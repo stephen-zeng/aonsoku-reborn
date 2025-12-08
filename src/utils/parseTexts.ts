@@ -17,12 +17,21 @@ interface createParams {
   text: string;
 }
 
+function escapeHtml(text: string): string {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
 function createLinkTag({ schema, url, text }: createParams) {
+  const safeUrl = escapeHtml(url);
+  const safeText = escapeHtml(text);
+
   if (schema.includes("mailto")) {
-    return `<a href="${url}">${text}</a>`;
+    return `<a href="${safeUrl}">${safeText}</a>`;
   }
 
-  return `<a href="${url}" target="_blank" rel="noreferrer nofollow">${text}</a>`;
+  return `<a href="${safeUrl}" target="_blank" rel="noreferrer nofollow">${safeText}</a>`;
 }
 
 export function linkifyText(textToParse: string) {
@@ -59,20 +68,40 @@ export function linkifyText(textToParse: string) {
 }
 
 export function sanitizeLinks(text: string) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(text, "text/html");
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text, "text/html");
 
-  doc.querySelectorAll("a").forEach((link) => {
-    const href = link.getAttribute("href") ?? "";
+    const tagWhiteList = ["a", "p", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "em", "ul", "ol", "li", "br", "span", "div"];
+    const attributeWhiteList = ["href", "class", "style", "rel", "target"];
 
-    if (href.includes("javascript")) {
-      const textNode = document.createTextNode(link.textContent || "");
-      link.replaceWith(textNode);
-    } else {
-      link.setAttribute("target", "_blank");
-      link.setAttribute("rel", "noreferrer nofollow");
-    }
-  });
+    // Remove all tags not in the whitelist
+    doc.body.querySelectorAll("*").forEach((node) => {
+        if (!tagWhiteList.includes(node.tagName.toLowerCase())) {
+            node.remove();
+        }
 
-  return doc.body.innerHTML;
+        // Strip attributes not in the whitelist
+        Array.from(node.attributes).forEach((attr) => {
+            if (!attributeWhiteList.includes(attr.name)) {
+                node.removeAttribute(attr.name);
+            }
+        });
+    });
+
+    doc.querySelectorAll("a").forEach((link) => {
+
+        const href = link.getAttribute("href") ?? "";
+
+        if (href.includes("javascript")) {
+            // There is no legitimate reason to have javascript: links
+            // Delete the link entirely
+            link.replaceWith(document.createTextNode(""));
+        } else {
+            link.setAttribute("target", "_blank");
+            link.setAttribute("rel", "noreferrer nofollow");
+        }
+
+    });
+
+    return doc.body.innerHTML;
 }

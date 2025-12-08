@@ -8,7 +8,7 @@ import { ThemeObserver } from "@/app/observers/theme-observer";
 import { ToastContainer } from "@/app/observers/toast-container";
 import { LanControlObserver } from "@/app/observers/lan-control-observer";
 import { router } from "@/routes/router";
-import { isLinux } from "@/utils/desktop";
+import { isDesktop, isLinux } from "@/utils/desktop";
 import {
   tryAutoConnect,
   useLanControlClientStore,
@@ -49,7 +49,7 @@ function App() {
       <SettingsDialog />
       <RouterProvider router={router} />
       <ToastContainer />
-      {isLinux && <Linux />}
+      {isDesktop() && isLinux && <Linux />}
     </>
   );
 }
