@@ -47,7 +47,7 @@ export function ArtistButtons({
   }
 
   async function handlePlayArtistRadio(shuffle = false) {
-    const songList = await getArtistAllSongs(artist?.name || "");
+    const songList = await getArtistAllSongs(artist?.id || "");
 
     if (songList) {
       setSongList(songList, 0, shuffle);

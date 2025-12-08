@@ -50,95 +50,47 @@ function sortSongs(
   });
 }
 
-// Cache for all songs to avoid refetching
-let allSongsCache: { songs: ISong[]; timestamp: number } | null = null;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-async function getAllSongs(
-  orderBy = SongsOrderByOptions.LastAdded,
-  sort = SortOptions.Desc,
-) {
-  // Check cache first
-  const now = Date.now();
-  if (
-    allSongsCache &&
-    allSongsCache.timestamp &&
-    now - allSongsCache.timestamp < CACHE_DURATION
-  ) {
-    // Re-sort cached songs if sorting changed
-    return sortSongs(allSongsCache.songs, orderBy, sort);
-  }
-
-  // Fetch all songs by using a very large count
-  // For search queries, we need to fetch with empty query to get all songs
-  const response = await subsonic.search.get({
-    query: "",
-    artistCount: 0,
-    albumCount: 0,
-    songCount: 999999,
-    songOffset: 0,
-  });
-
-  if (!response || !response.song) return [];
-
-  // Update cache with unsorted songs
-  allSongsCache = {
-    songs: response.song,
-    timestamp: now,
-  };
-
-  // Return sorted songs
-  return sortSongs(response.song, orderBy, sort);
-}
+// Cache for all songs is removed as we are switching to server-side pagination for "All Songs"
 
 export async function songsSearch(params: SongSearchParams) {
   const orderBy = params.orderBy || SongsOrderByOptions.LastAdded;
   const sort = params.sort || SortOptions.Desc;
 
-  // If there's a search query, use the original search behavior
-  if (params.query && params.query.trim() !== "") {
-    const response = await subsonic.search.get({
-      artistCount: 0,
-      albumCount: 0,
-      query: params.query,
-      songCount: params.songCount,
-      songOffset: params.songOffset,
-    });
+  // Use server-side pagination for both search and "all songs" (empty query)
+  // We effectively treat "browse all" as a search with empty query
+  const response = await subsonic.search.get({
+    artistCount: 0,
+    albumCount: 0,
+    // If query is empty strings, subsonic service handles whether to send "" or '""' based on server type
+    query: params.query,
+    songCount: params.songCount,
+    songOffset: params.songOffset,
+  });
 
-    if (!response) return emptyResponse;
-    if (!response.song) return emptyResponse;
+  if (!response) return emptyResponse;
+  if (!response.song) return emptyResponse;
 
-    // For search results, sort by the selected criteria
-    const sortedSongs = sortSongs(response.song, orderBy, sort);
+  // Note: We are no longer sorting on the client side for the full list because we only fetch a page.
+  // Ideally, the server should handle sorting, but search3 might not support it.
+  // We return the songs as is from the server for the current page.
+  // If we really wanted to sort the *page* we could call sortSongs here, but sorting a single page
+  // without the full context can be misleading (e.g. "A" might be on page 2 if server returns random order).
+  // However, for consistency with existing search behavior (which sorted the search results),
+  // we can keep sorting the returned page if it helps, but generally server order is best for pagination.
 
-    let nextOffset = null;
-    if (sortedSongs.length >= params.songCount) {
-      nextOffset = params.songOffset + params.songCount;
-    }
-
-    return {
-      songs: sortedSongs,
-      nextOffset,
-    };
-  }
-
-  // For browsing all songs (no search query), fetch all and paginate
-  const allSongs = await getAllSongs(orderBy, sort);
-
-  if (allSongs.length === 0) return emptyResponse;
-
-  // Apply pagination to the sorted results
-  const startIndex = params.songOffset;
-  const endIndex = startIndex + params.songCount;
-  const paginatedSongs = allSongs.slice(startIndex, endIndex);
+  // existing code did: const sortedSongs = sortSongs(response.song, orderBy, sort);
+  // We will respect that behavior for the returned page to ensure the types and assumed stability match,
+  // although its effectiveness is limited to the page size.
+  const sortedSongs = sortSongs(response.song, orderBy, sort);
 
   let nextOffset = null;
-  if (endIndex < allSongs.length) {
-    nextOffset = endIndex;
+  // If we got a full page, assume there might be more
+  if (sortedSongs.length >= params.songCount) {
+    nextOffset = params.songOffset + params.songCount;
   }
 
   return {
-    songs: paginatedSongs,
+    songs: sortedSongs,
     nextOffset,
   };
 }
