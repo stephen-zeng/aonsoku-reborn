@@ -17,12 +17,21 @@ interface createParams {
   text: string;
 }
 
+function escapeHtml(text: string): string {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
 function createLinkTag({ schema, url, text }: createParams) {
+  const safeUrl = escapeHtml(url);
+  const safeText = escapeHtml(text);
+
   if (schema.includes("mailto")) {
-    return `<a href="${url}">${text}</a>`;
+    return `<a href="${safeUrl}">${safeText}</a>`;
   }
 
-  return `<a href="${url}" target="_blank" rel="noreferrer nofollow">${text}</a>`;
+  return `<a href="${safeUrl}" target="_blank" rel="noreferrer nofollow">${safeText}</a>`;
 }
 
 export function linkifyText(textToParse: string) {
