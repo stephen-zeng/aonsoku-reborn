@@ -12,7 +12,9 @@ import { Button } from "@/app/components/ui/button";
 import { Popover, PopoverContent } from "@/app/components/ui/popover";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { cn } from "@/lib/utils";
+import { useIsXl } from "@/app/hooks/use-is-xl";
 import {
+  useFullscreenPlayerState,
   useMainDrawerState,
   usePlayerActions,
   useQueueState,
@@ -26,12 +28,18 @@ export function PlayerQueueButton({ disabled }: PlayerSongListButtonProps) {
   const { t } = useTranslation();
   const { mainDrawerState } = useMainDrawerState();
   const { queueState, toggleQueueAction } = useQueueState();
+  const { openFullscreenPlayer } = useFullscreenPlayerState();
+  const isXl = useIsXl();
   const [openPopover, setOpenPopover] = useState(false);
 
   const isActive = mainDrawerState && queueState;
 
   function handleClick() {
-    toggleQueueAction();
+    if (isXl) {
+      toggleQueueAction();
+    } else {
+      openFullscreenPlayer("queue");
+    }
   }
 
   return (

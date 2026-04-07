@@ -19,6 +19,7 @@ import {
   useReplayGainState,
   usePlayerPrevAndNext,
   usePlayerDuration,
+  useFullscreenPlayerState,
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
 import { hasPiPSupport } from "@/utils/browser";
@@ -55,8 +56,8 @@ export function Player() {
   const radioRef = useRef<HTMLAudioElement>(null);
   const podcastRef = useRef<HTMLAudioElement>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
+  const { openFullscreenPlayer } = useFullscreenPlayerState();
   const {
     setAudioPlayerRef,
     setCurrentDuration,
@@ -218,10 +219,10 @@ export function Player() {
       const isInteractive = isControlButton || isSlider;
 
       if (!isInteractive) {
-        setIsFullscreenOpen(true);
+        openFullscreenPlayer("playing");
       }
     },
-    [isMobile],
+    [isMobile, openFullscreenPlayer],
   );
 
   return (
@@ -233,11 +234,7 @@ export function Player() {
         {/* Track Info */}
         <div className="flex items-center gap-1 w-full sm:gap-2">
           {isSong && (
-            <MemoTrackInfo
-              song={song}
-              isFullscreenOpen={isFullscreenOpen}
-              setIsFullscreenOpen={setIsFullscreenOpen}
-            />
+            <MemoTrackInfo song={song} />
           )}
           {isRadio && <MemoRadioInfo radio={radio} />}
           {isPodcast && <MemoPodcastInfo podcast={podcast} />}

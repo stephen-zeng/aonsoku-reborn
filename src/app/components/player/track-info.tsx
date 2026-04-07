@@ -1,6 +1,6 @@
 import randomCSSHexColor from "@chriscodesthings/random-css-hex-color";
 import { AudioLines, Maximize2 } from "lucide-react";
-import { type Dispatch, useCallback } from "react";
+import { useCallback } from "react";
 import { Fragment } from "react/jsx-runtime";
 import { useTranslation } from "react-i18next";
 import { LazyLoadImage } from "react-lazy-load-image-component";
@@ -13,7 +13,10 @@ import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
-import { useSongColor } from "@/store/player.store";
+import {
+  useFullscreenPlayerState,
+  useSongColor,
+} from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { getAverageColor } from "@/utils/getAverageColor";
 import { logger } from "@/utils/logger";
@@ -21,15 +24,16 @@ import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
 
 export function TrackInfo({
   song,
-  isFullscreenOpen,
-  setIsFullscreenOpen,
 }: {
   song: ISong | undefined;
-  isFullscreenOpen: boolean;
-  setIsFullscreenOpen: Dispatch<boolean>;
 }) {
   const { t } = useTranslation();
   const { setCurrentSongColor, currentSongColor } = useSongColor();
+  const {
+    fullscreenPlayerOpen,
+    openFullscreenPlayer,
+    closeFullscreenPlayer,
+  } = useFullscreenPlayerState();
 
   const getImageElement = useCallback(() => {
     return document.getElementById("track-song-image") as HTMLImageElement;
@@ -102,8 +106,11 @@ export function TrackInfo({
           />
         </div>
         <FullscreenMode
-          open={isFullscreenOpen}
-          onOpenChange={setIsFullscreenOpen}
+          open={fullscreenPlayerOpen}
+          onOpenChange={(open) => {
+            if (open) openFullscreenPlayer("playing");
+            else closeFullscreenPlayer();
+          }}
         >
           <Button
             variant="secondary"

@@ -27,6 +27,8 @@ export interface ISongList {
   podcastListProgresses: number[];
 }
 
+export type FullscreenPlayerTab = "queue" | "playing" | "lyrics";
+
 export interface IPlayerState {
   isPlaying: boolean;
   loopState: LoopState;
@@ -40,6 +42,8 @@ export interface IPlayerState {
   mainDrawerState: boolean;
   queueState: boolean;
   lyricsState: boolean;
+  fullscreenPlayerOpen: boolean;
+  fullscreenPlayerTab: FullscreenPlayerTab;
   hasPrev: boolean;
   hasNext: boolean;
 }
@@ -179,6 +183,9 @@ export interface IPlayerActions {
   toggleLyricsAction: () => void;
   toggleQueueAndLyrics: () => void;
   closeDrawer: () => void;
+  openFullscreenPlayer: (tab?: FullscreenPlayerTab) => void;
+  closeFullscreenPlayer: () => void;
+  setFullscreenPlayerTab: (tab: FullscreenPlayerTab) => void;
   playFirstSongInQueue: () => void;
   handleSongEnded: () => void;
   getCurrentProgress: () => number;

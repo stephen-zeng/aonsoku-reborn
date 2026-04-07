@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Tabs,
@@ -6,6 +6,8 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/app/components/ui/tabs";
+import { useFullscreenPlayerState } from "@/store/player.store";
+import { FullscreenPlayerTab } from "@/types/playerContext";
 import { FullscreenPlayer } from "./player";
 import { LyricsTab } from "./lyrics";
 import { FullscreenSongQueue } from "./queue";
@@ -16,15 +18,10 @@ const MemoSongInfo = memo(SongInfo);
 const MemoLyricsTab = memo(LyricsTab);
 const MemoFullscreenPlayer = memo(FullscreenPlayer);
 
-enum TabsEnum {
-  Queue = "queue",
-  Playing = "playing",
-  Lyrics = "lyrics",
-}
-
-type TabValue = TabsEnum;
-
-const getTransform = (currentTab: TabValue, tabValue: TabValue) => {
+const getTransform = (
+  currentTab: FullscreenPlayerTab,
+  tabValue: FullscreenPlayerTab,
+) => {
   const positions = {
     queue: {
       queue: "0",
@@ -57,61 +54,63 @@ const triggerStyles =
   "w-full data-[state=active]:bg-foreground data-[state=active]:text-secondary text-foreground drop-shadow-sm";
 
 export function FullscreenTabs() {
-  const [tab, setTab] = useState<TabValue>(TabsEnum.Playing);
+  const { fullscreenPlayerTab, setFullscreenPlayerTab } =
+    useFullscreenPlayerState();
   const { t } = useTranslation();
 
   return (
     <Tabs
-      value={tab}
-      onValueChange={(value) => setTab(value as TabValue)}
+      value={fullscreenPlayerTab}
+      onValueChange={(value) =>
+        setFullscreenPlayerTab(value as FullscreenPlayerTab)
+      }
       className="w-full h-full min-h-full"
     >
       <TabsList className="w-full bg-foreground/20 mb-4">
-        <TabsTrigger value={TabsEnum.Queue} className={triggerStyles}>
+        <TabsTrigger value="queue" className={triggerStyles}>
           {t("fullscreen.queue")}
         </TabsTrigger>
-        <TabsTrigger value={TabsEnum.Playing} className={triggerStyles}>
+        <TabsTrigger value="playing" className={triggerStyles}>
           {t("fullscreen.playing")}
         </TabsTrigger>
-        <TabsTrigger value={TabsEnum.Lyrics} className={triggerStyles}>
+        <TabsTrigger value="lyrics" className={triggerStyles}>
           {t("fullscreen.lyrics")}
         </TabsTrigger>
       </TabsList>
       <div className="relative w-full h-full">
         <TabsContent
-          value={TabsEnum.Queue}
+          value="queue"
           className={scrollableTabStyles}
           style={{
             backfaceVisibility: "hidden",
-            transform: getTransform(tab, TabsEnum.Queue),
+            transform: getTransform(fullscreenPlayerTab, "queue"),
           }}
           forceMount={true}
         >
           <MemoSongQueue />
         </TabsContent>
         <TabsContent
-          value={TabsEnum.Playing}
+          value="playing"
           className={playingTabStyles}
           style={{
             backfaceVisibility: "hidden",
-            transform: getTransform(tab, TabsEnum.Playing),
+            transform: getTransform(fullscreenPlayerTab, "playing"),
           }}
           forceMount={true}
         >
           <div className="flex flex-col h-full justify-center sm:justify-start px-0">
             <MemoSongInfo />
-            {/* Show controls on mobile */}
             <div className="sm:hidden mt-auto pb-2 px-2">
               <MemoFullscreenPlayer />
             </div>
           </div>
         </TabsContent>
         <TabsContent
-          value={TabsEnum.Lyrics}
+          value="lyrics"
           className={scrollableTabStyles}
           style={{
             backfaceVisibility: "hidden",
-            transform: getTransform(tab, TabsEnum.Lyrics),
+            transform: getTransform(fullscreenPlayerTab, "lyrics"),
           }}
           forceMount={true}
         >

@@ -198,6 +198,8 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               mainDrawerState: false,
               queueState: false,
               lyricsState: false,
+              fullscreenPlayerOpen: false,
+              fullscreenPlayerTab: "playing",
               currentPlaybackRate: 1,
               hasPrev: false,
               hasNext: false,
@@ -1069,6 +1071,25 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.playerState.lyricsState = false;
                 });
               },
+              openFullscreenPlayer: (tab = "playing") => {
+                set((state) => {
+                  state.playerState.mainDrawerState = false;
+                  state.playerState.queueState = false;
+                  state.playerState.lyricsState = false;
+                  state.playerState.fullscreenPlayerOpen = true;
+                  state.playerState.fullscreenPlayerTab = tab;
+                });
+              },
+              closeFullscreenPlayer: () => {
+                set((state) => {
+                  state.playerState.fullscreenPlayerOpen = false;
+                });
+              },
+              setFullscreenPlayerTab: (tab) => {
+                set((state) => {
+                  state.playerState.fullscreenPlayerTab = tab;
+                });
+              },
               playFirstSongInQueue: () => {
                 set((state) => {
                   state.songlist.currentSongIndex = 0;
@@ -1265,6 +1286,8 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
             "playerState.mainDrawerState",
             "playerState.queueState",
             "playerState.lyricsState",
+            "playerState.fullscreenPlayerOpen",
+            "playerState.fullscreenPlayerTab",
             "state.settings.colors.bigPlayer.blur.settings",
             "remoteControl",
           ]);
@@ -1516,6 +1539,15 @@ export const useLyricsState = () =>
     lyricsState: state.playerState.lyricsState,
     setLyricsState: state.actions.setLyricsState,
     toggleLyricsAction: state.actions.toggleLyricsAction,
+  }));
+
+export const useFullscreenPlayerState = () =>
+  usePlayerStore((state) => ({
+    fullscreenPlayerOpen: state.playerState.fullscreenPlayerOpen,
+    fullscreenPlayerTab: state.playerState.fullscreenPlayerTab,
+    openFullscreenPlayer: state.actions.openFullscreenPlayer,
+    closeFullscreenPlayer: state.actions.closeFullscreenPlayer,
+    setFullscreenPlayerTab: state.actions.setFullscreenPlayerTab,
   }));
 
 export const useSongColor = () =>
