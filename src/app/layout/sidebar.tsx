@@ -1,11 +1,11 @@
 import {
   DiscAlbumIcon,
+  HeartIcon,
   ListMusicIcon,
   Mic2Icon,
   Music2Icon,
   PodcastIcon,
   RadioIcon,
-  HeartIcon,
 } from "lucide-react";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,6 +19,7 @@ import {
 import { SidebarGenerator } from "@/app/components/sidebar/sidebar-generator";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
+import { useSidebar } from "@/store/ui.store";
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
 
@@ -34,12 +35,14 @@ const MemoSidebarGenerator = memo(SidebarGenerator);
 
 export function Sidebar({ className }: SidebarProps) {
   const { t } = useTranslation();
+  const { isCollapsed } = useSidebar();
 
   return (
     <aside>
       <div
         className={cn(
-          "hidden xl:flex flex-col min-w-sidebar max-w-sidebar border-r fixed top-header left-0 bottom-0 pb-player bg-background z-10",
+          "hidden flex-col min-w-sidebar max-w-sidebar border-r fixed top-header left-0 bottom-0 pb-player bg-background z-10",
+          isCollapsed ? "xl:hidden" : "xl:flex",
           className,
         )}
       >

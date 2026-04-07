@@ -136,7 +136,9 @@
     "library": "Bibliothèque",
     "artists": "Artistes",
     "emptyPlaylist": "Aucune liste de lecture créée",
-    "podcasts": "Podcasts"
+    "podcasts": "Podcasts",
+    "collapse": "Réduire la barre latérale",
+    "expand": "Développer la barre latérale"
   },
   "menu": {
     "serverLogout": "Se déconnecter",

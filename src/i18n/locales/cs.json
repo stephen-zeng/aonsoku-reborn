@@ -17,7 +17,9 @@
     "podcasts": "Podcasty",
     "miniSearch": "Hledat",
     "radios": "Rádiové stanice",
-    "artists": "Umělci"
+    "artists": "Umělci",
+    "collapse": "Sbalit postranní panel",
+    "expand": "Rozbalit postranní panel"
   },
   "menu": {
     "language": "Jazyk",

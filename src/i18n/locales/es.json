@@ -17,7 +17,9 @@
     "playlists": "Listas de reproducción",
     "radios": "Radios",
     "emptyPlaylist": "Aún no se han creado listas de reproducción",
-    "podcasts": "Podcasts"
+    "podcasts": "Podcasts",
+    "collapse": "Contraer barra lateral",
+    "expand": "Expandir barra lateral"
   },
   "menu": {
     "language": "Idioma",

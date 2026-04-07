@@ -6,6 +6,13 @@ interface ISongInfo {
   reset: () => void;
 }
 
+interface ISidebar {
+  isCollapsed: boolean;
+  toggleSidebar: () => void;
+  setIsCollapsed: (collapsed: boolean) => void;
+}
+
 export interface IUiContext {
   songInfo: ISongInfo;
+  sidebar: ISidebar;
 }

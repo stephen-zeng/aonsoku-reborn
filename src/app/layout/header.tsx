@@ -1,19 +1,23 @@
+import { HomeIcon, PanelLeftIcon } from "lucide-react";
+import { memo, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { NavigationButtons } from "@/app/components/header/navigation-buttons";
 import { UserDropdown } from "@/app/components/header/user-dropdown";
 import { SettingsButton } from "@/app/components/settings/header-button";
 import { useAppWindow } from "@/app/hooks/use-app-window";
-import { useWindowControlsOverlay } from "@/app/hooks/use-window-controls-overlay";
 import { useThemeColor } from "@/app/hooks/use-theme-color";
+import { useWindowControlsOverlay } from "@/app/hooks/use-window-controls-overlay";
+import { useSidebar } from "@/store/ui.store";
 import { isDesktop, isLinux, isMacOS, isWindows } from "@/utils/desktop";
 import { isWindowControlsOverlayAvailable } from "@/utils/pwa";
 import CommandMenu from "../components/command/command-menu";
-import { memo, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import { HomeIcon } from "lucide-react";
 
 export function Header() {
+  const { t } = useTranslation();
   const { isFullscreen } = useAppWindow();
+  const { isCollapsed, toggleSidebar } = useSidebar();
   const MemoCommandMenu = memo(CommandMenu);
 
   // Update browser theme color dynamically
@@ -81,6 +85,9 @@ export function Header() {
         ? 122 // Electron Windows default
         : 94 // Electron Linux default
     : 0;
+  const sidebarToggleLabel = t(
+    isCollapsed ? "sidebar.expand" : "sidebar.collapse",
+  );
 
   return (
     <header className="w-full grid grid-cols-header h-header px-4 fixed top-0 right-0 left-0 z-20 bg-background border-b electron-drag">
@@ -102,6 +109,18 @@ export function Header() {
               <HomeIcon className="w-4 h-4" strokeWidth={1.5} />
             </Button>
           </Link>
+        </div>
+        <div className="hidden xl:block w-8 h-8">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 rounded-md"
+            title={sidebarToggleLabel}
+            aria-label={sidebarToggleLabel}
+            onClick={toggleSidebar}
+          >
+            <PanelLeftIcon className="w-4 h-4" strokeWidth={1.5} />
+          </Button>
         </div>
         <div className="md:hidden flex justify-center items-center px-4 gap-2 w-full">
           <NavigationButtons />

@@ -496,7 +496,9 @@
     "playlists": "Playlists",
     "radios": "Rádios",
     "podcasts": "Podcasts",
-    "emptyPlaylist": "Nenhuma playlist criada ainda"
+    "emptyPlaylist": "Nenhuma playlist criada ainda",
+    "collapse": "Recolher barra lateral",
+    "expand": "Expandir barra lateral"
   },
   "menu": {
     "language": "Linguagem",
