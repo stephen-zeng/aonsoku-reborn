@@ -1,6 +1,7 @@
 import {
   DiscAlbumIcon,
   HeartIcon,
+  HomeIcon,
   ListMusicIcon,
   Mic2Icon,
   Music2Icon,
@@ -29,6 +30,7 @@ const Music2 = memo(Music2Icon);
 const Radio = memo(RadioIcon);
 const DiscAlbum = memo(DiscAlbumIcon);
 const Podcast = memo(PodcastIcon);
+const Home = memo(HomeIcon);
 const Heart = memo(HeartIcon);
 
 const MemoSidebarGenerator = memo(SidebarGenerator);
@@ -47,11 +49,11 @@ export function Sidebar({ className }: SidebarProps) {
         )}
       >
         <div className="space-y-4 py-4 pt-4">
-          {/* <SidebarSection>
+          <SidebarSection>
             <div>
               <MemoSidebarGenerator list={mainMenuItems} />
             </div>
-          </SidebarSection> */}
+          </SidebarSection>
           <SidebarSection>
             <SectionTitle>{t("sidebar.library")}</SectionTitle>
             <div>
@@ -80,12 +82,12 @@ export enum SidebarItems {
 }
 
 export const mainMenuItems = [
-  // {
-  //   id: SidebarItems.Home,
-  //   title: "sidebar.home",
-  //   route: ROUTES.LIBRARY.HOME,
-  //   icon: Home,
-  // },
+  {
+    id: SidebarItems.Home,
+    title: "sidebar.home",
+    route: ROUTES.LIBRARY.HOME,
+    icon: Home,
+  },
 ];
 
 export const libraryItems = [
