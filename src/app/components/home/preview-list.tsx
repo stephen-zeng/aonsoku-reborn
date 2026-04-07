@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { isMobile } from "react-device-detect";
 import { getCoverArtUrl } from "@/api/httpClient";
 import { PreviewCard } from "@/app/components/preview-card/card";
 import {
@@ -68,7 +69,7 @@ export default function PreviewList({
     <div className="w-full flex flex-col mt-4">
       <div className="my-4 flex justify-between items-center">
         <h3
-          className="scroll-m-20 text-2xl font-semibold tracking-tight"
+          className="scroll-m-20 text-lg sm:text-2xl font-semibold tracking-tight"
           data-testid="preview-list-title"
         >
           {title}
@@ -81,7 +82,7 @@ export default function PreviewList({
               </p>
             </Link>
           )}
-          <div className="flex gap-2 hidden sm:flex">
+          <div className="hidden sm:flex gap-2">
             <CarouselButton
               direction="prev"
               disabled={!canScrollPrev}
@@ -111,7 +112,7 @@ export default function PreviewList({
             {list.map((album, index) => (
               <CarouselItem
                 key={album.id}
-                className="basis-1/4 sm:basis-1/6 2xl:basis-1/8"
+                className="basis-1/3 sm:basis-1/6 2xl:basis-1/8"
                 data-testid={`preview-list-carousel-item-${index}`}
               >
                 <PreviewCard.Root>
@@ -120,7 +121,7 @@ export default function PreviewList({
                       src={getCoverArtUrl(album.coverArt, "album")}
                       alt={album.name}
                     />
-                    {window.innerWidth > 640 && (
+                    {!isMobile && (
                       <PreviewCard.PlayButton
                         onClick={() => handlePlayAlbum(album)}
                       />

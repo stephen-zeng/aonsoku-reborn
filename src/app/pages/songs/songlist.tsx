@@ -117,7 +117,7 @@ export default function SongList() {
           loading={songCountIsLoading}
         />
 
-        <div className="flex gap-2 flex-1 justify-end">
+        <div className="flex gap-2 flex-1 justify-end flex-wrap">
           {filterByArtist && <ClearFilterButton />}
           <ExpandableSearchInput
             placeholder={t("songs.list.search.placeholder")}

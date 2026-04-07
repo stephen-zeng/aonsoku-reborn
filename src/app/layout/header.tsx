@@ -1,6 +1,7 @@
 import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import { NavigationButtons } from "@/app/components/header/navigation-buttons";
 import { UserDropdown } from "@/app/components/header/user-dropdown";
 import { SettingsButton } from "@/app/components/settings/header-button";
@@ -8,17 +9,27 @@ import { useAppWindow } from "@/app/hooks/use-app-window";
 import { useThemeColor } from "@/app/hooks/use-theme-color";
 import { useWindowControlsOverlay } from "@/app/hooks/use-window-controls-overlay";
 import { cn } from "@/lib/utils";
+import { ROUTES } from "@/routes/routesList";
 import { useSidebar } from "@/store/ui.store";
 import { isDesktop, isLinux, isMacOS, isWindows } from "@/utils/desktop";
 import { isWindowControlsOverlayAvailable } from "@/utils/pwa";
 import CommandMenu from "../components/command/command-menu";
 import { Button } from "../components/ui/button";
 
+const mobileRootRoutes = [
+  ROUTES.LIBRARY.HOME,
+  ROUTES.MOBILE.LIBRARY,
+  ROUTES.MOBILE.SEARCH,
+];
+
 export function Header() {
   const { t } = useTranslation();
   const { isFullscreen } = useAppWindow();
   const { isCollapsed, toggleSidebar } = useSidebar();
+  const { pathname } = useLocation();
   const MemoCommandMenu = memo(CommandMenu);
+
+  const isMobileRootPage = mobileRootRoutes.includes(pathname);
 
   // Update browser theme color dynamically
   useThemeColor();
@@ -126,9 +137,11 @@ export function Header() {
             <SidebarToggleIcon className="w-4 h-4" strokeWidth={1.5} />
           </Button>
         </div>
-        <div className="md:hidden flex items-center gap-2">
-          <NavigationButtons />
-        </div>
+        {!isMobileRootPage && (
+          <div className="md:hidden flex items-center gap-2">
+            <NavigationButtons />
+          </div>
+        )}
       </div>
       <div className="hidden md:flex col-span-2 items-center justify-center">
         <div className="flex justify-center items-center px-4 gap-2 w-full">

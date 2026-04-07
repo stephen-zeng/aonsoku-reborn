@@ -2,7 +2,7 @@ import { Skeleton } from "@/app/components/ui/skeleton";
 
 export function HeaderFallback() {
   return (
-    <div className="flex w-full rounded-lg bg-skeleton h-[250px] 2xl:h-[300px] p-4 2xl:p-6 gap-4 border border-border">
+    <div className="flex w-full rounded-lg bg-skeleton h-[140px] sm:h-[250px] 2xl:h-[300px] p-4 2xl:p-6 gap-4 border border-border">
       <Skeleton className="bg-background/50 h-full aspect-square rounded-lg" />
       <div className="flex flex-col gap-3 w-full h-full justify-end">
         <Skeleton className="w-96 h-10 bg-background/50" />
@@ -24,7 +24,7 @@ export function HeaderFallback() {
 
 export function HomeFallback() {
   return (
-    <div className="w-full px-8 py-6">
+    <div className="w-full px-4 sm:px-8 py-4 sm:py-6">
       <HeaderFallback />
 
       <PreviewListFallback />
@@ -40,7 +40,7 @@ export function PreviewListFallback() {
     <div className="w-full flex flex-col my-4">
       <div className="flex justify-between my-4">
         <Skeleton className="w-52 h-8 rounded" />
-        <div className="flex gap-2 hidden sm:flex">
+        <div className="hidden sm:flex gap-2">
           <Skeleton className="w-8 h-8 rounded-full" />
           <Skeleton className="w-8 h-8 rounded-full" />
         </div>
@@ -74,9 +74,9 @@ export function SongsCarouselFallback() {
         ))}
       </div>
 
-      <div className="flex sm:hidden gap-4">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <div className="basis-1/4" key={"small-" + index}>
+      <div className="flex sm:hidden gap-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div className="basis-1/3" key={"mobile-" + index}>
             <Skeleton className="aspect-square" />
             <Skeleton className="h-[13px] w-11/12 mt-2" />
             <Skeleton className="h-3 w-1/2 mt-[7px]" />

@@ -13,6 +13,7 @@ import { ColumnFilter } from "@/types/columnFilter";
 import { AlbumsSearchParams } from "@/utils/albumsFilter";
 import { queryKeys } from "@/utils/queryKeys";
 import { SearchParamsHandler } from "@/utils/searchParamsHandler";
+import { isMobile } from "react-device-detect";
 
 export default function SongList() {
   const { t } = useTranslation();
@@ -52,17 +53,18 @@ export default function SongList() {
     if (songlist) setSongList(songlist, index);
   }
 
-  const columnsToShow: ColumnFilter[] = [
-    "index",
-    "title",
-    // 'artist',
-    "album",
-    "duration",
-    "playCount",
-    "played",
-    "contentType",
-    "select",
-  ];
+  const columnsToShow: ColumnFilter[] = isMobile
+    ? ["index", "title", "select"]
+    : [
+        "index",
+        "title",
+        "album",
+        "duration",
+        "playCount",
+        "played",
+        "contentType",
+        "select",
+      ];
 
   const title = t("sidebar.favorites");
 

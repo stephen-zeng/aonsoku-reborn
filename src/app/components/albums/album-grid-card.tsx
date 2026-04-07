@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { isMobile } from "react-device-detect";
 import { getCoverArtUrl } from "@/api/httpClient";
 import { PreviewCard } from "@/app/components/preview-card/card";
 import { ROUTES } from "@/routes/routesList";
@@ -28,7 +29,7 @@ function AlbumCard({ album }: AlbumCardProps) {
           src={getCoverArtUrl(album.coverArt, "album", "300")}
           alt={album.name}
         />
-        {window.innerWidth > 640 && (
+        {!isMobile && (
           <PreviewCard.PlayButton onClick={handlePlayAlbum} />
         )}
       </PreviewCard.ImageWrapper>
