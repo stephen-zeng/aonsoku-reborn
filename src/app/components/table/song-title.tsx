@@ -5,7 +5,10 @@ import { ROUTES } from "@/routes/routesList";
 import { useMainDrawerState } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 
-export function TableSongTitle({ song }: { song: ISong }) {
+export function TableSongTitle({
+  song,
+  onPlay,
+}: { song: ISong; onPlay?: () => void }) {
   return (
     <div className="flex w-full gap-2 items-center">
       <CoverImage
@@ -14,7 +17,22 @@ export function TableSongTitle({ song }: { song: ISong }) {
         altText={song.title}
       />
       <div className="flex flex-col w-full justify-center truncate">
-        <span className="font-medium truncate">{song.title}</span>
+        <span
+          className={cn(
+            "font-medium truncate",
+            onPlay && "cursor-pointer hover:underline",
+          )}
+          onClick={
+            onPlay
+              ? (e) => {
+                  e.stopPropagation();
+                  onPlay();
+                }
+              : undefined
+          }
+        >
+          {song.title}
+        </span>
         <div className="flex items-center truncate">
           <TableArtists song={song} />
         </div>

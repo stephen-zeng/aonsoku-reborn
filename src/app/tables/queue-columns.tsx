@@ -19,7 +19,7 @@ export function queueColumns(): ColumnDefType<ISong>[] {
         minWidth: 48,
       },
       header: "",
-      cell: ({ row, table }) => {
+      cell: ({ row }) => {
         const trackNumber = row.index + 1;
         const song = row.original;
 
@@ -27,7 +27,6 @@ export function queueColumns(): ColumnDefType<ISong>[] {
           <PlaySongButton
             trackNumber={trackNumber}
             trackId={song.id}
-            handlePlayButton={() => table.options.meta?.handlePlaySong?.(row)}
           />
         );
       },
@@ -40,7 +39,12 @@ export function queueColumns(): ColumnDefType<ISong>[] {
         minWidth: 150,
       },
       header: "",
-      cell: ({ row }) => <TableSongTitle song={row.original} />,
+      cell: ({ row, table }) => (
+        <TableSongTitle
+          song={row.original}
+          onPlay={() => table.options.meta?.handlePlaySong?.(row)}
+        />
+      ),
     },
     {
       id: "artist",

@@ -26,7 +26,7 @@ export function artistsColumns(): ColumnDefType<ISimilarArtist>[] {
       header: () => {
         return <div className="w-full text-center">#</div>;
       },
-      cell: ({ row, table }) => {
+      cell: ({ row }) => {
         const index = row.index + 1;
         const artist = row.original;
 
@@ -34,7 +34,6 @@ export function artistsColumns(): ColumnDefType<ISimilarArtist>[] {
           <MemoPlaySongButton
             trackNumber={index}
             trackId={artist.id}
-            handlePlayButton={() => table.options.meta?.handlePlaySong?.(row)}
           />
         );
       },

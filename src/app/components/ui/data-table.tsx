@@ -20,7 +20,9 @@ import {
   memo,
   TouchEvent,
   useCallback,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { isMacOs } from "react-device-detect";
@@ -101,6 +103,7 @@ export function DataTable<TData, TValue>({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState({});
   const [lastRowSelected, setLastRowSelected] = useState<number | null>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
 
   const isClassic = variant === "classic";
   const isModern = variant === "modern";
@@ -168,6 +171,22 @@ export function DataTable<TData, TValue>({
     preventDefault: true,
     enabled: table.getIsAllRowsSelected() || table.getIsSomeRowsSelected(),
   });
+
+  useEffect(() => {
+    if (selectedRows.length === 0) return;
+
+    function handleClickOutside(e: globalThis.MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (target.closest("[data-radix-menu-content]")) return;
+
+      if (tableRef.current && !tableRef.current.contains(target)) {
+        setRowSelection({});
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [selectedRows.length]);
 
   const inputValue =
     searchColumn !== undefined
@@ -382,6 +401,7 @@ export function DataTable<TData, TValue>({
 
       <div className={clsx(isClassic && "rounded-md border")}>
         <div
+          ref={tableRef}
           className={clsx(
             "relative w-full overflow-hidden rounded-md cursor-default caption-bottom text-sm",
             isClassic ? "bg-background" : "bg-transparent",

@@ -25,7 +25,7 @@ export function playlistsColumns(): ColumnDefType<Playlist>[] {
       header: () => {
         return <div className="w-full text-center">#</div>;
       },
-      cell: ({ row, table }) => {
+      cell: ({ row }) => {
         const index = row.index + 1;
         const playlist = row.original;
 
@@ -33,7 +33,6 @@ export function playlistsColumns(): ColumnDefType<Playlist>[] {
           <PlaySongButton
             trackNumber={index}
             trackId={playlist.id}
-            handlePlayButton={() => table.options.meta?.handlePlaySong?.(row)}
           />
         );
       },

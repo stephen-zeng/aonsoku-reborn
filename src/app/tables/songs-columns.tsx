@@ -38,7 +38,7 @@ export function songsColumns(): ColumnDefType<ISong>[] {
       header: () => {
         return <div className="w-full text-center">#</div>;
       },
-      cell: ({ row, table }) => {
+      cell: ({ row }) => {
         const trackNumber = row.index + 1;
         const song = row.original;
 
@@ -46,7 +46,6 @@ export function songsColumns(): ColumnDefType<ISong>[] {
           <MemoPlaySongButton
             trackNumber={trackNumber}
             trackId={song.id}
-            handlePlayButton={() => table.options.meta?.handlePlaySong?.(row)}
           />
         );
       },
@@ -61,7 +60,7 @@ export function songsColumns(): ColumnDefType<ISong>[] {
       header: () => {
         return <div className="w-full text-center">#</div>;
       },
-      cell: ({ row, table }) => {
+      cell: ({ row }) => {
         const song = row.original;
         const trackNumber = song.track;
 
@@ -69,7 +68,6 @@ export function songsColumns(): ColumnDefType<ISong>[] {
           <MemoPlaySongButton
             trackNumber={trackNumber}
             trackId={song.id}
-            handlePlayButton={() => table.options.meta?.handlePlaySong?.(row)}
           />
         );
       },
@@ -88,7 +86,12 @@ export function songsColumns(): ColumnDefType<ISong>[] {
           {i18n.t("table.columns.title")}
         </MemoDataTableColumnHeader>
       ),
-      cell: ({ row }) => <MemoTableSongTitle song={row.original} />,
+      cell: ({ row, table }) => (
+        <MemoTableSongTitle
+          song={row.original}
+          onPlay={() => table.options.meta?.handlePlaySong?.(row)}
+        />
+      ),
     },
     {
       id: "artist",

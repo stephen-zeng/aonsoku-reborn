@@ -90,6 +90,7 @@ export function DataTableList<TData, TValue>({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState({});
   const [lastRowSelected, setLastRowSelected] = useState<number | null>(null);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
 
   const selectedRows = useMemo(
     () => Object.keys(rowSelection).map(Number),
@@ -179,6 +180,25 @@ export function DataTableList<TData, TValue>({
     preventDefault: true,
     enabled: table.getIsAllRowsSelected() || table.getIsSomeRowsSelected(),
   });
+
+  useEffect(() => {
+    if (selectedRows.length === 0) return;
+
+    function handleClickOutside(e: globalThis.MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (target.closest("[data-radix-menu-content]")) return;
+
+      if (
+        tableContainerRef.current &&
+        !tableContainerRef.current.contains(target)
+      ) {
+        setRowSelection({});
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [selectedRows.length]);
 
   const getContextMenuOptions = useCallback(
     (row: Row<TData>) => {
@@ -334,6 +354,7 @@ export function DataTableList<TData, TValue>({
   return (
     <div className="h-full">
       <div
+        ref={tableContainerRef}
         className="relative w-full h-full overflow-hidden cursor-default caption-bottom text-sm bg-transparent"
         data-testid="data-table"
         role="table"
