@@ -2,6 +2,7 @@ import omit from "lodash/omit";
 import {
   CheckIcon,
   DownloadIcon,
+  Heart,
   Info,
   ListEnd,
   ListPlus,
@@ -14,6 +15,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { ContextMenuItem } from "@/app/components/ui/context-menu";
 import { DropdownMenuItem } from "@/app/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import { MenuItemFactory } from "./menu-item-factory";
 import { SubMenuFactory } from "./sub-menu-factory";
 
@@ -195,11 +197,42 @@ function GotoPodcast({
   );
 }
 
+type LikeProps = DropdownMenuItemProps & {
+  isStarred?: boolean;
+  label?: string;
+};
+
+function Like({
+  variant = "dropdown",
+  isStarred,
+  label,
+  ...props
+}: LikeProps) {
+  const { t } = useTranslation();
+
+  return (
+    <MenuItemFactory
+      variant={variant}
+      icon={
+        <Heart
+          className={cn(
+            "mr-2 h-4 w-4",
+            isStarred && "text-red-500 fill-red-500",
+          )}
+        />
+      }
+      label={label ?? (isStarred ? t("options.unlike") : t("options.like"))}
+      {...props}
+    />
+  );
+}
+
 export const OptionsButtons = {
   Play,
   PlayNext,
   PlayLast,
   Download,
+  Like,
   AddToPlaylistOption,
   EditPlaylist,
   RemovePlaylist,

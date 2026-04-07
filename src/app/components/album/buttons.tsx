@@ -1,6 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Actions } from "@/app/components/actions";
+import { OptionsButtons } from "@/app/components/options/buttons";
+import {
+  DropdownMenuGroup,
+  DropdownMenuSeparator,
+} from "@/app/components/ui/dropdown-menu";
 import { subsonic } from "@/service/subsonic";
 import { useAppPages } from "@/store/app.store";
 import { usePlayerActions } from "@/store/player.store";
@@ -58,14 +63,6 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
 
   return (
     <Actions.Container>
-      <Actions.Button
-        tooltip={buttonsTooltips.play}
-        buttonStyle="primary"
-        onClick={() => setSongList(album.song, 0, false, { albumId: album.id })}
-      >
-        <Actions.PlayIcon />
-      </Actions.Button>
-
       {album.song.length > 1 && (
         <Actions.Button
           tooltip={buttonsTooltips.shuffle}
@@ -78,7 +75,17 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
       )}
 
       <Actions.Button
+        tooltip={buttonsTooltips.play}
+        buttonStyle="primary"
+        className="md:order-first"
+        onClick={() => setSongList(album.song, 0, false, { albumId: album.id })}
+      >
+        <Actions.PlayIcon />
+      </Actions.Button>
+
+      <Actions.Button
         tooltip={buttonsTooltips.like()}
+        className="hidden md:inline-flex"
         onClick={handleLikeButton}
       >
         <Actions.LikeIcon isStarred={isAlbumStarred} />
@@ -87,6 +94,7 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
       {showInfoButton && (
         <Actions.Button
           tooltip={buttonsTooltips.info()}
+          className="hidden md:inline-flex"
           onClick={toggleShowInfoPanel}
         >
           <Actions.InfoIcon />
@@ -95,7 +103,19 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
 
       <Actions.Dropdown
         tooltip={buttonsTooltips.options}
-        options={<AlbumOptions album={album} />}
+        options={
+          <>
+            <DropdownMenuGroup className="md:hidden">
+              <OptionsButtons.Like
+                onClick={handleLikeButton}
+                isStarred={isAlbumStarred}
+                label={buttonsTooltips.like()}
+              />
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator className="md:hidden" />
+            <AlbumOptions album={album} />
+          </>
+        }
       />
     </Actions.Container>
   );

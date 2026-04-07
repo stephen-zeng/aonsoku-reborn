@@ -1,6 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Actions } from "@/app/components/actions";
+import { OptionsButtons } from "@/app/components/options/buttons";
+import {
+  DropdownMenuGroup,
+  DropdownMenuSeparator,
+} from "@/app/components/ui/dropdown-menu";
 import { useSongList } from "@/app/hooks/use-song-list";
 import { subsonic } from "@/service/subsonic";
 import { useAppPages } from "@/store/app.store";
@@ -77,14 +82,6 @@ export function ArtistButtons({
   return (
     <Actions.Container>
       <Actions.Button
-        tooltip={buttonsTooltips.play}
-        buttonStyle="primary"
-        onClick={() => handlePlayArtistRadio()}
-      >
-        <Actions.PlayIcon />
-      </Actions.Button>
-
-      <Actions.Button
         tooltip={buttonsTooltips.shuffle}
         onClick={() => handlePlayArtistRadio(true)}
       >
@@ -92,7 +89,17 @@ export function ArtistButtons({
       </Actions.Button>
 
       <Actions.Button
+        tooltip={buttonsTooltips.play}
+        buttonStyle="primary"
+        className="md:order-first"
+        onClick={() => handlePlayArtistRadio()}
+      >
+        <Actions.PlayIcon />
+      </Actions.Button>
+
+      <Actions.Button
         tooltip={buttonsTooltips.like()}
+        className="hidden md:inline-flex"
         onClick={handleLikeButton}
       >
         <Actions.LikeIcon isStarred={isArtistStarred} />
@@ -101,6 +108,7 @@ export function ArtistButtons({
       {showInfoButton && (
         <Actions.Button
           tooltip={buttonsTooltips.info()}
+          className="hidden md:inline-flex"
           onClick={toggleShowInfoPanel}
         >
           <Actions.InfoIcon />
@@ -109,7 +117,19 @@ export function ArtistButtons({
 
       <Actions.Dropdown
         tooltip={buttonsTooltips.options}
-        options={<ArtistOptions artist={artist} />}
+        options={
+          <>
+            <DropdownMenuGroup className="md:hidden">
+              <OptionsButtons.Like
+                onClick={handleLikeButton}
+                isStarred={isArtistStarred}
+                label={buttonsTooltips.like()}
+              />
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator className="md:hidden" />
+            <ArtistOptions artist={artist} />
+          </>
+        }
       />
     </Actions.Container>
   );

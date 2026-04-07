@@ -62,6 +62,9 @@ export default function Album() {
       type: "link",
       link: ROUTES.ALBUMS.GENRE(album.genre),
     },
+  ];
+
+  const secondaryBadges: BadgesData = [
     {
       content: album.songCount
         ? t("playlist.songCount", { count: album.songCount })
@@ -137,6 +140,7 @@ export default function Album() {
         coverArtSize="700"
         coverArtAlt={album.name}
         badges={badges}
+        secondaryBadges={secondaryBadges}
       />
 
       <ListWrapper>

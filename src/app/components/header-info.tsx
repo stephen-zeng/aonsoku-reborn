@@ -25,7 +25,7 @@ export function HeaderInfoGenerator({
   badges,
 }: HeaderInfoProps) {
   return (
-    <div className="flex flex-wrap text-sm">
+    <div className="flex flex-wrap text-sm justify-center md:justify-start">
       <Fragment>
         {badges
           .filter((item) => item.content)
