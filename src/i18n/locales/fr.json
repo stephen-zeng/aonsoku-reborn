@@ -136,7 +136,6 @@
     "library": "Bibliothèque",
     "artists": "Artistes",
     "emptyPlaylist": "Aucune liste de lecture créée",
-    "podcasts": "Podcasts",
     "collapse": "Réduire la barre latérale",
     "expand": "Développer la barre latérale"
   },
@@ -375,11 +374,8 @@
     "info": "Plus d'infos",
     "goto": {
       "artist": "Aller à l'artiste",
-      "album": "Aller à l'album",
-      "episode": "Aller à l'épisode",
-      "podcast": "Aller au podcast"
-    },
-    "markAsPlayed": "Marquer comme joué"
+      "album": "Aller à l'album"
+    }
   },
   "settings": {
     "audio": {
@@ -412,22 +408,6 @@
       }
     },
     "content": {
-      "podcast": {
-        "group": "Podcasts",
-        "description": "Activer l'intégration avec le service Aonsoku Podcasts.",
-        "credentials": {
-          "label": "Utiliser l'URL de l'utilisateur connecté et du serveur",
-          "url": "URL du serveur",
-          "user": "Nom d'utilisateur",
-          "error": "Le nom d'utilisateur et l'URL du serveur sont nécessaires."
-        },
-        "service": {
-          "url": "URL du service de podcasts"
-        },
-        "enabled": {
-          "label": "Activer l'intégration"
-        }
-      },
       "sidebar": {
         "radios": {
           "section": "Masquer la section des radios"
@@ -601,87 +581,6 @@
   "warnings": {
     "reload": "Une musique est en cours de lecture !\nÊtes-vous sûr·e de vouloir recharger la page ?",
     "songError": "Impossible de jouer le titre, vérifiez le serveur !"
-  },
-  "podcasts": {
-    "form": {
-      "addButton": "Ajouter un podcast",
-      "search": "Rechercher des podcasts…",
-      "dialog": {
-        "title": "Créer un podcast",
-        "feedUrl": "URL du flux",
-        "saveButton": "Enregistrer",
-        "message": "Vous pouvez ajouter plusieurs URL, une par ligne.",
-        "validations": {
-          "url": "Veuillez fournir des URL valides.",
-          "urlLength": "Les URL doivent avoir au moins 10 caractères",
-          "protocol": "Les URL doivent commencer par http:// ou https://",
-          "atLeastOneUrl": "Veuillez fournir au moins une URL."
-        }
-      },
-      "latestEpisodes": "Derniers épisodes",
-      "toasts": {
-        "success": "Podcast créé avec succès ! Il sera disponible à l'écoute dans quelques minutes !",
-        "error": "Échec de la création du podcast !"
-      }
-    },
-    "filters": {
-      "episodes": {
-        "orderBy": {
-          "title": "Titre",
-          "duration": "Durée",
-          "publishDate": "Date de publication"
-        },
-        "search": "Recherche d'épisodes…"
-      },
-      "podcasts": {
-        "orderBy": {
-          "title": "Titre",
-          "episodeCount": "Nombre d'épisodes"
-        }
-      }
-    },
-    "header": {
-      "feed": "Flux",
-      "website": "Site Web officiel",
-      "unfollow": {
-        "tooltip": "Se désabonner de {{title}}",
-        "dialog": {
-          "title": "Êtes-vous sûr·e de vouloir vous désabonner de ce podcast ?",
-          "description": "Pour écouter ce podcast à l'avenir, vous devrez le recréer."
-        },
-        "toasts": {
-          "success": "Vous vous êtes bien désabonné·e du podcast !",
-          "error": "Une erreur s'est produite en essayant de vous désabonner du podcast. Veuillez réessayer."
-        }
-      },
-      "episodeCount_one": "{{count}} épisode",
-      "episodeCount_many": "{{count}} épisodes",
-      "episodeCount_other": "{{count}} épisodes"
-    },
-    "list": {
-      "episodes": "Épisodes",
-      "notFoundMessage": "Ce podcast n'a pas encore d'épisodes !",
-      "progress": {
-        "remainingTime": "il reste {{time}}",
-        "completed": "Terminé"
-      }
-    },
-    "emptyPage": {
-      "description": "Il semble que vous n'ayez pas encore ajouté de podcasts. Ajoutez-en un ci-dessus !",
-      "message": "Aucun podcast ajouté"
-    },
-    "emptyResults": {
-      "title": "Aucun résultat trouvé.",
-      "info": "Nous n'avons pas trouvé de podcasts correspondant à votre recherche.",
-      "action": "Veuillez vérifier l'orthographe ou essayez d'autres mots-clés."
-    },
-    "latestEpisodes": {
-      "emptyPage": {
-        "goToPodcasts": "Aller aux podcasts",
-        "description": "Essayer d'ajouter plus de podcasts.",
-        "message": "Aucun épisode disponible"
-      }
-    }
   },
   "dayjs": {
     "relativeTime": {

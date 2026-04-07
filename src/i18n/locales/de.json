@@ -11,7 +11,6 @@
     "favorites": "Favoriten",
     "playlists": "Wiedergabelisten",
     "emptyPlaylist": "Noch keine Wiedergabelisten erstellt",
-    "podcasts": "Podcasts",
     "collapse": "Seitenleiste einklappen",
     "expand": "Seitenleiste ausklappen"
   },
@@ -434,11 +433,8 @@
     "info": "Informationen abrufen",
     "goto": {
       "artist": "Zum Künstler gehen",
-      "album": "Zum Album gehen",
-      "podcast": "Zum Podcast gehen",
-      "episode": "Zu Episode gehen"
-    },
-    "markAsPlayed": "Als gespielt markieren"
+      "album": "Zum Album gehen"
+    }
   },
   "time": {
     "days_one": "{{days}} Tag",
@@ -609,103 +605,7 @@
           "section": "Radio-Abschnitt ausblenden"
         },
         "description": "Sichtbarkeit und Anordnung der Abschnitte in der Seitenleiste verwalten."
-      },
-      "podcast": {
-        "description": "Aktivieren Sie die Integration mit dem Aonsoku Podcasts-Dienst.",
-        "enabled": {
-          "label": "Integration aktivieren"
-        },
-        "group": "Podcasts",
-        "credentials": {
-          "error": "Benutzername und Server-URL sind erforderlich.",
-          "label": "Eingeloggten Benutzer und Server-URL verwenden",
-          "user": "Benutzername",
-          "url": "Server-URL"
-        },
-        "service": {
-          "url": "URL des Podcast-Dienstes"
-        }
       }
-    }
-  },
-  "podcasts": {
-    "header": {
-      "episodeCount_one": "{{count}} Episode",
-      "episodeCount_other": "{{count}} Episoden",
-      "feed": "Feed",
-      "website": "Offizielle Website",
-      "unfollow": {
-        "dialog": {
-          "title": "Bist du sicher, dass du diesem Podcast entfolgen willst?",
-          "description": "Um diesen Podcast in Zukunft erneut anzuhören zu können, wirst du ihn erneut erstellen müssen."
-        },
-        "toasts": {
-          "error": "Ein Fehler ist aufgetreten als du versucht hast dem Podcast zu entfolgen. Bitte versuche es erneut.",
-          "success": "Du bist diesem Podcast erfolgreich entfolgt!"
-        },
-        "tooltip": "{{title}} entfolgen"
-      }
-    },
-    "filters": {
-      "podcasts": {
-        "orderBy": {
-          "episodeCount": "Episodenanzahl",
-          "title": "Titel"
-        }
-      },
-      "episodes": {
-        "orderBy": {
-          "duration": "Laufzeit",
-          "title": "Titel",
-          "publishDate": "Veröffentlichungsdatum"
-        },
-        "search": "Suche nach Episoden …"
-      }
-    },
-    "list": {
-      "episodes": "Episoden",
-      "notFoundMessage": "Dieser Podcast hat noch keine Episoden!",
-      "progress": {
-        "completed": "Abgeschlossen",
-        "remainingTime": "{{time}} verbleibend"
-      }
-    },
-    "form": {
-      "latestEpisodes": "Neueste Episoden",
-      "dialog": {
-        "saveButton": "Speichern",
-        "validations": {
-          "url": "Bitte gib valide URLs an.",
-          "urlLength": "URLs müssen mindestens 10 Zeichen lang sein",
-          "protocol": "URLs müssen mit http:// oder https:// anfangen",
-          "atLeastOneUrl": "Bitte gib mindestens eine URL an."
-        },
-        "title": "Podcast erstellen",
-        "feedUrl": "Feed-URL",
-        "message": "Du kannst mehrere URLs auf einmal hinzufügen, eine pro Zeile."
-      },
-      "toasts": {
-        "success": "Der Podcast wurde erfolgreich hinzugefügt! Er wird in Kürze zum Hören bereitstehen!",
-        "error": "Erstellen des Podcasts fehlgeschlagen!"
-      },
-      "addButton": "Podcast hinzufügen",
-      "search": "Durchsuche Podcasts …"
-    },
-    "emptyResults": {
-      "info": "Wir konnten keine Podcasts passend zu deiner Suche finden.",
-      "action": "Bitte überprüfe deine Rechtschreibung oder benutze andere Schlüsselwörter.",
-      "title": "Keine Ergebnisse gefunden."
-    },
-    "latestEpisodes": {
-      "emptyPage": {
-        "message": "Keine Episoden verfügbar",
-        "goToPodcasts": "Zu den Podcasts gehen",
-        "description": "Versuche mehr Podcasts hinzuzufügen."
-      }
-    },
-    "emptyPage": {
-      "description": "Es sieht so aus, als noch keine Podcasts hinzugefügt wurden. Füge oberhalb einen hinzu!",
-      "message": "Kein Podcast hinzugefügt"
     }
   }
 }

@@ -14,8 +14,8 @@ import { manageMediaSession } from "@/utils/setMediaSession";
 export function MediaSessionObserver() {
   const { t } = useTranslation();
   const isPlaying = usePlayerIsPlaying();
-  const { isRadio, isSong, isPodcast } = usePlayerMediaType();
-  const { currentList, currentSongIndex, podcastList, radioList } =
+  const { isRadio, isSong } = usePlayerMediaType();
+  const { currentList, currentSongIndex, radioList } =
     usePlayerSonglist();
   const progress = usePlayerProgress();
   const radioLabel = t("radios.label");
@@ -46,14 +46,11 @@ export function MediaSessionObserver() {
         }
       : (currentList[currentSongIndex] ?? null);
   const radio = radioList[currentSongIndex] ?? null;
-  const episode = podcastList[currentSongIndex] ?? null;
 
   // In remote mode, check if we have currentSong data
   const hasNothingPlaying = isRemoteActive
     ? !remoteCurrentSong || !remoteCurrentSong.id
-    : currentList.length === 0 &&
-      radioList.length === 0 &&
-      podcastList.length === 0;
+    : currentList.length === 0 && radioList.length === 0;
 
   const resetAppTitle = useCallback(() => {
     document.title = appName;
@@ -61,7 +58,10 @@ export function MediaSessionObserver() {
 
   // Update media session handlers when remote control state changes
   useEffect(() => {
-    console.log("[MediaSession] Remote control state changed:", isRemoteActive);
+    console.log(
+      "[MediaSession] Remote control state changed:",
+      isRemoteActive,
+    );
     manageMediaSession.setHandlers();
   }, [isRemoteActive]);
 
@@ -121,24 +121,12 @@ export function MediaSessionObserver() {
         manageMediaSession.setMediaSession(song);
         lastMetadataRef.current = metadataKey;
       }
-    } else if (isPodcast && episode) {
-      title = `${episode.title} - ${episode.podcast.title} | Aonsoku`;
-      metadataKey = `podcast:${episode.id}`;
-
-      // Only update if changed
-      if (lastMetadataRef.current !== metadataKey) {
-        console.log("[MediaSession] Setting podcast session:", title);
-        manageMediaSession.setPodcastMediaSession(episode);
-        lastMetadataRef.current = metadataKey;
-      }
     }
 
     document.title = title;
   }, [
-    episode,
     hasNothingPlaying,
     isPlaying,
-    isPodcast,
     isRadio,
     isSong,
     radio,

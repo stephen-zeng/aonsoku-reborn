@@ -14,7 +14,6 @@
     "favorites": "Oblíbené",
     "playlists": "Playlisty",
     "emptyPlaylist": "Zatím nebyly vytvořeny žádné playlisty",
-    "podcasts": "Podcasty",
     "miniSearch": "Hledat",
     "radios": "Rádiové stanice",
     "artists": "Umělci",
@@ -229,12 +228,9 @@
     },
     "goto": {
       "artist": "Přejít na umělce",
-      "album": "Přejít na album",
-      "episode": "Přejít na epizodu",
-      "podcast": "Přejít na podcast"
+      "album": "Přejít na album"
     },
-    "download": "Stáhnout",
-    "markAsPlayed": "Označit jako přehrané"
+    "download": "Stáhnout"
   },
   "radios": {
     "addRadio": "Přidat rádio",

@@ -8,7 +8,6 @@ import {
   useState,
 } from "react";
 import { ProgressSlider } from "@/app/components/ui/slider";
-import { podcasts } from "@/service/podcasts";
 import { subsonic } from "@/service/subsonic";
 import {
   usePlayerActions,
@@ -27,17 +26,19 @@ interface PlayerProgressProps {
   isBuffering?: boolean;
 }
 
-export function PlayerProgress({ audioRef, isBuffering = false }: PlayerProgressProps) {
+export function PlayerProgress({
+  audioRef,
+  isBuffering = false,
+}: PlayerProgressProps) {
   const progress = usePlayerProgress();
   const [localProgress, setLocalProgress] = useState(progress);
   const [isLocalSeeking, setIsLocalSeeking] = useState(false);
   const currentDuration = usePlayerDuration();
   const isPlaying = usePlayerIsPlaying();
-  const { currentSong, currentList, podcastList, currentSongIndex } =
+  const { currentSong, currentList } =
     usePlayerSonglist();
-  const { isSong, isPodcast } = usePlayerMediaType();
-  const { setProgress, setUpdatePodcastProgress, getCurrentPodcastProgress } =
-    usePlayerActions();
+  const { isSong } = usePlayerMediaType();
+  const { setProgress } = usePlayerActions();
   const isRemoteControlActive = useIsRemoteControlActive();
   const isScrobbleSentRef = useRef(false);
   const isNowPlayingSentRef = useRef(false);
@@ -137,23 +138,22 @@ export function PlayerProgress({ audioRef, isBuffering = false }: PlayerProgress
       return;
     }
     if (isRemoteControlActive || !isSong) return;
-    if (isSong) {
-      const progressPercentage = (progress / currentDuration) * 100;
 
-      if (progressPercentage === 0) {
-        isScrobbleSentRef.current = false;
-        progressTicks.current = 0;
-      } else {
-        progressTicks.current += 1;
+    const progressPercentage = (progress / currentDuration) * 100;
 
-        if (
-          (progressTicks.current >= currentDuration / 2 ||
-            progressTicks.current >= 60 * 4) &&
-          !isScrobbleSentRef.current
-        ) {
-          sendScrobble(currentSong.id);
-          isScrobbleSentRef.current = true;
-        }
+    if (progressPercentage === 0) {
+      isScrobbleSentRef.current = false;
+      progressTicks.current = 0;
+    } else {
+      progressTicks.current += 1;
+
+      if (
+        (progressTicks.current >= currentDuration / 2 ||
+          progressTicks.current >= 60 * 4) &&
+        !isScrobbleSentRef.current
+      ) {
+        sendScrobble(currentSong.id);
+        isScrobbleSentRef.current = true;
       }
     }
   }, [
@@ -165,40 +165,6 @@ export function PlayerProgress({ audioRef, isBuffering = false }: PlayerProgress
     isPlaying,
     isRemoteControlActive,
     isLocalSeeking,
-  ]);
-
-  // Used to save listening progress to backend every 30 seconds
-  useEffect(() => {
-    if (isRemoteControlActive || !isPodcast || !podcastList) return;
-    if (progress === 0) return;
-
-    const send = (progress / 30) % 1 === 0;
-    if (!send) return;
-
-    const podcast = podcastList[currentSongIndex] ?? null;
-    if (!podcast) return;
-
-    const podcastProgress = getCurrentPodcastProgress();
-    if (progress === podcastProgress) return;
-
-    setUpdatePodcastProgress(progress);
-
-    podcasts
-      .saveEpisodeProgress(podcast.id, progress)
-      .then(() => {
-        logger.info("Progress sent:", progress);
-      })
-      .catch((error) => {
-        logger.error("Error sending progress", error);
-      });
-  }, [
-    currentSongIndex,
-    getCurrentPodcastProgress,
-    isPodcast,
-    podcastList,
-    progress,
-    setUpdatePodcastProgress,
-    isRemoteControlActive,
   ]);
 
   const currentTime = convertSecondsToTime(
@@ -229,7 +195,7 @@ export function PlayerProgress({ audioRef, isBuffering = false }: PlayerProgress
       >
         {currentTime}
       </small>
-      {!isEmpty || isPodcast ? (
+      {!isEmpty ? (
         <ProgressSlider
           defaultValue={[0]}
           value={isLocalSeeking ? [localProgress] : [progress]}

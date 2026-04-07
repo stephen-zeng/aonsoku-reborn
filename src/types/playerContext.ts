@@ -5,7 +5,6 @@ import {
   QueueData,
   RemoteDeviceInfo,
 } from "./lanControl";
-import { EpisodeWithPodcast } from "./responses/podcasts";
 import { Radio } from "./responses/radios";
 import { ISong } from "./responses/song";
 
@@ -23,8 +22,6 @@ export interface ISongList {
   originalList: ISong[];
   originalSongIndex: number;
   radioList: Radio[];
-  podcastList: EpisodeWithPodcast[];
-  podcastListProgresses: number[];
 }
 
 export type FullscreenPlayerTab = "queue" | "playing" | "lyrics";
@@ -36,8 +33,7 @@ export interface IPlayerState {
   isSongStarred: boolean;
   volume: number;
   currentDuration: number;
-  mediaType: "song" | "radio" | "podcast";
-  currentPlaybackRate: number;
+  mediaType: "song" | "radio";
   audioPlayerRef: HTMLAudioElement | null;
   mainDrawerState: boolean;
   queueState: boolean;
@@ -191,16 +187,6 @@ export interface IPlayerActions {
   handleSongEnded: () => void;
   getCurrentProgress: () => number;
   resetConfig: () => void;
-  setPlayPodcast: (
-    list: EpisodeWithPodcast[],
-    index: number,
-    progress: number,
-  ) => void;
-  setUpdatePodcastProgress: (value: number) => void;
-  getCurrentPodcastProgress: () => number;
-  setPlaybackRate: (value: number) => void;
-  setNextPodcast: (episode: EpisodeWithPodcast, progress: number) => void;
-  setLastPodcast: (episode: EpisodeWithPodcast, progress: number) => void;
   updateQueueChecks: () => void;
   setCurrentSongColor: (value: string | null) => void;
   setCurrentSongIntensity: (value: number) => void;

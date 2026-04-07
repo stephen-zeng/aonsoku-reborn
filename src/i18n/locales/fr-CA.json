@@ -259,12 +259,9 @@
     },
     "goto": {
       "artist": "Aller à l'artiste",
-      "album": "Aller à l'album",
-      "podcast": "Aller au balado",
-      "episode": "Aller à l'épisode"
+      "album": "Aller à l'album"
     },
     "info": "Plus d'infos",
-    "markAsPlayed": "Marquer comme joué",
     "play": "Lecture",
     "addLast": "Ajouter à la file",
     "playNext": "Lecture suivante",
@@ -323,22 +320,6 @@
       }
     },
     "content": {
-      "podcast": {
-        "enabled": {
-          "label": "Activer l'intégration"
-        },
-        "credentials": {
-          "label": "Utiliser l'URL de l'utilisateur connecté et du serveur",
-          "error": "Le nom d'utilisateur et l'URL du serveur sont nécessaires.",
-          "user": "Nom d'utilisateur",
-          "url": "URL du serveur"
-        },
-        "group": "Balados",
-        "description": "Activer l'intégration avec le service de balados Aonsoku.",
-        "service": {
-          "url": "URL du service de balados"
-        }
-      },
       "sidebar": {
         "group": "Barre latérale",
         "description": "Gérer la visibilité et l'organisation des sections affichées dans la barre latérale.",
@@ -416,7 +397,6 @@
     "albums": "Albums",
     "playlists": "Listes de lecture",
     "radios": "Radios",
-    "podcasts": "Balados",
     "emptyPlaylist": "Aucune liste de lecture créée",
     "home": "Accueil",
     "search": "Recherche…",
@@ -517,87 +497,6 @@
     "songCount_one": "{{count}} titre",
     "songCount_many": "{{count}} titres",
     "songCount_other": "{{count}} titres"
-  },
-  "podcasts": {
-    "form": {
-      "dialog": {
-        "feedUrl": "URL du flux",
-        "saveButton": "Enregistrer",
-        "title": "Créer un balado",
-        "message": "Vous pouvez ajouter plusieurs URL, une par ligne.",
-        "validations": {
-          "urlLength": "Les URL doivent avoir au moins 10 caractères",
-          "url": "Veuillez fournir des URL valides.",
-          "protocol": "Les URL doivent commencer par http:// ou https://",
-          "atLeastOneUrl": "Veuillez fournir au moins une URL."
-        }
-      },
-      "search": "Rechercher des balados…",
-      "toasts": {
-        "error": "Échec de la création du balado!",
-        "success": "Balado créé avec succès! Il sera disponible à l'écoute dans quelques minutes!"
-      },
-      "latestEpisodes": "Derniers épisodes",
-      "addButton": "Ajouter un balado"
-    },
-    "emptyPage": {
-      "description": "Il semble que vous n'ayez pas encore ajouté de balados. Ajoutez-en un ci-dessus!",
-      "message": "Aucun balado ajouté"
-    },
-    "emptyResults": {
-      "title": "Aucun résultat trouvé.",
-      "info": "Nous n'avons pas trouvé de balados correspondant à votre recherche.",
-      "action": "Veuillez vérifier l'orthographe ou essayez d'autres mots-clés."
-    },
-    "filters": {
-      "episodes": {
-        "search": "Recherche d'épisodes…",
-        "orderBy": {
-          "publishDate": "Date de publication",
-          "title": "Titre",
-          "duration": "Durée"
-        }
-      },
-      "podcasts": {
-        "orderBy": {
-          "title": "Titre",
-          "episodeCount": "Nombre d'épisodes"
-        }
-      }
-    },
-    "header": {
-      "feed": "Flux",
-      "unfollow": {
-        "toasts": {
-          "success": "Vous vous êtes bien désabonné·e du balado!",
-          "error": "Une erreur s'est produite en essayant de vous désabonner du balado. Veuillez réessayer."
-        },
-        "dialog": {
-          "description": "Pour écouter ce balado à l'avenir, vous devrez le recréer.",
-          "title": "Êtes-vous sûr·e de vouloir vous désabonner de ce balado?"
-        },
-        "tooltip": "Se désabonner de {{title}}"
-      },
-      "website": "Site Web officiel",
-      "episodeCount_one": "{{count}} épisode",
-      "episodeCount_many": "{{count}} épisodes",
-      "episodeCount_other": "{{count}} épisodes"
-    },
-    "list": {
-      "progress": {
-        "completed": "Terminé",
-        "remainingTime": "il reste {{time}}"
-      },
-      "notFoundMessage": "Ce balado n'a pas encore d'épisodes!",
-      "episodes": "Épisodes"
-    },
-    "latestEpisodes": {
-      "emptyPage": {
-        "message": "Aucun épisode disponible",
-        "description": "Essayer d'ajouter plus de balados.",
-        "goToPodcasts": "Aller aux balados"
-      }
-    }
   },
   "fullscreen": {
     "lyrics": "Paroles",

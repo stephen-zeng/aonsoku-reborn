@@ -184,8 +184,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               currentList: [],
               currentSongIndex: 0,
               radioList: [],
-              podcastList: [],
-              podcastListProgresses: [],
             },
             playerState: {
               isPlaying: false,
@@ -201,7 +199,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               lyricsState: false,
               fullscreenPlayerOpen: false,
               fullscreenPlayerTab: "playing",
-              currentPlaybackRate: 1,
               hasPrev: false,
               hasNext: false,
             },
@@ -364,7 +361,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.songlist.originalSongIndex = index;
                   state.playerState.mediaType = "song";
                   state.songlist.radioList = [];
-                  state.songlist.podcastList = [];
                 });
 
                 if (shuffle) {
@@ -421,7 +417,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                     state.playerState.isShuffleActive = false;
                     state.playerState.isPlaying = true;
                     state.songlist.radioList = [];
-                    state.songlist.podcastList = [];
                   });
                 }
               },
@@ -552,111 +547,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.playerState.isPlaying = true;
                 });
               },
-              setPlayPodcast: (list, index, progress) => {
-                if (isRemoteActive()) return;
-                const { mediaType } = get().playerState;
-                const { podcastList, currentSongIndex } = get().songlist;
-
-                if (
-                  mediaType === "podcast" &&
-                  podcastList.length > 0 &&
-                  list[index].id === podcastList[currentSongIndex].id
-                ) {
-                  set((state) => {
-                    state.playerState.isPlaying = true;
-                  });
-                  return;
-                }
-
-                get().actions.clearPlayerState();
-                set((state) => {
-                  state.playerState.mediaType = "podcast";
-                  state.songlist.podcastList = list;
-                  state.songlist.currentSongIndex = index;
-                  state.playerState.isPlaying = true;
-                  state.songlist.podcastListProgresses[index] = progress;
-                });
-              },
-              setUpdatePodcastProgress: (progress) => {
-                if (isRemoteActive()) return;
-                const { mediaType } = get().playerState;
-                if (mediaType !== "podcast") return;
-
-                const { currentSongIndex } = get().songlist;
-
-                set((state) => {
-                  state.songlist.podcastListProgresses[currentSongIndex] =
-                    progress;
-                });
-              },
-              getCurrentPodcastProgress: () => {
-                if (isRemoteActive()) return 0;
-                const { mediaType } = get().playerState;
-                if (mediaType !== "podcast") return 0;
-
-                const { podcastListProgresses, currentSongIndex } =
-                  get().songlist;
-
-                return podcastListProgresses[currentSongIndex] ?? 0;
-              },
-              setNextPodcast: (episode, progress) => {
-                if (isRemoteActive()) return;
-                const { podcastList, currentSongIndex } = get().songlist;
-
-                const currentListIds = new Set(
-                  podcastList.map((episode) => episode.id),
-                );
-                if (currentListIds.has(episode.id)) {
-                  return;
-                }
-
-                const newPodcastList = addNextSongList(
-                  currentSongIndex,
-                  podcastList,
-                  [episode],
-                );
-
-                const nextIndex = currentSongIndex + 1;
-
-                set((state) => {
-                  state.songlist.podcastList = newPodcastList;
-                  state.playerState.mediaType = "podcast";
-                  state.songlist.podcastListProgresses[nextIndex] = progress;
-                });
-
-                const { isPlaying } = get().playerState;
-
-                if (!isPlaying) {
-                  get().actions.setPlayingState(true);
-                }
-              },
-              setLastPodcast: (episode, progress) => {
-                if (isRemoteActive()) return;
-                const { podcastList } = get().songlist;
-
-                const currentListIds = new Set(
-                  podcastList.map((episode) => episode.id),
-                );
-                if (currentListIds.has(episode.id)) {
-                  return;
-                }
-
-                const newPodcastList = [...podcastList, episode];
-
-                const lastIndex = newPodcastList.length - 1;
-
-                set((state) => {
-                  state.songlist.podcastList = newPodcastList;
-                  state.playerState.mediaType = "podcast";
-                  state.songlist.podcastListProgresses[lastIndex] = progress;
-                });
-
-                const { isPlaying } = get().playerState;
-
-                if (!isPlaying) {
-                  get().actions.setPlayingState(true);
-                }
-              },
               setPlayingState: (status) => {
                 if (isRemoteActive()) {
                   remoteSend(
@@ -772,8 +662,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.songlist.currentList = [];
                   state.songlist.currentSong = {} as ISong;
                   state.songlist.radioList = [];
-                  state.songlist.podcastList = [];
-                  state.songlist.podcastListProgresses = [];
                   state.songlist.originalSongIndex = 0;
                   state.songlist.currentSongIndex = 0;
                   state.playerState.mediaType = "song";
@@ -840,22 +728,15 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   currentList,
                   currentSongIndex,
                   radioList,
-                  podcastList,
                 } = get().songlist;
 
                 const nextIndex = currentSongIndex + 1;
 
-                if (mediaType === "song") {
-                  return nextIndex < currentList.length;
-                }
                 if (mediaType === "radio") {
                   return nextIndex < radioList.length;
                 }
-                if (mediaType === "podcast") {
-                  return nextIndex < podcastList.length;
-                }
 
-                return false;
+                return nextIndex < currentList.length;
               },
               hasPrevSong: () => {
                 const { currentSongIndex } = get().songlist;
@@ -935,11 +816,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
 
                 set((state) => {
                   state.songlist.currentList = songList;
-                });
-              },
-              setPlaybackRate: (value) => {
-                set((state) => {
-                  state.playerState.currentPlaybackRate = value;
                 });
               },
               setAudioPlayerRef: (audioPlayer) => {
@@ -1348,7 +1224,7 @@ usePlayerStore.subscribe(
   () => {
     const playerStore = usePlayerStore.getState();
     const { mediaType } = playerStore.playerState;
-    if (mediaType === "radio" || mediaType === "podcast") return;
+    if (mediaType === "radio") return;
 
     playerStore.actions.checkIsSongStarred();
     playerStore.actions.setCurrentSong();
@@ -1369,7 +1245,6 @@ usePlayerStore.subscribe(
   ({ songlist }) => [
     songlist.currentList,
     songlist.radioList,
-    songlist.podcastList,
     songlist.currentSongIndex,
   ],
   () => {
@@ -1413,18 +1288,17 @@ function updateDesktopState() {
   if (!isDesktop()) return;
 
   const { isPlaying, hasPrev, hasNext } = usePlayerStore.getState().playerState;
-  const { currentList, podcastList, radioList } =
+  const { currentList, radioList } =
     usePlayerStore.getState().songlist;
 
   const hasSongs = currentList.length >= 1;
-  const hasPodcasts = podcastList.length >= 1;
   const hasRadios = radioList.length >= 1;
 
   window.api.updatePlayerState({
     isPlaying,
     hasPrevious: hasPrev,
     hasNext,
-    hasSonglist: hasSongs || hasPodcasts || hasRadios,
+    hasSonglist: hasSongs || hasRadios,
   });
 }
 
@@ -1453,7 +1327,6 @@ export const usePlayerSonglist = () =>
       currentList,
       currentSong,
       currentSongIndex,
-      podcastList,
       radioList,
     } = state.songlist;
 
@@ -1461,7 +1334,6 @@ export const usePlayerSonglist = () =>
       currentList,
       currentSong,
       currentSongIndex,
-      podcastList,
       radioList,
     };
   });
@@ -1517,12 +1389,10 @@ export const usePlayerMediaType = () => {
   const mediaType = usePlayerStore((state) => state.playerState.mediaType);
   const isSong = mediaType === "song";
   const isRadio = mediaType === "radio";
-  const isPodcast = mediaType === "podcast";
 
   return {
     isSong,
     isRadio,
-    isPodcast,
   };
 };
 

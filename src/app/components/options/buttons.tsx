@@ -1,6 +1,5 @@
 import omit from "lodash/omit";
 import {
-  CheckIcon,
   Disc3,
   DownloadIcon,
   Heart,
@@ -11,7 +10,6 @@ import {
   Pencil,
   PlayIcon,
   PlusIcon,
-  PodcastIcon,
   Trash,
   User,
 } from "lucide-react";
@@ -177,45 +175,6 @@ function SongInfo({ variant = "dropdown", ...props }: DropdownMenuItemProps) {
   );
 }
 
-function MarkAsPlayed({
-  variant = "dropdown",
-  ...props
-}: DropdownMenuItemProps) {
-  const { t } = useTranslation();
-
-  return (
-    <MenuItemFactory
-      variant={variant}
-      icon={<CheckIcon className="mr-2 h-4 w-4" />}
-      label={t("options.markAsPlayed")}
-      {...props}
-    />
-  );
-}
-
-type GotoPodcastProps = DropdownMenuItemProps & {
-  type: "podcast" | "episode";
-};
-
-function GotoPodcast({
-  variant = "dropdown",
-  type = "podcast",
-  ...props
-}: GotoPodcastProps) {
-  const { t } = useTranslation();
-
-  const label = t(`options.goto.${type}`);
-
-  return (
-    <MenuItemFactory
-      variant={variant}
-      icon={<PodcastIcon className="mr-2 h-4 w-4" />}
-      label={label}
-      {...props}
-    />
-  );
-}
-
 function GotoArtist({
   variant = "dropdown",
   ...props
@@ -290,8 +249,6 @@ export const OptionsButtons = {
   RemoveFromPlaylist,
   RemoveFromQueue,
   SongInfo,
-  MarkAsPlayed,
-  GotoPodcast,
   GotoArtist,
   GotoAlbum,
 };

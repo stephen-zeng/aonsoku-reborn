@@ -36,7 +36,7 @@ export function AudioPlayer({
   const [previousGain, setPreviousGain] = useState(1);
   const [audioSrc, setAudioSrc] = useState<string | undefined>(undefined);
   const { replayGainEnabled, replayGainError } = useReplayGainState();
-  const { isSong, isRadio, isPodcast } = usePlayerMediaType();
+  const { isSong, isRadio } = usePlayerMediaType();
   const { setReplayGainEnabled, setReplayGainError } = useReplayGainActions();
   const { volume } = usePlayerVolume();
   const isPlaying = usePlayerIsPlaying();
@@ -235,13 +235,12 @@ export function AudioPlayer({
         handleSongError();
       }
     }
-    if (isSong || isPodcast) handleSong();
+    if (isSong) handleSong();
   }, [
     audioRef,
     handleSongError,
     isPlaying,
     isSong,
-    isPodcast,
     resumeContext,
     shouldUseNativeAudio,
   ]);

@@ -5,7 +5,6 @@ import {
   ListMusicIcon,
   Mic2Icon,
   Music2Icon,
-  PodcastIcon,
   RadioIcon,
 } from "lucide-react";
 import { memo } from "react";
@@ -29,7 +28,6 @@ const Mic2 = memo(Mic2Icon);
 const Music2 = memo(Music2Icon);
 const Radio = memo(RadioIcon);
 const DiscAlbum = memo(DiscAlbumIcon);
-const Podcast = memo(PodcastIcon);
 const Home = memo(HomeIcon);
 const Heart = memo(HeartIcon);
 
@@ -77,7 +75,6 @@ export enum SidebarItems {
   Favorites = "favorites",
   Albums = "albums",
   Playlists = "playlists",
-  Podcasts = "podcasts",
   Radios = "radios",
 }
 
@@ -120,12 +117,6 @@ export const libraryItems = [
     title: "sidebar.playlists",
     route: ROUTES.LIBRARY.PLAYLISTS,
     icon: ListMusic,
-  },
-  {
-    id: SidebarItems.Podcasts,
-    title: "sidebar.podcasts",
-    route: ROUTES.LIBRARY.PODCASTS,
-    icon: Podcast,
   },
   {
     id: SidebarItems.Radios,

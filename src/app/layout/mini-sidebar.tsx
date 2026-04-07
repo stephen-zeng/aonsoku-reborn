@@ -1,12 +1,11 @@
 import { MiniSidebarItem } from "@/app/components/sidebar/mini-item";
 import { cn } from "@/lib/utils";
-import { useAppPages, useAppPodcasts } from "@/store/app.store";
+import { useAppPages } from "@/store/app.store";
 import { useSidebar } from "@/store/ui.store";
 import { libraryItems, mainMenuItems } from "./sidebar";
 
 export function MiniSidebar() {
   const { hideRadiosSection } = useAppPages();
-  const { active: isPodcastEnabled } = useAppPodcasts();
   const { isCollapsed } = useSidebar();
 
   return (
@@ -19,7 +18,6 @@ export function MiniSidebar() {
       {menuItems.map((item) => {
         // Setting to show/hide Radios section
         if (hideRadiosSection && item.id === "radios") return null;
-        if (!isPodcastEnabled && item.id === "podcasts") return null;
 
         return <MiniSidebarItem item={item} key={item.route} />;
       })}

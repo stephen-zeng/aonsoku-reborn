@@ -15,7 +15,6 @@
     "albums": "Albümler",
     "playlists": "Çalma Listeleri",
     "radios": "Radyo İstasyonları",
-    "podcasts": "Podcastler",
     "emptyPlaylist": "Henüz çalma listesi oluşturulmadı"
   },
   "menu": {
@@ -201,87 +200,6 @@
     "recentAlbums": "Son albümler",
     "relatedArtists": "İlgili sanatçılar"
   },
-  "podcasts": {
-    "form": {
-      "latestEpisodes": "Son Bölümler",
-      "addButton": "Podcast Ekle",
-      "search": "Podcast ara…",
-      "dialog": {
-        "title": "Podcast Oluştur",
-        "feedUrl": "Feed URL'si",
-        "message": "Birden fazla URL ekleyebilirsiniz, her satıra bir tane.",
-        "saveButton": "Kaydet",
-        "validations": {
-          "url": "Lütfen geçerli URL'ler sağlayın.",
-          "urlLength": "URL'ler en az 10 karakter olmalıdır",
-          "protocol": "URL'ler http:// veya https:// ile başlamalıdır",
-          "atLeastOneUrl": "Lütfen en az bir URL sağlayın."
-        }
-      },
-      "toasts": {
-        "success": "Podcast başarıyla oluşturuldu! Birkaç dakika içinde dinlemeye hazır olacak!",
-        "error": "Podcast oluşturulamadı!"
-      }
-    },
-    "emptyPage": {
-      "message": "Podcast eklenmedi",
-      "description": "Henüz hiç podcast eklememişsiniz. Yukarıdan bir tane ekleyin!"
-    },
-    "latestEpisodes": {
-      "emptyPage": {
-        "message": "Bölüm bulunamadı",
-        "description": "Daha fazla podcast eklemeyi deneyin.",
-        "goToPodcasts": "Podcast'lere Git"
-      }
-    },
-    "emptyResults": {
-      "title": "Sonuç bulunamadı.",
-      "info": "Arama teriminizle eşleşen podcast bulamadık.",
-      "action": "Lütfen yazım hatası olup olmadığını kontrol edin veya farklı anahtar kelimeler deneyin."
-    },
-    "filters": {
-      "episodes": {
-        "search": "Bölüm ara…",
-        "orderBy": {
-          "publishDate": "Yayın Tarihi",
-          "title": "Başlık",
-          "duration": "Süre"
-        }
-      },
-      "podcasts": {
-        "orderBy": {
-          "title": "Başlık",
-          "episodeCount": "Bölüm Sayısı"
-        }
-      }
-    },
-    "header": {
-      "episodeCount_one": "{{count}} bölüm",
-      "episodeCount_many": "{{count}} bölüm",
-      "episodeCount_other": "{{count}} bölüm",
-      "feed": "Feed",
-      "website": "Resmi Web Sitesi",
-      "unfollow": {
-        "tooltip": "{{title}} takibini bırak",
-        "dialog": {
-          "title": "Bu podcast'i takibi bırakmak istediğinizden emin misiniz?",
-          "description": "Gelecekte bu podcast'i tekrar dinlemek için yeniden oluşturmanız gerekecektir."
-        },
-        "toasts": {
-          "success": "Podcast takibini başarıyla bıraktınız!",
-          "error": "Podcast takibini bırakırken bir hata oluştu. Lütfen tekrar deneyin."
-        }
-      }
-    },
-    "list": {
-      "episodes": "Bölümler",
-      "notFoundMessage": "Bu podcast'in henüz hiç bölümü yok!",
-      "progress": {
-        "remainingTime": "{{time}} kaldı",
-        "completed": "Tamamlandı"
-      }
-    }
-  },
   "table": {
     "columns": {
       "title": "Başlık",
@@ -441,12 +359,9 @@
       "removeSong": "Çalma listesinden kaldır"
     },
     "info": "Bilgi al",
-    "markAsPlayed": "Oynatıldı olarak işaretle",
     "goto": {
       "artist": "Sanatçıya git",
-      "album": "Albüme git",
-      "episode": "Bölüme git",
-      "podcast": "Podcast'e git"
+      "album": "Albüme git"
     }
   },
   "radios": {
@@ -671,22 +586,6 @@
         "description": "Kenar çubuğunda görüntülenen bölümlerin görünürlüğünü ve organizasyonunu yönetin.",
         "radios": {
           "section": "Radyolar bölümünü gizle"
-        }
-      },
-      "podcast": {
-        "group": "Podcast'ler",
-        "description": "Aonsoku Podcast servisi ile entegrasyonu etkinleştirin.",
-        "enabled": {
-          "label": "Entegrasyonu Etkinleştir"
-        },
-        "service": {
-          "url": "Podcast Servis URL'si"
-        },
-        "credentials": {
-          "label": "Oturum Açmış Kullanıcıyı ve Sunucu URL'sini Kullan",
-          "error": "Kullanıcı adı ve Sunucu URL'si gereklidir.",
-          "user": "Kullanıcı Adı",
-          "url": "Sunucu URL'si"
         }
       }
     },

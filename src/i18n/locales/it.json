@@ -11,7 +11,6 @@
     "search": "Cerca…",
     "albums": "Album",
     "songs": "Brani",
-    "podcasts": "Podcast",
     "emptyPlaylist": "Nessuna playlist creata",
     "miniSearch": "Cerca",
     "library": "Libreria",
@@ -205,87 +204,6 @@
     "recentAlbums": "Album recenti",
     "relatedArtists": "Artisti correlati",
     "topSongs": "Popolari"
-  },
-  "podcasts": {
-    "filters": {
-      "podcasts": {
-        "orderBy": {
-          "title": "Titolo",
-          "episodeCount": "Numero di Episodi"
-        }
-      },
-      "episodes": {
-        "search": "Cerca episodi…",
-        "orderBy": {
-          "publishDate": "Data di pubblicazione",
-          "title": "Titolo",
-          "duration": "Durata"
-        }
-      }
-    },
-    "form": {
-      "addButton": "Aggiungi Podcast",
-      "search": "Cerca podcast…",
-      "dialog": {
-        "title": "Crea Podcast",
-        "feedUrl": "URL del feed",
-        "message": "Puoi aggiungere più URL, uno per riga.",
-        "saveButton": "Salva",
-        "validations": {
-          "url": "Per favore fornisci URL validi.",
-          "urlLength": "Gli URL devono avere almeno 10 caratteri",
-          "protocol": "Gli URL devono cominciare con http:// o https://",
-          "atLeastOneUrl": "Per favore fornisci almeno un URL."
-        }
-      },
-      "latestEpisodes": "Ultimi episodi",
-      "toasts": {
-        "success": "Il podcast è stato creato con successo! Sarà disponibile all'ascolto tra pochi minuti!",
-        "error": "Creazione del podcast fallita!"
-      }
-    },
-    "emptyPage": {
-      "message": "Nessun podcast aggiunto",
-      "description": "Sembra che tu non abbia ancora aggiunto nessun podcast. Aggiungine uno sopra!"
-    },
-    "latestEpisodes": {
-      "emptyPage": {
-        "message": "Nessun episodio disponibile",
-        "description": "Prova ad aggiungere più podcast.",
-        "goToPodcasts": "Vai ai Podcast"
-      }
-    },
-    "emptyResults": {
-      "title": "Nessun risultato trovato.",
-      "info": "Non si sono potuti trovare podcast che corrispondono ai termini della tua ricerca.",
-      "action": "Per favore controlla l'ortografia della tua ricerca o prova con altre parole chiave."
-    },
-    "header": {
-      "episodeCount_one": "{{count}} episodio",
-      "episodeCount_many": "{{count}} episodi",
-      "episodeCount_other": "{{count}} episodi",
-      "feed": "Feed",
-      "website": "Sito Ufficiale",
-      "unfollow": {
-        "tooltip": "Smetti di seguire {{title}}",
-        "dialog": {
-          "title": "Sei sicuro di voler smettere di seguire questo podcast?",
-          "description": "Per ascoltare questo podcast di nuovo in futuro, dovrai ricrearlo."
-        },
-        "toasts": {
-          "success": "Hai smesso di seguire il podcast con successo!",
-          "error": "Si è verificato un errore durante il tentativo di rimuovere il podcast. Per favore riprova."
-        }
-      }
-    },
-    "list": {
-      "episodes": "Episodi",
-      "notFoundMessage": "Questo podcast non ha ancora nessun episodio!",
-      "progress": {
-        "remainingTime": "{{time}} rimanente",
-        "completed": "Completato"
-      }
-    }
   },
   "login": {
     "form": {

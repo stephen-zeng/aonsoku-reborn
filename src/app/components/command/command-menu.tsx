@@ -15,7 +15,6 @@ import {
   CommandList,
 } from "@/app/components/ui/command";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
-import { getPodcast } from "@/queries/podcasts";
 import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
 import { byteLength } from "@/utils/byteLength";
@@ -72,13 +71,6 @@ export default function CommandMenu() {
     staleTime: convertMinutesToMs(5),
   });
 
-  const { data: podcastData } = useQuery({
-    queryKey: [queryKeys.podcast.one, params.podcastId],
-    queryFn: () => getPodcast(params.podcastId!),
-    enabled: Boolean(params.podcastId),
-    staleTime: convertMinutesToMs(5),
-  });
-
   useEffect(() => {
     const pathname = location.pathname;
 
@@ -108,14 +100,6 @@ export default function CommandMenu() {
       setPageTitle(t("sidebar.radios"));
       return;
     }
-    if (pathname === "/library/podcasts") {
-      setPageTitle(t("sidebar.podcasts"));
-      return;
-    }
-    if (pathname === "/library/episodes/latest") {
-      setPageTitle(t("sidebar.podcasts"));
-      return;
-    }
 
     if (pathname.startsWith("/library/artists/") && artistData) {
       setPageTitle(artistData.name);
@@ -129,16 +113,6 @@ export default function CommandMenu() {
       setPageTitle(playlistData.name);
       return;
     }
-    if (pathname.startsWith("/library/podcasts/") && podcastData) {
-      setPageTitle(
-        podcastData.title || podcastData.description || t("sidebar.podcasts"),
-      );
-      return;
-    }
-    if (pathname.startsWith("/library/episodes/")) {
-      setPageTitle(t("sidebar.podcasts"));
-      return;
-    }
 
     if (pathname === "/server-config") {
       setPageTitle(t("menu.server"));
@@ -146,7 +120,7 @@ export default function CommandMenu() {
     }
 
     setPageTitle("Aonsoku");
-  }, [location.pathname, albumData, artistData, playlistData, podcastData, t]);
+  }, [location.pathname, albumData, artistData, playlistData, t]);
 
   const { data: searchResult } = useQuery({
     queryKey: [queryKeys.search, query],

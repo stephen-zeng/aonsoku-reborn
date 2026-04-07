@@ -51,38 +51,6 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
               },
             },
           },
-          podcasts: {
-            active: false,
-            setActive: (value) => {
-              set((state) => {
-                state.podcasts.active = value;
-              });
-            },
-            serviceUrl: "",
-            setServiceUrl: (value) => {
-              set((state) => {
-                state.podcasts.serviceUrl = value;
-              });
-            },
-            useDefaultUser: true,
-            setUseDefaultUser: (value) => {
-              set((state) => {
-                state.podcasts.useDefaultUser = value;
-              });
-            },
-            customUser: "",
-            setCustomUser: (value) => {
-              set((state) => {
-                state.podcasts.customUser = value;
-              });
-            },
-            customUrl: "",
-            setCustomUrl: (value) => {
-              set((state) => {
-                state.podcasts.customUrl = value;
-              });
-            },
-          },
           pages: {
             showInfoPanel: true,
             toggleShowInfoPanel: () => {
@@ -92,7 +60,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                 state.pages.showInfoPanel = !showInfoPanel;
               });
             },
-            hideRadiosSection: HIDE_RADIOS_SECTION ?? false,
+            hideRadiosSection: HIDE_RADIOS_SECTION ?? true,
             setHideRadiosSection: (value) => {
               set((state) => {
                 state.pages.hideRadiosSection = value;
@@ -222,13 +190,8 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                 state.data.songCount = null;
                 state.data.favoriteCount = null;
                 state.pages.showInfoPanel = true;
-                state.pages.hideRadiosSection = HIDE_RADIOS_SECTION ?? false;
+                state.pages.hideRadiosSection = HIDE_RADIOS_SECTION ?? true;
                 state.pages.artistsPageViewType = "table";
-                state.podcasts.active = false;
-                state.podcasts.serviceUrl = "";
-                state.podcasts.useDefaultUser = true;
-                state.podcasts.customUser = "";
-                state.podcasts.customUrl = "";
               });
             },
             setLogoutDialogState: (value) => {
@@ -251,10 +214,11 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
               | Partial<IAppContext>
               | undefined;
 
-            let hideRadiosSection = false;
+            let hideRadiosSection = true;
 
             if (persisted) {
-              hideRadiosSection = persisted.pages?.hideRadiosSection ?? false;
+              hideRadiosSection =
+                persisted.pages?.hideRadiosSection ?? true;
             }
             if (HIDE_RADIOS_SECTION !== undefined) {
               hideRadiosSection = HIDE_RADIOS_SECTION;
@@ -299,7 +263,10 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
 
             return merge(currentState, withoutLockUser);
           } catch (error) {
-            logger.error("[AppStore] [merge] - Unable to merge states", error);
+            logger.error(
+              "[AppStore] [merge] - Unable to merge states",
+              error,
+            );
 
             return currentState;
           }
@@ -347,7 +314,6 @@ useAppStore.subscribe(
 
 export const useAppData = () => useAppStore((state) => state.data);
 export const useAppAccounts = () => useAppStore((state) => state.accounts);
-export const useAppPodcasts = () => useAppStore((state) => state.podcasts);
 export const useAppPages = () => useAppStore((state) => state.pages);
 export const useAppDesktopData = () =>
   useAppStore((state) => state.desktop.data);

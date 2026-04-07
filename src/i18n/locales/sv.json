@@ -340,9 +340,7 @@
     "info": "Få info",
     "goto": {
       "artist": "Go to artist",
-      "album": "Go to album",
-      "episode": "Go to episode",
-      "podcast": "Go to podcast"
+      "album": "Go to album"
     }
   },
   "radios": {

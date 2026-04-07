@@ -3,17 +3,12 @@ import {
   Pause,
   Play,
   Repeat,
-  RotateCcwIcon,
-  RotateCwIcon,
   Shuffle,
   SkipBack,
   SkipForward,
 } from "lucide-react";
 import {
   ComponentPropsWithoutRef,
-  RefObject,
-  useCallback,
-  useEffect,
 } from "react";
 import { useTranslation } from "react-i18next";
 import RepeatOne from "@/app/components/icons/repeat-one";
@@ -30,26 +25,20 @@ import {
   usePlayerShuffle,
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
-import { EpisodeWithPodcast } from "@/types/responses/podcasts";
 import { Radio } from "@/types/responses/radios";
 import { ISong } from "@/types/responses/song";
-import { manageMediaSession } from "@/utils/setMediaSession";
 
 interface PlayerControlsProps {
   song: ISong;
   radio: Radio;
-  podcast: EpisodeWithPodcast;
-  audioRef: RefObject<HTMLAudioElement>;
 }
 
 export function PlayerControls({
   song,
   radio,
-  podcast,
-  audioRef,
 }: PlayerControlsProps) {
   const { t } = useTranslation();
-  const { isSong, isPodcast } = usePlayerMediaType();
+  const { isSong } = usePlayerMediaType();
   const isShuffleActive = usePlayerShuffle();
   const { hasPrev, hasNext } = usePlayerPrevAndNext();
   const loopState = usePlayerLoop();
@@ -70,34 +59,12 @@ export function PlayerControls({
   useAudioHotkeys("mod+s", toggleShuffle);
   useAudioHotkeys("mod+r", toggleLoop);
 
-  const handleSeekAction = useCallback(
-    (value: number) => {
-      const audio = audioRef.current;
-      if (!audio) return;
-
-      audio.currentTime += value;
-    },
-    [audioRef],
-  );
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: isPlaying needed to trigger
-  useEffect(() => {
-    if (isPodcast) {
-      manageMediaSession.setPodcastHandlers({ handleSeekAction });
-    } else {
-      manageMediaSession.setHandlers();
-    }
-  }, [handleSeekAction, isPodcast, isPlaying]);
-
   const shuffleTooltip = isShuffleActive
     ? t("player.tooltips.shuffle.disable")
     : t("player.tooltips.shuffle.enable");
 
   const previousTooltip = t("player.tooltips.previous");
   const nextTooltip = t("player.tooltips.next");
-
-  const skipRewindTooltip = t("player.tooltips.rewind", { amount: 15 });
-  const skipForwardTooltip = t("player.tooltips.forward", { amount: 30 });
 
   const playTooltip = isPlaying
     ? t("player.tooltips.pause")
@@ -111,7 +78,7 @@ export function PlayerControls({
   const repeatTooltip = repeatTooltips[loopState];
 
   const cannotGotoNextSong = !hasNext && loopState !== LoopState.All;
-  const disableButtons = !song && !radio && !podcast;
+  const disableButtons = !song && !radio;
 
   return (
     <div className="flex w-full gap-1 justify-center items-center mb-1">
@@ -125,7 +92,9 @@ export function PlayerControls({
         >
           <Shuffle
             className={clsx(
-              isShuffleActive ? "text-primary" : "text-secondary-foreground",
+              isShuffleActive
+                ? "text-primary"
+                : "text-secondary-foreground",
             )}
           />
         </PlayerButton>
@@ -140,22 +109,9 @@ export function PlayerControls({
         <SkipBack className="text-secondary-foreground fill-secondary-foreground" />
       </PlayerButton>
 
-      {isPodcast && (
-        <PlayerButton
-          onClick={() => handleSeekAction(-15)}
-          data-testid="player-button-skip-backward"
-          tooltip={skipRewindTooltip}
-        >
-          <span className="text-secondary-foreground font-light text-[8px] absolute">
-            15
-          </span>
-          <RotateCcwIcon className="text-secondary-foreground" />
-        </PlayerButton>
-      )}
-
       <PlayerButton
         variant="default"
-        disabled={!song && !radio && !isPodcast}
+        disabled={!song && !radio}
         onClick={togglePlayPause}
         data-testid={`player-button-${isPlaying ? "pause" : "play"}`}
         tooltip={playTooltip}
@@ -166,19 +122,6 @@ export function PlayerControls({
           <Play className="fill-primary-foreground" />
         )}
       </PlayerButton>
-
-      {isPodcast && (
-        <PlayerButton
-          onClick={() => handleSeekAction(30)}
-          data-testid="player-button-skip-forward"
-          tooltip={skipForwardTooltip}
-        >
-          <span className="text-secondary-foreground font-light text-[8px] absolute">
-            30
-          </span>
-          <RotateCwIcon className="text-secondary-foreground" />
-        </PlayerButton>
-      )}
 
       <PlayerButton
         disabled={disableButtons || cannotGotoNextSong}
@@ -202,7 +145,9 @@ export function PlayerControls({
           {loopState === LoopState.Off && (
             <Repeat className="text-secondary-foreground" />
           )}
-          {loopState === LoopState.All && <Repeat className="text-primary" />}
+          {loopState === LoopState.All && (
+            <Repeat className="text-primary" />
+          )}
           {loopState === LoopState.One && (
             <RepeatOne className="text-primary" />
           )}

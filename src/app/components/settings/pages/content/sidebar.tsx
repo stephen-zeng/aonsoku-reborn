@@ -13,7 +13,7 @@ import {
 import { Switch } from "@/app/components/ui/switch";
 import { useAppPages } from "@/store/app.store";
 
-const hideRadiosSectionConfig = window.HIDE_RADIOS_SECTION ?? false;
+const hideRadiosSectionConfig = window.HIDE_RADIOS_SECTION ?? true;
 
 export function SidebarContent() {
   const { t } = useTranslation();

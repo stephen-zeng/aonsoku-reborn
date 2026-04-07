@@ -17,7 +17,6 @@
     "playlists": "Listas de reproducción",
     "radios": "Radios",
     "emptyPlaylist": "Aún no se han creado listas de reproducción",
-    "podcasts": "Podcasts",
     "collapse": "Contraer barra lateral",
     "expand": "Expandir barra lateral"
   },
@@ -373,11 +372,8 @@
     "playNext": "Reproducir siguiente",
     "goto": {
       "artist": "Ir al artista",
-      "album": "Ir al álbum",
-      "episode": "Ir al episodio",
-      "podcast": "Ir al podcast"
-    },
-    "markAsPlayed": "Marcar como reproducido"
+      "album": "Ir al álbum"
+    }
   },
   "radios": {
     "label": "Radio",
@@ -543,87 +539,6 @@
     "access_recommendation": "Por favor, acceda desde un ordenador de sobremesa o una tableta.",
     "unsupported_message": "{{app_name}} no es compatible con dispositivos móviles."
   },
-  "podcasts": {
-    "form": {
-      "dialog": {
-        "saveButton": "Guardar",
-        "title": "Crear Podcast",
-        "feedUrl": "Añadir URL",
-        "validations": {
-          "url": "Por favor agrega URLs válidas.",
-          "urlLength": "Las URLs deben ser de al menos 10 caracteres de longitud",
-          "atLeastOneUrl": "Por favor agregue al menos una URL.",
-          "protocol": "Las URLs deben empezar con http:// o https://"
-        },
-        "message": "Puedes añadir múltiples URLs, una por línea."
-      },
-      "search": "Buscar podcasts…",
-      "toasts": {
-        "error": "No se pudo crear el podcast!",
-        "success": "Podcast creado correctamente! Estará disponible para escuchar en unos pocos minutos!"
-      },
-      "addButton": "Añadir Podcast",
-      "latestEpisodes": "Últimos Episodios"
-    },
-    "emptyPage": {
-      "message": "No se agregaron podcasts",
-      "description": "Parece que no has añadido ningún podcast todavía. Añade uno arriba!"
-    },
-    "latestEpisodes": {
-      "emptyPage": {
-        "description": "Prueba a añadir más podcasts.",
-        "goToPodcasts": "Ir a Podcasts",
-        "message": "No hay episodios disponibles"
-      }
-    },
-    "emptyResults": {
-      "info": "No pudimos encontrar ningún podcast que coincida con tu búsqueda.",
-      "action": "Por favor revisa la búsqueda o prueba con otras palabras clave.",
-      "title": "No se encontraron resultados."
-    },
-    "filters": {
-      "podcasts": {
-        "orderBy": {
-          "title": "Título",
-          "episodeCount": "Número de Episodios"
-        }
-      },
-      "episodes": {
-        "orderBy": {
-          "publishDate": "Fecha de Publicación",
-          "title": "Título",
-          "duration": "Duración"
-        },
-        "search": "Buscar episodios…"
-      }
-    },
-    "header": {
-      "website": "Web Oficial",
-      "unfollow": {
-        "dialog": {
-          "title": "¿Estás seguro de que quieres dejar de seguir este podcast?",
-          "description": "Para escuchar este podcast de nuevo en el futuro tendrás que recrearlo."
-        },
-        "toasts": {
-          "error": "Un error ha ocurrido al intentar dejar de seguir el podcast. Por favor, inténtelo de nuevo.",
-          "success": "Has dejado de seguir este podcast!"
-        },
-        "tooltip": "Dejar de seguir {{title}}"
-      },
-      "feed": "Sección Principal",
-      "episodeCount_one": "{{count}} Episodio",
-      "episodeCount_many": "{{count}} Episodios",
-      "episodeCount_other": "{{count}} Episodios"
-    },
-    "list": {
-      "notFoundMessage": "Este podcast no tiene ningún episodio todavía!",
-      "progress": {
-        "remainingTime": "Quedan {{time}}",
-        "completed": "Completado"
-      },
-      "episodes": "Episodios"
-    }
-  },
   "settings": {
     "options": {
       "audio": "Reproductor & Audio",
@@ -684,22 +599,6 @@
       }
     },
     "content": {
-      "podcast": {
-        "credentials": {
-          "user": "Nombre de usuario",
-          "url": "URL del Servidor",
-          "error": "Se requiere el Nombre de Usuario y la URL del Servidor.",
-          "label": "Usa un Usuario con Sesión Iniciada y la URL del Servidor"
-        },
-        "description": "Activar integracion con el servicio Aonsoku Podcasts.",
-        "enabled": {
-          "label": "Activar integración"
-        },
-        "service": {
-          "url": "URL del Servicio de Podcast"
-        },
-        "group": "Podcasts"
-      },
       "sidebar": {
         "radios": {
           "section": "Esconder la sección de radios"

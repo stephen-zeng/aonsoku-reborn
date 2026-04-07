@@ -17,7 +17,6 @@
     "favorites": "收藏夹",
     "search": "搜索…",
     "miniSearch": "搜索",
-    "podcasts": "播客",
     "collapse": "收起侧边栏",
     "expand": "展开侧边栏"
   },
@@ -354,11 +353,8 @@
     "info": "获取信息",
     "goto": {
       "artist": "前往艺人",
-      "album": "前往专辑",
-      "episode": "前往单集",
-      "podcast": "前往播客"
-    },
-    "markAsPlayed": "标记为已播放"
+      "album": "前往专辑"
+    }
   },
   "radios": {
     "label": "电台",
@@ -590,22 +586,6 @@
         "radios": {
           "section": "隐藏电台区域"
         }
-      },
-      "podcast": {
-        "description": "开启与 Aonsoku Podcasts 服务的集成。",
-        "group": "播客",
-        "credentials": {
-          "url": "服务器 URL",
-          "error": "用户名和服务器 URL 是必需的。",
-          "user": "用户名",
-          "label": "使用已登录用户和服务器 URL"
-        },
-        "enabled": {
-          "label": "开启集成"
-        },
-        "service": {
-          "url": "播客服务 URL"
-        }
       }
     },
     "label": "设置",
@@ -754,85 +734,6 @@
       "unknownDevice": "未知设备",
       "version": "版本 {{version}}",
       "autoConnectFailed": "无法连接到远程设备，进入本地播放模式"
-    }
-  },
-  "podcasts": {
-    "form": {
-      "latestEpisodes": "最新单集",
-      "addButton": "添加播客",
-      "dialog": {
-        "message": "可以添加多个 URL，每行一个。",
-        "saveButton": "保存",
-        "validations": {
-          "url": "请输入有效的 URL。",
-          "protocol": "URL 必须以 http:// 或 https:// 开头",
-          "urlLength": "URL 长度须不少于 10 个字符",
-          "atLeastOneUrl": "请至少输入一个 URL。"
-        },
-        "feedUrl": "订阅源 URL",
-        "title": "创建播客"
-      },
-      "toasts": {
-        "success": "播客创建成功！几分钟后即可收听！",
-        "error": "创建播客失败！"
-      },
-      "search": "搜索播客…"
-    },
-    "emptyPage": {
-      "message": "还没有添加播客",
-      "description": "看起来你还没有添加任何播客。请点击上方按钮添加！"
-    },
-    "emptyResults": {
-      "title": "没有找到任何结果。",
-      "info": "不能找到任何匹配你的搜索词的播客。",
-      "action": "请检查你的拼写或者尝试其它关键词。"
-    },
-    "filters": {
-      "episodes": {
-        "search": "搜索单集…",
-        "orderBy": {
-          "publishDate": "发布日期",
-          "title": "标题",
-          "duration": "时长"
-        }
-      },
-      "podcasts": {
-        "orderBy": {
-          "title": "标题",
-          "episodeCount": "单集数量"
-        }
-      }
-    },
-    "header": {
-      "unfollow": {
-        "dialog": {
-          "description": "如果想要再次收听这个播客，你需要重新创建它。",
-          "title": "你确定你要取消关注这个播客吗？"
-        },
-        "toasts": {
-          "error": "尝试取消关注这个播客时发生了错误。请稍候再试。",
-          "success": "你已经成功取消关注这个播客！"
-        },
-        "tooltip": "取消关注 {{title}}"
-      },
-      "episodeCount_other": "{{count}} 集",
-      "website": "官方网站",
-      "feed": "信息流"
-    },
-    "list": {
-      "progress": {
-        "remainingTime": "剩余 {{time}}",
-        "completed": "已完成"
-      },
-      "notFoundMessage": "这个播客还没有任何单集！",
-      "episodes": "单集"
-    },
-    "latestEpisodes": {
-      "emptyPage": {
-        "message": "没有找到任何单集",
-        "description": "请尝试添加更多播客。",
-        "goToPodcasts": "前往播客"
-      }
     }
   }
 }

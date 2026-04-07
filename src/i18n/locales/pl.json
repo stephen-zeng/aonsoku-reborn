@@ -107,87 +107,6 @@
     "light": "Jasny",
     "tinacious-design": "Tinacious Design"
   },
-  "podcasts": {
-    "form": {
-      "dialog": {
-        "validations": {
-          "atLeastOneUrl": "Podaj co najmniej jeden adres URL.",
-          "protocol": "Adresy URL muszą zaczynać się od http:// lub https://",
-          "url": "Podaj poprawne adresy URL.",
-          "urlLength": "URL musi mieć co najmniej 10 znaków"
-        },
-        "title": "Utwórz Podcast",
-        "feedUrl": "URL Kanału",
-        "message": "Możesz dodać wiele URL, jeden na jedną linijkę.",
-        "saveButton": "Zapisz"
-      },
-      "latestEpisodes": "Najnowsze odcinki",
-      "addButton": "Dodaj Podcast",
-      "search": "Wyszukaj podcasty…",
-      "toasts": {
-        "success": "Podcast utworzony pomyślnie! Będzie dostępny do posłuchania za parę minut!",
-        "error": "Nie udało się utworzyć podcastu!"
-      }
-    },
-    "emptyPage": {
-      "message": "Nie dodano podcastów",
-      "description": "Wygląda na to, że nie dodałeś jeszcze żadnych podcastów. Dodaj jeden powyżej!"
-    },
-    "filters": {
-      "episodes": {
-        "orderBy": {
-          "duration": "Długość",
-          "publishDate": "Data Publikacji",
-          "title": "Tytuł"
-        },
-        "search": "Wyszukaj odcinki…"
-      },
-      "podcasts": {
-        "orderBy": {
-          "episodeCount": "Liczba Odcinków",
-          "title": "Tytuł"
-        }
-      }
-    },
-    "latestEpisodes": {
-      "emptyPage": {
-        "message": "Brak dostępnych odcinków",
-        "description": "Spróbuj dodać więcej podcastów.",
-        "goToPodcasts": "Przejdź do Podcastów"
-      }
-    },
-    "emptyResults": {
-      "title": "Nie znaleziono wyników.",
-      "info": "Nie mogliśmy znaleźć żadnych podcastów, które pasowałyby do twojego wyszukiwania.",
-      "action": "Sprawdź pisownię lub spróbuj użyć innych słów kluczowych."
-    },
-    "header": {
-      "feed": "Feed",
-      "website": "Oficjalna Strona",
-      "unfollow": {
-        "dialog": {
-          "title": "Czy jesteś pewien, że nie chcesz już obserwować tego podcastu?",
-          "description": "Aby posłuchać tego podcastu ponownie w przyszłości, musisz go utworzyć jeszcze raz."
-        },
-        "toasts": {
-          "success": "Przestano obserwować podcast pomyślnie!",
-          "error": "Wystąpił błąd przy próbie odobserwowania podcastu. Spróbuj ponownie."
-        },
-        "tooltip": "Przestań obserwować {{title}}"
-      },
-      "episodeCount_one": "{{count}} odcinek",
-      "episodeCount_few": "{{count}} odcinki",
-      "episodeCount_many": "{{count}} odcinków"
-    },
-    "list": {
-      "episodes": "Odcinki",
-      "notFoundMessage": "Ten podcast nie ma jeszcze żadnych odcinków!",
-      "progress": {
-        "remainingTime": "{{time}} pozostało",
-        "completed": "Ukończono"
-      }
-    }
-  },
   "home": {
     "mostPlayed": "Najczęściej odtwarzane",
     "recentlyPlayed": "Ostatnio odtwarzane",
@@ -201,7 +120,6 @@
     "songs": "Utwory",
     "albums": "Albumy",
     "radios": "Radia",
-    "podcasts": "Podcasty",
     "miniSearch": "Wyszukiwanie",
     "artists": "Wykonawcy",
     "playlists": "Playlisty",
@@ -447,12 +365,9 @@
       "notFound": "Nie znaleziono playlisty"
     },
     "info": "Informacje",
-    "markAsPlayed": "Oznacz jako odtworzone",
     "goto": {
       "artist": "Przejdź do artysty",
-      "album": "Przejdź do albumu",
-      "episode": "Przejdź do odcinka",
-      "podcast": "Przejdź do podcastu"
+      "album": "Przejdź do albumu"
     }
   },
   "radios": {
@@ -642,22 +557,6 @@
           "section": "Ukryj sekcję radia"
         },
         "group": "Pasek boczny"
-      },
-      "podcast": {
-        "service": {
-          "url": "Adres URL Usługi Podcastowej"
-        },
-        "credentials": {
-          "label": "Użyj Zalogowanego Użytkownika i Adresu URL Serwera",
-          "user": "Nazwa użytkownika",
-          "url": "Adres URL Serwera",
-          "error": "Wymagane są Nazwa użytkownika i Adres URL Serwera."
-        },
-        "description": "Włącz integrację z usługą Podcastową Aonsoku.",
-        "group": "Podcasty",
-        "enabled": {
-          "label": "Włącz Integrację"
-        }
       }
     },
     "appearance": {

@@ -54,87 +54,6 @@
     "recentAlbums": "Álbuns recentes",
     "relatedArtists": "Artistas relacionados"
   },
-  "podcasts": {
-    "filters": {
-      "episodes": {
-        "orderBy": {
-          "publishDate": "Data de Publicação",
-          "title": "Título",
-          "duration": "Duração"
-        },
-        "search": "Buscar episódios…"
-      },
-      "podcasts": {
-        "orderBy": {
-          "title": "Título",
-          "episodeCount": "Número de Episódios"
-        }
-      }
-    },
-    "header": {
-      "episodeCount_one": "{{count}} episódio",
-      "episodeCount_many": "{{count}} episódios",
-      "episodeCount_other": "{{count}} episódios",
-      "feed": "Feed",
-      "unfollow": {
-        "tooltip": "Deixar de seguir {{title}}",
-        "dialog": {
-          "title": "Tem certeza de que deseja deixar de seguir este podcast?",
-          "description": "Para escutar este podcast novamente no futuro, terá de cadastrá-lo novamente."
-        },
-        "toasts": {
-          "error": "Ocorreu um erro ao deixar de seguir o podcast. Por favor, tente novamente.",
-          "success": "Deixou de seguir o podcast com sucesso!"
-        }
-      },
-      "website": "Site Oficial"
-    },
-    "list": {
-      "episodes": "Episódios",
-      "progress": {
-        "remainingTime": "{{time}} restante(s)",
-        "completed": "Reproduzido"
-      },
-      "notFoundMessage": "Este podcast ainda não tem episódios!"
-    },
-    "form": {
-      "latestEpisodes": "Últimos Episódios",
-      "addButton": "Adicionar Podcast",
-      "search": "Buscar podcasts…",
-      "dialog": {
-        "title": "Criar Podcast",
-        "feedUrl": "URL do Feed",
-        "message": "Pode adicionar múltiplas URLs, uma por linha.",
-        "saveButton": "Gravar",
-        "validations": {
-          "url": "Por favor, forneça URLs válidas.",
-          "urlLength": "As URLs devem conter pelo menos 10 caracteres",
-          "protocol": "As URLs devem começar com http:// ou https://",
-          "atLeastOneUrl": "Por favor, forneça pelo menos uma URL."
-        }
-      },
-      "toasts": {
-        "success": "Podcast criado com sucesso! Ele estará disponível para ouvir em alguns minutos!",
-        "error": "Falha ao criar o podcast!"
-      }
-    },
-    "emptyPage": {
-      "message": "Nenhum podcast adicionado",
-      "description": "Parece que ainda não adicionou nenhum podcast. Adicione um acima!"
-    },
-    "latestEpisodes": {
-      "emptyPage": {
-        "message": "Nenhum episódio disponível",
-        "description": "Tente cadastrar mais podcasts.",
-        "goToPodcasts": "Ir para Podcasts"
-      }
-    },
-    "emptyResults": {
-      "title": "Nenhum resultado encontrado.",
-      "info": "Não encontramos podcasts para o termo pesquisado.",
-      "action": "Por favor, verifique a ortografia ou tente palavras-chave diferentes."
-    }
-  },
   "table": {
     "columns": {
       "name": "Nome",
@@ -332,22 +251,6 @@
         "radios": {
           "section": "Esconder secção de rádios"
         }
-      },
-      "podcast": {
-        "group": "Podcasts",
-        "description": "Ativar integração com o serviço Aonsoku Podcasts.",
-        "enabled": {
-          "label": "Ativar Integração"
-        },
-        "service": {
-          "url": "URL do Serviço de Podcast"
-        },
-        "credentials": {
-          "label": "Usar Utilizador Logado e URL do Servidor",
-          "error": "Nome de utilizador e URL do servidor são obrigatórios.",
-          "user": "Nome de Utilizador",
-          "url": "URL do Servidor"
-        }
       }
     }
   },
@@ -495,7 +398,6 @@
     "favorites": "Favoritos",
     "playlists": "Playlists",
     "radios": "Rádios",
-    "podcasts": "Podcasts",
     "emptyPlaylist": "Nenhuma playlist criada ainda",
     "collapse": "Recolher barra lateral",
     "expand": "Expandir barra lateral"
@@ -574,12 +476,9 @@
       "removeSong": "Remover da playlist"
     },
     "info": "Mais informações",
-    "markAsPlayed": "Marcar como reproduzido",
     "goto": {
       "artist": "Ir para o artista",
-      "album": "Ir para o álbum",
-      "episode": "Ir para o episódio",
-      "podcast": "Ir para o podcast"
+      "album": "Ir para o álbum"
     }
   },
   "radios": {

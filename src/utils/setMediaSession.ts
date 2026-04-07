@@ -1,6 +1,5 @@
 import { getCoverArtUrl } from "@/api/httpClient";
 import { usePlayerStore } from "@/store/player.store";
-import { EpisodeWithPodcast } from "@/types/responses/podcasts";
 import { ISong } from "@/types/responses/song";
 import { LanControlMessageType } from "@/types/lanControl";
 
@@ -88,32 +87,6 @@ function setMediaSession(
     }
   } catch (error) {
     console.error("[MediaSession] Failed to set metadata:", error);
-  }
-}
-
-function setPodcastMediaSession(episode: EpisodeWithPodcast) {
-  if (!isMediaSessionSupported()) return;
-
-  try {
-    const metadata = {
-      title: episode.title || "Unknown Episode",
-      album: episode.podcast?.title || "Unknown Podcast",
-      artist: episode.podcast?.author || "Unknown Author",
-      artwork: episode.image_url
-        ? [
-            {
-              src: episode.image_url,
-              sizes: "",
-              type: "image/jpeg",
-            },
-          ]
-        : [],
-    };
-
-    logMediaSessionInfo("Setting podcast metadata", metadata);
-    navigator.mediaSession.metadata = new MediaMetadata(metadata);
-  } catch (error) {
-    console.error("[MediaSession] Failed to set podcast metadata:", error);
   }
 }
 
@@ -277,7 +250,9 @@ function setHandlers() {
       console.log("[MediaSession] Seek action triggered:", details);
       if (details.seekTime !== undefined) {
         if (isRemoteActive && remoteSender) {
-          remoteSender(LanControlMessageType.SEEK, { time: details.seekTime });
+          remoteSender(LanControlMessageType.SEEK, {
+            time: details.seekTime,
+          });
         } else {
           const audioPlayerRef = state.playerState.audioPlayerRef;
           if (audioPlayerRef) {
@@ -294,77 +269,11 @@ function setHandlers() {
   }
 }
 
-interface SetPodcastHandlerParams {
-  handleSeekAction: (value: number) => void;
-}
-
-function setPodcastHandlers({ handleSeekAction }: SetPodcastHandlerParams) {
-  if (!isMediaSessionSupported()) {
-    console.warn(
-      "[MediaSession] Cannot set podcast handlers: API not supported",
-    );
-    return;
-  }
-
-  const { mediaSession } = navigator;
-
-  try {
-    const state = usePlayerStore.getState();
-    const { setPlayingState, setProgress } = state.actions;
-
-    logMediaSessionInfo("Setting up podcast action handlers");
-
-    mediaSession.setActionHandler("previoustrack", null);
-    mediaSession.setActionHandler("nexttrack", null);
-
-    mediaSession.setActionHandler("play", () => {
-      console.log("[MediaSession] Podcast play action triggered");
-      setPlayingState(true);
-    });
-
-    mediaSession.setActionHandler("pause", () => {
-      console.log("[MediaSession] Podcast pause action triggered");
-      setPlayingState(false);
-    });
-
-    mediaSession.setActionHandler("seekbackward", () => {
-      console.log("[MediaSession] Podcast seek backward action triggered");
-      handleSeekAction(-15);
-    });
-
-    mediaSession.setActionHandler("seekforward", () => {
-      console.log("[MediaSession] Podcast seek forward action triggered");
-      handleSeekAction(30);
-    });
-
-    // Support seekto for iOS and other platforms
-    mediaSession.setActionHandler("seekto", (details) => {
-      console.log("[MediaSession] Podcast seek to action triggered:", details);
-      if (details.seekTime !== undefined) {
-        const audioPlayerRef = state.playerState.audioPlayerRef;
-        if (audioPlayerRef) {
-          audioPlayerRef.currentTime = details.seekTime;
-          setProgress(Math.floor(details.seekTime));
-        }
-      }
-    });
-
-    console.log("[MediaSession] Podcast action handlers set successfully");
-  } catch (error) {
-    console.error(
-      "[MediaSession] Failed to set podcast action handlers:",
-      error,
-    );
-  }
-}
-
 export const manageMediaSession = {
   removeMediaSession,
   setMediaSession,
   setRadioMediaSession,
-  setPodcastMediaSession,
   setPlaybackState,
   setPositionState,
   setHandlers,
-  setPodcastHandlers,
 };

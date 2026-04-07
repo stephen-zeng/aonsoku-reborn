@@ -33,7 +33,6 @@
     "albums": "앨범",
     "playlists": "재생목록",
     "radios": "라디오",
-    "podcasts": "팟캐스트",
     "emptyPlaylist": "생성된 재생목록 없음"
   },
   "playlist": {
@@ -360,22 +359,6 @@
           "section": "라디오 구역 가리기"
         },
         "group": "사이드바"
-      },
-      "podcast": {
-        "group": "팟캐스트",
-        "enabled": {
-          "label": "통합 활성화"
-        },
-        "credentials": {
-          "label": "로그인된 사용자 및 서버 주소를 사용하세요",
-          "error": "사용자명과 서버 주소가 필요합니다.",
-          "user": "사용자명",
-          "url": "서버 주소"
-        },
-        "description": "Aonsoku 팟캐스트 서비스와의 통합을 활성화합니다.",
-        "service": {
-          "url": "팟캐스트 서비스 주소"
-        }
       }
     }
   },
@@ -497,12 +480,9 @@
       "notFound": "검색된 재생목록 없음"
     },
     "playNext": "다음 곡 재생",
-    "markAsPlayed": "재생 완료된 것으로 설정",
     "goto": {
       "artist": "아티스트로 이동",
-      "album": "앨범으로 이동",
-      "episode": "에피소드로 이동",
-      "podcast": "팟캐스트로 이동"
+      "album": "앨범으로 이동"
     },
     "addLast": "대기열 끝에 추가",
     "play": "재생",
@@ -545,85 +525,6 @@
       "filter": {
         "clear": "필터 재설정"
       }
-    }
-  },
-  "podcasts": {
-    "form": {
-      "dialog": {
-        "saveButton": "저장",
-        "message": "한 줄 당 하나의 주소를 입력하여 여러 주소를 한꺼번에 추가할 수 있습니다.",
-        "validations": {
-          "atLeastOneUrl": "하나 이상의 주소를 입력하세요.",
-          "urlLength": "주소는 최소 10글자 이상이어야 합니다",
-          "protocol": "주소는 http:// 또는 https://로 시작해야 합니다",
-          "url": "유효한 주소를 입력하세요."
-        },
-        "title": "팟캐스트 만들기",
-        "feedUrl": "피드 주소"
-      },
-      "toasts": {
-        "success": "팟캐스트가 생성되었습니다! 몇 분만 기다리시면 청취 가능합니다!",
-        "error": "팟캐스트를 만들지 못했습니다!"
-      },
-      "search": "팟캐스트 검색…",
-      "addButton": "팟캐스트 추가",
-      "latestEpisodes": "최신 에피소드"
-    },
-    "emptyPage": {
-      "message": "추가된 팟캐스트 없음",
-      "description": "구독 중인 팟캐스트가 없습니다. 추가해 보세요!"
-    },
-    "latestEpisodes": {
-      "emptyPage": {
-        "message": "청취 가능한 에피소드 없음",
-        "description": "더 많은 팟캐스트를 추가하세요.",
-        "goToPodcasts": "팟캐스트로 이동"
-      }
-    },
-    "emptyResults": {
-      "title": "검색 결과 없음.",
-      "info": "검색어와 일치하는 팟캐스트를 찾지 못했습니다.",
-      "action": "철자를 확인하거나 다른 키워드를 입력하세요."
-    },
-    "filters": {
-      "episodes": {
-        "search": "에피소드 검색…",
-        "orderBy": {
-          "publishDate": "공개일",
-          "title": "제목",
-          "duration": "길이"
-        }
-      },
-      "podcasts": {
-        "orderBy": {
-          "title": "제목",
-          "episodeCount": "에피소드 수"
-        }
-      }
-    },
-    "header": {
-      "feed": "피드",
-      "unfollow": {
-        "tooltip": "{{title}} 구독 해제",
-        "dialog": {
-          "description": "다음에 이 팟캐스트를 다시 청취하기 위해서는 팟캐스트를 다시 만들어야 합니다.",
-          "title": "이 팟캐스트의 구독을 해제할까요?"
-        },
-        "toasts": {
-          "success": "팟캐스트 구독을 해제했습니다!",
-          "error": "팟캐스트 구독 해제 중 오류가 발생했습니다. 다시 시도하세요."
-        }
-      },
-      "episodeCount_other": "{{count}}개의 에피소드",
-      "website": "공식 웹사이트"
-    },
-    "list": {
-      "notFoundMessage": "이 팟캐스트는 아직 비어 있습니다!",
-      "progress": {
-        "remainingTime": "{{time}} 남음",
-        "completed": "완료"
-      },
-      "episodes": "에피소드"
     }
   },
   "server": {
