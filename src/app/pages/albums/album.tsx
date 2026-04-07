@@ -23,6 +23,7 @@ import { ColumnFilter } from "@/types/columnFilter";
 import { Albums } from "@/types/responses/album";
 import { sortRecentAlbums } from "@/utils/album";
 import { convertSecondsToHumanRead } from "@/utils/convertSecondsToTime";
+import { isMobile } from "react-device-detect";
 
 export default function Album() {
   const { albumId } = useParams() as { albumId: string };
@@ -75,17 +76,26 @@ export default function Album() {
     },
   ];
 
-  const columnsToShow: ColumnFilter[] = [
-    "trackNumber",
-    "title",
-    // 'artist',
-    "duration",
-    "playCount",
-    "played",
-    "bitRate",
-    "contentType",
-    "select",
-  ];
+  const hasTrackNumbers = album.song.some((song) => song.track > 0);
+
+  const columnsToShow: ColumnFilter[] = isMobile
+    ? [
+        ...(hasTrackNumbers ? ["trackNumber" as ColumnFilter] : []),
+        "title",
+        "duration",
+        "select",
+      ]
+    : [
+        ...(hasTrackNumbers ? ["trackNumber" as ColumnFilter] : []),
+        "title",
+        // 'artist',
+        "duration",
+        "playCount",
+        "played",
+        "bitRate",
+        "contentType",
+        "select",
+      ];
 
   function removeCurrentAlbumFromList(moreAlbums: Albums[], sort = false) {
     if (moreAlbums.length === 0 || !album) return null;

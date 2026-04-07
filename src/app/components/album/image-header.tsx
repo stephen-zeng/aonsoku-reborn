@@ -37,7 +37,7 @@ function HeaderSubtitleSection({
   return (
     <div className={className}>
       {!isPlaylist && artists && hasMultipleArtists && (
-        <div className="flex items-center mt-1 sm:mt-2">
+        <div className="flex flex-wrap items-center mt-1 sm:mt-2">
           <AlbumMultipleArtistsInfo artists={artists} />
           <HeaderInfoGenerator badges={badges} />
         </div>
@@ -46,7 +46,7 @@ function HeaderSubtitleSection({
       {!isPlaylist && subtitle && !hasMultipleArtists && (
         <>
           {artistId ? (
-            <div className="flex items-center mt-1 sm:mt-2">
+            <div className="flex flex-wrap items-center mt-1 sm:mt-2">
               <AlbumArtistInfo id={artistId} name={subtitle} />
               <HeaderInfoGenerator badges={badges} />
             </div>

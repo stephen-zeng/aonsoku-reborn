@@ -104,7 +104,7 @@ export function ExpandableSearchInput({ ...props }: SearchInputProps) {
             "focus-visible:ring-transparent ring-offset-background",
             "focus-visible:ring-offset-0 focus-visible:ring-0",
             searchActive
-              ? "w-[260px] pr-9 text-foreground placeholder:opacity-100"
+              ? "w-[180px] sm:w-[260px] pr-9 text-foreground placeholder:opacity-100"
               : "w-9 text-transparent placeholder:opacity-0",
           )}
           {...props}

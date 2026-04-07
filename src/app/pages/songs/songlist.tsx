@@ -24,6 +24,7 @@ import {
 } from "@/utils/albumsFilter";
 import { queryKeys } from "@/utils/queryKeys";
 import { SearchParamsHandler } from "@/utils/searchParamsHandler";
+import { isMobile } from "react-device-detect";
 
 const DEFAULT_OFFSET = 100;
 
@@ -85,17 +86,19 @@ export default function SongList() {
     if (songlist) setSongList(songlist, index);
   }
 
-  const columnsToShow: ColumnFilter[] = [
-    "index",
-    "title",
-    // 'artist',
-    "album",
-    "duration",
-    "playCount",
-    "played",
-    "contentType",
-    "select",
-  ];
+  const columnsToShow: ColumnFilter[] = isMobile
+    ? ["index", "title", "select"]
+    : [
+        "index",
+        "title",
+        // 'artist',
+        "album",
+        "duration",
+        "playCount",
+        "played",
+        "contentType",
+        "select",
+      ];
 
   const title = filterByArtist
     ? t("songs.list.byArtist", { artist: artistName })

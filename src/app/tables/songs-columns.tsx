@@ -79,7 +79,7 @@ export function songsColumns(): ColumnDefType<ISong>[] {
       accessorKey: "title",
       style: {
         flex: 1,
-        minWidth: 210,
+        minWidth: 120,
       },
       enableSorting: true,
       sortingFn: "customSortFn",

@@ -14,8 +14,10 @@ import { artistsColumns } from "@/app/tables/artists-columns";
 import { subsonic } from "@/service/subsonic";
 import { useAppArtistsViewType } from "@/store/app.store";
 import { usePlayerActions } from "@/store/player.store";
+import { ColumnFilter } from "@/types/columnFilter";
 import { ISimilarArtist } from "@/types/responses/artist";
 import { queryKeys } from "@/utils/queryKeys";
+import { isMobile } from "react-device-detect";
 
 const MemoShadowHeader = memo(ShadowHeader);
 const MemoHeaderTitle = memo(HeaderTitle);
@@ -35,6 +37,9 @@ export default function ArtistsList() {
   } = useAppArtistsViewType();
 
   const columns = artistsColumns();
+  const artistColumnFilter: ColumnFilter[] | undefined = isMobile
+    ? ["index", "name", "starred"]
+    : undefined;
 
   const { data: artists, isLoading } = useQuery({
     queryKey: [queryKeys.artist.all],
@@ -71,6 +76,7 @@ export default function ArtistsList() {
             columns={columns}
             data={artists}
             handlePlaySong={(row) => handlePlayArtistRadio(row.original)}
+            columnFilter={artistColumnFilter}
             allowRowSelection={false}
             dataType="artist"
           />

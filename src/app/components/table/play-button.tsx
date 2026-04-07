@@ -57,12 +57,12 @@ export default function PlaySongButton({
       )}
       {isCurrentSongPlaying() && isPlaying && (
         <div className="relative w-full h-full flex items-center justify-center">
-          <div className="absolute opacity-100 group-hover/tablerow:opacity-0 w-8 h-8 flex items-center">
+          <div className="absolute opacity-100 md:group-hover/tablerow:opacity-0 w-8 h-8 flex items-center">
             <div className="w-8 h-8 flex items-center justify-center">
               <EqualizerBars size={18} className="mb-1" />
             </div>
           </div>
-          <div className="absolute opacity-0 group-hover/tablerow:opacity-100 flex justify-center">
+          <div className="absolute opacity-0 md:group-hover/tablerow:opacity-100 flex justify-center">
             <Button
               className="w-8 h-8 rounded-full group hover:bg-background hover:shadow-sm border-0"
               size="icon"
@@ -82,10 +82,10 @@ export default function PlaySongButton({
       )}
       {!isCurrentSongPlaying() && (
         <>
-          <div className="group-hover/tablerow:hidden w-8 h-8 flex items-center justify-center">
+          <div className="md:group-hover/tablerow:hidden w-8 h-8 flex items-center justify-center">
             {trackNumber}
           </div>
-          <div className="hidden group-hover/tablerow:block">
+          <div className="hidden md:group-hover/tablerow:block">
             <Button
               className="w-8 h-8 rounded-full group hover:bg-background hover:shadow-sm border-0"
               size="icon"

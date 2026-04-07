@@ -58,7 +58,7 @@ export function TableRow<TData>({
             !isNextRowSelected(index) &&
             "rounded-b-md",
           isModern && !row.getIsSelected() && "rounded-md",
-          "hover:bg-muted data-[state=selected]:bg-primary/75",
+          "hover:bg-muted md:data-[state=selected]:bg-primary/75",
           isClassic && "border-b",
           isRowSongActive && isModern && "row-active bg-accent",
         )}

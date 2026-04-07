@@ -37,6 +37,8 @@ export function GridViewWrapper<T>({
 }: GridViewWrapperProps<T>) {
   const scrollDivRef = useRef<HTMLDivElement | null>(null);
   const [gridColumnsSize, setGridColumnsSize] = useState(4);
+  const [effectivePadding, setEffectivePadding] = useState(padding);
+  const [effectiveGap, setEffectiveGap] = useState(gap);
   const [size, setSize] = useState({
     width: defaultWidth,
     height: defaultWidth + titleHeight,
@@ -61,8 +63,8 @@ export function GridViewWrapper<T>({
     }
 
     const pageWidth = scrollDivRef.current.offsetWidth;
-    const gapsDifference = (gridColumnsSize - 1) * gap;
-    const bothSidesPaddingSize = padding * 2;
+    const gapsDifference = (gridColumnsSize - 1) * effectiveGap;
+    const bothSidesPaddingSize = effectivePadding * 2;
     const remainSpace = pageWidth - bothSidesPaddingSize - gapsDifference;
 
     const width = remainSpace / gridColumnsSize;
@@ -72,7 +74,7 @@ export function GridViewWrapper<T>({
       width,
       height,
     };
-  }, [defaultWidth, gap, gridColumnsSize, padding, titleHeight]);
+  }, [defaultWidth, effectiveGap, effectivePadding, gridColumnsSize, titleHeight]);
 
   useLayoutEffect(() => {
     scrollDivRef.current = getMainScrollElement();
@@ -84,9 +86,17 @@ export function GridViewWrapper<T>({
         setGridColumnsSize(8); // 2xl breakpoint
       } else if (width >= 1024) {
         setGridColumnsSize(6); // lg breakpoint
+      } else if (width >= 768) {
+        setGridColumnsSize(4); // md breakpoint
+      } else if (width >= 480) {
+        setGridColumnsSize(3); // small mobile
       } else {
-        setGridColumnsSize(4); // default size
+        setGridColumnsSize(2); // very small mobile
       }
+
+      const isMobileView = width < 768;
+      setEffectivePadding(isMobileView ? 16 : padding);
+      setEffectiveGap(isMobileView ? 12 : gap);
 
       const newSize = calculateSize();
       setSize(newSize);
@@ -108,7 +118,7 @@ export function GridViewWrapper<T>({
       window.removeEventListener("resize", resizeHandler);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [calculateSize]);
+  }, [calculateSize, padding, gap]);
 
   const grid = useGrid({
     scrollRef: scrollDivRef,
@@ -118,9 +128,9 @@ export function GridViewWrapper<T>({
     rows,
     size,
     padding: {
-      x: padding,
+      x: effectivePadding,
     },
-    gap,
+    gap: effectiveGap,
     overscan: 5,
   });
 
