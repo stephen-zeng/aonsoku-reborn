@@ -17,7 +17,9 @@
     "favorites": "收藏夹",
     "search": "搜索…",
     "miniSearch": "搜索",
-    "podcasts": "播客"
+    "podcasts": "播客",
+    "collapse": "收起侧边栏",
+    "expand": "展开侧边栏"
   },
   "menu": {
     "about": "关于",

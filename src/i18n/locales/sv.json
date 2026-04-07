@@ -10,7 +10,9 @@
     "playlists": "Spellista",
     "songs": "Sånger",
     "emptyPlaylist": "Inga spellistor skapat ännu",
-    "library": "Bibliotek"
+    "library": "Bibliotek",
+    "collapse": "Fäll ihop sidofältet",
+    "expand": "Expandera sidofältet"
   },
   "home": {
     "recentlyAdded": "Nyligen tillagd",

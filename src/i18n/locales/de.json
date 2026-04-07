@@ -11,7 +11,9 @@
     "favorites": "Favoriten",
     "playlists": "Wiedergabelisten",
     "emptyPlaylist": "Noch keine Wiedergabelisten erstellt",
-    "podcasts": "Podcasts"
+    "podcasts": "Podcasts",
+    "collapse": "Seitenleiste einklappen",
+    "expand": "Seitenleiste ausklappen"
   },
   "theme": {
     "nuclear-dark": "Nuclear Dark",
