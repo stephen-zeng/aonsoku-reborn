@@ -3,6 +3,7 @@ import { MainDrawerPage } from "@/app/components/drawer/page";
 import { Player } from "@/app/components/player/player";
 import { RemovePlaylistDialog } from "@/app/components/playlist/remove-dialog";
 import { SongInfoDialog } from "@/app/components/song/info-dialog";
+import { BottomNavigation } from "@/app/layout/bottom-navigation";
 import { Header } from "@/app/layout/header";
 import { MiniSidebar } from "@/app/layout/mini-sidebar";
 import { Sidebar } from "@/app/layout/sidebar";
@@ -15,6 +16,7 @@ const MemoPlayer = memo(Player);
 const MemoSongInfoDialog = memo(SongInfoDialog);
 const MemoRemovePlaylistDialog = memo(RemovePlaylistDialog);
 const MemoMainDrawerPage = memo(MainDrawerPage);
+const MemoBottomNavigation = memo(BottomNavigation);
 
 export default function BaseLayout() {
   return (
@@ -23,6 +25,7 @@ export default function BaseLayout() {
       <MemoMiniSidebar />
       <MemoSidebar />
       <MemoPlayer />
+      <MemoBottomNavigation />
       {/* Routes */}
       <MainRoutes />
       <MemoSongInfoDialog />

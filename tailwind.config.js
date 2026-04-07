@@ -29,6 +29,7 @@ module.exports = {
         "shadow-header": "var(--shadow-header-height)",
         "shadow-header-distance": "var(--shadow-header-distance)",
         toast: "var(--toastify-toast-container-height)",
+        "bottom-nav": "var(--bottom-nav-height)",
       },
       colors: {
         border: "hsl(var(--border))",

@@ -68,8 +68,13 @@ const EPISODES = {
 
 const SERVER_CONFIG = "/server-config";
 
+const MOBILE = {
+  LIBRARY: "/mobile/library",
+};
+
 export const ROUTES = {
   LIBRARY,
+  MOBILE,
   ARTIST,
   ALBUM,
   ALBUMS,

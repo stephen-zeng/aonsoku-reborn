@@ -16,7 +16,7 @@ export function MainRoutes() {
   return (
     <main
       className={cn(
-        "flex h-full pl-mini-sidebar pt-header pb-player",
+        "flex h-full pl-0 md:pl-mini-sidebar pt-header pb-[calc(var(--player-height)+var(--bottom-nav-height))]",
         isCollapsed ? "xl:pl-mini-sidebar" : "xl:pl-sidebar",
       )}
     >

@@ -128,7 +128,6 @@ export function Header() {
         </div>
         <div className="md:hidden flex justify-center items-center px-4 gap-2 w-full">
           <NavigationButtons />
-          <MemoCommandMenu />
         </div>
       </div>
       <div className="col-span-2 flex items-center justify-center">
