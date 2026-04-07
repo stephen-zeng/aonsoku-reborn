@@ -449,6 +449,7 @@
       "notFound": "No playlist found",
       "removeSong": "Remove from playlist"
     },
+    "removeFromQueue": "Remove from queue",
     "info": "Get info",
     "markAsPlayed": "Mark as played",
     "goto": {

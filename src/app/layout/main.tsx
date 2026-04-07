@@ -29,7 +29,7 @@ export function MainRoutes() {
       className={cn(
         "flex h-full pl-0 md:pl-mini-sidebar pt-header pb-[calc(var(--player-height)+var(--bottom-nav-height))] transition-[padding] duration-300",
         isCollapsed ? "xl:pl-mini-sidebar" : "xl:pl-sidebar",
-        mainDrawerState && "xl:pr-right-panel",
+        mainDrawerState && "lg:pr-right-panel",
       )}
     >
       <ScrollArea

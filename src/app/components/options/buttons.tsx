@@ -7,6 +7,7 @@ import {
   Info,
   ListEnd,
   ListPlus,
+  ListX,
   Pencil,
   PlayIcon,
   PlusIcon,
@@ -147,6 +148,22 @@ function RemoveFromPlaylist({
   );
 }
 
+function RemoveFromQueue({
+  variant = "dropdown",
+  ...props
+}: DropdownMenuItemProps) {
+  const { t } = useTranslation();
+
+  return (
+    <MenuItemFactory
+      variant={variant}
+      icon={<ListX className="mr-2 h-4 w-4" />}
+      label={t("options.removeFromQueue")}
+      {...props}
+    />
+  );
+}
+
 function SongInfo({ variant = "dropdown", ...props }: DropdownMenuItemProps) {
   const { t } = useTranslation();
 
@@ -271,6 +288,7 @@ export const OptionsButtons = {
   EditPlaylist,
   RemovePlaylist,
   RemoveFromPlaylist,
+  RemoveFromQueue,
   SongInfo,
   MarkAsPlayed,
   GotoPodcast,

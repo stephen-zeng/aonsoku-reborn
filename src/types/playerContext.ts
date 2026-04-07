@@ -176,6 +176,7 @@ export interface IPlayerActions {
     sourceId?: { albumId: string } | { playlistId: string },
   ) => void;
   removeSongFromQueue: (id: string) => void;
+  reorderQueue: (fromIndex: number, toIndex: number) => void;
   setMainDrawerState: (state: boolean) => void;
   setQueueState: (state: boolean) => void;
   toggleQueueAction: () => void;

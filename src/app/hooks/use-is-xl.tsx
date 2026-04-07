@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const XL_BREAKPOINT = 1280;
+const XL_BREAKPOINT = 1024;
 
 export function useIsXl() {
   const [isXl, setIsXl] = useState<boolean | undefined>(undefined);

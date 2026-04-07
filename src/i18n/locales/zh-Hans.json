@@ -350,6 +350,7 @@
     },
     "play": "播放",
     "addLast": "添加到队列末尾",
+    "removeFromQueue": "从队列中移除",
     "info": "获取信息",
     "goto": {
       "artist": "前往艺人",

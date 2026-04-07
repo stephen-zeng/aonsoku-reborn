@@ -1,3 +1,4 @@
+import { arrayMove } from "@dnd-kit/sortable";
 import { produce } from "immer";
 import clamp from "lodash/clamp";
 import merge from "lodash/merge";
@@ -1007,6 +1008,38 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.songlist.shuffledList = newShuffledList;
                   state.songlist.currentSongIndex = updatedCurrentIndex;
                   state.songlist.originalSongIndex = updatedOriginalIndex;
+                });
+              },
+              reorderQueue: (fromIndex, toIndex) => {
+                if (isRemoteActive()) return;
+                const { currentList, currentSongIndex } =
+                  get().songlist;
+
+                const newList = arrayMove(
+                  currentList,
+                  fromIndex,
+                  toIndex,
+                );
+
+                // Recalculate currentSongIndex
+                let newSongIndex = currentSongIndex;
+                if (currentSongIndex === fromIndex) {
+                  newSongIndex = toIndex;
+                } else if (
+                  fromIndex < currentSongIndex &&
+                  toIndex >= currentSongIndex
+                ) {
+                  newSongIndex = currentSongIndex - 1;
+                } else if (
+                  fromIndex > currentSongIndex &&
+                  toIndex <= currentSongIndex
+                ) {
+                  newSongIndex = currentSongIndex + 1;
+                }
+
+                set((state) => {
+                  state.songlist.currentList = newList;
+                  state.songlist.currentSongIndex = newSongIndex;
                 });
               },
               setMainDrawerState: (status) => {

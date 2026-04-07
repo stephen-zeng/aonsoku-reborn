@@ -1,6 +1,5 @@
-import clsx from "clsx";
 import { ListVideo, MicVocalIcon, XIcon } from "lucide-react";
-import { ComponentPropsWithoutRef, useMemo } from "react";
+import { ComponentPropsWithoutRef } from "react";
 import { useTranslation } from "react-i18next";
 import { LyricsTab } from "@/app/components/fullscreen/lyrics";
 import { QueueSettings } from "@/app/components/fullscreen/settings";
@@ -11,27 +10,14 @@ import {
   useLyricsState,
   useMainDrawerState,
   useQueueState,
-  useSongColor,
 } from "@/store/player.store";
-import { hexToRgba } from "@/utils/getAverageColor";
 
 export function MainDrawerPage() {
-  const {
-    currentSongColor,
-    useSongColorOnQueue,
-    currentSongColorIntensity,
-  } = useSongColor();
   const { mainDrawerState, closeDrawer, toggleQueueAndLyrics } =
     useMainDrawerState();
   const { queueState } = useQueueState();
   const { lyricsState } = useLyricsState();
   const { t } = useTranslation();
-
-  const backgroundColor = useMemo(() => {
-    if (!useSongColorOnQueue || !currentSongColor) return undefined;
-
-    return hexToRgba(currentSongColor, currentSongColorIntensity);
-  }, [currentSongColor, useSongColorOnQueue, currentSongColorIntensity]);
 
   return (
     <div
@@ -39,20 +25,13 @@ export function MainDrawerPage() {
         "fixed top-[--header-height] right-0 bottom-[calc(var(--player-height)+var(--bottom-nav-height))] w-[--right-panel-width] z-30",
         "border-l bg-background-foreground",
         "transition-transform duration-300 ease-in-out",
-        "hidden xl:flex flex-col",
+        "hidden lg:flex flex-col",
         mainDrawerState
           ? "translate-x-0"
           : "translate-x-full pointer-events-none",
       )}
     >
-      <div
-        className={clsx(
-          "flex flex-col w-full h-full",
-          "transition-[background-image,background-color] duration-1000",
-          currentSongColor && "default-gradient",
-        )}
-        style={{ backgroundColor }}
-      >
+      <div className="flex flex-col w-full h-full">
         <div className="flex w-full h-12 min-h-12 px-3 items-center gap-1">
           <div className="flex items-center gap-0.5 flex-1">
             <Button
