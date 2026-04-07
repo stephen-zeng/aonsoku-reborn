@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
-import { useAppStore } from "@/store/app.store";
 
 const navItems = [
   {
@@ -18,12 +17,17 @@ const navItems = [
     route: ROUTES.MOBILE.LIBRARY,
     icon: LibraryIcon,
   },
+  {
+    id: "search",
+    title: "sidebar.miniSearch",
+    route: ROUTES.MOBILE.SEARCH,
+    icon: SearchIcon,
+  },
 ] as const;
 
 export function BottomNavigation() {
   const { t } = useTranslation();
   const location = useLocation();
-  const { setOpen } = useAppStore((state) => state.command);
 
   function isActive(route: string) {
     return location.pathname === route;
@@ -52,14 +56,6 @@ export function BottomNavigation() {
             <span className="text-[10px] leading-none">{t(item.title)}</span>
           </Link>
         ))}
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="flex flex-col items-center justify-center gap-1 text-xs text-muted-foreground transition-colors"
-        >
-          <SearchIcon className="w-5 h-5 stroke-[1.5]" />
-          <span className="text-[10px] leading-none">{t("sidebar.miniSearch")}</span>
-        </button>
       </div>
     </nav>
   );

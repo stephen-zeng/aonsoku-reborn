@@ -70,6 +70,8 @@ const SERVER_CONFIG = "/server-config";
 
 const MOBILE = {
   LIBRARY: "/mobile/library",
+  SEARCH: "/mobile/search",
+  SETTINGS: "/mobile/settings",
 };
 
 export const ROUTES = {

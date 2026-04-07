@@ -42,6 +42,8 @@ const LatestEpisodes = lazy(
   () => import("@/app/pages/podcasts/latest-episodes"),
 );
 const MobileLibrary = lazy(() => import("@/app/pages/mobile/library"));
+const MobileSearch = lazy(() => import("@/app/pages/mobile/search"));
+const MobileSettings = lazy(() => import("@/app/pages/mobile/settings"));
 
 export const router = createHashRouter([
   {
@@ -201,6 +203,26 @@ export const router = createHashRouter([
         element: (
           <Suspense fallback={<SongListFallback />}>
             <MobileLibrary />
+          </Suspense>
+        ),
+      },
+      {
+        id: "mobile-search",
+        path: ROUTES.MOBILE.SEARCH,
+        errorElement: <ErrorPage />,
+        element: (
+          <Suspense>
+            <MobileSearch />
+          </Suspense>
+        ),
+      },
+      {
+        id: "mobile-settings",
+        path: ROUTES.MOBILE.SETTINGS,
+        errorElement: <ErrorPage />,
+        element: (
+          <Suspense>
+            <MobileSettings />
           </Suspense>
         ),
       },

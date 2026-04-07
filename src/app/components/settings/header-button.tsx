@@ -1,24 +1,37 @@
 import { Settings } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
+import { ROUTES } from "@/routes/routesList";
 import { useAppSettings } from "@/store/app.store";
 
 export function SettingsButton() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { openDialog, setOpenDialog } = useAppSettings();
 
   useHotkeys("mod+comma", () => {
     setOpenDialog(!openDialog);
   });
 
+  function handleClick() {
+    if (isMobile) {
+      navigate(ROUTES.MOBILE.SETTINGS);
+    } else {
+      setOpenDialog(true);
+    }
+  }
+
   return (
     <SimpleTooltip text={t("settings.label")} side="bottom">
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => setOpenDialog(true)}
+        onClick={handleClick}
         className="h-8 w-8 p-0 rounded-md"
       >
         <Settings className="w-4 h-4" />
