@@ -24,9 +24,10 @@ import { logger } from "@/utils/logger";
 
 interface PlayerProgressProps {
   audioRef: RefObject<HTMLAudioElement>;
+  isBuffering?: boolean;
 }
 
-export function PlayerProgress({ audioRef }: PlayerProgressProps) {
+export function PlayerProgress({ audioRef, isBuffering = false }: PlayerProgressProps) {
   const progress = usePlayerProgress();
   const [localProgress, setLocalProgress] = useState(progress);
   const [isLocalSeeking, setIsLocalSeeking] = useState(false);
@@ -236,6 +237,7 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
           max={currentDuration}
           step={1}
           className="cursor-pointer w-[32rem]"
+          isBuffering={isBuffering}
           onValueChange={([value]) => handleSeeking(value)}
           onValueCommit={([value]) => handleSeeked(value)}
           // Sometimes onValueCommit doesn't work properly

@@ -56,6 +56,7 @@ export function Player() {
   const podcastRef = useRef<HTMLAudioElement>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
   const {
     setAudioPlayerRef,
     setCurrentDuration,
@@ -251,7 +252,7 @@ export function Player() {
           />
 
           {(isSong || isPodcast) && (
-            <MemoPlayerProgress audioRef={getAudioRef()} />
+            <MemoPlayerProgress audioRef={getAudioRef()} isBuffering={isBuffering} />
           )}
         </div>
         {/* Mobile Controls - Only Play/Pause and Next */}
@@ -320,6 +321,9 @@ export function Player() {
           onTimeUpdate={setupProgress}
           onEnded={handleSongEnded}
           onLoadStart={setupInitialVolume}
+          onWaiting={() => setIsBuffering(true)}
+          onPlaying={() => setIsBuffering(false)}
+          onCanPlay={() => setIsBuffering(false)}
           data-testid="player-song-audio"
         />
       )}
@@ -351,6 +355,9 @@ export function Player() {
             handleSongEnded();
           }}
           onLoadStart={setupInitialVolume}
+          onWaiting={() => setIsBuffering(true)}
+          onPlaying={() => setIsBuffering(false)}
+          onCanPlay={() => setIsBuffering(false)}
           data-testid="player-podcast-audio"
         />
       )}

@@ -1081,15 +1081,21 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   hasNextSong,
                   playNextSong,
                   setPlayingState,
-                  clearPlayerState,
+                  resetProgress,
+                  setCurrentSong,
                 } = get().actions;
 
                 if (hasNextSong() || loopState === LoopState.All) {
                   playNextSong();
                   setPlayingState(true);
                 } else {
-                  clearPlayerState();
-                  setPlayingState(false);
+                  // Queue finished — preserve queue so user can restart from beginning
+                  resetProgress();
+                  set((state) => {
+                    state.playerState.isPlaying = false;
+                    state.songlist.currentSongIndex = 0;
+                  });
+                  setCurrentSong();
                 }
               },
               getCurrentProgress: () => {
