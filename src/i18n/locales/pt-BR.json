@@ -455,6 +455,8 @@
     "info": "Mais informações",
     "markAsPlayed": "Marcar como reproduzido",
     "goto": {
+      "artist": "Ir para o artista",
+      "album": "Ir para o álbum",
       "episode": "Ir para o episódio",
       "podcast": "Ir para o podcast"
     }

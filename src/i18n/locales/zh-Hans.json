@@ -352,6 +352,8 @@
     "addLast": "添加到队列末尾",
     "info": "获取信息",
     "goto": {
+      "artist": "前往艺人",
+      "album": "前往专辑",
       "episode": "前往单集",
       "podcast": "前往播客"
     },

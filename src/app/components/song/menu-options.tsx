@@ -1,6 +1,8 @@
+import { useNavigate } from "react-router-dom";
 import { OptionsButtons } from "@/app/components/options/buttons";
 import { ContextMenuSeparator } from "@/app/components/ui/context-menu";
 import { useOptions } from "@/app/hooks/use-options";
+import { ROUTES } from "@/routes/routesList";
 import { ISong } from "@/types/responses/song";
 import { AddToPlaylistSubMenu } from "./add-to-playlist";
 
@@ -15,6 +17,7 @@ export function SongMenuOptions({
   song,
   index,
 }: SongMenuOptionsProps) {
+  const navigate = useNavigate();
   const {
     playNext,
     playLast,
@@ -61,6 +64,29 @@ export function SongMenuOptions({
         />
       )}
       <ContextMenuSeparator />
+      {(song.artistId || song.albumId) && (
+        <>
+          {song.artistId && (
+            <OptionsButtons.GotoArtist
+              variant={variant}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(ROUTES.ARTIST.PAGE(song.artistId!));
+              }}
+            />
+          )}
+          {song.albumId && (
+            <OptionsButtons.GotoAlbum
+              variant={variant}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(ROUTES.ALBUM.PAGE(song.albumId));
+              }}
+            />
+          )}
+          <ContextMenuSeparator />
+        </>
+      )}
       <OptionsButtons.Download
         variant={variant}
         onClick={(e) => {

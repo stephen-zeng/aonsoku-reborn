@@ -228,6 +228,8 @@
       "notFound": "Nebyl nalezen žádný playlist"
     },
     "goto": {
+      "artist": "Přejít na umělce",
+      "album": "Přejít na album",
       "episode": "Přejít na epizodu",
       "podcast": "Přejít na podcast"
     },

@@ -433,6 +433,8 @@
     },
     "info": "Informationen abrufen",
     "goto": {
+      "artist": "Zum Künstler gehen",
+      "album": "Zum Album gehen",
       "podcast": "Zum Podcast gehen",
       "episode": "Zu Episode gehen"
     },

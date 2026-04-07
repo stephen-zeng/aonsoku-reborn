@@ -372,6 +372,8 @@
     "info": "Obtener información",
     "playNext": "Reproducir siguiente",
     "goto": {
+      "artist": "Ir al artista",
+      "album": "Ir al álbum",
       "episode": "Ir al episodio",
       "podcast": "Ir al podcast"
     },

@@ -1,3 +1,4 @@
+import { isMobile } from "react-device-detect";
 import { Link } from "react-router-dom";
 import { CoverImage } from "@/app/components/table/cover-image";
 import { cn } from "@/lib/utils";
@@ -86,6 +87,16 @@ type ArtistLinkProps = {
 };
 
 function ArtistLink({ id, name }: ArtistLinkProps) {
+  if (isMobile) {
+    return (
+      <span className="text-xs text-foreground/70 text-nowrap">{name}</span>
+    );
+  }
+
+  return <ArtistLinkDesktop id={id} name={name} />;
+}
+
+function ArtistLinkDesktop({ id, name }: ArtistLinkProps) {
   const { mainDrawerState, closeDrawer } = useMainDrawerState();
 
   return (

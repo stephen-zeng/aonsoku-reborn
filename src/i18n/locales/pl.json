@@ -449,6 +449,8 @@
     "info": "Informacje",
     "markAsPlayed": "Oznacz jako odtworzone",
     "goto": {
+      "artist": "Przejdź do artysty",
+      "album": "Przejdź do albumu",
       "episode": "Przejdź do odcinka",
       "podcast": "Przejdź do podcastu"
     }

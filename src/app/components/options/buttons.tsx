@@ -1,6 +1,7 @@
 import omit from "lodash/omit";
 import {
   CheckIcon,
+  Disc3,
   DownloadIcon,
   Heart,
   Info,
@@ -11,6 +12,7 @@ import {
   PlusIcon,
   PodcastIcon,
   Trash,
+  User,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ContextMenuItem } from "@/app/components/ui/context-menu";
@@ -197,6 +199,38 @@ function GotoPodcast({
   );
 }
 
+function GotoArtist({
+  variant = "dropdown",
+  ...props
+}: DropdownMenuItemProps) {
+  const { t } = useTranslation();
+
+  return (
+    <MenuItemFactory
+      variant={variant}
+      icon={<User className="mr-2 h-4 w-4" />}
+      label={t("options.goto.artist")}
+      {...props}
+    />
+  );
+}
+
+function GotoAlbum({
+  variant = "dropdown",
+  ...props
+}: DropdownMenuItemProps) {
+  const { t } = useTranslation();
+
+  return (
+    <MenuItemFactory
+      variant={variant}
+      icon={<Disc3 className="mr-2 h-4 w-4" />}
+      label={t("options.goto.album")}
+      {...props}
+    />
+  );
+}
+
 type LikeProps = DropdownMenuItemProps & {
   isStarred?: boolean;
   label?: string;
@@ -240,4 +274,6 @@ export const OptionsButtons = {
   SongInfo,
   MarkAsPlayed,
   GotoPodcast,
+  GotoArtist,
+  GotoAlbum,
 };

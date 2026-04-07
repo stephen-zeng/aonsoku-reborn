@@ -499,6 +499,8 @@
     "playNext": "다음 곡 재생",
     "markAsPlayed": "재생 완료된 것으로 설정",
     "goto": {
+      "artist": "아티스트로 이동",
+      "album": "앨범으로 이동",
       "episode": "에피소드로 이동",
       "podcast": "팟캐스트로 이동"
     },

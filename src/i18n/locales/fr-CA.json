@@ -258,6 +258,8 @@
       "create": "Nouvelle liste de lecture"
     },
     "goto": {
+      "artist": "Aller à l'artiste",
+      "album": "Aller à l'album",
       "podcast": "Aller au balado",
       "episode": "Aller à l'épisode"
     },

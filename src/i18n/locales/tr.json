@@ -443,6 +443,8 @@
     "info": "Bilgi al",
     "markAsPlayed": "Oynatıldı olarak işaretle",
     "goto": {
+      "artist": "Sanatçıya git",
+      "album": "Albüme git",
       "episode": "Bölüme git",
       "podcast": "Podcast'e git"
     }

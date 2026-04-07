@@ -452,6 +452,8 @@
     "info": "Get info",
     "markAsPlayed": "Mark as played",
     "goto": {
+      "artist": "Go to artist",
+      "album": "Go to album",
       "episode": "Go to episode",
       "podcast": "Go to podcast"
     }
