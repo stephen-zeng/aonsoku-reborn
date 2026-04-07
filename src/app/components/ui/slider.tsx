@@ -147,6 +147,7 @@ type ProgressSliderProps = React.ComponentPropsWithoutRef<
   variant?: Variant;
   tooltipValue?: string;
   tooltipTransformer?: (value: number) => string;
+  isBuffering?: boolean;
 };
 
 export function ProgressSlider(props: ProgressSliderProps) {
@@ -155,6 +156,7 @@ export function ProgressSlider(props: ProgressSliderProps) {
     tooltipValue,
     tooltipTransformer,
     variant = "default",
+    isBuffering = false,
     onValueChange,
     ...rest
   } = props;
@@ -302,7 +304,8 @@ export function ProgressSlider(props: ProgressSliderProps) {
         <SliderPrimitive.Track
           className={clsx(
             "relative h-1 w-full grow overflow-hidden rounded-full select-none",
-            variant === "default" && "bg-secondary",
+            variant === "default" && !isBuffering && "bg-secondary",
+            variant === "default" && isBuffering && "bg-secondary animate-pulse",
             variant === "secondary" && "bg-muted-foreground/70",
           )}
           onContextMenu={handleContextMenu}

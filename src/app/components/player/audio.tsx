@@ -4,13 +4,13 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { useAudioContext } from "@/app/hooks/use-audio-context";
 import {
-  usePlayerActions,
   usePlayerIsPlaying,
   usePlayerMediaType,
   usePlayerVolume,
@@ -37,7 +37,6 @@ export function AudioPlayer({
   const [audioSrc, setAudioSrc] = useState<string | undefined>(undefined);
   const { replayGainEnabled, replayGainError } = useReplayGainState();
   const { isSong, isRadio, isPodcast } = usePlayerMediaType();
-  const { setPlayingState } = usePlayerActions();
   const { setReplayGainEnabled, setReplayGainError } = useReplayGainActions();
   const { volume } = usePlayerVolume();
   const isPlaying = usePlayerIsPlaying();
@@ -54,6 +53,12 @@ export function AudioPlayer({
         useNativeAudio: shouldUseNativeAudio,
         isRemoteControlActive,
       });
+      // Clear any pending retry when the source changes
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
+      retryCountRef.current = 0;
       setAudioSrc(src);
     }
   }, [src, audioSrc, shouldUseNativeAudio, isRemoteControlActive]);
@@ -107,6 +112,32 @@ export function AudioPlayer({
     volume,
   ]);
 
+  const retryCountRef = useRef(0);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const MAX_RETRIES = 5;
+
+  const scheduleRetry = useCallback(
+    (audio: HTMLAudioElement) => {
+      if (retryCountRef.current >= MAX_RETRIES) {
+        toast.error(t("warnings.songError"));
+        retryCountRef.current = 0;
+        return;
+      }
+
+      retryCountRef.current += 1;
+      const delay = Math.pow(2, retryCountRef.current - 1) * 1000;
+      logger.info(`Retrying audio (attempt ${retryCountRef.current}) in ${delay}ms`);
+
+      retryTimeoutRef.current = setTimeout(() => {
+        audio.load();
+        audio.play().catch((err) => {
+          logger.error("Retry play failed:", err);
+        });
+      }, delay);
+    },
+    [t],
+  );
+
   const handleSongError = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -125,8 +156,6 @@ export function AudioPlayer({
 
     logger.error("Audio load error", errorDetails);
 
-    // Only show toast and reload if this is a replay gain related error
-    // Otherwise just log the error to avoid reload loops
     if (
       audio.error?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED &&
       replayGainEnabled
@@ -136,12 +165,12 @@ export function AudioPlayer({
       setReplayGainError(true);
       window.location.reload();
     } else if (audio.error?.code !== MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
-      // Only show toast for non-source errors
-      toast.error(t("warnings.songError"));
+      scheduleRetry(audio);
     }
   }, [
     audioRef,
     replayGainEnabled,
+    scheduleRetry,
     setReplayGainEnabled,
     setReplayGainError,
     t,
@@ -151,9 +180,25 @@ export function AudioPlayer({
     const audio = audioRef.current;
     if (!audio) return;
 
-    toast.error(t("radios.error"));
-    setPlayingState(false);
-  }, [audioRef, setPlayingState, t]);
+    scheduleRetry(audio);
+  }, [audioRef, scheduleRetry]);
+
+  // Reset retry count on successful play and clear pending retries on unmount
+  useEffect(() => {
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handlePlaySuccess = useCallback(() => {
+    retryCountRef.current = 0;
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     async function handleSong() {
@@ -239,6 +284,10 @@ export function AudioPlayer({
       src={audioSrc}
       crossOrigin={crossOrigin}
       onError={handleError}
+      onPlay={(e) => {
+        handlePlaySuccess();
+        props.onPlay?.(e);
+      }}
       playsInline
       preload="auto"
     />
