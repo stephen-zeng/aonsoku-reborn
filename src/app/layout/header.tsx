@@ -93,7 +93,7 @@ export function Header() {
     : PanelLeftCloseIcon;
 
   return (
-    <header className="w-full grid grid-cols-header h-header px-4 fixed top-0 right-0 left-0 z-20 bg-background border-b electron-drag">
+    <header className="w-full flex justify-between items-center md:grid md:grid-cols-header h-[calc(var(--header-height)+env(safe-area-inset-top))] px-4 pt-[env(safe-area-inset-top)] fixed top-0 right-0 left-0 z-20 bg-background/95 supports-[backdrop-filter]:bg-background/60 backdrop-blur-md border-b electron-drag">
       <div className="flex items-center">
         {/* Spacing for macOS window controls (traffic lights) on left side */}
         {leftSpacingWidth > 10 && (
@@ -126,18 +126,20 @@ export function Header() {
             <SidebarToggleIcon className="w-4 h-4" strokeWidth={1.5} />
           </Button>
         </div>
-        <div className="md:hidden flex justify-center items-center px-4 gap-2 w-full">
+        <div className="md:hidden flex items-center gap-2">
           <NavigationButtons />
         </div>
       </div>
-      <div className="col-span-2 flex items-center justify-center">
-        <div className="hidden md:flex justify-center items-center px-4 gap-2 w-full">
+      <div className="hidden md:flex col-span-2 items-center justify-center">
+        <div className="flex justify-center items-center px-4 gap-2 w-full">
           <NavigationButtons />
           <MemoCommandMenu />
         </div>
       </div>
       <div className="flex justify-end items-center gap-2">
-        <SettingsButton />
+        <div className="hidden md:block">
+          <SettingsButton />
+        </div>
         <UserDropdown />
         {/* Spacing for Windows/Linux window controls on right side */}
         {rightSpacingWidth > 10 && (

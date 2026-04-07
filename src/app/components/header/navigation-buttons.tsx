@@ -28,7 +28,7 @@ export function NavigationButtons() {
       </div>
       <div
         className={clsx(
-          "w-8 h-8",
+          "w-8 h-8 hidden md:block",
           !canGoForward && !mainDrawerState && "cursor-not-allowed",
         )}
       >

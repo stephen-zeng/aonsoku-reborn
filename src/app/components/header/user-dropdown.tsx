@@ -1,10 +1,12 @@
-import { Cast, Info, Keyboard, LogOut, User } from "lucide-react";
+import { Cast, Info, Keyboard, LogOut, Settings, User } from "lucide-react";
 import { useState } from "react";
 import { Fragment } from "react/jsx-runtime";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 import { AboutDialog } from "@/app/components/about/dialog";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import { ShortcutsDialog } from "@/app/components/shortcuts/dialog";
 import { Avatar, AvatarFallback } from "@/app/components/ui/avatar";
 import {
@@ -19,7 +21,8 @@ import {
 import { LogoutObserver } from "@/app/observers/logout-observer";
 import { RemoteControlDialog } from "@/app/components/remote-control/dialog";
 import { logoutKeys, shortcutDialogKeys, stringifyShortcut } from "@/shortcuts";
-import { useAppData, useAppStore } from "@/store/app.store";
+import { ROUTES } from "@/routes/routesList";
+import { useAppData, useAppStore, useAppSettings } from "@/store/app.store";
 import { useLanControlServerInfo } from "@/store/lanControl.store";
 import { isMacOS } from "@/utils/desktop";
 
@@ -29,10 +32,21 @@ export function UserDropdown() {
     (state) => state.actions.setLogoutDialogState,
   );
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const { setOpenDialog } = useAppSettings();
   const serverInfo = useLanControlServerInfo();
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [remoteControlOpen, setRemoteControlOpen] = useState(false);
+
+  function handleSettingsClick() {
+    if (isMobile) {
+      navigate(ROUTES.MOBILE.SETTINGS);
+    } else {
+      setOpenDialog(true);
+    }
+  }
 
   useHotkeys("shift+ctrl+q", () => setLogoutDialogState(true));
   useHotkeys("mod+/", () => setShortcutsOpen((prev) => !prev));
@@ -69,13 +83,21 @@ export function UserDropdown() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setShortcutsOpen(true)}>
-            <Keyboard className="mr-2 h-4 w-4" />
-            <span>{t("shortcuts.modal.title")}</span>
-            <DropdownMenuShortcut>
-              {stringifyShortcut(shortcutDialogKeys)}
-            </DropdownMenuShortcut>
-          </DropdownMenuItem>
+          {isMobile && (
+            <DropdownMenuItem onClick={handleSettingsClick}>
+              <Settings className="mr-2 h-4 w-4" />
+              <span>{t("settings.label")}</span>
+            </DropdownMenuItem>
+          )}
+          {!isMobile && (
+            <DropdownMenuItem onClick={() => setShortcutsOpen(true)}>
+              <Keyboard className="mr-2 h-4 w-4" />
+              <span>{t("shortcuts.modal.title")}</span>
+              <DropdownMenuShortcut>
+                {stringifyShortcut(shortcutDialogKeys)}
+              </DropdownMenuShortcut>
+            </DropdownMenuItem>
+          )}
           {!isServerRunning && (
             <DropdownMenuItem onClick={() => setRemoteControlOpen(true)}>
               <Cast className="mr-2 h-4 w-4" />
