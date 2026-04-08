@@ -1,5 +1,12 @@
 import type { LyricLine, LyricWord } from "@applemusic-like-lyrics/core";
 
+/** Matches an LRC timestamp at the start of a line: [mm:ss.xx] or [mm:ss:xx] */
+export const LRC_TIMESTAMP_REGEX = /^\[\d+:\d+[.:]\d+\]/;
+
+/** Matches common LRC metadata tags like [ti:...], [ar:...], etc. */
+export const LRC_METADATA_REGEX =
+  /^\[(ti|ar|al|by|offset|re|ve|length):/;
+
 /**
  * Parse LRC timestamp to milliseconds
  * Supports formats: [mm:ss.xx], [mm:ss.xxx], [mm:ss:xx]
@@ -45,14 +52,17 @@ function parseLrcLine(
 /**
  * Convert LRC format lyrics to AMLL LyricLine[] format
  */
-export function convertLrcToAMLL(lrcContent: string): LyricLine[] {
+export function convertLrcToAMLL(
+  lrcContent: string,
+  songDurationMs?: number,
+): LyricLine[] {
   const lines = lrcContent.split("\n");
   const parsedLines: { timestamp: number; content: string }[] = [];
 
   // Parse all lines with timestamps
   for (const line of lines) {
     const parsed = parseLrcLine(line);
-    if (parsed && parsed.content) {
+    if (parsed) {
       parsedLines.push(parsed);
     }
   }
@@ -64,7 +74,9 @@ export function convertLrcToAMLL(lrcContent: string): LyricLine[] {
   return parsedLines.map((line, index, arr): LyricLine => {
     // Calculate end time based on next line's start time
     const endTime =
-      index < arr.length - 1 ? arr[index + 1].timestamp : line.timestamp + 5000;
+      index < arr.length - 1
+        ? arr[index + 1].timestamp
+        : (songDurationMs ?? line.timestamp + 5000);
 
     const word: LyricWord = {
       word: line.content,
@@ -90,10 +102,6 @@ export function convertLrcToAMLL(lrcContent: string): LyricLine[] {
  * Check if lyrics are synced (have LRC timestamps)
  */
 export function areLyricsSynced(lyrics: string): boolean {
-  const lyric = lyrics.trim();
-  return (
-    lyric.startsWith("[00:") ||
-    lyric.startsWith("[01:") ||
-    lyric.startsWith("[02:")
-  );
+  const lines = lyrics.trim().split("\n", 20);
+  return lines.some((line) => LRC_TIMESTAMP_REGEX.test(line));
 }
