@@ -2,21 +2,21 @@
 
 // Build hash & precache manifest are injected by the Vite plugin during builds.
 // Must match CACHE_PREFIX in src/utils/swRegistration.ts (separate JS contexts).
-var CACHE_PREFIX = "aonsoku-";
-var CACHE_VERSION = "__SW_CACHE_HASH__";
-var MAIN_CACHE = CACHE_PREFIX + "Main-" + CACHE_VERSION;
-var EXTERNAL_CACHE = CACHE_PREFIX + "ExternalRes";
+const CACHE_PREFIX = "aonsoku-";
+const CACHE_VERSION = "__SW_CACHE_HASH__";
+const MAIN_CACHE = CACHE_PREFIX + "Main-" + CACHE_VERSION;
+const EXTERNAL_CACHE = CACHE_PREFIX + "ExternalRes";
 
 // Precache manifest — replaced at build time by the Vite plugin.
-var PRECACHE_URLS = "__PRECACHE_MANIFEST__";
+const PRECACHE_URLS = "__PRECACHE_MANIFEST__";
 
 // Max concurrent fetches during precaching.
-var PRECACHE_BATCH_SIZE = 15;
+const PRECACHE_BATCH_SIZE = 15;
 
-var MATCH_OPTS = { ignoreSearch: true, ignoreVary: true };
+const MATCH_OPTS = { ignoreSearch: true, ignoreVary: true };
 
 // Cache self origin once — it never changes.
-var SELF_URL = new URL(self.location.href);
+const SELF_URL = new URL(self.location.href);
 
 // ── Caching Strategies ──────────────────────────────────────
 
@@ -37,7 +37,7 @@ function cacheFirst(request, key) {
 
 function onlineFirst(request, key) {
   return caches.open(key).then(function (cache) {
-    var offlineFetch = function () {
+    const offlineFetch = function () {
       return cache.match(request, MATCH_OPTS);
     };
     return fetch(request)
@@ -64,13 +64,13 @@ function precacheAppShell() {
     }
 
     // Cache the SPA shell first — it's the most critical resource.
-    var shellPromise = cache.add("/index.html");
+    const shellPromise = cache.add("/index.html");
 
     return shellPromise.then(function () {
-      var remaining = PRECACHE_URLS.filter(function (u) {
+      const remaining = PRECACHE_URLS.filter(function (u) {
         return u !== "/index.html";
       });
-      var failedUrls = [];
+      const failedUrls = [];
 
       function processBatch(startIndex) {
         if (startIndex >= remaining.length) {
@@ -80,13 +80,13 @@ function precacheAppShell() {
           return Promise.resolve();
         }
 
-        var batch = remaining.slice(startIndex, startIndex + PRECACHE_BATCH_SIZE);
+        const batch = remaining.slice(startIndex, startIndex + PRECACHE_BATCH_SIZE);
         return Promise.allSettled(
           batch.map(function (url) {
             return cache.add(url);
           })
         ).then(function (results) {
-          for (var i = 0; i < results.length; i++) {
+          for (let i = 0; i < results.length; i++) {
             if (results[i].status === "rejected") {
               failedUrls.push(batch[i]);
             }
@@ -131,7 +131,7 @@ self.addEventListener("activate", function (e) {
 self.addEventListener("fetch", function (e) {
   if (e.request.method !== "GET") return;
 
-  var url = new URL(e.request.url);
+  const url = new URL(e.request.url);
 
   if (
     url.pathname.endsWith("sw.js") ||
@@ -187,14 +187,14 @@ self.addEventListener("fetch", function (e) {
 // Channel name must match src/utils/swRegistration.ts setupUpdateListener().
 
 self.addEventListener("message", function (event) {
-  var data = event.data;
+  const data = event.data;
   if (!data || !data.action) return;
 
   if (data.action === "update") {
-    var assets = Array.isArray(PRECACHE_URLS) ? PRECACHE_URLS.slice() : [];
+    const assets = Array.isArray(PRECACHE_URLS) ? PRECACHE_URLS.slice() : [];
 
     if (Array.isArray(data.assets)) {
-      for (var i = 0; i < data.assets.length; i++) {
+      for (let i = 0; i < data.assets.length; i++) {
         assets.push("/assets/" + data.assets[i]);
       }
     }
@@ -208,7 +208,7 @@ self.addEventListener("message", function (event) {
         return cache.addAll(assets);
       })
       .then(function () {
-        var broadcast = new BroadcastChannel("updateFinish");
+        const broadcast = new BroadcastChannel("updateFinish");
         broadcast.postMessage({ type: "UPDATED" });
         broadcast.close();
       })
