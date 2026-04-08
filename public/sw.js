@@ -31,36 +31,52 @@ const STATIC_ASSET_RE =
 // Ignore query-string differences when matching cached entries
 const CACHE_MATCH_OPTS = { ignoreSearch: true };
 
+// Max concurrent fetches during precaching (avoids overwhelming constrained connections)
+const PRECACHE_BATCH_SIZE = 15;
+
 // ── Install ──────────────────────────────────────────────────
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => {
-        // Use individual cache.add() with allSettled so a single
-        // failing URL (e.g. slow connection) doesn't abort the
-        // entire precache — the app shell and critical chunks
-        // still get cached.
-        if (!Array.isArray(PRECACHE_URLS)) {
-          console.error(
-            "[SW] Precache manifest was not injected at build time",
-          );
-          return;
+    caches.open(CACHE_NAME).then(async (cache) => {
+      if (!Array.isArray(PRECACHE_URLS)) {
+        console.error(
+          "[SW] Precache manifest was not injected at build time",
+        );
+        return;
+      }
+
+      // Cache the SPA shell first — it's the most critical resource.
+      // If this fails, offline navigation will not work at all.
+      if (PRECACHE_URLS.includes("/index.html")) {
+        try {
+          await cache.add("/index.html");
+        } catch (e) {
+          console.warn("[SW] Failed to precache app shell:", e);
         }
-        return Promise.allSettled(
-          PRECACHE_URLS.map((url) => cache.add(url)),
-        ).then((results) => {
-          const failed = results.filter((r) => r.status === "rejected");
-          if (failed.length) {
-            console.warn(
-              `[SW] Precache: ${PRECACHE_URLS.length - failed.length}/${PRECACHE_URLS.length} OK, ${failed.length} failed`,
-              failed.map((r) => r.reason),
-            );
-          }
-        });
-      })
-      .then(() => self.skipWaiting()),
+      }
+
+      // Batch the remaining URLs to avoid overwhelming constrained connections
+      // with 190+ simultaneous fetches.
+      const remaining = PRECACHE_URLS.filter((u) => u !== "/index.html");
+      let failed = 0;
+
+      for (let i = 0; i < remaining.length; i += PRECACHE_BATCH_SIZE) {
+        const batch = remaining.slice(i, i + PRECACHE_BATCH_SIZE);
+        const results = await Promise.allSettled(
+          batch.map((url) => cache.add(url)),
+        );
+        failed += results.filter((r) => r.status === "rejected").length;
+      }
+
+      if (failed) {
+        console.warn(
+          `[SW] Precache: ${PRECACHE_URLS.length - failed}/${PRECACHE_URLS.length} OK, ${failed} failed`,
+        );
+      }
+
+      return self.skipWaiting();
+    }),
   );
 });
 
@@ -118,8 +134,9 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Everything else: stale-while-revalidate
-  event.respondWith(staleWhileRevalidate(request));
+  // Everything else: stale-while-revalidate.
+  // Pass event so the strategy can extend SW lifetime for the background write.
+  event.respondWith(staleWhileRevalidate(request, event));
 });
 
 // ── Strategies ───────────────────────────────────────────────
@@ -129,15 +146,22 @@ async function networkFirst(request) {
     const response = await fetch(safeFetchRequest(request));
     if (response.ok) {
       const cache = await caches.open(CACHE_NAME);
-      cache.put(request, response.clone());
+      // Await the write so the SW doesn't terminate before it completes,
+      // which would produce a cache entry with an empty (0-byte) body.
+      await cache.put(request, response.clone());
     }
     return response;
   } catch {
     // SPA fallback: serve the cached app shell for any navigation.
-    // This covers the case where the user navigates to "/" but the
-    // precache stored the response under "/index.html".
-    const shell = await caches.match("/index.html");
+    // Parallel lookup covers the case where the user navigates to a
+    // sub-route (e.g. "/settings") that was cached under its own URL
+    // but also has /index.html as the canonical shell.
+    const [shell, cachedNav] = await Promise.all([
+      caches.match("/index.html", CACHE_MATCH_OPTS),
+      caches.match(request, CACHE_MATCH_OPTS),
+    ]);
     if (shell && isValidResponse(shell)) return shell;
+    if (cachedNav && isValidResponse(cachedNav)) return cachedNav;
 
     return createOfflineResponse();
   }
@@ -149,11 +173,11 @@ async function cacheFirst(request) {
     if (cached && isValidResponse(cached)) return cached;
 
     const cache = await caches.open(CACHE_NAME);
-    if (cached) await cache.delete(request);
+    // cache.put() overwrites existing entries, so no explicit delete needed.
 
     const response = await fetch(safeFetchRequest(request));
     if (response.ok) {
-      cache.put(request, response.clone());
+      await cache.put(request, response.clone());
     }
     return response;
   } catch {
@@ -161,23 +185,28 @@ async function cacheFirst(request) {
   }
 }
 
-async function staleWhileRevalidate(request) {
+async function staleWhileRevalidate(request, event) {
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request, CACHE_MATCH_OPTS);
 
-  // Clone the request without browser-imposed cache constraints
-  // to avoid net::ERR_CACHE_MISS when the browser sends
-  // requests with cache: "only-if-cached" (e.g. bfcache, prefetch)
   const networkPromise = fetch(safeFetchRequest(request))
-    .then((response) => {
+    .then(async (response) => {
       if (response.ok) {
-        cache.put(request, response.clone());
+        // Await inside async .then() so the promise doesn't settle
+        // until the cache write is fully committed.
+        await cache.put(request, response.clone());
       }
       return response;
     })
     .catch(() => null);
 
-  if (cached && isValidResponse(cached)) return cached;
+  if (cached && isValidResponse(cached)) {
+    // Keep the SW alive until the background network+cache update
+    // finishes — without this, the SW may terminate mid-write and
+    // produce another 0-byte cache entry.
+    event.waitUntil(networkPromise);
+    return cached;
+  }
 
   const response = await networkPromise;
   if (response) return response;
@@ -219,10 +248,16 @@ function safeFetchRequest(request) {
 }
 
 function isValidResponse(response) {
-  // Defensive: opaque responses (cross-origin no-cors) can't be inspected,
-  // but treat them as valid if they somehow reach the cache.
+  if (!response) return false;
+  // Opaque responses (cross-origin no-cors) can't be inspected;
+  // treat them as valid if they somehow reach the cache.
   if (response.type === "opaque") return true;
-  return response && response.status >= 200 && response.status < 400;
+  if (response.status < 200 || response.status >= 400) return false;
+  // Reject entries with an explicitly empty body — these are corrupted
+  // cache writes that were interrupted before the SW could finish.
+  const cl = response.headers.get("content-length");
+  if (cl === "0") return false;
+  return true;
 }
 
 function createOfflineResponse() {
