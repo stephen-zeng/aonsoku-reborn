@@ -1,5 +1,4 @@
-import { LazyLoadImage } from "react-lazy-load-image-component";
-import { getCoverArtUrl } from "@/api/httpClient";
+import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { usePlayerCurrentSong } from "@/store/player.store";
 
 export function MiniPlayerSongImage() {
@@ -7,8 +6,10 @@ export function MiniPlayerSongImage() {
 
   return (
     <div className="min-w-[20%] h-full max-w-full aspect-square flex items-center justify-center rounded">
-      <LazyLoadImage
-        src={getCoverArtUrl(song.coverArt, "song", "500")}
+      <CachedImage
+        coverArtId={song.coverArt}
+        coverArtType="song"
+        coverArtSize="500"
         width="100%"
         height="100%"
         loading="eager"

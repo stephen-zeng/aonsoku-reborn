@@ -1,6 +1,4 @@
-import { useMemo } from "react";
-import { LazyLoadImage } from "react-lazy-load-image-component";
-import { getCoverArtUrl } from "@/api/httpClient";
+import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { AspectRatio } from "@/app/components/ui/aspect-ratio";
 import { usePlayerStore } from "@/store/player.store";
 
@@ -8,9 +6,6 @@ export function FullscreenSongImage() {
   const { coverArt, artist, title } = usePlayerStore(({ songlist }) => {
     return songlist.currentSong;
   });
-  const imageUrl = useMemo(() => {
-    return getCoverArtUrl(coverArt, "song", "800");
-  }, [coverArt]);
 
   return (
     <div className="w-full sm:w-auto sm:2xl:w-[33%] h-auto sm:h-full max-w-[min(70vw,320px)] max-h-[min(70vw,320px)] sm:max-w-[450px] sm:max-h-[450px] 2xl:max-w-[550px] 2xl:max-h-[550px] items-end flex aspect-square mx-auto sm:mx-0">
@@ -18,8 +13,10 @@ export function FullscreenSongImage() {
         ratio={1 / 1}
         className="rounded-lg 2xl:rounded-2xl overflow-hidden bg-accent"
       >
-        <LazyLoadImage
-          src={imageUrl}
+        <CachedImage
+          coverArtId={coverArt}
+          coverArtType="song"
+          coverArtSize="800"
           effect="opacity"
           alt={`${artist} - ${title}`}
           className="aspect-square object-cover shadow-custom-5"

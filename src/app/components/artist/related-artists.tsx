@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { getCoverArtUrl } from "@/api/httpClient";
 import { PreviewCard } from "@/app/components/preview-card/card";
 import {
   Carousel,
@@ -88,7 +87,8 @@ export default function RelatedArtistsList({
                     link={ROUTES.ARTIST.PAGE(artist.id)}
                   >
                     <PreviewCard.Image
-                      src={getCoverArtUrl(artist.coverArt, "artist")}
+                      coverArtId={artist.coverArt}
+                      coverArtType="artist"
                       alt={artist.name}
                     />
                     <PreviewCard.PlayButton

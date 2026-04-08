@@ -527,7 +527,8 @@
       "content": "Content",
       "accounts": "Accounts",
       "desktop": "Desktop Application",
-      "privacy": "Privacy & Security"
+      "privacy": "Privacy & Security",
+      "storage": "Storage"
     },
     "appearance": {
       "general": {
@@ -592,6 +593,30 @@
           "info": "LRCLIB is used to find song lyrics.",
           "label": "LRCLIB"
         }
+      }
+    },
+    "storage": {
+      "coverArt": {
+        "group": "Cover Art Cache",
+        "description": "Cache album cover images for faster loading.",
+        "enabled": "Enable cover art cache",
+        "size": "Cache size",
+        "entries": "{{count}} images cached",
+        "clear": "Clear cover art cache"
+      },
+      "audio": {
+        "group": "Audio Cache",
+        "description": "Cache audio files for instant playback on repeated listens.",
+        "enabled": "Enable audio cache",
+        "maxSize": "Maximum cache size",
+        "size": "Cache size",
+        "entries": "{{count}} songs cached",
+        "clear": "Clear audio cache"
+      },
+      "metadata": {
+        "group": "All Caches",
+        "description": "Clear all cached data including metadata, cover art, and audio files.",
+        "clear": "Clear all caches"
       }
     },
     "content": {

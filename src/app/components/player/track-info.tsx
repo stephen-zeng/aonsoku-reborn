@@ -3,10 +3,9 @@ import { AudioLines, Maximize2 } from "lucide-react";
 import { useCallback } from "react";
 import { Fragment } from "react/jsx-runtime";
 import { useTranslation } from "react-i18next";
-import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
 
-import { getCoverArtUrl } from "@/api/httpClient";
+import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { MarqueeTitle } from "@/app/components/fullscreen/marquee-title";
 import FullscreenMode from "@/app/components/fullscreen/page";
 import { Button } from "@/app/components/ui/button";
@@ -81,10 +80,12 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
     <Fragment>
       <div className="group relative">
         <div className="w-12 h-12 sm:w-[70px] sm:h-[70px] sm:min-w-[70px] sm:max-w-[70px] aspect-square bg-cover bg-center bg-skeleton rounded overflow-hidden shadow-md">
-          <LazyLoadImage
+          <CachedImage
             key={song.id}
             id="track-song-image"
-            src={getCoverArtUrl(song.coverArt, "song", "400")}
+            coverArtId={song.coverArt}
+            coverArtType="song"
+            coverArtSize="400"
             width="100%"
             height="100%"
             crossOrigin="anonymous"

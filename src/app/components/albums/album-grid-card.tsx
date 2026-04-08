@@ -1,6 +1,5 @@
 import { memo } from "react";
 import { isMobile } from "react-device-detect";
-import { getCoverArtUrl } from "@/api/httpClient";
 import { PreviewCard } from "@/app/components/preview-card/card";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
@@ -26,7 +25,9 @@ function AlbumCard({ album }: AlbumCardProps) {
     <PreviewCard.Root>
       <PreviewCard.ImageWrapper link={ROUTES.ALBUM.PAGE(album.id)}>
         <PreviewCard.Image
-          src={getCoverArtUrl(album.coverArt, "album", "300")}
+          coverArtId={album.coverArt}
+          coverArtType="album"
+          coverArtSize="300"
           alt={album.name}
         />
         {!isMobile && <PreviewCard.PlayButton onClick={handlePlayAlbum} />}

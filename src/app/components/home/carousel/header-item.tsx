@@ -1,9 +1,9 @@
 import clsx from "clsx";
 import { Play } from "lucide-react";
 import { isFirefox } from "react-device-detect";
-import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
-import { getCoverArtUrl } from "@/api/httpClient";
+import { CachedImage } from "@/app/components/cover-image/cached-image";
+import { useCachedCoverArt } from "@/app/hooks/use-cached-cover-art";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
 import { ROUTES } from "@/routes/routesList";
@@ -14,6 +14,7 @@ import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 
 export function HeaderItem({ song }: { song: ISong }) {
   const { setSongList } = usePlayerActions();
+  const coverArtUrl = useCachedCoverArt(song.coverArt, "song", "400");
 
   async function handlePlaySongAlbum(song: ISong) {
     const album = await subsonic.albums.getOne(song.albumId);
@@ -21,11 +22,11 @@ export function HeaderItem({ song }: { song: ISong }) {
     if (album) {
       const songIndex = album.song.findIndex((item) => item.id === song.id);
 
-      setSongList(album.song, songIndex, false, { albumId: album.id });
+      setSongList(album.song, songIndex, false, {
+        albumId: album.id,
+      });
     }
   }
-
-  const coverArtUrl = getCoverArtUrl(song.coverArt, "song", "400");
 
   return (
     <div
@@ -53,8 +54,10 @@ export function HeaderItem({ song }: { song: ISong }) {
             className="h-full aspect-square relative group bg-skeleton rounded-lg"
             data-testid="header-image-container"
           >
-            <LazyLoadImage
-              src={coverArtUrl}
+            <CachedImage
+              coverArtId={song.coverArt}
+              coverArtType="song"
+              coverArtSize="400"
               alt={song.title}
               effect="opacity"
               width="100%"

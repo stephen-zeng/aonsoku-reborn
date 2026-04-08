@@ -1,6 +1,5 @@
-import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
-import { getCoverArtUrl } from "@/api/httpClient";
+import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { Dot } from "@/app/components/dot";
 import { ROUTES } from "@/routes/routesList";
 import { IFeaturedArtist } from "@/types/responses/artist";
@@ -61,9 +60,11 @@ function ArtistImage({ id, name }: AlbumArtistProps) {
 
   return (
     <div className="size-6 min-w-6 min-h-6 rounded-full bg-accent text-shadow-lg ring-1 ring-foreground/10">
-      <LazyLoadImage
+      <CachedImage
         effect="opacity"
-        src={getCoverArtUrl(id, "artist", "100")}
+        coverArtId={id}
+        coverArtType="artist"
+        coverArtSize="100"
         alt={name}
         className="w-full h-full rounded-full aspect-square object-cover shadow-custom-5"
       />

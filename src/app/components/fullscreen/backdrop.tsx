@@ -1,8 +1,8 @@
 import clsx from "clsx";
 import { useEffect, useMemo, useState } from "react";
 import { isSafari } from "react-device-detect";
-import { LazyLoadImage } from "react-lazy-load-image-component";
-import { getCoverArtUrl } from "@/api/httpClient";
+import { CachedImage } from "@/app/components/cover-image/cached-image";
+import { useCachedCoverArt } from "@/app/hooks/use-cached-cover-art";
 import { usePlayerCurrentSong, useSongColor } from "@/store/player.store";
 import { isChromeOrFirefox } from "@/utils/browser";
 import { hexToRgba } from "@/utils/getAverageColor";
@@ -27,7 +27,7 @@ export function ImageBackdrop() {
 
 function OtherBackdrop() {
   const { coverArt } = usePlayerCurrentSong();
-  const coverArtUrl = getCoverArtUrl(coverArt, "song", "300");
+  const coverArtUrl = useCachedCoverArt(coverArt, "song", "300");
   const [backgroundImage, setBackgroundImage] = useState(coverArtUrl);
   const { bigPlayerBlur } = useSongColor();
 
@@ -57,7 +57,6 @@ function OtherBackdrop() {
 
 function MacBackdrop() {
   const { coverArt, title } = usePlayerCurrentSong();
-  const coverArtUrl = getCoverArtUrl(coverArt, "song", "300");
   const { bigPlayerBlur } = useSongColor();
   const { currentSongColor, currentSongColorIntensity } = useSongColor();
 
@@ -72,9 +71,11 @@ function MacBackdrop() {
       className="relative w-full h-full flex items-center transition-colors duration-1000"
       style={{ backgroundColor }}
     >
-      <LazyLoadImage
+      <CachedImage
         key={coverArt}
-        src={coverArtUrl}
+        coverArtId={coverArt}
+        coverArtType="song"
+        coverArtSize="300"
         alt={title}
         effect="opacity"
         width="100%"

@@ -526,7 +526,8 @@
       "audio": "播放器和音频",
       "content": "内容",
       "appearance": "外观",
-      "privacy": "隐私和安全"
+      "privacy": "隐私和安全",
+      "storage": "存储"
     },
     "appearance": {
       "general": {
@@ -601,6 +602,30 @@
           "info": "LRCLIB 用于查找歌词。"
         },
         "description": "管理 Aonsoku 可以访问的外部服务。"
+      }
+    },
+    "storage": {
+      "coverArt": {
+        "group": "封面图缓存",
+        "description": "缓存专辑封面图以加快加载速度。",
+        "enabled": "启用封面图缓存",
+        "size": "缓存大小",
+        "entries": "已缓存 {{count}} 张图片",
+        "clear": "清除封面图缓存"
+      },
+      "audio": {
+        "group": "音频缓存",
+        "description": "缓存音频文件，重复收听时即时播放。",
+        "enabled": "启用音频缓存",
+        "maxSize": "最大缓存大小",
+        "size": "缓存大小",
+        "entries": "已缓存 {{count}} 首歌曲",
+        "clear": "清除音频缓存"
+      },
+      "metadata": {
+        "group": "所有缓存",
+        "description": "清除所有缓存数据，包括元数据、封面图和音频文件。",
+        "clear": "清除所有缓存"
       }
     },
     "desktop": {

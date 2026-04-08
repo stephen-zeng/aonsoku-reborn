@@ -1,9 +1,9 @@
 import randomCSSHexColor from "@chriscodesthings/random-css-hex-color";
 import clsx from "clsx";
 import { useState } from "react";
-import { LazyLoadImage } from "react-lazy-load-image-component";
 
 import { getCoverArtUrl } from "@/api/httpClient";
+import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { AlbumHeaderFallback } from "@/app/components/fallbacks/album-fallbacks";
 import { BadgesData, HeaderInfoGenerator } from "@/app/components/header-info";
 import { CustomLightBox } from "@/app/components/lightbox";
@@ -185,12 +185,14 @@ export default function ImageHeader({
                 "hover:scale-[1.02] ease-linear duration-100",
               )}
             >
-              <LazyLoadImage
+              <CachedImage
                 key={coverArtId}
                 effect="opacity"
                 crossOrigin="anonymous"
                 id="cover-art-image"
-                src={getCoverArtUrl(coverArtId, coverArtType, coverArtSize)}
+                coverArtId={coverArtId}
+                coverArtType={coverArtType}
+                coverArtSize={coverArtSize}
                 alt={coverArtAlt}
                 className="aspect-square object-cover w-full h-full cursor-pointer"
                 width="100%"

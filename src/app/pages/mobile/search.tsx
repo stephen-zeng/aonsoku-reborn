@@ -6,13 +6,13 @@ import { useNavigate } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
 import { Input } from "@/app/components/ui/input";
 import { useSongList } from "@/app/hooks/use-song-list";
+import { useCachedCoverArt } from "@/app/hooks/use-cached-cover-art";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
 import { byteLength } from "@/utils/byteLength";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
-import { getCoverArtUrl } from "@/api/httpClient";
 import Image from "@/app/components/image";
 import { Button } from "@/app/components/ui/button";
 import { Play } from "lucide-react";
@@ -39,6 +39,8 @@ function MobileResultItem({
   onRowClick,
   onPlayClick,
 }: MobileResultItemProps) {
+  const src = useCachedCoverArt(coverArt, coverArtType, "100");
+
   return (
     <button
       type="button"
@@ -46,7 +48,7 @@ function MobileResultItem({
       onClick={onRowClick}
     >
       <Image
-        src={getCoverArtUrl(coverArt, coverArtType, "100")}
+        src={src}
         width={44}
         height={44}
         className="aspect-square object-cover rounded shadow flex-shrink-0"

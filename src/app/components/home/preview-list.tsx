@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { isMobile } from "react-device-detect";
-import { getCoverArtUrl } from "@/api/httpClient";
 import { PreviewCard } from "@/app/components/preview-card/card";
 import {
   Carousel,
@@ -118,7 +117,8 @@ export default function PreviewList({
                 <PreviewCard.Root>
                   <PreviewCard.ImageWrapper link={ROUTES.ALBUM.PAGE(album.id)}>
                     <PreviewCard.Image
-                      src={getCoverArtUrl(album.coverArt, "album")}
+                      coverArtId={album.coverArt}
+                      coverArtType="album"
                       alt={album.name}
                     />
                     {!isMobile && (

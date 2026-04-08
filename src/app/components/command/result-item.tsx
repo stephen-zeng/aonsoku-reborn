@@ -1,6 +1,6 @@
 import { Play } from "lucide-react";
-import { getCoverArtUrl } from "@/api/httpClient";
 import Image from "@/app/components/image";
+import { useCachedCoverArt } from "@/app/hooks/use-cached-cover-art";
 import { Button } from "@/app/components/ui/button";
 import { CoverArt } from "@/types/coverArtType";
 
@@ -19,11 +19,13 @@ export function ResultItem({
   artist,
   onClick,
 }: ResultItemProps) {
+  const src = useCachedCoverArt(coverArt, coverArtType, "100");
+
   return (
     <div className="flex w-full justify-between items-center">
       <div className="flex gap-2 w-[420px]">
         <Image
-          src={getCoverArtUrl(coverArt, coverArtType, "100")}
+          src={src}
           width={40}
           height={40}
           className="aspect-square object-cover rounded shadow"
