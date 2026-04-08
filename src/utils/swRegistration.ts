@@ -2,18 +2,33 @@ import { toast } from "react-toastify";
 import i18n from "@/i18n";
 import { isDesktop } from "./desktop";
 
-const ALLOWED_HOSTS = ["aonsoku.realtvop.top", "alpha.aonsoku.realtvop.top"];
+const STANDARD_PORTS = new Set(["", "80", "443"]);
 
 // Must match CACHE_PREFIX in public/sw.js (separate JS contexts)
 const CACHE_PREFIX = "aonsoku-";
 
 export function registerServiceWorker() {
-  if (isDesktop()) return;
-  if (!("serviceWorker" in navigator)) return;
-  if (!ALLOWED_HOSTS.includes(window.location.hostname)) return;
+  if (!shouldRegisterServiceWorker()) return;
 
   setupChunkErrorRecovery();
   register();
+}
+
+function shouldRegisterServiceWorker(): boolean {
+  if (isDesktop()) return false;
+  if (!("serviceWorker" in navigator)) return false;
+  if (!import.meta.env.PROD) return false;
+
+  return STANDARD_PORTS.has(window.location.port);
+}
+
+function notifyUpdateReady() {
+  console.log("[SW] Update installed, will activate on refresh");
+  toast.info(i18n.t("update.sw.newVersion"), {
+    autoClose: false,
+    toastId: "sw-update",
+    onClick: () => window.location.reload(),
+  });
 }
 
 async function register() {
@@ -21,6 +36,10 @@ async function register() {
     const registration = await navigator.serviceWorker.register("/sw.js", {
       scope: "/",
     });
+
+    if (registration.waiting && navigator.serviceWorker.controller) {
+      notifyUpdateReady();
+    }
 
     registration.addEventListener("updatefound", () => {
       const newWorker = registration.installing;
@@ -30,12 +49,7 @@ async function register() {
         switch (newWorker.state) {
           case "installed":
             if (navigator.serviceWorker.controller) {
-              console.log("[SW] Update installed, will activate on refresh");
-              toast.info(i18n.t("update.sw.newVersion"), {
-                autoClose: false,
-                toastId: "sw-update",
-                onClick: () => window.location.reload(),
-              });
+              notifyUpdateReady();
             } else {
               console.log("[SW] Content cached for offline use");
             }

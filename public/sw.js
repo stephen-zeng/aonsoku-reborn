@@ -37,48 +37,51 @@ const PRECACHE_BATCH_SIZE = 15;
 // ── Install ──────────────────────────────────────────────────
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(async (cache) => {
-      if (!Array.isArray(PRECACHE_URLS)) {
-        console.error(
-          "[SW] Precache manifest was not injected at build time",
-        );
-        return;
-      }
+  event.waitUntil(precacheAppShell());
+});
 
-      // Cache the SPA shell first — it's the most critical resource.
-      // If this fails, offline navigation will not work at all.
-      if (PRECACHE_URLS.includes("/index.html")) {
-        try {
-          await cache.add("/index.html");
-        } catch (e) {
-          console.warn("[SW] Failed to precache app shell:", e);
+async function precacheAppShell() {
+  const cache = await caches.open(CACHE_NAME);
+
+  try {
+    if (!Array.isArray(PRECACHE_URLS)) {
+      throw new Error("Precache manifest was not injected at build time");
+    }
+
+    if (!PRECACHE_URLS.includes("/index.html")) {
+      throw new Error("Precache manifest is missing /index.html");
+    }
+
+    // Cache the SPA shell first — it's the most critical resource.
+    await cache.add("/index.html");
+
+    // Batch the remaining URLs to avoid overwhelming constrained connections
+    // with 190+ simultaneous fetches.
+    const remaining = PRECACHE_URLS.filter((u) => u !== "/index.html");
+    const failedUrls = [];
+
+    for (let i = 0; i < remaining.length; i += PRECACHE_BATCH_SIZE) {
+      const batch = remaining.slice(i, i + PRECACHE_BATCH_SIZE);
+      const results = await Promise.allSettled(
+        batch.map((url) => cache.add(url)),
+      );
+
+      for (const [index, result] of results.entries()) {
+        if (result.status === "rejected") {
+          failedUrls.push(batch[index]);
         }
       }
+    }
 
-      // Batch the remaining URLs to avoid overwhelming constrained connections
-      // with 190+ simultaneous fetches.
-      const remaining = PRECACHE_URLS.filter((u) => u !== "/index.html");
-      let failed = 0;
-
-      for (let i = 0; i < remaining.length; i += PRECACHE_BATCH_SIZE) {
-        const batch = remaining.slice(i, i + PRECACHE_BATCH_SIZE);
-        const results = await Promise.allSettled(
-          batch.map((url) => cache.add(url)),
-        );
-        failed += results.filter((r) => r.status === "rejected").length;
-      }
-
-      if (failed) {
-        console.warn(
-          `[SW] Precache: ${PRECACHE_URLS.length - failed}/${PRECACHE_URLS.length} OK, ${failed} failed`,
-        );
-      }
-
-      return self.skipWaiting();
-    }),
-  );
-});
+    if (failedUrls.length > 0) {
+      console.error("[SW] Precache failed for URLs:", failedUrls);
+      throw new Error(`Precache failed for ${failedUrls.length} URLs`);
+    }
+  } catch (error) {
+    console.error("[SW] Install failed, keeping previous cache:", error);
+    throw error;
+  }
+}
 
 // ── Activate ─────────────────────────────────────────────────
 

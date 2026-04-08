@@ -130,6 +130,13 @@ services:
       - 8080:8080
 ```
 
+> [!IMPORTANT]
+> The web app only registers its Service Worker on standard web ports
+> (`80`/`443`, or URLs with no explicit port). Direct access through
+> `http://host:8080` still works as a normal web app, but offline caching
+> and installable PWA behavior are intentionally disabled there. Use a
+> reverse proxy on a default port if you need Service Worker caching.
+
 - Podman Quadlet
 
 ```ini
