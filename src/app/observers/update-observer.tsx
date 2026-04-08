@@ -1,28 +1,28 @@
-import { useQuery } from '@tanstack/react-query'
-import { Loader2, RocketIcon } from 'lucide-react'
-import { FormEvent, useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import Markdown from 'react-markdown'
-import { toast } from 'react-toastify'
-import remarkGfm from 'remark-gfm'
+import { useQuery } from "@tanstack/react-query";
+import { Loader2, RocketIcon } from "lucide-react";
+import { FormEvent, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import Markdown from "react-markdown";
+import { toast } from "react-toastify";
+import remarkGfm from "remark-gfm";
 import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/app/components/ui/alert-dialog'
-import { Badge } from '@/app/components/ui/badge'
-import { Button } from '@/app/components/ui/button'
-import { useAppUpdate } from '@/store/app.store'
-import { isProd } from '@/utils/env'
-import { queryKeys } from '@/utils/queryKeys'
+} from "@/app/components/ui/alert-dialog";
+import { Badge } from "@/app/components/ui/badge";
+import { Button } from "@/app/components/ui/button";
+import { useAppUpdate } from "@/store/app.store";
+import { isProd } from "@/utils/env";
+import { queryKeys } from "@/utils/queryKeys";
 
 export function UpdateObserver() {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
   const { openDialog, setOpenDialog, remindOnNextBoot, setRemindOnNextBoot } =
-    useAppUpdate()
-  const [updateHasStarted, setUpdateHasStarted] = useState(false)
+    useAppUpdate();
+  const [updateHasStarted, setUpdateHasStarted] = useState(false);
 
   const { data: updateInfo } = useQuery({
     queryKey: [queryKeys.update.check],
@@ -32,53 +32,53 @@ export function UpdateObserver() {
     refetchOnMount: false,
     staleTime: Infinity,
     gcTime: Infinity,
-  })
+  });
 
   useEffect(() => {
     if (updateInfo?.files?.length) {
-      setOpenDialog(true)
+      setOpenDialog(true);
     }
-  }, [setOpenDialog, updateInfo])
+  }, [setOpenDialog, updateInfo]);
 
   useEffect(() => {
     window.api.onUpdateDownloaded(() => {
-      toast.update('update', {
-        render: t('update.toasts.success'),
-        type: 'success',
+      toast.update("update", {
+        render: t("update.toasts.success"),
+        type: "success",
         autoClose: 5000,
         isLoading: false,
-      })
-      window.api.quitAndInstall()
-    })
+      });
+      window.api.quitAndInstall();
+    });
 
     window.api.onUpdateError(() => {
-      setUpdateHasStarted(false)
-      setRemindOnNextBoot(true)
+      setUpdateHasStarted(false);
+      setRemindOnNextBoot(true);
 
-      toast.update('update', {
-        render: t('update.toasts.error'),
-        type: 'error',
+      toast.update("update", {
+        render: t("update.toasts.error"),
+        type: "error",
         autoClose: 5000,
         isLoading: false,
-      })
-    })
-  }, [t, setRemindOnNextBoot])
+      });
+    });
+  }, [t, setRemindOnNextBoot]);
 
-  if (!updateInfo || !updateInfo.files?.length) return null
+  if (!updateInfo || !updateInfo.files?.length) return null;
 
   const handleUpdate = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+    event.preventDefault();
 
-    toast(t('update.toasts.started'), {
+    toast(t("update.toasts.started"), {
       autoClose: false,
-      type: 'default',
+      type: "default",
       isLoading: true,
-      toastId: 'update',
-    })
+      toastId: "update",
+    });
 
-    setUpdateHasStarted(true)
-    window.api.downloadUpdate()
-  }
+    setUpdateHasStarted(true);
+    window.api.downloadUpdate();
+  };
 
   return (
     <AlertDialog open={openDialog}>
@@ -86,7 +86,7 @@ export function UpdateObserver() {
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <RocketIcon className="w-6 h-6 text-primary fill-primary/60" />
-            <span>{t('update.dialog.title')}</span>
+            <span>{t("update.dialog.title")}</span>
             <Badge>{updateInfo.version}</Badge>
           </AlertDialogTitle>
         </AlertDialogHeader>
@@ -96,7 +96,7 @@ export function UpdateObserver() {
           className="w-full min-h-16 max-h-80 overflow-auto text-muted-foreground bg-background-foreground p-4 border rounded-md"
         >
           <Markdown className="space-y-2 text-sm" remarkPlugins={[remarkGfm]}>
-            {updateInfo.releaseNotes || ''}
+            {updateInfo.releaseNotes || ""}
           </Markdown>
         </div>
 
@@ -106,23 +106,23 @@ export function UpdateObserver() {
               variant="outline"
               disabled={updateHasStarted}
               onClick={() => {
-                setOpenDialog(false)
-                setRemindOnNextBoot(true)
+                setOpenDialog(false);
+                setRemindOnNextBoot(true);
               }}
               type="button"
             >
-              {t('update.dialog.remindLater')}
+              {t("update.dialog.remindLater")}
             </Button>
             <Button variant="default" disabled={updateHasStarted} type="submit">
               {updateHasStarted ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                t('update.dialog.install')
+                t("update.dialog.install")
               )}
             </Button>
           </form>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }

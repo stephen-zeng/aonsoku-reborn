@@ -175,10 +175,7 @@ function SongInfo({ variant = "dropdown", ...props }: DropdownMenuItemProps) {
   );
 }
 
-function GotoArtist({
-  variant = "dropdown",
-  ...props
-}: DropdownMenuItemProps) {
+function GotoArtist({ variant = "dropdown", ...props }: DropdownMenuItemProps) {
   const { t } = useTranslation();
 
   return (
@@ -191,10 +188,7 @@ function GotoArtist({
   );
 }
 
-function GotoAlbum({
-  variant = "dropdown",
-  ...props
-}: DropdownMenuItemProps) {
+function GotoAlbum({ variant = "dropdown", ...props }: DropdownMenuItemProps) {
   const { t } = useTranslation();
 
   return (
@@ -212,12 +206,7 @@ type LikeProps = DropdownMenuItemProps & {
   label?: string;
 };
 
-function Like({
-  variant = "dropdown",
-  isStarred,
-  label,
-  ...props
-}: LikeProps) {
+function Like({ variant = "dropdown", isStarred, label, ...props }: LikeProps) {
   const { t } = useTranslation();
 
   return (

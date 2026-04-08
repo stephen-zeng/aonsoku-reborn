@@ -60,8 +60,7 @@ export function Player() {
     togglePlayPause,
     playNextSong,
   } = usePlayerActions();
-  const { currentList, currentSongIndex, radioList } =
-    usePlayerSonglist();
+  const { currentList, currentSongIndex, radioList } = usePlayerSonglist();
   const isPlaying = usePlayerIsPlaying();
   const { isSong, isRadio } = usePlayerMediaType();
   const loopState = usePlayerLoop();
@@ -118,13 +117,7 @@ export function Player() {
 
     const progress = getCurrentProgress();
     audio.currentTime = progress;
-  }, [
-    getAudioRef,
-    isSong,
-    song,
-    setCurrentDuration,
-    getCurrentProgress,
-  ]);
+  }, [getAudioRef, isSong, song, setCurrentDuration, getCurrentProgress]);
 
   const setupProgress = useCallback(() => {
     const audio = getAudioRef().current;
@@ -192,17 +185,12 @@ export function Player() {
       <div className="w-full h-full grid grid-cols-[1fr_auto] gap-3 px-3 sm:grid-cols-player sm:gap-2 sm:px-4">
         {/* Track Info */}
         <div className="flex items-center gap-1 w-full sm:gap-2">
-          {isSong && (
-            <MemoTrackInfo song={song} />
-          )}
+          {isSong && <MemoTrackInfo song={song} />}
           {isRadio && <MemoRadioInfo radio={radio} />}
         </div>
         {/* Main Controls */}
         <div className="hidden sm:col-span-2 sm:flex flex-col justify-center items-center px-4 gap-1">
-          <MemoPlayerControls
-            song={song}
-            radio={radio}
-          />
+          <MemoPlayerControls song={song} radio={radio} />
 
           {isSong && (
             <MemoPlayerProgress
@@ -229,8 +217,7 @@ export function Player() {
           <Button
             variant="ghost"
             disabled={
-              (!song && !radio) ||
-              (!hasNext && loopState !== LoopState.All)
+              (!song && !radio) || (!hasNext && loopState !== LoopState.All)
             }
             onClick={playNextSong}
             data-testid="player-button-next-mobile"
@@ -249,9 +236,7 @@ export function Player() {
                 <MemoPlayerQueueButton disabled={!song} />
               </>
             )}
-            {isRadio && (
-              <MemoPlayerClearQueueButton disabled={!radio} />
-            )}
+            {isRadio && <MemoPlayerClearQueueButton disabled={!radio} />}
 
             <MemoPlayerVolume
               audioRef={getAudioRef()}

@@ -724,11 +724,8 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               },
               hasNextSong: () => {
                 const { mediaType } = get().playerState;
-                const {
-                  currentList,
-                  currentSongIndex,
-                  radioList,
-                } = get().songlist;
+                const { currentList, currentSongIndex, radioList } =
+                  get().songlist;
 
                 const nextIndex = currentSongIndex + 1;
 
@@ -888,14 +885,9 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               },
               reorderQueue: (fromIndex, toIndex) => {
                 if (isRemoteActive()) return;
-                const { currentList, currentSongIndex } =
-                  get().songlist;
+                const { currentList, currentSongIndex } = get().songlist;
 
-                const newList = arrayMove(
-                  currentList,
-                  fromIndex,
-                  toIndex,
-                );
+                const newList = arrayMove(currentList, fromIndex, toIndex);
 
                 // Recalculate currentSongIndex
                 let newSongIndex = currentSongIndex;
@@ -1288,8 +1280,7 @@ function updateDesktopState() {
   if (!isDesktop()) return;
 
   const { isPlaying, hasPrev, hasNext } = usePlayerStore.getState().playerState;
-  const { currentList, radioList } =
-    usePlayerStore.getState().songlist;
+  const { currentList, radioList } = usePlayerStore.getState().songlist;
 
   const hasSongs = currentList.length >= 1;
   const hasRadios = radioList.length >= 1;
@@ -1323,12 +1314,8 @@ export const usePlayerActions = () => usePlayerStore((state) => state.actions);
 
 export const usePlayerSonglist = () =>
   usePlayerStore((state) => {
-    const {
-      currentList,
-      currentSong,
-      currentSongIndex,
-      radioList,
-    } = state.songlist;
+    const { currentList, currentSong, currentSongIndex, radioList } =
+      state.songlist;
 
     return {
       currentList,

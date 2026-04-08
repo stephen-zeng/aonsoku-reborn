@@ -9,7 +9,10 @@ import { ISong } from "@/types/responses/song";
 export function TableSongTitle({
   song,
   onPlay,
-}: { song: ISong; onPlay?: () => void }) {
+}: {
+  song: ISong;
+  onPlay?: () => void;
+}) {
   return (
     <div className="flex w-full gap-2 items-center">
       <CoverImage

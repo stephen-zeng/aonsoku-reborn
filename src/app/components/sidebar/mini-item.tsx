@@ -17,10 +17,7 @@ export function MiniSidebarItem({ item }: { item: ISidebarItem }) {
   return (
     <Link
       to={item.route}
-      className={clsx(
-        "w-full",
-        isActive(item.route) && "pointer-events-none",
-      )}
+      className={clsx("w-full", isActive(item.route) && "pointer-events-none")}
       onClick={() => {
         resetGridClickedItem({ name: item.id as GridViewWrapperType });
       }}

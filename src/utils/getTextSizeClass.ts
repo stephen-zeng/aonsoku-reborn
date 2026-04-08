@@ -13,7 +13,5 @@ export function getTextSizeClass(text: string) {
     );
   }
 
-  return base(
-    "md:text-4xl 2xl:text-6xl md:leading-[3rem] 2xl:leading-[5rem]",
-  );
+  return base("md:text-4xl 2xl:text-6xl md:leading-[3rem] 2xl:leading-[5rem]");
 }

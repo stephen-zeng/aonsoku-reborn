@@ -15,8 +15,14 @@ interface QueueMenuOptionsProps {
 export function QueueMenuOptions({ variant, song }: QueueMenuOptionsProps) {
   const navigate = useNavigate();
   const { removeSongFromQueue } = usePlayerActions();
-  const { playNext, playLast, createNewPlaylist, addToPlaylist, startDownload, openSongInfo } =
-    useOptions();
+  const {
+    playNext,
+    playLast,
+    createNewPlaylist,
+    addToPlaylist,
+    startDownload,
+    openSongInfo,
+  } = useOptions();
 
   return (
     <>

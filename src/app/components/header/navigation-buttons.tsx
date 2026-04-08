@@ -4,17 +4,11 @@ import { Button } from "@/app/components/ui/button";
 import useNavigationHistory from "@/app/hooks/use-navigation-history";
 
 export function NavigationButtons() {
-  const { canGoBack, canGoForward, goBack, goForward } =
-    useNavigationHistory();
+  const { canGoBack, canGoForward, goBack, goForward } = useNavigationHistory();
 
   return (
     <div className="flex gap-1">
-      <div
-        className={clsx(
-          "w-8 h-8",
-          !canGoBack && "cursor-not-allowed",
-        )}
-      >
+      <div className={clsx("w-8 h-8", !canGoBack && "cursor-not-allowed")}>
         <Button
           variant="ghost"
           size="sm"

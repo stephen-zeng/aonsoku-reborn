@@ -29,9 +29,7 @@ function AlbumCard({ album }: AlbumCardProps) {
           src={getCoverArtUrl(album.coverArt, "album", "300")}
           alt={album.name}
         />
-        {!isMobile && (
-          <PreviewCard.PlayButton onClick={handlePlayAlbum} />
-        )}
+        {!isMobile && <PreviewCard.PlayButton onClick={handlePlayAlbum} />}
       </PreviewCard.ImageWrapper>
       <PreviewCard.InfoWrapper>
         <PreviewCard.Title link={ROUTES.ALBUM.PAGE(album.id)}>

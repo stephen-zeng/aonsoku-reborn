@@ -39,10 +39,8 @@ export function MainDrawerPage() {
               size="sm"
               className={cn(
                 "h-8 px-3 rounded-full gap-1.5 text-xs font-medium",
-                queueState &&
-                  "bg-foreground/10 text-foreground",
-                !queueState &&
-                  "text-muted-foreground hover:text-foreground",
+                queueState && "bg-foreground/10 text-foreground",
+                !queueState && "text-muted-foreground hover:text-foreground",
               )}
               onClick={() => {
                 if (lyricsState) toggleQueueAndLyrics();
@@ -56,10 +54,8 @@ export function MainDrawerPage() {
               size="sm"
               className={cn(
                 "h-8 px-3 rounded-full gap-1.5 text-xs font-medium",
-                lyricsState &&
-                  "bg-foreground/10 text-foreground",
-                !lyricsState &&
-                  "text-muted-foreground hover:text-foreground",
+                lyricsState && "bg-foreground/10 text-foreground",
+                !lyricsState && "text-muted-foreground hover:text-foreground",
               )}
               onClick={() => {
                 if (queueState) toggleQueueAndLyrics();

@@ -217,8 +217,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
             let hideRadiosSection = true;
 
             if (persisted) {
-              hideRadiosSection =
-                persisted.pages?.hideRadiosSection ?? true;
+              hideRadiosSection = persisted.pages?.hideRadiosSection ?? true;
             }
             if (HIDE_RADIOS_SECTION !== undefined) {
               hideRadiosSection = HIDE_RADIOS_SECTION;
@@ -263,10 +262,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
 
             return merge(currentState, withoutLockUser);
           } catch (error) {
-            logger.error(
-              "[AppStore] [merge] - Unable to merge states",
-              error,
-            );
+            logger.error("[AppStore] [merge] - Unable to merge states", error);
 
             return currentState;
           }

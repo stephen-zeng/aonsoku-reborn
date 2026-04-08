@@ -228,9 +228,7 @@ export default function ImageHeader({
 
           <div className="md:hidden flex flex-col items-center">
             {!isPlaylist && subtitle && !showArtistAboveCover && (
-              <p className="opacity-80 text-xs font-medium mb-1">
-                {subtitle}
-              </p>
+              <p className="opacity-80 text-xs font-medium mb-1">{subtitle}</p>
             )}
 
             {isPlaylist && subtitle && (
@@ -239,10 +237,7 @@ export default function ImageHeader({
               </p>
             )}
 
-            <HeaderInfoGenerator
-              badges={badges}
-              showFirstDot={false}
-            />
+            <HeaderInfoGenerator badges={badges} showFirstDot={false} />
 
             {hasSecondaryBadges && (
               <HeaderInfoGenerator

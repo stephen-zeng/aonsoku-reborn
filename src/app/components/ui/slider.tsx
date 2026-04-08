@@ -66,7 +66,7 @@ const Slider = React.forwardRef<
       >
         <SliderPrimitive.Thumb
           className={clsx(
-            "block opacity-0 h-3 w-3 cursor-pointer select-none rounded-full",
+            "block opacity-0 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full",
             "border-2 ring-offset-background transition-[background-color,opacity]",
             "focus-visible:outline-none focus-visible:ring-transparent",
             "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
@@ -305,7 +305,9 @@ export function ProgressSlider(props: ProgressSliderProps) {
           className={clsx(
             "relative h-1 w-full grow overflow-hidden rounded-full select-none",
             variant === "default" && !isBuffering && "bg-secondary",
-            variant === "default" && isBuffering && "bg-secondary animate-pulse",
+            variant === "default" &&
+              isBuffering &&
+              "bg-secondary animate-pulse",
             variant === "secondary" && "bg-muted-foreground/70",
           )}
           onContextMenu={handleContextMenu}
@@ -324,7 +326,7 @@ export function ProgressSlider(props: ProgressSliderProps) {
 
       <SliderPrimitive.Thumb
         className={clsx(
-          "block opacity-0 h-3 w-3 cursor-pointer select-none rounded-full",
+          "block opacity-0 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full",
           "border-2 transition-[background-color,opacity]",
           "focus-visible:outline-none focus-visible:ring-transparent",
           "disabled:pointer-events-none disabled:opacity-50 transform-gpu",

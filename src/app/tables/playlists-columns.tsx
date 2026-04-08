@@ -29,12 +29,7 @@ export function playlistsColumns(): ColumnDefType<Playlist>[] {
         const index = row.index + 1;
         const playlist = row.original;
 
-        return (
-          <PlaySongButton
-            trackNumber={index}
-            trackId={playlist.id}
-          />
-        );
+        return <PlaySongButton trackNumber={index} trackId={playlist.id} />;
       },
     },
     {

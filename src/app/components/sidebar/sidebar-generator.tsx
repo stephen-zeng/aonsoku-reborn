@@ -39,8 +39,7 @@ export function SidebarGenerator({ list }: { list: ISidebarItem[] }) {
     <>
       {list.map((item) => {
         // Setting to show/hide Radios section
-        if (hideRadiosSection && item.id === SidebarItems.Radios)
-          return null;
+        if (hideRadiosSection && item.id === SidebarItems.Radios) return null;
 
         return (
           <Link
@@ -114,8 +113,7 @@ export function SidebarPlaylistGenerator({
                 size="sm"
                 className={clsx(
                   "w-full justify-start",
-                  isActive(playlist.id) &&
-                    "cursor-default hover:bg-accent",
+                  isActive(playlist.id) && "cursor-default hover:bg-accent",
                 )}
               >
                 <ListMusic className="mr-2 min-h-4 min-w-4 h-4 w-4" />

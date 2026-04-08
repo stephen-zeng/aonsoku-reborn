@@ -84,7 +84,7 @@ export default function FullscreenMode({
       >
         <MemoFullscreenBackdrop />
         <FullscreenDragHandler />
-        <div className="absolute inset-0 flex flex-col p-0 sm:p-0 2xl:p-8 pt-4 sm:pt-10 2xl:pt-12 w-full h-full gap-4 bg-black/0 z-10">
+        <div className="absolute inset-0 flex flex-col p-0 sm:p-0 2xl:p-8 sm:pt-10 2xl:pt-12 w-full h-full gap-4 bg-black/0 z-10 fullscreen-safe-area">
           {/* First Row - Header */}
           <div className="flex gap-2 items-center w-full h-[40px] px-4 sm:px-16 z-20 justify-end">
             <FullscreenSettings />

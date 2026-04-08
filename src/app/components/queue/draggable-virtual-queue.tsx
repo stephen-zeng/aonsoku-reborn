@@ -49,9 +49,7 @@ export function DraggableVirtualQueue({
 
   const getScrollElement = useCallback(() => {
     if (!parentRef.current) return null;
-    return parentRef.current.querySelector(
-      scrollAreaViewportSelector,
-    );
+    return parentRef.current.querySelector(scrollAreaViewportSelector);
   }, []);
 
   const virtualizer = useVirtualizer({
@@ -67,9 +65,7 @@ export function DraggableVirtualQueue({
     }
   }, [currentSongIndex, virtualizer]);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, POINTER_SENSOR_OPTIONS),
-  );
+  const sensors = useSensors(useSensor(PointerSensor, POINTER_SENSOR_OPTIONS));
 
   const items = useMemo(
     () => currentList.map((song) => song.id),
@@ -86,12 +82,8 @@ export function DraggableVirtualQueue({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const fromIndex = currentList.findIndex(
-      (s) => s.id === active.id,
-    );
-    const toIndex = currentList.findIndex(
-      (s) => s.id === over.id,
-    );
+    const fromIndex = currentList.findIndex((s) => s.id === active.id);
+    const toIndex = currentList.findIndex((s) => s.id === over.id);
     if (fromIndex === -1 || toIndex === -1) return;
 
     reorderQueue(fromIndex, toIndex);
@@ -104,10 +96,7 @@ export function DraggableVirtualQueue({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <SortableContext
-        items={items}
-        strategy={verticalListSortingStrategy}
-      >
+      <SortableContext items={items} strategy={verticalListSortingStrategy}>
         <ScrollArea
           ref={parentRef}
           type="always"
@@ -144,10 +133,7 @@ export function DraggableVirtualQueue({
                     isActive={isCurrent}
                     onPlay={() => {
                       if (!isCurrent) {
-                        setSongList(
-                          currentList,
-                          virtualRow.index,
-                        );
+                        setSongList(currentList, virtualRow.index);
                       }
                     }}
                   />
@@ -161,9 +147,7 @@ export function DraggableVirtualQueue({
         {activeItem && (
           <QueueItemRow
             song={activeItem}
-            isPlaying={
-              currentSong.id === activeItem.id && isPlaying
-            }
+            isPlaying={currentSong.id === activeItem.id && isPlaying}
             isActive={currentSong.id === activeItem.id}
             onPlay={() => {}}
           />

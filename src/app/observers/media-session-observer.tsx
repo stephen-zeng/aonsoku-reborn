@@ -15,8 +15,7 @@ export function MediaSessionObserver() {
   const { t } = useTranslation();
   const isPlaying = usePlayerIsPlaying();
   const { isRadio, isSong } = usePlayerMediaType();
-  const { currentList, currentSongIndex, radioList } =
-    usePlayerSonglist();
+  const { currentList, currentSongIndex, radioList } = usePlayerSonglist();
   const progress = usePlayerProgress();
   const radioLabel = t("radios.label");
   const isRemoteActive = useIsRemoteControlActive();
@@ -58,10 +57,7 @@ export function MediaSessionObserver() {
 
   // Update media session handlers when remote control state changes
   useEffect(() => {
-    console.log(
-      "[MediaSession] Remote control state changed:",
-      isRemoteActive,
-    );
+    console.log("[MediaSession] Remote control state changed:", isRemoteActive);
     manageMediaSession.setHandlers();
   }, [isRemoteActive]);
 

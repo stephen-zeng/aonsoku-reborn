@@ -43,10 +43,7 @@ export function songsColumns(): ColumnDefType<ISong>[] {
         const song = row.original;
 
         return (
-          <MemoPlaySongButton
-            trackNumber={trackNumber}
-            trackId={song.id}
-          />
+          <MemoPlaySongButton trackNumber={trackNumber} trackId={song.id} />
         );
       },
     },
@@ -65,10 +62,7 @@ export function songsColumns(): ColumnDefType<ISong>[] {
         const trackNumber = song.track;
 
         return (
-          <MemoPlaySongButton
-            trackNumber={trackNumber}
-            trackId={song.id}
-          />
+          <MemoPlaySongButton trackNumber={trackNumber} trackId={song.id} />
         );
       },
     },

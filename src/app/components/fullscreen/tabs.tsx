@@ -6,6 +6,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/app/components/ui/tabs";
+import { useSwipeTabs } from "@/app/hooks/use-swipe-tabs";
 import { useFullscreenPlayerState } from "@/store/player.store";
 import { FullscreenPlayerTab } from "@/types/playerContext";
 import { FullscreenPlayer } from "./player";
@@ -57,6 +58,10 @@ export function FullscreenTabs() {
   const { fullscreenPlayerTab, setFullscreenPlayerTab } =
     useFullscreenPlayerState();
   const { t } = useTranslation();
+  const { onTouchStart, onTouchEnd } = useSwipeTabs(
+    fullscreenPlayerTab,
+    setFullscreenPlayerTab,
+  );
 
   return (
     <Tabs
@@ -77,7 +82,11 @@ export function FullscreenTabs() {
           {t("fullscreen.lyrics")}
         </TabsTrigger>
       </TabsList>
-      <div className="relative w-full h-full">
+      <div
+        className="relative w-full h-full"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
         <TabsContent
           value="queue"
           className={scrollableTabStyles}

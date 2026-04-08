@@ -34,7 +34,7 @@ export function BottomNavigation() {
   }
 
   return (
-    <nav className="md:hidden fixed left-0 right-0 z-30 bg-background border-t h-[--bottom-nav-height] bottom-0">
+    <nav className="md:hidden fixed left-0 right-0 z-30 bg-background border-t h-[--bottom-nav-height] bottom-0 pb-[env(safe-area-inset-bottom)]">
       <div className="grid grid-cols-3 h-full">
         {navItems.map((item) => (
           <Link

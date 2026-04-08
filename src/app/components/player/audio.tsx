@@ -126,7 +126,9 @@ export function AudioPlayer({
 
       retryCountRef.current += 1;
       const delay = Math.pow(2, retryCountRef.current - 1) * 1000;
-      logger.info(`Retrying audio (attempt ${retryCountRef.current}) in ${delay}ms`);
+      logger.info(
+        `Retrying audio (attempt ${retryCountRef.current}) in ${delay}ms`,
+      );
 
       retryTimeoutRef.current = setTimeout(() => {
         audio.load();

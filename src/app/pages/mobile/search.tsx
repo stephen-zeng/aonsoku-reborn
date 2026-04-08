@@ -54,7 +54,9 @@ function MobileResultItem({
       />
       <div className="flex flex-col justify-center flex-1 min-w-0">
         <span className="font-medium text-sm truncate">{title}</span>
-        <span className="text-xs text-muted-foreground truncate">{subtitle}</span>
+        <span className="text-xs text-muted-foreground truncate">
+          {subtitle}
+        </span>
       </div>
       <Button
         variant="ghost"
@@ -126,7 +128,8 @@ export default function MobileSearch() {
   const artists: ISimilarArtist[] = searchResult?.artist ?? [];
   const songs: ISong[] = searchResult?.song ?? [];
 
-  const hasResults = albums.length > 0 || artists.length > 0 || songs.length > 0;
+  const hasResults =
+    albums.length > 0 || artists.length > 0 || songs.length > 0;
   const showNoResults = enableQuery && !hasResults;
 
   const debounced = useDebouncedCallback((value: string) => {
@@ -164,7 +167,9 @@ export default function MobileSearch() {
       <div className="flex-1 overflow-y-auto">
         {showNoResults && (
           <div className="flex justify-center items-center p-8">
-            <p className="text-sm text-muted-foreground">{t("command.noResults")}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("command.noResults")}
+            </p>
           </div>
         )}
 
@@ -214,7 +219,9 @@ export default function MobileSearch() {
                 coverArt={artist.coverArt}
                 coverArtType="artist"
                 title={artist.name}
-                subtitle={t("artist.info.albumsCount", { count: artist.albumCount })}
+                subtitle={t("artist.info.albumsCount", {
+                  count: artist.albumCount,
+                })}
                 onRowClick={() => navigate(ROUTES.ARTIST.PAGE(artist.id))}
                 onPlayClick={() => handlePlayArtist(artist)}
               />

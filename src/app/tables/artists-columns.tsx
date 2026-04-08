@@ -30,12 +30,7 @@ export function artistsColumns(): ColumnDefType<ISimilarArtist>[] {
         const index = row.index + 1;
         const artist = row.original;
 
-        return (
-          <MemoPlaySongButton
-            trackNumber={index}
-            trackId={artist.id}
-          />
-        );
+        return <MemoPlaySongButton trackNumber={index} trackId={artist.id} />;
       },
     },
     {

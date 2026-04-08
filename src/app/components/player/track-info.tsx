@@ -13,27 +13,17 @@ import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
-import {
-  useFullscreenPlayerState,
-  useSongColor,
-} from "@/store/player.store";
+import { useFullscreenPlayerState, useSongColor } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { getAverageColor } from "@/utils/getAverageColor";
 import { logger } from "@/utils/logger";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
 
-export function TrackInfo({
-  song,
-}: {
-  song: ISong | undefined;
-}) {
+export function TrackInfo({ song }: { song: ISong | undefined }) {
   const { t } = useTranslation();
   const { setCurrentSongColor, currentSongColor } = useSongColor();
-  const {
-    fullscreenPlayerOpen,
-    openFullscreenPlayer,
-    closeFullscreenPlayer,
-  } = useFullscreenPlayerState();
+  const { fullscreenPlayerOpen, openFullscreenPlayer, closeFullscreenPlayer } =
+    useFullscreenPlayerState();
 
   const getImageElement = useCallback(() => {
     return document.getElementById("track-song-image") as HTMLImageElement;
@@ -128,9 +118,13 @@ export function TrackInfo({
       </div>
       <div className="flex flex-col justify-center w-full overflow-hidden ml-1">
         <MarqueeTitle gap="mr-2">
-          <Link to={ROUTES.ALBUM.PAGE(song.albumId)} tabIndex={-1}>
+          <Link
+            to={ROUTES.ALBUM.PAGE(song.albumId)}
+            tabIndex={-1}
+            className="pointer-events-none sm:pointer-events-auto"
+          >
             <span
-              className="text-xs sm:text-sm font-medium hover:underline cursor-pointer"
+              className="text-xs sm:text-sm font-medium sm:hover:underline sm:cursor-pointer"
               data-testid="track-title"
             >
               {song.title}
@@ -177,13 +171,16 @@ function ArtistLink({ id, name }: ArtistLinkProps) {
   return (
     <Link
       to={ROUTES.ARTIST.PAGE(id ?? "")}
-      className={cn("w-fit inline-flex", !id && "pointer-events-none")}
+      className={cn(
+        "w-fit inline-flex pointer-events-none",
+        id && "sm:pointer-events-auto",
+      )}
       data-testid="track-artist-url"
     >
       <span
         className={cn(
           "text-[10px] sm:text-xs text-muted-foreground text-nowrap",
-          id && "hover:underline hover:text-foreground",
+          id && "sm:hover:underline sm:hover:text-foreground",
         )}
       >
         {name}

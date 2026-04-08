@@ -39,9 +39,7 @@ export default function PlaySongButton({
         {isActive && isPlaying ? (
           <EqualizerBars size={18} className="mb-1" />
         ) : (
-          <span className={isActive ? "text-primary" : ""}>
-            {trackNumber}
-          </span>
+          <span className={isActive ? "text-primary" : ""}>{trackNumber}</span>
         )}
       </div>
     </div>

@@ -22,12 +22,7 @@ export function radiosColumns(): ColumnDefType<Radio>[] {
         const trackNumber = row.index + 1;
         const radio = row.original;
 
-        return (
-          <PlaySongButton
-            trackNumber={trackNumber}
-            trackId={radio.id}
-          />
-        );
+        return <PlaySongButton trackNumber={trackNumber} trackId={radio.id} />;
       },
     },
     {

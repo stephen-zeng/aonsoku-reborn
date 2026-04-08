@@ -3,7 +3,6 @@ import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
 import { EllipsisVertical, PlayIcon } from "lucide-react";
 import { CSSProperties, forwardRef, useState } from "react";
-import { isMobile } from "react-device-detect";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { getCoverArtUrl } from "@/api/httpClient";
 import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
@@ -68,15 +67,7 @@ export const QueueItemRow = forwardRef<
   HTMLDivElement,
   InternalQueueItemRowProps
 >(function QueueItemRow(
-  {
-    song,
-    isPlaying,
-    isActive,
-    onPlay,
-    style,
-    dragAttributes,
-    dragListeners,
-  },
+  { song, isPlaying, isActive, onPlay, style, dragAttributes, dragListeners },
   ref,
 ) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -113,10 +104,7 @@ export const QueueItemRow = forwardRef<
           </div>
           {isPlaying && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded">
-              <EqualizerBars
-                size={18}
-                className="text-white mb-0.5"
-              />
+              <EqualizerBars size={18} className="text-white mb-0.5" />
             </div>
           )}
           <div
@@ -130,9 +118,7 @@ export const QueueItemRow = forwardRef<
         </div>
 
         <div className="flex flex-col min-w-0 flex-1">
-          <span className="font-semibold truncate text-sm">
-            {song.title}
-          </span>
+          <span className="font-semibold truncate text-sm">{song.title}</span>
           <QueueArtists song={song} />
         </div>
 
@@ -140,19 +126,14 @@ export const QueueItemRow = forwardRef<
           <span
             className={clsx(
               "text-xs transition-opacity",
-              !isMobile &&
-                !dropdownOpen &&
-                "group-hover/queuerow:opacity-0",
+              !dropdownOpen && "group-hover/queuerow:opacity-0",
               dropdownOpen && "opacity-0",
             )}
           >
             {convertSecondsToTime(song.duration)}
           </span>
           <div className="absolute inset-0 flex items-center justify-end">
-            <DropdownMenu
-              open={dropdownOpen}
-              onOpenChange={setDropdownOpen}
-            >
+            <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
@@ -160,9 +141,7 @@ export const QueueItemRow = forwardRef<
                   className={clsx(
                     "w-8 h-8 p-1 rounded-full",
                     "data-[state=open]:opacity-100",
-                    isMobile
-                      ? "opacity-100"
-                      : "opacity-0 group-hover/queuerow:opacity-100 transition-opacity",
+                    "opacity-0 group-hover/queuerow:opacity-100 transition-opacity",
                   )}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -175,10 +154,7 @@ export const QueueItemRow = forwardRef<
                 align="end"
                 onClick={(e) => e.stopPropagation()}
               >
-                <QueueMenuOptions
-                  variant="dropdown"
-                  song={song}
-                />
+                <QueueMenuOptions variant="dropdown" song={song} />
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -198,15 +174,11 @@ function QueueArtists({ song }: { song: ISong }) {
       .join(", ");
 
     return (
-      <span className="font-normal text-xs opacity-70 truncate">
-        {names}
-      </span>
+      <span className="font-normal text-xs opacity-70 truncate">{names}</span>
     );
   }
 
   return (
-    <span className="font-normal text-xs opacity-70 truncate">
-      {artist}
-    </span>
+    <span className="font-normal text-xs opacity-70 truncate">{artist}</span>
   );
 }

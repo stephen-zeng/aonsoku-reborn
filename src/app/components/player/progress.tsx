@@ -35,8 +35,7 @@ export function PlayerProgress({
   const [isLocalSeeking, setIsLocalSeeking] = useState(false);
   const currentDuration = usePlayerDuration();
   const isPlaying = usePlayerIsPlaying();
-  const { currentSong, currentList } =
-    usePlayerSonglist();
+  const { currentSong, currentList } = usePlayerSonglist();
   const { isSong } = usePlayerMediaType();
   const { setProgress } = usePlayerActions();
   const isRemoteControlActive = useIsRemoteControlActive();

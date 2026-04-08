@@ -74,7 +74,13 @@ export function GridViewWrapper<T>({
       width,
       height,
     };
-  }, [defaultWidth, effectiveGap, effectivePadding, gridColumnsSize, titleHeight]);
+  }, [
+    defaultWidth,
+    effectiveGap,
+    effectivePadding,
+    gridColumnsSize,
+    titleHeight,
+  ]);
 
   useLayoutEffect(() => {
     scrollDivRef.current = getMainScrollElement();

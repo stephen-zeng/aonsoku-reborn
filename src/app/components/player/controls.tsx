@@ -7,9 +7,7 @@ import {
   SkipBack,
   SkipForward,
 } from "lucide-react";
-import {
-  ComponentPropsWithoutRef,
-} from "react";
+import { ComponentPropsWithoutRef } from "react";
 import { useTranslation } from "react-i18next";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { Button } from "@/app/components/ui/button";
@@ -33,10 +31,7 @@ interface PlayerControlsProps {
   radio: Radio;
 }
 
-export function PlayerControls({
-  song,
-  radio,
-}: PlayerControlsProps) {
+export function PlayerControls({ song, radio }: PlayerControlsProps) {
   const { t } = useTranslation();
   const { isSong } = usePlayerMediaType();
   const isShuffleActive = usePlayerShuffle();
@@ -92,9 +87,7 @@ export function PlayerControls({
         >
           <Shuffle
             className={clsx(
-              isShuffleActive
-                ? "text-primary"
-                : "text-secondary-foreground",
+              isShuffleActive ? "text-primary" : "text-secondary-foreground",
             )}
           />
         </PlayerButton>
@@ -145,9 +138,7 @@ export function PlayerControls({
           {loopState === LoopState.Off && (
             <Repeat className="text-secondary-foreground" />
           )}
-          {loopState === LoopState.All && (
-            <Repeat className="text-primary" />
-          )}
+          {loopState === LoopState.All && <Repeat className="text-primary" />}
           {loopState === LoopState.One && (
             <RepeatOne className="text-primary" />
           )}
