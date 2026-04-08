@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useEffect } from "react";
 import { MainDrawerPage } from "@/app/components/drawer/page";
 import { Player } from "@/app/components/player/player";
 import { RemovePlaylistDialog } from "@/app/components/playlist/remove-dialog";
@@ -7,6 +7,7 @@ import { BottomNavigation } from "@/app/layout/bottom-navigation";
 import { Header } from "@/app/layout/header";
 import { MiniSidebar } from "@/app/layout/mini-sidebar";
 import { Sidebar } from "@/app/layout/sidebar";
+import { useUiStore } from "@/store/ui.store";
 import { MainRoutes } from "./main";
 
 const MemoHeader = memo(Header);
@@ -18,9 +19,33 @@ const MemoRemovePlaylistDialog = memo(RemovePlaylistDialog);
 const MemoMainDrawerPage = memo(MainDrawerPage);
 const MemoBottomNavigation = memo(BottomNavigation);
 
+function CSSVariableSync() {
+  const sidebarWidth = useUiStore((state) => state.sidebar.width);
+  const rightPanelWidth = useUiStore(
+    (state) => state.rightPanel.width,
+  );
+
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--sidebar-width",
+      `${sidebarWidth}px`,
+    );
+  }, [sidebarWidth]);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--right-panel-width",
+      `${rightPanelWidth}px`,
+    );
+  }, [rightPanelWidth]);
+
+  return null;
+}
+
 export default function BaseLayout() {
   return (
     <div className="h-screen w-screen overflow-hidden">
+      <CSSVariableSync />
       <MemoHeader />
       <MemoMiniSidebar />
       <MemoSidebar />

@@ -17,9 +17,11 @@ import {
   SidebarSection,
 } from "@/app/components/playlist/sidebar-list";
 import { SidebarGenerator } from "@/app/components/sidebar/sidebar-generator";
+import { ResizeHandle } from "@/app/components/ui/resize-handle";
+import { useResizePanel } from "@/app/hooks/use-resize-panel";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
-import { useSidebar } from "@/store/ui.store";
+import { DEFAULT_SIDEBAR_WIDTH, useSidebar } from "@/store/ui.store";
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
 
@@ -35,7 +37,16 @@ const MemoSidebarGenerator = memo(SidebarGenerator);
 
 export function Sidebar({ className }: SidebarProps) {
   const { t } = useTranslation();
-  const { isCollapsed } = useSidebar();
+  const { isCollapsed, setWidth } = useSidebar();
+
+  const { handleMouseDown, handleDoubleClick } = useResizePanel({
+    cssVar: "--sidebar-width",
+    min: 200,
+    max: 420,
+    defaultWidth: DEFAULT_SIDEBAR_WIDTH,
+    direction: "right",
+    onWidthChange: setWidth,
+  });
 
   return (
     <aside>
@@ -61,6 +72,11 @@ export function Sidebar({ className }: SidebarProps) {
         </div>
 
         <SidebarPlaylists />
+        <ResizeHandle
+          side="right"
+          onMouseDown={handleMouseDown}
+          onDoubleClick={handleDoubleClick}
+        />
       </div>
 
       <CreatePlaylistDialog />

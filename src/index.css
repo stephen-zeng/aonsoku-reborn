@@ -60,6 +60,15 @@
     }
   }
 
+  /* Resize drag: lock cursor and suppress transitions */
+  body.is-resizing {
+    cursor: col-resize !important;
+  }
+
+  body.is-resizing main {
+    transition-property: none !important;
+  }
+
   :root {
     --shadow-header-height: 80px;
     --shadow-header-distance: calc(var(--shadow-header-height) + 1.5rem);

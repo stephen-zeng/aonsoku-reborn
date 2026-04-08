@@ -5,12 +5,18 @@ import { LyricsTab } from "@/app/components/fullscreen/lyrics";
 import { QueueSettings } from "@/app/components/fullscreen/settings";
 import { QueueSongList } from "@/app/components/queue/song-list";
 import { Button } from "@/app/components/ui/button";
+import { ResizeHandle } from "@/app/components/ui/resize-handle";
+import { useResizePanel } from "@/app/hooks/use-resize-panel";
 import { cn } from "@/lib/utils";
 import {
   useLyricsState,
   useMainDrawerState,
   useQueueState,
 } from "@/store/player.store";
+import {
+  DEFAULT_RIGHT_PANEL_WIDTH,
+  useRightPanel,
+} from "@/store/ui.store";
 
 export function MainDrawerPage() {
   const { mainDrawerState, closeDrawer, toggleQueueAndLyrics } =
@@ -18,6 +24,16 @@ export function MainDrawerPage() {
   const { queueState } = useQueueState();
   const { lyricsState } = useLyricsState();
   const { t } = useTranslation();
+  const { setWidth } = useRightPanel();
+
+  const { handleMouseDown, handleDoubleClick } = useResizePanel({
+    cssVar: "--right-panel-width",
+    min: 240,
+    max: 480,
+    defaultWidth: DEFAULT_RIGHT_PANEL_WIDTH,
+    direction: "left",
+    onWidthChange: setWidth,
+  });
 
   return (
     <div
@@ -31,6 +47,11 @@ export function MainDrawerPage() {
           : "translate-x-full pointer-events-none",
       )}
     >
+      <ResizeHandle
+        side="left"
+        onMouseDown={handleMouseDown}
+        onDoubleClick={handleDoubleClick}
+      />
       <div className="flex flex-col w-full h-full">
         <div className="flex w-full h-12 min-h-12 px-3 items-center gap-1">
           <div className="flex items-center gap-0.5 flex-1">
