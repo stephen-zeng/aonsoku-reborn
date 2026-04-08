@@ -28,7 +28,7 @@ export const useCacheStore = createWithEqualityFn<CacheContext>()(
       immer((set) => ({
         settings: {
           coverArtCacheEnabled: true,
-          audioCacheEnabled: true,
+          audioCacheEnabled: false,
           audioCacheMaxSize: ONE_GB,
         },
         actions: {
