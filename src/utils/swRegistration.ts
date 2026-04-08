@@ -3,6 +3,7 @@ import i18n from "@/i18n";
 import { isDesktop } from "./desktop";
 
 const STANDARD_PORTS = new Set(["", "80", "443"]);
+let isReloadingForUpdate = false;
 
 // Must match CACHE_PREFIX in public/sw.js (separate JS contexts)
 const CACHE_PREFIX = "aonsoku-";
@@ -22,12 +23,33 @@ function shouldRegisterServiceWorker(): boolean {
   return STANDARD_PORTS.has(window.location.port);
 }
 
-function notifyUpdateReady() {
-  console.log("[SW] Update installed, will activate on refresh");
+function activateUpdate(registration: ServiceWorkerRegistration) {
+  const waitingWorker = registration.waiting;
+  if (!waitingWorker) {
+    window.location.reload();
+    return;
+  }
+
+  if (isReloadingForUpdate) return;
+  isReloadingForUpdate = true;
+
+  navigator.serviceWorker.addEventListener(
+    "controllerchange",
+    () => {
+      window.location.reload();
+    },
+    { once: true },
+  );
+
+  waitingWorker.postMessage({ type: "SKIP_WAITING" });
+}
+
+function notifyUpdateReady(registration: ServiceWorkerRegistration) {
+  console.log("[SW] Update installed and waiting for activation");
   toast.info(i18n.t("update.sw.newVersion"), {
     autoClose: false,
     toastId: "sw-update",
-    onClick: () => window.location.reload(),
+    onClick: () => activateUpdate(registration),
   });
 }
 
@@ -38,7 +60,7 @@ async function register() {
     });
 
     if (registration.waiting && navigator.serviceWorker.controller) {
-      notifyUpdateReady();
+      notifyUpdateReady(registration);
     }
 
     registration.addEventListener("updatefound", () => {
@@ -49,7 +71,7 @@ async function register() {
         switch (newWorker.state) {
           case "installed":
             if (navigator.serviceWorker.controller) {
-              notifyUpdateReady();
+              notifyUpdateReady(registration);
             } else {
               console.log("[SW] Content cached for offline use");
             }
