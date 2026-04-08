@@ -1,0 +1,239 @@
+name: Nightly Build
+
+on:
+  schedule:
+    - cron: "0 22 * * *" # 22:00 UTC = 06:00 CST (UTC+8)
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.check.outputs.has_changes }}
+      nightly_date: ${{ steps.check.outputs.nightly_date }}
+      nightly_version: ${{ steps.check.outputs.nightly_version }}
+      short_sha: ${{ steps.check.outputs.short_sha }}
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          ref: development
+          fetch-depth: 0
+
+      - name: Check for recent commits
+        id: check
+        run: |
+          DATE=$(date -u +%Y-%m-%d)
+          DATE_COMPACT=$(date -u +%Y%m%d)
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          VERSION=$(node -p "require('./package.json').version")
+
+          echo "nightly_date=$DATE" >> "$GITHUB_OUTPUT"
+          echo "nightly_version=$VERSION-nightly.$DATE_COMPACT" >> "$GITHUB_OUTPUT"
+          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual trigger, skipping commit check"
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          RECENT_COMMITS=$(git log --since="24 hours ago" --oneline)
+          if [ -n "$RECENT_COMMITS" ]; then
+            echo "New commits found:"
+            echo "$RECENT_COMMITS"
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No new commits in the last 24 hours"
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-docker:
+    needs: check-changes
+    if: needs.check-changes.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          ref: development
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=nightly
+            type=raw,value=nightly-${{ needs.check-changes.outputs.nightly_date }}
+            type=raw,value=nightly-${{ needs.check-changes.outputs.short_sha }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: |
+            linux/amd64
+            linux/arm64/v8
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-electron:
+    needs: check-changes
+    if: needs.check-changes.outputs.has_changes == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: "macos-latest"
+            target: "mac"
+            arch: "x64"
+          - platform: "macos-latest"
+            target: "mac"
+            arch: "arm64"
+          - platform: "ubuntu-22.04"
+            target: "linux"
+            arch: "x64"
+          - platform: "ubuntu-22.04-arm"
+            target: "linux"
+            arch: "arm64"
+          - platform: "windows-latest"
+            target: "win"
+            arch: "x64"
+          - platform: "windows-11-arm"
+            target: "win"
+            arch: "arm64"
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          ref: development
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.15.2
+          run_install: false
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          CYPRESS_INSTALL_BINARY: ${{ matrix.platform == 'windows-11-arm' && '0' || '' }}
+
+      - name: Inject nightly version
+        run: node -e "const p=require('./package.json'); p.version='${{ needs.check-changes.outputs.nightly_version }}'; require('fs').writeFileSync('package.json', JSON.stringify(p, null, 2))"
+
+      - name: Build Electron app
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: pnpm run build:${{ matrix.target }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-${{ matrix.target }}-${{ matrix.arch }}
+          path: |
+            dist/make/**/*.deb
+            dist/make/**/*.rpm
+            dist/make/**/*.dmg
+            dist/make/**/*.zip
+            dist/make/**/*.exe
+            dist/make/**/*.nupkg
+          if-no-files-found: error
+
+  create-release:
+    needs: [check-changes, build-docker, build-electron]
+    if: always() && needs.check-changes.outputs.has_changes == 'true' && needs.build-docker.result == 'success' && needs.build-electron.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          ref: development
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: nightly-*
+          merge-multiple: true
+
+      - name: List artifacts
+        run: find artifacts -type f | head -50 || echo "No artifacts found"
+
+      - name: Create nightly tag
+        env:
+          NIGHTLY_TAG: nightly-${{ needs.check-changes.outputs.nightly_date }}
+        run: |
+          git tag -f "$NIGHTLY_TAG"
+          git push origin "$NIGHTLY_TAG" --force
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly-${{ needs.check-changes.outputs.nightly_date }}
+          name: Nightly Build ${{ needs.check-changes.outputs.nightly_date }}
+          prerelease: true
+          generate_release_notes: false
+          make_latest: false
+          body: |
+            ## Nightly Build
+
+            **Branch:** `development`
+            **Version:** `${{ needs.check-changes.outputs.nightly_version }}`
+            **Commit:** `${{ needs.check-changes.outputs.short_sha }}`
+
+            ---
+
+            ### Docker
+
+            ```bash
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:nightly
+            # or pinned
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:nightly-${{ needs.check-changes.outputs.nightly_date }}
+            ```
+
+            ---
+
+            > This is an automated nightly build from the `development` branch. It may be unstable.
+          files: |
+            artifacts/**/*.deb
+            artifacts/**/*.rpm
+            artifacts/**/*.dmg
+            artifacts/**/*.zip
+            artifacts/**/*.exe
+            artifacts/**/*.nupkg
