@@ -502,6 +502,9 @@
       "started": "The update process has started.",
       "success": "The update has been installed! The app will now restart.",
       "error": "Failed to install the update. Please try downloading it directly from GitHub."
+    },
+    "sw": {
+      "newVersion": "A new version is available. Click to reload."
     }
   },
   "about": {

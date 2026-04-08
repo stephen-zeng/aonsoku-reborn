@@ -1,6 +1,6 @@
 // Aonsoku Service Worker
 // Build hash & precache manifest are injected by the Vite plugin during builds
-const CACHE_VERSION = "__BUILD_HASH__";
+const CACHE_VERSION = "__SW_CACHE_HASH__";
 const CACHE_PREFIX = "aonsoku-";
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
 
@@ -128,9 +128,16 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Static assets (hashed JS/CSS, fonts, images): cache-first
-  if (HASHED_ASSET_RE.test(request.url) || STATIC_ASSET_RE.test(request.url)) {
+  // Hashed assets (content-addressed JS/CSS): cache-first — immutable
+  if (HASHED_ASSET_RE.test(request.url)) {
     event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // Non-hashed static assets (fonts, images, icons): stale-while-revalidate
+  // — these may change without a URL change, so always revalidate in background.
+  if (STATIC_ASSET_RE.test(request.url)) {
+    event.respondWith(staleWhileRevalidate(request, event));
     return;
   }
 

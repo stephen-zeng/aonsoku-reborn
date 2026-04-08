@@ -1,4 +1,5 @@
 import react from "@vitejs/plugin-react";
+import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { type PluginOption, defineConfig } from "vite";
@@ -16,8 +17,6 @@ function swVersionPlugin(): PluginOption {
       const swPath = path.resolve(outDir, "sw.js");
       try {
         let content = fs.readFileSync(swPath, "utf-8");
-        const hash = Date.now().toString(36);
-
         // Exclusion-based approach so new files are automatically
         // included in future builds.
         const EXCLUDE_DIRS = new Set(["screenshots"]);
@@ -47,7 +46,15 @@ function swVersionPlugin(): PluginOption {
 
         const precacheUrls = collectFiles(outDir);
 
-        content = content.replace(/__BUILD_HASH__/g, hash);
+        // Content-based hash: identical builds produce the same cache
+        // key, so returning users skip re-downloading unchanged assets.
+        const hash = crypto
+          .createHash("md5")
+          .update(JSON.stringify(precacheUrls.sort()))
+          .digest("hex")
+          .slice(0, 10);
+
+        content = content.replace(/__SW_CACHE_HASH__/g, hash);
         content = content.replace(
           '"__PRECACHE_MANIFEST__"',
           JSON.stringify(precacheUrls),

@@ -1,3 +1,5 @@
+import { toast } from "react-toastify";
+import i18n from "@/i18n";
 import { isDesktop } from "./desktop";
 
 const ALLOWED_HOSTS = ["aonsoku.realtvop.top", "alpha.aonsoku.realtvop.top"];
@@ -29,6 +31,11 @@ async function register() {
           case "installed":
             if (navigator.serviceWorker.controller) {
               console.log("[SW] Update installed, will activate on refresh");
+              toast.info(i18n.t("update.sw.newVersion"), {
+                autoClose: false,
+                toastId: "sw-update",
+                onClick: () => window.location.reload(),
+              });
             } else {
               console.log("[SW] Content cached for offline use");
             }
@@ -92,6 +99,8 @@ function setupChunkErrorRecovery() {
   function isChunkError(message: string): boolean {
     return (
       message.includes("Failed to fetch dynamically imported module") ||
+      message.includes("Importing a module script failed") ||
+      message.includes("error resolving module specifier") ||
       message.includes("Loading chunk") ||
       message.includes("Loading CSS chunk") ||
       message.includes("ChunkLoadError")
