@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ProgressSlider } from "@/app/components/ui/slider";
 import {
   usePlayerActions,
@@ -8,18 +8,22 @@ import {
 } from "@/store/player.store";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 
-let isSeeking = false;
-
 export function FullscreenProgress() {
   const progress = usePlayerProgress();
   const [localProgress, setLocalProgress] = useState(progress);
+  const [isSeeking, setIsSeeking] = useState(false);
   const audioPlayerRef = usePlayerRef();
   const currentDuration = usePlayerDuration();
   const { setProgress } = usePlayerActions();
 
+  useEffect(() => {
+    if (!isSeeking) {
+      setLocalProgress(progress);
+    }
+  }, [progress, isSeeking]);
+
   const updateAudioCurrentTime = useCallback(
     (value: number) => {
-      isSeeking = false;
       if (audioPlayerRef) {
         audioPlayerRef.currentTime = value;
       }
@@ -28,12 +32,13 @@ export function FullscreenProgress() {
   );
 
   const handleSeeking = useCallback((amount: number) => {
-    isSeeking = true;
+    setIsSeeking(true);
     setLocalProgress(amount);
   }, []);
 
   const handleSeeked = useCallback(
     (amount: number) => {
+      setIsSeeking(false);
       updateAudioCurrentTime(amount);
       setProgress(amount);
       setLocalProgress(amount);
@@ -42,11 +47,14 @@ export function FullscreenProgress() {
   );
 
   const handleSeekedFallback = useCallback(() => {
-    if (localProgress !== progress) {
-      updateAudioCurrentTime(localProgress);
-      setProgress(localProgress);
+    if (isSeeking) {
+      setIsSeeking(false);
+      if (localProgress !== progress) {
+        updateAudioCurrentTime(localProgress);
+        setProgress(localProgress);
+      }
     }
-  }, [localProgress, progress, setProgress, updateAudioCurrentTime]);
+  }, [isSeeking, localProgress, progress, setProgress, updateAudioCurrentTime]);
 
   const currentTime = convertSecondsToTime(
     isSeeking ? localProgress : progress,
@@ -70,6 +78,8 @@ export function FullscreenProgress() {
         onValueCommit={([value]) => handleSeeked(value)}
         onPointerUp={handleSeekedFallback}
         onMouseUp={handleSeekedFallback}
+        onTouchEnd={handleSeekedFallback}
+        data-vaul-no-drag
       />
 
       <div className="min-w-[40px] sm:min-w-[50px] max-w-[50px] sm:max-w-[60px] text-left drop-shadow-lg text-sm sm:text-base">
