@@ -13,10 +13,7 @@ import {
   useMainDrawerState,
   useQueueState,
 } from "@/store/player.store";
-import {
-  DEFAULT_RIGHT_PANEL_WIDTH,
-  useRightPanel,
-} from "@/store/ui.store";
+import { DEFAULT_RIGHT_PANEL_WIDTH, useRightPanel } from "@/store/ui.store";
 
 export function MainDrawerPage() {
   const { mainDrawerState, closeDrawer, toggleQueueAndLyrics } =

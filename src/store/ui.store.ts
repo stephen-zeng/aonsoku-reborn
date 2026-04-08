@@ -112,5 +112,4 @@ export const useUiStore = createWithEqualityFn<IUiContext>()(
 
 export const useSongInfo = () => useUiStore((state) => state.songInfo);
 export const useSidebar = () => useUiStore((state) => state.sidebar);
-export const useRightPanel = () =>
-  useUiStore((state) => state.rightPanel);
+export const useRightPanel = () => useUiStore((state) => state.rightPanel);

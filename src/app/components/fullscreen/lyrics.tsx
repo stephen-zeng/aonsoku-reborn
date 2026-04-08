@@ -63,8 +63,7 @@ function pickStructuredTracks(structured: IStructuredLyric[]): {
   translation?: IStructuredLyric;
 } {
   const primary = structured[0];
-  const translation =
-    structured.length >= 2 ? structured[1] : undefined;
+  const translation = structured.length >= 2 ? structured[1] : undefined;
   return { primary, translation };
 }
 
@@ -78,29 +77,22 @@ export function LyricsTab() {
 
   const { data: lyrics, isLoading: isLoadingLyrics } = useQuery({
     queryKey: ["get-lyrics", artist, title, duration],
-    queryFn: () =>
-      subsonic.lyrics.getLyrics({ artist, title, duration }),
+    queryFn: () => subsonic.lyrics.getLyrics({ artist, title, duration }),
   });
 
-  const { data: structuredLyrics, isLoading: isLoadingStructured } =
-    useQuery({
-      queryKey: ["get-structured-lyrics", songId],
-      queryFn: () =>
-        subsonic.lyrics.getStructuredLyrics(songId),
-      enabled: !!songId,
-    });
+  const { data: structuredLyrics, isLoading: isLoadingStructured } = useQuery({
+    queryKey: ["get-structured-lyrics", songId],
+    queryFn: () => subsonic.lyrics.getStructuredLyrics(songId),
+    enabled: !!songId,
+  });
 
   // Resolve the best lyrics source into a render-ready format.
   // Priority: structured (synced) > structured (unsynced)
   //           > /getLyrics (LRC) > /getLyrics (plain)
   const resolved: ResolvedLyrics | null = useMemo(() => {
     // Priority 1 & 2: Structured lyrics
-    if (
-      structuredLyrics &&
-      structuredLyrics.length > 0
-    ) {
-      const { primary, translation } =
-        pickStructuredTracks(structuredLyrics);
+    if (structuredLyrics && structuredLyrics.length > 0) {
+      const { primary, translation } = pickStructuredTracks(structuredLyrics);
 
       if (primary.synced) {
         // Priority 1: Structured + synced
@@ -138,10 +130,7 @@ export function LyricsTab() {
         // Priority 3: LRC synced
         return {
           type: "synced",
-          lyricLines: convertLrcToAMLL(
-            lyrics.value,
-            songDurationMs,
-          ),
+          lyricLines: convertLrcToAMLL(lyrics.value, songDurationMs),
         };
       }
 
@@ -153,12 +142,7 @@ export function LyricsTab() {
     }
 
     return null;
-  }, [
-    structuredLyrics,
-    lyrics,
-    showTranslation,
-    songDurationMs,
-  ]);
+  }, [structuredLyrics, lyrics, showTranslation, songDurationMs]);
 
   const noLyricsFound = t("fullscreen.noLyrics");
   const loadingLyrics = t("fullscreen.loadingLyrics");
@@ -200,18 +184,12 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
     if (!playerRef) return;
 
     const updateTime = () => {
-      const timeMs = Math.floor(
-        (playerRef.currentTime || 0) * 1000,
-      );
-      setCurrentTime((prev) =>
-        prev === timeMs ? prev : timeMs,
-      );
-      animationFrameRef.current =
-        requestAnimationFrame(updateTime);
+      const timeMs = Math.floor((playerRef.currentTime || 0) * 1000);
+      setCurrentTime((prev) => (prev === timeMs ? prev : timeMs));
+      animationFrameRef.current = requestAnimationFrame(updateTime);
     };
 
-    animationFrameRef.current =
-      requestAnimationFrame(updateTime);
+    animationFrameRef.current = requestAnimationFrame(updateTime);
 
     return () => {
       if (animationFrameRef.current) {
@@ -247,26 +225,21 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
             const lyricLine = lyricLines[line.lineIndex];
             if (Number.isFinite(lyricLine.startTime)) {
               // Seek the audio element
-              playerRef.currentTime =
-                lyricLine.startTime / 1000;
+              playerRef.currentTime = lyricLine.startTime / 1000;
               if (isPlaying) {
                 playerRef.play().catch(() => {});
               }
 
               // Prepare AMLL for seek: prevent cascade
               // animation jitter on large time jumps
-              const lp =
-                lyricPlayerRef.current?.lyricPlayer;
+              const lp = lyricPlayerRef.current?.lyricPlayer;
               if (lp) {
                 lp.resetScroll();
                 lp.setIsSeeking(true);
                 clearTimeout(seekingTimerRef.current);
-                seekingTimerRef.current = setTimeout(
-                  () => {
-                    lp.setIsSeeking(false);
-                  },
-                  100,
-                );
+                seekingTimerRef.current = setTimeout(() => {
+                  lp.setIsSeeking(false);
+                }, 100);
               }
 
               // Update time state immediately with exact
@@ -286,10 +259,7 @@ interface UnsyncedLyricsProps {
   translationLines?: string[];
 }
 
-function UnsyncedLyrics({
-  lines,
-  translationLines,
-}: UnsyncedLyricsProps) {
+function UnsyncedLyrics({ lines, translationLines }: UnsyncedLyricsProps) {
   const { currentSong } = usePlayerSonglist();
   const lyricsBoxRef = useRef<HTMLDivElement>(null);
 
@@ -322,9 +292,7 @@ function UnsyncedLyrics({
             index === lines.length - 1 && "mb-10",
           )}
         >
-          <p className="leading-10 drop-shadow-lg text-balance">
-            {line}
-          </p>
+          <p className="leading-10 drop-shadow-lg text-balance">{line}</p>
           {translationLines?.[index] && (
             <p className="leading-8 drop-shadow-lg text-balance text-base 2xl:text-lg opacity-70">
               {translationLines[index]}

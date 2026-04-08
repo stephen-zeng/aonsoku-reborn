@@ -21,9 +21,7 @@ const MemoBottomNavigation = memo(BottomNavigation);
 
 function CSSVariableSync() {
   const sidebarWidth = useUiStore((state) => state.sidebar.width);
-  const rightPanelWidth = useUiStore(
-    (state) => state.rightPanel.width,
-  );
+  const rightPanelWidth = useUiStore((state) => state.rightPanel.width);
 
   useEffect(() => {
     document.documentElement.style.setProperty(

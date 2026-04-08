@@ -1,9 +1,6 @@
 import { isDesktop } from "./desktop";
 
-const ALLOWED_HOSTS = [
-  "aonsoku.realtvop.top",
-  "alpha.aonsoku.realtvop.top",
-];
+const ALLOWED_HOSTS = ["aonsoku.realtvop.top", "alpha.aonsoku.realtvop.top"];
 
 // Must match CACHE_PREFIX in public/sw.js (separate JS contexts)
 const CACHE_PREFIX = "aonsoku-";

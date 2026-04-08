@@ -65,11 +65,8 @@ export function useResizePanel({
       isResizingRef.current = true;
       startXRef.current = e.clientX;
 
-      const raw =
-        document.documentElement.style.getPropertyValue(cssVar);
-      startWidthRef.current = raw
-        ? parseInt(raw, 10)
-        : defaultWidth;
+      const raw = document.documentElement.style.getPropertyValue(cssVar);
+      startWidthRef.current = raw ? parseInt(raw, 10) : defaultWidth;
       lastWidthRef.current = startWidthRef.current;
 
       document.body.classList.add("is-resizing");

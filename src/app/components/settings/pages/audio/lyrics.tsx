@@ -32,9 +32,7 @@ export function LyricsSettings() {
       </Header>
       <Content>
         <ContentItem>
-          <ContentItemTitle
-            info={t("settings.audio.lyrics.preferSynced.info")}
-          >
+          <ContentItemTitle info={t("settings.audio.lyrics.preferSynced.info")}>
             {t("settings.audio.lyrics.preferSynced.label")}
           </ContentItemTitle>
           <ContentItemForm>
@@ -46,9 +44,7 @@ export function LyricsSettings() {
         </ContentItem>
         <ContentItem>
           <ContentItemTitle
-            info={t(
-              "settings.audio.lyrics.showTranslation.info",
-            )}
+            info={t("settings.audio.lyrics.showTranslation.info")}
           >
             {t("settings.audio.lyrics.showTranslation.label")}
           </ContentItemTitle>

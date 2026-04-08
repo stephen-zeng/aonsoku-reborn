@@ -177,8 +177,7 @@ async function getStructuredLyrics(
       },
     );
 
-    const structuredLyrics =
-      response?.data.lyricsList?.structuredLyrics;
+    const structuredLyrics = response?.data.lyricsList?.structuredLyrics;
 
     if (structuredLyrics && structuredLyrics.length > 0) {
       set(cacheKey, structuredLyrics);

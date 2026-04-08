@@ -8,8 +8,7 @@ import type {
 export const LRC_TIMESTAMP_REGEX = /^\[\d+:\d+[.:]\d+\]/;
 
 /** Matches common LRC metadata tags like [ti:...], [ar:...], etc. */
-export const LRC_METADATA_REGEX =
-  /^\[(ti|ar|al|by|offset|re|ve|length):/;
+export const LRC_METADATA_REGEX = /^\[(ti|ar|al|by|offset|re|ve|length):/;
 
 /**
  * Supports formats: [mm:ss.xx], [mm:ss.xxx], [mm:ss:xx]
@@ -115,9 +114,7 @@ export function convertLrcToAMLL(
   const extracted = extractInlineTranslations(parsedLines);
   const finalLines = extracted.mainLines;
   const translationMap =
-    extracted.translations.size > 0
-      ? extracted.translations
-      : undefined;
+    extracted.translations.size > 0 ? extracted.translations : undefined;
 
   return finalLines.map((line, index, arr): LyricLine => {
     const endTime =
@@ -155,9 +152,7 @@ export function convertLrcToAMLL(
  * to avoid collisions when multiple standalone lines share the
  * same start time.
  */
-function extractStructuredInlineTranslations(
-  lines: IStructuredLyricLine[],
-): {
+function extractStructuredInlineTranslations(lines: IStructuredLyricLine[]): {
   mainLines: IStructuredLyricLine[];
   /** mainLines index → translated text */
   translations: Map<number, string>;
@@ -214,9 +209,7 @@ export function convertStructuredToAMLL(
   if (translation) {
     externalMap = buildTranslationMap(translation.line);
   } else {
-    const extracted = extractStructuredInlineTranslations(
-      primary.line,
-    );
+    const extracted = extractStructuredInlineTranslations(primary.line);
     if (extracted.translations.size > 0) {
       sourceLines = extracted.mainLines;
       inlineMap = extracted.translations;
@@ -241,9 +234,7 @@ export function convertStructuredToAMLL(
     // Inline translations keyed by index (avoids timestamp
     // collisions), external ones keyed by timestamp.
     const translated =
-      inlineMap?.get(index) ??
-      externalMap?.get(startTime) ??
-      "";
+      inlineMap?.get(index) ?? externalMap?.get(startTime) ?? "";
 
     return {
       words: [word],

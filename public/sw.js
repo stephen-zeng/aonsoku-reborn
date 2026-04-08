@@ -51,9 +51,7 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter(
-              (key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME,
-            )
+            .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
             .map((key) => {
               console.log("[SW] Deleting old cache:", key);
               return caches.delete(key);
@@ -95,7 +93,7 @@ self.addEventListener("fetch", (event) => {
 
 async function networkFirst(request) {
   try {
-    const response = await fetch(request);
+    const response = await fetch(safeFetchRequest(request));
     if (response.ok) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone());
@@ -116,7 +114,7 @@ async function cacheFirst(request) {
     const cache = await caches.open(CACHE_NAME);
     if (cached) await cache.delete(request);
 
-    const response = await fetch(request);
+    const response = await fetch(safeFetchRequest(request));
     if (response.ok) {
       cache.put(request, response.clone());
     }
@@ -130,7 +128,10 @@ async function staleWhileRevalidate(request) {
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request);
 
-  const networkPromise = fetch(request)
+  // Clone the request without browser-imposed cache constraints
+  // to avoid net::ERR_CACHE_MISS when the browser sends
+  // requests with cache: "only-if-cached" (e.g. bfcache, prefetch)
+  const networkPromise = fetch(safeFetchRequest(request))
     .then((response) => {
       if (response.ok) {
         cache.put(request, response.clone());
@@ -148,6 +149,21 @@ async function staleWhileRevalidate(request) {
 }
 
 // ── Helpers ──────────────────────────────────────────────────
+
+/**
+ * Create a fetch-safe copy of a request, stripping browser-imposed
+ * cache constraints (e.g. cache: "only-if-cached") that cause
+ * net::ERR_CACHE_MISS inside service workers.
+ */
+function safeFetchRequest(request) {
+  return new Request(request.url, {
+    method: request.method,
+    headers: request.headers,
+    mode: "same-origin",
+    credentials: request.credentials,
+    redirect: request.redirect,
+  });
+}
 
 function isValidResponse(response) {
   return response && response.status >= 200 && response.status < 400;
