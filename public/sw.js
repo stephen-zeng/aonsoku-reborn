@@ -26,7 +26,10 @@ const HASHED_ASSET_RE = /[-.][0-9a-f]{8,}\.(js|css)(\?.*)?$/;
 
 // Static assets that rarely change (fonts, images, icons)
 const STATIC_ASSET_RE =
-  /\.(woff2?|ttf|otf|eot|png|jpg|jpeg|svg|gif|ico|webp)(\?.*)?$/;
+  /\.(woff2?|ttf|otf|eot|png|jpg|jpeg|svg|gif|ico|webp|webmanifest|xml)(\?.*)?$/;
+
+// Ignore query-string differences when matching cached entries
+const CACHE_MATCH_OPTS = { ignoreSearch: true };
 
 // ── Install ──────────────────────────────────────────────────
 
@@ -89,6 +92,10 @@ self.addEventListener("fetch", (event) => {
   // Only handle GET requests
   if (request.method !== "GET") return;
 
+  // Cross-origin requests use opaque responses that can't be inspected;
+  // let the browser handle them natively.
+  if (!request.url.startsWith(self.location.origin + "/")) return;
+
   // Skip requests that should never be cached
   if (NO_CACHE_PATTERNS.some((re) => re.test(request.url))) return;
 
@@ -138,7 +145,7 @@ async function networkFirst(request) {
 
 async function cacheFirst(request) {
   try {
-    const cached = await caches.match(request);
+    const cached = await caches.match(request, CACHE_MATCH_OPTS);
     if (cached && isValidResponse(cached)) return cached;
 
     const cache = await caches.open(CACHE_NAME);
@@ -156,7 +163,7 @@ async function cacheFirst(request) {
 
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
+  const cached = await cache.match(request, CACHE_MATCH_OPTS);
 
   // Clone the request without browser-imposed cache constraints
   // to avoid net::ERR_CACHE_MISS when the browser sends
@@ -197,21 +204,24 @@ async function networkWithEmptyFallback(request) {
 }
 
 /**
- * Create a fetch-safe copy of a request, stripping browser-imposed
- * cache constraints (e.g. cache: "only-if-cached") that cause
- * net::ERR_CACHE_MISS inside service workers.
+ * Create a fetch-safe copy of a request: strips browser-imposed
+ * cache constraints (cache: "only-if-cached") and downgrades
+ * "navigate" mode to "same-origin" (fetch() can't use "navigate").
  */
 function safeFetchRequest(request) {
   return new Request(request.url, {
     method: request.method,
     headers: request.headers,
-    mode: "same-origin",
+    mode: request.mode === "navigate" ? "same-origin" : request.mode,
     credentials: request.credentials,
     redirect: request.redirect,
   });
 }
 
 function isValidResponse(response) {
+  // Defensive: opaque responses (cross-origin no-cors) can't be inspected,
+  // but treat them as valid if they somehow reach the cache.
+  if (response.type === "opaque") return true;
   return response && response.status >= 200 && response.status < 400;
 }
 

@@ -18,18 +18,34 @@ function swVersionPlugin(): PluginOption {
         let content = fs.readFileSync(swPath, "utf-8");
         const hash = Date.now().toString(36);
 
-        // Collect precache manifest from build output
-        const precacheUrls: string[] = ["/index.html"];
-        const assetsDir = path.resolve(outDir, "assets");
-        try {
-          const assets = fs
-            .readdirSync(assetsDir)
-            .filter((f) => /\.(js|css)$/.test(f))
-            .map((f) => `/assets/${f}`);
-          precacheUrls.push(...assets);
-        } catch {
-          // assets dir missing (unexpected) — precache app shell only
+        // Exclusion-based approach so new files are automatically
+        // included in future builds.
+        const EXCLUDE_DIRS = new Set(["screenshots"]);
+        const EXCLUDE_FILES = new Set(["sw.js", "env-config.js"]);
+        const EXCLUDE_EXTS = new Set([".map"]);
+
+        function collectFiles(dir: string, base = ""): string[] {
+          const entries = fs.readdirSync(dir, { withFileTypes: true });
+          const result: string[] = [];
+          for (const entry of entries) {
+            if (entry.isDirectory()) {
+              if (EXCLUDE_DIRS.has(entry.name)) continue;
+              result.push(
+                ...collectFiles(
+                  path.join(dir, entry.name),
+                  `${base}${entry.name}/`,
+                ),
+              );
+            } else if (entry.isFile()) {
+              if (EXCLUDE_FILES.has(entry.name)) continue;
+              if (EXCLUDE_EXTS.has(path.extname(entry.name))) continue;
+              result.push(`/${base}${entry.name}`);
+            }
+          }
+          return result;
         }
+
+        const precacheUrls = collectFiles(outDir);
 
         content = content.replace(/__BUILD_HASH__/g, hash);
         content = content.replace(
