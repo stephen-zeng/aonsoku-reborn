@@ -15,10 +15,31 @@ function swVersionPlugin(): PluginOption {
     closeBundle() {
       const swPath = path.resolve(outDir, "sw.js");
       try {
-        const content = fs.readFileSync(swPath, "utf-8");
+        let content = fs.readFileSync(swPath, "utf-8");
         const hash = Date.now().toString(36);
-        fs.writeFileSync(swPath, content.replace(/__BUILD_HASH__/g, hash));
-        console.log(`[sw-version] Injected build hash: ${hash}`);
+
+        // Collect precache manifest from build output
+        const precacheUrls: string[] = ["/index.html"];
+        const assetsDir = path.resolve(outDir, "assets");
+        try {
+          const assets = fs
+            .readdirSync(assetsDir)
+            .filter((f) => /\.(js|css)$/.test(f))
+            .map((f) => `/assets/${f}`);
+          precacheUrls.push(...assets);
+        } catch {
+          // assets dir missing (unexpected) — precache app shell only
+        }
+
+        content = content.replace(/__BUILD_HASH__/g, hash);
+        content = content.replace(
+          '"__PRECACHE_MANIFEST__"',
+          JSON.stringify(precacheUrls),
+        );
+        fs.writeFileSync(swPath, content);
+        console.log(
+          `[sw-version] hash=${hash}, precache=${precacheUrls.length} files`,
+        );
       } catch {
         // sw.js not present in output (e.g. electron build) — skip
       }

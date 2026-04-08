@@ -51,14 +51,25 @@ async function register() {
  * Detects chunk load failures caused by stale SW cache (e.g. HTML
  * references hashed assets that no longer exist) and recovers by
  * clearing all caches and reloading.
+ *
+ * A sessionStorage-based cooldown prevents infinite reload loops
+ * when offline (navigator.onLine alone is unreliable on captive
+ * portals and flaky mobile connections).
  */
 function setupChunkErrorRecovery() {
-  let recovering = false;
+  const COOLDOWN_KEY = "sw-recovery-ts";
+  const COOLDOWN_MS = 10_000;
 
   function recover() {
-    if (recovering) return;
-    recovering = true;
+    const lastAttempt = Number(sessionStorage.getItem(COOLDOWN_KEY) || 0);
+    if (Date.now() - lastAttempt < COOLDOWN_MS) {
+      console.warn(
+        "[SW] Chunk load failure, but recovery cooldown active — skipping",
+      );
+      return;
+    }
 
+    sessionStorage.setItem(COOLDOWN_KEY, String(Date.now()));
     console.warn("[SW] Chunk load failure detected, clearing caches...");
 
     caches

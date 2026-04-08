@@ -1,13 +1,14 @@
 // Aonsoku Service Worker
-// Build hash is injected by the Vite plugin during production builds
+// Build hash & precache manifest are injected by the Vite plugin during builds
 const CACHE_VERSION = "__BUILD_HASH__";
 const CACHE_PREFIX = "aonsoku-";
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
 
-// URL to precache during installation (app shell)
-const PRECACHE_URLS = ["/index.html"];
+// Precache manifest — replaced at build time by the Vite plugin.
+// Quoted string keeps the file valid JS if the replacement ever fails.
+const PRECACHE_URLS = "__PRECACHE_MANIFEST__";
 
-// Patterns that must never be cached (API, streaming, runtime config)
+// Patterns that must never be cached (API, streaming)
 const NO_CACHE_PATTERNS = [
   /\/rest\//,
   /\/api\//,
@@ -15,8 +16,10 @@ const NO_CACHE_PATTERNS = [
   /\/getCoverArt/,
   /\/getAvatar/,
   /chrome-extension:\/\//,
-  /\/env-config\.js/,
 ];
+
+// Prevents noisy console errors for non-critical config scripts when offline
+const OFFLINE_FALLBACK_PATTERNS = [/\/env-config\.js/];
 
 // Vite hashed assets: filename contains 8+ hex chars before extension
 const HASHED_ASSET_RE = /[-.][0-9a-f]{8,}\.(js|css)(\?.*)?$/;
@@ -31,13 +34,29 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) =>
-        cache.addAll(PRECACHE_URLS).catch((err) => {
-          // Don't block installation if precaching fails;
-          // the fetch handler will cache assets on demand.
-          console.warn("[SW] Precache failed, continuing:", err);
-        }),
-      )
+      .then((cache) => {
+        // Use individual cache.add() with allSettled so a single
+        // failing URL (e.g. slow connection) doesn't abort the
+        // entire precache — the app shell and critical chunks
+        // still get cached.
+        if (!Array.isArray(PRECACHE_URLS)) {
+          console.error(
+            "[SW] Precache manifest was not injected at build time",
+          );
+          return;
+        }
+        return Promise.allSettled(
+          PRECACHE_URLS.map((url) => cache.add(url)),
+        ).then((results) => {
+          const failed = results.filter((r) => r.status === "rejected");
+          if (failed.length) {
+            console.warn(
+              `[SW] Precache: ${PRECACHE_URLS.length - failed.length}/${PRECACHE_URLS.length} OK, ${failed.length} failed`,
+              failed.map((r) => r.reason),
+            );
+          }
+        });
+      })
       .then(() => self.skipWaiting()),
   );
 });
@@ -73,7 +92,14 @@ self.addEventListener("fetch", (event) => {
   // Skip requests that should never be cached
   if (NO_CACHE_PATTERNS.some((re) => re.test(request.url))) return;
 
-  // Navigation requests: network-first with cache fallback
+  // Requests that should return an empty fallback when offline
+  // (e.g. env-config.js — optional runtime config, not critical)
+  if (OFFLINE_FALLBACK_PATTERNS.some((re) => re.test(request.url))) {
+    event.respondWith(networkWithEmptyFallback(request));
+    return;
+  }
+
+  // Navigation requests: network-first with SPA fallback
   if (request.mode === "navigate") {
     event.respondWith(networkFirst(request));
     return;
@@ -100,8 +126,12 @@ async function networkFirst(request) {
     }
     return response;
   } catch {
-    const cached = await caches.match(request);
-    if (cached && isValidResponse(cached)) return cached;
+    // SPA fallback: serve the cached app shell for any navigation.
+    // This covers the case where the user navigates to "/" but the
+    // precache stored the response under "/index.html".
+    const shell = await caches.match("/index.html");
+    if (shell && isValidResponse(shell)) return shell;
+
     return createOfflineResponse();
   }
 }
@@ -149,6 +179,22 @@ async function staleWhileRevalidate(request) {
 }
 
 // ── Helpers ──────────────────────────────────────────────────
+
+/**
+ * Network-first but returns an empty JS response on failure instead
+ * of letting the browser's default fetch produce ERR_INTERNET_DISCONNECTED.
+ * Used for optional scripts like env-config.js.
+ */
+async function networkWithEmptyFallback(request) {
+  try {
+    return await fetch(safeFetchRequest(request));
+  } catch {
+    return new Response("// offline", {
+      status: 200,
+      headers: { "Content-Type": "application/javascript" },
+    });
+  }
+}
 
 /**
  * Create a fetch-safe copy of a request, stripping browser-imposed
