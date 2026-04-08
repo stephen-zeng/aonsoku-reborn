@@ -86,6 +86,8 @@ interface IFullscreen {
 interface ILyrics {
   preferSyncedLyrics: boolean;
   setPreferSyncedLyrics: (value: boolean) => void;
+  showTranslation: boolean;
+  setShowTranslation: (value: boolean) => void;
 }
 
 export interface IPrivacySettings {

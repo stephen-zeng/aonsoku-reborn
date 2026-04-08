@@ -235,6 +235,12 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                     state.settings.lyrics.preferSyncedLyrics = value;
                   });
                 },
+                showTranslation: true,
+                setShowTranslation: (value) => {
+                  set((state) => {
+                    state.settings.lyrics.showTranslation = value;
+                  });
+                },
               },
               replayGain: {
                 values: {

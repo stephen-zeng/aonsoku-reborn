@@ -1,7 +1,11 @@
 import { get, set } from "idb-keyval";
 import { httpClient } from "@/api/httpClient";
 import { usePlayerStore } from "@/store/player.store";
-import { LyricsResponse } from "@/types/responses/song";
+import type {
+  IStructuredLyric,
+  LyricsBySongIdResponse,
+  LyricsResponse,
+} from "@/types/responses/song";
 import { lrclibClient } from "@/utils/appName";
 import { checkServerType } from "@/utils/servers";
 
@@ -156,7 +160,39 @@ function getLyricsCacheKey(
   return `lyrics:${artist}:${title}:${type}`;
 }
 
+async function getStructuredLyrics(
+  songId: string,
+): Promise<IStructuredLyric[] | null> {
+  const cacheKey = `lyrics-structured:${songId}`;
+
+  const cached = await get(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const response = await httpClient<LyricsBySongIdResponse>(
+      "/getLyricsBySongId",
+      {
+        method: "GET",
+        query: { id: songId },
+      },
+    );
+
+    const structuredLyrics =
+      response?.data.lyricsList?.structuredLyrics;
+
+    if (structuredLyrics && structuredLyrics.length > 0) {
+      set(cacheKey, structuredLyrics);
+      return structuredLyrics;
+    }
+  } catch {
+    // Silently fallback — endpoint may not be supported
+  }
+
+  return null;
+}
+
 export const lyrics = {
   getLyrics,
   getLyricsFromLRCLib,
+  getStructuredLyrics,
 };

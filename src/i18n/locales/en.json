@@ -577,6 +577,10 @@
         "preferSynced": {
           "label": "Prefer synced lyrics",
           "info": "When enabled, synced lyrics will be prioritized over unsynced lyrics."
+        },
+        "showTranslation": {
+          "label": "Show translation",
+          "info": "When available, show translated lyrics below the original lyrics."
         }
       }
     },

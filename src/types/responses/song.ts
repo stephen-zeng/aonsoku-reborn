@@ -84,4 +84,22 @@ export interface FavoritesResponse
 
 export interface LyricsResponse extends SubsonicResponse<{ lyrics: ILyric }> {}
 
+export interface IStructuredLyricLine {
+  start?: number;
+  value: string;
+}
+
+export interface IStructuredLyric {
+  lang: string;
+  synced: boolean;
+  line: IStructuredLyricLine[];
+}
+
+export interface LyricsList {
+  structuredLyrics?: IStructuredLyric[];
+}
+
+export interface LyricsBySongIdResponse
+  extends SubsonicResponse<{ lyricsList: LyricsList }> {}
+
 export interface GetSongResponse extends SubsonicResponse<{ song: ISong }> {}
