@@ -510,6 +510,7 @@
     "version": "Version",
     "type": "Type",
     "apiVersion": "API Version",
+    "buildTime": "Build Time",
     "toasts": {
       "copy": "Link copied to clipboard!"
     }
