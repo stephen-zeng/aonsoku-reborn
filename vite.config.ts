@@ -1,11 +1,34 @@
 import react from "@vitejs/plugin-react";
+import fs from "fs";
 import path from "path";
-import { defineConfig } from "vite";
+import { type PluginOption, defineConfig } from "vite";
 import { createManualChunks } from "./src/manual-chunks";
+
+function swVersionPlugin(): PluginOption {
+  let outDir = "dist";
+  return {
+    name: "sw-version-inject",
+    apply: "build",
+    configResolved(config) {
+      outDir = config.build.outDir;
+    },
+    closeBundle() {
+      const swPath = path.resolve(outDir, "sw.js");
+      try {
+        const content = fs.readFileSync(swPath, "utf-8");
+        const hash = Date.now().toString(36);
+        fs.writeFileSync(swPath, content.replace(/__BUILD_HASH__/g, hash));
+        console.log(`[sw-version] Injected build hash: ${hash}`);
+      } catch {
+        // sw.js not present in output (e.g. electron build) — skip
+      }
+    },
+  };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), swVersionPlugin()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

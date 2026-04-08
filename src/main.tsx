@@ -14,8 +14,10 @@ import App from "@/App";
 
 import { queryClient } from "@/lib/queryClient";
 import { blockFeatures } from "@/utils/browser";
+import { registerServiceWorker } from "@/utils/swRegistration";
 
 blockFeatures();
+registerServiceWorker();
 
 createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>
