@@ -12,7 +12,14 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
 import {
   ScrollArea,
   scrollAreaViewportSelector,
@@ -102,6 +109,7 @@ export function DraggableVirtualQueue({
           type="always"
           className={scrollAreaClassName}
           thumbClassName={thumbClassName}
+          data-vaul-no-drag
         >
           <div
             className="px-2"
@@ -143,16 +151,20 @@ export function DraggableVirtualQueue({
           </div>
         </ScrollArea>
       </SortableContext>
-      <DragOverlay>
-        {activeItem && (
-          <QueueItemRow
-            song={activeItem}
-            isPlaying={currentSong.id === activeItem.id && isPlaying}
-            isActive={currentSong.id === activeItem.id}
-            onPlay={() => {}}
-          />
-        )}
-      </DragOverlay>
+      {/* Portal escapes Vaul drawer's transform that breaks position:fixed */}
+      {createPortal(
+        <DragOverlay>
+          {activeItem && (
+            <QueueItemRow
+              song={activeItem}
+              isPlaying={currentSong.id === activeItem.id && isPlaying}
+              isActive={currentSong.id === activeItem.id}
+              onPlay={() => {}}
+            />
+          )}
+        </DragOverlay>,
+        document.body,
+      )}
     </DndContext>
   );
 }
