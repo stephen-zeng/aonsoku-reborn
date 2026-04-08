@@ -29,6 +29,9 @@ export default defineConfig({
   renderer: {
     root: ".",
     plugins: [react()],
+    define: {
+      __BUILD_HASH__: JSON.stringify(Date.now().toString(36)),
+    },
     resolve: {
       alias: {
         "@": resolve(__dirname, "./src"),

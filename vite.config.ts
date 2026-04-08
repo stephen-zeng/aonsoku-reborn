@@ -27,8 +27,13 @@ function swVersionPlugin(): PluginOption {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react(), swVersionPlugin()],
+  define: {
+    __BUILD_HASH__: JSON.stringify(
+      mode === "production" ? Date.now().toString(36) : "dev",
+    ),
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -44,4 +49,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));
