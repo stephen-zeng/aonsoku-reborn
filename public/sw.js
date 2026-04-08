@@ -1,285 +1,219 @@
-// Aonsoku Service Worker
-// Build hash & precache manifest are injected by the Vite plugin during builds
-const CACHE_VERSION = "__SW_CACHE_HASH__";
-const CACHE_PREFIX = "aonsoku-";
-const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
+"use strict";
+
+// Build hash & precache manifest are injected by the Vite plugin during builds.
+// Must match CACHE_PREFIX in src/utils/swRegistration.ts (separate JS contexts).
+var CACHE_PREFIX = "aonsoku-";
+var CACHE_VERSION = "__SW_CACHE_HASH__";
+var MAIN_CACHE = CACHE_PREFIX + "Main-" + CACHE_VERSION;
+var EXTERNAL_CACHE = CACHE_PREFIX + "ExternalRes";
 
 // Precache manifest — replaced at build time by the Vite plugin.
-// Quoted string keeps the file valid JS if the replacement ever fails.
-const PRECACHE_URLS = "__PRECACHE_MANIFEST__";
+var PRECACHE_URLS = "__PRECACHE_MANIFEST__";
 
-// Patterns that must never be cached (API, streaming)
-const NO_CACHE_PATTERNS = [
-  /\/rest\//,
-  /\/api\//,
-  /\/stream/,
-  /\/getCoverArt/,
-  /\/getAvatar/,
-  /chrome-extension:\/\//,
-];
+// Max concurrent fetches during precaching.
+var PRECACHE_BATCH_SIZE = 15;
 
-// Prevents noisy console errors for non-critical config scripts when offline
-const OFFLINE_FALLBACK_PATTERNS = [/\/env-config\.js/];
+var MATCH_OPTS = { ignoreSearch: true, ignoreVary: true };
 
-// Vite hashed assets: filename contains 8+ hex chars before extension
-const HASHED_ASSET_RE = /[-.][0-9a-f]{8,}\.(js|css)(\?.*)?$/;
+// Cache self origin once — it never changes.
+var SELF_URL = new URL(self.location.href);
 
-// Static assets that rarely change (fonts, images, icons)
-const STATIC_ASSET_RE =
-  /\.(woff2?|ttf|otf|eot|png|jpg|jpeg|svg|gif|ico|webp|webmanifest|xml)(\?.*)?$/;
+// ── Caching Strategies ──────────────────────────────────────
 
-// Ignore query-string differences when matching cached entries
-const CACHE_MATCH_OPTS = { ignoreSearch: true };
+function cacheFirst(request, key) {
+  return caches.open(key).then(function (cache) {
+    return cache.match(request, MATCH_OPTS).then(function (response) {
+      return (
+        response ||
+        fetch(request).then(function (response) {
+          if (response.ok || response.type === "opaque")
+            cache.put(request, response.clone());
+          return response;
+        })
+      );
+    });
+  });
+}
 
-// Max concurrent fetches during precaching (avoids overwhelming constrained connections)
-const PRECACHE_BATCH_SIZE = 15;
+function onlineFirst(request, key) {
+  return caches.open(key).then(function (cache) {
+    var offlineFetch = function () {
+      return cache.match(request, MATCH_OPTS);
+    };
+    return fetch(request)
+      .then(function (response) {
+        if (response.ok) cache.put(request, response.clone());
+        return response;
+      })
+      .catch(offlineFetch);
+  });
+}
 
-// ── Install ──────────────────────────────────────────────────
+// ── Install ─────────────────────────────────────────────────
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(precacheAppShell());
+self.addEventListener("install", function (e) {
+  e.waitUntil(precacheAppShell());
+  self.skipWaiting();
 });
 
-async function precacheAppShell() {
-  const cache = await caches.open(CACHE_NAME);
-
-  try {
+function precacheAppShell() {
+  return caches.open(MAIN_CACHE).then(function (cache) {
     if (!Array.isArray(PRECACHE_URLS)) {
-      throw new Error("Precache manifest was not injected at build time");
-    }
-
-    if (!PRECACHE_URLS.includes("/index.html")) {
-      throw new Error("Precache manifest is missing /index.html");
+      console.error("[SW] Precache manifest was not injected at build time");
+      return Promise.resolve();
     }
 
     // Cache the SPA shell first — it's the most critical resource.
-    await cache.add("/index.html");
+    var shellPromise = cache.add("/index.html");
 
-    // Batch the remaining URLs to avoid overwhelming constrained connections
-    // with 190+ simultaneous fetches.
-    const remaining = PRECACHE_URLS.filter((u) => u !== "/index.html");
-    const failedUrls = [];
+    return shellPromise.then(function () {
+      var remaining = PRECACHE_URLS.filter(function (u) {
+        return u !== "/index.html";
+      });
+      var failedUrls = [];
 
-    for (let i = 0; i < remaining.length; i += PRECACHE_BATCH_SIZE) {
-      const batch = remaining.slice(i, i + PRECACHE_BATCH_SIZE);
-      const results = await Promise.allSettled(
-        batch.map((url) => cache.add(url)),
-      );
-
-      for (const [index, result] of results.entries()) {
-        if (result.status === "rejected") {
-          failedUrls.push(batch[index]);
+      function processBatch(startIndex) {
+        if (startIndex >= remaining.length) {
+          if (failedUrls.length > 0) {
+            console.error("[SW] Precache failed for URLs:", failedUrls);
+          }
+          return Promise.resolve();
         }
-      }
-    }
 
-    if (failedUrls.length > 0) {
-      console.error("[SW] Precache failed for URLs:", failedUrls);
-      throw new Error(`Precache failed for ${failedUrls.length} URLs`);
-    }
-  } catch (error) {
-    console.error("[SW] Install failed, keeping previous cache:", error);
-    throw error;
-  }
+        var batch = remaining.slice(startIndex, startIndex + PRECACHE_BATCH_SIZE);
+        return Promise.allSettled(
+          batch.map(function (url) {
+            return cache.add(url);
+          })
+        ).then(function (results) {
+          for (var i = 0; i < results.length; i++) {
+            if (results[i].status === "rejected") {
+              failedUrls.push(batch[i]);
+            }
+          }
+          return processBatch(startIndex + PRECACHE_BATCH_SIZE);
+        });
+      }
+
+      return processBatch(0);
+    });
+  });
 }
 
-// ── Activate ─────────────────────────────────────────────────
+// ── Activate ────────────────────────────────────────────────
 
-self.addEventListener("message", (event) => {
-  if (event.data?.type === "SKIP_WAITING") {
-    self.skipWaiting();
-  }
-});
-
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
+self.addEventListener("activate", function (e) {
+  e.waitUntil(
     caches
       .keys()
-      .then((keys) =>
-        Promise.all(
-          keys
-            .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
-            .map((key) => {
-              console.log("[SW] Deleting old cache:", key);
-              return caches.delete(key);
-            }),
-        ),
-      )
-      .then(() => self.clients.claim()),
+      .then(function (cacheNames) {
+        return Promise.all(
+          cacheNames
+            .filter(function (name) {
+              if (name === MAIN_CACHE) return false;
+              if (name === EXTERNAL_CACHE) return false;
+              return name.startsWith(CACHE_PREFIX);
+            })
+            .map(function (name) {
+              console.log("[SW] Deleting old cache:", name);
+              return caches.delete(name);
+            })
+        );
+      })
+      .then(function () {
+        return self.clients.claim();
+      })
   );
 });
 
-// ── Fetch ────────────────────────────────────────────────────
+// ── Fetch ───────────────────────────────────────────────────
 
-self.addEventListener("fetch", (event) => {
-  const { request } = event;
+self.addEventListener("fetch", function (e) {
+  if (e.request.method !== "GET") return;
 
-  // Only handle GET requests
-  if (request.method !== "GET") return;
+  var url = new URL(e.request.url);
 
-  // Cross-origin requests use opaque responses that can't be inspected;
-  // let the browser handle them natively.
-  if (!request.url.startsWith(self.location.origin + "/")) return;
-
-  // Skip requests that should never be cached
-  if (NO_CACHE_PATTERNS.some((re) => re.test(request.url))) return;
-
-  // Requests that should return an empty fallback when offline
-  // (e.g. env-config.js — optional runtime config, not critical)
-  if (OFFLINE_FALLBACK_PATTERNS.some((re) => re.test(request.url))) {
-    event.respondWith(networkWithEmptyFallback(request));
+  if (
+    url.pathname.endsWith("sw.js") ||
+    url.hostname === "localhost" ||
+    url.pathname.includes("/rest/") ||
+    url.pathname.includes("/api/") ||
+    url.pathname.includes("/stream")
+  ) {
     return;
   }
 
-  // Navigation requests: network-first with SPA fallback
-  if (request.mode === "navigate") {
-    event.respondWith(networkFirst(request));
+  if (url.pathname.endsWith("env-config.js")) {
+    e.respondWith(
+      fetch(e.request).catch(function () {
+        return new Response("// offline", {
+          status: 200,
+          headers: { "Content-Type": "application/javascript" },
+        });
+      })
+    );
     return;
   }
 
-  // Hashed assets (content-addressed JS/CSS): cache-first — immutable
-  if (HASHED_ASSET_RE.test(request.url)) {
-    event.respondWith(cacheFirst(request));
+  // Navigation requests — online-first with SPA /index.html fallback
+  if (e.request.mode === "navigate") {
+    e.respondWith(
+      onlineFirst(e.request, MAIN_CACHE).then(function (response) {
+        if (response) return response;
+        return caches.match("/index.html", MATCH_OPTS).then(function (shell) {
+          return (
+            shell ||
+            new Response("Offline", {
+              status: 503,
+              statusText: "Service Unavailable",
+              headers: { "Content-Type": "text/plain" },
+            })
+          );
+        });
+      })
+    );
     return;
   }
 
-  // Non-hashed static assets (fonts, images, icons): stale-while-revalidate
-  // — these may change without a URL change, so always revalidate in background.
-  if (STATIC_ASSET_RE.test(request.url)) {
-    event.respondWith(staleWhileRevalidate(request, event));
+  if (url.hostname === SELF_URL.hostname) {
+    e.respondWith(cacheFirst(e.request, MAIN_CACHE));
     return;
   }
 
-  // Everything else: stale-while-revalidate.
-  // Pass event so the strategy can extend SW lifetime for the background write.
-  event.respondWith(staleWhileRevalidate(request, event));
+  e.respondWith(cacheFirst(e.request, EXTERNAL_CACHE));
 });
 
-// ── Strategies ───────────────────────────────────────────────
+// ── Message (cache rebuild) ─────────────────────────────────
+// Channel name must match src/utils/swRegistration.ts setupUpdateListener().
 
-async function networkFirst(request) {
-  try {
-    const response = await fetch(safeFetchRequest(request));
-    if (response.ok) {
-      const cache = await caches.open(CACHE_NAME);
-      // Await the write so the SW doesn't terminate before it completes,
-      // which would produce a cache entry with an empty (0-byte) body.
-      await cache.put(request, response.clone());
-    }
-    return response;
-  } catch {
-    // SPA fallback: serve the cached app shell for any navigation.
-    // Parallel lookup covers the case where the user navigates to a
-    // sub-route (e.g. "/settings") that was cached under its own URL
-    // but also has /index.html as the canonical shell.
-    const [shell, cachedNav] = await Promise.all([
-      caches.match("/index.html", CACHE_MATCH_OPTS),
-      caches.match(request, CACHE_MATCH_OPTS),
-    ]);
-    if (shell && isValidResponse(shell)) return shell;
-    if (cachedNav && isValidResponse(cachedNav)) return cachedNav;
+self.addEventListener("message", function (event) {
+  var data = event.data;
+  if (!data || !data.action) return;
 
-    return createOfflineResponse();
-  }
-}
+  if (data.action === "update") {
+    var assets = Array.isArray(PRECACHE_URLS) ? PRECACHE_URLS.slice() : [];
 
-async function cacheFirst(request) {
-  try {
-    const cached = await caches.match(request, CACHE_MATCH_OPTS);
-    if (cached && isValidResponse(cached)) return cached;
-
-    const cache = await caches.open(CACHE_NAME);
-    // cache.put() overwrites existing entries, so no explicit delete needed.
-
-    const response = await fetch(safeFetchRequest(request));
-    if (response.ok) {
-      await cache.put(request, response.clone());
-    }
-    return response;
-  } catch {
-    return createOfflineResponse();
-  }
-}
-
-async function staleWhileRevalidate(request, event) {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request, CACHE_MATCH_OPTS);
-
-  const networkPromise = fetch(safeFetchRequest(request))
-    .then(async (response) => {
-      if (response.ok) {
-        // Await inside async .then() so the promise doesn't settle
-        // until the cache write is fully committed.
-        await cache.put(request, response.clone());
+    if (Array.isArray(data.assets)) {
+      for (var i = 0; i < data.assets.length; i++) {
+        assets.push("/assets/" + data.assets[i]);
       }
-      return response;
-    })
-    .catch(() => null);
+    }
 
-  if (cached && isValidResponse(cached)) {
-    // Keep the SW alive until the background network+cache update
-    // finishes — without this, the SW may terminate mid-write and
-    // produce another 0-byte cache entry.
-    event.waitUntil(networkPromise);
-    return cached;
+    caches
+      .delete(MAIN_CACHE)
+      .then(function () {
+        return caches.open(MAIN_CACHE);
+      })
+      .then(function (cache) {
+        return cache.addAll(assets);
+      })
+      .then(function () {
+        var broadcast = new BroadcastChannel("updateFinish");
+        broadcast.postMessage({ type: "UPDATED" });
+        broadcast.close();
+      })
+      .catch(function (err) {
+        console.error("[SW] Cache rebuild failed:", err);
+      });
   }
-
-  const response = await networkPromise;
-  if (response) return response;
-
-  return createOfflineResponse();
-}
-
-// ── Helpers ──────────────────────────────────────────────────
-
-/**
- * Network-first but returns an empty JS response on failure instead
- * of letting the browser's default fetch produce ERR_INTERNET_DISCONNECTED.
- * Used for optional scripts like env-config.js.
- */
-async function networkWithEmptyFallback(request) {
-  try {
-    return await fetch(safeFetchRequest(request));
-  } catch {
-    return new Response("// offline", {
-      status: 200,
-      headers: { "Content-Type": "application/javascript" },
-    });
-  }
-}
-
-/**
- * Create a fetch-safe copy of a request: strips browser-imposed
- * cache constraints (cache: "only-if-cached") and downgrades
- * "navigate" mode to "same-origin" (fetch() can't use "navigate").
- */
-function safeFetchRequest(request) {
-  return new Request(request.url, {
-    method: request.method,
-    headers: request.headers,
-    mode: request.mode === "navigate" ? "same-origin" : request.mode,
-    credentials: request.credentials,
-    redirect: request.redirect,
-  });
-}
-
-function isValidResponse(response) {
-  if (!response) return false;
-  // Opaque responses (cross-origin no-cors) can't be inspected;
-  // treat them as valid if they somehow reach the cache.
-  if (response.type === "opaque") return true;
-  if (response.status < 200 || response.status >= 400) return false;
-  // Reject entries with an explicitly empty body — these are corrupted
-  // cache writes that were interrupted before the SW could finish.
-  const cl = response.headers.get("content-length");
-  if (cl === "0") return false;
-  return true;
-}
-
-function createOfflineResponse() {
-  return new Response("Offline", {
-    status: 503,
-    statusText: "Service Unavailable",
-    headers: { "Content-Type": "text/plain" },
-  });
-}
+});

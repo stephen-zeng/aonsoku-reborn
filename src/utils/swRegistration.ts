@@ -3,7 +3,6 @@ import i18n from "@/i18n";
 import { isDesktop } from "./desktop";
 
 const STANDARD_PORTS = new Set(["", "80", "443"]);
-let isReloadingForUpdate = false;
 
 // Must match CACHE_PREFIX in public/sw.js (separate JS contexts)
 const CACHE_PREFIX = "aonsoku-";
@@ -12,6 +11,7 @@ export function registerServiceWorker() {
   if (!shouldRegisterServiceWorker()) return;
 
   setupChunkErrorRecovery();
+  setupUpdateListener();
   register();
 }
 
@@ -23,33 +23,24 @@ function shouldRegisterServiceWorker(): boolean {
   return STANDARD_PORTS.has(window.location.port);
 }
 
-function activateUpdate(registration: ServiceWorkerRegistration) {
-  const waitingWorker = registration.waiting;
-  if (!waitingWorker) {
-    window.location.reload();
-    return;
-  }
-
-  if (isReloadingForUpdate) return;
-  isReloadingForUpdate = true;
-
-  navigator.serviceWorker.addEventListener(
-    "controllerchange",
-    () => {
+// Channel name must match public/sw.js message handler.
+function setupUpdateListener() {
+  const broadcast = new BroadcastChannel("updateFinish");
+  broadcast.addEventListener("message", (event) => {
+    if (event.data?.type === "UPDATED") {
+      console.log("[SW] Cache rebuild complete, reloading...");
+      broadcast.close();
       window.location.reload();
-    },
-    { once: true },
-  );
-
-  waitingWorker.postMessage({ type: "SKIP_WAITING" });
+    }
+  });
 }
 
-function notifyUpdateReady(registration: ServiceWorkerRegistration) {
+function notifyUpdateReady() {
   console.log("[SW] Update installed and waiting for activation");
   toast.info(i18n.t("update.sw.newVersion"), {
     autoClose: false,
     toastId: "sw-update",
-    onClick: () => activateUpdate(registration),
+    onClick: () => window.location.reload(),
   });
 }
 
@@ -60,7 +51,7 @@ async function register() {
     });
 
     if (registration.waiting && navigator.serviceWorker.controller) {
-      notifyUpdateReady(registration);
+      notifyUpdateReady();
     }
 
     registration.addEventListener("updatefound", () => {
@@ -71,7 +62,7 @@ async function register() {
         switch (newWorker.state) {
           case "installed":
             if (navigator.serviceWorker.controller) {
-              notifyUpdateReady(registration);
+              notifyUpdateReady();
             } else {
               console.log("[SW] Content cached for offline use");
             }
