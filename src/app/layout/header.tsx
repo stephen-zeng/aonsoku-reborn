@@ -6,7 +6,6 @@ import { NavigationButtons } from "@/app/components/header/navigation-buttons";
 import { UserDropdown } from "@/app/components/header/user-dropdown";
 import { SettingsButton } from "@/app/components/settings/header-button";
 import { useAppWindow } from "@/app/hooks/use-app-window";
-import { useThemeColor } from "@/app/hooks/use-theme-color";
 import { useWindowControlsOverlay } from "@/app/hooks/use-window-controls-overlay";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
@@ -30,9 +29,6 @@ export function Header() {
   const MemoCommandMenu = memo(CommandMenu);
 
   const isMobileRootPage = mobileRootRoutes.includes(pathname);
-
-  // Update browser theme color dynamically
-  useThemeColor();
 
   // Check if we're in PWA mode with window controls overlay
   const hasWindowControls = isWindowControlsOverlayAvailable();

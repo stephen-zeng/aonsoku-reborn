@@ -26,3 +26,26 @@ export function setDesktopTitleBarColors(transparent = false) {
     bgColor,
   });
 }
+
+let themeColorMeta: Element | null = null;
+
+export function updatePwaThemeColor() {
+  const bgHsl = getComputedStyle(document.documentElement)
+    .getPropertyValue("--background")
+    .trim();
+
+  if (!bgHsl) return;
+
+  const color = hslToHex(bgHsl);
+
+  if (!themeColorMeta) {
+    themeColorMeta =
+      document.querySelector('meta[name="theme-color"]') ??
+      Object.assign(document.createElement("meta"), { name: "theme-color" });
+    document.head.appendChild(themeColorMeta);
+  }
+
+  if (themeColorMeta.getAttribute("content") !== color) {
+    themeColorMeta.setAttribute("content", color);
+  }
+}
