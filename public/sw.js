@@ -84,6 +84,37 @@ self.addEventListener("install", function (e) {
   );
 });
 
+/**
+ * Caches URLs in sequential batches of PRECACHE_BATCH_SIZE using
+ * Promise.allSettled so individual failures don't abort the run.
+ * Resolves to an array of URLs that failed to cache.
+ */
+function batchCacheAdd(cache, urls) {
+  const failedUrls = [];
+
+  function processBatch(startIndex) {
+    if (startIndex >= urls.length) return Promise.resolve();
+
+    const batch = urls.slice(startIndex, startIndex + PRECACHE_BATCH_SIZE);
+    return Promise.allSettled(
+      batch.map(function (url) {
+        return cache.add(url);
+      })
+    ).then(function (results) {
+      for (let i = 0; i < results.length; i++) {
+        if (results[i].status === "rejected") {
+          failedUrls.push(batch[i]);
+        }
+      }
+      return processBatch(startIndex + PRECACHE_BATCH_SIZE);
+    });
+  }
+
+  return processBatch(0).then(function () {
+    return failedUrls;
+  });
+}
+
 function precacheAppShell() {
   // was skipped so the failure is immediately visible during development.
   if (!Array.isArray(PRECACHE_URLS)) {
@@ -100,32 +131,63 @@ function precacheAppShell() {
       const remaining = PRECACHE_URLS.filter(function (u) {
         return u !== "/index.html";
       });
-      const failedUrls = [];
-
-      function processBatch(startIndex) {
-        if (startIndex >= remaining.length) {
-          if (failedUrls.length > 0) {
-            console.error("[SW] Precache failed for URLs:", failedUrls);
-          }
-          return Promise.resolve();
+      return batchCacheAdd(cache, remaining).then(function (failedUrls) {
+        if (failedUrls.length > 0) {
+          console.error("[SW] Precache failed for URLs:", failedUrls);
         }
+      });
+    });
+  });
+}
 
-        const batch = remaining.slice(startIndex, startIndex + PRECACHE_BATCH_SIZE);
-        return Promise.allSettled(
-          batch.map(function (url) {
-            return cache.add(url);
-          })
-        ).then(function (results) {
-          for (let i = 0; i < results.length; i++) {
-            if (results[i].status === "rejected") {
-              failedUrls.push(batch[i]);
-            }
-          }
-          return processBatch(startIndex + PRECACHE_BATCH_SIZE);
+// ── Cache Integrity ────────────────────────────────────────
+
+/**
+ * Verifies every URL in PRECACHE_URLS exists in MAIN_CACHE.
+ * Missing entries are re-fetched in batches of PRECACHE_BATCH_SIZE.
+ * Resolves to { checked, repaired, failed }.
+ */
+function checkCacheIntegrity() {
+  if (!Array.isArray(PRECACHE_URLS)) {
+    console.warn("[SW] Integrity check skipped: no precache manifest");
+    return Promise.resolve({ checked: 0, repaired: 0, failed: 0 });
+  }
+
+  return caches.open(MAIN_CACHE).then(function (cache) {
+    return Promise.all(
+      PRECACHE_URLS.map(function (url) {
+        return cache.match(url, MATCH_OPTS).then(function (resp) {
+          return resp ? null : url;
         });
+      })
+    ).then(function (results) {
+      const missing = results.filter(function (u) {
+        return u !== null;
+      });
+
+      if (missing.length === 0) {
+        console.log("[SW] Integrity OK —", PRECACHE_URLS.length, "assets cached");
+        return { checked: PRECACHE_URLS.length, repaired: 0, failed: 0 };
       }
 
-      return processBatch(0);
+      console.warn("[SW] Integrity check found", missing.length, "missing asset(s)");
+
+      return batchCacheAdd(cache, missing).then(function (failedUrls) {
+        if (failedUrls.length > 0) {
+          console.error("[SW] Integrity repair failed for:", failedUrls);
+        }
+        const repaired = missing.length - failedUrls.length;
+        console.log(
+          "[SW] Integrity repair complete —",
+          repaired, "repaired,",
+          failedUrls.length, "still missing"
+        );
+        return {
+          checked: PRECACHE_URLS.length,
+          repaired: repaired,
+          failed: failedUrls.length,
+        };
+      });
     });
   });
 }
@@ -236,7 +298,22 @@ self.addEventListener("message", function (event) {
   const data = event.data;
   if (!data || !data.action) return;
 
-  if (data.action === "update") {
+  if (data.action === "checkIntegrity") {
+    checkCacheIntegrity()
+      .then(function (result) {
+        if (event.source && event.source.postMessage) {
+          event.source.postMessage({
+            action: "integrityResult",
+            result: result,
+          });
+        }
+      })
+      .catch(function (err) {
+        console.error("[SW] Integrity check error:", err);
+      });
+  }
+
+  else if (data.action === "update") {
     const assetSet = new Set(Array.isArray(PRECACHE_URLS) ? PRECACHE_URLS : []);
 
     if (Array.isArray(data.assets)) {

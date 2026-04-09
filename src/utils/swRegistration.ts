@@ -12,7 +12,9 @@ export function registerServiceWorker() {
 
   setupChunkErrorRecovery();
   setupUpdateListener();
-  register();
+  register().then(() => {
+    requestCacheIntegrityCheck();
+  });
 }
 
 function shouldRegisterServiceWorker(): boolean {
@@ -33,6 +35,43 @@ function setupUpdateListener() {
       window.location.reload();
     }
   });
+}
+
+/**
+ * Asks the active service worker to verify that all precached assets
+ * still exist in the cache and re-fetch any that are missing.
+ *
+ * Runs only when online and a controlling SW exists. Entirely async
+ * and non-blocking — the app loads normally regardless of the outcome.
+ */
+function requestCacheIntegrityCheck() {
+  if (!navigator.onLine) return;
+
+  const sw = navigator.serviceWorker.controller;
+  if (!sw) return;
+
+  console.log("[SW] Requesting cache integrity check...");
+  sw.postMessage({ action: "checkIntegrity" });
+
+  function onResult(event: MessageEvent) {
+    if (event.data?.action === "integrityResult") {
+      cleanup();
+      const { checked, repaired, failed } = event.data.result;
+      if (repaired > 0 || failed > 0) {
+        console.warn(
+          `[SW] Integrity: ${checked} checked, ${repaired} repaired, ${failed} failed`,
+        );
+      }
+    }
+  }
+
+  function cleanup() {
+    navigator.serviceWorker.removeEventListener("message", onResult);
+    clearTimeout(timer);
+  }
+
+  navigator.serviceWorker.addEventListener("message", onResult);
+  const timer = setTimeout(cleanup, 10_000);
 }
 
 function notifyUpdateReady() {
