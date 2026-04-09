@@ -2,6 +2,7 @@ import { Cell, flexRender, Row } from "@tanstack/react-table";
 import clsx from "clsx";
 import { MouseEvent, memo, TouchEvent, useMemo } from "react";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
+import { useIsSongUnavailable } from "@/app/hooks/use-song-availability";
 import { usePlayerCurrentSong } from "@/store/player.store";
 import { ColumnDefType } from "@/types/react-table/columnDef";
 
@@ -33,6 +34,10 @@ export function TableListRow<TData>({
   pageType = "general",
 }: TableRowProps<TData>) {
   const currentSong = usePlayerCurrentSong();
+
+  // @ts-expect-error row type
+  const songId = row.original.id as string;
+  const isSongUnavailable = useIsSongUnavailable(songId, dataType);
 
   function handleTouchStart() {
     isTap = true;
@@ -68,9 +73,8 @@ export function TableListRow<TData>({
   const isRowSongActive = useMemo(() => {
     if (dataType !== "song") return false;
 
-    // @ts-expect-error row type
-    return row.original.id === currentSong.id;
-  }, [currentSong.id, dataType, row.original]);
+    return songId === currentSong.id;
+  }, [currentSong.id, dataType, songId]);
 
   const isQueue = pageType === "queue";
 
@@ -93,6 +97,7 @@ export function TableListRow<TData>({
           "md:data-[state=selected]:bg-primary/75 hover:bg-muted",
           isQueue && "rounded-md",
           isRowSongActive && "row-active bg-accent",
+          isSongUnavailable && "opacity-40 pointer-events-none",
         )}
         style={{
           height: `${virtualRow.size}px`,

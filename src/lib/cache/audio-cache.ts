@@ -151,10 +151,20 @@ async function getEntryCount(): Promise<number> {
   }
 }
 
+async function getCachedSongIds(): Promise<string[]> {
+  try {
+    const index = await getMetaIndex();
+    return index.map((m) => m.songId);
+  } catch {
+    return [];
+  }
+}
+
 export const audioCache = {
   getBlob,
   putBlob,
   clear,
   getTotalSize,
   getEntryCount,
+  getCachedSongIds,
 };

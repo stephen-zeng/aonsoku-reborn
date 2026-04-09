@@ -794,5 +794,13 @@
       "y": "1 year",
       "yy": "%d years"
     }
+  },
+  "offline": {
+    "mode": "Offline",
+    "reconnecting": "Reconnecting…",
+    "reconnected": "Reconnected to server",
+    "reconnectFailed": "Could not reconnect. Continuing in offline mode.",
+    "songUnavailable": "This song is not available offline",
+    "disconnected": "Server unreachable. Entering offline mode."
   }
 }

@@ -1,5 +1,6 @@
 import omit from "lodash/omit";
 import { useAppStore } from "@/store/app.store";
+import { useOfflineStore } from "@/store/offline.store";
 import { CoverArt } from "@/types/coverArtType";
 import { AuthType } from "@/types/serverConfig";
 import { appName } from "@/utils/appName";
@@ -88,6 +89,18 @@ async function browserFetch<T>(
     return undefined;
   } catch (error) {
     console.error("Error on browserFetch request", error);
+
+    if (
+      error instanceof TypeError &&
+      !navigator.onLine &&
+      !useOfflineStore.getState().state.isOfflineMode
+    ) {
+      useOfflineStore
+        .getState()
+        .actions.enterOfflineMode()
+        .catch(() => {});
+    }
+
     return undefined;
   }
 }
