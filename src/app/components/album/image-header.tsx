@@ -2,11 +2,11 @@ import randomCSSHexColor from "@chriscodesthings/random-css-hex-color";
 import clsx from "clsx";
 import { useState } from "react";
 
-import { getCoverArtUrl } from "@/api/httpClient";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { AlbumHeaderFallback } from "@/app/components/fallbacks/album-fallbacks";
 import { BadgesData, HeaderInfoGenerator } from "@/app/components/header-info";
 import { CustomLightBox } from "@/app/components/lightbox";
+import { useCachedCoverArt } from "@/app/hooks/use-cached-cover-art";
 import { cn } from "@/lib/utils";
 import { CoverArt } from "@/types/coverArtType";
 import { IFeaturedArtist } from "@/types/responses/artist";
@@ -108,6 +108,9 @@ export default function ImageHeader({
   const [loaded, setLoaded] = useState(false);
   const [open, setOpen] = useState(false);
   const [bgColor, setBgColor] = useState("");
+
+  // Use cached URL for the lightbox so it works offline
+  const lightboxSrc = useCachedCoverArt(coverArtId, coverArtType, "700");
 
   function getImage() {
     return document.getElementById("cover-art-image") as HTMLImageElement;
@@ -260,7 +263,7 @@ export default function ImageHeader({
       <CustomLightBox
         open={open}
         close={setOpen}
-        src={getCoverArtUrl(coverArtId, coverArtType, coverArtSize)}
+        src={lightboxSrc}
         alt={coverArtAlt}
       />
     </div>

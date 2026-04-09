@@ -3,8 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
 import { EllipsisVertical, PlayIcon } from "lucide-react";
 import { CSSProperties, forwardRef, useState } from "react";
-import { LazyLoadImage } from "react-lazy-load-image-component";
-import { getCoverArtUrl } from "@/api/httpClient";
+import { useCachedCoverArt } from "@/app/hooks/use-cached-cover-art";
 import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { Button } from "@/app/components/ui/button";
@@ -71,7 +70,7 @@ export const QueueItemRow = forwardRef<
   ref,
 ) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const coverArtUrl = getCoverArtUrl(song.coverArt, "song", "100");
+  const coverArtUrl = useCachedCoverArt(song.coverArt, "song", "100");
 
   return (
     <ContextMenuProvider
@@ -96,9 +95,9 @@ export const QueueItemRow = forwardRef<
           }}
         >
           <div className="w-10 h-10 bg-accent rounded overflow-hidden">
-            <LazyLoadImage
+            <img
               src={coverArtUrl}
-              className="w-10 h-10 rounded text-transparent"
+              className="w-10 h-10 rounded text-transparent object-cover"
               alt={`${song.title} - ${song.artist}`}
             />
           </div>

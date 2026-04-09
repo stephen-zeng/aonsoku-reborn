@@ -1,9 +1,10 @@
 import { getCoverArtUrl } from "@/api/httpClient";
+import { coverArtCache, getCurrentScope } from "@/lib/cache/cover-art-cache";
 import { usePlayerStore } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { LanControlMessageType } from "@/types/lanControl";
 
-const artworkSizes = ["96", "128", "192", "256", "384", "512"];
+const MEDIA_SESSION_COVER_SIZE = "300";
 
 /**
  * Check if MediaSession API is supported and available
@@ -54,40 +55,69 @@ function setMediaSession(
     return;
   }
 
-  try {
-    const artwork = song.coverArt
-      ? artworkSizes.map((size): MediaImage => {
-          return {
-            src: getCoverArtUrl(song.coverArt, "song", size),
-            sizes: [size, size].join("x"),
-            type: "image/jpeg",
-          };
-        })
-      : [];
+  async function buildArtwork(): Promise<{
+    artwork: MediaImage[];
+    blobUrl: string | null;
+  }> {
+    if (!song.coverArt) return { artwork: [], blobUrl: null };
 
-    const metadata = {
-      title: song.title || "Unknown Title",
-      artist: song.artist || "Unknown Artist",
-      album: song.album || "Unknown Album",
-      artwork,
+    // Prefer cached blob URL; fall back to live server URL if not cached
+    const scope = getCurrentScope();
+    const blob = await coverArtCache.getBlob(
+      scope,
+      song.coverArt,
+      MEDIA_SESSION_COVER_SIZE,
+    );
+    const blobUrl = blob ? URL.createObjectURL(blob) : null;
+    const src =
+      blobUrl ?? getCoverArtUrl(song.coverArt, "song", MEDIA_SESSION_COVER_SIZE);
+
+    return {
+      artwork: [
+        {
+          src,
+          sizes: `${MEDIA_SESSION_COVER_SIZE}x${MEDIA_SESSION_COVER_SIZE}`,
+          type: "image/jpeg",
+        },
+      ],
+      blobUrl,
     };
-
-    logMediaSessionInfo("Setting metadata", {
-      title: metadata.title,
-      artist: metadata.artist,
-      album: metadata.album,
-      hasArtwork: artwork.length > 0,
-    });
-
-    navigator.mediaSession.metadata = new MediaMetadata(metadata);
-
-    // Verify that metadata was actually set
-    if (navigator.mediaSession.metadata === null) {
-      console.warn("[MediaSession] Metadata was set to null unexpectedly");
-    }
-  } catch (error) {
-    console.error("[MediaSession] Failed to set metadata:", error);
   }
+
+  buildArtwork()
+    .then(({ artwork, blobUrl }) => {
+      try {
+        const metadata = {
+          title: song.title || "Unknown Title",
+          artist: song.artist || "Unknown Artist",
+          album: song.album || "Unknown Album",
+          artwork,
+        };
+
+        logMediaSessionInfo("Setting metadata", {
+          title: metadata.title,
+          artist: metadata.artist,
+          album: metadata.album,
+          hasArtwork: artwork.length > 0,
+        });
+
+        navigator.mediaSession.metadata = new MediaMetadata(metadata);
+
+        // Revoke the temporary blob URL — MediaMetadata has consumed it
+        if (blobUrl) URL.revokeObjectURL(blobUrl);
+
+        if (navigator.mediaSession.metadata === null) {
+          console.warn("[MediaSession] Metadata was set to null unexpectedly");
+        }
+      } catch (error) {
+        // Revoke blob URL even if setting metadata threw
+        if (blobUrl) URL.revokeObjectURL(blobUrl);
+        console.error("[MediaSession] Failed to set metadata:", error);
+      }
+    })
+    .catch((error) => {
+      console.error("[MediaSession] Failed to build artwork:", error);
+    });
 }
 
 async function setRadioMediaSession(label: string, radioName: string) {

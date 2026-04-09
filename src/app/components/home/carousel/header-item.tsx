@@ -14,7 +14,7 @@ import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 
 export function HeaderItem({ song }: { song: ISong }) {
   const { setSongList } = usePlayerActions();
-  const coverArtUrl = useCachedCoverArt(song.coverArt, "song", "400");
+  const coverArtUrl = useCachedCoverArt(song.coverArt, "song", "300");
 
   async function handlePlaySongAlbum(song: ISong) {
     const album = await subsonic.albums.getOne(song.albumId);
@@ -57,7 +57,7 @@ export function HeaderItem({ song }: { song: ISong }) {
             <CachedImage
               coverArtId={song.coverArt}
               coverArtType="song"
-              coverArtSize="400"
+              coverArtSize="300"
               alt={song.title}
               effect="opacity"
               width="100%"

@@ -13,7 +13,7 @@ interface CoverImageProps {
 export function CoverImage({
   coverArt,
   coverArtType,
-  coverArtSize = 80,
+  coverArtSize = 100,
   size = 40,
   altText,
 }: CoverImageProps) {

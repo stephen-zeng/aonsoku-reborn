@@ -1,6 +1,7 @@
 /**
- * Simple LRU cache for blob URLs stored in memory.
+ * LRU cache for blob URLs stored in memory.
  * Automatically revokes old blob URLs when evicting or replacing entries.
+ * get() promotes the accessed entry to most-recently-used.
  */
 export class MemoryLRUCache {
   private cache = new Map<string, string>();
@@ -8,7 +9,13 @@ export class MemoryLRUCache {
   constructor(private maxEntries: number) {}
 
   get(key: string): string | undefined {
-    return this.cache.get(key);
+    const value = this.cache.get(key);
+    if (value !== undefined) {
+      // Promote to most-recently-used by re-inserting at the end
+      this.cache.delete(key);
+      this.cache.set(key, value);
+    }
+    return value;
   }
 
   set(key: string, value: string): void {
@@ -18,7 +25,11 @@ export class MemoryLRUCache {
       URL.revokeObjectURL(existing);
     }
 
-    if (!this.cache.has(key) && this.cache.size >= this.maxEntries) {
+    if (existing !== undefined) {
+      // Already exists — delete so re-insertion moves it to end (MRU)
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.maxEntries) {
+      // Evict the least-recently-used (first entry in Map)
       const firstKey = this.cache.keys().next().value;
       if (firstKey) {
         const oldUrl = this.cache.get(firstKey);
@@ -29,5 +40,14 @@ export class MemoryLRUCache {
       }
     }
     this.cache.set(key, value);
+  }
+
+  clear(): void {
+    for (const url of this.cache.values()) {
+      if (url.startsWith("blob:")) {
+        URL.revokeObjectURL(url);
+      }
+    }
+    this.cache.clear();
   }
 }

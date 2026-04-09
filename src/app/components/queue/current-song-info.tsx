@@ -1,6 +1,5 @@
-import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
-import { getCoverArtUrl } from "@/api/httpClient";
+import { useCachedCoverArt } from "@/app/hooks/use-cached-cover-art";
 import { LinkWithoutTo } from "@/app/components/song/artist-link";
 import { AspectRatio } from "@/app/components/ui/aspect-ratio";
 import { cn } from "@/lib/utils";
@@ -13,7 +12,7 @@ export function CurrentSongInfo() {
   const { currentSong } = usePlayerSonglist();
   const { closeDrawer } = useMainDrawerState();
 
-  const imageUrl = getCoverArtUrl(currentSong.coverArt, "song", "900");
+  const imageUrl = useCachedCoverArt(currentSong.coverArt, "song", "700");
 
   return (
     <div className="mr-12 hidden lg:block w-[260px] lg:w-[320px] 2xl:w-[380px]">
@@ -21,14 +20,11 @@ export function CurrentSongInfo() {
         ratio={1 / 1}
         className="shadow-header-image rounded-md overflow-hidden bg-accent"
       >
-        <LazyLoadImage
+        <img
           id="song-info-image"
           src={imageUrl}
-          effect="opacity"
           alt={`${currentSong.artist} - ${currentSong.title}`}
-          className="rounded-md aspect-square object-cover text-transparent"
-          width="100%"
-          height="100%"
+          className="rounded-md aspect-square object-cover text-transparent w-full h-full"
         />
       </AspectRatio>
 

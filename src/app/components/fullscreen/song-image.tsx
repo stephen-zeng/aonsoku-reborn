@@ -16,7 +16,7 @@ export function FullscreenSongImage() {
         <CachedImage
           coverArtId={coverArt}
           coverArtType="song"
-          coverArtSize="800"
+          coverArtSize="700"
           effect="opacity"
           alt={`${artist} - ${title}`}
           className="aspect-square object-cover shadow-custom-5"

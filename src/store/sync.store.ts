@@ -7,6 +7,7 @@ import {
   type SyncPhase,
   type SyncProgress,
 } from "@/lib/sync/sync-engine";
+import { useCacheStore } from "@/store/cache.store";
 
 // ─── Persisted settings ────────────────────────────────
 
@@ -95,9 +96,12 @@ export const useSyncStore = createWithEqualityFn<SyncContext>()(
             });
 
             const { syncCoverArt } = get().settings;
+            // Only include cover art sync if cache is also enabled
+            const coverArtEnabled =
+              useCacheStore.getState().settings.coverArtCacheEnabled;
 
             runFullSync({
-              includeCoverArt: syncCoverArt,
+              includeCoverArt: syncCoverArt && coverArtEnabled,
               signal: abortController.signal,
               onProgress: (() => {
                 let lastUpdate = 0;
@@ -170,3 +174,16 @@ export const useSyncSettings = () => useSyncStore((s) => s.settings);
 export const useSyncState = () => useSyncStore((s) => s.state);
 
 export const useSyncActions = () => useSyncStore((s) => s.actions);
+
+// ─── Side-effect: disable syncCoverArt when cover art cache is disabled ────
+// Subscribe to the cache store so that turning off the cover art cache
+// automatically resets the syncCoverArt toggle. Using subscribe here avoids
+// a circular import (cache.store would import sync.store and vice-versa).
+useCacheStore.subscribe((state) => {
+  if (
+    !state.settings.coverArtCacheEnabled &&
+    useSyncStore.getState().settings.syncCoverArt
+  ) {
+    useSyncStore.getState().actions.setSyncCoverArt(false);
+  }
+});

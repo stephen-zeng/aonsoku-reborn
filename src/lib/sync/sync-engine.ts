@@ -1,7 +1,11 @@
 import { getCoverArtUrl, httpClient } from "@/api/httpClient";
-import { coverArtCache } from "@/lib/cache/cover-art-cache";
+import {
+  coverArtCache,
+  getCurrentScope,
+} from "@/lib/cache/cover-art-cache";
 import { metadataCache, type SyncMeta } from "@/lib/cache/metadata-cache";
 import { subsonic } from "@/service/subsonic";
+import { useCacheStore } from "@/store/cache.store";
 import type { Albums } from "@/types/responses/album";
 import type { ISimilarArtist } from "@/types/responses/artist";
 import type { Genre } from "@/types/responses/genre";
@@ -74,24 +78,40 @@ async function fetchAllPaginated<T>(
 
 // ─── Cover Art Sync ────────────────────────────────────
 
+function collectUniqueCoverArtIds(
+  ...sources: Array<{ coverArt?: string }[]>
+): string[] {
+  const seen = new Set<string>();
+  const items: string[] = [];
+  for (const source of sources) {
+    for (const item of source) {
+      if (item.coverArt && !seen.has(item.coverArt)) {
+        seen.add(item.coverArt);
+        items.push(item.coverArt);
+      }
+    }
+  }
+  return items;
+}
+
 async function syncCoverArt(
   albums: Albums[],
   artists: ISimilarArtist[],
+  playlists: Playlist[],
+  songs: ISong[],
   signal: AbortSignal,
   onProgress: (current: number, total: number) => void,
 ): Promise<void> {
-  const items: { id: string; type: "album" | "artist" }[] = [];
+  // Guard: if cache is disabled, skip entirely
+  const cacheEnabled =
+    useCacheStore.getState().settings.coverArtCacheEnabled;
+  if (!cacheEnabled) return;
 
-  for (const album of albums) {
-    if (album.coverArt) {
-      items.push({ id: album.coverArt, type: "album" });
-    }
-  }
-  for (const artist of artists) {
-    if (artist.coverArt) {
-      items.push({ id: artist.coverArt, type: "artist" });
-    }
-  }
+  const scope = getCurrentScope();
+
+  // Deduplicate coverArtIds across all sources.
+  // Priority: album > artist > playlist/song (all use same Subsonic id, type doesn't matter for fetch)
+  const items = collectUniqueCoverArtIds(albums, artists, playlists, songs);
 
   const total = items.length;
   let completed = 0;
@@ -99,17 +119,15 @@ async function syncCoverArt(
   for (let i = 0; i < items.length; i += COVER_ART_CONCURRENCY) {
     checkCancelled(signal);
 
+    // Re-check after each batch in case the setting was toggled mid-sync
+    if (!useCacheStore.getState().settings.coverArtCacheEnabled) return;
+
     const batch = items.slice(i, i + COVER_ART_CONCURRENCY);
     await Promise.allSettled(
-      batch.map(async (item) => {
-        const cached = await coverArtCache.getBlob(
-          item.id,
-          item.type,
-          COVER_ART_SIZE,
-        );
-        if (cached) return;
-        const url = getCoverArtUrl(item.id, item.type, COVER_ART_SIZE);
-        await coverArtCache.putBlob(item.id, item.type, COVER_ART_SIZE, url);
+      batch.map(async (id) => {
+        // putBlob already does a pre-existence check internally
+        const url = getCoverArtUrl(id, "album", COVER_ART_SIZE);
+        await coverArtCache.putBlob(scope, id, COVER_ART_SIZE, url);
       }),
     );
 
@@ -209,9 +227,8 @@ export async function runFullSync(options: SyncOptions): Promise<void> {
     // ── Phase 4: Cover Art (optional) ──
     if (includeCoverArt) {
       phaseIndex = 4;
-      const coverArtTotal = albums.length + artists.length;
-      reportPhase("coverArt", 0, coverArtTotal);
-      await syncCoverArt(albums, artists, signal, (current, total) => {
+      reportPhase("coverArt", 0, 0);
+      await syncCoverArt(albums, artists, playlists, songs, signal, (current, total) => {
         reportPhase("coverArt", current, total);
       });
     }

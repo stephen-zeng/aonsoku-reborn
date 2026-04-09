@@ -2,6 +2,7 @@ import { devtools, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
+import { clearCoverArtMemoryCache } from "@/app/hooks/use-cached-cover-art";
 
 const ONE_GB = 1073741824;
 
@@ -36,6 +37,11 @@ export const useCacheStore = createWithEqualityFn<CacheContext>()(
             set((state) => {
               state.settings.coverArtCacheEnabled = value;
             });
+
+            if (!value) {
+              // Clear in-memory blob URLs so stale entries aren't served
+              clearCoverArtMemoryCache();
+            }
           },
           setAudioCacheEnabled: (value) => {
             set((state) => {
