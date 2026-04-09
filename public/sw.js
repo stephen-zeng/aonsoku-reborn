@@ -129,9 +129,9 @@ self.addEventListener("activate", function (e) {
 // ── Fetch ───────────────────────────────────────────────────
 
 self.addEventListener("fetch", function (e) {
-  if (e.request.method !== "GET") return;
-
   const url = new URL(e.request.url);
+
+  if (e.request.method !== "GET" || ["http:", "https:"].includes(url.protocol)) return;
 
   if (
     url.pathname.endsWith("sw.js") ||
