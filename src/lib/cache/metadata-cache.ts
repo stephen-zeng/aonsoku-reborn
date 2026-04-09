@@ -1,5 +1,5 @@
 import { clear as idbClear, createStore, get, set } from "idb-keyval";
-import type { Albums } from "@/types/responses/album";
+import type { Albums, SingleAlbum } from "@/types/responses/album";
 import type { ISimilarArtist } from "@/types/responses/artist";
 import type { Genre } from "@/types/responses/genre";
 import type { Playlist } from "@/types/responses/playlist";
@@ -77,6 +77,20 @@ async function getMeta(): Promise<SyncMeta | null> {
   return (await get<SyncMeta>(KEYS.meta, store)) ?? null;
 }
 
+// ── Composite lookups ──
+
+async function getAlbumWithSongs(
+  albumId: string,
+): Promise<SingleAlbum | undefined> {
+  const albums = await getAlbums();
+  const album = albums.find((a) => a.id === albumId);
+  if (!album) return undefined;
+
+  const songs = await getSongs();
+  const albumSongs = songs.filter((s) => s.albumId === albumId);
+  return { ...album, song: albumSongs } as SingleAlbum;
+}
+
 // ── Management ──
 
 async function clear(): Promise<void> {
@@ -108,6 +122,7 @@ export const metadataCache = {
   getPlaylists,
   getGenres,
   getMeta,
+  getAlbumWithSongs,
   clear,
   getTotalEntryCount,
 };

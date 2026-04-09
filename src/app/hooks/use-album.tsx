@@ -1,11 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
+import { metadataCache } from "@/lib/cache/metadata-cache";
 import { subsonic } from "@/service/subsonic";
+import { useOfflineStore } from "@/store/offline.store";
 import { queryKeys } from "@/utils/queryKeys";
 
 export const useGetAlbum = (albumId: string) => {
   return useQuery({
     queryKey: [queryKeys.album.single, albumId],
-    queryFn: () => subsonic.albums.getOne(albumId),
+    queryFn: async () => {
+      const isOffline =
+        useOfflineStore.getState().state.isOfflineMode;
+
+      if (!isOffline) {
+        return subsonic.albums.getOne(albumId);
+      }
+
+      return metadataCache.getAlbumWithSongs(albumId);
+    },
+    enabled: !!albumId,
   });
 };
 
