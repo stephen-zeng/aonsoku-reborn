@@ -1,26 +1,17 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
-import { ShadowHeader } from "@/app/components/album/shadow-header";
-import { InfinitySongListFallback } from "@/app/components/fallbacks/song-fallbacks";
-import { HeaderTitle } from "@/app/components/header-title";
-import { DataTableList } from "@/app/components/ui/data-table-list";
+import { SongListLayout } from "@/app/components/song/song-list-layout";
 import { useTotalFavorites } from "@/app/hooks/use-favorite-songs";
-import { songsColumns } from "@/app/tables/songs-columns";
 import { getFavoriteSongs } from "@/queries/songs";
-import { usePlayerActions } from "@/store/player.store";
-import { ColumnFilter } from "@/types/columnFilter";
 import { AlbumsSearchParams } from "@/utils/albumsFilter";
 import { queryKeys } from "@/utils/queryKeys";
 import { SearchParamsHandler } from "@/utils/searchParamsHandler";
-import { isMobile } from "react-device-detect";
 
 export default function SongList() {
   const { t } = useTranslation();
-  const { setSongList } = usePlayerActions();
   const [searchParams] = useSearchParams();
   const { getSearchParam } = new SearchParamsHandler(searchParams);
-  const columns = songsColumns();
 
   const filter = getSearchParam<string>(AlbumsSearchParams.MainFilter, "");
   const query = getSearchParam<string>(AlbumsSearchParams.Query, "");
@@ -41,57 +32,19 @@ export default function SongList() {
   const { data: songCountData, isLoading: songCountIsLoading } =
     useTotalFavorites();
 
-  if (isLoading && !isFetchingNextPage) {
-    return <InfinitySongListFallback />;
-  }
-  if (!data) return null;
-
-  const songlist = data.pages.flatMap((page) => page.songs) ?? [];
+  const songlist = data?.pages.flatMap((page) => page.songs) ?? [];
   const songCount = songCountData ?? 0;
 
-  function handlePlaySong(index: number) {
-    if (songlist) setSongList(songlist, index);
-  }
-
-  const columnsToShow: ColumnFilter[] = isMobile
-    ? ["index", "title", "select"]
-    : [
-        "index",
-        "title",
-        "album",
-        "duration",
-        "playCount",
-        "played",
-        "contentType",
-        "select",
-      ];
-
-  const title = t("sidebar.favorites");
-
   return (
-    <div className="w-full h-content">
-      <ShadowHeader
-        showGlassEffect={false}
-        fixed={false}
-        className="relative w-full justify-between items-center"
-      >
-        <HeaderTitle
-          title={title}
-          count={songCount}
-          loading={songCountIsLoading}
-        />
-      </ShadowHeader>
-
-      <div className="w-full h-[calc(100%-80px)] overflow-auto">
-        <DataTableList
-          columns={columns}
-          data={songlist}
-          handlePlaySong={(row) => handlePlaySong(row.index)}
-          columnFilter={columnsToShow}
-          fetchNextPage={fetchNextPage}
-          hasNextPage={hasNextPage}
-        />
-      </div>
-    </div>
+    <SongListLayout
+      title={t("sidebar.favorites")}
+      songCount={songCount}
+      songCountLoading={songCountIsLoading}
+      songlist={songlist}
+      isLoading={isLoading}
+      isFetchingNextPage={isFetchingNextPage}
+      fetchNextPage={fetchNextPage}
+      hasNextPage={hasNextPage ?? false}
+    />
   );
 }

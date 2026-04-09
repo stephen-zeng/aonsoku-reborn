@@ -1,27 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { getCoverArtUrl } from "@/api/httpClient";
 import { coverArtCache } from "@/lib/cache/cover-art-cache";
+import { MemoryLRUCache } from "@/lib/cache/memory-lru-cache";
 import { useCacheStore } from "@/store/cache.store";
 import { CoverArt } from "@/types/coverArtType";
 
 // In-memory LRU to avoid repeated IDB reads within the same session
-const memoryCache = new Map<string, string>();
-const MAX_MEMORY_ENTRIES = 500;
-
-function memoryCacheSet(key: string, blobUrl: string) {
-  if (memoryCache.size >= MAX_MEMORY_ENTRIES) {
-    // Remove oldest entry
-    const firstKey = memoryCache.keys().next().value;
-    if (firstKey) {
-      const oldUrl = memoryCache.get(firstKey);
-      if (oldUrl?.startsWith("blob:")) {
-        URL.revokeObjectURL(oldUrl);
-      }
-      memoryCache.delete(firstKey);
-    }
-  }
-  memoryCache.set(key, blobUrl);
-}
+const memoryCache = new MemoryLRUCache(500);
 
 export function useCachedCoverArt(
   id: string | undefined,
@@ -62,7 +47,7 @@ export function useCachedCoverArt(
       if (blob) {
         const blobUrl = URL.createObjectURL(blob);
         blobUrlRef.current = blobUrl;
-        memoryCacheSet(key, blobUrl);
+        memoryCache.set(key, blobUrl);
         setSrc(blobUrl);
       } else {
         setSrc(originalUrl);

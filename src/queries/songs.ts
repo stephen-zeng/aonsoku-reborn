@@ -127,7 +127,6 @@ export async function getArtistAllSongs(
 
 export async function getFavoriteSongs() {
   const response = await subsonic.songs.getFavoriteSongs();
-  console.log(response);
   if (!response || !response.song) return { songs: [], nextOffset: null };
 
   return {

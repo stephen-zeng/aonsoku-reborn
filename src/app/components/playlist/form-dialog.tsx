@@ -80,7 +80,7 @@ export function CreatePlaylistDialog() {
       toast.success(t("playlist.form.create.toast.success"));
     },
     onError: () => {
-      toast.error(t("playlist.form.create.toast.success"));
+      toast.error(t("playlist.form.create.toast.error"));
     },
   });
 

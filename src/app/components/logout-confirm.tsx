@@ -1,16 +1,7 @@
-import { MouseEvent } from "react";
+import { type MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/app/components/ui/alert-dialog";
+import { ConfirmationDialog } from "@/app/components/ui/confirmation-dialog";
 import { ROUTES } from "@/routes/routesList";
 import { useAppActions, useAppStore } from "@/store/app.store";
 import { usePlayerActions } from "@/store/player.store";
@@ -42,23 +33,12 @@ export function LogoutConfirmDialog({
   }
 
   return (
-    <AlertDialog open={openDialog}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t("logout.dialog.title")}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t("logout.dialog.description")}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => setOpenDialog(!openDialog)}>
-            {t("logout.dialog.cancel")}
-          </AlertDialogCancel>
-          <AlertDialogAction onClick={handleRemoveConfig}>
-            {t("logout.dialog.confirm")}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmationDialog
+      open={openDialog}
+      onOpenChange={setOpenDialog}
+      title={t("logout.dialog.title")}
+      description={t("logout.dialog.description")}
+      onConfirm={handleRemoveConfig}
+    />
   );
 }

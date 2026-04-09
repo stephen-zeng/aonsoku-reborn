@@ -146,7 +146,6 @@ function clearSavedConnection() {
 }
 
 const savedConnection = loadSavedConnection();
-console.log(savedConnection);
 
 export const useLanControlClientStore =
   createWithEqualityFn<LanControlClientState>()(
