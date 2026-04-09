@@ -1,10 +1,8 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
-import { OfflineLibraryEmptyState } from "@/app/components/offline/library-empty-state";
 import { SongListLayout } from "@/app/components/song/song-list-layout";
 import { useTotalFavorites } from "@/app/hooks/use-favorite-songs";
-import { useOfflineLibraryStatus } from "@/app/hooks/use-offline-library-status";
 import { getFavoriteSongs } from "@/queries/songs";
 import { AlbumsSearchParams } from "@/utils/albumsFilter";
 import { queryKeys } from "@/utils/queryKeys";
@@ -18,7 +16,6 @@ export default function SongList() {
   const filter = getSearchParam<string>(AlbumsSearchParams.MainFilter, "");
   const query = getSearchParam<string>(AlbumsSearchParams.Query, "");
   const artistId = getSearchParam<string>(AlbumsSearchParams.ArtistId, "");
-  const { isOfflineMode, hasSyncedLibrary } = useOfflineLibraryStatus();
 
   async function fetchSongs() {
     return getFavoriteSongs();
@@ -37,8 +34,6 @@ export default function SongList() {
 
   const songlist = data?.pages.flatMap((page) => page.songs) ?? [];
   const songCount = songCountData ?? 0;
-  const emptyState =
-    isOfflineMode && !hasSyncedLibrary ? <OfflineLibraryEmptyState /> : undefined;
 
   return (
     <SongListLayout
@@ -50,7 +45,6 @@ export default function SongList() {
       isFetchingNextPage={isFetchingNextPage}
       fetchNextPage={fetchNextPage}
       hasNextPage={hasNextPage ?? false}
-      emptyState={emptyState}
     />
   );
 }

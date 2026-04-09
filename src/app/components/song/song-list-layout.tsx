@@ -1,7 +1,6 @@
 import { type ReactNode, useMemo } from "react";
 import { isMobile } from "react-device-detect";
 import { ShadowHeader } from "@/app/components/album/shadow-header";
-import { EmptyWrapper } from "@/app/components/albums/empty-wrapper";
 import { InfinitySongListFallback } from "@/app/components/fallbacks/song-fallbacks";
 import { HeaderTitle } from "@/app/components/header-title";
 import { DataTableList } from "@/app/components/ui/data-table-list";
@@ -33,7 +32,6 @@ interface SongListLayoutProps {
   fetchNextPage: () => void;
   hasNextPage: boolean;
   headerActions?: ReactNode;
-  emptyState?: ReactNode;
   noRowsMessage?: string;
 }
 
@@ -47,7 +45,6 @@ export function SongListLayout({
   fetchNextPage,
   hasNextPage,
   headerActions,
-  emptyState,
   noRowsMessage,
 }: SongListLayoutProps) {
   const { setSongList } = usePlayerActions();
@@ -82,23 +79,17 @@ export function SongListLayout({
         )}
       </ShadowHeader>
 
-      {songlist.length === 0 && emptyState ? (
-        <div className="w-full h-[calc(100%-80px)]">
-          <EmptyWrapper>{emptyState}</EmptyWrapper>
-        </div>
-      ) : (
-        <div className="w-full h-[calc(100%-80px)] overflow-auto">
-          <DataTableList
-            columns={columns}
-            data={songlist}
-            handlePlaySong={(row) => handlePlaySong(row.index)}
-            columnFilter={columnsToShow}
-            fetchNextPage={fetchNextPage}
-            hasNextPage={hasNextPage}
-            noRowsMessage={noRowsMessage}
-          />
-        </div>
-      )}
+      <div className="w-full h-[calc(100%-80px)] overflow-auto">
+        <DataTableList
+          columns={columns}
+          data={songlist}
+          handlePlaySong={(row) => handlePlaySong(row.index)}
+          columnFilter={columnsToShow}
+          fetchNextPage={fetchNextPage}
+          hasNextPage={hasNextPage}
+          noRowsMessage={noRowsMessage}
+        />
+      </div>
     </div>
   );
 }

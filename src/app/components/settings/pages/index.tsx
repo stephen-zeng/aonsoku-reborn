@@ -7,14 +7,12 @@ import { Content } from "./content";
 import { Desktop } from "./desktop";
 import { Language } from "./language";
 import { Privacy } from "./privacy";
-import { Storage } from "./storage";
 
 const pages: Record<SettingsOptions, JSX.Element> = {
   appearance: <Appearance />,
   audio: <Audio />,
   language: <Language />,
   content: <Content />,
-  storage: <Storage />,
   accounts: <Accounts />,
   desktop: <Desktop />,
   privacy: <Privacy />,

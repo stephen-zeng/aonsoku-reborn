@@ -1,6 +1,6 @@
 import { ComponentPropsWithoutRef } from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import { useCachedCoverArt } from "@/app/hooks/use-cached-cover-art";
+import { getCoverArtUrl } from "@/api/httpClient";
 import { CoverArt } from "@/types/coverArtType";
 
 type LazyLoadImageProps = ComponentPropsWithoutRef<typeof LazyLoadImage>;
@@ -13,10 +13,10 @@ interface CachedImageProps extends Omit<LazyLoadImageProps, "src"> {
 }
 
 /**
- * Drop-in replacement for LazyLoadImage that integrates cover art caching.
+ * Drop-in replacement for LazyLoadImage that resolves cover art URLs.
  *
- * Use with coverArtId/coverArtType/coverArtSize for automatic caching,
- * or pass a plain `src` to skip caching and behave like a normal image.
+ * Use with coverArtId/coverArtType/coverArtSize for automatic URL resolution,
+ * or pass a plain `src` to behave like a normal image.
  */
 export function CachedImage({
   coverArtId,
@@ -25,10 +25,8 @@ export function CachedImage({
   src: directSrc,
   ...props
 }: CachedImageProps) {
-  const cachedSrc = useCachedCoverArt(coverArtId, coverArtType, coverArtSize);
+  const resolvedSrc =
+    directSrc ?? getCoverArtUrl(coverArtId, coverArtType, coverArtSize);
 
-  // If a direct src is provided (not using cover art caching), use it as-is
-  const finalSrc = directSrc ?? cachedSrc;
-
-  return <LazyLoadImage {...props} src={finalSrc} />;
+  return <LazyLoadImage {...props} src={resolvedSrc} />;
 }

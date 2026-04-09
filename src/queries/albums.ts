@@ -1,5 +1,3 @@
-import { searchOfflineAlbums } from "@/lib/offline/library-read-model";
-import { readOfflineCapable } from "@/lib/offline/read-model";
 import { AlbumListParams } from "@/service/albums";
 import { subsonic } from "@/service/subsonic";
 
@@ -24,31 +22,26 @@ interface AlbumSearch {
 }
 
 export async function albumSearch({ query, count, offset }: AlbumSearch) {
-  return readOfflineCapable(
-    async () => {
-      const response = await subsonic.search.get({
-        query,
-        songCount: 0,
-        artistCount: 0,
-        albumCount: count,
-        albumOffset: offset,
-      });
+  const response = await subsonic.search.get({
+    query,
+    songCount: 0,
+    artistCount: 0,
+    albumCount: count,
+    albumOffset: offset,
+  });
 
-      if (!response?.album) return emptyResponse;
+  if (!response?.album) return emptyResponse;
 
-      let nextOffset: number | null = null;
-      if (response.album.length >= count) {
-        nextOffset = offset + count;
-      }
+  let nextOffset: number | null = null;
+  if (response.album.length >= count) {
+    nextOffset = offset + count;
+  }
 
-      return {
-        albums: response.album,
-        nextOffset,
-        albumsCount: offset + response.album.length,
-      };
-    },
-    () => searchOfflineAlbums({ query, count, offset }),
-  );
+  return {
+    albums: response.album,
+    nextOffset,
+    albumsCount: offset + response.album.length,
+  };
 }
 
 export async function getAlbumList(params: Required<AlbumListParams>) {

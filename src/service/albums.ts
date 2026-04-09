@@ -1,6 +1,4 @@
 import { httpClient } from "@/api/httpClient";
-import { getOfflineAlbumList } from "@/lib/offline/library-read-model";
-import { readOfflineCapable, readOnlineOnly } from "@/lib/offline/read-model";
 import {
   AlbumInfoResponse,
   AlbumListResponse,
@@ -29,67 +27,44 @@ async function getAlbumList(params: Partial<AlbumListParams> = {}) {
     genre,
   } = params;
 
-  return readOfflineCapable(
-    async () => {
-      const response = await httpClient<AlbumListResponse>("/getAlbumList2", {
-        method: "GET",
-        query: {
-          type,
-          size: size.toString(),
-          offset: offset.toString(),
-          fromYear,
-          toYear,
-          genre,
-        },
-      });
-
-      return {
-        albumsCount: response.count,
-        list: response.data.albumList2.album,
-      };
+  const response = await httpClient<AlbumListResponse>("/getAlbumList2", {
+    method: "GET",
+    query: {
+      type,
+      size: size.toString(),
+      offset: offset.toString(),
+      fromYear,
+      toYear,
+      genre,
     },
-    () =>
-      getOfflineAlbumList({
-        type,
-        size,
-        offset,
-        fromYear,
-        toYear,
-        genre,
-      }),
-  );
+  });
+
+  return {
+    albumsCount: response.count,
+    list: response.data.albumList2.album,
+  };
 }
 
 async function getOne(id: string): Promise<SingleAlbum | undefined> {
-  return readOfflineCapable(
-    async () => {
-      const response = await httpClient<GetAlbumResponse>("/getAlbum", {
-        method: "GET",
-        query: {
-          id,
-        },
-      });
+  const response = await httpClient<GetAlbumResponse>("/getAlbum", {
+    method: "GET",
+    query: {
+      id,
+    },
+  });
 
-      return response.data.album;
-    },
-    async () => {
-      const { metadataCache } = await import("@/lib/cache/metadata-cache");
-      return metadataCache.getAlbumWithSongs(id);
-    },
-  );
+  return response.data.album;
 }
 
 async function getInfo(id: string): Promise<IAlbumInfo | null> {
-  return readOnlineOnly(async () => {
-    const response = await httpClient<AlbumInfoResponse>("/getAlbumInfo2", {
-      method: "GET",
-      query: {
-        id,
-      },
-    });
+  const response = await httpClient<AlbumInfoResponse>("/getAlbumInfo2", {
+    method: "GET",
+    query: {
+      id,
+    },
+  });
 
-    return response.data.albumInfo;
-  }, null);
+  return response.data.albumInfo;
 }
 
 export const albums = {

@@ -2,7 +2,6 @@ import { Cell, flexRender, Row } from "@tanstack/react-table";
 import clsx from "clsx";
 import { ComponentPropsWithoutRef, memo, ReactNode, useMemo } from "react";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
-import { useIsSongUnavailable } from "@/app/hooks/use-song-availability";
 import { usePlayerCurrentSong } from "@/store/player.store";
 import { ColumnDefType } from "@/types/react-table/columnDef";
 
@@ -36,7 +35,6 @@ export function TableRow<TData>({
 
   // @ts-expect-error row type
   const songId = row.original.id as string;
-  const isSongUnavailable = useIsSongUnavailable(songId, dataType);
 
   const isRowSongActive = useMemo(() => {
     if (dataType !== "song") return false;
@@ -65,7 +63,6 @@ export function TableRow<TData>({
           "hover:bg-muted md:data-[state=selected]:bg-primary/75",
           isClassic && "border-b",
           isRowSongActive && isModern && "row-active bg-accent",
-          isSongUnavailable && "opacity-40 pointer-events-none",
         )}
       >
         {row.getVisibleCells().map((cell) => (

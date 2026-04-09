@@ -2,7 +2,7 @@ import clsx from "clsx";
 import { useEffect, useMemo, useState } from "react";
 import { isSafari } from "react-device-detect";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
-import { useCachedCoverArt } from "@/app/hooks/use-cached-cover-art";
+import { getCoverArtUrl } from "@/api/httpClient";
 import { usePlayerCurrentSong, useSongColor } from "@/store/player.store";
 import { isChromeOrFirefox } from "@/utils/browser";
 import { hexToRgba } from "@/utils/getAverageColor";
@@ -27,19 +27,21 @@ export function ImageBackdrop() {
 
 function OtherBackdrop() {
   const { coverArt } = usePlayerCurrentSong();
-  const coverArtUrl = useCachedCoverArt(coverArt, "song", "300");
+  const coverArtUrl = getCoverArtUrl(coverArt, "song", "300");
   const [backgroundImage, setBackgroundImage] = useState(coverArtUrl);
   const { bigPlayerBlur } = useSongColor();
 
-  const newBackgroundImage = useMemo(() => coverArtUrl, [coverArtUrl]);
-
   useEffect(() => {
+    let cancelled = false;
     const img = new Image();
-    img.src = newBackgroundImage;
     img.onload = () => {
-      setBackgroundImage(newBackgroundImage);
+      if (!cancelled) setBackgroundImage(coverArtUrl);
     };
-  }, [newBackgroundImage]);
+    img.src = coverArtUrl;
+    return () => {
+      cancelled = true;
+    };
+  }, [coverArtUrl]);
 
   return (
     <div className="relative w-full h-full transition-colors duration-1000 bg-black/0">

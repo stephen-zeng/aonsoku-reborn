@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useCachedCoverArt } from "@/app/hooks/use-cached-cover-art";
+import { getCoverArtUrl } from "@/api/httpClient";
 import { LinkWithoutTo } from "@/app/components/song/artist-link";
 import { AspectRatio } from "@/app/components/ui/aspect-ratio";
 import { cn } from "@/lib/utils";
@@ -12,7 +12,7 @@ export function CurrentSongInfo() {
   const { currentSong } = usePlayerSonglist();
   const { closeDrawer } = useMainDrawerState();
 
-  const imageUrl = useCachedCoverArt(currentSong.coverArt, "song", "700");
+  const imageUrl = getCoverArtUrl(currentSong.coverArt, "song", "700");
 
   return (
     <div className="mr-12 hidden lg:block w-[260px] lg:w-[320px] 2xl:w-[380px]">

@@ -30,7 +30,7 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
 
   const getImageColor = useCallback(
     async (e: React.SyntheticEvent<HTMLImageElement>) => {
-      // e.currentTarget avoids races when useCachedCoverArt swaps originalUrl → blob URL.
+      // e.currentTarget avoids races when the cover art URL swaps.
       const img = e.currentTarget;
 
       let color = randomCSSHexColor(true);

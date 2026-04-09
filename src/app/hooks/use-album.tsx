@@ -15,8 +15,6 @@ export const useGetAlbumInfo = (albumId: string) => {
     queryKey: [queryKeys.album.info, albumId],
     queryFn: () => subsonic.albums.getInfo(albumId),
     enabled: !!albumId,
-    // readOnlineOnly service — pause rather than overwrite cache with null offline
-    networkMode: "online",
   });
 };
 

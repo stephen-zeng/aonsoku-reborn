@@ -16,7 +16,7 @@ import { useLanControlServerInfo } from "@/store/lanControl.store";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 import { subsonic } from "@/service/subsonic";
 import { ISong } from "@/types/responses/song";
-import { useCachedCoverArt } from "@/app/hooks/use-cached-cover-art";
+import { getCoverArtUrl } from "@/api/httpClient";
 
 interface RemoteControlDialogProps {
   open: boolean;
@@ -114,7 +114,7 @@ export function RemoteControlDialog({
     currentSong?.artist ||
     t("lanControl.remote.emptyArtist");
   const displayAlbum = fullSongInfo?.album || currentSong?.album || "";
-  const coverArtUrl = useCachedCoverArt(fullSongInfo?.coverArt, "album");
+  const coverArtUrl = getCoverArtUrl(fullSongInfo?.coverArt, "album");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

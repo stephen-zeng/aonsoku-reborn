@@ -15,8 +15,6 @@ export const useGetArtistInfo = (artistId: string) => {
     queryKey: [queryKeys.artist.info, artistId],
     queryFn: () => subsonic.artists.getInfo(artistId),
     enabled: !!artistId,
-    // readOnlineOnly service — pause rather than overwrite cache with null offline
-    networkMode: "online",
   });
 };
 
@@ -25,7 +23,5 @@ export const useGetTopSongs = (artistName?: string) => {
     queryKey: [queryKeys.artist.topSongs, artistName],
     queryFn: () => subsonic.songs.getTopSongs(artistName ?? ""),
     enabled: !!artistName,
-    // readOnlineOnly service — pause rather than overwrite cache with null offline
-    networkMode: "online",
   });
 };

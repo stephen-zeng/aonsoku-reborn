@@ -1,5 +1,4 @@
 import { getCoverArtUrl } from "@/api/httpClient";
-import { coverArtCache, getCurrentScope } from "@/lib/cache/cover-art-cache";
 import { usePlayerStore } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { LanControlMessageType } from "@/types/lanControl";
@@ -28,11 +27,6 @@ function logMediaSessionInfo(action: string, data?: unknown): void {
   console.log(`[MediaSession] ${action}:`, data);
 }
 
-// Retain the previous artwork blob URL until the next call so the OS can load
-// the image asynchronously. MediaMetadata does NOT synchronously consume the
-// blob URL — the browser/OS fetches it lazily when rendering media panels.
-let previousArtworkBlobUrl: string | null = null;
-
 function removeMediaSession() {
   if (!isMediaSessionSupported()) return;
 
@@ -41,11 +35,6 @@ function removeMediaSession() {
     logMediaSessionInfo("Removed metadata");
   } catch (error) {
     console.error("[MediaSession] Failed to remove metadata:", error);
-  }
-
-  if (previousArtworkBlobUrl) {
-    URL.revokeObjectURL(previousArtworkBlobUrl);
-    previousArtworkBlobUrl = null;
   }
 }
 
@@ -65,22 +54,14 @@ function setMediaSession(
     return;
   }
 
-  async function buildArtwork(): Promise<{
-    artwork: MediaImage[];
-    blobUrl: string | null;
-  }> {
-    if (!song.coverArt) return { artwork: [], blobUrl: null };
+  function buildArtwork(): { artwork: MediaImage[] } {
+    if (!song.coverArt) return { artwork: [] };
 
-    // Prefer cached blob URL; fall back to live server URL if not cached
-    const scope = getCurrentScope();
-    const blob = await coverArtCache.getBlob(
-      scope,
+    const src = getCoverArtUrl(
       song.coverArt,
+      "song",
       MEDIA_SESSION_COVER_SIZE,
     );
-    const blobUrl = blob ? URL.createObjectURL(blob) : null;
-    const src =
-      blobUrl ?? getCoverArtUrl(song.coverArt, "song", MEDIA_SESSION_COVER_SIZE);
 
     return {
       artwork: [
@@ -90,49 +71,33 @@ function setMediaSession(
           type: "image/jpeg",
         },
       ],
-      blobUrl,
     };
   }
 
-  buildArtwork()
-    .then(({ artwork, blobUrl }) => {
-      try {
-        const metadata = {
-          title: song.title || "Unknown Title",
-          artist: song.artist || "Unknown Artist",
-          album: song.album || "Unknown Album",
-          artwork,
-        };
+  try {
+    const { artwork } = buildArtwork();
+    const metadata = {
+      title: song.title || "Unknown Title",
+      artist: song.artist || "Unknown Artist",
+      album: song.album || "Unknown Album",
+      artwork,
+    };
 
-        logMediaSessionInfo("Setting metadata", {
-          title: metadata.title,
-          artist: metadata.artist,
-          album: metadata.album,
-          hasArtwork: artwork.length > 0,
-        });
-
-        navigator.mediaSession.metadata = new MediaMetadata(metadata);
-
-        // Revoke the PREVIOUS call's blob URL now that the OS has had time to
-        // load it asynchronously. Do NOT revoke the current blobUrl here —
-        // the OS media panel fetches artwork lazily after MediaMetadata is set.
-        if (previousArtworkBlobUrl) {
-          URL.revokeObjectURL(previousArtworkBlobUrl);
-        }
-        previousArtworkBlobUrl = blobUrl;
-
-        if (navigator.mediaSession.metadata === null) {
-          console.warn("[MediaSession] Metadata was set to null unexpectedly");
-        }
-      } catch (error) {
-        // Revoke current blob URL on error since it won't be used
-        if (blobUrl) URL.revokeObjectURL(blobUrl);
-        console.error("[MediaSession] Failed to set metadata:", error);
-      }
-    })
-    .catch((error) => {
-      console.error("[MediaSession] Failed to build artwork:", error);
+    logMediaSessionInfo("Setting metadata", {
+      title: metadata.title,
+      artist: metadata.artist,
+      album: metadata.album,
+      hasArtwork: artwork.length > 0,
     });
+
+    navigator.mediaSession.metadata = new MediaMetadata(metadata);
+
+    if (navigator.mediaSession.metadata === null) {
+      console.warn("[MediaSession] Metadata was set to null unexpectedly");
+    }
+  } catch (error) {
+    console.error("[MediaSession] Failed to set metadata:", error);
+  }
 }
 
 async function setRadioMediaSession(label: string, radioName: string) {

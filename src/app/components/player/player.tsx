@@ -4,7 +4,7 @@ import { MiniPlayerButton } from "@/app/components/mini-player/button";
 import { RadioInfo } from "@/app/components/player/radio-info";
 import { TrackInfo } from "@/app/components/player/track-info";
 import { Button } from "@/app/components/ui/button";
-import { useCachedAudio } from "@/app/hooks/use-cached-audio";
+import { getSongStreamUrl } from "@/api/httpClient";
 import {
   getVolume,
   usePlayerActions,
@@ -73,7 +73,7 @@ export function Player() {
 
   const song = currentList[currentSongIndex];
   const radio = radioList[currentSongIndex];
-  const cachedAudioSrc = useCachedAudio(song?.id);
+  const audioSrc = song?.id ? getSongStreamUrl(song.id) : "";
 
   const getAudioRef = useCallback(() => {
     if (isRadio) return radioRef;
@@ -252,7 +252,7 @@ export function Player() {
       {isSong && song && !isRemoteControlActive && (
         <MemoAudioPlayer
           replayGain={getTrackReplayGain()}
-          src={cachedAudioSrc}
+          src={audioSrc}
           autoPlay={isPlaying}
           audioRef={audioRef}
           loop={loopState === LoopState.One}

@@ -3,7 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
 import { EllipsisVertical, PlayIcon } from "lucide-react";
 import { CSSProperties, forwardRef, useState } from "react";
-import { useCachedCoverArt } from "@/app/hooks/use-cached-cover-art";
+import { getCoverArtUrl } from "@/api/httpClient";
 import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { Button } from "@/app/components/ui/button";
@@ -70,7 +70,7 @@ export const QueueItemRow = forwardRef<
   ref,
 ) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const coverArtUrl = useCachedCoverArt(song.coverArt, "song", "100");
+  const coverArtUrl = getCoverArtUrl(song.coverArt, "song", "100");
 
   return (
     <ContextMenuProvider

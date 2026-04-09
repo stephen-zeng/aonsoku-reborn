@@ -1,11 +1,5 @@
 import { httpClient } from "@/api/httpClient";
 import {
-  getOfflineFavoriteSongs,
-  getOfflineRandomSongs,
-  getOfflineSongById,
-} from "@/lib/offline/library-read-model";
-import { readOfflineCapable, readOnlineOnly } from "@/lib/offline/read-model";
-import {
   FavoritesResponse,
   GetSongResponse,
   RandomSongsResponse,
@@ -26,52 +20,35 @@ async function getRandomSongs({
   fromYear,
   toYear,
 }: GetRandomSongsParams) {
-  return readOfflineCapable(
-    async () => {
-      const response = await httpClient<RandomSongsResponse>(
-        "/getRandomSongs",
-        {
-          method: "GET",
-          query: {
-            size: size?.toString(),
-            genre,
-            fromYear: fromYear?.toString(),
-            toYear: toYear?.toString(),
-          },
-        },
-      );
-
-      return response.data.randomSongs.song;
+  const response = await httpClient<RandomSongsResponse>("/getRandomSongs", {
+    method: "GET",
+    query: {
+      size: size?.toString(),
+      genre,
+      fromYear: fromYear?.toString(),
+      toYear: toYear?.toString(),
     },
-    () => getOfflineRandomSongs(size),
-  );
+  });
+
+  return response.data.randomSongs.song;
 }
 
 async function getFavoriteSongs() {
-  return readOfflineCapable(
-    async () => {
-      const response = await httpClient<FavoritesResponse>("/getStarred2", {
-        method: "GET",
-      });
-      return response.data.starred2;
-    },
-    async () => ({
-      song: await getOfflineFavoriteSongs(),
-    }),
-  );
+  const response = await httpClient<FavoritesResponse>("/getStarred2", {
+    method: "GET",
+  });
+  return response.data.starred2;
 }
 
 async function getTopSongs(artistName: string) {
-  return readOnlineOnly(async () => {
-    const response = await httpClient<TopSongsResponse>("/getTopSongs", {
-      method: "GET",
-      query: {
-        artist: artistName,
-      },
-    });
+  const response = await httpClient<TopSongsResponse>("/getTopSongs", {
+    method: "GET",
+    query: {
+      artist: artistName,
+    },
+  });
 
-    return response.data.topSongs.song;
-  }, null);
+  return response.data.topSongs.song;
 }
 
 async function getAllSongs(songCount: number) {
@@ -87,19 +64,14 @@ async function getAllSongs(songCount: number) {
 }
 
 async function getSong(id: string) {
-  return readOfflineCapable(
-    async () => {
-      const response = await httpClient<GetSongResponse>("/getSong", {
-        method: "GET",
-        query: {
-          id,
-        },
-      });
-
-      return response.data.song;
+  const response = await httpClient<GetSongResponse>("/getSong", {
+    method: "GET",
+    query: {
+      id,
     },
-    () => getOfflineSongById(id),
-  );
+  });
+
+  return response.data.song;
 }
 
 export const songs = {

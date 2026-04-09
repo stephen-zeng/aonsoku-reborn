@@ -1,8 +1,5 @@
-import { persistQueryClient } from "@tanstack/query-persist-client-core";
-import { onlineManager, QueryClient } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 import { isReachabilityError } from "@/api/errors";
-import { createIDBPersister } from "@/lib/cache/query-persister";
-import { useOfflineStore } from "@/store/offline.store";
 
 const FIVE_MINUTES = 5 * 60 * 1000;
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
@@ -13,7 +10,6 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       staleTime: FIVE_MINUTES,
       gcTime: TWENTY_FOUR_HOURS,
-      networkMode: "offlineFirst",
       retry: (failureCount, error) => {
         if (isReachabilityError(error)) {
           return false;
@@ -24,25 +20,3 @@ export const queryClient = new QueryClient({
     },
   },
 });
-
-const persister = createIDBPersister();
-
-persistQueryClient({
-  queryClient,
-  persister,
-  maxAge: TWENTY_FOUR_HOURS,
-  dehydrateOptions: {
-    shouldDehydrateQuery: (query) => query.state.status === "success",
-  },
-});
-
-// Sync offline state with React Query's online manager.
-// Do NOT invalidate queries here — React Query handles reconnect-refetch
-// natively via onlineManager, and invalidating on every mode change would
-// overwrite live cache data with null from readOnlineOnly services.
-useOfflineStore.subscribe(
-  (ctx) => ctx.state.isOfflineMode,
-  (isOffline) => {
-    onlineManager.setOnline(!isOffline);
-  },
-);

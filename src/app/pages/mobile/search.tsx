@@ -6,8 +6,6 @@ import { useNavigate } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
 import { Input } from "@/app/components/ui/input";
 import { useSongList } from "@/app/hooks/use-song-list";
-import { useCachedCoverArt } from "@/app/hooks/use-cached-cover-art";
-import { useOfflineLibraryStatus } from "@/app/hooks/use-offline-library-status";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
@@ -22,6 +20,7 @@ import { Albums } from "@/types/responses/album";
 import { ISong } from "@/types/responses/song";
 import { CoverArt } from "@/types/coverArtType";
 import { Link } from "react-router-dom";
+import { getCoverArtUrl } from "@/api/httpClient";
 
 interface MobileResultItemProps {
   coverArt: string;
@@ -40,7 +39,7 @@ function MobileResultItem({
   onRowClick,
   onPlayClick,
 }: MobileResultItemProps) {
-  const src = useCachedCoverArt(coverArt, coverArtType, "100");
+  const src = getCoverArtUrl(coverArt, coverArtType, "100");
 
   return (
     <button
@@ -111,7 +110,6 @@ export default function MobileSearch() {
   const [query, setQuery] = useState("");
   const { playSong, setSongList } = usePlayerActions();
   const { getAlbumSongs, getArtistAllSongs } = useSongList();
-  const { isOfflineMode, hasSyncedLibrary } = useOfflineLibraryStatus();
 
   const enableQuery = byteLength(query) >= 3;
 
@@ -134,11 +132,7 @@ export default function MobileSearch() {
 
   const hasResults =
     albums.length > 0 || artists.length > 0 || songs.length > 0;
-  const showOfflineUnsearchable = Boolean(
-    enableQuery && isOfflineMode && !hasSyncedLibrary,
-  );
-  const showNoResults =
-    enableQuery && !hasResults && !showOfflineUnsearchable;
+  const showNoResults = enableQuery && !hasResults;
 
   const debounced = useDebouncedCallback((value: string) => {
     setQuery(value);
@@ -177,14 +171,6 @@ export default function MobileSearch() {
           <div className="flex justify-center items-center p-8">
             <p className="text-sm text-muted-foreground">
               {t("command.noResults")}
-            </p>
-          </div>
-        )}
-
-        {showOfflineUnsearchable && (
-          <div className="flex justify-center items-center p-8">
-            <p className="text-sm text-muted-foreground">
-              {t("offline.searchUnavailable")}
             </p>
           </div>
         )}

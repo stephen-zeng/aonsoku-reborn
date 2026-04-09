@@ -1,10 +1,9 @@
 import omit from "lodash/omit";
 import { useAppStore } from "@/store/app.store";
-import { useOfflineStore } from "@/store/offline.store";
 import { CoverArt } from "@/types/coverArtType";
 import { appName } from "@/utils/appName";
 import { authQueryParams } from "./auth";
-import { AppRequestError, isReachabilityError } from "./errors";
+import { AppRequestError } from "./errors";
 
 export type QueryType = Record<string, string | number | undefined>;
 
@@ -123,16 +122,6 @@ export async function httpClient<T>(
     return await browserFetch<T>(url, init);
   } catch (error) {
     console.error("Error on httpClient request", error);
-
-    if (
-      isReachabilityError(error) &&
-      !useOfflineStore.getState().state.isOfflineMode
-    ) {
-      useOfflineStore
-        .getState()
-        .actions.enterOfflineMode()
-        .catch(() => {});
-    }
 
     throw error;
   }

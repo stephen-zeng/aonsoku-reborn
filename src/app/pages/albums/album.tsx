@@ -5,20 +5,17 @@ import { AlbumComment } from "@/app/components/album/comment";
 import ImageHeader from "@/app/components/album/image-header";
 import { AlbumInfo } from "@/app/components/album/info";
 import { RecordLabelsInfo } from "@/app/components/album/record-labels";
-import { EmptyWrapper } from "@/app/components/albums/empty-wrapper";
 import { AlbumFallback } from "@/app/components/fallbacks/album-fallbacks";
 import { PreviewListFallback } from "@/app/components/fallbacks/home-fallbacks";
 import { BadgesData } from "@/app/components/header-info";
 import PreviewList from "@/app/components/home/preview-list";
 import ListWrapper from "@/app/components/list-wrapper";
-import { OfflineLibraryEmptyState } from "@/app/components/offline/library-empty-state";
 import { DataTable } from "@/app/components/ui/data-table";
 import {
   useGetAlbum,
   useGetArtistAlbums,
   useGetGenreAlbums,
 } from "@/app/hooks/use-album";
-import { useOfflineLibraryStatus } from "@/app/hooks/use-offline-library-status";
 import ErrorPage from "@/app/pages/error-page";
 import { songsColumns } from "@/app/tables/songs-columns";
 import { ROUTES } from "@/routes/routesList";
@@ -32,7 +29,6 @@ export default function Album() {
   const { albumId } = useParams() as { albumId: string };
   const { setSongList } = usePlayerActions();
   const { t } = useTranslation();
-  const { isOfflineMode, hasSyncedLibrary } = useOfflineLibraryStatus();
 
   const {
     data: album,
@@ -48,20 +44,6 @@ export default function Album() {
   const moreAlbums = artist?.album;
 
   if (albumIsLoading) return <AlbumFallback />;
-  // Only show the "please sync" empty state when offline, no renderable data,
-  // and no sync snapshot at all — a synced library means the album just isn't
-  // in the cache, which is closer to a 404.
-  if (isOfflineMode && !album && !hasSyncedLibrary) {
-    return (
-      <div className="w-full h-content">
-        <ListWrapper className="h-full">
-          <EmptyWrapper>
-            <OfflineLibraryEmptyState title={t("album.headline")} />
-          </EmptyWrapper>
-        </ListWrapper>
-      </div>
-    );
-  }
   if (isFetched && !album) {
     return <ErrorPage status={404} statusText={t("error.notFound")} />;
   }

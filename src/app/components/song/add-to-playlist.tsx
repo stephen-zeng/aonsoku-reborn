@@ -15,7 +15,6 @@ import { ContextMenuItem } from "@/app/components/ui/context-menu";
 import { DropdownMenuItem } from "@/app/components/ui/dropdown-menu";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { subsonic } from "@/service/subsonic";
-import { useIsOffline } from "@/store/offline.store";
 import { queryKeys } from "@/utils/queryKeys";
 
 interface AddToPlaylistSubMenuProps {
@@ -30,7 +29,6 @@ export function AddToPlaylistSubMenu({
   type = "dropdown",
 }: AddToPlaylistSubMenuProps) {
   const { t } = useTranslation();
-  const isOfflineMode = useIsOffline();
 
   const { data: playlists } = useQuery({
     queryKey: [queryKeys.playlist.all],
@@ -56,7 +54,6 @@ export function AddToPlaylistSubMenu({
           {type === "dropdown" ? (
             <DropdownMenuItem
               className="flex p-1 items-center h-10"
-              disabled={isOfflineMode}
               onClick={newPlaylistFn}
               autoFocus={false}
             >
@@ -66,7 +63,6 @@ export function AddToPlaylistSubMenu({
           ) : (
             <ContextMenuItem
               className="flex p-1 items-center h-10"
-              disabled={isOfflineMode}
               onClick={newPlaylistFn}
               autoFocus={false}
             >
@@ -91,7 +87,6 @@ export function AddToPlaylistSubMenu({
                     {type === "dropdown" ? (
                       <DropdownMenuItem
                         className="truncate h-10"
-                        disabled={isOfflineMode}
                         onClick={() => addToPlaylistFn(playlist.id)}
                       >
                         <span className="truncate pl-1">{playlist.name}</span>
@@ -99,7 +94,6 @@ export function AddToPlaylistSubMenu({
                     ) : (
                       <ContextMenuItem
                         className="truncate h-10"
-                        disabled={isOfflineMode}
                         onClick={() => addToPlaylistFn(playlist.id)}
                       >
                         <span className="truncate pl-1">{playlist.name}</span>

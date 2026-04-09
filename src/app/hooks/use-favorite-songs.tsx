@@ -1,6 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { getOfflineFavoriteSongs } from "@/lib/offline/library-read-model";
-import { readOfflineCapable } from "@/lib/offline/read-model";
 import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
@@ -12,20 +10,12 @@ async function fetchFavorites() {
 }
 
 async function fetchTotalFavorites(): Promise<number> {
-  return readOfflineCapable(
-    async () => {
-      const storedFavoriteCount = useAppStore.getState().data.favoriteCount;
-      if (storedFavoriteCount && storedFavoriteCount > 0) {
-        return storedFavoriteCount;
-      }
-      const songs = await fetchFavorites();
-      return songs.length;
-    },
-    async () => {
-      const songs = await getOfflineFavoriteSongs();
-      return songs.length;
-    },
-  );
+  const storedFavoriteCount = useAppStore.getState().data.favoriteCount;
+  if (storedFavoriteCount && storedFavoriteCount > 0) {
+    return storedFavoriteCount;
+  }
+  const songs = await fetchFavorites();
+  return songs.length;
 }
 
 export function useTotalFavorites() {

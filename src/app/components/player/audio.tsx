@@ -10,7 +10,6 @@ import {
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { useAudioContext } from "@/app/hooks/use-audio-context";
-import { useIsOffline } from "@/store/offline.store";
 import {
   usePlayerIsPlaying,
   usePlayerMediaType,
@@ -42,8 +41,6 @@ export function AudioPlayer({
   const { volume } = usePlayerVolume();
   const isPlaying = usePlayerIsPlaying();
   const { active: isRemoteControlActive } = useRemoteControlState();
-  const isOfflineMode = useIsOffline();
-  const offlineToastShownRef = useRef(false);
 
   // Use native audio by default, only use AudioContext when acting as a remote controller
   const shouldUseNativeAudio = !isRemoteControlActive;
@@ -62,7 +59,6 @@ export function AudioPlayer({
         retryTimeoutRef.current = null;
       }
       retryCountRef.current = 0;
-      offlineToastShownRef.current = false;
       setAudioSrc(src || undefined);
     }
   }, [src, audioSrc, shouldUseNativeAudio, isRemoteControlActive]);
@@ -122,14 +118,6 @@ export function AudioPlayer({
 
   const scheduleRetry = useCallback(
     (audio: HTMLAudioElement) => {
-      if (isOfflineMode) {
-        if (!offlineToastShownRef.current) {
-          offlineToastShownRef.current = true;
-          toast.warning(t("offline.songUnavailable"));
-        }
-        return;
-      }
-
       if (retryCountRef.current >= MAX_RETRIES) {
         toast.error(t("warnings.songError"));
         retryCountRef.current = 0;
@@ -149,7 +137,7 @@ export function AudioPlayer({
         });
       }, delay);
     },
-    [isOfflineMode, t],
+    [t],
   );
 
   const handleSongError = useCallback(() => {
@@ -213,15 +201,6 @@ export function AudioPlayer({
       retryTimeoutRef.current = null;
     }
   }, []);
-
-  useEffect(() => {
-    if (!audioSrc && isOfflineMode && isSong && isPlaying) {
-      if (!offlineToastShownRef.current) {
-        offlineToastShownRef.current = true;
-        toast.warning(t("offline.songUnavailable"));
-      }
-    }
-  }, [audioSrc, isOfflineMode, isPlaying, isSong, t]);
 
   useEffect(() => {
     async function handleSong() {

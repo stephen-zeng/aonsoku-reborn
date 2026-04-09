@@ -1,30 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
-import clsx from "clsx";
 import { PlusIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { ShadowHeader } from "@/app/components/album/shadow-header";
-import { EmptyWrapper } from "@/app/components/albums/empty-wrapper";
 import { SongListFallback } from "@/app/components/fallbacks/song-fallbacks";
 import { HeaderTitle } from "@/app/components/header-title";
-import ListWrapper from "@/app/components/list-wrapper";
-import { OfflineLibraryEmptyState } from "@/app/components/offline/library-empty-state";
 import { EmptyPlaylistsPage } from "@/app/components/playlist/empty-page";
 import { Button } from "@/app/components/ui/button";
 import { DataTableList } from "@/app/components/ui/data-table-list";
-import { useOfflineLibraryStatus } from "@/app/hooks/use-offline-library-status";
 import { playlistsColumns } from "@/app/tables/playlists-columns";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
-import { useIsOffline } from "@/store/offline.store";
 import { usePlaylists } from "@/store/playlists.store";
 import { queryKeys } from "@/utils/queryKeys";
 
 export default function PlaylistsPage() {
   const { setPlaylistDialogState } = usePlaylists();
   const { t } = useTranslation();
-  const isOfflineMode = useIsOffline();
-  const { hasSyncedLibrary } = useOfflineLibraryStatus();
 
   const { data: playlists, isLoading } = useQuery({
     queryKey: [queryKeys.playlist.all],
@@ -36,37 +28,11 @@ export default function PlaylistsPage() {
 
   if (isLoading) return <SongListFallback />;
   if (!playlists) return null;
-  if (isOfflineMode && !hasSyncedLibrary) {
-    return (
-      <div className={clsx("w-full", "h-content")}>
-        <ShadowHeader
-          showGlassEffect={false}
-          fixed={false}
-          className="relative w-full justify-between items-center"
-        >
-          <div className="w-full flex items-center justify-between">
-            <HeaderTitle title={t("sidebar.playlists")} count={0} />
-          </div>
-
-          <Button size="sm" variant="default" className="px-4" disabled={true}>
-            <PlusIcon className="w-5 h-5 -ml-[3px]" />
-            <span className="ml-2">{t("playlist.form.create.title")}</span>
-          </Button>
-        </ShadowHeader>
-
-        <ListWrapper className="pt-[--shadow-header-distance] h-full">
-          <EmptyWrapper>
-            <OfflineLibraryEmptyState />
-          </EmptyWrapper>
-        </ListWrapper>
-      </div>
-    );
-  }
 
   const showTable = playlists.length > 0;
 
   return (
-    <div className={clsx("w-full", showTable ? "h-content" : "h-content")}>
+    <div className="w-full h-content">
       <ShadowHeader
         showGlassEffect={false}
         fixed={false}
@@ -83,7 +49,6 @@ export default function PlaylistsPage() {
           size="sm"
           variant="default"
           className="px-4"
-          disabled={isOfflineMode}
           onClick={() => setPlaylistDialogState(true)}
         >
           <PlusIcon className="w-5 h-5 -ml-[3px]" />

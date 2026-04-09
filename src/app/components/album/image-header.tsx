@@ -6,7 +6,7 @@ import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { AlbumHeaderFallback } from "@/app/components/fallbacks/album-fallbacks";
 import { BadgesData, HeaderInfoGenerator } from "@/app/components/header-info";
 import { CustomLightBox } from "@/app/components/lightbox";
-import { useCachedCoverArt } from "@/app/hooks/use-cached-cover-art";
+import { getCoverArtUrl } from "@/api/httpClient";
 import { cn } from "@/lib/utils";
 import { CoverArt } from "@/types/coverArtType";
 import { IFeaturedArtist } from "@/types/responses/artist";
@@ -109,8 +109,7 @@ export default function ImageHeader({
   const [open, setOpen] = useState(false);
   const [bgColor, setBgColor] = useState("");
 
-  // Use cached URL for the lightbox so it works offline
-  const lightboxSrc = useCachedCoverArt(coverArtId, coverArtType, "700");
+  const lightboxSrc = getCoverArtUrl(coverArtId, coverArtType, "700");
 
   function getImage() {
     return document.getElementById("cover-art-image") as HTMLImageElement;
