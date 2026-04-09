@@ -2,7 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { OptionsButtons } from "@/app/components/options/buttons";
 import { ContextMenuSeparator } from "@/app/components/ui/context-menu";
 import { useOptions } from "@/app/hooks/use-options";
+import { cacheManager, audioKey } from "@/service/cache";
 import { ROUTES } from "@/routes/routesList";
+import { useCacheMode } from "@/store/cache.store";
+import { useIsAudioCached } from "@/store/cache-index.store";
 import { ISong } from "@/types/responses/song";
 import { AddToPlaylistSubMenu } from "./add-to-playlist";
 
@@ -29,6 +32,9 @@ export function SongMenuOptions({
     isOnPlaylistPage,
   } = useOptions();
   const songIndexes = [index.toString()];
+  const cacheMode = useCacheMode();
+  const isCached = useIsAudioCached(song.id);
+  const showCacheActions = cacheMode !== "none";
 
   return (
     <>
@@ -94,6 +100,27 @@ export function SongMenuOptions({
           startDownload(song.id);
         }}
       />
+      {showCacheActions && (
+        <>
+          {isCached ? (
+            <OptionsButtons.RemoveFromCache
+              variant={variant}
+              onClick={(e) => {
+                e.stopPropagation();
+                cacheManager.evictItem(audioKey(song.id));
+              }}
+            />
+          ) : (
+            <OptionsButtons.CacheSong
+              variant={variant}
+              onClick={(e) => {
+                e.stopPropagation();
+                cacheManager.cacheSong(song.id);
+              }}
+            />
+          )}
+        </>
+      )}
       <ContextMenuSeparator />
       <OptionsButtons.SongInfo
         variant={variant}

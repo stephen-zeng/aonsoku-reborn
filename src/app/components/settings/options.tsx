@@ -3,6 +3,7 @@ import {
   EarthLock,
   FileText,
   Globe,
+  HardDrive,
   Headphones,
   LaptopIcon,
   Paintbrush,
@@ -24,6 +25,7 @@ export type SettingsOptions =
   | "language"
   | "audio"
   | "content"
+  | "storage"
   | "accounts"
   | "desktop"
   | "privacy";
@@ -41,6 +43,7 @@ const options: OptionsData[] = [
   { id: "language", icon: Globe },
   { id: "audio", icon: Headphones },
   { id: "content", icon: FileText },
+  { id: "storage", icon: HardDrive },
   ...(isDesktop() ? [accountsOption, desktopOption] : []),
   { id: "privacy", icon: EarthLock },
 ];

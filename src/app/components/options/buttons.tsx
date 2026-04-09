@@ -1,6 +1,7 @@
 import omit from "lodash/omit";
 import {
   Disc3,
+  DownloadCloud,
   DownloadIcon,
   Heart,
   Info,
@@ -11,6 +12,7 @@ import {
   PlayIcon,
   PlusIcon,
   Trash,
+  Trash2,
   User,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -226,6 +228,38 @@ function Like({ variant = "dropdown", isStarred, label, ...props }: LikeProps) {
   );
 }
 
+function CacheSong({
+  variant = "dropdown",
+  ...props
+}: DropdownMenuItemProps) {
+  const { t } = useTranslation();
+
+  return (
+    <MenuItemFactory
+      variant={variant}
+      icon={<DownloadCloud className="mr-2 h-4 w-4" />}
+      label={t("options.cache", "Cache song")}
+      {...props}
+    />
+  );
+}
+
+function RemoveFromCache({
+  variant = "dropdown",
+  ...props
+}: DropdownMenuItemProps) {
+  const { t } = useTranslation();
+
+  return (
+    <MenuItemFactory
+      variant={variant}
+      icon={<Trash2 className="mr-2 h-4 w-4" />}
+      label={t("options.removeFromCache", "Remove from cache")}
+      {...props}
+    />
+  );
+}
+
 export const OptionsButtons = {
   Play,
   PlayNext,
@@ -240,4 +274,6 @@ export const OptionsButtons = {
   SongInfo,
   GotoArtist,
   GotoAlbum,
+  CacheSong,
+  RemoveFromCache,
 };

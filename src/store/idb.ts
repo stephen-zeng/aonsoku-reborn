@@ -1,4 +1,13 @@
-import { del, get, set } from "idb-keyval";
+import { createStore, del, get, set } from "idb-keyval";
+
+export const cacheIndexStore = createStore(
+  "aonsoku-cache",
+  "cache-index",
+);
+export const offlineLibraryStore = createStore(
+  "aonsoku-cache",
+  "offline-library",
+);
 
 export const idbStorage = {
   getItem: <T>(name: string, callback: (value: T | null) => void): void => {

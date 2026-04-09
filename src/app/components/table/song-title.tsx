@@ -9,12 +9,19 @@ import { ISong } from "@/types/responses/song";
 export function TableSongTitle({
   song,
   onPlay,
+  disabled,
 }: {
   song: ISong;
   onPlay?: () => void;
+  disabled?: boolean;
 }) {
   return (
-    <div className="flex w-full gap-2 items-center">
+    <div
+      className={cn(
+        "flex w-full gap-2 items-center",
+        disabled && "opacity-50",
+      )}
+    >
       <CoverImage
         coverArt={song.coverArt}
         coverArtType="song"
@@ -24,10 +31,11 @@ export function TableSongTitle({
         <span
           className={cn(
             "font-medium truncate",
-            onPlay && "cursor-pointer hover:underline",
+            onPlay && !disabled && "cursor-pointer hover:underline",
+            disabled && "text-muted-foreground",
           )}
           onClick={
-            onPlay
+            onPlay && !disabled
               ? (e) => {
                   e.stopPropagation();
                   onPlay();

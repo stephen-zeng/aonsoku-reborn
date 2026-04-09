@@ -2,12 +2,15 @@ import { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
 import { Linux } from "@/app/components/controls/linux";
 import { SettingsDialog } from "@/app/components/settings/dialog";
+import { OfflineIndicator } from "@/app/components/offline-indicator";
+import { useNetworkStatusObserver } from "@/app/hooks/use-network-status";
 import { LangObserver } from "@/app/observers/lang-observer";
 import { MediaSessionObserver } from "@/app/observers/media-session-observer";
 import { ThemeObserver } from "@/app/observers/theme-observer";
 import { ToastContainer } from "@/app/observers/toast-container";
 import { LanControlObserver } from "@/app/observers/lan-control-observer";
 import { router } from "@/routes/router";
+import { useCacheIndexActions } from "@/store/cache-index.store";
 import { isDesktop, isLinux } from "@/utils/desktop";
 import {
   tryAutoConnect,
@@ -19,6 +22,13 @@ import { useTranslation } from "react-i18next";
 function App() {
   const { t } = useTranslation();
   const status = useLanControlClientStore((state) => state.status);
+  const { loadFromIDB } = useCacheIndexActions();
+
+  useEffect(() => {
+    loadFromIDB();
+  }, [loadFromIDB]);
+
+  useNetworkStatusObserver();
 
   // Try to auto-connect on mount
   useEffect(() => {
@@ -46,6 +56,7 @@ function App() {
       <LangObserver />
       <ThemeObserver />
       <LanControlObserver />
+      <OfflineIndicator />
       <SettingsDialog />
       <RouterProvider router={router} />
       <ToastContainer />

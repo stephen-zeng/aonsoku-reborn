@@ -59,6 +59,12 @@ export function AudioPlayer({
         retryTimeoutRef.current = null;
       }
       retryCountRef.current = 0;
+
+      // Revoke previous blob URL to prevent memory leaks
+      if (audioSrc?.startsWith("blob:")) {
+        URL.revokeObjectURL(audioSrc);
+      }
+
       setAudioSrc(src || undefined);
     }
   }, [src, audioSrc, shouldUseNativeAudio, isRemoteControlActive]);

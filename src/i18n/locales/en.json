@@ -372,7 +372,9 @@
     "goto": {
       "artist": "Go to artist",
       "album": "Go to album"
-    }
+    },
+    "cache": "Cache song",
+    "removeFromCache": "Remove from cache"
   },
   "radios": {
     "label": "Radio",
@@ -600,39 +602,47 @@
       }
     },
     "storage": {
-      "coverArt": {
-        "group": "Cover Art Cache",
-        "description": "Cache album cover images for faster loading.",
-        "enabled": "Enable cover art cache",
-        "size": "Cache size",
-        "entries": "{{count}} images cached",
-        "clear": "Clear cover art cache"
+      "mode": {
+        "group": "Cache Mode",
+        "description": "Choose how Aonsoku caches data for playback.",
+        "label": "Cache mode",
+        "none": {
+          "label": "None",
+          "description": "Stream everything. No local caching."
+        },
+        "performance": {
+          "label": "Performance",
+          "description": "Cache played songs and covers for faster loading."
+        },
+        "offline": {
+          "label": "Offline",
+          "description": "Full offline support. Sync metadata and cache audio."
+        }
       },
-      "audio": {
-        "group": "Audio Cache",
-        "description": "Cache audio files for instant playback on repeated listens.",
-        "enabled": "Enable audio cache",
-        "maxSize": "Maximum cache size",
-        "size": "Cache size",
-        "entries": "{{count}} songs cached",
-        "clear": "Clear audio cache"
-      },
-      "metadata": {
-        "group": "All Caches",
-        "description": "Clear all cached data including metadata, cover art, and audio files.",
-        "clear": "Clear all caches"
+      "limits": {
+        "group": "Cache Storage",
+        "description": "Manage cached audio and cover art storage.",
+        "maxSize": "Maximum audio cache size",
+        "audioSize": "Audio cache",
+        "audioEntries": "{{count}} songs cached",
+        "coverSize": "Cover art cache",
+        "coverEntries": "{{count}} images cached",
+        "clearAudio": "Clear",
+        "clearCovers": "Clear",
+        "clearAll": "Clear all caches"
       },
       "sync": {
-        "group": "Sync on Launch",
-        "description": "Cache all metadata on every app launch for offline browsing. Audio files are never synced.",
-        "enabled": "Enable sync on launch",
+        "group": "Metadata Sync",
+        "description": "Sync library metadata for offline browsing. Audio files are cached separately during playback.",
+        "enabled": "Sync on launch",
         "coverArt": "Include cover art",
         "coverArtInfo": "Download all album and artist images during sync. This may use significant storage and bandwidth.",
         "lastSynced": "Last synced",
         "never": "Never",
+        "justNow": "Just now",
         "syncNow": "Sync Now",
         "cancel": "Cancel",
-        "clear": "Clear",
+        "clear": "Clear synced data",
         "entries": "{{count}} items synced",
         "phases": {
           "idle": "Preparing…",

@@ -354,7 +354,9 @@
     "goto": {
       "artist": "前往艺人",
       "album": "前往专辑"
-    }
+    },
+    "cache": "缓存歌曲",
+    "removeFromCache": "移除缓存"
   },
   "radios": {
     "label": "电台",
@@ -606,39 +608,47 @@
       }
     },
     "storage": {
-      "coverArt": {
-        "group": "封面图缓存",
-        "description": "缓存专辑封面图以加快加载速度。",
-        "enabled": "启用封面图缓存",
-        "size": "缓存大小",
-        "entries": "已缓存 {{count}} 张图片",
-        "clear": "清除封面图缓存"
+      "mode": {
+        "group": "缓存模式",
+        "description": "选择 Aonsoku 如何缓存数据以供播放。",
+        "label": "缓存模式",
+        "none": {
+          "label": "无",
+          "description": "全部在线流式传输，不进行本地缓存。"
+        },
+        "performance": {
+          "label": "性能优先",
+          "description": "缓存播放过的歌曲和封面图以加快加载速度。"
+        },
+        "offline": {
+          "label": "离线模式",
+          "description": "完整离线支持。同步元数据并缓存音频。"
+        }
       },
-      "audio": {
-        "group": "音频缓存",
-        "description": "缓存音频文件，重复收听时即时播放。",
-        "enabled": "启用音频缓存",
-        "maxSize": "最大缓存大小",
-        "size": "缓存大小",
-        "entries": "已缓存 {{count}} 首歌曲",
-        "clear": "清除音频缓存"
-      },
-      "metadata": {
-        "group": "所有缓存",
-        "description": "清除所有缓存数据，包括元数据、封面图和音频文件。",
-        "clear": "清除所有缓存"
+      "limits": {
+        "group": "缓存存储",
+        "description": "管理已缓存的音频和封面图存储。",
+        "maxSize": "最大音频缓存大小",
+        "audioSize": "音频缓存",
+        "audioEntries": "已缓存 {{count}} 首歌曲",
+        "coverSize": "封面图缓存",
+        "coverEntries": "已缓存 {{count}} 张图片",
+        "clearAudio": "清除",
+        "clearCovers": "清除",
+        "clearAll": "清除所有缓存"
       },
       "sync": {
-        "group": "启动时同步",
-        "description": "每次启动应用时缓存所有元数据，以便离线浏览。音频文件不会被同步。",
-        "enabled": "启用启动时同步",
+        "group": "元数据同步",
+        "description": "同步音乐库元数据以供离线浏览。音频文件在播放时单独缓存。",
+        "enabled": "启动时同步",
         "coverArt": "包含封面图",
         "coverArtInfo": "同步时下载所有专辑和艺术家图片。这可能占用大量存储空间和带宽。",
         "lastSynced": "上次同步",
         "never": "从未同步",
+        "justNow": "刚刚",
         "syncNow": "立即同步",
         "cancel": "取消",
-        "clear": "清除",
+        "clear": "清除同步数据",
         "entries": "已同步 {{count}} 项",
         "phases": {
           "idle": "准备中…",
