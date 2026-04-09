@@ -68,7 +68,7 @@ function trimExternalCache(cache) {
     return Promise.all(
       toDelete.map(function (req) {
         return cache.delete(req);
-      })
+      }),
     );
   });
 }
@@ -80,7 +80,7 @@ self.addEventListener("install", function (e) {
   e.waitUntil(
     precacheAppShell().then(function () {
       return self.skipWaiting();
-    })
+    }),
   );
 });
 
@@ -99,7 +99,7 @@ function batchCacheAdd(cache, urls) {
     return Promise.allSettled(
       batch.map(function (url) {
         return cache.add(url);
-      })
+      }),
     ).then(function (results) {
       for (let i = 0; i < results.length; i++) {
         if (results[i].status === "rejected") {
@@ -159,18 +159,26 @@ function checkCacheIntegrity() {
         return cache.match(url, MATCH_OPTS).then(function (resp) {
           return resp ? null : url;
         });
-      })
+      }),
     ).then(function (results) {
       const missing = results.filter(function (u) {
         return u !== null;
       });
 
       if (missing.length === 0) {
-        console.log("[SW] Integrity OK —", PRECACHE_URLS.length, "assets cached");
+        console.log(
+          "[SW] Integrity OK —",
+          PRECACHE_URLS.length,
+          "assets cached",
+        );
         return { checked: PRECACHE_URLS.length, repaired: 0, failed: 0 };
       }
 
-      console.warn("[SW] Integrity check found", missing.length, "missing asset(s)");
+      console.warn(
+        "[SW] Integrity check found",
+        missing.length,
+        "missing asset(s)",
+      );
 
       return batchCacheAdd(cache, missing).then(function (failedUrls) {
         if (failedUrls.length > 0) {
@@ -179,8 +187,10 @@ function checkCacheIntegrity() {
         const repaired = missing.length - failedUrls.length;
         console.log(
           "[SW] Integrity repair complete —",
-          repaired, "repaired,",
-          failedUrls.length, "still missing"
+          repaired,
+          "repaired,",
+          failedUrls.length,
+          "still missing",
         );
         return {
           checked: PRECACHE_URLS.length,
@@ -209,12 +219,12 @@ self.addEventListener("activate", function (e) {
             .map(function (name) {
               console.log("[SW] Deleting old cache:", name);
               return caches.delete(name);
-            })
+            }),
         );
       })
       .then(function () {
         return self.clients.claim();
-      })
+      }),
   );
 });
 
@@ -223,7 +233,8 @@ self.addEventListener("activate", function (e) {
 self.addEventListener("fetch", function (e) {
   const url = new URL(e.request.url);
 
-  if (e.request.method !== "GET" || !["http:", "https:"].includes(url.protocol)) return;
+  if (e.request.method !== "GET" || !["http:", "https:"].includes(url.protocol))
+    return;
 
   if (
     url.pathname.endsWith("sw.js") ||
@@ -242,7 +253,7 @@ self.addEventListener("fetch", function (e) {
           status: 200,
           headers: { "Content-Type": "application/javascript" },
         });
-      })
+      }),
     );
     return;
   }
@@ -264,7 +275,7 @@ self.addEventListener("fetch", function (e) {
             );
           });
         });
-      })
+      }),
     );
     return;
   }
@@ -287,7 +298,7 @@ self.addEventListener("fetch", function (e) {
           return response;
         });
       });
-    })
+    }),
   );
 });
 
@@ -311,9 +322,7 @@ self.addEventListener("message", function (event) {
       .catch(function (err) {
         console.error("[SW] Integrity check error:", err);
       });
-  }
-
-  else if (data.action === "update") {
+  } else if (data.action === "update") {
     const assetSet = new Set(Array.isArray(PRECACHE_URLS) ? PRECACHE_URLS : []);
 
     if (Array.isArray(data.assets)) {
@@ -343,7 +352,7 @@ self.addEventListener("message", function (event) {
                   return tmpCache.match(req).then(function (res) {
                     return newCache.put(req, res);
                   });
-                })
+                }),
               );
             });
           });

@@ -1,9 +1,9 @@
 import { httpClient } from "@/api/httpClient";
+import { metadataCache } from "@/lib/cache/metadata-cache";
 import { getOfflinePlaylists } from "@/lib/offline/library-read-model";
 import {
   assertOnlineAccess,
   readOfflineCapable,
-  readOnlineOnly,
 } from "@/lib/offline/read-model";
 import {
   CreateParams,
@@ -30,19 +30,25 @@ async function getAll() {
 }
 
 async function getOne(id: string): Promise<PlaylistWithEntries | null> {
-  return readOnlineOnly(async () => {
-    const response = await httpClient<PlaylistWithEntriesResponse>(
-      "/getPlaylist",
-      {
-        method: "GET",
-        query: {
-          id,
+  return readOfflineCapable(
+    async () => {
+      const response = await httpClient<PlaylistWithEntriesResponse>(
+        "/getPlaylist",
+        {
+          method: "GET",
+          query: {
+            id,
+          },
         },
-      },
-    );
+      );
 
-    return response.data.playlist;
-  }, null);
+      const playlist = response.data.playlist;
+      // Write-through to detail cache so it's available offline later
+      await metadataCache.putPlaylistDetail(playlist);
+      return playlist;
+    },
+    () => metadataCache.getPlaylistDetail(id),
+  );
 }
 
 async function remove(id: string) {

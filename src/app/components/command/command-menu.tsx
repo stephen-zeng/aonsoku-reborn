@@ -15,6 +15,7 @@ import {
   CommandList,
 } from "@/app/components/ui/command";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
+import { useOfflineLibraryStatus } from "@/app/hooks/use-offline-library-status";
 import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
 import { byteLength } from "@/utils/byteLength";
@@ -38,6 +39,7 @@ export default function CommandMenu() {
   const { open, setOpen } = useAppStore((state) => state.command);
   const location = useLocation();
   const params = useParams();
+  const { isOfflineMode, hasSyncedLibrary } = useOfflineLibraryStatus();
 
   const [query, setQuery] = useState("");
   const [pages, setPages] = useState<CommandPages[]>(["HOME"]);
@@ -143,6 +145,11 @@ export default function CommandMenu() {
   const showArtistGroup = Boolean(query && artists.length > 0);
   const showSongGroup = Boolean(query && songs.length > 0);
 
+  // Offline with no sync snapshot → search is unavailable, not just "no results"
+  const showOfflineUnsearchable = Boolean(
+    enableQuery && isOfflineMode && !hasSyncedLibrary,
+  );
+
   useHotkeys(["/", "mod+f", "mod+k"], () => setOpen(!open), {
     preventDefault: true,
   });
@@ -194,7 +201,11 @@ export default function CommandMenu() {
   };
 
   const showNotFoundMessage = Boolean(
-    enableQuery && !showAlbumGroup && !showArtistGroup && !showSongGroup,
+    enableQuery &&
+      !showOfflineUnsearchable &&
+      !showAlbumGroup &&
+      !showArtistGroup &&
+      !showSongGroup,
   );
 
   return (
@@ -249,6 +260,12 @@ export default function CommandMenu() {
               {showNotFoundMessage && (
                 <div className="flex justify-center items-center p-4 mt-2 mx-2 bg-accent/40 rounded border border-border">
                   <p className="text-sm">{t("command.noResults")}</p>
+                </div>
+              )}
+
+              {showOfflineUnsearchable && (
+                <div className="flex justify-center items-center p-4 mt-2 mx-2 bg-accent/40 rounded border border-border">
+                  <p className="text-sm">{t("offline.searchUnavailable")}</p>
                 </div>
               )}
 

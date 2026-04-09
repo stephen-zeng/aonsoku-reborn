@@ -18,7 +18,7 @@ export default function SongList() {
   const filter = getSearchParam<string>(AlbumsSearchParams.MainFilter, "");
   const query = getSearchParam<string>(AlbumsSearchParams.Query, "");
   const artistId = getSearchParam<string>(AlbumsSearchParams.ArtistId, "");
-  const { isOfflineMode, hasOfflineData } = useOfflineLibraryStatus();
+  const { isOfflineMode, hasSyncedLibrary } = useOfflineLibraryStatus();
 
   async function fetchSongs() {
     return getFavoriteSongs();
@@ -38,7 +38,7 @@ export default function SongList() {
   const songlist = data?.pages.flatMap((page) => page.songs) ?? [];
   const songCount = songCountData ?? 0;
   const emptyState =
-    isOfflineMode && !hasOfflineData ? <OfflineLibraryEmptyState /> : undefined;
+    isOfflineMode && !hasSyncedLibrary ? <OfflineLibraryEmptyState /> : undefined;
 
   return (
     <SongListLayout

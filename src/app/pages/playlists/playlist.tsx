@@ -2,12 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import ImageHeader from "@/app/components/album/image-header";
+import { EmptyWrapper } from "@/app/components/albums/empty-wrapper";
 import { PlaylistFallback } from "@/app/components/fallbacks/playlist-fallbacks";
 import { BadgesData } from "@/app/components/header-info";
 import ListWrapper from "@/app/components/list-wrapper";
+import { OfflineLibraryEmptyState } from "@/app/components/offline/library-empty-state";
 import { PlaylistButtons } from "@/app/components/playlist/buttons";
 import { RemoveSongFromPlaylistDialog } from "@/app/components/playlist/remove-song-dialog";
 import { DataTable } from "@/app/components/ui/data-table";
+import { useIsOffline } from "@/store/offline.store";
 import ErrorPage from "@/app/pages/error-page";
 import { songsColumns } from "@/app/tables/songs-columns";
 import { subsonic } from "@/service/subsonic";
@@ -22,6 +25,7 @@ export default function Playlist() {
   const { t } = useTranslation();
   const columns = songsColumns();
   const { setSongList } = usePlayerActions();
+  const isOfflineMode = useIsOffline();
 
   const {
     data: playlist,
@@ -33,7 +37,20 @@ export default function Playlist() {
   });
 
   if (isFetching || isLoading) return <PlaylistFallback />;
-  if (!playlist) return <ErrorPage status={404} statusText="Not Found" />;
+  if (!playlist) {
+    if (isOfflineMode) {
+      return (
+        <div className="w-full h-content">
+          <ListWrapper className="h-full">
+            <EmptyWrapper>
+              <OfflineLibraryEmptyState title={t("playlist.headline")} />
+            </EmptyWrapper>
+          </ListWrapper>
+        </div>
+      );
+    }
+    return <ErrorPage status={404} statusText="Not Found" />;
+  }
 
   const columnsToShow: ColumnFilter[] = isMobile
     ? [

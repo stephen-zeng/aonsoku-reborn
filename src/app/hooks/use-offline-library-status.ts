@@ -4,17 +4,18 @@ import { useIsOffline } from "@/store/offline.store";
 
 export function useOfflineLibraryStatus() {
   const isOfflineMode = useIsOffline();
+  // Always-enabled with a stable key so the snapshot is already loaded when
+  // offline mode kicks in, avoiding a flash of the "empty library" state.
   const { data, isLoading } = useQuery({
-    queryKey: ["offline-library-meta", isOfflineMode],
+    queryKey: ["offline-library-meta"],
     queryFn: () => metadataCache.getMeta(),
-    enabled: isOfflineMode,
     staleTime: 0,
     gcTime: 0,
   });
 
   return {
     isOfflineMode,
-    hasOfflineData: Boolean(data?.lastSyncedAt),
-    isLoading: isOfflineMode && isLoading,
+    hasSyncedLibrary: Boolean(data?.lastSyncedAt),
+    isLoading,
   };
 }

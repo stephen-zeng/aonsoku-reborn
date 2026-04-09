@@ -25,7 +25,7 @@ import { sortRecentAlbums } from "@/utils/album";
 export default function Artist() {
   const { t } = useTranslation();
   const { artistId } = useParams() as { artistId: string };
-  const { isOfflineMode, hasOfflineData } = useOfflineLibraryStatus();
+  const { isOfflineMode, hasSyncedLibrary } = useOfflineLibraryStatus();
 
   const {
     data: artist,
@@ -39,7 +39,7 @@ export default function Artist() {
   );
 
   if (artistIsLoading) return <AlbumFallback />;
-  if (isOfflineMode && !hasOfflineData) {
+  if (isOfflineMode && !artist && !hasSyncedLibrary) {
     return (
       <div className="w-full h-content">
         <ListWrapper className="h-full">

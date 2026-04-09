@@ -290,3 +290,51 @@ export async function hasOfflineLibrarySync(): Promise<boolean> {
   const meta = await metadataCache.getMeta();
   return Boolean(meta?.lastSyncedAt);
 }
+
+// ── Search helpers ─────────────────────────────────────────
+
+interface OfflineArtistSearchParams {
+  query: string;
+  count: number;
+  offset: number;
+}
+
+export async function searchOfflineArtists({
+  query,
+  count,
+  offset,
+}: OfflineArtistSearchParams) {
+  // getOfflineArtists already returns artists sorted by name
+  const artists = await getOfflineArtists();
+  const filtered = artists.filter((artist) =>
+    matchesQuery([artist.name], query),
+  );
+  const paged = paginate(filtered, offset, count);
+  return { artists: paged.items, nextOffset: paged.nextOffset };
+}
+
+interface OfflineSearchAllParams {
+  query: string;
+  albumCount: number;
+  artistCount: number;
+  songCount: number;
+}
+
+export async function searchOfflineAll({
+  query,
+  albumCount,
+  artistCount,
+  songCount,
+}: OfflineSearchAllParams) {
+  const [albumResult, artistResult, songResult] = await Promise.all([
+    searchOfflineAlbums({ query, count: albumCount, offset: 0 }),
+    searchOfflineArtists({ query, count: artistCount, offset: 0 }),
+    searchOfflineSongs({ query, songCount, songOffset: 0 }),
+  ]);
+
+  return {
+    album: albumResult.albums,
+    artist: artistResult.artists,
+    song: songResult.songs,
+  };
+}

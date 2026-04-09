@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { metadataCache } from "@/lib/cache/metadata-cache";
 import { hydrateFromSyncCache } from "@/lib/sync/sync-hydrator";
+import { queryClient } from "@/lib/queryClient";
 import { useSyncStore } from "@/store/sync.store";
 
 export function SyncObserver() {
@@ -36,6 +37,8 @@ export function SyncObserver() {
   useEffect(() => {
     if (status === "done") {
       hydrateFromSyncCache();
+      // Refresh offline-library-meta so pages see the new lastSyncedAt
+      queryClient.invalidateQueries({ queryKey: ["offline-library-meta"] });
     }
   }, [status]);
 

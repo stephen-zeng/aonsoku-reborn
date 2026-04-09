@@ -36,11 +36,13 @@ persistQueryClient({
   },
 });
 
-// Sync offline state with React Query's online manager
+// Sync offline state with React Query's online manager.
+// Do NOT invalidate queries here — React Query handles reconnect-refetch
+// natively via onlineManager, and invalidating on every mode change would
+// overwrite live cache data with null from readOnlineOnly services.
 useOfflineStore.subscribe(
   (ctx) => ctx.state.isOfflineMode,
   (isOffline) => {
     onlineManager.setOnline(!isOffline);
-    queryClient.invalidateQueries().catch(() => {});
   },
 );

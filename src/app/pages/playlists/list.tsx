@@ -24,7 +24,7 @@ export default function PlaylistsPage() {
   const { setPlaylistDialogState } = usePlaylists();
   const { t } = useTranslation();
   const isOfflineMode = useIsOffline();
-  const { hasOfflineData } = useOfflineLibraryStatus();
+  const { hasSyncedLibrary } = useOfflineLibraryStatus();
 
   const { data: playlists, isLoading } = useQuery({
     queryKey: [queryKeys.playlist.all],
@@ -36,7 +36,7 @@ export default function PlaylistsPage() {
 
   if (isLoading) return <SongListFallback />;
   if (!playlists) return null;
-  if (isOfflineMode && !hasOfflineData) {
+  if (isOfflineMode && !hasSyncedLibrary) {
     return (
       <div className={clsx("w-full", "h-content")}>
         <ShadowHeader

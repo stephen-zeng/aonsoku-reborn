@@ -40,7 +40,7 @@ export default function ArtistsList() {
   } = useAppArtistsViewType();
 
   const columns = artistsColumns();
-  const { isOfflineMode, hasOfflineData } = useOfflineLibraryStatus();
+  const { isOfflineMode, hasSyncedLibrary } = useOfflineLibraryStatus();
   const artistColumnFilter: ColumnFilter[] | undefined = isMobile
     ? ["index", "name", "starred"]
     : undefined;
@@ -58,7 +58,7 @@ export default function ArtistsList() {
 
   if (isLoading) return <ArtistsFallback />;
   if (!artists) return null;
-  if (isOfflineMode && !hasOfflineData) {
+  if (isOfflineMode && !hasSyncedLibrary) {
     return (
       <div className="w-full h-content">
         <MemoShadowHeader

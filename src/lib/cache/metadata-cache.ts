@@ -2,7 +2,7 @@ import { clear as idbClear, createStore, get, set } from "idb-keyval";
 import type { Albums, SingleAlbum } from "@/types/responses/album";
 import type { IArtist, ISimilarArtist } from "@/types/responses/artist";
 import type { Genre } from "@/types/responses/genre";
-import type { Playlist } from "@/types/responses/playlist";
+import type { Playlist, PlaylistWithEntries } from "@/types/responses/playlist";
 import type { ISong } from "@/types/responses/song";
 
 const store = createStore("aonsoku-metadata-cache", "metadata");
@@ -14,7 +14,12 @@ const KEYS = {
   playlists: "sync:playlists",
   genres: "sync:genres",
   meta: "sync:meta",
+  playlistDetails: "sync:playlist-details",
 } as const;
+
+function playlistDetailKey(id: string) {
+  return `${KEYS.playlistDetails}:${id}`;
+}
 
 export interface SyncMeta {
   lastSyncedAt: number;
@@ -51,6 +56,10 @@ async function putMeta(meta: SyncMeta): Promise<void> {
   await set(KEYS.meta, meta, store);
 }
 
+async function putPlaylistDetail(playlist: PlaylistWithEntries): Promise<void> {
+  await set(playlistDetailKey(playlist.id), playlist, store);
+}
+
 // ── Read operations ──
 
 async function getSongs(): Promise<ISong[]> {
@@ -75,6 +84,12 @@ async function getGenres(): Promise<Genre[]> {
 
 async function getMeta(): Promise<SyncMeta | null> {
   return (await get<SyncMeta>(KEYS.meta, store)) ?? null;
+}
+
+async function getPlaylistDetail(
+  id: string,
+): Promise<PlaylistWithEntries | null> {
+  return (await get<PlaylistWithEntries>(playlistDetailKey(id), store)) ?? null;
 }
 
 // ── Composite lookups ──
@@ -132,12 +147,14 @@ export const metadataCache = {
   putPlaylists,
   putGenres,
   putMeta,
+  putPlaylistDetail,
   getSongs,
   getAlbums,
   getArtists,
   getPlaylists,
   getGenres,
   getMeta,
+  getPlaylistDetail,
   getAlbumWithSongs,
   getArtistWithAlbums,
   clear,

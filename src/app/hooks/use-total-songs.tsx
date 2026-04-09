@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { metadataCache } from "@/lib/cache/metadata-cache";
+import { readOfflineCapable } from "@/lib/offline/read-model";
 import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
-import { useIsOffline } from "@/store/offline.store";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
 
@@ -16,12 +16,7 @@ async function fetchSongs(offset: number, count: number) {
   return response?.song ?? [];
 }
 
-async function fetchTotalSongs(isOfflineMode: boolean) {
-  if (isOfflineMode) {
-    const meta = await metadataCache.getMeta();
-    return meta?.songCount ?? 0;
-  }
-
+async function fetchTotalSongsOnline(): Promise<number> {
   const storedSongCount = useAppStore.getState().data.songCount;
 
   if (storedSongCount && storedSongCount > 0) {
@@ -70,12 +65,17 @@ async function fetchTotalSongs(isOfflineMode: boolean) {
   return totalSongs;
 }
 
-export function useTotalSongs() {
-  const isOfflineMode = useIsOffline();
+async function fetchTotalSongs(): Promise<number> {
+  return readOfflineCapable(fetchTotalSongsOnline, async () => {
+    const meta = await metadataCache.getMeta();
+    return meta?.songCount ?? 0;
+  });
+}
 
+export function useTotalSongs() {
   return useQuery({
-    queryKey: [queryKeys.song.count, isOfflineMode],
-    queryFn: () => fetchTotalSongs(isOfflineMode),
+    queryKey: [queryKeys.song.count],
+    queryFn: fetchTotalSongs,
     staleTime: convertMinutesToMs(5),
     gcTime: convertMinutesToMs(5),
   });

@@ -797,6 +797,7 @@
     "reconnected": "已重新连接到服务器",
     "reconnectFailed": "无法重新连接，继续使用离线模式",
     "songUnavailable": "此歌曲不可离线播放",
-    "disconnected": "无法连接服务器，进入离线模式"
+    "disconnected": "无法连接服务器，进入离线模式",
+    "searchUnavailable": "搜索需要先完成离线资料库同步。"
   }
 }

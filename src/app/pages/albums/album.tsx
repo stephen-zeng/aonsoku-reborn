@@ -32,7 +32,7 @@ export default function Album() {
   const { albumId } = useParams() as { albumId: string };
   const { setSongList } = usePlayerActions();
   const { t } = useTranslation();
-  const { isOfflineMode, hasOfflineData } = useOfflineLibraryStatus();
+  const { isOfflineMode, hasSyncedLibrary } = useOfflineLibraryStatus();
 
   const {
     data: album,
@@ -48,7 +48,10 @@ export default function Album() {
   const moreAlbums = artist?.album;
 
   if (albumIsLoading) return <AlbumFallback />;
-  if (isOfflineMode && !hasOfflineData) {
+  // Only show the "please sync" empty state when offline, no renderable data,
+  // and no sync snapshot at all — a synced library means the album just isn't
+  // in the cache, which is closer to a 404.
+  if (isOfflineMode && !album && !hasSyncedLibrary) {
     return (
       <div className="w-full h-content">
         <ListWrapper className="h-full">

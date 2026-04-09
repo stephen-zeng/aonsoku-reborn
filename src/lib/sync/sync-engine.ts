@@ -1,11 +1,11 @@
-import { getCoverArtUrl } from "@/api/httpClient";
+import { getCoverArtUrl, httpClient } from "@/api/httpClient";
 import { coverArtCache } from "@/lib/cache/cover-art-cache";
 import { metadataCache, type SyncMeta } from "@/lib/cache/metadata-cache";
 import { subsonic } from "@/service/subsonic";
 import type { Albums } from "@/types/responses/album";
 import type { ISimilarArtist } from "@/types/responses/artist";
 import type { Genre } from "@/types/responses/genre";
-import type { Playlist } from "@/types/responses/playlist";
+import type { Playlist, PlaylistWithEntriesResponse } from "@/types/responses/playlist";
 import type { ISong } from "@/types/responses/song";
 
 // ─── Types ─────────────────────────────────────────────
@@ -147,6 +147,18 @@ export async function runFullSync(options: SyncOptions): Promise<void> {
       metadataCache.putArtists(artists),
       metadataCache.putPlaylists(playlists),
     ]);
+
+    // Prefetch playlist details so they are available for offline playback.
+    // Playlists are typically few, so fire all requests at once.
+    await Promise.allSettled(
+      playlists.map(async (playlist) => {
+        const response = await httpClient<PlaylistWithEntriesResponse>(
+          "/getPlaylist",
+          { method: "GET", query: { id: playlist.id } },
+        );
+        await metadataCache.putPlaylistDetail(response.data.playlist);
+      }),
+    );
 
     reportPhase(
       "genres",

@@ -37,7 +37,7 @@ export default function SongList() {
     SongsOrderByOptions.LastAdded,
   );
   const sort = getSearchParam<SortOptions>("sort", SortOptions.Desc);
-  const { isOfflineMode, hasOfflineData } = useOfflineLibraryStatus();
+  const { isOfflineMode, hasSyncedLibrary } = useOfflineLibraryStatus();
 
   const searchFilterIsSet = filter === AlbumsFilters.Search && query !== "";
   const filterByArtist = artistId !== "" && artistName !== "";
@@ -75,7 +75,7 @@ export default function SongList() {
     ? t("songs.list.byArtist", { artist: artistName })
     : t("sidebar.songs");
   const emptyState =
-    isOfflineMode && !hasOfflineData ? <OfflineLibraryEmptyState /> : undefined;
+    isOfflineMode && !hasSyncedLibrary ? <OfflineLibraryEmptyState /> : undefined;
 
   return (
     <SongListLayout

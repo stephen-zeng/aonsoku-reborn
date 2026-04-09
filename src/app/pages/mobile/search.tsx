@@ -7,6 +7,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { Input } from "@/app/components/ui/input";
 import { useSongList } from "@/app/hooks/use-song-list";
 import { useCachedCoverArt } from "@/app/hooks/use-cached-cover-art";
+import { useOfflineLibraryStatus } from "@/app/hooks/use-offline-library-status";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
@@ -110,6 +111,7 @@ export default function MobileSearch() {
   const [query, setQuery] = useState("");
   const { playSong, setSongList } = usePlayerActions();
   const { getAlbumSongs, getArtistAllSongs } = useSongList();
+  const { isOfflineMode, hasSyncedLibrary } = useOfflineLibraryStatus();
 
   const enableQuery = byteLength(query) >= 3;
 
@@ -132,7 +134,11 @@ export default function MobileSearch() {
 
   const hasResults =
     albums.length > 0 || artists.length > 0 || songs.length > 0;
-  const showNoResults = enableQuery && !hasResults;
+  const showOfflineUnsearchable = Boolean(
+    enableQuery && isOfflineMode && !hasSyncedLibrary,
+  );
+  const showNoResults =
+    enableQuery && !hasResults && !showOfflineUnsearchable;
 
   const debounced = useDebouncedCallback((value: string) => {
     setQuery(value);
@@ -171,6 +177,14 @@ export default function MobileSearch() {
           <div className="flex justify-center items-center p-8">
             <p className="text-sm text-muted-foreground">
               {t("command.noResults")}
+            </p>
+          </div>
+        )}
+
+        {showOfflineUnsearchable && (
+          <div className="flex justify-center items-center p-8">
+            <p className="text-sm text-muted-foreground">
+              {t("offline.searchUnavailable")}
             </p>
           </div>
         )}

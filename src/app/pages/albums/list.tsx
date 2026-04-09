@@ -10,11 +10,11 @@ import { useOfflineLibraryStatus } from "@/app/hooks/use-offline-library-status"
 import { useAlbumsListModel } from "./list.model";
 
 export default function AlbumsList() {
-  const { isOfflineMode, hasOfflineData } = useOfflineLibraryStatus();
+  const { isOfflineMode, hasSyncedLibrary } = useOfflineLibraryStatus();
   const { isLoading, isEmpty, albums, albumsCount } = useAlbumsListModel();
 
   if (isLoading) return <AlbumsFallback />;
-  if (isOfflineMode && !hasOfflineData) {
+  if (isOfflineMode && !hasSyncedLibrary) {
     return (
       <div className="w-full h-content">
         <AlbumsHeader albumCount={0} />
