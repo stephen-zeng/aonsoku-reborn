@@ -5,13 +5,15 @@
 const CACHE_PREFIX = "aonsoku-";
 const CACHE_VERSION = "__SW_CACHE_HASH__";
 const MAIN_CACHE = CACHE_PREFIX + "Main-" + CACHE_VERSION;
-const EXTERNAL_CACHE = CACHE_PREFIX + "ExternalRes";
+const EXTERNAL_CACHE = CACHE_PREFIX + "ExternalRes-" + CACHE_VERSION;
 
 // Precache manifest — replaced at build time by the Vite plugin.
 const PRECACHE_URLS = "__PRECACHE_MANIFEST__";
 
 // Max concurrent fetches during precaching.
 const PRECACHE_BATCH_SIZE = 15;
+
+const EXTERNAL_CACHE_MAX_ENTRIES = 60;
 
 const MATCH_OPTS = { ignoreSearch: true, ignoreVary: true };
 
@@ -20,53 +22,81 @@ const SELF_URL = new URL(self.location.href);
 
 // ── Caching Strategies ──────────────────────────────────────
 
+// Opaque responses have an unknown status and caching them risks permanently
+// serving a silent error response to the client.
 function cacheFirst(request, key) {
   return caches.open(key).then(function (cache) {
     return cache.match(request, MATCH_OPTS).then(function (response) {
-      return (
-        response ||
-        fetch(request).then(function (response) {
-          if (response.ok || response.type === "opaque")
-            cache.put(request, response.clone());
-          return response;
-        })
-      );
+      if (response) return response;
+      return fetch(request).then(function (networkResponse) {
+        if (networkResponse.ok) {
+          cache.put(request, networkResponse.clone());
+        }
+        return networkResponse;
+      });
     });
   });
 }
 
+// server returns a non-ok status (e.g. 500), so users see stale content
+// instead of an error page.
 function onlineFirst(request, key) {
   return caches.open(key).then(function (cache) {
-    const offlineFetch = function () {
+    const cacheMatch = function () {
       return cache.match(request, MATCH_OPTS);
     };
     return fetch(request)
       .then(function (response) {
-        if (response.ok) cache.put(request, response.clone());
-        return response;
+        if (response.ok) {
+          cache.put(request, response.clone());
+          return response;
+        }
+        // Server returned an error — try the cache before surfacing it.
+        return cacheMatch().then(function (cached) {
+          return cached || response;
+        });
       })
-      .catch(offlineFetch);
+      .catch(cacheMatch);
+  });
+}
+
+// evicting the oldest entries (insertion order) first.
+function trimExternalCache(cache) {
+  return cache.keys().then(function (keys) {
+    if (keys.length <= EXTERNAL_CACHE_MAX_ENTRIES) return;
+    const toDelete = keys.slice(0, keys.length - EXTERNAL_CACHE_MAX_ENTRIES);
+    return Promise.all(
+      toDelete.map(function (req) {
+        return cache.delete(req);
+      })
+    );
   });
 }
 
 // ── Install ─────────────────────────────────────────────────
 
+// activate before precaching has fully completed.
 self.addEventListener("install", function (e) {
-  e.waitUntil(precacheAppShell());
-  self.skipWaiting();
+  e.waitUntil(
+    precacheAppShell().then(function () {
+      return self.skipWaiting();
+    })
+  );
 });
 
 function precacheAppShell() {
+  // was skipped so the failure is immediately visible during development.
+  if (!Array.isArray(PRECACHE_URLS)) {
+    const msg = "[SW] FATAL: Precache manifest was not injected at build time";
+    console.error(msg);
+    // Throwing rejects the install promise, causing the SW to not install,
+    // which surfaces the problem clearly instead of shipping a broken PWA.
+    throw new Error(msg);
+  }
+
   return caches.open(MAIN_CACHE).then(function (cache) {
-    if (!Array.isArray(PRECACHE_URLS)) {
-      console.error("[SW] Precache manifest was not injected at build time");
-      return Promise.resolve();
-    }
-
     // Cache the SPA shell first — it's the most critical resource.
-    const shellPromise = cache.add("/index.html");
-
-    return shellPromise.then(function () {
+    return cache.add("/index.html").then(function () {
       const remaining = PRECACHE_URLS.filter(function (u) {
         return u !== "/index.html";
       });
@@ -131,7 +161,7 @@ self.addEventListener("activate", function (e) {
 self.addEventListener("fetch", function (e) {
   const url = new URL(e.request.url);
 
-  if (e.request.method !== "GET" || ["http:", "https:"].includes(url.protocol)) return;
+  if (e.request.method !== "GET" || !["http:", "https:"].includes(url.protocol)) return;
 
   if (
     url.pathname.endsWith("sw.js") ||
@@ -155,20 +185,22 @@ self.addEventListener("fetch", function (e) {
     return;
   }
 
-  // Navigation requests — online-first with SPA /index.html fallback
   if (e.request.mode === "navigate") {
     e.respondWith(
       onlineFirst(e.request, MAIN_CACHE).then(function (response) {
-        if (response) return response;
-        return caches.match("/index.html", MATCH_OPTS).then(function (shell) {
-          return (
-            shell ||
-            new Response("Offline", {
-              status: 503,
-              statusText: "Service Unavailable",
-              headers: { "Content-Type": "text/plain" },
-            })
-          );
+        if (response && response.ok) return response;
+        // Fall back to the cached app shell regardless of the original URL.
+        return caches.open(MAIN_CACHE).then(function (cache) {
+          return cache.match("/index.html", MATCH_OPTS).then(function (shell) {
+            return (
+              shell ||
+              new Response("Offline", {
+                status: 503,
+                statusText: "Service Unavailable",
+                headers: { "Content-Type": "text/plain" },
+              })
+            );
+          });
         });
       })
     );
@@ -180,7 +212,21 @@ self.addEventListener("fetch", function (e) {
     return;
   }
 
-  e.respondWith(cacheFirst(e.request, EXTERNAL_CACHE));
+  e.respondWith(
+    caches.open(EXTERNAL_CACHE).then(function (cache) {
+      return cache.match(e.request, MATCH_OPTS).then(function (cached) {
+        if (cached) return cached;
+        return fetch(e.request).then(function (response) {
+          if (response.ok) {
+            cache.put(e.request, response.clone());
+            // Trim asynchronously — do not block the response.
+            trimExternalCache(cache);
+          }
+          return response;
+        });
+      });
+    })
+  );
 });
 
 // ── Message (cache rebuild) ─────────────────────────────────
@@ -191,21 +237,43 @@ self.addEventListener("message", function (event) {
   if (!data || !data.action) return;
 
   if (data.action === "update") {
-    const assets = Array.isArray(PRECACHE_URLS) ? PRECACHE_URLS.slice() : [];
+    const assetSet = new Set(Array.isArray(PRECACHE_URLS) ? PRECACHE_URLS : []);
 
     if (Array.isArray(data.assets)) {
       for (let i = 0; i < data.assets.length; i++) {
-        assets.push("/assets/" + data.assets[i]);
+        assetSet.add("/assets/" + data.assets[i]);
       }
     }
 
+    const assets = Array.from(assetSet);
+
+    const TEMP_CACHE = MAIN_CACHE + "-update-tmp";
+
     caches
-      .delete(MAIN_CACHE)
-      .then(function () {
-        return caches.open(MAIN_CACHE);
+      .open(TEMP_CACHE)
+      .then(function (tmpCache) {
+        return tmpCache.addAll(assets);
       })
-      .then(function (cache) {
-        return cache.addAll(assets);
+      .then(function () {
+        return caches.delete(MAIN_CACHE);
+      })
+      .then(function () {
+        return caches.open(MAIN_CACHE).then(function (newCache) {
+          return caches.open(TEMP_CACHE).then(function (tmpCache) {
+            return tmpCache.keys().then(function (keys) {
+              return Promise.all(
+                keys.map(function (req) {
+                  return tmpCache.match(req).then(function (res) {
+                    return newCache.put(req, res);
+                  });
+                })
+              );
+            });
+          });
+        });
+      })
+      .then(function () {
+        return caches.delete(TEMP_CACHE);
       })
       .then(function () {
         const broadcast = new BroadcastChannel("updateFinish");
@@ -214,6 +282,8 @@ self.addEventListener("message", function (event) {
       })
       .catch(function (err) {
         console.error("[SW] Cache rebuild failed:", err);
+        // Clean up the temp cache on failure so it does not linger.
+        caches.delete(TEMP_CACHE);
       });
   }
 });
