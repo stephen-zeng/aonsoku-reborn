@@ -1,22 +1,24 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { getSongStreamUrl } from "@/api/httpClient";
 import { audioCache } from "@/lib/cache/audio-cache";
 import { MemoryLRUCache } from "@/lib/cache/memory-lru-cache";
 import { useCacheStore } from "@/store/cache.store";
+import { useIsOffline } from "@/store/offline.store";
 
 const memoryCache = new MemoryLRUCache(200);
 
 export function useCachedAudio(songId: string | undefined): string {
   const enabled = useCacheStore((state) => state.settings.audioCacheEnabled);
   const maxSize = useCacheStore((state) => state.settings.audioCacheMaxSize);
+  const isOfflineMode = useIsOffline();
   const originalUrl = songId ? getSongStreamUrl(songId) : "";
   const [src, setSrc] = useState<string>(() => {
-    if (!songId || !enabled) return originalUrl;
+    if (!songId) return "";
+    if (!enabled) return isOfflineMode ? "" : originalUrl;
 
     const cached = memoryCache.get(songId);
-    return cached ?? originalUrl;
+    return cached ?? (isOfflineMode ? "" : originalUrl);
   });
-  const prevSongIdRef = useRef<string | undefined>(songId);
 
   useEffect(() => {
     if (!songId) {
@@ -25,11 +27,9 @@ export function useCachedAudio(songId: string | undefined): string {
     }
 
     if (!enabled) {
-      setSrc(originalUrl);
+      setSrc(isOfflineMode ? "" : originalUrl);
       return;
     }
-
-    prevSongIdRef.current = songId;
 
     const memoryCached = memoryCache.get(songId);
     if (memoryCached) {
@@ -46,6 +46,8 @@ export function useCachedAudio(songId: string | undefined): string {
         const blobUrl = URL.createObjectURL(blob);
         memoryCache.set(songId, blobUrl);
         setSrc(blobUrl);
+      } else if (isOfflineMode) {
+        setSrc("");
       } else {
         setSrc(originalUrl);
         audioCache.putBlob(songId, originalUrl, maxSize);
@@ -55,7 +57,7 @@ export function useCachedAudio(songId: string | undefined): string {
     return () => {
       cancelled = true;
     };
-  }, [songId, enabled, originalUrl, maxSize]);
+  }, [songId, enabled, isOfflineMode, originalUrl, maxSize]);
 
   return src;
 }

@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { subsonic } from "@/service/subsonic";
 import { useOfflineStore } from "@/store/offline.store";
 
 export function OfflineObserver() {
@@ -23,20 +22,14 @@ export function OfflineObserver() {
       const { state, actions } = useOfflineStore.getState();
       if (!state.isOfflineMode) return;
 
-      actions.setReconnecting(true);
-
-      const isServerUp = await subsonic.ping
-        .pingView()
-        .catch(() => false);
+      const isServerUp = await actions.tryReconnect();
 
       if (isServerUp) {
-        actions.clearOfflineMode();
         toast.success(t("offline.reconnected"), {
           toastId: "offline-status",
           autoClose: 3000,
         });
       } else {
-        actions.setReconnecting(false);
         toast.warning(t("offline.reconnectFailed"), {
           toastId: "offline-status",
           autoClose: 5000,

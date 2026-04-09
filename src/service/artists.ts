@@ -1,47 +1,64 @@
 import { httpClient } from "@/api/httpClient";
+import { getOfflineArtists } from "@/lib/offline/library-read-model";
+import { readOfflineCapable, readOnlineOnly } from "@/lib/offline/read-model";
 import {
   ArtistInfoResponse,
   ArtistResponse,
   ArtistsResponse,
+  IArtist,
+  IArtistInfo,
   ISimilarArtist,
 } from "@/types/responses/artist";
 
 async function getAll() {
-  const response = await httpClient<ArtistsResponse>("/getArtists", {
-    method: "GET",
-  });
+  return readOfflineCapable(
+    async () => {
+      const response = await httpClient<ArtistsResponse>("/getArtists", {
+        method: "GET",
+      });
 
-  if (!response) return [];
+      const artistsList: ISimilarArtist[] = [];
 
-  const artistsList: ISimilarArtist[] = [];
+      response.data.artists.index.forEach((item) => {
+        artistsList.push(...item.artist);
+      });
 
-  response.data.artists.index.forEach((item) => {
-    artistsList.push(...item.artist);
-  });
-
-  return artistsList.sort((a, b) => a.name.localeCompare(b.name));
+      return artistsList.sort((a, b) => a.name.localeCompare(b.name));
+    },
+    () => getOfflineArtists(),
+  );
 }
 
-async function getOne(id: string) {
-  const response = await httpClient<ArtistResponse>("/getArtist", {
-    method: "GET",
-    query: {
-      id,
-    },
-  });
+async function getOne(id: string): Promise<IArtist | undefined> {
+  return readOfflineCapable(
+    async () => {
+      const response = await httpClient<ArtistResponse>("/getArtist", {
+        method: "GET",
+        query: {
+          id,
+        },
+      });
 
-  return response?.data.artist;
+      return response.data.artist;
+    },
+    async () => {
+      const { metadataCache } = await import("@/lib/cache/metadata-cache");
+      return metadataCache.getArtistWithAlbums(id);
+    },
+  );
 }
 
-async function getInfo(id: string) {
-  const response = await httpClient<ArtistInfoResponse>("/getArtistInfo", {
-    method: "GET",
-    query: {
-      id,
-    },
-  });
+async function getInfo(id: string): Promise<IArtistInfo | null> {
+  return readOnlineOnly(async () => {
+    const response = await httpClient<ArtistInfoResponse>("/getArtistInfo", {
+      method: "GET",
+      query: {
+        id,
+      },
+    });
 
-  return response?.data.artistInfo;
+    return response.data.artistInfo;
+  }, null);
 }
 
 export const artists = {

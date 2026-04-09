@@ -15,12 +15,13 @@ import { Button } from "@/app/components/ui/button";
 import { Progress } from "@/app/components/ui/progress";
 import { Switch } from "@/app/components/ui/switch";
 import { metadataCache } from "@/lib/cache/metadata-cache";
-import dateTime from "@/utils/dateTime";
+import { queryClient } from "@/lib/queryClient";
 import {
   useSyncActions,
   useSyncSettings,
   useSyncState,
 } from "@/store/sync.store";
+import dateTime from "@/utils/dateTime";
 
 function formatLastSynced(ts: number | null, neverLabel: string): string {
   if (ts === null) return neverLabel;
@@ -74,6 +75,7 @@ export function SyncSection() {
 
   async function handleClearSyncData() {
     await metadataCache.clear();
+    await queryClient.invalidateQueries();
     refreshCount();
   }
 

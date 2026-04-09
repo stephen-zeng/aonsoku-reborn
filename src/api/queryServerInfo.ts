@@ -1,6 +1,6 @@
 import { AuthType } from "@/types/serverConfig";
 import { appName } from "@/utils/appName";
-import { authQueryParams } from "./httpClient";
+import { authQueryParams } from "./auth";
 
 export async function queryServerInfo(url: string) {
   try {

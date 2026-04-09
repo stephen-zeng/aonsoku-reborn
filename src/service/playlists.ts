@@ -1,7 +1,15 @@
 import { httpClient } from "@/api/httpClient";
+import { getOfflinePlaylists } from "@/lib/offline/library-read-model";
+import {
+  assertOnlineAccess,
+  readOfflineCapable,
+  readOnlineOnly,
+} from "@/lib/offline/read-model";
 import {
   CreateParams,
+  Playlist,
   PlaylistsResponse,
+  PlaylistWithEntries,
   PlaylistWithEntriesResponse,
   SinglePlaylistResponse,
   UpdateParams,
@@ -9,28 +17,36 @@ import {
 import { SubsonicResponse } from "@/types/responses/subsonicResponse";
 
 async function getAll() {
-  const response = await httpClient<PlaylistsResponse>("/getPlaylists", {
-    method: "GET",
-  });
+  return readOfflineCapable(
+    async () => {
+      const response = await httpClient<PlaylistsResponse>("/getPlaylists", {
+        method: "GET",
+      });
 
-  return response?.data.playlists.playlist ?? [];
+      return response.data.playlists.playlist ?? [];
+    },
+    () => getOfflinePlaylists(),
+  );
 }
 
-async function getOne(id: string) {
-  const response = await httpClient<PlaylistWithEntriesResponse>(
-    "/getPlaylist",
-    {
-      method: "GET",
-      query: {
-        id,
+async function getOne(id: string): Promise<PlaylistWithEntries | null> {
+  return readOnlineOnly(async () => {
+    const response = await httpClient<PlaylistWithEntriesResponse>(
+      "/getPlaylist",
+      {
+        method: "GET",
+        query: {
+          id,
+        },
       },
-    },
-  );
+    );
 
-  return response?.data.playlist;
+    return response.data.playlist;
+  }, null);
 }
 
 async function remove(id: string) {
+  assertOnlineAccess();
   await httpClient<SubsonicResponse>("/deletePlaylist", {
     method: "DELETE",
     query: {
@@ -40,6 +56,7 @@ async function remove(id: string) {
 }
 
 async function create(name: string, songs?: string[]) {
+  assertOnlineAccess();
   const query = new URLSearchParams();
   query.append("name", name);
 
@@ -54,7 +71,7 @@ async function create(name: string, songs?: string[]) {
     },
   );
 
-  return response?.data.playlist;
+  return response.data.playlist as Playlist;
 }
 
 async function update({
@@ -65,6 +82,7 @@ async function update({
   songIndexToRemove,
   isPublic,
 }: UpdateParams) {
+  assertOnlineAccess();
   const query = new URLSearchParams({
     playlistId,
   });
@@ -96,6 +114,7 @@ async function update({
 }
 
 export async function createWithDetails(data: CreateParams) {
+  assertOnlineAccess();
   const playlist = await create(data.name);
 
   if (playlist) {

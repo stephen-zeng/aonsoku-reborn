@@ -2,6 +2,8 @@ import { audioCache } from "./audio-cache";
 import { coverArtCache } from "./cover-art-cache";
 import { metadataCache } from "./metadata-cache";
 import { clearQueryCache } from "./query-persister";
+import { queryClient } from "@/lib/queryClient";
+import { useOfflineStore } from "@/store/offline.store";
 
 export { formatBytes } from "@/utils/formatBytes";
 
@@ -27,14 +29,18 @@ export async function clearCoverArtCache(): Promise<void> {
 
 export async function clearAudioCache(): Promise<void> {
   await audioCache.clear();
+  await useOfflineStore.getState().actions.refreshCachedSongIds();
+  await queryClient.invalidateQueries();
 }
 
 export async function clearMetadataCache(): Promise<void> {
   await clearQueryCache();
+  await queryClient.invalidateQueries();
 }
 
 export async function clearMetadataSyncCache(): Promise<void> {
   await metadataCache.clear();
+  await queryClient.invalidateQueries();
 }
 
 export async function clearAllCaches(): Promise<void> {
@@ -44,4 +50,6 @@ export async function clearAllCaches(): Promise<void> {
     clearQueryCache(),
     metadataCache.clear(),
   ]);
+  await useOfflineStore.getState().actions.refreshCachedSongIds();
+  await queryClient.invalidateQueries();
 }

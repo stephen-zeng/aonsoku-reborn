@@ -1,4 +1,5 @@
 import { httpClient } from "@/api/httpClient";
+import { assertOnlineAccess } from "@/lib/offline/read-model";
 import {
   CreateRadio,
   Radio,
@@ -18,6 +19,7 @@ async function getAll() {
 }
 
 async function create({ name, streamUrl, homePageUrl }: CreateRadio) {
+  assertOnlineAccess();
   await httpClient<SubsonicResponse>("/createInternetRadioStation", {
     method: "POST",
     query: {
@@ -29,6 +31,7 @@ async function create({ name, streamUrl, homePageUrl }: CreateRadio) {
 }
 
 async function update({ id, streamUrl, name, homePageUrl = "" }: Radio) {
+  assertOnlineAccess();
   await httpClient<SubsonicResponse>("/updateInternetRadioStation", {
     method: "GET",
     query: {
@@ -41,6 +44,7 @@ async function update({ id, streamUrl, name, homePageUrl = "" }: Radio) {
 }
 
 async function remove(id: string) {
+  assertOnlineAccess();
   await httpClient<SubsonicResponse>("/deleteInternetRadioStation", {
     method: "GET",
     query: {

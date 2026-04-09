@@ -1,5 +1,6 @@
 import { get, set } from "idb-keyval";
 import { httpClient } from "@/api/httpClient";
+import { useOfflineStore } from "@/store/offline.store";
 import { usePlayerStore } from "@/store/player.store";
 import type {
   IStructuredLyric,
@@ -33,6 +34,10 @@ async function getLyrics(getLyricsData: GetLyricsData) {
 
   if (cachedLyrics) {
     return cachedLyrics;
+  }
+
+  if (useOfflineStore.getState().state.isOfflineMode) {
+    return null;
   }
 
   // If the user prefers synced lyrics, attempt to fetch them from the LrcLib first.
@@ -168,6 +173,10 @@ async function getStructuredLyrics(
   const cached = await get(cacheKey);
   if (cached) return cached;
 
+  if (useOfflineStore.getState().state.isOfflineMode) {
+    return null;
+  }
+
   try {
     const response = await httpClient<LyricsBySongIdResponse>(
       "/getLyricsBySongId",
@@ -177,7 +186,7 @@ async function getStructuredLyrics(
       },
     );
 
-    const structuredLyrics = response?.data.lyricsList?.structuredLyrics;
+    const structuredLyrics = response.data.lyricsList?.structuredLyrics;
 
     if (structuredLyrics && structuredLyrics.length > 0) {
       set(cacheKey, structuredLyrics);

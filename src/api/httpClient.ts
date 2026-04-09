@@ -2,38 +2,14 @@ import omit from "lodash/omit";
 import { useAppStore } from "@/store/app.store";
 import { useOfflineStore } from "@/store/offline.store";
 import { CoverArt } from "@/types/coverArtType";
-import { AuthType } from "@/types/serverConfig";
 import { appName } from "@/utils/appName";
-import { saltWord } from "@/utils/salt";
+import { authQueryParams } from "./auth";
+import { AppRequestError, isReachabilityError } from "./errors";
 
 export type QueryType = Record<string, string | number | undefined>;
 
 export interface FetchOptions extends RequestInit {
   query?: QueryType;
-}
-
-type AuthParams =
-  | { u: string; t: string; s: string }
-  | { u: string; p: string };
-
-export function authQueryParams(
-  username: string,
-  password: string,
-  authType: AuthType | null,
-): AuthParams {
-  if (authType === AuthType.TOKEN) {
-    return {
-      u: username ?? "",
-      t: password ?? "",
-      s: saltWord,
-    };
-  } else if (authType === AuthType.PASSWORD) {
-    return {
-      u: username ?? "",
-      p: password ?? "",
-    };
-  }
-  throw new Error("Invalid/unspecified auth type");
 }
 
 function queryParams() {
@@ -71,28 +47,85 @@ function getUrl(path: string, options?: QueryType) {
   return url;
 }
 
-async function browserFetch<T>(
-  url: string,
-  options: RequestInit,
-): Promise<{ count: number; data: T } | undefined> {
+async function browserFetch<T>(url: string, options: RequestInit) {
   try {
     const response = await fetch(url, options);
 
-    if (response.ok) {
-      const data = await response.json();
-      return {
-        count: parseInt(response.headers.get("x-total-count") || "0", 10),
-        data: data["subsonic-response"] as T,
-      };
+    if (!response.ok) {
+      throw new AppRequestError("http_error", `HTTP ${response.status}`, {
+        status: response.status,
+        url,
+      });
     }
 
-    return undefined;
+    let data: Record<string, unknown>;
+
+    try {
+      data = (await response.json()) as Record<string, unknown>;
+    } catch (_error) {
+      throw new AppRequestError("parse_error", "Failed to parse response", {
+        url,
+      });
+    }
+
+    const parsed = data["subsonic-response"] as
+      | (T & { status?: string; error?: { message?: string } })
+      | undefined;
+
+    if (!parsed) {
+      throw new AppRequestError(
+        "parse_error",
+        "Missing subsonic response payload",
+        { url },
+      );
+    }
+
+    if (parsed.status === "failed") {
+      throw new AppRequestError(
+        "server_error",
+        parsed.error?.message || "Server returned a failed response",
+        { url },
+      );
+    }
+
+    return {
+      count: parseInt(response.headers.get("x-total-count") || "0", 10),
+      data: parsed as T,
+    };
   } catch (error) {
-    console.error("Error on browserFetch request", error);
+    if (error instanceof AppRequestError) {
+      throw error;
+    }
+
+    if (error instanceof TypeError) {
+      throw new AppRequestError(
+        "network_unreachable",
+        "The configured server is unreachable",
+        { url },
+      );
+    }
+
+    throw new AppRequestError("server_error", "Unexpected request error", {
+      url,
+    });
+  }
+}
+
+export async function httpClient<T>(
+  path: string,
+  options: FetchOptions,
+): Promise<{ count: number; data: T }> {
+  const url = getUrl(path, options.query);
+
+  try {
+    const init = omit(options, "query");
+
+    return await browserFetch<T>(url, init);
+  } catch (error) {
+    console.error("Error on httpClient request", error);
 
     if (
-      error instanceof TypeError &&
-      !navigator.onLine &&
+      isReachabilityError(error) &&
       !useOfflineStore.getState().state.isOfflineMode
     ) {
       useOfflineStore
@@ -101,22 +134,7 @@ async function browserFetch<T>(
         .catch(() => {});
     }
 
-    return undefined;
-  }
-}
-
-export async function httpClient<T>(
-  path: string,
-  options: FetchOptions,
-): Promise<{ count: number; data: T } | undefined> {
-  try {
-    const url = getUrl(path, options.query);
-    const init = omit(options, "query");
-
-    return await browserFetch<T>(url, init);
-  } catch (error) {
-    console.error("Error on httpClient request", error);
-    return undefined;
+    throw error;
   }
 }
 

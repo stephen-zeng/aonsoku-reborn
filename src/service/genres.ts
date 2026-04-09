@@ -1,12 +1,19 @@
 import { httpClient } from "@/api/httpClient";
-import { GenresResponse } from "@/types/responses/genre";
+import { getOfflineGenres } from "@/lib/offline/library-read-model";
+import { readOfflineCapable } from "@/lib/offline/read-model";
+import { Genre, GenresResponse } from "@/types/responses/genre";
 
-async function get() {
-  const response = await httpClient<GenresResponse>("/getGenres", {
-    method: "GET",
-  });
+async function get(): Promise<Genre[]> {
+  return readOfflineCapable(
+    async () => {
+      const response = await httpClient<GenresResponse>("/getGenres", {
+        method: "GET",
+      });
 
-  return response?.data.genres.genre;
+      return response.data.genres.genre;
+    },
+    () => getOfflineGenres(),
+  );
 }
 
 export const genres = {

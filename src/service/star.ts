@@ -1,7 +1,9 @@
 import { httpClient } from "@/api/httpClient";
+import { assertOnlineAccess } from "@/lib/offline/read-model";
 import { SubsonicResponse } from "@/types/responses/subsonicResponse";
 
 async function starItem(id: string) {
+  assertOnlineAccess();
   await httpClient<SubsonicResponse>("/star", {
     method: "GET",
     query: {
@@ -11,6 +13,7 @@ async function starItem(id: string) {
 }
 
 async function unstarItem(id: string) {
+  assertOnlineAccess();
   await httpClient<SubsonicResponse>("/unstar", {
     method: "GET",
     query: {

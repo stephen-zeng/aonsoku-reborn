@@ -3,6 +3,7 @@ import { getCoverArtUrl } from "@/api/httpClient";
 import { coverArtCache } from "@/lib/cache/cover-art-cache";
 import { MemoryLRUCache } from "@/lib/cache/memory-lru-cache";
 import { useCacheStore } from "@/store/cache.store";
+import { useIsOffline } from "@/store/offline.store";
 import { CoverArt } from "@/types/coverArtType";
 
 // In-memory LRU to avoid repeated IDB reads within the same session
@@ -14,19 +15,22 @@ export function useCachedCoverArt(
   size = "300",
 ): string {
   const enabled = useCacheStore((state) => state.settings.coverArtCacheEnabled);
+  const isOfflineMode = useIsOffline();
   const originalUrl = getCoverArtUrl(id, type, size);
+  const fallbackUrl = getCoverArtUrl(undefined, type, size);
   const [src, setSrc] = useState<string>(() => {
-    if (!id || !enabled) return originalUrl;
+    if (!id) return fallbackUrl;
+    if (!enabled) return isOfflineMode ? fallbackUrl : originalUrl;
 
     const key = `${type}:${id}:${size}`;
     const cached = memoryCache.get(key);
-    return cached ?? originalUrl;
+    return cached ?? (isOfflineMode ? fallbackUrl : originalUrl);
   });
   const blobUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!id || !enabled) {
-      setSrc(originalUrl);
+      setSrc(id ? (isOfflineMode ? fallbackUrl : originalUrl) : fallbackUrl);
       return;
     }
 
@@ -49,6 +53,8 @@ export function useCachedCoverArt(
         blobUrlRef.current = blobUrl;
         memoryCache.set(key, blobUrl);
         setSrc(blobUrl);
+      } else if (isOfflineMode) {
+        setSrc(fallbackUrl);
       } else {
         setSrc(originalUrl);
         coverArtCache.putBlob(id, type, size, originalUrl);
@@ -58,7 +64,7 @@ export function useCachedCoverArt(
     return () => {
       cancelled = true;
     };
-  }, [id, type, size, enabled, originalUrl]);
+  }, [fallbackUrl, id, type, size, enabled, isOfflineMode, originalUrl]);
 
   return src;
 }

@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import ImageHeader from "@/app/components/album/image-header";
+import { EmptyWrapper } from "@/app/components/albums/empty-wrapper";
 import ArtistTopSongs from "@/app/components/artist/artist-top-songs";
 import { ArtistInfo } from "@/app/components/artist/info";
 import RelatedArtistsList from "@/app/components/artist/related-artists";
@@ -10,11 +11,13 @@ import { TopSongsTableFallback } from "@/app/components/fallbacks/table-fallback
 import { BadgesData } from "@/app/components/header-info";
 import PreviewList from "@/app/components/home/preview-list";
 import ListWrapper from "@/app/components/list-wrapper";
+import { OfflineLibraryEmptyState } from "@/app/components/offline/library-empty-state";
 import {
   useGetArtist,
   useGetArtistInfo,
   useGetTopSongs,
 } from "@/app/hooks/use-artist";
+import { useOfflineLibraryStatus } from "@/app/hooks/use-offline-library-status";
 import ErrorPage from "@/app/pages/error-page";
 import { ROUTES } from "@/routes/routesList";
 import { sortRecentAlbums } from "@/utils/album";
@@ -22,6 +25,7 @@ import { sortRecentAlbums } from "@/utils/album";
 export default function Artist() {
   const { t } = useTranslation();
   const { artistId } = useParams() as { artistId: string };
+  const { isOfflineMode, hasOfflineData } = useOfflineLibraryStatus();
 
   const {
     data: artist,
@@ -35,6 +39,17 @@ export default function Artist() {
   );
 
   if (artistIsLoading) return <AlbumFallback />;
+  if (isOfflineMode && !hasOfflineData) {
+    return (
+      <div className="w-full h-content">
+        <ListWrapper className="h-full">
+          <EmptyWrapper>
+            <OfflineLibraryEmptyState title={t("artist.headline")} />
+          </EmptyWrapper>
+        </ListWrapper>
+      </div>
+    );
+  }
   if (isFetched && !artist) {
     return <ErrorPage status={404} statusText="Not Found" />;
   }

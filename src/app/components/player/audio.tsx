@@ -10,13 +10,14 @@ import {
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { useAudioContext } from "@/app/hooks/use-audio-context";
+import { useIsOffline } from "@/store/offline.store";
 import {
   usePlayerIsPlaying,
   usePlayerMediaType,
   usePlayerVolume,
+  useRemoteControlState,
   useReplayGainActions,
   useReplayGainState,
-  useRemoteControlState,
 } from "@/store/player.store";
 import { logger } from "@/utils/logger";
 import { calculateReplayGain, ReplayGainParams } from "@/utils/replayGain";
@@ -41,13 +42,15 @@ export function AudioPlayer({
   const { volume } = usePlayerVolume();
   const isPlaying = usePlayerIsPlaying();
   const { active: isRemoteControlActive } = useRemoteControlState();
+  const isOfflineMode = useIsOffline();
+  const offlineToastShownRef = useRef(false);
 
   // Use native audio by default, only use AudioContext when acting as a remote controller
   const shouldUseNativeAudio = !isRemoteControlActive;
 
   // Update audio source only when it actually changes and is valid
   useEffect(() => {
-    if (src && src !== audioSrc) {
+    if (src !== audioSrc) {
       logger.info("Audio source changed", {
         src,
         useNativeAudio: shouldUseNativeAudio,
@@ -59,7 +62,8 @@ export function AudioPlayer({
         retryTimeoutRef.current = null;
       }
       retryCountRef.current = 0;
-      setAudioSrc(src);
+      offlineToastShownRef.current = false;
+      setAudioSrc(src || undefined);
     }
   }, [src, audioSrc, shouldUseNativeAudio, isRemoteControlActive]);
 
@@ -118,6 +122,14 @@ export function AudioPlayer({
 
   const scheduleRetry = useCallback(
     (audio: HTMLAudioElement) => {
+      if (isOfflineMode) {
+        if (!offlineToastShownRef.current) {
+          offlineToastShownRef.current = true;
+          toast.warning(t("offline.songUnavailable"));
+        }
+        return;
+      }
+
       if (retryCountRef.current >= MAX_RETRIES) {
         toast.error(t("warnings.songError"));
         retryCountRef.current = 0;
@@ -137,7 +149,7 @@ export function AudioPlayer({
         });
       }, delay);
     },
-    [t],
+    [isOfflineMode, t],
   );
 
   const handleSongError = useCallback(() => {
@@ -203,11 +215,25 @@ export function AudioPlayer({
   }, []);
 
   useEffect(() => {
+    if (!audioSrc && isOfflineMode && isSong && isPlaying) {
+      if (!offlineToastShownRef.current) {
+        offlineToastShownRef.current = true;
+        toast.warning(t("offline.songUnavailable"));
+      }
+    }
+  }, [audioSrc, isOfflineMode, isPlaying, isSong, t]);
+
+  useEffect(() => {
     async function handleSong() {
       const audio = audioRef.current;
       if (!audio) return;
 
       try {
+        if (!audioSrc) {
+          audio.pause();
+          return;
+        }
+
         if (isPlaying) {
           // Only resume AudioContext if in remote control mode (not using native audio)
           if (isSong && !shouldUseNativeAudio) {
@@ -240,6 +266,7 @@ export function AudioPlayer({
     if (isSong) handleSong();
   }, [
     audioRef,
+    audioSrc,
     handleSongError,
     isPlaying,
     isSong,

@@ -1,8 +1,10 @@
 import { redirect } from "react-router-dom";
+import { checkConfiguredServerConnectivity } from "@/api/checkConfiguredServer";
 import { ROUTES } from "@/routes/routesList";
-import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
 import { useOfflineStore } from "@/store/offline.store";
+
+const OFFLINE_RECONNECT_COOLDOWN_MS = 15 * 1000;
 
 export async function protectedLoader() {
   const { url, password, isServerConfigured } = useAppStore.getState().data;
@@ -12,13 +14,24 @@ export async function protectedLoader() {
   if (hasNoUrl || hasNoToken || !isServerConfigured)
     return redirect(ROUTES.SERVER_CONFIG);
 
-  // If already in offline mode, skip ping
-  if (useOfflineStore.getState().state.isOfflineMode) return null;
+  const { state, actions } = useOfflineStore.getState();
 
-  const isServerUp = await subsonic.ping.pingView();
+  if (state.isOfflineMode) {
+    const shouldRetry =
+      state.lastConnectivityCheckAt === null ||
+      Date.now() - state.lastConnectivityCheckAt >=
+        OFFLINE_RECONNECT_COOLDOWN_MS;
+
+    if (shouldRetry) {
+      await actions.tryReconnect();
+    }
+
+    return null;
+  }
+
+  const isServerUp = await checkConfiguredServerConnectivity();
   if (!isServerUp) {
-    // Server unreachable but credentials exist — enter offline mode
-    await useOfflineStore.getState().actions.enterOfflineMode();
+    await actions.enterOfflineMode();
     return null;
   }
 

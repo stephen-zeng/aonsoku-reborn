@@ -1,37 +1,33 @@
 import { useQuery } from "@tanstack/react-query";
-import { metadataCache } from "@/lib/cache/metadata-cache";
 import { subsonic } from "@/service/subsonic";
-import { useOfflineStore } from "@/store/offline.store";
+import { useIsOffline } from "@/store/offline.store";
 import { queryKeys } from "@/utils/queryKeys";
 
 export const useGetArtist = (artistId: string) => {
+  const isOfflineMode = useIsOffline();
+
   return useQuery({
-    queryKey: [queryKeys.artist.single, artistId],
-    queryFn: async () => {
-      const isOffline =
-        useOfflineStore.getState().state.isOfflineMode;
-
-      if (!isOffline) {
-        return subsonic.artists.getOne(artistId);
-      }
-
-      return metadataCache.getArtistWithAlbums(artistId);
-    },
+    queryKey: [queryKeys.artist.single, artistId, isOfflineMode],
+    queryFn: () => subsonic.artists.getOne(artistId),
     enabled: !!artistId,
   });
 };
 
 export const useGetArtistInfo = (artistId: string) => {
+  const isOfflineMode = useIsOffline();
+
   return useQuery({
-    queryKey: [queryKeys.artist.info, artistId],
+    queryKey: [queryKeys.artist.info, artistId, isOfflineMode],
     queryFn: () => subsonic.artists.getInfo(artistId),
     enabled: !!artistId,
   });
 };
 
 export const useGetTopSongs = (artistName?: string) => {
+  const isOfflineMode = useIsOffline();
+
   return useQuery({
-    queryKey: [queryKeys.artist.topSongs, artistName],
+    queryKey: [queryKeys.artist.topSongs, artistName, isOfflineMode],
     queryFn: () => subsonic.songs.getTopSongs(artistName ?? ""),
     enabled: !!artistName,
   });

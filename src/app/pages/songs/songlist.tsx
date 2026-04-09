@@ -1,6 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
+import { OfflineLibraryEmptyState } from "@/app/components/offline/library-empty-state";
 import { ClearFilterButton } from "@/app/components/search/clear-filter-button";
 import { ExpandableSearchInput } from "@/app/components/search/expandable-input";
 import { SongListLayout } from "@/app/components/song/song-list-layout";
@@ -8,6 +9,7 @@ import {
   SongsOrderByFilter,
   SongsSortFilter,
 } from "@/app/components/songs/songs-filters";
+import { useOfflineLibraryStatus } from "@/app/hooks/use-offline-library-status";
 import { useTotalSongs } from "@/app/hooks/use-total-songs";
 import { getArtistAllSongs, songsSearch } from "@/queries/songs";
 import {
@@ -35,6 +37,7 @@ export default function SongList() {
     SongsOrderByOptions.LastAdded,
   );
   const sort = getSearchParam<SortOptions>("sort", SortOptions.Desc);
+  const { isOfflineMode, hasOfflineData } = useOfflineLibraryStatus();
 
   const searchFilterIsSet = filter === AlbumsFilters.Search && query !== "";
   const filterByArtist = artistId !== "" && artistName !== "";
@@ -71,6 +74,8 @@ export default function SongList() {
   const title = filterByArtist
     ? t("songs.list.byArtist", { artist: artistName })
     : t("sidebar.songs");
+  const emptyState =
+    isOfflineMode && !hasOfflineData ? <OfflineLibraryEmptyState /> : undefined;
 
   return (
     <SongListLayout
@@ -82,6 +87,7 @@ export default function SongList() {
       isFetchingNextPage={isFetchingNextPage}
       fetchNextPage={fetchNextPage}
       hasNextPage={hasNextPage ?? false}
+      emptyState={emptyState}
       headerActions={
         <>
           {filterByArtist && <ClearFilterButton />}

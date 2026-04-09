@@ -1,14 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
+import { isMobile } from "react-device-detect";
 import { useTranslation } from "react-i18next";
 import { ShadowHeader } from "@/app/components/album/shadow-header";
+import { EmptyWrapper } from "@/app/components/albums/empty-wrapper";
 import { ArtistGridCard } from "@/app/components/artist/artist-grid-card";
 import { ArtistsFallback } from "@/app/components/fallbacks/artists.tsx";
 import { GridViewWrapper } from "@/app/components/grid-view-wrapper";
 import { HeaderTitle } from "@/app/components/header-title";
 import ListWrapper from "@/app/components/list-wrapper";
 import { MainViewTypeSelector } from "@/app/components/main-grid";
+import { OfflineLibraryEmptyState } from "@/app/components/offline/library-empty-state";
 import { DataTableList } from "@/app/components/ui/data-table-list";
+import { useOfflineLibraryStatus } from "@/app/hooks/use-offline-library-status";
 import { useSongList } from "@/app/hooks/use-song-list";
 import { artistsColumns } from "@/app/tables/artists-columns";
 import { subsonic } from "@/service/subsonic";
@@ -17,7 +21,6 @@ import { usePlayerActions } from "@/store/player.store";
 import { ColumnFilter } from "@/types/columnFilter";
 import { ISimilarArtist } from "@/types/responses/artist";
 import { queryKeys } from "@/utils/queryKeys";
-import { isMobile } from "react-device-detect";
 
 const MemoShadowHeader = memo(ShadowHeader);
 const MemoHeaderTitle = memo(HeaderTitle);
@@ -37,6 +40,7 @@ export default function ArtistsList() {
   } = useAppArtistsViewType();
 
   const columns = artistsColumns();
+  const { isOfflineMode, hasOfflineData } = useOfflineLibraryStatus();
   const artistColumnFilter: ColumnFilter[] | undefined = isMobile
     ? ["index", "name", "starred"]
     : undefined;
@@ -54,6 +58,30 @@ export default function ArtistsList() {
 
   if (isLoading) return <ArtistsFallback />;
   if (!artists) return null;
+  if (isOfflineMode && !hasOfflineData) {
+    return (
+      <div className="w-full h-content">
+        <MemoShadowHeader
+          showGlassEffect={false}
+          fixed={false}
+          className="relative w-full justify-between items-center"
+        >
+          <MemoHeaderTitle title={t("sidebar.artists")} count={0} />
+
+          <MemoViewTypeSelector
+            viewType={artistsPageViewType}
+            setViewType={setArtistsPageViewType}
+          />
+        </MemoShadowHeader>
+
+        <MemoListWrapper className="pt-shadow-header-distance h-full">
+          <EmptyWrapper>
+            <OfflineLibraryEmptyState />
+          </EmptyWrapper>
+        </MemoListWrapper>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-content">
