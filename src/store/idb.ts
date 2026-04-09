@@ -5,7 +5,7 @@ export const cacheIndexStore = createStore(
   "cache-index",
 );
 export const offlineLibraryStore = createStore(
-  "aonsoku-cache",
+  "aonsoku-offline",
   "offline-library",
 );
 
