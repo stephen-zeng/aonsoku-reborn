@@ -1,8 +1,10 @@
 import { useEffect } from "react";
 import { metadataCache } from "@/lib/cache/metadata-cache";
+import { hydrateFromSyncCache } from "@/lib/sync/sync-hydrator";
 import { useSyncStore } from "@/store/sync.store";
 
 export function SyncObserver() {
+  // Hydrate React Query cache from sync data on launch
   useEffect(() => {
     let cancelled = false;
 
@@ -14,6 +16,7 @@ export function SyncObserver() {
 
       if (meta?.lastSyncedAt) {
         actions.setLastSyncedAt(meta.lastSyncedAt);
+        await hydrateFromSyncCache(meta);
       }
 
       if (settings.syncOnLaunchEnabled && state.status !== "running") {
@@ -26,6 +29,15 @@ export function SyncObserver() {
       cancelled = true;
     };
   }, []);
+
+  // Re-hydrate when sync completes
+  const status = useSyncStore((s) => s.state.status);
+
+  useEffect(() => {
+    if (status === "done") {
+      hydrateFromSyncCache();
+    }
+  }, [status]);
 
   return null;
 }

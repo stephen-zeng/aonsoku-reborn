@@ -1,6 +1,6 @@
 import { clear as idbClear, createStore, get, set } from "idb-keyval";
 import type { Albums, SingleAlbum } from "@/types/responses/album";
-import type { ISimilarArtist } from "@/types/responses/artist";
+import type { IArtist, ISimilarArtist } from "@/types/responses/artist";
 import type { Genre } from "@/types/responses/genre";
 import type { Playlist } from "@/types/responses/playlist";
 import type { ISong } from "@/types/responses/song";
@@ -82,13 +82,29 @@ async function getMeta(): Promise<SyncMeta | null> {
 async function getAlbumWithSongs(
   albumId: string,
 ): Promise<SingleAlbum | undefined> {
-  const albums = await getAlbums();
+  const [albums, songs] = await Promise.all([
+    getAlbums(),
+    getSongs(),
+  ]);
   const album = albums.find((a) => a.id === albumId);
   if (!album) return undefined;
 
-  const songs = await getSongs();
   const albumSongs = songs.filter((s) => s.albumId === albumId);
   return { ...album, song: albumSongs } as SingleAlbum;
+}
+
+async function getArtistWithAlbums(
+  artistId: string,
+): Promise<IArtist | undefined> {
+  const [artists, albums] = await Promise.all([
+    getArtists(),
+    getAlbums(),
+  ]);
+  const artist = artists.find((a) => a.id === artistId);
+  if (!artist) return undefined;
+
+  const artistAlbums = albums.filter((a) => a.artistId === artistId);
+  return { ...artist, album: artistAlbums } as IArtist;
 }
 
 // ── Management ──
@@ -123,6 +139,7 @@ export const metadataCache = {
   getGenres,
   getMeta,
   getAlbumWithSongs,
+  getArtistWithAlbums,
   clear,
   getTotalEntryCount,
 };

@@ -12,6 +12,7 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       staleTime: FIVE_MINUTES,
       gcTime: TWENTY_FOUR_HOURS,
+      networkMode: "offlineFirst",
     },
   },
 });
