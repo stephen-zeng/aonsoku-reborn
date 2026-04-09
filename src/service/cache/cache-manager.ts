@@ -30,7 +30,9 @@ class CacheManager {
     if (mode === "none") return;
     if (isAudioCached(songId)) return;
 
-    const url = getSongStreamUrl(songId);
+    // Extra param differentiates this from the <audio> element's identical
+    // stream URL, preventing HTTP/2 multiplexing conflicts (ERR_HTTP2_PROTOCOL_ERROR).
+    const url = getSongStreamUrl(songId) + "&_c=1";
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(
