@@ -1,5 +1,6 @@
 import { audioCache } from "./audio-cache";
 import { coverArtCache } from "./cover-art-cache";
+import { metadataCache } from "./metadata-cache";
 import { clearQueryCache } from "./query-persister";
 
 export { formatBytes } from "@/utils/formatBytes";
@@ -32,10 +33,15 @@ export async function clearMetadataCache(): Promise<void> {
   await clearQueryCache();
 }
 
+export async function clearMetadataSyncCache(): Promise<void> {
+  await metadataCache.clear();
+}
+
 export async function clearAllCaches(): Promise<void> {
   await Promise.all([
     coverArtCache.clear(),
     audioCache.clear(),
     clearQueryCache(),
+    metadataCache.clear(),
   ]);
 }

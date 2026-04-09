@@ -627,6 +627,31 @@
         "group": "所有缓存",
         "description": "清除所有缓存数据，包括元数据、封面图和音频文件。",
         "clear": "清除所有缓存"
+      },
+      "sync": {
+        "group": "启动时同步",
+        "description": "每次启动应用时缓存所有元数据，以便离线浏览。音频文件不会被同步。",
+        "enabled": "启用启动时同步",
+        "coverArt": "包含封面图",
+        "coverArtInfo": "同步时下载所有专辑和艺术家图片。这可能占用大量存储空间和带宽。",
+        "lastSynced": "上次同步",
+        "never": "从未同步",
+        "syncNow": "立即同步",
+        "cancel": "取消",
+        "clear": "清除",
+        "entries": "已同步 {{count}} 项",
+        "phases": {
+          "idle": "准备中…",
+          "genres": "正在同步流派…",
+          "artists": "正在同步艺术家…",
+          "playlists": "正在同步播放列表…",
+          "albums": "正在同步专辑…",
+          "songs": "正在同步歌曲…",
+          "coverArt": "正在同步封面图…",
+          "done": "同步完成",
+          "error": "同步失败",
+          "cancelled": "同步已取消"
+        }
       }
     },
     "desktop": {

@@ -31,6 +31,7 @@ import {
   getCoverArtCacheSize,
 } from "@/lib/cache/cache-manager";
 import { useCacheActions, useCacheSettings } from "@/store/cache.store";
+import { SyncSection } from "./sync-section";
 
 const CACHE_SIZE_OPTIONS = [
   { value: 536870912, label: "512 MB" },
@@ -95,6 +96,8 @@ export function Storage() {
 
   return (
     <div className="space-y-4">
+      <SyncSection />
+
       <Root>
         <Header>
           <HeaderTitle>{t("settings.storage.coverArt.group")}</HeaderTitle>

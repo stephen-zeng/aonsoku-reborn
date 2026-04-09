@@ -5,6 +5,7 @@ import { SettingsDialog } from "@/app/components/settings/dialog";
 import { LangObserver } from "@/app/observers/lang-observer";
 import { MediaSessionObserver } from "@/app/observers/media-session-observer";
 import { OfflineObserver } from "@/app/observers/offline-observer";
+import { SyncObserver } from "@/app/observers/sync-observer";
 import { ThemeObserver } from "@/app/observers/theme-observer";
 import { ToastContainer } from "@/app/observers/toast-container";
 import { LanControlObserver } from "@/app/observers/lan-control-observer";
@@ -48,6 +49,7 @@ function App() {
       <ThemeObserver />
       <LanControlObserver />
       <OfflineObserver />
+      <SyncObserver />
       <SettingsDialog />
       <RouterProvider router={router} />
       <ToastContainer />

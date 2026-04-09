@@ -621,6 +621,31 @@
         "group": "All Caches",
         "description": "Clear all cached data including metadata, cover art, and audio files.",
         "clear": "Clear all caches"
+      },
+      "sync": {
+        "group": "Sync on Launch",
+        "description": "Cache all metadata on every app launch for offline browsing. Audio files are never synced.",
+        "enabled": "Enable sync on launch",
+        "coverArt": "Include cover art",
+        "coverArtInfo": "Download all album and artist images during sync. This may use significant storage and bandwidth.",
+        "lastSynced": "Last synced",
+        "never": "Never",
+        "syncNow": "Sync Now",
+        "cancel": "Cancel",
+        "clear": "Clear",
+        "entries": "{{count}} items synced",
+        "phases": {
+          "idle": "Preparing…",
+          "genres": "Syncing genres…",
+          "artists": "Syncing artists…",
+          "playlists": "Syncing playlists…",
+          "albums": "Syncing albums…",
+          "songs": "Syncing songs…",
+          "coverArt": "Syncing cover art…",
+          "done": "Sync complete",
+          "error": "Sync failed",
+          "cancelled": "Sync cancelled"
+        }
       }
     },
     "content": {
