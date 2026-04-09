@@ -28,6 +28,11 @@ function logMediaSessionInfo(action: string, data?: unknown): void {
   console.log(`[MediaSession] ${action}:`, data);
 }
 
+// Retain the previous artwork blob URL until the next call so the OS can load
+// the image asynchronously. MediaMetadata does NOT synchronously consume the
+// blob URL — the browser/OS fetches it lazily when rendering media panels.
+let previousArtworkBlobUrl: string | null = null;
+
 function removeMediaSession() {
   if (!isMediaSessionSupported()) return;
 
@@ -36,6 +41,11 @@ function removeMediaSession() {
     logMediaSessionInfo("Removed metadata");
   } catch (error) {
     console.error("[MediaSession] Failed to remove metadata:", error);
+  }
+
+  if (previousArtworkBlobUrl) {
+    URL.revokeObjectURL(previousArtworkBlobUrl);
+    previousArtworkBlobUrl = null;
   }
 }
 
@@ -103,14 +113,19 @@ function setMediaSession(
 
         navigator.mediaSession.metadata = new MediaMetadata(metadata);
 
-        // Revoke the temporary blob URL — MediaMetadata has consumed it
-        if (blobUrl) URL.revokeObjectURL(blobUrl);
+        // Revoke the PREVIOUS call's blob URL now that the OS has had time to
+        // load it asynchronously. Do NOT revoke the current blobUrl here —
+        // the OS media panel fetches artwork lazily after MediaMetadata is set.
+        if (previousArtworkBlobUrl) {
+          URL.revokeObjectURL(previousArtworkBlobUrl);
+        }
+        previousArtworkBlobUrl = blobUrl;
 
         if (navigator.mediaSession.metadata === null) {
           console.warn("[MediaSession] Metadata was set to null unexpectedly");
         }
       } catch (error) {
-        // Revoke blob URL even if setting metadata threw
+        // Revoke current blob URL on error since it won't be used
         if (blobUrl) URL.revokeObjectURL(blobUrl);
         console.error("[MediaSession] Failed to set metadata:", error);
       }

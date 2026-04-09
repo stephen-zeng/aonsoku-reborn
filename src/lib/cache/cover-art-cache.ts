@@ -61,22 +61,30 @@ const inflightFetches = new Map<string, Promise<Blob | null>>();
 
 let cachedBytes = 0;
 let cachedBytesInitialized = false;
+// Single-flight for initialization: prevents concurrent calls from
+// each independently scanning IDB and double-counting bytes.
+let initPromise: Promise<void> | null = null;
 
 async function ensureCachedBytesInitialized(): Promise<void> {
   if (cachedBytesInitialized) return;
-  try {
-    const allKeys = (await keys(blobStore)) as string[];
-    const entries = await getMany(allKeys, blobStore);
-    let total = 0;
-    for (const entry of entries) {
-      const e = entry as CoverArtEntry | undefined;
-      if (e) total += e.size;
-    }
-    cachedBytes = total;
-  } catch {
-    cachedBytes = 0;
+  if (!initPromise) {
+    initPromise = (async () => {
+      try {
+        const allKeys = (await keys(blobStore)) as string[];
+        const entries = await getMany(allKeys, blobStore);
+        let total = 0;
+        for (const entry of entries) {
+          const e = entry as CoverArtEntry | undefined;
+          if (e) total += e.size;
+        }
+        cachedBytes = total;
+      } catch {
+        cachedBytes = 0;
+      }
+      cachedBytesInitialized = true;
+    })();
   }
-  cachedBytesInitialized = true;
+  return initPromise;
 }
 
 // ─── Core read ─────────────────────────────────────────────────────────────
@@ -91,6 +99,9 @@ async function getBlob(
     const key = cacheKey(scope, id, normalizedSize);
     const entry = await get<CoverArtEntry>(key, blobStore);
     if (!entry) return null;
+    // Update lastAccessed so eviction is truly LRU, not FIFO.
+    entry.lastAccessed = Date.now();
+    set(key, entry, blobStore).catch(() => {});
     return entry.blob;
   } catch {
     return null;
@@ -141,14 +152,26 @@ async function putBlob(
     const inflight = inflightFetches.get(key);
     if (inflight) return await inflight;
 
-    const fetchPromise = (async (): Promise<Blob | null> => {
+    // Register the promise BEFORE the first await so that any concurrent
+    // caller arriving in the same microtask turn sees the in-flight entry.
+    const { promise: fetchPromise, resolve: resolvePromise } =
+      Promise.withResolvers<Blob | null>();
+    inflightFetches.set(key, fetchPromise);
+
+    (async (): Promise<void> => {
       try {
         // Pre-existence check
         const existing = await get<CoverArtEntry>(key, blobStore);
-        if (existing) return null;
+        if (existing) {
+          resolvePromise(null);
+          return;
+        }
 
         const response = await fetch(url);
-        if (!response.ok) return null;
+        if (!response.ok) {
+          resolvePromise(null);
+          return;
+        }
 
         const blob = await response.blob();
         const now = Date.now();
@@ -166,13 +189,14 @@ async function putBlob(
         // Evict if over capacity (fire-and-forget)
         if (cachedBytes > MAX_CACHE_BYTES) evictIfNeeded().catch(() => {});
 
-        return blob;
+        resolvePromise(blob);
+      } catch {
+        resolvePromise(null);
       } finally {
         inflightFetches.delete(key);
       }
     })();
 
-    inflightFetches.set(key, fetchPromise);
     return await fetchPromise;
   } catch {
     // Caching is best-effort
@@ -219,6 +243,11 @@ async function evictIfNeeded(): Promise<void> {
   } catch {
     // Eviction is best-effort
   }
+}
+
+async function getTotalSize(): Promise<number> {
+  await ensureCachedBytesInitialized();
+  return cachedBytes;
 }
 
 // ─── Cache management ──────────────────────────────────────────────────────
@@ -273,6 +302,8 @@ export const coverArtCache = {
   clear,
   /** Number of stored entries (v2 store only). */
   getEntryCount,
+  /** Total bytes stored across all entries (from in-memory running total). */
+  getTotalSize,
   /** Expose size normalizer for use in hook and sync. */
   normalizeSize,
   /** Build the current user's cache scope key. */

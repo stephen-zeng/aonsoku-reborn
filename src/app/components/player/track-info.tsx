@@ -18,42 +18,36 @@ import { getAverageColor } from "@/utils/getAverageColor";
 import { logger } from "@/utils/logger";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
 
+function handleError(e: React.SyntheticEvent<HTMLImageElement>) {
+  e.currentTarget.crossOrigin = null;
+}
+
 export function TrackInfo({ song }: { song: ISong | undefined }) {
   const { t } = useTranslation();
-  const { setCurrentSongColor, currentSongColor } = useSongColor();
+  const { setCurrentSongColor } = useSongColor();
   const { fullscreenPlayerOpen, openFullscreenPlayer, closeFullscreenPlayer } =
     useFullscreenPlayerState();
 
-  const getImageElement = useCallback(() => {
-    return document.getElementById("track-song-image") as HTMLImageElement;
-  }, []);
+  const getImageColor = useCallback(
+    async (e: React.SyntheticEvent<HTMLImageElement>) => {
+      // e.currentTarget avoids races when useCachedCoverArt swaps originalUrl → blob URL.
+      const img = e.currentTarget;
 
-  const getImageColor = useCallback(async () => {
-    const img = getImageElement();
-    if (!img) return;
+      let color = randomCSSHexColor(true);
 
-    let color = randomCSSHexColor(true);
+      try {
+        color = (await getAverageColor(img)).hex;
+        logger.info("[TrackInfo] - Getting Image Average Color", {
+          color,
+        });
+      } catch {
+        logger.error("[TrackInfo] - Unable to get image average color.");
+      }
 
-    try {
-      color = (await getAverageColor(img)).hex;
-      logger.info("[TrackInfo] - Getting Image Average Color", {
-        color,
-      });
-    } catch {
-      logger.error("[TrackInfo] - Unable to get image average color.");
-    }
-
-    if (color !== currentSongColor) {
       setCurrentSongColor(color);
-    }
-  }, [currentSongColor, setCurrentSongColor, getImageElement]);
-
-  function handleError() {
-    const img = getImageElement();
-    if (!img) return;
-
-    img.crossOrigin = null;
-  }
+    },
+    [setCurrentSongColor],
+  );
 
   if (!song) {
     return (
