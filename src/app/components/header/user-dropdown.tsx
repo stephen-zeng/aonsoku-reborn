@@ -1,4 +1,13 @@
-import { Cast, Info, Keyboard, LogOut, Settings, User } from "lucide-react";
+import {
+  Cast,
+  Info,
+  Keyboard,
+  LogOut,
+  RefreshCw,
+  Settings,
+  User,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { Fragment } from "react/jsx-runtime";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -20,9 +29,15 @@ import {
 } from "@/app/components/ui/dropdown-menu";
 import { LogoutObserver } from "@/app/observers/logout-observer";
 import { RemoteControlDialog } from "@/app/components/remote-control/dialog";
+import { metadataSyncService } from "@/service/cache";
 import { logoutKeys, shortcutDialogKeys, stringifyShortcut } from "@/shortcuts";
 import { ROUTES } from "@/routes/routesList";
 import { useAppData, useAppStore, useAppSettings } from "@/store/app.store";
+import {
+  useCacheMode,
+  useCacheStore,
+  useSyncState,
+} from "@/store/cache.store";
 import { useLanControlServerInfo } from "@/store/lanControl.store";
 import { isMacOS } from "@/utils/desktop";
 
@@ -36,6 +51,11 @@ export function UserDropdown() {
   const isMobile = useIsMobile();
   const { setOpenDialog } = useAppSettings();
   const serverInfo = useLanControlServerInfo();
+  const mode = useCacheMode();
+  const syncCoverArt = useCacheStore(
+    (state) => state.settings.syncCoverArt,
+  );
+  const { isSyncing } = useSyncState();
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [remoteControlOpen, setRemoteControlOpen] = useState(false);
@@ -53,6 +73,7 @@ export function UserDropdown() {
 
   const alignPosition = isMacOS ? "end" : "center";
   const isServerRunning = serverInfo.running;
+  const isOfflineCache = mode === "offline";
 
   return (
     <Fragment>
@@ -103,6 +124,34 @@ export function UserDropdown() {
               <Cast className="mr-2 h-4 w-4" />
               <span>{t("lanControl.remote.menu")}</span>
             </DropdownMenuItem>
+          )}
+          {isOfflineCache && (
+            <>
+              <DropdownMenuSeparator />
+              {isSyncing ? (
+                <DropdownMenuItem
+                  onClick={() => metadataSyncService.cancel()}
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  <span>
+                    {t("settings.storage.sync.cancel")}
+                  </span>
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onClick={() =>
+                    metadataSyncService.syncAll({
+                      includeCoverArt: syncCoverArt,
+                    })
+                  }
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  <span>
+                    {t("settings.storage.sync.syncNow")}
+                  </span>
+                </DropdownMenuItem>
+              )}
+            </>
           )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setAboutOpen(true)}>

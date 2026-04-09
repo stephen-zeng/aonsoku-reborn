@@ -3,6 +3,7 @@ import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { NavigationButtons } from "@/app/components/header/navigation-buttons";
+import { SyncIndicator } from "@/app/components/header/sync-indicator";
 import { UserDropdown } from "@/app/components/header/user-dropdown";
 import { SettingsButton } from "@/app/components/settings/header-button";
 import { useAppWindow } from "@/app/hooks/use-app-window";
@@ -146,6 +147,7 @@ export function Header() {
         </div>
       </div>
       <div className="flex justify-end items-center gap-2">
+        <SyncIndicator />
         <div className="hidden md:block">
           <SettingsButton />
         </div>

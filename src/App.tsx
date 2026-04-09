@@ -9,6 +9,7 @@ import { MediaSessionObserver } from "@/app/observers/media-session-observer";
 import { ThemeObserver } from "@/app/observers/theme-observer";
 import { ToastContainer } from "@/app/observers/toast-container";
 import { LanControlObserver } from "@/app/observers/lan-control-observer";
+import { MetadataSyncObserver } from "@/app/observers/metadata-sync-observer";
 import { router } from "@/routes/router";
 import { useCacheIndexActions } from "@/store/cache-index.store";
 import { isDesktop, isLinux } from "@/utils/desktop";
@@ -56,6 +57,7 @@ function App() {
       <LangObserver />
       <ThemeObserver />
       <LanControlObserver />
+      <MetadataSyncObserver />
       <OfflineIndicator />
       <SettingsDialog />
       <RouterProvider router={router} />
