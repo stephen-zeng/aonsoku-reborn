@@ -265,6 +265,7 @@ export function Player() {
           autoPlay={isPlaying}
           audioRef={audioRef}
           loop={loopState === LoopState.One}
+          onFatalError={playNextSong}
           onPlay={() => setPlayingState(true)}
           onPause={() => setPlayingState(false)}
           onLoadedMetadata={setupDuration}
@@ -286,6 +287,9 @@ export function Player() {
           onPlay={() => setPlayingState(true)}
           onPause={() => setPlayingState(false)}
           onLoadStart={setupInitialVolume}
+          onWaiting={() => setIsBuffering(true)}
+          onPlaying={() => setIsBuffering(false)}
+          onCanPlay={() => setIsBuffering(false)}
           data-testid="player-radio-audio"
         />
       )}

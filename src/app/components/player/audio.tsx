@@ -25,12 +25,14 @@ import { perceptualToGain } from "@/utils/volume";
 type AudioPlayerProps = ComponentPropsWithoutRef<"audio"> & {
   audioRef: RefObject<HTMLAudioElement>;
   replayGain?: ReplayGainParams;
+  onFatalError?: () => void;
 };
 
 export function AudioPlayer({
   audioRef,
   replayGain,
   src,
+  onFatalError,
   ...props
 }: AudioPlayerProps) {
   const { t } = useTranslation();
@@ -123,11 +125,20 @@ export function AudioPlayer({
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const MAX_RETRIES = 5;
 
+  const clearPendingRetry = useCallback(() => {
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+    retryCountRef.current = 0;
+  }, []);
+
   const scheduleRetry = useCallback(
     (audio: HTMLAudioElement) => {
       if (retryCountRef.current >= MAX_RETRIES) {
         toast.error(t("warnings.songError"));
-        retryCountRef.current = 0;
+        clearPendingRetry();
+        onFatalError?.();
         return;
       }
 
@@ -144,10 +155,10 @@ export function AudioPlayer({
         });
       }, delay);
     },
-    [t],
+    [t, onFatalError, clearPendingRetry],
   );
 
-  const handleSongError = useCallback(() => {
+  const handleAudioError = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -165,32 +176,55 @@ export function AudioPlayer({
 
     logger.error("Audio load error", errorDetails);
 
-    if (
-      audio.error?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED &&
-      replayGainEnabled
-    ) {
-      toast.error(t("warnings.songError"));
-      setReplayGainEnabled(false);
-      setReplayGainError(true);
-      window.location.reload();
-    } else if (audio.error?.code !== MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
-      scheduleRetry(audio);
+    const errorCode = audio.error?.code;
+
+    switch (errorCode) {
+      case MediaError.MEDIA_ERR_ABORTED:
+        // User or browser initiated — no retry needed
+        logger.info("Audio aborted, skipping retry");
+        return;
+
+      case MediaError.MEDIA_ERR_NETWORK:
+        scheduleRetry(audio);
+        return;
+
+      case MediaError.MEDIA_ERR_DECODE:
+        if (isRadio) {
+          // Radio streams can have transient decode glitches
+          scheduleRetry(audio);
+        } else {
+          // Song file is corrupt — retrying won't help, skip
+          logger.error("Decode error, skipping to next song");
+          toast.error(t("warnings.songError"));
+          clearPendingRetry();
+          onFatalError?.();
+        }
+        return;
+
+      case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+        if (isSong && replayGainEnabled) {
+          toast.error(t("warnings.songError"));
+          setReplayGainEnabled(false);
+          setReplayGainError(true);
+          window.location.reload();
+        }
+        return;
+
+      default:
+        scheduleRetry(audio);
     }
   }, [
     audioRef,
+    clearPendingRetry,
+    isRadio,
+    isSong,
+    onFatalError,
     replayGainEnabled,
     scheduleRetry,
     setReplayGainEnabled,
     setReplayGainError,
     t,
   ]);
-
-  const handleRadioError = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    scheduleRetry(audio);
-  }, [audioRef, scheduleRetry]);
 
   // Reset retry count on successful play and clear pending retries on unmount
   useEffect(() => {
@@ -201,13 +235,28 @@ export function AudioPlayer({
     };
   }, []);
 
+  // Auto-reconnect when network comes back online during retry
+  useEffect(() => {
+    const handleOnline = () => {
+      const audio = audioRef.current;
+      if (!audio || retryCountRef.current === 0) return;
+
+      logger.info("Network recovered, retrying audio playback");
+      clearPendingRetry();
+      audio.load();
+      audio.play().catch((err) => {
+        logger.error("Reconnect play failed:", err);
+        scheduleRetry(audio);
+      });
+    };
+
+    window.addEventListener("online", handleOnline);
+    return () => window.removeEventListener("online", handleOnline);
+  }, [audioRef, clearPendingRetry, scheduleRetry]);
+
   const handlePlaySuccess = useCallback(() => {
-    retryCountRef.current = 0;
-    if (retryTimeoutRef.current) {
-      clearTimeout(retryTimeoutRef.current);
-      retryTimeoutRef.current = null;
-    }
-  }, []);
+    clearPendingRetry();
+  }, [clearPendingRetry]);
 
   useEffect(() => {
     async function handleSong() {
@@ -246,14 +295,14 @@ export function AudioPlayer({
         }
       } catch (error) {
         logger.error("Audio playback failed", error);
-        handleSongError();
+        handleAudioError();
       }
     }
     if (isSong) handleSong();
   }, [
     audioRef,
     audioSrc,
-    handleSongError,
+    handleAudioError,
     isPlaying,
     isSong,
     resumeContext,
@@ -275,13 +324,6 @@ export function AudioPlayer({
     if (isRadio) handleRadio();
   }, [audioRef, isPlaying, isRadio]);
 
-  const handleError = useMemo(() => {
-    if (isSong) return handleSongError;
-    if (isRadio) return handleRadioError;
-
-    return undefined;
-  }, [handleRadioError, handleSongError, isRadio, isSong]);
-
   const crossOrigin = useMemo(() => {
     // In native audio mode, don't use crossOrigin as we're not using AudioContext
     if (shouldUseNativeAudio) return undefined;
@@ -297,7 +339,7 @@ export function AudioPlayer({
       {...props}
       src={audioSrc}
       crossOrigin={crossOrigin}
-      onError={handleError}
+      onError={handleAudioError}
       onPlay={(e) => {
         handlePlaySuccess();
         props.onPlay?.(e);
