@@ -23,6 +23,7 @@ import {
 import { LoopState } from "@/types/playerContext";
 import { hasPiPSupport } from "@/utils/browser";
 import { ReplayGainParams } from "@/utils/replayGain";
+import { perceptualToGain } from "@/utils/volume";
 import { manageMediaSession } from "@/utils/setMediaSession";
 import { AudioPlayer } from "./audio";
 import { PlayerClearQueueButton } from "./clear-queue-button";
@@ -149,7 +150,7 @@ export function Player() {
     const audio = getAudioRef().current;
     if (!audio) return;
 
-    audio.volume = getVolume() / 100;
+    audio.volume = perceptualToGain(getVolume());
   }, [getAudioRef]);
 
   function getTrackReplayGain(): ReplayGainParams {

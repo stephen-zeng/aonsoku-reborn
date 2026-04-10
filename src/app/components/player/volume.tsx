@@ -14,6 +14,7 @@ import { Slider } from "@/app/components/ui/slider";
 import { usePlayerHotkeys } from "@/app/hooks/use-audio-hotkeys";
 import { cn } from "@/lib/utils";
 import { usePlayerVolume, useVolumeSettings } from "@/store/player.store";
+import { perceptualToGain } from "@/utils/volume";
 import { PopoverVolume } from "./popover-volume";
 
 interface PlayerVolumeProps {
@@ -32,7 +33,7 @@ export function PlayerVolume({ disabled, audioRef }: PlayerVolumeProps) {
   useEffect(() => {
     if (!audioRef.current) return;
 
-    audioRef.current.volume = volume / 100;
+    audioRef.current.volume = perceptualToGain(volume);
   }, [audioRef, volume]);
 
   const tooltipText =

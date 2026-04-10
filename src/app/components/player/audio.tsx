@@ -20,6 +20,7 @@ import {
 } from "@/store/player.store";
 import { logger } from "@/utils/logger";
 import { calculateReplayGain, ReplayGainParams } from "@/utils/replayGain";
+import { perceptualToGain } from "@/utils/volume";
 
 type AudioPlayerProps = ComponentPropsWithoutRef<"audio"> & {
   audioRef: RefObject<HTMLAudioElement>;
@@ -70,7 +71,7 @@ export function AudioPlayer({
   }, [src, audioSrc, shouldUseNativeAudio, isRemoteControlActive]);
 
   const gainValue = useMemo(() => {
-    const audioVolume = volume / 100;
+    const audioVolume = perceptualToGain(volume);
 
     // In native audio mode, don't use replay gain - just use volume
     if (shouldUseNativeAudio) {
@@ -96,8 +97,8 @@ export function AudioPlayer({
 
     if (shouldUseNativeAudio) {
       // Use native volume control
-      audioRef.current.volume = volume / 100;
-      logger.info("Native audio volume set:", volume / 100);
+      audioRef.current.volume = perceptualToGain(volume);
+      logger.info("Native audio volume set:", perceptualToGain(volume));
       return;
     }
 
