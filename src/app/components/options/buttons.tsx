@@ -1,7 +1,7 @@
 import omit from "lodash/omit";
 import {
+  CircleArrowDown,
   Disc3,
-  DownloadCloud,
   DownloadIcon,
   Heart,
   Info,
@@ -67,14 +67,14 @@ function PlayLast({ variant = "dropdown", ...props }: DropdownMenuItemProps) {
   );
 }
 
-function Download({ variant = "dropdown", ...props }: DropdownMenuItemProps) {
+function SaveFile({ variant = "dropdown", ...props }: DropdownMenuItemProps) {
   const { t } = useTranslation();
 
   return (
     <MenuItemFactory
       variant={variant}
       icon={<DownloadIcon className="mr-2 h-4 w-4" />}
-      label={t("options.download")}
+      label={t("options.saveFile")}
       {...props}
     />
   );
@@ -228,7 +228,7 @@ function Like({ variant = "dropdown", isStarred, label, ...props }: LikeProps) {
   );
 }
 
-function CacheSong({
+function DownloadSong({
   variant = "dropdown",
   ...props
 }: DropdownMenuItemProps) {
@@ -237,14 +237,14 @@ function CacheSong({
   return (
     <MenuItemFactory
       variant={variant}
-      icon={<DownloadCloud className="mr-2 h-4 w-4" />}
-      label={t("options.cache", "Cache song")}
+      icon={<CircleArrowDown className="mr-2 h-4 w-4" />}
+      label={t("options.download")}
       {...props}
     />
   );
 }
 
-function CacheAlbum({
+function DownloadAlbum({
   variant = "dropdown",
   ...props
 }: DropdownMenuItemProps) {
@@ -253,14 +253,14 @@ function CacheAlbum({
   return (
     <MenuItemFactory
       variant={variant}
-      icon={<DownloadCloud className="mr-2 h-4 w-4" />}
-      label={t("options.cacheAlbum", "Cache album")}
+      icon={<CircleArrowDown className="mr-2 h-4 w-4" />}
+      label={t("options.downloadAlbum")}
       {...props}
     />
   );
 }
 
-function CachePlaylist({
+function DownloadPlaylist({
   variant = "dropdown",
   ...props
 }: DropdownMenuItemProps) {
@@ -269,14 +269,14 @@ function CachePlaylist({
   return (
     <MenuItemFactory
       variant={variant}
-      icon={<DownloadCloud className="mr-2 h-4 w-4" />}
-      label={t("options.cachePlaylist", "Cache playlist")}
+      icon={<CircleArrowDown className="mr-2 h-4 w-4" />}
+      label={t("options.downloadPlaylist")}
       {...props}
     />
   );
 }
 
-function CacheArtist({
+function DownloadArtist({
   variant = "dropdown",
   ...props
 }: DropdownMenuItemProps) {
@@ -285,14 +285,14 @@ function CacheArtist({
   return (
     <MenuItemFactory
       variant={variant}
-      icon={<DownloadCloud className="mr-2 h-4 w-4" />}
-      label={t("options.cacheArtist", "Cache artist")}
+      icon={<CircleArrowDown className="mr-2 h-4 w-4" />}
+      label={t("options.downloadArtist")}
       {...props}
     />
   );
 }
 
-function RemoveFromCache({
+function RemoveDownload({
   variant = "dropdown",
   ...props
 }: DropdownMenuItemProps) {
@@ -302,7 +302,7 @@ function RemoveFromCache({
     <MenuItemFactory
       variant={variant}
       icon={<Trash2 className="mr-2 h-4 w-4" />}
-      label={t("options.removeFromCache", "Remove from cache")}
+      label={t("options.removeDownload")}
       {...props}
     />
   );
@@ -312,7 +312,8 @@ export const OptionsButtons = {
   Play,
   PlayNext,
   PlayLast,
-  Download,
+  SaveFile,
+  DownloadSong,
   Like,
   AddToPlaylistOption,
   EditPlaylist,
@@ -322,9 +323,8 @@ export const OptionsButtons = {
   SongInfo,
   GotoArtist,
   GotoAlbum,
-  CacheSong,
-  CacheAlbum,
-  CachePlaylist,
-  CacheArtist,
-  RemoveFromCache,
+  DownloadAlbum,
+  DownloadPlaylist,
+  DownloadArtist,
+  RemoveDownload,
 };

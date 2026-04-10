@@ -328,6 +328,11 @@
     "addLast": "Sätt in sist",
     "playNext": "Spela nästa",
     "download": "Ladda ner",
+    "saveFile": "Spara fil",
+    "downloadAlbum": "Ladda ner album",
+    "downloadPlaylist": "Ladda ner spellista",
+    "downloadArtist": "Ladda ner artist",
+    "removeDownload": "Ta bort nedladdning",
     "playlist": {
       "add": "Lägg in i spellista",
       "edit": "Ändra spellista",
@@ -529,6 +534,59 @@
         "description": "Hantera synligheten och organisationen av de sektioner som visas i sidofältet.",
         "radios": {
           "section": "Dölj radiosektionen"
+        }
+      }
+    },
+    "storage": {
+      "downloadQuality": {
+        "group": "Nedladdningskvalitet",
+        "description": "Välj ljudkvalitet för nedladdade låtar.",
+        "label": "Nedladdningskvalitet",
+        "stream": {
+          "label": "Streamkvalitet",
+          "description": "Ladda ner med serverns transkoderingskvalitetsinställning."
+        },
+        "original": {
+          "label": "Originalkvalitet",
+          "description": "Ladda ner den ursprungliga filen utan omkodning."
+        }
+      },
+      "limits": {
+        "group": "Cachelagring",
+        "description": "Hantera cachelagrat ljud och omslagsbildslagring.",
+        "maxSize": "Maximal storlek för ljudcache",
+        "audioSize": "Ljudcache",
+        "audioEntries": "{{count}} låtar cachelagrade",
+        "coverSize": "Omslagsbildscache",
+        "coverEntries": "{{count}} bilder cachelagrade",
+        "clearAudio": "Rensa",
+        "clearCovers": "Rensa",
+        "clearAll": "Rensa alla cachar"
+      },
+      "sync": {
+        "group": "Bibliotekssynkronisering",
+        "description": "Synkronisera biblioteksmetadata för offlinenavigering. Nedladdade låtar är alltid tillgängliga offline.",
+        "enabled": "Synkronisera bibliotek",
+        "coverArt": "Inkludera omslagsbilder",
+        "coverArtInfo": "Ladda ner alla album- och artistbilder under synkronisering. Detta kan använda betydande lagringsutrymme och bandbredd.",
+        "lastSynced": "Senast synkroniserad",
+        "never": "Aldrig",
+        "justNow": "Just nu",
+        "syncNow": "Synkronisera nu",
+        "cancel": "Avbryt",
+        "clear": "Rensa synkroniserad data",
+        "entries": "{{count}} objekt synkroniserade",
+        "phases": {
+          "idle": "Förbereder…",
+          "genres": "Synkroniserar genrer…",
+          "artists": "Synkroniserar artister…",
+          "playlists": "Synkroniserar spellistor…",
+          "albums": "Synkroniserar album…",
+          "songs": "Synkroniserar låtar…",
+          "coverArt": "Synkroniserar omslagsbilder…",
+          "done": "Synkronisering klar",
+          "error": "Synkronisering misslyckades",
+          "cancelled": "Synkronisering avbruten"
         }
       }
     }

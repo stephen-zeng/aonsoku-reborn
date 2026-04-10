@@ -355,6 +355,11 @@
     "playNext": "Odtwórz następne",
     "addLast": "Dodaj jako ostatnie",
     "download": "Pobierz",
+    "saveFile": "Zapisz plik",
+    "downloadAlbum": "Pobierz album",
+    "downloadPlaylist": "Pobierz playlistę",
+    "downloadArtist": "Pobierz wykonawcę",
+    "removeDownload": "Usuń pobranie",
     "playlist": {
       "add": "Dodaj do playlisty",
       "edit": "Edytuj playlistę",
@@ -585,10 +590,63 @@
       "services": {
         "group": "Usługi Zewnętrzne",
         "lrclib": {
-          "info": "LRCLIB jest używany do znajdowania tekstów piosenek.",
-          "label": "LRCLIB"
+          "label": "LRCLIB",
+          "info": "LRCLIB jest używany do znajdowania tekstów piosenek."
         },
         "description": "Zarządzaj usługami zewnętrznymi do których Aonsoku może uzyskać dostęp."
+      }
+    },
+    "storage": {
+      "downloadQuality": {
+        "group": "Jakość Pobierania",
+        "description": "Wybierz jakość audio dla pobieranych utworów.",
+        "label": "Jakość pobierania",
+        "stream": {
+          "label": "Jakość strumienia",
+          "description": "Pobierz z ustawieniem jakości transkodowania serwera."
+        },
+        "original": {
+          "label": "Oryginalna jakość",
+          "description": "Pobierz oryginalny plik bez transkodowania."
+        }
+      },
+      "limits": {
+        "group": "Pamięć Podręczna",
+        "description": "Zarządzaj pamięcią podręczną audio i okładek.",
+        "maxSize": "Maksymalny rozmiar pamięci podręcznej audio",
+        "audioSize": "Pamięć podręczna audio",
+        "audioEntries": "{{count}} utworów w pamięci podręcznej",
+        "coverSize": "Pamięć podręczna okładek",
+        "coverEntries": "{{count}} obrazów w pamięci podręcznej",
+        "clearAudio": "Wyczyść",
+        "clearCovers": "Wyczyść",
+        "clearAll": "Wyczyść całą pamięć podręczną"
+      },
+      "sync": {
+        "group": "Synchronizacja Biblioteki",
+        "description": "Synchronizuj metadane biblioteki do przeglądania offline. Pobrane utwory są zawsze dostępne offline.",
+        "enabled": "Synchronizuj bibliotekę",
+        "coverArt": "Uwzględnij okładki",
+        "coverArtInfo": "Pobierz wszystkie okładki albumów i obrazy wykonawców podczas synchronizacji. Może to wymagać znacznej ilości miejsca i przepustowości.",
+        "lastSynced": "Ostatnia synchronizacja",
+        "never": "Nigdy",
+        "justNow": "Właśnie teraz",
+        "syncNow": "Synchronizuj Teraz",
+        "cancel": "Anuluj",
+        "clear": "Wyczyść zsynchronizowane dane",
+        "entries": "{{count}} elementów zsynchronizowanych",
+        "phases": {
+          "idle": "Przygotowywanie…",
+          "genres": "Synchronizowanie gatunków…",
+          "artists": "Synchronizowanie wykonawców…",
+          "playlists": "Synchronizowanie playlist…",
+          "albums": "Synchronizowanie albumów…",
+          "songs": "Synchronizowanie utworów…",
+          "coverArt": "Synchronizowanie okładek…",
+          "done": "Synchronizacja zakończona",
+          "error": "Synchronizacja nie powiodła się",
+          "cancelled": "Synchronizacja anulowana"
+        }
       }
     },
     "label": "Ustawienia"

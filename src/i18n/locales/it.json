@@ -328,5 +328,86 @@
         "disable": "Disattiva riproduzione random"
       }
     }
+  },
+  "options": {
+    "play": "Riproduci",
+    "playNext": "Riproduci successivo",
+    "addLast": "Aggiungi alla fine",
+    "download": "Scarica",
+    "saveFile": "Salva file",
+    "downloadAlbum": "Scarica album",
+    "downloadPlaylist": "Scarica playlist",
+    "downloadArtist": "Scarica artista",
+    "removeDownload": "Rimuovi download",
+    "playlist": {
+      "add": "Aggiungi alla playlist",
+      "edit": "Modifica playlist",
+      "delete": "Elimina playlist",
+      "search": "Cerca una playlist",
+      "create": "Nuova playlist",
+      "notFound": "Nessuna playlist trovata",
+      "removeSong": "Rimuovi dalla playlist"
+    },
+    "removeFromQueue": "Rimuovi dalla coda",
+    "info": "Informazioni",
+    "goto": {
+      "artist": "Vai all'artista",
+      "album": "Vai all'album"
+    }
+  },
+  "settings": {
+    "storage": {
+      "downloadQuality": {
+        "group": "Qualità Download",
+        "description": "Scegli la qualità audio per i brani scaricati.",
+        "label": "Qualità download",
+        "stream": {
+          "label": "Qualità stream",
+          "description": "Scarica con l'impostazione di qualità di transcodifica del server."
+        },
+        "original": {
+          "label": "Qualità originale",
+          "description": "Scarica il file originale senza transcodifica."
+        }
+      },
+      "limits": {
+        "group": "Cache",
+        "description": "Gestisci l'archiviazione di audio e copertine in cache.",
+        "maxSize": "Dimensione massima cache audio",
+        "audioSize": "Cache audio",
+        "audioEntries": "{{count}} brani in cache",
+        "coverSize": "Cache copertine",
+        "coverEntries": "{{count}} immagini in cache",
+        "clearAudio": "Cancella",
+        "clearCovers": "Cancella",
+        "clearAll": "Cancella tutte le cache"
+      },
+      "sync": {
+        "group": "Sincronizzazione Libreria",
+        "description": "Sincronizza i metadati della libreria per la navigazione offline. I brani scaricati sono sempre disponibili offline.",
+        "enabled": "Sincronizza libreria",
+        "coverArt": "Includi copertine",
+        "coverArtInfo": "Scarica tutte le immagini di album e artisti durante la sincronizzazione. Questo potrebbe richiedere molto spazio e larghezza di banda.",
+        "lastSynced": "Ultima sincronizzazione",
+        "never": "Mai",
+        "justNow": "Adesso",
+        "syncNow": "Sincronizza Ora",
+        "cancel": "Annulla",
+        "clear": "Cancella dati sincronizzati",
+        "entries": "{{count}} elementi sincronizzati",
+        "phases": {
+          "idle": "Preparazione…",
+          "genres": "Sincronizzazione generi…",
+          "artists": "Sincronizzazione artisti…",
+          "playlists": "Sincronizzazione playlist…",
+          "albums": "Sincronizzazione album…",
+          "songs": "Sincronizzazione brani…",
+          "coverArt": "Sincronizzazione copertine…",
+          "done": "Sincronizzazione completata",
+          "error": "Sincronizzazione fallita",
+          "cancelled": "Sincronizzazione annullata"
+        }
+      }
+    }
   }
 }

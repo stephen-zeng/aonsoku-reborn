@@ -33,11 +33,7 @@ import { metadataSyncService } from "@/service/cache";
 import { logoutKeys, shortcutDialogKeys, stringifyShortcut } from "@/shortcuts";
 import { ROUTES } from "@/routes/routesList";
 import { useAppData, useAppStore, useAppSettings } from "@/store/app.store";
-import {
-  useCacheMode,
-  useCacheStore,
-  useSyncState,
-} from "@/store/cache.store";
+import { useCacheStore } from "@/store/cache.store";
 import { useLanControlServerInfo } from "@/store/lanControl.store";
 import { isMacOS } from "@/utils/desktop";
 
@@ -51,11 +47,9 @@ export function UserDropdown() {
   const isMobile = useIsMobile();
   const { setOpenDialog } = useAppSettings();
   const serverInfo = useLanControlServerInfo();
-  const mode = useCacheMode();
-  const syncCoverArt = useCacheStore(
-    (state) => state.settings.syncCoverArt,
-  );
-  const { isSyncing } = useSyncState();
+  const syncLibrary = useCacheStore((state) => state.settings.syncLibrary);
+  const syncCoverArt = useCacheStore((state) => state.settings.syncCoverArt);
+  const { isSyncing } = useCacheStore((state) => state.status.syncState);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [remoteControlOpen, setRemoteControlOpen] = useState(false);
@@ -73,7 +67,7 @@ export function UserDropdown() {
 
   const alignPosition = isMacOS ? "end" : "center";
   const isServerRunning = serverInfo.running;
-  const isOfflineCache = mode === "offline";
+  const isOfflineCache = syncLibrary;
 
   return (
     <Fragment>
@@ -129,13 +123,9 @@ export function UserDropdown() {
             <>
               <DropdownMenuSeparator />
               {isSyncing ? (
-                <DropdownMenuItem
-                  onClick={() => metadataSyncService.cancel()}
-                >
+                <DropdownMenuItem onClick={() => metadataSyncService.cancel()}>
                   <X className="mr-2 h-4 w-4" />
-                  <span>
-                    {t("settings.storage.sync.cancel")}
-                  </span>
+                  <span>{t("settings.storage.sync.cancel")}</span>
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem
@@ -146,9 +136,7 @@ export function UserDropdown() {
                   }
                 >
                   <RefreshCw className="mr-2 h-4 w-4" />
-                  <span>
-                    {t("settings.storage.sync.syncNow")}
-                  </span>
+                  <span>{t("settings.storage.sync.syncNow")}</span>
                 </DropdownMenuItem>
               )}
             </>

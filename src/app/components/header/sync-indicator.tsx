@@ -5,18 +5,12 @@ import { useCacheStore } from "@/store/cache.store";
 
 export function SyncIndicator() {
   const { t } = useTranslation();
-  const isSyncing = useCacheStore(
-    (state) => state.status.syncState.isSyncing,
-  );
-  const phase = useCacheStore(
-    (state) => state.status.syncState.phase,
-  );
+  const isSyncing = useCacheStore((state) => state.status.syncState.isSyncing);
+  const phase = useCacheStore((state) => state.status.syncState.phase);
 
   if (!isSyncing) return null;
 
-  const phaseText = t(
-    `settings.storage.sync.phases.${phase}`,
-  );
+  const phaseText = t(`settings.storage.sync.phases.${phase}`);
 
   return (
     <SimpleTooltip text={phaseText} side="bottom">

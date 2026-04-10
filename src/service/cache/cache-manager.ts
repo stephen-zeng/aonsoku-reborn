@@ -1,5 +1,6 @@
 import {
   getCoverArtUrl,
+  getDownloadUrl,
   getSongStreamUrl,
 } from "@/api/httpClient";
 import { subsonic } from "@/service/subsonic";
@@ -16,23 +17,21 @@ import { cacheStorage } from "./cache-storage";
 import { computeEvictionPlan } from "./eviction";
 
 class CacheManager {
-  private queue: string[] = [];
-  private processing = false;
-  private maxConcurrency = 2;
-  private activeDownloads = 0;
-  private statsTimer: ReturnType<typeof setTimeout> | null =
-    null;
+  private statsTimer: ReturnType<typeof setTimeout> | null = null;
 
-  // ── Audio Caching ──
+  private resolveDownloadUrl(songId: string): string {
+    const quality = useCacheStore.getState().settings.downloadQuality;
+    if (quality === "original") {
+      return getDownloadUrl(songId);
+    }
+    return getSongStreamUrl(songId) + "&_c=1";
+  }
 
   async cacheSong(songId: string): Promise<void> {
-    const mode = useCacheStore.getState().settings.mode;
-    if (mode === "none") return;
     if (isAudioCached(songId)) return;
 
-    // Extra param differentiates this from the <audio> element's identical
-    // stream URL, preventing HTTP/2 multiplexing conflicts (ERR_HTTP2_PROTOCOL_ERROR).
-    const url = getSongStreamUrl(songId) + "&_c=1";
+    const quality = useCacheStore.getState().settings.downloadQuality;
+    const url = this.resolveDownloadUrl(songId);
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(
@@ -42,15 +41,12 @@ class CacheManager {
 
     const blob = await response.blob();
     const key = audioKey(songId);
-    await cacheStorage.put(
-      key,
-      blob,
-      blob.type || "audio/mpeg",
-    );
+    await cacheStorage.put(key, blob, blob.type || "audio/mpeg");
 
     const meta: CachedItemMeta = {
       id: songId,
       type: "audio",
+      quality,
       sizeBytes: blob.size,
       cachedAt: Date.now(),
       lastAccessedAt: Date.now(),
@@ -59,9 +55,7 @@ class CacheManager {
     this.scheduleStatsRefresh();
   }
 
-  async getCachedAudioUrl(
-    songId: string,
-  ): Promise<string | null> {
+  async getCachedAudioUrl(songId: string): Promise<string | null> {
     const key = audioKey(songId);
     if (!isAudioCached(songId)) return null;
 
@@ -75,14 +69,7 @@ class CacheManager {
     return URL.createObjectURL(blob);
   }
 
-  // ── Cover Art Caching ──
-
-  async cacheCover(
-    coverArtId: string,
-    size = "300",
-  ): Promise<void> {
-    const mode = useCacheStore.getState().settings.mode;
-    if (mode === "none") return;
+  async cacheCover(coverArtId: string, size = "300"): Promise<void> {
     if (isCoverCached(coverArtId, size)) return;
 
     const url = getCoverArtUrl(coverArtId, "album", size);
@@ -93,11 +80,7 @@ class CacheManager {
 
     const blob = await response.blob();
     const key = coverKey(coverArtId, size);
-    await cacheStorage.put(
-      key,
-      blob,
-      blob.type || "image/jpeg",
-    );
+    await cacheStorage.put(key, blob, blob.type || "image/jpeg");
 
     const meta: CachedItemMeta = {
       id: coverArtId,
@@ -127,8 +110,6 @@ class CacheManager {
     return URL.createObjectURL(blob);
   }
 
-  // ── Bulk Caching ──
-
   private async cacheBulk(
     songs: { id: string; coverArt?: string }[],
     onProgress?: (current: number, total: number) => void,
@@ -141,10 +122,7 @@ class CacheManager {
           await this.cacheCover(song.coverArt);
         }
       } catch (err) {
-        console.error(
-          `Failed to cache song ${song.id}:`,
-          err,
-        );
+        console.error(`Failed to cache song ${song.id}:`, err);
       }
       completed++;
       onProgress?.(completed, songs.length);
@@ -165,8 +143,7 @@ class CacheManager {
     playlistId: string,
     onProgress?: (current: number, total: number) => void,
   ): Promise<void> {
-    const playlist =
-      await subsonic.playlists.getOne(playlistId);
+    const playlist = await subsonic.playlists.getOne(playlistId);
     if (!playlist?.entry) return;
     await this.cacheBulk(playlist.entry, onProgress);
   }
@@ -190,62 +167,6 @@ class CacheManager {
     await this.cacheBulk(songs, onProgress);
   }
 
-  // ── Background Queue ──
-
-  enqueueForCaching(songId: string): void {
-    const mode = useCacheStore.getState().settings.mode;
-    if (mode === "none") return;
-    if (isAudioCached(songId)) return;
-    if (this.queue.includes(songId)) return;
-
-    this.queue.push(songId);
-    if (!this.processing) {
-      this.processQueue();
-    }
-  }
-
-  private async processQueue(): Promise<void> {
-    this.processing = true;
-
-    while (this.queue.length > 0) {
-      if (this.activeDownloads >= this.maxConcurrency) {
-        await new Promise<void>((resolve) => {
-          const check = () => {
-            if (this.activeDownloads < this.maxConcurrency) {
-              resolve();
-            } else {
-              setTimeout(check, 200);
-            }
-          };
-          check();
-        });
-      }
-
-      const songId = this.queue.shift();
-      if (!songId) break;
-
-      this.activeDownloads++;
-      this.cacheSong(songId)
-        .catch((err) => {
-          console.error(
-            `Background cache failed for ${songId}:`,
-            err,
-          );
-        })
-        .finally(() => {
-          this.activeDownloads--;
-        });
-    }
-
-    this.processing = false;
-  }
-
-  cancelQueue(): void {
-    this.queue.length = 0;
-  }
-
-  // ── Eviction ──
-
   async enforceStorageLimit(): Promise<void> {
     const { maxCacheSize } = useCacheStore.getState().settings;
     if (maxCacheSize === 0) return;
@@ -256,11 +177,7 @@ class CacheManager {
       0,
     );
 
-    const toEvict = computeEvictionPlan(
-      items,
-      totalSize,
-      maxCacheSize,
-    );
+    const toEvict = computeEvictionPlan(items, totalSize, maxCacheSize);
     for (const key of toEvict) {
       await this.evictItem(key);
     }
@@ -272,17 +189,13 @@ class CacheManager {
     this.scheduleStatsRefresh();
   }
 
-  // ── Cleanup ──
-
   async clearAudioCache(): Promise<void> {
     const items = getCacheIndexItems();
     const keysToDelete = Object.entries(items)
       .filter(([, meta]) => meta.type === "audio")
       .map(([key]) => key);
 
-    await Promise.all(
-      keysToDelete.map((key) => cacheStorage.delete(key)),
-    );
+    await Promise.all(keysToDelete.map((key) => cacheStorage.delete(key)));
     for (const key of keysToDelete) {
       getCacheIndexActions().removeItem(key);
     }
@@ -295,9 +208,7 @@ class CacheManager {
       .filter(([, meta]) => meta.type === "cover")
       .map(([key]) => key);
 
-    await Promise.all(
-      keysToDelete.map((key) => cacheStorage.delete(key)),
-    );
+    await Promise.all(keysToDelete.map((key) => cacheStorage.delete(key)));
     for (const key of keysToDelete) {
       getCacheIndexActions().removeItem(key);
     }
@@ -309,8 +220,6 @@ class CacheManager {
     getCacheIndexActions().clear();
     this.refreshStats();
   }
-
-  // ── Stats ──
 
   private scheduleStatsRefresh(): void {
     if (this.statsTimer) return;

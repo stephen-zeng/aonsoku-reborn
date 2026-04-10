@@ -358,6 +358,11 @@
     "playNext": "Play next",
     "addLast": "Add last",
     "download": "Download",
+    "saveFile": "Save file",
+    "downloadAlbum": "Download album",
+    "downloadPlaylist": "Download playlist",
+    "downloadArtist": "Download artist",
+    "removeDownload": "Remove download",
     "playlist": {
       "add": "Add to playlist",
       "edit": "Edit playlist",
@@ -372,12 +377,7 @@
     "goto": {
       "artist": "Go to artist",
       "album": "Go to album"
-    },
-    "cache": "Cache song",
-    "cacheAlbum": "Cache album",
-    "cachePlaylist": "Cache playlist",
-    "cacheArtist": "Cache artist",
-    "removeFromCache": "Remove from cache"
+    }
   },
   "radios": {
     "label": "Radio",
@@ -605,21 +605,17 @@
       }
     },
     "storage": {
-      "mode": {
-        "group": "Cache Mode",
-        "description": "Choose how Aonsoku caches data for playback.",
-        "label": "Cache mode",
-        "none": {
-          "label": "None",
-          "description": "Stream everything. No local caching."
+      "downloadQuality": {
+        "group": "Download Quality",
+        "description": "Choose the audio quality for downloaded songs.",
+        "label": "Download quality",
+        "stream": {
+          "label": "Stream quality",
+          "description": "Download at the server's transcode quality setting."
         },
-        "performance": {
-          "label": "Performance",
-          "description": "Cache played songs and covers for faster loading."
-        },
-        "offline": {
-          "label": "Offline",
-          "description": "Full offline support. Sync metadata and cache audio."
+        "original": {
+          "label": "Original quality",
+          "description": "Download the original file without transcoding."
         }
       },
       "limits": {
@@ -635,9 +631,9 @@
         "clearAll": "Clear all caches"
       },
       "sync": {
-        "group": "Metadata Sync",
-        "description": "Sync library metadata for offline browsing. Audio files are cached separately during playback.",
-        "enabled": "Sync on launch",
+        "group": "Library Sync",
+        "description": "Sync library metadata for offline browsing. Downloaded songs are always available offline.",
+        "enabled": "Sync library",
         "coverArt": "Include cover art",
         "coverArtInfo": "Download all album and artist images during sync. This may use significant storage and bandwidth.",
         "lastSynced": "Last synced",

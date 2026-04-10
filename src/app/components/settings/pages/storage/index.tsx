@@ -28,69 +28,58 @@ import {
   useCacheStats,
   useLastSyncedAt,
 } from "@/store/cache.store";
-import {
-  CACHE_SIZE_OPTIONS,
-  CacheMode,
-} from "@/types/cache";
+import { CACHE_SIZE_OPTIONS, DownloadQuality } from "@/types/cache";
 import dateTime from "@/utils/dateTime";
 import { formatBytes } from "@/utils/formatBytes";
 
-const cacheModes: CacheMode[] = [
-  "none",
-  "performance",
-  "offline",
-];
+const downloadQualities: DownloadQuality[] = ["stream", "original"];
 
-function CacheModeSection() {
+function DownloadQualitySection() {
   const { t } = useTranslation();
-  const { mode } = useCacheSettings();
-  const { setMode } = useCacheActions();
+  const { downloadQuality } = useCacheSettings();
+  const { setDownloadQuality } = useCacheActions();
 
   return (
     <Root>
       <Header>
-        <HeaderTitle>
-          {t("settings.storage.mode.group")}
-        </HeaderTitle>
+        <HeaderTitle>{t("settings.storage.downloadQuality.group")}</HeaderTitle>
         <HeaderDescription>
-          {t("settings.storage.mode.description")}
+          {t("settings.storage.downloadQuality.description")}
         </HeaderDescription>
       </Header>
 
       <Content>
         <ContentItem>
           <ContentItemTitle>
-            {t("settings.storage.mode.label")}
+            {t("settings.storage.downloadQuality.label")}
           </ContentItemTitle>
           <ContentItemForm>
             <Select
-              value={mode}
+              value={downloadQuality}
               onValueChange={(value) =>
-                setMode(value as CacheMode)
+                setDownloadQuality(value as DownloadQuality)
               }
             >
               <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left">
                 <SelectValue>
                   <span className="text-sm text-foreground">
                     {t(
-                      `settings.storage.mode.${mode}.label`,
+                      `settings.storage.downloadQuality.${downloadQuality}.label`,
                     )}
                   </span>
                 </SelectValue>
               </SelectTrigger>
               <SelectContent align="end">
                 <SelectGroup>
-                  {cacheModes.map((m) => (
-                    <SelectItem key={m} value={m}>
+                  {downloadQualities.map((q) => (
+                    <SelectItem key={q} value={q}>
                       <div className="flex flex-col">
                         <span>
-                          {t(
-                            `settings.storage.mode.${m}.label`,
-                          )}
+                          {t(`settings.storage.downloadQuality.${q}.label`)}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {t(
-                            `settings.storage.mode.${m}.description`,
+                            `settings.storage.downloadQuality.${q}.description`,
                           )}
                         </span>
                       </div>
@@ -110,10 +99,9 @@ function CacheModeSection() {
 
 function CacheLimitsSection() {
   const { t } = useTranslation();
-  const { maxCacheSize, mode } = useCacheSettings();
+  const { maxCacheSize } = useCacheSettings();
   const { setMaxCacheSize } = useCacheActions();
-  const { audioSize, coverSize, audioCount, coverCount } =
-    useCacheStats();
+  const { audioSize, coverSize, audioCount, coverCount } = useCacheStats();
 
   const handleClearAudio = useCallback(() => {
     cacheManager.clearAudioCache();
@@ -128,20 +116,14 @@ function CacheLimitsSection() {
   }, []);
 
   const sizeLabel = useMemo(() => {
-    const option = CACHE_SIZE_OPTIONS.find(
-      (o) => o.value === maxCacheSize,
-    );
+    const option = CACHE_SIZE_OPTIONS.find((o) => o.value === maxCacheSize);
     return option?.label ?? formatBytes(maxCacheSize);
   }, [maxCacheSize]);
-
-  if (mode === "none") return null;
 
   return (
     <Root>
       <Header>
-        <HeaderTitle>
-          {t("settings.storage.limits.group")}
-        </HeaderTitle>
+        <HeaderTitle>{t("settings.storage.limits.group")}</HeaderTitle>
         <HeaderDescription>
           {t("settings.storage.limits.description")}
         </HeaderDescription>
@@ -155,15 +137,11 @@ function CacheLimitsSection() {
           <ContentItemForm>
             <Select
               value={maxCacheSize.toString()}
-              onValueChange={(value) =>
-                setMaxCacheSize(Number(value))
-              }
+              onValueChange={(value) => setMaxCacheSize(Number(value))}
             >
               <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left">
                 <SelectValue>
-                  <span className="text-sm text-foreground">
-                    {sizeLabel}
-                  </span>
+                  <span className="text-sm text-foreground">{sizeLabel}</span>
                 </SelectValue>
               </SelectTrigger>
               <SelectContent align="end">
@@ -251,22 +229,16 @@ function CacheLimitsSection() {
   );
 }
 
-function SyncSection() {
+function SyncLibrarySection() {
   const { t } = useTranslation();
-  const { mode, syncOnLaunch, syncCoverArt } =
-    useCacheSettings();
-  const { setSyncOnLaunch, setSyncCoverArt } =
-    useCacheActions();
+  const { syncLibrary, syncCoverArt } = useCacheSettings();
+  const { setSyncLibrary, setSyncCoverArt } = useCacheActions();
   const lastSyncedAt = useLastSyncedAt();
-
-  if (mode !== "offline") return null;
 
   return (
     <Root>
       <Header>
-        <HeaderTitle>
-          {t("settings.storage.sync.group")}
-        </HeaderTitle>
+        <HeaderTitle>{t("settings.storage.sync.group")}</HeaderTitle>
         <HeaderDescription>
           {t("settings.storage.sync.description")}
         </HeaderDescription>
@@ -278,41 +250,38 @@ function SyncSection() {
             {t("settings.storage.sync.enabled")}
           </ContentItemTitle>
           <ContentItemForm>
-            <Switch
-              checked={syncOnLaunch}
-              onCheckedChange={setSyncOnLaunch}
-            />
+            <Switch checked={syncLibrary} onCheckedChange={setSyncLibrary} />
           </ContentItemForm>
         </ContentItem>
 
-        <ContentItem>
-          <ContentItemTitle
-            info={t(
-              "settings.storage.sync.coverArtInfo",
-            )}
-          >
-            {t("settings.storage.sync.coverArt")}
-          </ContentItemTitle>
-          <ContentItemForm>
-            <Switch
-              checked={syncCoverArt}
-              onCheckedChange={setSyncCoverArt}
-            />
-          </ContentItemForm>
-        </ContentItem>
+        {syncLibrary && (
+          <>
+            <ContentItem>
+              <ContentItemTitle info={t("settings.storage.sync.coverArtInfo")}>
+                {t("settings.storage.sync.coverArt")}
+              </ContentItemTitle>
+              <ContentItemForm>
+                <Switch
+                  checked={syncCoverArt}
+                  onCheckedChange={setSyncCoverArt}
+                />
+              </ContentItemForm>
+            </ContentItem>
 
-        <ContentItem>
-          <ContentItemTitle>
-            {t("settings.storage.sync.lastSynced")}
-          </ContentItemTitle>
-          <ContentItemForm>
-            <span className="text-xs text-muted-foreground">
-              {lastSyncedAt
-                ? dateTime(lastSyncedAt).fromNow()
-                : t("settings.storage.sync.never")}
-            </span>
-          </ContentItemForm>
-        </ContentItem>
+            <ContentItem>
+              <ContentItemTitle>
+                {t("settings.storage.sync.lastSynced")}
+              </ContentItemTitle>
+              <ContentItemForm>
+                <span className="text-xs text-muted-foreground">
+                  {lastSyncedAt
+                    ? dateTime(lastSyncedAt).fromNow()
+                    : t("settings.storage.sync.never")}
+                </span>
+              </ContentItemForm>
+            </ContentItem>
+          </>
+        )}
       </Content>
     </Root>
   );
@@ -321,9 +290,9 @@ function SyncSection() {
 export function Storage() {
   return (
     <div className="space-y-4">
-      <CacheModeSection />
+      <DownloadQualitySection />
       <CacheLimitsSection />
-      <SyncSection />
+      <SyncLibrarySection />
     </div>
   );
 }

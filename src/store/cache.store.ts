@@ -4,18 +4,18 @@ import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
 import {
-  CacheMode,
   CacheSettings,
   CacheStatus,
   DEFAULT_MAX_CACHE_SIZE,
+  DownloadQuality,
   SyncState,
 } from "@/types/cache";
 
 interface CacheActions {
-  setMode: (mode: CacheMode) => void;
+  setDownloadQuality: (quality: DownloadQuality) => void;
   setMaxCacheSize: (bytes: number) => void;
+  setSyncLibrary: (enabled: boolean) => void;
   setSyncCoverArt: (enabled: boolean) => void;
-  setSyncOnLaunch: (enabled: boolean) => void;
   setIsOnline: (online: boolean) => void;
   updateCacheStats: (stats: {
     audioSize: number;
@@ -41,16 +41,33 @@ const defaultSyncState: SyncState = {
   processedItems: 0,
 };
 
+function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
+  if (persisted && typeof persisted === "object" && "mode" in persisted) {
+    const old = persisted as Record<string, unknown>;
+    return {
+      downloadQuality: "stream" as DownloadQuality,
+      maxCacheSize:
+        typeof old.maxCacheSize === "number"
+          ? old.maxCacheSize
+          : DEFAULT_MAX_CACHE_SIZE,
+      syncLibrary: old.mode === "offline",
+      syncCoverArt:
+        typeof old.syncCoverArt === "boolean" ? old.syncCoverArt : false,
+    };
+  }
+  return persisted as unknown as CacheSettings;
+}
+
 export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
   subscribeWithSelector(
     persist(
       devtools(
         immer((set) => ({
           settings: {
-            mode: "none" as CacheMode,
+            downloadQuality: "stream" as DownloadQuality,
             maxCacheSize: DEFAULT_MAX_CACHE_SIZE,
+            syncLibrary: false,
             syncCoverArt: false,
-            syncOnLaunch: true,
           },
           status: {
             isOnline: navigator.onLine,
@@ -62,9 +79,9 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             lastSyncedAt: null,
           },
           actions: {
-            setMode: (mode) => {
+            setDownloadQuality: (quality) => {
               set((state) => {
-                state.settings.mode = mode;
+                state.settings.downloadQuality = quality;
               });
             },
             setMaxCacheSize: (bytes) => {
@@ -72,14 +89,14 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
                 state.settings.maxCacheSize = bytes;
               });
             },
+            setSyncLibrary: (enabled) => {
+              set((state) => {
+                state.settings.syncLibrary = enabled;
+              });
+            },
             setSyncCoverArt: (enabled) => {
               set((state) => {
                 state.settings.syncCoverArt = enabled;
-              });
-            },
-            setSyncOnLaunch: (enabled) => {
-              set((state) => {
-                state.settings.syncOnLaunch = enabled;
               });
             },
             setIsOnline: (online) => {
@@ -117,22 +134,27 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             lastSyncedAt: state.status.lastSyncedAt,
           },
         }),
-        merge: (persisted, current) => merge({}, current, persisted),
+        merge: (persisted, current) => {
+          const raw = persisted as Record<string, unknown> | null;
+          if (!raw) return current;
+          const settings = raw.settings as Record<string, unknown> | undefined;
+          if (settings) {
+            raw.settings = migrateSettings(settings);
+          }
+          return merge({}, current, raw);
+        },
       },
     ),
   ),
   shallow,
 );
 
-// Selective hooks
-export const useCacheMode = () =>
-  useCacheStore((state) => state.settings.mode);
+export const useDownloadQuality = () =>
+  useCacheStore((state) => state.settings.downloadQuality);
 
-export const useCacheSettings = () =>
-  useCacheStore((state) => state.settings);
+export const useCacheSettings = () => useCacheStore((state) => state.settings);
 
-export const useCacheStatus = () =>
-  useCacheStore((state) => state.status);
+export const useCacheStatus = () => useCacheStore((state) => state.status);
 
 export const useCacheStats = () =>
   useCacheStore(
@@ -150,8 +172,7 @@ export const useIsOnline = () =>
 
 export const useIsOfflineMode = () =>
   useCacheStore(
-    (state) =>
-      state.settings.mode === "offline" && !state.status.isOnline,
+    (state) => state.settings.syncLibrary && !state.status.isOnline,
   );
 
 export const useSyncState = () =>
@@ -160,5 +181,4 @@ export const useSyncState = () =>
 export const useLastSyncedAt = () =>
   useCacheStore((state) => state.status.lastSyncedAt);
 
-export const useCacheActions = () =>
-  useCacheStore((state) => state.actions);
+export const useCacheActions = () => useCacheStore((state) => state.actions);

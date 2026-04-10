@@ -2,10 +2,7 @@ export function audioKey(songId: string): string {
   return `audio:${songId}`;
 }
 
-export function coverKey(
-  coverArtId: string,
-  size = "300",
-): string {
+export function coverKey(coverArtId: string, size = "300"): string {
   return `cover:${coverArtId}:${size}`;
 }
 

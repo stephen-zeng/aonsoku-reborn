@@ -5,7 +5,6 @@ import { RadioInfo } from "@/app/components/player/radio-info";
 import { TrackInfo } from "@/app/components/player/track-info";
 import { Button } from "@/app/components/ui/button";
 import { useCachedAudioUrl } from "@/app/hooks/use-cached-audio";
-import { cacheManager } from "@/service/cache";
 import {
   getVolume,
   usePlayerActions,
@@ -109,13 +108,6 @@ export function Player() {
 
     return () => window.removeEventListener("resize", checkIsMobile);
   }, []);
-
-  // Prefetch next song in queue for cache
-  const nextSongId = currentList[currentSongIndex + 1]?.id;
-  useEffect(() => {
-    if (!isPlaying || !song?.id || !nextSongId) return;
-    cacheManager.enqueueForCaching(nextSongId);
-  }, [isPlaying, song?.id, nextSongId]);
 
   const setupDuration = useCallback(() => {
     const audio = getAudioRef().current;

@@ -265,7 +265,12 @@
     "play": "Lecture",
     "addLast": "Ajouter à la file",
     "playNext": "Lecture suivante",
-    "download": "Télécharger"
+    "download": "Télécharger",
+    "saveFile": "Enregistrer le fichier",
+    "downloadAlbum": "Télécharger l'album",
+    "downloadPlaylist": "Télécharger la liste de lecture",
+    "downloadArtist": "Télécharger l'artiste",
+    "removeDownload": "Supprimer le téléchargement"
   },
   "update": {
     "dialog": {
@@ -355,6 +360,59 @@
         "bigPlayer": {
           "label": "Grand Lecteur",
           "blurSize": "Taille du floutage des images"
+        }
+      }
+    },
+    "storage": {
+      "downloadQuality": {
+        "group": "Qualité de téléchargement",
+        "description": "Choisissez la qualité audio pour les titres téléchargés.",
+        "label": "Qualité de téléchargement",
+        "stream": {
+          "label": "Qualité de flux",
+          "description": "Télécharger selon le paramètre de qualité de transcodage du serveur."
+        },
+        "original": {
+          "label": "Qualité originale",
+          "description": "Télécharger le fichier original sans transcodage."
+        }
+      },
+      "limits": {
+        "group": "Stockage en cache",
+        "description": "Gérer le stockage de l'audio et des pochettes en cache.",
+        "maxSize": "Taille maximale du cache audio",
+        "audioSize": "Cache audio",
+        "audioEntries": "{{count}} titres en cache",
+        "coverSize": "Cache des pochettes",
+        "coverEntries": "{{count}} images en cache",
+        "clearAudio": "Vider",
+        "clearCovers": "Vider",
+        "clearAll": "Vider tous les caches"
+      },
+      "sync": {
+        "group": "Synchronisation de la bibliothèque",
+        "description": "Synchroniser les métadonnées de la bibliothèque pour la navigation hors ligne. Les titres téléchargés sont toujours disponibles hors ligne.",
+        "enabled": "Synchroniser la bibliothèque",
+        "coverArt": "Inclure les pochettes",
+        "coverArtInfo": "Télécharger toutes les images d'albums et d'artistes pendant la synchronisation. Cela peut utiliser un espace de stockage et une bande passante importants.",
+        "lastSynced": "Dernière synchronisation",
+        "never": "Jamais",
+        "justNow": "À l'instant",
+        "syncNow": "Synchroniser maintenant",
+        "cancel": "Annuler",
+        "clear": "Effacer les données synchronisées",
+        "entries": "{{count}} éléments synchronisés",
+        "phases": {
+          "idle": "Préparation…",
+          "genres": "Synchronisation des genres…",
+          "artists": "Synchronisation des artistes…",
+          "playlists": "Synchronisation des listes de lecture…",
+          "albums": "Synchronisation des albums…",
+          "songs": "Synchronisation des titres…",
+          "coverArt": "Synchronisation des pochettes…",
+          "done": "Synchronisation terminée",
+          "error": "Échec de la synchronisation",
+          "cancelled": "Synchronisation annulée"
         }
       }
     }

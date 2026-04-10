@@ -3,7 +3,9 @@ import { OptionsButtons } from "@/app/components/options/buttons";
 import { ContextMenuSeparator } from "@/app/components/ui/context-menu";
 import { AddToPlaylistSubMenu } from "@/app/components/song/add-to-playlist";
 import { useOptions } from "@/app/hooks/use-options";
+import { cacheManager, audioKey } from "@/service/cache";
 import { ROUTES } from "@/routes/routesList";
+import { useIsAudioCached } from "@/store/cache-index.store";
 import { usePlayerActions } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 
@@ -23,6 +25,7 @@ export function QueueMenuOptions({ variant, song }: QueueMenuOptionsProps) {
     startDownload,
     openSongInfo,
   } = useOptions();
+  const isCached = useIsAudioCached(song.id);
 
   return (
     <>
@@ -80,13 +83,30 @@ export function QueueMenuOptions({ variant, song }: QueueMenuOptionsProps) {
           <ContextMenuSeparator />
         </>
       )}
-      <OptionsButtons.Download
+      <OptionsButtons.SaveFile
         variant={variant}
         onClick={(e) => {
           e.stopPropagation();
           startDownload(song.id);
         }}
       />
+      {isCached ? (
+        <OptionsButtons.RemoveDownload
+          variant={variant}
+          onClick={(e) => {
+            e.stopPropagation();
+            cacheManager.evictItem(audioKey(song.id));
+          }}
+        />
+      ) : (
+        <OptionsButtons.DownloadSong
+          variant={variant}
+          onClick={(e) => {
+            e.stopPropagation();
+            cacheManager.cacheSong(song.id);
+          }}
+        />
+      )}
       <ContextMenuSeparator />
       <OptionsButtons.SongInfo
         variant={variant}

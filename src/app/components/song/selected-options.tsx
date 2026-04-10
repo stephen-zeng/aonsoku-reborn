@@ -102,7 +102,7 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
       {isSingleSelected && (
         <>
           <ContextMenuSeparator />
-          <OptionsButtons.Download
+          <OptionsButtons.SaveFile
             variant="context"
             onClick={(e) => {
               e.stopPropagation();

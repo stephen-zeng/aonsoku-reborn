@@ -252,6 +252,59 @@
           "section": "Esconder secção de rádios"
         }
       }
+    },
+    "storage": {
+      "downloadQuality": {
+        "group": "Qualidade de Descarregamento",
+        "description": "Escolha a qualidade de áudio para as músicas descarregadas.",
+        "label": "Qualidade de descarregamento",
+        "stream": {
+          "label": "Qualidade de stream",
+          "description": "Descarregar com a configuração de qualidade de transcodificação do servidor."
+        },
+        "original": {
+          "label": "Qualidade original",
+          "description": "Descarregar o ficheiro original sem transcodificação."
+        }
+      },
+      "limits": {
+        "group": "Armazenamento de Cache",
+        "description": "Gerir o armazenamento de áudio e capas em cache.",
+        "maxSize": "Tamanho máximo do cache de áudio",
+        "audioSize": "Cache de áudio",
+        "audioEntries": "{{count}} músicas em cache",
+        "coverSize": "Cache de capas",
+        "coverEntries": "{{count}} imagens em cache",
+        "clearAudio": "Limpar",
+        "clearCovers": "Limpar",
+        "clearAll": "Limpar todos os caches"
+      },
+      "sync": {
+        "group": "Sincronização da Biblioteca",
+        "description": "Sincronizar metadados da biblioteca para navegação offline. As músicas descarregadas estão sempre disponíveis offline.",
+        "enabled": "Sincronizar biblioteca",
+        "coverArt": "Incluir capas",
+        "coverArtInfo": "Descarregar todas as imagens de álbuns e artistas durante a sincronização. Isto pode usar armazenamento e largura de banda significativos.",
+        "lastSynced": "Última sincronização",
+        "never": "Nunca",
+        "justNow": "Agora mesmo",
+        "syncNow": "Sincronizar Agora",
+        "cancel": "Cancelar",
+        "clear": "Limpar dados sincronizados",
+        "entries": "{{count}} itens sincronizados",
+        "phases": {
+          "idle": "A preparar…",
+          "genres": "A sincronizar géneros…",
+          "artists": "A sincronizar artistas…",
+          "playlists": "A sincronizar listas de reprodução…",
+          "albums": "A sincronizar álbuns…",
+          "songs": "A sincronizar músicas…",
+          "coverArt": "A sincronizar capas…",
+          "done": "Sincronização concluída",
+          "error": "Sincronização falhou",
+          "cancelled": "Sincronização cancelada"
+        }
+      }
     }
   },
   "playlist": {
@@ -466,6 +519,11 @@
     "playNext": "Tocar a seguir",
     "addLast": "Adicionar ao final",
     "download": "Descarregar",
+    "saveFile": "Guardar ficheiro",
+    "downloadAlbum": "Descarregar álbum",
+    "downloadPlaylist": "Descarregar lista de reprodução",
+    "downloadArtist": "Descarregar artista",
+    "removeDownload": "Remover descarregamento",
     "playlist": {
       "add": "Adicionar à playlist",
       "edit": "Editar playlist",

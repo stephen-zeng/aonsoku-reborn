@@ -9,11 +9,7 @@ class CacheStorageService {
     return `/_cache/${key}`;
   }
 
-  async put(
-    key: string,
-    data: Blob,
-    contentType: string,
-  ): Promise<void> {
+  async put(key: string, data: Blob, contentType: string): Promise<void> {
     const cache = await this.getCache();
     const response = new Response(data, {
       headers: {

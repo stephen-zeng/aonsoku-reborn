@@ -360,6 +360,11 @@
     "playNext": "Tocar a seguir",
     "addLast": "Adicionar ao final",
     "download": "Download",
+    "saveFile": "Salvar arquivo",
+    "downloadAlbum": "Baixar álbum",
+    "downloadPlaylist": "Baixar playlist",
+    "downloadArtist": "Baixar artista",
+    "removeDownload": "Remover download",
     "playlist": {
       "add": "Adicionar à playlist",
       "edit": "Editar playlist",
@@ -621,6 +626,119 @@
         "tray": {
           "label": "Minimizar para a Bandeja",
           "info": "Quando ativado, o aplicativo será minimizado para a bandeja do sistema em vez de fechar ao clicar no botão de fechar."
+        }
+      },
+      "updates": {
+        "group": "Atualizações do Aplicativo",
+        "description": "Verificar e instalar atualizações do aplicativo.",
+        "currentVersion": {
+          "label": "Versão Atual",
+          "info": "A versão do Aonsoku que você está executando no momento."
+        },
+        "status": {
+          "label": "Status da Atualização",
+          "info": "O status atual das atualizações do aplicativo."
+        },
+        "checkNow": {
+          "label": "Verificar Atualizações",
+          "info": "Verificar manualmente por atualizações disponíveis."
+        },
+        "checking": "Verificando atualizações...",
+        "upToDate": "Você está atualizado",
+        "updateAvailable": "Atualização Disponível",
+        "updateAvailableDesc": "Versão {{version}} está disponível",
+        "availableVersion": "Versão {{version}} disponível",
+        "download": "Baixar Atualização",
+        "downloading": "Baixando... {{percent}}%",
+        "downloadStarted": "Download Iniciado",
+        "downloadStartedDesc": "O download da atualização começou",
+        "downloadError": "Download Falhou",
+        "updateReady": "Atualização Pronta",
+        "updateReadyDesc": "A atualização será instalada quando você reiniciar o aplicativo",
+        "readyToInstall": "Pronto para instalar (reinicialização necessária)",
+        "installNow": "Instalar e Reiniciar",
+        "updateError": "Falha na Verificação de Atualização"
+      },
+      "lanControl": {
+        "group": "Controle LAN",
+        "description": "Gerenciar configurações de controle LAN para acesso remoto.",
+        "enable": {
+          "label": "Habilitar Controle LAN",
+          "info": "Ative o controle LAN para permitir acesso remoto a este aplicativo."
+        },
+        "port": {
+          "label": "Porta",
+          "info": "Especifique o número da porta para o servidor de controle LAN."
+        },
+        "password": {
+          "label": "Senha",
+          "info": "Defina uma senha para acesso seguro ao servidor de controle LAN."
+        },
+        "address": {
+          "label": "Endereços do Servidor",
+          "info": "Endereços de servidor disponíveis para acesso ao controle LAN."
+        },
+        "allowNavidromeAuth": {
+          "label": "Permitir Autenticação Navidrome",
+          "info": "Habilitar autenticação usando credenciais do Navidrome."
+        },
+        "serverStarted": "Servidor de controle LAN iniciado com sucesso.",
+        "serverError": "Falha ao iniciar o servidor de controle LAN.",
+        "passwordRegenerated": "Senha regenerada com sucesso.",
+        "addressCopied": "Endereço do servidor copiado para a área de transferência.",
+        "passwordCopied": "Senha copiada para a área de transferência."
+      }
+    },
+    "storage": {
+      "downloadQuality": {
+        "group": "Qualidade de Download",
+        "description": "Escolha a qualidade de áudio para as músicas baixadas.",
+        "label": "Qualidade de download",
+        "stream": {
+          "label": "Qualidade de stream",
+          "description": "Baixar com a configuração de qualidade de transcodificação do servidor."
+        },
+        "original": {
+          "label": "Qualidade original",
+          "description": "Baixar o arquivo original sem transcodificação."
+        }
+      },
+      "limits": {
+        "group": "Armazenamento de Cache",
+        "description": "Gerenciar o armazenamento de áudio e capas em cache.",
+        "maxSize": "Tamanho máximo do cache de áudio",
+        "audioSize": "Cache de áudio",
+        "audioEntries": "{{count}} músicas em cache",
+        "coverSize": "Cache de capas",
+        "coverEntries": "{{count}} imagens em cache",
+        "clearAudio": "Limpar",
+        "clearCovers": "Limpar",
+        "clearAll": "Limpar todos os caches"
+      },
+      "sync": {
+        "group": "Sincronização da Biblioteca",
+        "description": "Sincronizar metadados da biblioteca para navegação offline. As músicas baixadas estão sempre disponíveis offline.",
+        "enabled": "Sincronizar biblioteca",
+        "coverArt": "Incluir capas",
+        "coverArtInfo": "Baixar todas as imagens de álbuns e artistas durante a sincronização. Isso pode usar armazenamento e largura de banda significativos.",
+        "lastSynced": "Última sincronização",
+        "never": "Nunca",
+        "justNow": "Agora mesmo",
+        "syncNow": "Sincronizar Agora",
+        "cancel": "Cancelar",
+        "clear": "Limpar dados sincronizados",
+        "entries": "{{count}} itens sincronizados",
+        "phases": {
+          "idle": "Preparando…",
+          "genres": "Sincronizando gêneros…",
+          "artists": "Sincronizando artistas…",
+          "playlists": "Sincronizando playlists…",
+          "albums": "Sincronizando álbuns…",
+          "songs": "Sincronizando músicas…",
+          "coverArt": "Sincronizando capas…",
+          "done": "Sincronização concluída",
+          "error": "Sincronização falhou",
+          "cancelled": "Sincronização cancelada"
         }
       }
     }

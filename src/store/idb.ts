@@ -1,9 +1,6 @@
 import { createStore, del, get, set } from "idb-keyval";
 
-export const cacheIndexStore = createStore(
-  "aonsoku-cache",
-  "cache-index",
-);
+export const cacheIndexStore = createStore("aonsoku-cache", "cache-index");
 export const offlineLibraryStore = createStore(
   "aonsoku-offline",
   "offline-library",

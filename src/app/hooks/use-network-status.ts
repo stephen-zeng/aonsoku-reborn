@@ -1,10 +1,6 @@
 import { useEffect } from "react";
 import { useCacheActions, useCacheStore } from "@/store/cache.store";
 
-/**
- * Hook that monitors network status and updates the cache store.
- * Should be mounted once at the app root level.
- */
 export function useNetworkStatusObserver() {
   const { setIsOnline } = useCacheActions();
 
@@ -22,30 +18,20 @@ export function useNetworkStatusObserver() {
   }, [setIsOnline]);
 }
 
-/**
- * Hook to read current network status.
- */
 export function useNetworkStatus() {
-  const isOnline = useCacheStore(
-    (state) => state.status.isOnline,
-  );
-  const mode = useCacheStore((state) => state.settings.mode);
+  const isOnline = useCacheStore((state) => state.status.isOnline);
+  const syncLibrary = useCacheStore((state) => state.settings.syncLibrary);
 
   return {
     isOnline,
-    isOfflineMode: mode === "offline" && !isOnline,
+    isOfflineMode: syncLibrary && !isOnline,
   };
 }
 
-/**
- * Non-hook version for use in services.
- */
 export function getNetworkStatus() {
   const state = useCacheStore.getState();
   return {
     isOnline: state.status.isOnline,
-    isOfflineMode:
-      state.settings.mode === "offline" &&
-      !state.status.isOnline,
+    isOfflineMode: state.settings.syncLibrary && !state.status.isOnline,
   };
 }

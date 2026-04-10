@@ -421,6 +421,11 @@
     "playNext": "Als nächstes abspielen",
     "addLast": "Als letztes spielen",
     "download": "Herunterladen",
+    "saveFile": "Datei speichern",
+    "downloadAlbum": "Album herunterladen",
+    "downloadPlaylist": "Wiedergabeliste herunterladen",
+    "downloadArtist": "Künstler herunterladen",
+    "removeDownload": "Download entfernen",
     "playlist": {
       "add": "Zur Playlist hinzufügen",
       "edit": "Playlist bearbeiten",
@@ -605,6 +610,59 @@
           "section": "Radio-Abschnitt ausblenden"
         },
         "description": "Sichtbarkeit und Anordnung der Abschnitte in der Seitenleiste verwalten."
+      }
+    },
+    "storage": {
+      "downloadQuality": {
+        "group": "Download-Qualität",
+        "description": "Wählen Sie die Audioqualität für heruntergeladene Songs.",
+        "label": "Download-Qualität",
+        "stream": {
+          "label": "Stream-Qualität",
+          "description": "Mit der Transcodierungs-Qualitätseinstellung des Servers herunterladen."
+        },
+        "original": {
+          "label": "Originalqualität",
+          "description": "Die Originaldatei ohne Transcodierung herunterladen."
+        }
+      },
+      "limits": {
+        "group": "Cache-Speicher",
+        "description": "Audio- und Cover-Speicher verwalten.",
+        "maxSize": "Maximale Audio-Cache-Größe",
+        "audioSize": "Audio-Cache",
+        "audioEntries": "{{count}} Songs im Cache",
+        "coverSize": "Cover-Cache",
+        "coverEntries": "{{count}} Bilder im Cache",
+        "clearAudio": "Leeren",
+        "clearCovers": "Leeren",
+        "clearAll": "Alle Caches leeren"
+      },
+      "sync": {
+        "group": "Bibliothek-Synchronisierung",
+        "description": "Bibliotheksmetadaten für die Offlinenutzung synchronisieren. Heruntergeladene Songs sind immer offline verfügbar.",
+        "enabled": "Bibliothek synchronisieren",
+        "coverArt": "Cover einbeziehen",
+        "coverArtInfo": "Alle Album- und Künstlerbilder während der Synchronisation herunterladen. Dies kann erheblichen Speicherplatz und Bandbreite beanspruchen.",
+        "lastSynced": "Zuletzt synchronisiert",
+        "never": "Nie",
+        "justNow": "Gerade eben",
+        "syncNow": "Jetzt synchronisieren",
+        "cancel": "Abbrechen",
+        "clear": "Synchronisierte Daten löschen",
+        "entries": "{{count}} Elemente synchronisiert",
+        "phases": {
+          "idle": "Vorbereitung…",
+          "genres": "Genres werden synchronisiert…",
+          "artists": "Künstler werden synchronisiert…",
+          "playlists": "Wiedergabelisten werden synchronisiert…",
+          "albums": "Alben werden synchronisiert…",
+          "songs": "Songs werden synchronisiert…",
+          "coverArt": "Cover werden synchronisiert…",
+          "done": "Synchronisation abgeschlossen",
+          "error": "Synchronisation fehlgeschlagen",
+          "cancelled": "Synchronisation abgebrochen"
+        }
       }
     }
   }

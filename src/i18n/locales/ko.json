@@ -360,6 +360,59 @@
         },
         "group": "사이드바"
       }
+    },
+    "storage": {
+      "downloadQuality": {
+        "group": "다운로드 품질",
+        "description": "다운로드한 곡의 오디오 품질을 선택하세요.",
+        "label": "다운로드 품질",
+        "stream": {
+          "label": "스트림 품질",
+          "description": "서버의 트랜스코드 품질 설정으로 다운로드합니다."
+        },
+        "original": {
+          "label": "원본 품질",
+          "description": "트랜스코드 없이 원본 파일을 다운로드합니다."
+        }
+      },
+      "limits": {
+        "group": "캐시 저장소",
+        "description": "캐시된 오디오 및 커버 아트 저장소를 관리합니다.",
+        "maxSize": "최대 오디오 캐시 크기",
+        "audioSize": "오디오 캐시",
+        "audioEntries": "{{count}}곡 캐시됨",
+        "coverSize": "커버 아트 캐시",
+        "coverEntries": "{{count}}개 이미지 캐시됨",
+        "clearAudio": "지우기",
+        "clearCovers": "지우기",
+        "clearAll": "모든 캐시 지우기"
+      },
+      "sync": {
+        "group": "라이브러리 동기화",
+        "description": "오프라인 탐색을 위해 라이브러리 메타데이터를 동기화합니다. 다운로드한 곡은 항상 오프라인에서 사용할 수 있습니다.",
+        "enabled": "라이브러리 동기화",
+        "coverArt": "커버 아트 포함",
+        "coverArtInfo": "동기화 중에 모든 앨범 및 아티스트 이미지를 다운로드합니다. 상당한 저장 공간과 대역폭이 필요할 수 있습니다.",
+        "lastSynced": "마지막 동기화",
+        "never": "안 함",
+        "justNow": "방금",
+        "syncNow": "지금 동기화",
+        "cancel": "취소",
+        "clear": "동기화된 데이터 지우기",
+        "entries": "{{count}}개 항목 동기화됨",
+        "phases": {
+          "idle": "준비 중…",
+          "genres": "장르 동기화 중…",
+          "artists": "아티스트 동기화 중…",
+          "playlists": "재생목록 동기화 중…",
+          "albums": "앨범 동기화 중…",
+          "songs": "곡 동기화 중…",
+          "coverArt": "커버 아트 동기화 중…",
+          "done": "동기화 완료",
+          "error": "동기화 실패",
+          "cancelled": "동기화 취소됨"
+        }
+      }
     }
   },
   "time": {
@@ -486,7 +539,12 @@
     },
     "addLast": "대기열 끝에 추가",
     "play": "재생",
-    "download": "다운로드"
+    "download": "다운로드",
+    "saveFile": "파일 저장",
+    "downloadAlbum": "앨범 다운로드",
+    "downloadPlaylist": "재생목록 다운로드",
+    "downloadArtist": "아티스트 다운로드",
+    "removeDownload": "다운로드 제거"
   },
   "fullscreen": {
     "loadingLyrics": "가사 검색 중…",

@@ -3,7 +3,6 @@ import { DropdownMenuSeparator } from "@/app/components/ui/dropdown-menu";
 import { useOptions } from "@/app/hooks/use-options";
 import { cacheManager } from "@/service/cache";
 import { subsonic } from "@/service/subsonic";
-import { useCacheMode } from "@/store/cache.store";
 import { usePlaylists, useRemovePlaylist } from "@/store/playlists.store";
 import { Playlist, PlaylistWithEntries } from "@/types/responses/playlist";
 import { ISong } from "@/types/responses/song";
@@ -32,8 +31,6 @@ export function PlaylistOptions({
   const { setPlaylistDialogState, setData } = usePlaylists();
   const { play, playNext, playLast, startDownload } = useOptions();
   const { setPlaylistId, setConfirmDialogState } = useRemovePlaylist();
-  const cacheMode = useCacheMode();
-  const showCacheActions = cacheMode !== "none";
 
   function handleEdit() {
     setData({
@@ -120,7 +117,7 @@ export function PlaylistOptions({
         }}
       />
       <DropdownMenuSeparator />
-      <OptionsButtons.Download
+      <OptionsButtons.SaveFile
         variant={variant}
         disabled={disableDownload}
         onClick={(e) => {
@@ -128,15 +125,13 @@ export function PlaylistOptions({
           handleDownload();
         }}
       />
-      {showCacheActions && (
-        <OptionsButtons.CachePlaylist
-          variant={variant}
-          onClick={(e) => {
-            e.stopPropagation();
-            cacheManager.cachePlaylist(playlist.id);
-          }}
-        />
-      )}
+      <OptionsButtons.DownloadPlaylist
+        variant={variant}
+        onClick={(e) => {
+          e.stopPropagation();
+          cacheManager.cachePlaylist(playlist.id);
+        }}
+      />
       <DropdownMenuSeparator />
       <OptionsButtons.EditPlaylist
         variant={variant}

@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { EllipsisVertical, PlayIcon } from "lucide-react";
 import { CSSProperties, forwardRef, useState } from "react";
 import { getCoverArtUrl } from "@/api/httpClient";
+import { CachedIndicator } from "@/app/components/table/cached-indicator";
 import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { Button } from "@/app/components/ui/button";
@@ -122,6 +123,7 @@ export const QueueItemRow = forwardRef<
         </div>
 
         <div className="relative w-[60px] flex-shrink-0 flex items-center justify-end">
+          <CachedIndicator songId={song.id} />
           <span
             className={clsx(
               "text-xs transition-opacity",

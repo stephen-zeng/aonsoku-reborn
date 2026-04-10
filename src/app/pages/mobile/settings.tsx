@@ -3,6 +3,7 @@ import {
   EarthLock,
   FileText,
   Globe,
+  HardDrive,
   Headphones,
   LaptopIcon,
   Paintbrush,
@@ -20,6 +21,7 @@ import { Content } from "@/app/components/settings/pages/content";
 import { Desktop } from "@/app/components/settings/pages/desktop";
 import { Language } from "@/app/components/settings/pages/language";
 import { Privacy } from "@/app/components/settings/pages/privacy";
+import { Storage } from "@/app/components/settings/pages/storage";
 import { SettingsOptions } from "@/app/components/settings/options";
 import { isDesktop } from "@/utils/desktop";
 
@@ -36,6 +38,7 @@ const categories: CategoryItem[] = [
   { id: "language", icon: Globe },
   { id: "audio", icon: Headphones },
   { id: "content", icon: FileText },
+  { id: "storage", icon: HardDrive },
   ...(isDesktop() ? [accountsOption, desktopOption] : []),
   { id: "privacy", icon: EarthLock },
 ];
@@ -45,6 +48,7 @@ const pages: Record<SettingsOptions, () => JSX.Element> = {
   audio: () => <Audio />,
   language: () => <Language />,
   content: () => <Content />,
+  storage: () => <Storage />,
   accounts: () => <Accounts />,
   desktop: () => <Desktop />,
   privacy: () => <Privacy />,

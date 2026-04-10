@@ -1,8 +1,9 @@
-export type CacheMode = "none" | "performance" | "offline";
+export type DownloadQuality = "stream" | "original";
 
 export interface CachedItemMeta {
   id: string;
   type: "audio" | "cover";
+  quality?: DownloadQuality;
   sizeBytes: number;
   cachedAt: number;
   lastAccessedAt: number;
@@ -29,10 +30,10 @@ export interface SyncState {
 }
 
 export interface CacheSettings {
-  mode: CacheMode;
+  downloadQuality: DownloadQuality;
   maxCacheSize: number;
+  syncLibrary: boolean;
   syncCoverArt: boolean;
-  syncOnLaunch: boolean;
 }
 
 export interface CacheStatus {
@@ -53,4 +54,4 @@ export const CACHE_SIZE_OPTIONS = [
   { value: 0, label: "Unlimited" },
 ] as const;
 
-export const DEFAULT_MAX_CACHE_SIZE = 2_147_483_648; // 2 GB
+export const DEFAULT_MAX_CACHE_SIZE = 2_147_483_648;

@@ -359,6 +359,11 @@
     "play": "Reproducir",
     "addLast": "Añadir al final",
     "download": "Descargar",
+    "saveFile": "Guardar archivo",
+    "downloadAlbum": "Descargar álbum",
+    "downloadPlaylist": "Descargar lista de reproducción",
+    "downloadArtist": "Descargar artista",
+    "removeDownload": "Eliminar descarga",
     "playlist": {
       "add": "Añadir a lista de reproducción",
       "edit": "Editar Lista de Reproducción",
@@ -615,6 +620,59 @@
           "label": "LRCLIB"
         },
         "description": "Organiza los servicios externos a los que Aonsoku puede acceder."
+      }
+    },
+    "storage": {
+      "downloadQuality": {
+        "group": "Calidad de Descarga",
+        "description": "Elija la calidad de audio para las canciones descargadas.",
+        "label": "Calidad de descarga",
+        "stream": {
+          "label": "Calidad de stream",
+          "description": "Descargar con la configuración de calidad de transcodificación del servidor."
+        },
+        "original": {
+          "label": "Calidad original",
+          "description": "Descargar el archivo original sin transcodificación."
+        }
+      },
+      "limits": {
+        "group": "Almacenamiento en Caché",
+        "description": "Gestionar el almacenamiento de audio e imágenes en caché.",
+        "maxSize": "Tamaño máximo de caché de audio",
+        "audioSize": "Caché de audio",
+        "audioEntries": "{{count}} canciones en caché",
+        "coverSize": "Caché de portadas",
+        "coverEntries": "{{count}} imágenes en caché",
+        "clearAudio": "Limpiar",
+        "clearCovers": "Limpiar",
+        "clearAll": "Limpiar toda la caché"
+      },
+      "sync": {
+        "group": "Sincronización de Biblioteca",
+        "description": "Sincronizar metadatos de la biblioteca para navegación sin conexión. Las canciones descargadas están siempre disponibles sin conexión.",
+        "enabled": "Sincronizar biblioteca",
+        "coverArt": "Incluir portadas",
+        "coverArtInfo": "Descargar todas las imágenes de álbumes y artistas durante la sincronización. Esto puede usar espacio de almacenamiento y ancho de banda significativos.",
+        "lastSynced": "Última sincronización",
+        "never": "Nunca",
+        "justNow": "Justo ahora",
+        "syncNow": "Sincronizar Ahora",
+        "cancel": "Cancelar",
+        "clear": "Limpiar datos sincronizados",
+        "entries": "{{count}} elementos sincronizados",
+        "phases": {
+          "idle": "Preparando…",
+          "genres": "Sincronizando géneros…",
+          "artists": "Sincronizando artistas…",
+          "playlists": "Sincronizando listas de reproducción…",
+          "albums": "Sincronizando álbumes…",
+          "songs": "Sincronizando canciones…",
+          "coverArt": "Sincronizando portadas…",
+          "done": "Sincronización completa",
+          "error": "Sincronización fallida",
+          "cancelled": "Sincronización cancelada"
+        }
       }
     },
     "label": "Configuración"

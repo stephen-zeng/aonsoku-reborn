@@ -230,7 +230,12 @@
       "artist": "Přejít na umělce",
       "album": "Přejít na album"
     },
-    "download": "Stáhnout"
+    "download": "Stáhnout",
+    "saveFile": "Uložit soubor",
+    "downloadAlbum": "Stáhnout album",
+    "downloadPlaylist": "Stáhnout playlist",
+    "downloadArtist": "Stáhnout umělce",
+    "removeDownload": "Odebrat stažení"
   },
   "radios": {
     "addRadio": "Přidat rádio",
@@ -383,5 +388,60 @@
   },
   "album": {
     "headline": "Album"
+  },
+  "settings": {
+    "storage": {
+      "downloadQuality": {
+        "group": "Kvalita stahování",
+        "description": "Vyberte zvukovou kvalitu pro stažené skladby.",
+        "label": "Kvalita stahování",
+        "stream": {
+          "label": "Kvalita streamu",
+          "description": "Stáhnout s nastavením kvality transkódování serveru."
+        },
+        "original": {
+          "label": "Původní kvalita",
+          "description": "Stáhnout původní soubor bez překódování."
+        }
+      },
+      "limits": {
+        "group": "Mezipaměť",
+        "description": "Spravovat mezipaměť zvuku a obalů alb.",
+        "maxSize": "Maximální velikost mezipaměti zvuku",
+        "audioSize": "Mezipaměť zvuku",
+        "audioEntries": "{{count}} skladeb v mezipaměti",
+        "coverSize": "Mezipaměť obalů",
+        "coverEntries": "{{count}} obrázků v mezipaměti",
+        "clearAudio": "Vymazat",
+        "clearCovers": "Vymazat",
+        "clearAll": "Vymazat všechny mezipaměti"
+      },
+      "sync": {
+        "group": "Synchronizace knihovny",
+        "description": "Synchronizovat metadata knihovny pro offline prohlížení. Stažené skladby jsou vždy dostupné offline.",
+        "enabled": "Synchronizovat knihovnu",
+        "coverArt": "Zahrnout obaly",
+        "coverArtInfo": "Stáhnout všechny obrázky alb a umělců během synchronizace. To může vyžadovat značné úložiště a šířku pásma.",
+        "lastSynced": "Poslední synchronizace",
+        "never": "Nikdy",
+        "justNow": "Právě teď",
+        "syncNow": "Synchronizovat nyní",
+        "cancel": "Zrušit",
+        "clear": "Vymazat synchronizovaná data",
+        "entries": "{{count}} položek synchronizováno",
+        "phases": {
+          "idle": "Příprava…",
+          "genres": "Synchronizace žánrů…",
+          "artists": "Synchronizace umělců…",
+          "playlists": "Synchronizace playlistů…",
+          "albums": "Synchronizace alb…",
+          "songs": "Synchronizace skladeb…",
+          "coverArt": "Synchronizace obalů…",
+          "done": "Synchronizace dokončena",
+          "error": "Synchronizace selhala",
+          "cancelled": "Synchronizace zrušena"
+        }
+      }
+    }
   }
 }

@@ -46,15 +46,11 @@ class MetadataSyncService {
       processedItems,
       totalItems,
       progress:
-        totalItems > 0
-          ? Math.round((processedItems / totalItems) * 100)
-          : 0,
+        totalItems > 0 ? Math.round((processedItems / totalItems) * 100) : 0,
     });
   }
 
-  async syncAll(options?: {
-    includeCoverArt?: boolean;
-  }): Promise<void> {
+  async syncAll(options?: { includeCoverArt?: boolean }): Promise<void> {
     if (this.abortController) {
       this.abortController.abort();
     }
@@ -127,8 +123,7 @@ class MetadataSyncService {
       // 4. Songs
       if (signal.aborted) throw new DOMException("Aborted", "AbortError");
       this.updateSyncState("songs");
-      const knownSongCount =
-        useAppStore.getState().data.songCount ?? 100_000;
+      const knownSongCount = useAppStore.getState().data.songCount ?? 100_000;
       const songs = await subsonic.songs.getAllSongs(knownSongCount);
       await set(IDB_KEYS.songs, songs, offlineLibraryStore);
       this.updateSyncState("songs", songs.length, songs.length);
@@ -178,10 +173,7 @@ class MetadataSyncService {
 
   async getArtists(): Promise<ISimilarArtist[]> {
     return (
-      (await get<ISimilarArtist[]>(
-        IDB_KEYS.artists,
-        offlineLibraryStore,
-      )) ?? []
+      (await get<ISimilarArtist[]>(IDB_KEYS.artists, offlineLibraryStore)) ?? []
     );
   }
 
@@ -202,9 +194,7 @@ class MetadataSyncService {
   }
 
   async getLastSyncTime(): Promise<number | null> {
-    return (
-      (await get<number>(IDB_KEYS.timestamp, offlineLibraryStore)) ?? null
-    );
+    return (await get<number>(IDB_KEYS.timestamp, offlineLibraryStore)) ?? null;
   }
 
   async hasSyncedData(): Promise<boolean> {

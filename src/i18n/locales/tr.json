@@ -349,6 +349,11 @@
     "playNext": "Sıradakini oynat",
     "addLast": "Sona ekle",
     "download": "İndir",
+    "saveFile": "Dosyayı kaydet",
+    "downloadAlbum": "Albümü indir",
+    "downloadPlaylist": "Çalma listesini indir",
+    "downloadArtist": "Sanatçıyı indir",
+    "removeDownload": "İndirmeyi kaldır",
     "playlist": {
       "add": "Çalma listesine ekle",
       "edit": "Çalma listesini düzenle",
@@ -586,6 +591,59 @@
         "description": "Kenar çubuğunda görüntülenen bölümlerin görünürlüğünü ve organizasyonunu yönetin.",
         "radios": {
           "section": "Radyolar bölümünü gizle"
+        }
+      }
+    },
+    "storage": {
+      "downloadQuality": {
+        "group": "İndirme Kalitesi",
+        "description": "İndirilen şarkılar için ses kalitesini seçin.",
+        "label": "İndirme kalitesi",
+        "stream": {
+          "label": "Stream kalitesi",
+          "description": "Sunucunun dönüştürme kalitesi ayarında indirin."
+        },
+        "original": {
+          "label": "Orijinal kalite",
+          "description": "Kod dönüştürme olmadan orijinal dosyayı indirin."
+        }
+      },
+      "limits": {
+        "group": "Önbellek Depolama",
+        "description": "Önbelleğe alınmış ses ve kapak resmi depolamasını yönetin.",
+        "maxSize": "Maksimum ses önbellek boyutu",
+        "audioSize": "Ses önbelleği",
+        "audioEntries": "{{count}} şarkı önbelleğe alındı",
+        "coverSize": "Kapak resmi önbelleği",
+        "coverEntries": "{{count}} resim önbelleğe alındı",
+        "clearAudio": "Temizle",
+        "clearCovers": "Temizle",
+        "clearAll": "Tüm önbellekleri temizle"
+      },
+      "sync": {
+        "group": "Kitaplık Senkronizasyonu",
+        "description": "Çevrimdışı gezinme için kitaplık meta verilerini senkronize edin. İndirilen şarkılar her zaman çevrimdışı olarak kullanılabilir.",
+        "enabled": "Kitaplığı senkronize et",
+        "coverArt": "Kapak resmini dahil et",
+        "coverArtInfo": "Senkronizasyon sırasında tüm albüm ve sanatçı resimlerini indirin. Bu önemli depolama ve bant genişliği kullanabilir.",
+        "lastSynced": "Son senkronize edilen",
+        "never": "Hiçbir zaman",
+        "justNow": "Az önce",
+        "syncNow": "Şimdi Senkronize Et",
+        "cancel": "İptal",
+        "clear": "Senkronize verileri temizle",
+        "entries": "{{count}} öğe senkronize edildi",
+        "phases": {
+          "idle": "Hazırlanıyor…",
+          "genres": "Türler senkronize ediliyor…",
+          "artists": "Sanatçılar senkronize ediliyor…",
+          "playlists": "Çalma listeleri senkronize ediliyor…",
+          "albums": "Albümler senkronize ediliyor…",
+          "songs": "Şarkılar senkronize ediliyor…",
+          "coverArt": "Kapak resimleri senkronize ediliyor…",
+          "done": "Senkronizasyon tamamlandı",
+          "error": "Senkronizasyon başarısız",
+          "cancelled": "Senkronizasyon iptal edildi"
         }
       }
     },
