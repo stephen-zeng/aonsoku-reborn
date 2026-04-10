@@ -244,6 +244,54 @@ function CacheSong({
   );
 }
 
+function CacheAlbum({
+  variant = "dropdown",
+  ...props
+}: DropdownMenuItemProps) {
+  const { t } = useTranslation();
+
+  return (
+    <MenuItemFactory
+      variant={variant}
+      icon={<DownloadCloud className="mr-2 h-4 w-4" />}
+      label={t("options.cacheAlbum", "Cache album")}
+      {...props}
+    />
+  );
+}
+
+function CachePlaylist({
+  variant = "dropdown",
+  ...props
+}: DropdownMenuItemProps) {
+  const { t } = useTranslation();
+
+  return (
+    <MenuItemFactory
+      variant={variant}
+      icon={<DownloadCloud className="mr-2 h-4 w-4" />}
+      label={t("options.cachePlaylist", "Cache playlist")}
+      {...props}
+    />
+  );
+}
+
+function CacheArtist({
+  variant = "dropdown",
+  ...props
+}: DropdownMenuItemProps) {
+  const { t } = useTranslation();
+
+  return (
+    <MenuItemFactory
+      variant={variant}
+      icon={<DownloadCloud className="mr-2 h-4 w-4" />}
+      label={t("options.cacheArtist", "Cache artist")}
+      {...props}
+    />
+  );
+}
+
 function RemoveFromCache({
   variant = "dropdown",
   ...props
@@ -275,5 +323,8 @@ export const OptionsButtons = {
   GotoArtist,
   GotoAlbum,
   CacheSong,
+  CacheAlbum,
+  CachePlaylist,
+  CacheArtist,
   RemoveFromCache,
 };

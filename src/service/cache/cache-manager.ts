@@ -171,6 +171,25 @@ class CacheManager {
     await this.cacheBulk(playlist.entry, onProgress);
   }
 
+  async cacheArtist(
+    artistId: string,
+    onProgress?: (current: number, total: number) => void,
+  ): Promise<void> {
+    const artist = await subsonic.artists.getOne(artistId);
+    if (!artist?.album) return;
+
+    const results = await Promise.all(
+      artist.album.map((a) => subsonic.albums.getOne(a.id)),
+    );
+
+    const songs = results.flatMap((result) => {
+      if (!result) return [];
+      return result.song;
+    });
+
+    await this.cacheBulk(songs, onProgress);
+  }
+
   // ── Background Queue ──
 
   enqueueForCaching(songId: string): void {

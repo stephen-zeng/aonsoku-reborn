@@ -374,6 +374,9 @@
       "album": "Go to album"
     },
     "cache": "Cache song",
+    "cacheAlbum": "Cache album",
+    "cachePlaylist": "Cache playlist",
+    "cacheArtist": "Cache artist",
     "removeFromCache": "Remove from cache"
   },
   "radios": {

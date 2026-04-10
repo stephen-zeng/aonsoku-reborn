@@ -356,6 +356,9 @@
       "album": "前往专辑"
     },
     "cache": "缓存歌曲",
+    "cacheAlbum": "缓存专辑",
+    "cachePlaylist": "缓存播放列表",
+    "cacheArtist": "缓存艺人",
     "removeFromCache": "移除缓存"
   },
   "radios": {

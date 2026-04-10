@@ -5,6 +5,8 @@ import {
   DropdownMenuSeparator,
 } from "@/app/components/ui/dropdown-menu";
 import { useOptions } from "@/app/hooks/use-options";
+import { cacheManager } from "@/service/cache";
+import { useCacheMode } from "@/store/cache.store";
 import { SingleAlbum } from "@/types/responses/album";
 
 interface AlbumOptionsProps {
@@ -19,6 +21,8 @@ export function AlbumOptions({ album }: AlbumOptionsProps) {
     addToPlaylist,
     createNewPlaylist,
   } = useOptions();
+  const cacheMode = useCacheMode();
+  const showCacheActions = cacheMode !== "none";
 
   function handlePlayNext() {
     playNext(album.song, { albumId: album.id });
@@ -61,6 +65,11 @@ export function AlbumOptions({ album }: AlbumOptionsProps) {
       <DropdownMenuSeparator />
       <DropdownMenuGroup>
         <OptionsButtons.Download onClick={handleDownload} />
+        {showCacheActions && (
+          <OptionsButtons.CacheAlbum
+            onClick={() => cacheManager.cacheAlbum(album.id)}
+          />
+        )}
       </DropdownMenuGroup>
     </>
   );
