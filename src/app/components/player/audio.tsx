@@ -33,6 +33,9 @@ export function AudioPlayer({
   replayGain,
   src,
   onFatalError,
+  onTimeUpdate,
+  onLoadedMetadata,
+  onPlay,
   ...props
 }: AudioPlayerProps) {
   const { t } = useTranslation();
@@ -62,6 +65,8 @@ export function AudioPlayer({
         retryTimeoutRef.current = null;
       }
       retryCountRef.current = 0;
+      isRetryingRef.current = false;
+      retryProgressRef.current = null;
 
       // Revoke previous blob URL to prevent memory leaks
       if (audioSrc?.startsWith("blob:")) {
@@ -123,6 +128,8 @@ export function AudioPlayer({
 
   const retryCountRef = useRef(0);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isRetryingRef = useRef(false);
+  const retryProgressRef = useRef<number | null>(null);
   const MAX_RETRIES = 5;
 
   const clearPendingRetry = useCallback(() => {
@@ -131,6 +138,8 @@ export function AudioPlayer({
       retryTimeoutRef.current = null;
     }
     retryCountRef.current = 0;
+    isRetryingRef.current = false;
+    retryProgressRef.current = null;
   }, []);
 
   const scheduleRetry = useCallback(
@@ -142,10 +151,17 @@ export function AudioPlayer({
         return;
       }
 
+      // Capture initial position so subsequent retries restore here
+      // even after audio.load() resets currentTime to 0
+      if (retryProgressRef.current === null && audio.currentTime > 0) {
+        retryProgressRef.current = audio.currentTime;
+      }
+      isRetryingRef.current = true;
+
       retryCountRef.current += 1;
       const delay = Math.pow(2, retryCountRef.current - 1) * 1000;
       logger.info(
-        `Retrying audio (attempt ${retryCountRef.current}) in ${delay}ms`,
+        `Retrying audio (attempt ${retryCountRef.current}) in ${delay}ms, saved progress: ${retryProgressRef.current}`,
       );
 
       retryTimeoutRef.current = setTimeout(() => {
@@ -232,6 +248,8 @@ export function AudioPlayer({
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
       }
+      isRetryingRef.current = false;
+      retryProgressRef.current = null;
     };
   }, []);
 
@@ -242,7 +260,13 @@ export function AudioPlayer({
       if (!audio || retryCountRef.current === 0) return;
 
       logger.info("Network recovered, retrying audio playback");
-      clearPendingRetry();
+      // Clear pending timeout and count, but keep progress/retrying
+      // flags so the reconnect attempt still restores position
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
+      retryCountRef.current = 0;
       audio.load();
       audio.play().catch((err) => {
         logger.error("Reconnect play failed:", err);
@@ -252,7 +276,7 @@ export function AudioPlayer({
 
     window.addEventListener("online", handleOnline);
     return () => window.removeEventListener("online", handleOnline);
-  }, [audioRef, clearPendingRetry, scheduleRetry]);
+  }, [audioRef, scheduleRetry]);
 
   const handlePlaySuccess = useCallback(() => {
     clearPendingRetry();
@@ -340,9 +364,27 @@ export function AudioPlayer({
       src={audioSrc}
       crossOrigin={crossOrigin}
       onError={handleAudioError}
+      onTimeUpdate={(e) => {
+        if (isRetryingRef.current) return;
+        onTimeUpdate?.(e);
+      }}
+      onLoadedMetadata={(e) => {
+        onLoadedMetadata?.(e);
+        // Backup: restore from ref in case store was overwritten by
+        // a timeupdate(0) that slipped through before the gate
+        const audio = audioRef.current;
+        if (
+          audio &&
+          isRetryingRef.current &&
+          retryProgressRef.current !== null &&
+          audio.currentTime !== retryProgressRef.current
+        ) {
+          audio.currentTime = retryProgressRef.current;
+        }
+      }}
       onPlay={(e) => {
         handlePlaySuccess();
-        props.onPlay?.(e);
+        onPlay?.(e);
       }}
       playsInline
       preload="auto"
