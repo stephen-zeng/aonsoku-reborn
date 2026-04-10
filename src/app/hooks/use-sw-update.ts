@@ -10,7 +10,7 @@ export function useSwUpdate() {
   const [status, setStatus] = useState<SwStatus>("idle");
 
   useEffect(() => {
-    registerServiceWorker(setStatus);
+    return registerServiceWorker(setStatus);
   }, []);
 
   return {

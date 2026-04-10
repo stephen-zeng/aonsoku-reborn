@@ -2,26 +2,59 @@ export type SwStatus = "idle" | "installing" | "waiting" | "error";
 
 type SwStatusCallback = (status: SwStatus) => void;
 
-let registered = false;
+let didRegister = false;
 let waitingWorker: ServiceWorker | null = null;
 let savedReg: ServiceWorkerRegistration | null = null;
-let savedCallback: SwStatusCallback | null = null;
+
+const listeners = new Set<SwStatusCallback>();
+let currentStatus: SwStatus = "idle";
+
+function emitStatus(status: SwStatus): void {
+  if (status === currentStatus) return;
+  currentStatus = status;
+  for (const cb of listeners) {
+    cb(status);
+  }
+}
+
+let shouldReloadOnControllerChange = false;
+let hasReloaded = false;
 
 /**
  * Register and manage the service worker lifecycle.
  * Only registers on hostnames ending with "aonsoku.realtvop.top".
- * Guarded against multiple calls (React StrictMode).
+ *
+ * Each call subscribes `onStatusChange` and immediately replays the
+ * current status so late callers (React StrictMode remount) don't
+ * miss state.  Returns an unsubscribe function for effect cleanup.
  */
-export function registerServiceWorker(onStatusChange: SwStatusCallback): void {
-  if (registered) return;
+export function registerServiceWorker(
+  onStatusChange: SwStatusCallback,
+): () => void {
+  // Always subscribe & replay, even if we already registered the SW
+  listeners.add(onStatusChange);
+  onStatusChange(currentStatus);
+
+  if (!didRegister) {
+    didRegister = true;
+    bootstrapServiceWorker();
+  }
+
+  return () => {
+    listeners.delete(onStatusChange);
+  };
+}
+
+function bootstrapServiceWorker(): void {
   if (!("serviceWorker" in navigator)) return;
   if (!location.hostname.endsWith("aonsoku.realtvop.top")) return;
 
-  registered = true;
-  savedCallback = onStatusChange;
-
+  // Only reload when the user explicitly triggered an update
   navigator.serviceWorker.addEventListener("controllerchange", () => {
-    window.location.reload();
+    if (shouldReloadOnControllerChange && !hasReloaded) {
+      hasReloaded = true;
+      window.location.reload();
+    }
   });
 
   navigator.serviceWorker
@@ -32,14 +65,14 @@ export function registerServiceWorker(onStatusChange: SwStatusCallback): void {
 
       if (reg.waiting && navigator.serviceWorker.controller) {
         waitingWorker = reg.waiting;
-        onStatusChange("waiting");
+        emitStatus("waiting");
       }
 
       reg.addEventListener("updatefound", () => {
         const newWorker = reg.installing;
         if (!newWorker) return;
 
-        onStatusChange("installing");
+        emitStatus("installing");
 
         newWorker.addEventListener("statechange", () => {
           if (
@@ -47,18 +80,18 @@ export function registerServiceWorker(onStatusChange: SwStatusCallback): void {
             navigator.serviceWorker.controller
           ) {
             waitingWorker = newWorker;
-            onStatusChange("waiting");
+            emitStatus("waiting");
           }
 
           if (newWorker.state === "redundant") {
-            onStatusChange("error");
+            emitStatus("error");
           }
         });
       });
     })
     .catch((err) => {
       console.error("[SW] Registration failed:", err);
-      onStatusChange("error");
+      emitStatus("error");
     });
 }
 
@@ -67,7 +100,9 @@ export function registerServiceWorker(onStatusChange: SwStatusCallback): void {
  * The controllerchange listener will then reload the page.
  */
 export function applySwUpdate(): void {
-  waitingWorker?.postMessage({ type: "SKIP_WAITING" });
+  if (!waitingWorker) return;
+  shouldReloadOnControllerChange = true;
+  waitingWorker.postMessage({ type: "SKIP_WAITING" });
 }
 
 /**
@@ -75,19 +110,18 @@ export function applySwUpdate(): void {
  * If the SW is unchanged on the server, resets status to idle.
  */
 export function retrySwUpdate(): void {
-  if (!savedReg || !savedCallback) return;
-  const cb = savedCallback;
-  cb("installing");
+  if (!savedReg) return;
+  emitStatus("installing");
   savedReg
     .update()
     .then(() => {
       // If no new worker appeared, the SW is unchanged — reset
       if (!savedReg?.installing) {
-        cb("idle");
+        emitStatus("idle");
       }
     })
     .catch((err) => {
       console.error("[SW] Retry failed:", err);
-      cb("error");
+      emitStatus("error");
     });
 }

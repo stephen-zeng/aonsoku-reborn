@@ -84,6 +84,13 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+function cacheResponse(key, response) {
+  return caches
+    .open(CACHE_NAME)
+    .then((cache) => cache.put(key, response))
+    .catch((err) => console.warn("[SW] Cache write failed:", err));
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -99,10 +106,7 @@ self.addEventListener("fetch", (event) => {
       fetch(request)
         .then((response) => {
           if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put("/index.html", clone);
-            });
+            event.waitUntil(cacheResponse("/index.html", response.clone()));
           }
           return response;
         })
@@ -119,10 +123,7 @@ self.addEventListener("fetch", (event) => {
           cached ||
           fetch(request).then((response) => {
             if (response.ok) {
-              const clone = response.clone();
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(request, clone);
-              });
+              event.waitUntil(cacheResponse(request, response.clone()));
             }
             return response;
           }),
