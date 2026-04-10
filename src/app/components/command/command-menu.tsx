@@ -194,10 +194,7 @@ export default function CommandMenu() {
   };
 
   const showNotFoundMessage = Boolean(
-    enableQuery &&
-      !showAlbumGroup &&
-      !showArtistGroup &&
-      !showSongGroup,
+    enableQuery && !showAlbumGroup && !showArtistGroup && !showSongGroup,
   );
 
   return (

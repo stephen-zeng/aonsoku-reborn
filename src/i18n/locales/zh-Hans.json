@@ -471,6 +471,11 @@
       "title": "发现了一个新版本！",
       "remindLater": "稍候提醒我",
       "install": "安装并重启"
+    },
+    "sw": {
+      "updating": "更新中...",
+      "refresh": "刷新以更新",
+      "error": "更新失败 - 重试"
     }
   },
   "about": {

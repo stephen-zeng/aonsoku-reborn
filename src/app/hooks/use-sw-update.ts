@@ -3,6 +3,7 @@ import {
   type SwStatus,
   applySwUpdate,
   registerServiceWorker,
+  retrySwUpdate,
 } from "@/utils/sw-register";
 
 export function useSwUpdate() {
@@ -12,5 +13,9 @@ export function useSwUpdate() {
     registerServiceWorker(setStatus);
   }, []);
 
-  return { status, applyUpdate: applySwUpdate };
+  return {
+    status,
+    applyUpdate: applySwUpdate,
+    retryUpdate: retrySwUpdate,
+  };
 }

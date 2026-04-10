@@ -505,7 +505,8 @@
     },
     "sw": {
       "updating": "Updating...",
-      "refresh": "Refresh to update"
+      "refresh": "Refresh to update",
+      "error": "Update failed – Retry"
     }
   },
   "about": {

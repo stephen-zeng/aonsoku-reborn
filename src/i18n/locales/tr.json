@@ -492,6 +492,11 @@
       "started": "Güncelleme işlemi başladı.",
       "success": "Güncelleme yüklendi! Uygulama şimdi yeniden başlatılacak.",
       "error": "Güncelleme yüklenemedi. Lütfen doğrudan GitHub'dan indirmeyi deneyin."
+    },
+    "sw": {
+      "updating": "Updating...",
+      "refresh": "Refresh to update",
+      "error": "Update failed – Retry"
     }
   },
   "about": {

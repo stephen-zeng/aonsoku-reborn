@@ -39,15 +39,29 @@ self.addEventListener("install", (event) => {
 
       // 2. Precache build assets — batch first, individual fallback
       if (Array.isArray(PRECACHE_MANIFEST)) {
+        const failed = [];
+
         try {
           await cache.addAll(PRECACHE_MANIFEST);
         } catch {
+          // Batch failed — retry individually, collect failures
           await Promise.all(
             PRECACHE_MANIFEST.map((url) =>
               cache.add(url).catch((err) => {
+                failed.push(url);
                 console.warn(`[SW] Failed to precache ${url}:`, err);
               }),
             ),
+          );
+        }
+
+        // JS/CSS are critical — missing chunks cause white-screen
+        const criticalFailed = failed.filter(
+          (url) => url.endsWith(".js") || url.endsWith(".css"),
+        );
+        if (criticalFailed.length > 0) {
+          throw new Error(
+            `[SW] Critical assets failed: ${criticalFailed.join(", ")}`,
           );
         }
       }
@@ -62,9 +76,7 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter(
-              (key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME,
-            )
+            .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
             .map((key) => caches.delete(key)),
         ),
       )

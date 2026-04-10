@@ -27,10 +27,7 @@ function swCacheVersionPlugin(buildHash: string): Plugin {
           withFileTypes: true,
         })) {
           if (entry.isDirectory()) {
-            walk(
-              path.join(dir, entry.name),
-              `${prefix}${entry.name}/`,
-            );
+            walk(path.join(dir, entry.name), `${prefix}${entry.name}/`);
           } else if (!entry.name.endsWith(".map")) {
             assetFiles.push(`${prefix}${entry.name}`);
           }
@@ -50,8 +47,7 @@ function swCacheVersionPlugin(buildHash: string): Plugin {
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const buildTimestamp = mode === "production" ? Date.now() : 0;
-  const buildHash =
-    buildTimestamp > 0 ? buildTimestamp.toString(36) : "dev";
+  const buildHash = buildTimestamp > 0 ? buildTimestamp.toString(36) : "dev";
   return {
     plugins: [
       react(),

@@ -494,6 +494,11 @@
       "success": "Обновление установлено! Приложение сейчас перезапустится.",
       "started": "Процесс обновления начался.",
       "error": "Не удалось установить обновление. Попробуйте загрузить его напрямую с GitHub."
+    },
+    "sw": {
+      "updating": "Updating...",
+      "refresh": "Refresh to update",
+      "error": "Update failed – Retry"
     }
   },
   "about": {

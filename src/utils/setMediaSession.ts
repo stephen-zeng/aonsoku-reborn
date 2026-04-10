@@ -57,11 +57,7 @@ function setMediaSession(
   function buildArtwork(): { artwork: MediaImage[] } {
     if (!song.coverArt) return { artwork: [] };
 
-    const src = getCoverArtUrl(
-      song.coverArt,
-      "song",
-      MEDIA_SESSION_COVER_SIZE,
-    );
+    const src = getCoverArtUrl(song.coverArt, "song", MEDIA_SESSION_COVER_SIZE);
 
     return {
       artwork: [

@@ -45,9 +45,7 @@ export function createManualChunks(id: string) {
   const modulePath = id.split("node_modules/")[1];
   const topLevelFolder = modulePath.split("/")[0];
   const pkgName =
-    topLevelFolder === ".pnpm"
-      ? modulePath.split("/")[1]
-      : topLevelFolder;
+    topLevelFolder === ".pnpm" ? modulePath.split("/")[1] : topLevelFolder;
   const has = (s: string) => pkgName.includes(s);
 
   // 2. Heavy vendor — optional features loaded on demand

@@ -623,6 +623,11 @@
       "success": "La mise à jour a été installée ! L'application va redémarrer.",
       "started": "La mise à jour a commencé.",
       "error": "L'installation de la mise à jour a échoué. Veuillez la télécharger directement depuis GitHub."
+    },
+    "sw": {
+      "updating": "Updating...",
+      "refresh": "Refresh to update",
+      "error": "Update failed – Retry"
     }
   }
 }
