@@ -2,22 +2,47 @@ import react from "@vitejs/plugin-react";
 import fs from "fs";
 import path from "path";
 import { defineConfig, type Plugin } from "vite";
-import { createManualChunks } from "./src/manual-chunks";
+import { createManualChunks } from "./manual-chunks";
 
 function swCacheVersionPlugin(buildHash: string): Plugin {
   return {
     name: "sw-cache-version",
     closeBundle() {
-      const swPath = path.resolve(__dirname, "dist/sw.js");
+      const distDir = path.resolve(__dirname, "dist");
+      const swPath = path.join(distDir, "sw.js");
+
+      let content: string;
       try {
-        const content = fs.readFileSync(swPath, "utf-8");
-        fs.writeFileSync(
-          swPath,
-          content.replace(/__SW_CACHE_VERSION__/g, buildHash),
-        );
+        content = fs.readFileSync(swPath, "utf-8");
       } catch {
         // sw.js not in build output — nothing to patch
+        return;
       }
+
+      // Generate precache manifest: collect all files under dist/assets/
+      const assetFiles: string[] = [];
+      const assetsDir = path.join(distDir, "assets");
+      function walk(dir: string, prefix: string) {
+        for (const entry of fs.readdirSync(dir, {
+          withFileTypes: true,
+        })) {
+          if (entry.isDirectory()) {
+            walk(
+              path.join(dir, entry.name),
+              `${prefix}${entry.name}/`,
+            );
+          } else if (!entry.name.endsWith(".map")) {
+            assetFiles.push(`${prefix}${entry.name}`);
+          }
+        }
+      }
+      walk(assetsDir, "/assets/");
+
+      content = content
+        .replace(/__SW_CACHE_VERSION__/g, buildHash)
+        .replace(/"__SW_PRECACHE_MANIFEST__"/g, JSON.stringify(assetFiles));
+
+      fs.writeFileSync(swPath, content);
     },
   };
 }

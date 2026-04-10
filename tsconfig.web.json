@@ -37,7 +37,7 @@
     "electron/main/**/*",
     "electron/preload/**/*",
     "vite.config.ts",
-    "src/manual-chunks.ts"
+    "manual-chunks.ts"
   ],
   "references": [
     {

@@ -4,7 +4,10 @@ const CACHE_VERSION = "__SW_CACHE_VERSION__";
 const CACHE_NAME = `aonsoku-cache-v${CACHE_VERSION}`;
 const CACHE_PREFIX = "aonsoku-cache-v";
 
-const PRECACHE_URLS = ["/index.html"];
+// Replaced at build time with a JSON array of asset URLs.
+// In dev, stays as a string — Array.isArray() skips precaching.
+const PRECACHE_MANIFEST = "__SW_PRECACHE_MANIFEST__";
+const CRITICAL_URLS = ["/index.html"];
 
 // Check by pathname — caller already parsed the URL
 function isCacheablePathname(pathname) {
@@ -30,14 +33,25 @@ function isCacheablePathname(pathname) {
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
-      .catch((err) => {
-        console.error("[SW] Precache failed, aborting install:", err);
-        // Rejecting keeps this SW in "redundant" state — old SW stays active
-        throw err;
-      }),
+    caches.open(CACHE_NAME).then(async (cache) => {
+      // 1. Critical resources must succeed
+      await cache.addAll(CRITICAL_URLS);
+
+      // 2. Precache build assets — batch first, individual fallback
+      if (Array.isArray(PRECACHE_MANIFEST)) {
+        try {
+          await cache.addAll(PRECACHE_MANIFEST);
+        } catch {
+          await Promise.all(
+            PRECACHE_MANIFEST.map((url) =>
+              cache.add(url).catch((err) => {
+                console.warn(`[SW] Failed to precache ${url}:`, err);
+              }),
+            ),
+          );
+        }
+      }
+    }),
   );
 });
 

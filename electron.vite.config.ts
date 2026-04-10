@@ -1,7 +1,7 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "electron-vite";
 import { resolve } from "path";
-import { createElectronManualChunks } from "./electron.manual-chunks";
+import { createManualChunks } from "./manual-chunks";
 
 export default defineConfig(() => {
   const buildTimestamp = Date.now();
@@ -47,7 +47,7 @@ export default defineConfig(() => {
             index: resolve(__dirname, "index.html"),
           },
           output: {
-            manualChunks: createElectronManualChunks,
+            manualChunks: createManualChunks,
           },
         },
       },
