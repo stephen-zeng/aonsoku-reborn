@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
 import { Linux } from "@/app/components/controls/linux";
 import { SettingsDialog } from "@/app/components/settings/dialog";
-import { OfflineIndicator } from "@/app/components/offline-indicator";
 import { useNetworkStatusObserver } from "@/app/hooks/use-network-status";
 import { LangObserver } from "@/app/observers/lang-observer";
 import { MediaSessionObserver } from "@/app/observers/media-session-observer";
@@ -58,7 +57,6 @@ function App() {
       <ThemeObserver />
       <LanControlObserver />
       <MetadataSyncObserver />
-      <OfflineIndicator />
       <SettingsDialog />
       <RouterProvider router={router} />
       <ToastContainer />
