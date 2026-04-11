@@ -200,7 +200,7 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
   }, [playerRef]);
 
   return (
-    <div className="w-full h-full text-center lrc-box" data-vaul-no-drag>
+    <div className="w-full h-full text-left lrc-box" data-vaul-no-drag>
       <LyricPlayer
         ref={lyricPlayerRef}
         style={{
@@ -213,7 +213,7 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
         }}
         lyricLines={lyricLines}
         currentTime={currentTime}
-        alignAnchor="center"
+        alignAnchor="left"
         enableBlur={true}
         enableSpring={true}
         onLyricLineClick={(line) => {
@@ -280,7 +280,7 @@ function UnsyncedLyrics({ lines, translationLines }: UnsyncedLyricsProps) {
   return (
     <ScrollArea
       type="always"
-      className="w-full h-full overflow-y-auto text-center font-semibold text-xl 2xl:text-2xl px-2 scroll-smooth"
+      className="w-full h-full overflow-y-auto text-left font-semibold text-xl 2xl:text-2xl px-2 scroll-smooth"
       thumbClassName="secondary-thumb-bar"
       ref={lyricsBoxRef}
       data-vaul-no-drag
@@ -310,7 +310,7 @@ type CenteredMessageProps = ComponentPropsWithoutRef<"p">;
 function CenteredMessage({ children }: CenteredMessageProps) {
   return (
     <div className="w-full h-full flex justify-center items-center">
-      <p className="leading-10 drop-shadow-lg text-center font-semibold text-xl 2xl:text-2xl">
+      <p className="leading-10 drop-shadow-lg text-left font-semibold text-xl 2xl:text-2xl">
         {children}
       </p>
     </div>
