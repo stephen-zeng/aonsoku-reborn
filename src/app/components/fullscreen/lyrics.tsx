@@ -200,7 +200,7 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
   }, [playerRef]);
 
   return (
-    <div className="w-full h-full text-center lrc-box">
+    <div className="w-full h-full text-center lrc-box" data-vaul-no-drag>
       <LyricPlayer
         ref={lyricPlayerRef}
         style={{
@@ -283,6 +283,7 @@ function UnsyncedLyrics({ lines, translationLines }: UnsyncedLyricsProps) {
       className="w-full h-full overflow-y-auto text-center font-semibold text-xl 2xl:text-2xl px-2 scroll-smooth"
       thumbClassName="secondary-thumb-bar"
       ref={lyricsBoxRef}
+      data-vaul-no-drag
     >
       {lines.map((line, index) => (
         <div
