@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
+import { useIsOnline } from "@/store/cache.store";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
 
@@ -64,10 +65,13 @@ async function fetchTotalSongs(): Promise<number> {
 }
 
 export function useTotalSongs() {
+  const isOnline = useIsOnline();
+
   return useQuery({
     queryKey: [queryKeys.song.count],
     queryFn: fetchTotalSongs,
     staleTime: convertMinutesToMs(5),
     gcTime: convertMinutesToMs(5),
+    enabled: isOnline,
   });
 }

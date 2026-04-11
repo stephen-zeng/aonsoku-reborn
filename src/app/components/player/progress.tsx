@@ -18,6 +18,7 @@ import {
   usePlayerSonglist,
   useIsRemoteControlActive,
 } from "@/store/player.store";
+import { useIsOnline } from "@/store/cache.store";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 import { logger } from "@/utils/logger";
 
@@ -39,6 +40,7 @@ export function PlayerProgress({
   const { isSong } = usePlayerMediaType();
   const { setProgress } = usePlayerActions();
   const isRemoteControlActive = useIsRemoteControlActive();
+  const isOnline = useIsOnline();
   const isScrobbleSentRef = useRef(false);
   const isNowPlayingSentRef = useRef(false);
 
@@ -115,6 +117,8 @@ export function PlayerProgress({
     if (isRemoteControlActive || !isSong || !isPlaying || !currentSong?.id)
       return;
 
+    if (!isOnline) return;
+
     // Send now playing notification when song starts
     if (progress === 0 && !isNowPlayingSentRef.current) {
       subsonic.scrobble.send(currentSong.id, false);
@@ -125,7 +129,14 @@ export function PlayerProgress({
     if (progress === 0 && !isPlaying) {
       isNowPlayingSentRef.current = false;
     }
-  }, [isSong, isPlaying, currentSong?.id, progress, isRemoteControlActive]);
+  }, [
+    isSong,
+    isPlaying,
+    currentSong?.id,
+    progress,
+    isRemoteControlActive,
+    isOnline,
+  ]);
 
   // Reset the flag when the song changes
   useEffect(() => {
@@ -137,6 +148,7 @@ export function PlayerProgress({
       return;
     }
     if (isRemoteControlActive || !isSong) return;
+    if (!isOnline) return;
 
     const progressPercentage = (progress / currentDuration) * 100;
 
@@ -164,6 +176,7 @@ export function PlayerProgress({
     isPlaying,
     isRemoteControlActive,
     isLocalSeeking,
+    isOnline,
   ]);
 
   const currentTime = convertSecondsToTime(

@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import ImageHeader from "@/app/components/album/image-header";
@@ -10,6 +9,7 @@ import { RemoveSongFromPlaylistDialog } from "@/app/components/playlist/remove-s
 import { DataTable } from "@/app/components/ui/data-table";
 import ErrorPage from "@/app/pages/error-page";
 import { songsColumns } from "@/app/tables/songs-columns";
+import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
 import { ColumnFilter } from "@/types/columnFilter";
@@ -27,10 +27,19 @@ export default function Playlist() {
     data: playlist,
     isLoading,
     isFetching,
-  } = useQuery({
-    queryKey: [queryKeys.playlist.single, playlistId],
-    queryFn: () => subsonic.playlists.getOne(playlistId),
-  });
+  } = useOfflineQuery(
+    [queryKeys.playlist.single, playlistId],
+    () => subsonic.playlists.getOne(playlistId),
+    {
+      enabled: !!playlistId,
+      offlineFn: async () => {
+        const playlists = await offlineData.playlists();
+        const found = playlists.find((p) => p.id === playlistId);
+        if (!found) throw new Error(`Playlist ${playlistId} not found offline`);
+        return found;
+      },
+    },
+  );
 
   if (isFetching || isLoading) return <PlaylistFallback />;
   if (!playlist) {

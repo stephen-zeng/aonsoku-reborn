@@ -1,8 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
 import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
+import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 
 async function fetchFavorites() {
   const response = await subsonic.songs.getFavoriteSongs();
@@ -19,10 +19,12 @@ async function fetchTotalFavorites(): Promise<number> {
 }
 
 export function useTotalFavorites() {
-  return useQuery({
-    queryKey: [queryKeys.favorites.count],
-    queryFn: fetchTotalFavorites,
+  return useOfflineQuery([queryKeys.favorites.count], fetchTotalFavorites, {
     staleTime: convertMinutesToMs(5),
     gcTime: convertMinutesToMs(5),
+    offlineFn: async () => {
+      const songs = await offlineData.songs();
+      return songs.filter((s) => s.starred != null).length;
+    },
   });
 }

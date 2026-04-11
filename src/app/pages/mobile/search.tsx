@@ -8,6 +8,7 @@ import { Input } from "@/app/components/ui/input";
 import { useSongList } from "@/app/hooks/use-song-list";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
+import { useIsOnline } from "@/store/cache.store";
 import { usePlayerActions } from "@/store/player.store";
 import { byteLength } from "@/utils/byteLength";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
@@ -112,6 +113,7 @@ export default function MobileSearch() {
   const { getAlbumSongs, getArtistAllSongs } = useSongList();
 
   const enableQuery = byteLength(query) >= 3;
+  const isOnline = useIsOnline();
 
   const { data: searchResult } = useQuery({
     queryKey: [queryKeys.search, query],
@@ -122,7 +124,7 @@ export default function MobileSearch() {
         artistCount: 6,
         songCount: 6,
       }),
-    enabled: enableQuery,
+    enabled: enableQuery && isOnline,
     staleTime: convertMinutesToMs(5),
   });
 

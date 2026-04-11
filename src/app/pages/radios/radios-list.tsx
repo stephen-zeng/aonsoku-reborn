@@ -14,6 +14,7 @@ import { Button } from "@/app/components/ui/button";
 import { DataTableList } from "@/app/components/ui/data-table-list";
 import { radiosColumns } from "@/app/tables/radios-columns";
 import { subsonic } from "@/service/subsonic";
+import { useIsOnline } from "@/store/cache.store";
 import { usePlayerActions } from "@/store/player.store";
 import { useRadios } from "@/store/radios.store";
 import { Radio } from "@/types/responses/radios";
@@ -23,10 +24,12 @@ export default function Radios() {
   const { setDialogState, setData } = useRadios();
   const { t } = useTranslation();
   const { setPlayRadio } = usePlayerActions();
+  const isOnline = useIsOnline();
 
   const { data: radios, isLoading } = useQuery({
     queryKey: [queryKeys.radio.all],
     queryFn: subsonic.radios.getAll,
+    enabled: isOnline,
   });
 
   const columns = radiosColumns();

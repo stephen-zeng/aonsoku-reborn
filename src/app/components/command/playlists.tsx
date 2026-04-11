@@ -1,10 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { Dot } from "@/app/components/dot";
 import { CommandGroup, CommandItem } from "@/app/components/ui/command";
 import { ROUTES } from "@/routes/routesList";
+import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 import { subsonic } from "@/service/subsonic";
 import { Playlist } from "@/types/responses/playlist";
 import { convertSecondsToHumanRead } from "@/utils/convertSecondsToTime";
@@ -15,10 +15,11 @@ export function CommandPlaylists({ runCommand }: CommandItemProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const { data: playlists } = useQuery({
-    queryKey: [queryKeys.playlist.all],
-    queryFn: subsonic.playlists.getAll,
-  });
+  const { data: playlists } = useOfflineQuery(
+    [queryKeys.playlist.all],
+    subsonic.playlists.getAll,
+    { offlineFn: offlineData.playlists },
+  );
 
   if (!playlists || playlists.length === 0) return null;
 

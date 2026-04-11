@@ -7,6 +7,7 @@ import {
   getAlbumList,
   getArtistDiscography,
 } from "@/queries/albums";
+import { useIsOnline } from "@/store/cache.store";
 import { AlbumListType } from "@/types/responses/album";
 import {
   AlbumsFilters,
@@ -26,6 +27,7 @@ export function useAlbumsListModel() {
   const currentYear = new Date().getFullYear().toString();
 
   const scrollDivRef = useRef<HTMLDivElement | null>(null);
+  const isOnline = useIsOnline();
 
   const currentFilter = getSearchParam<AlbumListType>(
     AlbumsSearchParams.MainFilter,
@@ -77,6 +79,7 @@ export function useAlbumsListModel() {
   };
 
   function enableMainQuery() {
+    if (!isOnline) return false;
     if (currentFilter === AlbumsFilters.ByGenre && genre === "") return false;
 
     return true;

@@ -9,6 +9,7 @@ import {
 import roundedIcon from "@/assets/icon.svg";
 import githubIcon from "@/assets/icons/github-mark-white.svg";
 import { subsonic } from "@/service/subsonic";
+import { useIsOnline } from "@/store/cache.store";
 import { getAppInfo } from "@/utils/appName";
 import { queryKeys } from "@/utils/queryKeys";
 
@@ -20,10 +21,12 @@ interface AboutDialogProps {
 export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
   const { t } = useTranslation();
   const { name, version, buildHash, buildTime, url } = getAppInfo();
+  const isOnline = useIsOnline();
 
   const { data: server, isLoading } = useQuery({
     queryKey: [queryKeys.update.serverInfo],
     queryFn: subsonic.ping.pingInfo,
+    enabled: isOnline,
   });
 
   return (

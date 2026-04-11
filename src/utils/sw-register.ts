@@ -47,7 +47,14 @@ export function registerServiceWorker(
 
 function bootstrapServiceWorker(): void {
   if (!("serviceWorker" in navigator)) return;
-  if (!location.hostname.endsWith("aonsoku.realtvop.top")) return;
+  // Allow SW registration on all deployment targets including localhost and Electron
+  const isLocalhost =
+    location.hostname === "localhost" || location.hostname === "127.0.0.1";
+  const isFileProtocol = location.protocol === "file:";
+  // Skip registration for file:// protocol (Electron without dev server)
+  if (isFileProtocol) return;
+  // On localhost, only register in production builds (SW precache won't work in dev)
+  if (isLocalhost && import.meta.env.DEV) return;
 
   // Only reload when the user explicitly triggered an update
   navigator.serviceWorker.addEventListener("controllerchange", () => {

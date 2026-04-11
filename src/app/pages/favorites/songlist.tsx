@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { SongListLayout } from "@/app/components/song/song-list-layout";
 import { useTotalFavorites } from "@/app/hooks/use-favorite-songs";
 import { getFavoriteSongs } from "@/queries/songs";
+import { useIsOnline } from "@/store/cache.store";
 import { AlbumsSearchParams } from "@/utils/albumsFilter";
 import { queryKeys } from "@/utils/queryKeys";
 import { SearchParamsHandler } from "@/utils/searchParamsHandler";
@@ -12,6 +13,7 @@ export default function SongList() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const { getSearchParam } = new SearchParamsHandler(searchParams);
+  const isOnline = useIsOnline();
 
   const filter = getSearchParam<string>(AlbumsSearchParams.MainFilter, "");
   const query = getSearchParam<string>(AlbumsSearchParams.Query, "");
@@ -27,6 +29,7 @@ export default function SongList() {
       initialPageParam: 0,
       queryFn: fetchSongs,
       getNextPageParam: (lastPage) => lastPage.nextOffset,
+      enabled: isOnline,
     });
 
   const { data: songCountData, isLoading: songCountIsLoading } =

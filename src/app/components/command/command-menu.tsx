@@ -17,6 +17,7 @@ import {
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
+import { useIsOnline } from "@/store/cache.store";
 import { byteLength } from "@/utils/byteLength";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
@@ -38,6 +39,7 @@ export default function CommandMenu() {
   const { open, setOpen } = useAppStore((state) => state.command);
   const location = useLocation();
   const params = useParams();
+  const isOnline = useIsOnline();
 
   const [query, setQuery] = useState("");
   const [pages, setPages] = useState<CommandPages[]>(["HOME"]);
@@ -53,21 +55,21 @@ export default function CommandMenu() {
   const { data: albumData } = useQuery({
     queryKey: [queryKeys.album.single, params.albumId],
     queryFn: () => subsonic.albums.getOne(params.albumId!),
-    enabled: Boolean(params.albumId),
+    enabled: Boolean(params.albumId) && isOnline,
     staleTime: convertMinutesToMs(5),
   });
 
   const { data: artistData } = useQuery({
     queryKey: [queryKeys.artist.single, params.artistId],
     queryFn: () => subsonic.artists.getOne(params.artistId!),
-    enabled: Boolean(params.artistId),
+    enabled: Boolean(params.artistId) && isOnline,
     staleTime: convertMinutesToMs(5),
   });
 
   const { data: playlistData } = useQuery({
     queryKey: [queryKeys.playlist.single, params.playlistId],
     queryFn: () => subsonic.playlists.getOne(params.playlistId!),
-    enabled: Boolean(params.playlistId),
+    enabled: Boolean(params.playlistId) && isOnline,
     staleTime: convertMinutesToMs(5),
   });
 
@@ -131,7 +133,7 @@ export default function CommandMenu() {
         artistCount: 4,
         songCount: 4,
       }),
-    enabled: enableQuery,
+    enabled: enableQuery && isOnline,
     staleTime: convertMinutesToMs(5),
   });
 

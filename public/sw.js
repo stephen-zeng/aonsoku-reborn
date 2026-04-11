@@ -3,11 +3,45 @@
 const CACHE_VERSION = "__SW_CACHE_VERSION__";
 const CACHE_NAME = `aonsoku-cache-v${CACHE_VERSION}`;
 const CACHE_PREFIX = "aonsoku-cache-v";
+const API_CACHE_NAME = `aonsoku-api-v${CACHE_VERSION}`;
 
 // Replaced at build time with a JSON array of asset URLs.
 // In dev, stays as a string — Array.isArray() skips precaching.
 const PRECACHE_MANIFEST = "__SW_PRECACHE_MANIFEST__";
 const CRITICAL_URLS = ["/index.html"];
+
+// API paths that are safe to cache with StaleWhileRevalidate
+const CACHEABLE_API_PREFIXES = [
+  "/rest/getGenres",
+  "/rest/getArtists",
+  "/rest/getAlbumList",
+  "/rest/getAlbumList2",
+  "/rest/getAlbum",
+  "/rest/getArtist",
+  "/rest/getArtistInfo",
+  "/rest/getArtistInfo2",
+  "/rest/getSong",
+  "/rest/getPlaylist",
+  "/rest/getPlaylists",
+  "/rest/getMusicDirectory",
+  "/rest/getIndexes",
+  "/rest/getMusicFolders",
+  "/rest/getTopSongs",
+  "/rest/getLyrics",
+  "/rest/search",
+  "/rest/search2",
+  "/rest/search3",
+  "/rest/getCoverArt",
+];
+
+function isApiGetRequest(request) {
+  return (
+    request.method === "GET" &&
+    CACHEABLE_API_PREFIXES.some((prefix) =>
+      new URL(request.url).pathname.startsWith(prefix),
+    )
+  );
+}
 
 // Check by pathname — caller already parsed the URL
 function isCacheablePathname(pathname) {
@@ -65,6 +99,9 @@ self.addEventListener("install", (event) => {
           );
         }
       }
+
+      // 3. Open API cache
+      await caches.open(API_CACHE_NAME);
     }),
   );
 });
@@ -76,7 +113,11 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+            .filter(
+              (key) =>
+                (key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME) ||
+                (key.startsWith("aonsoku-api-") && key !== API_CACHE_NAME),
+            )
             .map((key) => caches.delete(key)),
         ),
       )
@@ -89,6 +130,42 @@ function cacheResponse(key, response) {
     .open(CACHE_NAME)
     .then((cache) => cache.put(key, response))
     .catch((err) => console.warn("[SW] Cache write failed:", err));
+}
+
+// Stale-while-revalidate for API responses
+function staleWhileRevalidate(event) {
+  const { request } = event;
+
+  event.respondWith(
+    caches.open(API_CACHE_NAME).then((cache) =>
+      cache.match(request).then((cached) => {
+        // Kick off network fetch in background to update cache
+        const fetchPromise = fetch(request)
+          .then((response) => {
+            if (response.ok) {
+              event.waitUntil(cache.put(request, response.clone()));
+            }
+            return response;
+          })
+          .catch(() => undefined);
+
+        if (cached) {
+          // Return stale cache immediately, revalidate in background
+          return cached;
+        }
+
+        // No cache — must wait for network
+        return fetchPromise.then(
+          (response) =>
+            response ||
+            new Response("", {
+              status: 503,
+              statusText: "Service Unavailable",
+            }),
+        );
+      }),
+    ),
+  );
 }
 
 self.addEventListener("fetch", (event) => {
@@ -132,7 +209,13 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Everything else (API calls, etc.): network-only pass-through
+  // Cacheable API GET requests: stale-while-revalidate
+  if (isApiGetRequest(request)) {
+    staleWhileRevalidate(event);
+    return;
+  }
+
+  // Everything else (API mutations, non-cacheable calls): network-only pass-through
 });
 
 self.addEventListener("message", (event) => {

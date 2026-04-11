@@ -42,6 +42,7 @@ import { ROUTES } from "@/routes/routesList";
 import { useAppActions, useAppData } from "@/store/app.store";
 import { isDesktop } from "@/utils/desktop";
 import { removeSlashFromUrl } from "@/utils/removeSlashFromUrl";
+import { queryKeys } from "@/utils/queryKeys";
 
 const loginSchema = z.object({
   url: z
@@ -105,7 +106,14 @@ export function LoginForm() {
     });
 
     if (status) {
-      await queryClient.invalidateQueries();
+      await queryClient.invalidateQueries({ queryKey: [queryKeys.album] });
+      await queryClient.invalidateQueries({ queryKey: [queryKeys.artist] });
+      await queryClient.invalidateQueries({ queryKey: [queryKeys.song] });
+      await queryClient.invalidateQueries({ queryKey: [queryKeys.playlist] });
+      await queryClient.invalidateQueries({ queryKey: [queryKeys.favorites] });
+      await queryClient.invalidateQueries({ queryKey: [queryKeys.genre] });
+      await queryClient.invalidateQueries({ queryKey: [queryKeys.radio] });
+      await queryClient.invalidateQueries({ queryKey: [queryKeys.search] });
       toast.success(t("toast.server.success"));
       navigate(ROUTES.LIBRARY.HOME, { replace: true });
     } else {

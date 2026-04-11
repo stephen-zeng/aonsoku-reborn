@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { DiscAlbumIcon, Mic2Icon, Music2Icon } from "lucide-react";
 import { ElementType } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,6 +5,7 @@ import { Link } from "react-router-dom";
 import { EmptyPlaylistsMessage } from "@/app/components/playlist/empty-message";
 import { SidebarPlaylistGenerator } from "@/app/components/sidebar/sidebar-generator";
 import { ROUTES } from "@/routes/routesList";
+import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 import { subsonic } from "@/service/subsonic";
 import { queryKeys } from "@/utils/queryKeys";
 
@@ -30,10 +30,11 @@ function LibraryCard({ icon: Icon, label, to }: LibraryCardProps) {
 export default function MobileLibrary() {
   const { t } = useTranslation();
 
-  const { data: playlists } = useQuery({
-    queryKey: [queryKeys.playlist.all],
-    queryFn: subsonic.playlists.getAll,
-  });
+  const { data: playlists } = useOfflineQuery(
+    [queryKeys.playlist.all],
+    subsonic.playlists.getAll,
+    { offlineFn: offlineData.playlists },
+  );
 
   const quickLinks = [
     {

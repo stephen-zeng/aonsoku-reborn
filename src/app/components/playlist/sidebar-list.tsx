@@ -1,10 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
 import { ComponentPropsWithoutRef } from "react";
 import { useTranslation } from "react-i18next";
 import { SidebarPlaylistButtons } from "@/app/components/playlist/sidebar-buttons";
 import { SidebarPlaylistGenerator } from "@/app/components/sidebar/sidebar-generator";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 import { subsonic } from "@/service/subsonic";
 import { queryKeys } from "@/utils/queryKeys";
 import { EmptyPlaylistsMessage } from "./empty-message";
@@ -12,10 +12,11 @@ import { EmptyPlaylistsMessage } from "./empty-message";
 export function SidebarPlaylists() {
   const { t } = useTranslation();
 
-  const { data: playlists } = useQuery({
-    queryKey: [queryKeys.playlist.all],
-    queryFn: subsonic.playlists.getAll,
-  });
+  const { data: playlists } = useOfflineQuery(
+    [queryKeys.playlist.all],
+    subsonic.playlists.getAll,
+    { offlineFn: offlineData.playlists },
+  );
 
   return (
     <div className="flex flex-col flex-grow overflow-y-auto">

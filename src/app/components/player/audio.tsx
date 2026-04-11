@@ -144,6 +144,12 @@ export function AudioPlayer({
 
   const scheduleRetry = useCallback(
     (audio: HTMLAudioElement) => {
+      if (!navigator.onLine) {
+        logger.info("Offline, skipping audio retry");
+        clearPendingRetry();
+        return;
+      }
+
       if (retryCountRef.current >= MAX_RETRIES) {
         toast.error(t("warnings.songError"));
         clearPendingRetry();
@@ -165,6 +171,10 @@ export function AudioPlayer({
       );
 
       retryTimeoutRef.current = setTimeout(() => {
+        if (!navigator.onLine) {
+          clearPendingRetry();
+          return;
+        }
         audio.load();
         audio.play().catch((err) => {
           logger.error("Retry play failed:", err);

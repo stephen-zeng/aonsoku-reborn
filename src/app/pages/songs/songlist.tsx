@@ -10,6 +10,7 @@ import {
 } from "@/app/components/songs/songs-filters";
 import { useTotalSongs } from "@/app/hooks/use-total-songs";
 import { getArtistAllSongs, songsSearch } from "@/queries/songs";
+import { useIsOnline } from "@/store/cache.store";
 import {
   AlbumsFilters,
   AlbumsSearchParams,
@@ -25,6 +26,7 @@ export default function SongList() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const { getSearchParam } = new SearchParamsHandler(searchParams);
+  const isOnline = useIsOnline();
 
   const filter = getSearchParam<string>(AlbumsSearchParams.MainFilter, "");
   const query = getSearchParam<string>(AlbumsSearchParams.Query, "");
@@ -60,6 +62,7 @@ export default function SongList() {
       initialPageParam: 0,
       queryFn: fetchSongs,
       getNextPageParam: (lastPage) => lastPage.nextOffset,
+      enabled: isOnline,
     });
 
   const { data: songCountData, isLoading: songCountIsLoading } =

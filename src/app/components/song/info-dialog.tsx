@@ -15,6 +15,7 @@ import {
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
+import { useIsOnline } from "@/store/cache.store";
 import { useSongInfo } from "@/store/ui.store";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 import dateTime from "@/utils/dateTime";
@@ -25,11 +26,12 @@ import { queryKeys } from "@/utils/queryKeys";
 export function SongInfoDialog() {
   const { t } = useTranslation();
   const { songId, modalOpen, reset } = useSongInfo();
+  const isOnline = useIsOnline();
 
   const { data: song, isLoading } = useQuery({
     queryKey: [queryKeys.song.info, songId],
     queryFn: () => subsonic.songs.getSong(songId),
-    enabled: modalOpen,
+    enabled: modalOpen && isOnline,
   });
 
   const loadedAlbumId = song ? typeof song.albumId === "string" : false;
