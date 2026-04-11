@@ -502,6 +502,11 @@
       "started": "Proces aktualizacji został rozpoczęty.",
       "error": "Nie udało się zainstalować aktualizacji. Spróbuj ją pobrać bezpośrednio z GitHuba.",
       "success": "Aktualizacja została zainstalowana! Aplikacja zostanie zrestartowana."
+    },
+    "sw": {
+      "updating": "Updating...",
+      "refresh": "Refresh to update",
+      "error": "Update failed – Retry"
     }
   },
   "about": {

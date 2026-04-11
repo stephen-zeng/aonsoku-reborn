@@ -14,7 +14,7 @@
     ]
   },
   "include": [
-    "electron.manual-chunks.ts",
+    "manual-chunks.ts",
     "electron.vite.config.*",
     "electron/env.d.ts",
     "electron/main/**/*",

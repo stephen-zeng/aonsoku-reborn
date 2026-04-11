@@ -625,6 +625,11 @@
       "error": "업데이트를 설치하지 못했습니다. GitHub에서 직접 다운로드하세요.",
       "started": "업데이트가 시작되었습니다.",
       "success": "업데이트 설치가 완료되었습니다! 앱을 재실행합니다."
+    },
+    "sw": {
+      "updating": "Updating...",
+      "refresh": "Refresh to update",
+      "error": "Update failed – Retry"
     }
   },
   "mobile": {

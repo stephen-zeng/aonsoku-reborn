@@ -509,7 +509,9 @@
       "error": "Failed to install the update. Please try downloading it directly from GitHub."
     },
     "sw": {
-      "newVersion": "A new version is available. Click to reload."
+      "updating": "Updating...",
+      "refresh": "Refresh to update",
+      "error": "Update failed – Retry"
     }
   },
   "about": {

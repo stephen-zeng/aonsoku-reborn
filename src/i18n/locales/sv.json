@@ -469,6 +469,11 @@
       "success": "Uppdateringen har installerats! Appen kommer nu att starta om.",
       "started": "Uppdateringsprocessen har påbörjats.",
       "error": "Misslyckades med att installera uppdateringen. Försök att ladda ner den direkt från GitHub."
+    },
+    "sw": {
+      "updating": "Updating...",
+      "refresh": "Refresh to update",
+      "error": "Update failed – Retry"
     }
   },
   "about": {

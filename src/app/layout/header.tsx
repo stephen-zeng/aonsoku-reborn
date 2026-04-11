@@ -13,6 +13,7 @@ import { ROUTES } from "@/routes/routesList";
 import { useSidebar } from "@/store/ui.store";
 import { isDesktop, isLinux, isMacOS, isWindows } from "@/utils/desktop";
 import { isWindowControlsOverlayAvailable } from "@/utils/pwa";
+import { SwUpdateChip } from "../components/header/sw-update-chip";
 import CommandMenu from "../components/command/command-menu";
 import { Button } from "../components/ui/button";
 
@@ -134,6 +135,7 @@ export function Header() {
             <SidebarToggleIcon className="w-4 h-4" strokeWidth={1.5} />
           </Button>
         </div>
+        <SwUpdateChip />
         {!isMobileRootPage && (
           <div className="md:hidden flex items-center gap-2">
             <NavigationButtons />

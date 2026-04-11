@@ -513,6 +513,11 @@
       "started": "O processo de atualização foi iniciado.",
       "success": "A atualização foi instalada! O aplicativo será reiniciado agora.",
       "error": "Falha ao instalar a atualização. Por favor, tente baixá-la diretamente do GitHub."
+    },
+    "sw": {
+      "updating": "Updating...",
+      "refresh": "Refresh to update",
+      "error": "Update failed – Retry"
     }
   },
   "about": {

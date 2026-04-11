@@ -517,6 +517,11 @@
       "started": "Der Aktualisierungsprozess wurde gestartet.",
       "success": "Das Update wurde installiert! Die App wird jetzt neu gestartet.",
       "error": "Das Update konnte nicht installiert werden. Bitte versuchen Sie, es direkt von GitHub herunterzuladen."
+    },
+    "sw": {
+      "updating": "Updating...",
+      "refresh": "Refresh to update",
+      "error": "Update failed – Retry"
     }
   },
   "about": {
