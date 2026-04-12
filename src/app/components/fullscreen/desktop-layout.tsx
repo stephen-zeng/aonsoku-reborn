@@ -5,14 +5,12 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useFullscreenPlayerState } from "@/store/player.store";
+import { ArtworkWithInfo } from "./artwork-with-info";
 import { FullscreenControls } from "./controls";
-import { LikeButton } from "./like-button";
 import { LyricsTab } from "./lyrics";
 import { FullscreenProgress } from "./progress";
 import { FullscreenSongQueue } from "./queue";
 import { FullscreenSettings } from "./settings";
-import { FullscreenSongArtwork } from "./song-artwork";
-import { SongInfo } from "./song-info";
 import { VolumeContainer } from "./volume-container";
 
 const MemoSongQueue = memo(FullscreenSongQueue);
@@ -76,23 +74,15 @@ export const DesktopLayout = memo(function DesktopLayout() {
           </Button>
         </div>
 
-        <div className="flex-1 flex items-center justify-center min-h-0 py-4">
-          <FullscreenSongArtwork />
+        <div className="flex-1 flex flex-col items-center justify-center min-h-0 py-4">
+          <ArtworkWithInfo />
         </div>
 
         <div className="flex flex-col gap-3 pb-2">
-          <SongInfo />
           <FullscreenProgress />
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
-            <div className="flex w-[180px] justify-start">
-              <LikeButton />
-            </div>
-            <div className="flex flex-1 justify-center items-center gap-1 sm:gap-2">
-              <FullscreenControls />
-            </div>
-            <div className="flex w-[180px] justify-end">
-              <VolumeContainer />
-            </div>
+          <div className="flex items-center justify-center gap-4">
+            <FullscreenControls />
+            <VolumeContainer />
           </div>
         </div>
       </div>

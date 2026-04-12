@@ -4,6 +4,7 @@ import { memo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { useFullscreenPlayerState, usePlayerStore } from "@/store/player.store";
+import { ArtworkWithInfo } from "./artwork-with-info";
 import { FullscreenControls } from "./controls";
 import { LikeButton } from "./like-button";
 import { LyricsTab } from "./lyrics";
@@ -11,12 +12,10 @@ import { MobileVolumeBar } from "./mobile-volume-bar";
 import { FullscreenProgress } from "./progress";
 import { FullscreenSongQueue } from "./queue";
 import { FullscreenSettings } from "./settings";
-import { FullscreenSongArtwork } from "./song-artwork";
-import { CompactSongInfo, SongInfo } from "./song-info";
+import { CompactSongInfo } from "./song-info";
 
 const MemoLyricsTab = memo(LyricsTab);
 const MemoSongQueue = memo(FullscreenSongQueue);
-const MemoSongInfo = memo(SongInfo);
 
 function MobileMiniSongInfo() {
   const currentSong = usePlayerStore((state) => state.songlist.currentSong);
@@ -79,19 +78,6 @@ function MobileSecondaryFooter() {
   );
 }
 
-function MobileSongInfoRow() {
-  return (
-    <div className="flex items-start justify-between gap-2">
-      <div className="flex-1 min-w-0">
-        <MemoSongInfo />
-      </div>
-      <div className="flex items-center gap-1 shrink-0 pt-1">
-        <LikeButton />
-      </div>
-    </div>
-  );
-}
-
 export const MobileLayout = memo(function MobileLayout() {
   const { t } = useTranslation();
   const { closeFullscreenPlayer, fullscreenPlayerTab, setFullscreenPlayerTab } =
@@ -114,12 +100,8 @@ export const MobileLayout = memo(function MobileLayout() {
               onClick={() => closeFullscreenPlayer()}
             />
 
-            <div className="flex-1 flex items-center justify-center min-h-0 px-6">
-              <FullscreenSongArtwork />
-            </div>
-
-            <div className="shrink-0 px-4 pt-4">
-              <MobileSongInfoRow />
+            <div className="flex-1 flex flex-col items-center justify-center min-h-0">
+              <ArtworkWithInfo />
             </div>
 
             <div className="shrink-0 px-4 pt-2">
