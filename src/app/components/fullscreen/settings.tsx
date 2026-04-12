@@ -45,6 +45,8 @@ interface PopoverProps {
 }
 
 function DynamicSettingsPopover({ children }: PopoverProps) {
+  const { t } = useTranslation();
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -52,6 +54,7 @@ function DynamicSettingsPopover({ children }: PopoverProps) {
           variant="ghost"
           size="icon"
           className="size-10 rounded-full hover:bg-foreground/20 data-[state=open]:bg-foreground/20"
+          aria-label={t("settings.label")}
         >
           <SlidersHorizontal className="size-4" strokeWidth={2.5} />
         </Button>
