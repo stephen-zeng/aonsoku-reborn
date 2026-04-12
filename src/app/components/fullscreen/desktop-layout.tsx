@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ListMusic, Music, X } from "lucide-react";
+import { ListMusic, MicVocalIcon, X } from "lucide-react";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
@@ -59,7 +59,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
                 onClick={handleLyricsClick}
                 disabled={lyricsDisabled}
               >
-                <Music className="size-4" />
+                <MicVocalIcon className="size-4" />
               </Button>
             </>
           )}
@@ -108,7 +108,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
               onClick={handleLyricsClick}
               disabled={lyricsDisabled}
             >
-              <Music className="size-4" />
+              <MicVocalIcon className="size-4" />
               {t("fullscreen.lyrics")}
             </Button>
           </div>
