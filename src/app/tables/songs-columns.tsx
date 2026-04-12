@@ -26,7 +26,13 @@ const MemoDataTableColumnHeader = memo(
   DataTableColumnHeader,
 ) as typeof DataTableColumnHeader;
 
-export function songsColumns(): ColumnDefType<ISong>[] {
+type SongsColumnsOptions = {
+  disableTextNavigation?: boolean;
+};
+
+export function songsColumns({
+  disableTextNavigation = false,
+}: SongsColumnsOptions = {}): ColumnDefType<ISong>[] {
   return [
     {
       id: "index",
@@ -82,6 +88,7 @@ export function songsColumns(): ColumnDefType<ISong>[] {
       ),
       cell: ({ row, table }) => (
         <MemoTableSongTitle
+          disableTextNavigation={disableTextNavigation}
           song={row.original}
           onPlay={() => table.options.meta?.handlePlaySong?.(row)}
         />
@@ -105,12 +112,24 @@ export function songsColumns(): ColumnDefType<ISong>[] {
         const { artist, artistId, artists } = row.original;
 
         if (artists && artists.length > 1) {
-          return <ArtistsLinks artists={artists} />;
+          return (
+            <ArtistsLinks
+              artists={artists}
+              disableNavigation={disableTextNavigation}
+            />
+          );
         }
 
         if (!artistId) return artist;
 
-        return <ArtistLink artistId={artistId}>{artist}</ArtistLink>;
+        return (
+          <ArtistLink
+            artistId={artistId}
+            disableNavigation={disableTextNavigation}
+          >
+            {artist}
+          </ArtistLink>
+        );
       },
     },
     {

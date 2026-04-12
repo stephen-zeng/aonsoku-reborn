@@ -1,9 +1,9 @@
 import { type ReactNode, useMemo } from "react";
-import { isMobile } from "react-device-detect";
 import { ShadowHeader } from "@/app/components/album/shadow-header";
 import { InfinitySongListFallback } from "@/app/components/fallbacks/song-fallbacks";
 import { HeaderTitle } from "@/app/components/header-title";
 import { DataTableList } from "@/app/components/ui/data-table-list";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import { songsColumns } from "@/app/tables/songs-columns";
 import { usePlayerActions } from "@/store/player.store";
 import { ColumnFilter } from "@/types/columnFilter";
@@ -48,7 +48,14 @@ export function SongListLayout({
   noRowsMessage,
 }: SongListLayoutProps) {
   const { setSongList } = usePlayerActions();
-  const columns = useMemo(() => songsColumns(), []);
+  const isMobile = useIsMobile();
+  const columns = useMemo(
+    () =>
+      songsColumns({
+        disableTextNavigation: isMobile,
+      }),
+    [isMobile],
+  );
   const columnsToShow = isMobile ? COLUMNS_MOBILE : COLUMNS_DESKTOP;
 
   if (isLoading && !isFetchingNextPage) {

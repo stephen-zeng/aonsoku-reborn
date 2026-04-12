@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { isMobile } from "react-device-detect";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import ImageHeader from "@/app/components/album/image-header";
@@ -9,6 +9,7 @@ import ListWrapper from "@/app/components/list-wrapper";
 import { PlaylistButtons } from "@/app/components/playlist/buttons";
 import { RemoveSongFromPlaylistDialog } from "@/app/components/playlist/remove-song-dialog";
 import { DataTable } from "@/app/components/ui/data-table";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import ErrorPage from "@/app/pages/error-page";
 import { songsColumns } from "@/app/tables/songs-columns";
 import { subsonic } from "@/service/subsonic";
@@ -20,7 +21,14 @@ import { queryKeys } from "@/utils/queryKeys";
 export default function Playlist() {
   const { playlistId } = useParams() as { playlistId: string };
   const { t } = useTranslation();
-  const columns = songsColumns();
+  const isMobile = useIsMobile();
+  const columns = useMemo(
+    () =>
+      songsColumns({
+        disableTextNavigation: isMobile,
+      }),
+    [isMobile],
+  );
   const { setSongList } = usePlayerActions();
 
   const {

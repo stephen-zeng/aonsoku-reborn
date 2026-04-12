@@ -6,6 +6,7 @@ import { getCoverArtUrl } from "@/api/httpClient";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
@@ -13,6 +14,7 @@ import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 
 export function HeaderItem({ song }: { song: ISong }) {
+  const isMobile = useIsMobile();
   const { setSongList } = usePlayerActions();
   const coverArtUrl = getCoverArtUrl(song.coverArt, "song", "300");
 
@@ -77,15 +79,31 @@ export function HeaderItem({ song }: { song: ISong }) {
             </div>
           </div>
           <div className="flex flex-1 h-full flex-col justify-end">
-            <Link to={ROUTES.ALBUM.PAGE(song.albumId)} className="w-fit">
+            {isMobile ? (
               <h1
                 data-testid="header-title"
-                className="w-full scroll-m-20 text-xl sm:text-3xl 2xl:text-4xl font-bold tracking-tight mb-0 2xl:mb-1 hover:underline line-clamp-2"
+                className="w-full scroll-m-20 text-xl sm:text-3xl 2xl:text-4xl font-bold tracking-tight mb-0 2xl:mb-1 line-clamp-2"
               >
                 {song.title}
               </h1>
-            </Link>
+            ) : (
+              <Link to={ROUTES.ALBUM.PAGE(song.albumId)} className="w-fit">
+                <h1
+                  data-testid="header-title"
+                  className="w-full scroll-m-20 text-xl sm:text-3xl 2xl:text-4xl font-bold tracking-tight mb-0 2xl:mb-1 hover:underline line-clamp-2"
+                >
+                  {song.title}
+                </h1>
+              </Link>
+            )}
             {!song.artistId ? (
+              <h4
+                data-testid="header-artist"
+                className="scroll-m-20 text-base sm:text-lg 2xl:text-xl font-semibold tracking-tight opacity-70"
+              >
+                {song.artist}
+              </h4>
+            ) : isMobile ? (
               <h4
                 data-testid="header-artist"
                 className="scroll-m-20 text-base sm:text-lg 2xl:text-xl font-semibold tracking-tight opacity-70"

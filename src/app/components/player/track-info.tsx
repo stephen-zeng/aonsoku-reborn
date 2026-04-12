@@ -10,6 +10,7 @@ import { MarqueeTitle } from "@/app/components/fullscreen/marquee-title";
 import FullscreenMode from "@/app/components/fullscreen/page";
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
 import { useFullscreenPlayerState, useSongColor } from "@/store/player.store";
@@ -24,6 +25,7 @@ function handleError(e: React.SyntheticEvent<HTMLImageElement>) {
 
 export function TrackInfo({ song }: { song: ISong | undefined }) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   const { setCurrentSongColor } = useSongColor();
   const { fullscreenPlayerOpen, openFullscreenPlayer, closeFullscreenPlayer } =
     useFullscreenPlayerState();
@@ -113,20 +115,25 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
       </div>
       <div className="flex flex-col justify-center w-full overflow-hidden ml-1">
         <MarqueeTitle gap="mr-2">
-          <Link
-            to={ROUTES.ALBUM.PAGE(song.albumId)}
-            tabIndex={-1}
-            className="pointer-events-none sm:pointer-events-auto"
-          >
+          {isMobile ? (
             <span
-              className="text-xs sm:text-sm font-medium sm:hover:underline sm:cursor-pointer"
+              className="text-xs sm:text-sm font-medium"
               data-testid="track-title"
             >
               {song.title}
             </span>
-          </Link>
+          ) : (
+            <Link to={ROUTES.ALBUM.PAGE(song.albumId)} tabIndex={-1}>
+              <span
+                className="text-xs sm:text-sm font-medium hover:underline cursor-pointer"
+                data-testid="track-title"
+              >
+                {song.title}
+              </span>
+            </Link>
+          )}
         </MarqueeTitle>
-        <TrackInfoArtistsLinks song={song} />
+        <TrackInfoArtistsLinks disableNavigation={isMobile} song={song} />
       </div>
     </Fragment>
   );
@@ -134,9 +141,13 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
 
 type TrackInfoArtistsLinksProps = {
   song: ISong;
+  disableNavigation?: boolean;
 };
 
-function TrackInfoArtistsLinks({ song }: TrackInfoArtistsLinksProps) {
+function TrackInfoArtistsLinks({
+  song,
+  disableNavigation = false,
+}: TrackInfoArtistsLinksProps) {
   const { artists, artistId, artist } = song;
 
   if (artists && artists.length > 1) {
@@ -146,7 +157,11 @@ function TrackInfoArtistsLinks({ song }: TrackInfoArtistsLinksProps) {
       <div className="flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground w-full maskImage-marquee-fade-finished">
         {reducedArtists.map(({ id, name }, index) => (
           <div key={id} className="flex items-center">
-            <ArtistLink id={id} name={name} />
+            <ArtistLink
+              disableNavigation={disableNavigation}
+              id={id}
+              name={name}
+            />
             {index < reducedArtists.length - 1 && ","}
           </div>
         ))}
@@ -154,28 +169,43 @@ function TrackInfoArtistsLinks({ song }: TrackInfoArtistsLinksProps) {
     );
   }
 
-  return <ArtistLink id={artistId} name={artist} />;
+  return (
+    <ArtistLink
+      disableNavigation={disableNavigation}
+      id={artistId}
+      name={artist}
+    />
+  );
 }
 
 type ArtistLinkProps = {
   id?: string;
   name: string;
+  disableNavigation?: boolean;
 };
 
-function ArtistLink({ id, name }: ArtistLinkProps) {
+function ArtistLink({ id, name, disableNavigation = false }: ArtistLinkProps) {
+  if (disableNavigation || !id) {
+    return (
+      <span
+        className="w-fit inline-flex text-[10px] sm:text-xs text-muted-foreground text-nowrap"
+        data-testid="track-artist-url"
+      >
+        {name}
+      </span>
+    );
+  }
+
   return (
     <Link
-      to={ROUTES.ARTIST.PAGE(id ?? "")}
-      className={cn(
-        "w-fit inline-flex pointer-events-none",
-        id && "sm:pointer-events-auto",
-      )}
+      to={ROUTES.ARTIST.PAGE(id)}
+      className="w-fit inline-flex"
       data-testid="track-artist-url"
     >
       <span
         className={cn(
           "text-[10px] sm:text-xs text-muted-foreground text-nowrap",
-          id && "sm:hover:underline sm:hover:text-foreground",
+          "hover:underline hover:text-foreground",
         )}
       >
         {name}

@@ -12,7 +12,7 @@ describe('TrackInfo Component', () => {
     cy.viewport('macbook-11')
   })
 
-  it('should display track info without link', () => {
+  it('should display track info without artist navigation when artist id is missing', () => {
     cy.fixture('songs/song').then((song: ISong) => {
       cy.mount(
         <Wrapper>
@@ -34,7 +34,7 @@ describe('TrackInfo Component', () => {
       cy.getByTestId('track-artist-url')
         .should('be.visible')
         .and('have.text', song.artist)
-        .and('have.css', 'pointer-events', 'none')
+        .and('not.have.attr', 'href')
     })
   })
 
@@ -63,6 +63,33 @@ describe('TrackInfo Component', () => {
         .should('be.visible')
         .and('have.text', song.artist)
         .and('have.attr', 'href', `/library/artists/${song.artistId}`)
+    })
+  })
+
+  it('should disable song text navigation on mobile screens', () => {
+    cy.viewport('iphone-x')
+
+    cy.fixture('songs/random').then((songs: ISong[]) => {
+      const song = songs[1]
+
+      cy.mount(
+        <Wrapper>
+          <TrackInfo song={song} />
+        </Wrapper>,
+      )
+
+      cy.getByTestId('track-title')
+        .eq(1)
+        .should('be.visible')
+        .and('have.text', song.title)
+
+      cy.getByTestId('track-artist-url')
+        .should('be.visible')
+        .and('have.text', song.artist)
+        .and('not.have.attr', 'href')
+
+      cy.get(`a[href="/library/albums/${song.albumId}"]`).should('not.exist')
+      cy.get(`a[href="/library/artists/${song.artistId}"]`).should('not.exist')
     })
   })
 

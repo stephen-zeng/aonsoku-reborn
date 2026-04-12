@@ -1,5 +1,10 @@
 import clsx from "clsx";
-import { RefAttributes } from "react";
+import {
+  type ComponentPropsWithoutRef,
+  type MouseEvent,
+  type RefAttributes,
+  type TouchEvent,
+} from "react";
 import { Link, LinkProps } from "react-router-dom";
 import { Dot } from "@/app/components/dot";
 import { cn } from "@/lib/utils";
@@ -12,21 +17,55 @@ export type LinkWithoutTo = Omit<LinkProps, "to"> &
 
 type ArtistLinkProps = LinkWithoutTo & {
   artistId?: string;
+  disableNavigation?: boolean;
+  suppressInteraction?: boolean;
 };
 
-export function ArtistLink({ artistId, className, ...props }: ArtistLinkProps) {
+export function ArtistLink({
+  artistId,
+  className,
+  disableNavigation = false,
+  suppressInteraction = false,
+  onContextMenu,
+  ...props
+}: ArtistLinkProps) {
+  if (disableNavigation || !artistId) {
+    const spanProps = props as unknown as ComponentPropsWithoutRef<"span">;
+    const { onClick, onTouchEnd, ...restSpanProps } = spanProps;
+
+    return (
+      <span
+        className={cn("truncate", className)}
+        {...restSpanProps}
+        onClick={(e) => {
+          if (suppressInteraction) {
+            e.stopPropagation();
+          }
+
+          onClick?.(e as MouseEvent<HTMLSpanElement>);
+        }}
+        onTouchEnd={(e) => {
+          if (suppressInteraction) {
+            e.stopPropagation();
+          }
+
+          onTouchEnd?.(e as TouchEvent<HTMLSpanElement>);
+        }}
+      >
+        {props.children}
+      </span>
+    );
+  }
+
   return (
     <Link
-      className={cn(
-        "truncate",
-        className,
-        artistId ? "hover:underline" : "pointer-events-none",
-      )}
+      className={cn("truncate hover:underline", className)}
       {...props}
-      to={ROUTES.ARTIST.PAGE(artistId ?? "")}
+      to={ROUTES.ARTIST.PAGE(artistId)}
       onContextMenu={(e) => {
         e.stopPropagation();
         e.preventDefault();
+        onContextMenu?.(e);
       }}
     />
   );
@@ -35,9 +74,22 @@ export function ArtistLink({ artistId, className, ...props }: ArtistLinkProps) {
 type ArtistsLinksProps = {
   artists: IFeaturedArtist[];
   onClickLink?: () => void;
+  disableNavigation?: boolean;
+  suppressInteraction?: boolean;
+  className?: string;
+  linkClassName?: string;
+  linkTestId?: string;
 };
 
-export function ArtistsLinks({ artists, onClickLink }: ArtistsLinksProps) {
+export function ArtistsLinks({
+  artists,
+  onClickLink,
+  disableNavigation = false,
+  suppressInteraction = false,
+  className,
+  linkClassName,
+  linkTestId,
+}: ArtistsLinksProps) {
   const data = artists.slice(0, TABLE_ARTISTS_MAX_NUMBER);
   const showThreeDots = artists.length > TABLE_ARTISTS_MAX_NUMBER;
 
@@ -50,7 +102,7 @@ export function ArtistsLinks({ artists, onClickLink }: ArtistsLinksProps) {
   }
 
   return (
-    <div className="flex items-center truncate">
+    <div className={cn("flex items-center truncate", className)}>
       {data.map(({ id, name }, index) => (
         <div
           key={id}
@@ -58,6 +110,10 @@ export function ArtistsLinks({ artists, onClickLink }: ArtistsLinksProps) {
         >
           <ArtistLink
             artistId={id}
+            disableNavigation={disableNavigation}
+            suppressInteraction={suppressInteraction}
+            className={linkClassName}
+            data-testid={linkTestId}
             title={showTitle(index, name)}
             onClick={() => {
               if (onClickLink) onClickLink();
