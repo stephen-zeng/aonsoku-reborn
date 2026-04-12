@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { memo } from "react";
 import { usePlayerStore } from "@/store/player.store";
 import { CompactSongArtwork } from "./song-artwork";
+import { ScrollingTitle } from "./scrolling-title";
 import { ISong } from "@/types/responses/song";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
 
@@ -16,7 +17,7 @@ export const SongInfo = memo(function SongInfo() {
   const currentSong = usePlayerStore((state) => state.songlist.currentSong);
 
   return (
-    <div className="flex flex-col gap-0.5 w-full overflow-hidden">
+    <div className="flex flex-col gap-0.5 w-full overflow-visible">
       <AnimatePresence mode="wait">
         <motion.div
           key={currentSong.id ?? "no-song"}
@@ -24,11 +25,13 @@ export const SongInfo = memo(function SongInfo() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={TEXT_TRANSITION}
-          className="w-full"
+          className="w-full overflow-visible"
         >
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight line-clamp-2">
-            {currentSong.title}
-          </h2>
+          <ScrollingTitle>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              {currentSong.title}
+            </h2>
+          </ScrollingTitle>
         </motion.div>
       </AnimatePresence>
       <AnimatePresence mode="wait">

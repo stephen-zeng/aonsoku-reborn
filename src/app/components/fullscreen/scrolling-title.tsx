@@ -1,0 +1,132 @@
+import { motion, useAnimationControls } from "framer-motion";
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+
+interface ScrollingTitleProps {
+  children: ReactNode;
+}
+
+const SCROLL_SPEED = 30;
+const INITIAL_DELAY = 2;
+const PAUSE_DURATION = 3;
+const TEXT_GAP = 80;
+const FADE_WIDTH = 20;
+
+const MASK_STYLE = {
+  left: -FADE_WIDTH,
+  right: 0,
+  maskImage: `linear-gradient(90deg, transparent 0px, rgb(0, 0, 0) ${FADE_WIDTH}px, rgb(0, 0, 0) calc(100% - ${FADE_WIDTH}px), transparent 100%)`,
+} as const;
+
+export function ScrollingTitle({ children }: ScrollingTitleProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+  const controls = useAnimationControls();
+  const [overflow, setOverflow] = useState({ width: 0, isOverflowing: false });
+
+  const calculateOverflow = useCallback(() => {
+    if (!containerRef.current || !textRef.current) return;
+
+    const containerWidth = containerRef.current.offsetWidth;
+    const measuredWidth = textRef.current.scrollWidth;
+    const isOverflowing = measuredWidth > containerWidth;
+
+    setOverflow((prev) =>
+      prev.width === measuredWidth && prev.isOverflowing === isOverflowing
+        ? prev
+        : { width: measuredWidth, isOverflowing },
+    );
+  }, []);
+
+  useLayoutEffect(() => {
+    let rafId: number;
+    const handleResize = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(calculateOverflow);
+    };
+
+    calculateOverflow();
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      cancelAnimationFrame(rafId);
+    };
+  }, [calculateOverflow]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: need children to reset animation on content change
+  useEffect(() => {
+    controls.set({ x: 0 });
+    setOverflow({ width: 0, isOverflowing: false });
+    calculateOverflow();
+  }, [children, controls, calculateOverflow]);
+
+  useEffect(() => {
+    if (!overflow.isOverflowing || overflow.width <= 0) return;
+
+    const scrollDistance = overflow.width + TEXT_GAP;
+    const duration = scrollDistance / SCROLL_SPEED;
+    const transition = { duration, ease: "easeInOut" } as const;
+    let isCancelled = false;
+    const timeoutIds: ReturnType<typeof setTimeout>[] = [];
+
+    async function runAnimation() {
+      await new Promise<void>((resolve) => {
+        timeoutIds.push(setTimeout(resolve, INITIAL_DELAY * 1000));
+      });
+
+      while (!isCancelled) {
+        await controls.start({ x: -scrollDistance, transition });
+
+        if (isCancelled) break;
+
+        controls.set({ x: 0 });
+
+        await new Promise<void>((resolve) => {
+          timeoutIds.push(setTimeout(resolve, PAUSE_DURATION * 1000));
+        });
+      }
+    }
+
+    runAnimation();
+
+    return () => {
+      isCancelled = true;
+      timeoutIds.forEach(clearTimeout);
+      controls.stop();
+    };
+  }, [overflow.isOverflowing, overflow.width, controls]);
+
+  if (!overflow.isOverflowing) {
+    return (
+      <div ref={containerRef} className="overflow-hidden">
+        <div ref={textRef} className="inline-block whitespace-nowrap">
+          {children}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div className="absolute top-0 bottom-0" style={MASK_STYLE}>
+        <motion.div
+          animate={controls}
+          className="inline-flex whitespace-nowrap"
+          style={{ marginLeft: FADE_WIDTH }}
+        >
+          <div ref={textRef}>{children}</div>
+          <div style={{ paddingLeft: TEXT_GAP }} aria-hidden>
+            {children}
+          </div>
+        </motion.div>
+      </div>
+      <div className="invisible whitespace-nowrap">{children}</div>
+    </div>
+  );
+}

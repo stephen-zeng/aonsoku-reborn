@@ -16,7 +16,7 @@ export const ArtworkWithInfo = memo(function ArtworkWithInfo() {
 
       <div className={`w-full ${CONTENT_MAX_WIDTH} pt-2 px-6 sm:px-0`}>
         <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 overflow-visible">
             <SongInfo />
           </div>
           <div className="shrink-0 pt-1">
