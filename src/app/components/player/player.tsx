@@ -1,29 +1,29 @@
-import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play, SkipForward } from "lucide-react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { getSongStreamUrl } from "@/api/httpClient";
 import { MiniPlayerButton } from "@/app/components/mini-player/button";
 import { RadioInfo } from "@/app/components/player/radio-info";
 import { TrackInfo } from "@/app/components/player/track-info";
 import { Button } from "@/app/components/ui/button";
-import { getSongStreamUrl } from "@/api/httpClient";
 import {
   getVolume,
+  useFullscreenPlayerState,
+  useIsRemoteControlActive,
   usePlayerActions,
+  usePlayerDuration,
   usePlayerIsPlaying,
   usePlayerLoop,
   usePlayerMediaType,
+  usePlayerPrevAndNext,
   usePlayerRef,
   usePlayerSonglist,
-  useIsRemoteControlActive,
   useReplayGainState,
-  usePlayerPrevAndNext,
-  usePlayerDuration,
-  useFullscreenPlayerState,
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
 import { hasPiPSupport } from "@/utils/browser";
 import { ReplayGainParams } from "@/utils/replayGain";
-import { perceptualToGain } from "@/utils/volume";
 import { manageMediaSession } from "@/utils/setMediaSession";
+import { perceptualToGain } from "@/utils/volume";
 import { AudioPlayer } from "./audio";
 import { PlayerClearQueueButton } from "./clear-queue-button";
 import { PlayerControls } from "./controls";

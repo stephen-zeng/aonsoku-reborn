@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { Location, Outlet, useLocation } from "react-router-dom";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
 import { useIsXl } from "@/app/hooks/use-is-xl";
+import { cn } from "@/lib/utils";
 import { useMainDrawerState } from "@/store/player.store";
 import { useSidebar } from "@/store/ui.store";
 import { scrollPageToTop } from "@/utils/scrollPageToTop";

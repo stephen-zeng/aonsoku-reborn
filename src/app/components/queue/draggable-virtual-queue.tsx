@@ -1,12 +1,12 @@
+import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import {
+  closestCenter,
   DndContext,
   DragOverlay,
   PointerSensor,
-  closestCenter,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,

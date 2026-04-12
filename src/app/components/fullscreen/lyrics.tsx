@@ -1,6 +1,6 @@
 import type { LyricLine } from "@applemusic-like-lyrics/core";
-import { LyricPlayer } from "@applemusic-like-lyrics/react";
 import type { LyricPlayerRef } from "@applemusic-like-lyrics/react";
+import { LyricPlayer } from "@applemusic-like-lyrics/react";
 import "@applemusic-like-lyrics/core/style.css";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";

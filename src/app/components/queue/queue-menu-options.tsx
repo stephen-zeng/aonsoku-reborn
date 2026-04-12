@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { OptionsButtons } from "@/app/components/options/buttons";
-import { ContextMenuSeparator } from "@/app/components/ui/context-menu";
 import { AddToPlaylistSubMenu } from "@/app/components/song/add-to-playlist";
+import { ContextMenuSeparator } from "@/app/components/ui/context-menu";
 import { useOptions } from "@/app/hooks/use-options";
 import { ROUTES } from "@/routes/routesList";
 import { usePlayerActions } from "@/store/player.store";

@@ -10,13 +10,13 @@ import {
 import { ProgressSlider } from "@/app/components/ui/slider";
 import { subsonic } from "@/service/subsonic";
 import {
+  useIsRemoteControlActive,
   usePlayerActions,
   usePlayerDuration,
   usePlayerIsPlaying,
   usePlayerMediaType,
   usePlayerProgress,
   usePlayerSonglist,
-  useIsRemoteControlActive,
 } from "@/store/player.store";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 import { logger } from "@/utils/logger";

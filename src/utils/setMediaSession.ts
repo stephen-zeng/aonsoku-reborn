@@ -1,7 +1,7 @@
 import { getCoverArtUrl } from "@/api/httpClient";
 import { usePlayerStore } from "@/store/player.store";
-import { ISong } from "@/types/responses/song";
 import { LanControlMessageType } from "@/types/lanControl";
+import { ISong } from "@/types/responses/song";
 
 const MEDIA_SESSION_COVER_SIZE = "300";
 

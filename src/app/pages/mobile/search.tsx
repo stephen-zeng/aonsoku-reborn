@@ -1,26 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
-import { SearchIcon } from "lucide-react";
+import { Play, SearchIcon } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
+import { getCoverArtUrl } from "@/api/httpClient";
+import Image from "@/app/components/image";
+import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { useSongList } from "@/app/hooks/use-song-list";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
+import { CoverArt } from "@/types/coverArtType";
+import { Albums } from "@/types/responses/album";
+import { ISimilarArtist } from "@/types/responses/artist";
+import { ISong } from "@/types/responses/song";
 import { byteLength } from "@/utils/byteLength";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
-import Image from "@/app/components/image";
-import { Button } from "@/app/components/ui/button";
-import { Play } from "lucide-react";
-import { ISimilarArtist } from "@/types/responses/artist";
-import { Albums } from "@/types/responses/album";
-import { ISong } from "@/types/responses/song";
-import { CoverArt } from "@/types/coverArtType";
-import { Link } from "react-router-dom";
-import { getCoverArtUrl } from "@/api/httpClient";
 
 interface MobileResultItemProps {
   coverArt: string;

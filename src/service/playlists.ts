@@ -1,11 +1,11 @@
 import { httpClient } from "@/api/httpClient";
 import {
+  CreateParams,
   Playlist,
   PlaylistsResponse,
   PlaylistWithEntries,
   PlaylistWithEntriesResponse,
   SinglePlaylistResponse,
-  CreateParams,
   UpdateParams,
 } from "@/types/responses/playlist";
 import { SubsonicResponse } from "@/types/responses/subsonicResponse";
