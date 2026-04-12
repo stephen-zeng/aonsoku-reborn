@@ -1,8 +1,9 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ListMusic, Music, X } from "lucide-react";
-import { memo, useState } from "react";
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
+import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useFullscreenPlayerState } from "@/store/player.store";
 import { FullscreenControls } from "./controls";
 import { LikeButton } from "./like-button";
@@ -17,17 +18,53 @@ import { VolumeContainer } from "./volume-container";
 const MemoSongQueue = memo(FullscreenSongQueue);
 const MemoLyricsTab = memo(LyricsTab);
 
-type RightPanelView = "queue" | "lyrics";
-
 export const DesktopLayout = memo(function DesktopLayout() {
-  const [rightPanelView, setRightPanelView] = useState<RightPanelView>("queue");
-  const { closeFullscreenPlayer } = useFullscreenPlayerState();
+  const {
+    closeFullscreenPlayer,
+    desktopFullscreenPanelView: rightPanelView,
+    setDesktopFullscreenPanelView: setRightPanelView,
+  } = useFullscreenPlayerState();
   const { t } = useTranslation();
+  const { hasLyrics } = useHasLyrics();
+
+  const lyricsDisabled = hasLyrics === false;
+
+  function handleQueueClick() {
+    setRightPanelView(rightPanelView === "queue" ? null : "queue");
+  }
+
+  function handleLyricsClick() {
+    if (lyricsDisabled) return;
+    setRightPanelView(rightPanelView === "lyrics" ? null : "lyrics");
+  }
 
   return (
-    <div className="flex h-full w-full gap-0">
-      <div className="flex flex-col h-full w-[55%] 2xl:w-[50%] px-8 sm:px-12 pt-6 pb-4 justify-between">
+    <div className="flex h-full w-full overflow-hidden">
+      <div
+        className={`flex flex-col h-full shrink-0 px-8 sm:px-12 pt-6 pb-4 justify-between transition-[width] duration-300 ${rightPanelView ? "w-1/2" : "w-full"}`}
+      >
         <div className="flex items-center justify-end gap-2">
+          {!rightPanelView && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-10 rounded-full hover:bg-foreground/20"
+                onClick={handleQueueClick}
+              >
+                <ListMusic className="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`size-10 rounded-full hover:bg-foreground/20 ${lyricsDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                onClick={handleLyricsClick}
+                disabled={lyricsDisabled}
+              >
+                <Music className="size-4" />
+              </Button>
+            </>
+          )}
           <FullscreenSettings />
           <Button
             variant="ghost"
@@ -60,14 +97,16 @@ export const DesktopLayout = memo(function DesktopLayout() {
         </div>
       </div>
 
-      <div className="flex flex-col h-full w-[45%] 2xl:w-[50%] border-l border-foreground/10 bg-black/5">
+      <div
+        className={`shrink-0 flex flex-col h-full border-l border-foreground/10 bg-black/5 overflow-hidden transition-[width] duration-300 ${rightPanelView ? "w-1/2" : "w-0"}`}
+      >
         <div className="flex items-center justify-between px-4 pt-6 pb-2">
           <div className="flex gap-1">
             <Button
               variant={rightPanelView === "queue" ? "secondary" : "ghost"}
               size="sm"
               className="gap-1.5"
-              onClick={() => setRightPanelView("queue")}
+              onClick={handleQueueClick}
             >
               <ListMusic className="size-4" />
               {t("fullscreen.queue")}
@@ -75,8 +114,9 @@ export const DesktopLayout = memo(function DesktopLayout() {
             <Button
               variant={rightPanelView === "lyrics" ? "secondary" : "ghost"}
               size="sm"
-              className="gap-1.5"
-              onClick={() => setRightPanelView("lyrics")}
+              className={`gap-1.5 ${lyricsDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+              onClick={handleLyricsClick}
+              disabled={lyricsDisabled}
             >
               <Music className="size-4" />
               {t("fullscreen.lyrics")}

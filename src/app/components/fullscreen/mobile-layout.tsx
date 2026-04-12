@@ -3,6 +3,7 @@ import { ChevronDown, ChevronLeft, ListMusic, Music } from "lucide-react";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
+import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useFullscreenPlayerState } from "@/store/player.store";
 import { FullscreenControls } from "./controls";
 import { LikeButton } from "./like-button";
@@ -21,6 +22,9 @@ export const MobileLayout = memo(function MobileLayout() {
   const [view, setView] = useState<MobileView>("playing");
   const { closeFullscreenPlayer } = useFullscreenPlayerState();
   const { t } = useTranslation();
+  const { hasLyrics } = useHasLyrics();
+
+  const lyricsDisabled = hasLyrics === false;
 
   return (
     <div className="flex flex-col h-full w-full relative">
@@ -90,8 +94,9 @@ export const MobileLayout = memo(function MobileLayout() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-foreground/70 hover:text-foreground hover:bg-foreground/10 gap-1.5"
-                    onClick={() => setView("lyrics")}
+                    className={`gap-1.5 ${lyricsDisabled ? "opacity-50 cursor-not-allowed text-foreground/70" : "text-foreground/70 hover:text-foreground hover:bg-foreground/10"}`}
+                    onClick={() => !lyricsDisabled && setView("lyrics")}
+                    disabled={lyricsDisabled}
                   >
                     <Music className="size-4" />
                     <span className="text-xs">{t("fullscreen.lyrics")}</span>

@@ -199,6 +199,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               lyricsState: false,
               fullscreenPlayerOpen: false,
               fullscreenPlayerTab: "playing",
+              desktopFullscreenPanelView: "queue",
               hasPrev: false,
               hasNext: false,
             },
@@ -997,6 +998,11 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.playerState.fullscreenPlayerTab = tab;
                 });
               },
+              setDesktopFullscreenPanelView: (view) => {
+                set((state) => {
+                  state.playerState.desktopFullscreenPanelView = view;
+                });
+              },
               playFirstSongInQueue: () => {
                 set((state) => {
                   state.songlist.currentSongIndex = 0;
@@ -1195,6 +1201,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
             "playerState.lyricsState",
             "playerState.fullscreenPlayerOpen",
             "playerState.fullscreenPlayerTab",
+            "playerState.desktopFullscreenPanelView",
             "state.settings.colors.bigPlayer.blur.settings",
             "remoteControl",
           ]);
@@ -1441,9 +1448,11 @@ export const useFullscreenPlayerState = () =>
   usePlayerStore((state) => ({
     fullscreenPlayerOpen: state.playerState.fullscreenPlayerOpen,
     fullscreenPlayerTab: state.playerState.fullscreenPlayerTab,
+    desktopFullscreenPanelView: state.playerState.desktopFullscreenPanelView,
     openFullscreenPlayer: state.actions.openFullscreenPlayer,
     closeFullscreenPlayer: state.actions.closeFullscreenPlayer,
     setFullscreenPlayerTab: state.actions.setFullscreenPlayerTab,
+    setDesktopFullscreenPanelView: state.actions.setDesktopFullscreenPanelView,
   }));
 
 export const useSongColor = () =>

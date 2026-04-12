@@ -25,6 +25,7 @@ export interface ISongList {
 }
 
 export type FullscreenPlayerTab = "queue" | "playing" | "lyrics";
+export type DesktopFullscreenPanelView = "queue" | "lyrics" | null;
 
 export interface IPlayerState {
   isPlaying: boolean;
@@ -40,6 +41,7 @@ export interface IPlayerState {
   lyricsState: boolean;
   fullscreenPlayerOpen: boolean;
   fullscreenPlayerTab: FullscreenPlayerTab;
+  desktopFullscreenPanelView: DesktopFullscreenPanelView;
   hasPrev: boolean;
   hasNext: boolean;
 }
@@ -185,6 +187,7 @@ export interface IPlayerActions {
   openFullscreenPlayer: (tab?: FullscreenPlayerTab) => void;
   closeFullscreenPlayer: () => void;
   setFullscreenPlayerTab: (tab: FullscreenPlayerTab) => void;
+  setDesktopFullscreenPanelView: (view: DesktopFullscreenPanelView) => void;
   playFirstSongInQueue: () => void;
   handleSongEnded: () => void;
   getCurrentProgress: () => number;
