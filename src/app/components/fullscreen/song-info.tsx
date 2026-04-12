@@ -1,10 +1,16 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { memo } from "react";
-import { Dot } from "@/app/components/dot";
 import { usePlayerStore } from "@/store/player.store";
 import { CompactSongArtwork } from "./song-artwork";
 import { ISong } from "@/types/responses/song";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
+
+const TEXT_TRANSITION = { duration: 0.25, ease: [0.4, 0, 0.2, 1] } as const;
+const TEXT_TRANSITION_DELAYED = {
+  duration: 0.25,
+  ease: [0.4, 0, 0.2, 1],
+  delay: 0.05,
+} as const;
 
 export const SongInfo = memo(function SongInfo() {
   const currentSong = usePlayerStore((state) => state.songlist.currentSong);
@@ -17,7 +23,7 @@ export const SongInfo = memo(function SongInfo() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+          transition={TEXT_TRANSITION}
           className="w-full"
         >
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight line-clamp-2">
@@ -31,17 +37,34 @@ export const SongInfo = memo(function SongInfo() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1], delay: 0.05 }}
+          transition={TEXT_TRANSITION_DELAYED}
           className="w-full"
         >
-          <div className="flex gap-1 text-sm text-foreground/70 truncate">
-            <p className="truncate text-foreground/80">{currentSong.album}</p>
-            <Dot className="text-foreground/70" />
+          <div className="text-sm text-foreground/70 truncate">
             <ArtistNames song={currentSong} />
           </div>
         </motion.div>
       </AnimatePresence>
     </div>
+  );
+});
+
+export const AlbumName = memo(function AlbumName() {
+  const currentSong = usePlayerStore((state) => state.songlist.currentSong);
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.p
+        key={currentSong.id ?? "no-album"}
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 8 }}
+        transition={TEXT_TRANSITION}
+        className="text-sm text-foreground/70 truncate text-center"
+      >
+        {currentSong.album}
+      </motion.p>
+    </AnimatePresence>
   );
 });
 
