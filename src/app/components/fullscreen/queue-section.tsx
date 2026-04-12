@@ -8,7 +8,6 @@ interface QueueSectionProps {
   songs: ISong[];
   currentSong: ISong;
   isPlaying: boolean;
-  draggable: boolean;
   startIndex: number;
   fullList: ISong[];
 }
