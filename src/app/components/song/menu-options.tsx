@@ -1,21 +1,72 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { OptionsButtons } from "@/app/components/options/buttons";
 import { ContextMenuSeparator } from "@/app/components/ui/context-menu";
 import { useOptions } from "@/app/hooks/use-options";
 import { ROUTES } from "@/routes/routesList";
+import { subsonic } from "@/service/subsonic";
+import {
+  usePlayerActions,
+  usePlayerMediaType,
+  usePlayerSonglist,
+} from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { AddToPlaylistSubMenu } from "./add-to-playlist";
+
+interface MenuLikeButtonProps {
+  variant: "context" | "dropdown";
+  song: ISong;
+}
+
+function MenuLikeButton({ variant, song }: MenuLikeButtonProps) {
+  const [isStarred, setIsStarred] = useState(
+    typeof song.starred === "string",
+  );
+  const { currentSong } = usePlayerSonglist();
+  const { isSong } = usePlayerMediaType();
+  const { starCurrentSong, starSongInQueue } = usePlayerActions();
+
+  async function handleToggleStar() {
+    const newState = !isStarred;
+    await subsonic.star.handleStarItem({
+      id: song.id,
+      starred: isStarred,
+    });
+    setIsStarred(newState);
+
+    if (isSong) {
+      const isSongPlaying = currentSong.id === song.id;
+      isSongPlaying ? starCurrentSong() : starSongInQueue(song.id);
+    }
+  }
+
+  return (
+    <>
+      <OptionsButtons.Like
+        variant={variant}
+        isStarred={isStarred}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleToggleStar();
+        }}
+      />
+      <ContextMenuSeparator />
+    </>
+  );
+}
 
 interface SongMenuOptionsProps {
   variant: "context" | "dropdown";
   song: ISong;
   index: number;
+  showLikeOption?: boolean;
 }
 
 export function SongMenuOptions({
   variant,
   song,
   index,
+  showLikeOption = false,
 }: SongMenuOptionsProps) {
   const navigate = useNavigate();
   const {
@@ -32,6 +83,7 @@ export function SongMenuOptions({
 
   return (
     <>
+      {showLikeOption && <MenuLikeButton variant={variant} song={song} />}
       <OptionsButtons.PlayNext
         variant={variant}
         onClick={(e) => {

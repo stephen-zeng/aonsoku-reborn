@@ -1,4 +1,5 @@
 import { Row } from "@tanstack/react-table";
+import { isMobile } from "react-device-detect";
 import { SongMenuOptions } from "@/app/components/song/menu-options";
 import { TableActionButton } from "@/app/components/table/action-button";
 import { TableLikeButton } from "@/app/components/table/like-button";
@@ -17,14 +18,17 @@ export function SongTableActions({ row }: SongTableActionsProps) {
             variant="dropdown"
             song={row.original}
             index={row.index}
+            showLikeOption={isMobile}
           />
         }
       />
-      <TableLikeButton
-        type="song"
-        entityId={row.original.id}
-        starred={typeof row.original.starred === "string"}
-      />
+      {!isMobile && (
+        <TableLikeButton
+          type="song"
+          entityId={row.original.id}
+          starred={typeof row.original.starred === "string"}
+        />
+      )}
     </div>
   );
 }
