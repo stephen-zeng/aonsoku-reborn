@@ -43,9 +43,11 @@ export const SongInfo = memo(function SongInfo() {
           transition={TEXT_TRANSITION_DELAYED}
           className="w-full"
         >
-          <div className="text-sm text-foreground/70 truncate">
-            <ArtistNames song={currentSong} />
-          </div>
+          <ScrollingTitle>
+            <div className="text-sm text-foreground/70">
+              <ArtistNames song={currentSong} />
+            </div>
+          </ScrollingTitle>
         </motion.div>
       </AnimatePresence>
     </div>
@@ -57,16 +59,18 @@ export const AlbumName = memo(function AlbumName() {
 
   return (
     <AnimatePresence mode="wait">
-      <motion.p
+      <motion.div
         key={currentSong.id ?? "no-album"}
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 8 }}
         transition={TEXT_TRANSITION}
-        className="text-sm text-foreground/70 truncate text-center"
+        className="text-center"
       >
-        {currentSong.album}
-      </motion.p>
+        <ScrollingTitle>
+          <p className="text-sm text-foreground/70">{currentSong.album}</p>
+        </ScrollingTitle>
+      </motion.div>
     </AnimatePresence>
   );
 });
@@ -92,18 +96,8 @@ function ArtistNames({ song }: { song: ISong }) {
 
   if (artists && artists.length > 1) {
     const data = artists.slice(0, ALBUM_ARTISTS_MAX_NUMBER);
-
-    return (
-      <div className="flex items-center gap-1">
-        {data.map(({ id, name }, index) => (
-          <div key={id} className="flex">
-            <p className="truncate">{name}</p>
-            {index < data.length - 1 && ","}
-          </div>
-        ))}
-      </div>
-    );
+    return <p>{data.map(({ name }) => name).join(", ")}</p>;
   }
 
-  return <p className="truncate">{artist}</p>;
+  return <p>{artist}</p>;
 }
