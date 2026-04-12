@@ -293,9 +293,9 @@ function UnsyncedLyrics({ lines, translationLines }: UnsyncedLyricsProps) {
             index === lines.length - 1 && "mb-10",
           )}
         >
-          <p className="leading-10 drop-shadow-lg text-balance">{line}</p>
+          <p className="leading-10 text-balance">{line}</p>
           {translationLines?.[index] && (
-            <p className="leading-8 drop-shadow-lg text-balance text-base 2xl:text-lg opacity-70">
+            <p className="leading-8 text-balance text-base 2xl:text-lg opacity-70">
               {translationLines[index]}
             </p>
           )}
@@ -310,7 +310,7 @@ type CenteredMessageProps = ComponentPropsWithoutRef<"p">;
 function CenteredMessage({ children }: CenteredMessageProps) {
   return (
     <div className="w-full h-full flex justify-center items-center">
-      <p className="leading-10 drop-shadow-lg text-left font-semibold text-xl 2xl:text-2xl">
+      <p className="leading-10 text-left font-semibold text-xl 2xl:text-2xl">
         {children}
       </p>
     </div>

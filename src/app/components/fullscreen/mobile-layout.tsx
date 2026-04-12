@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronLeft, ListMusic, Music, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ListMusic, Music } from "lucide-react";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
@@ -8,10 +8,12 @@ import { useFullscreenPlayerState, usePlayerStore } from "@/store/player.store";
 import { FullscreenControls } from "./controls";
 import { LikeButton } from "./like-button";
 import { LyricsTab } from "./lyrics";
+import { MobileVolumeBar } from "./mobile-volume-bar";
 import { FullscreenProgress } from "./progress";
+import { FullscreenSettings } from "./settings";
 import { FullscreenSongQueue } from "./queue";
 import { FullscreenSongArtwork } from "./song-artwork";
-import { SongInfo } from "./song-info";
+import { CompactSongInfo, SongInfo } from "./song-info";
 
 const MemoSongQueue = memo(FullscreenSongQueue);
 const MemoLyricsTab = memo(LyricsTab);
@@ -24,13 +26,92 @@ function MobileMiniSongInfo() {
 
   return (
     <div className="flex items-center gap-2 min-h-0 truncate">
-      <p className="text-sm font-medium truncate drop-shadow-lg">
-        {currentSong.title}
-      </p>
+      <p className="text-sm font-medium truncate">{currentSong.title}</p>
       <span className="text-sm text-foreground/70">·</span>
-      <p className="text-sm text-foreground/70 truncate drop-shadow-lg">
+      <p className="text-sm text-foreground/70 truncate">
         {currentSong.artist}
       </p>
+    </div>
+  );
+}
+
+function MobileTabButton({
+  icon,
+  label,
+  active,
+  disabled,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  active: boolean;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className={`gap-1.5 ${
+        disabled
+          ? "opacity-50 cursor-not-allowed text-foreground/70"
+          : active
+            ? "text-foreground hover:text-foreground"
+            : "text-foreground/70 hover:text-foreground hover:bg-foreground/10"
+      }`}
+      onClick={onClick}
+      disabled={disabled}
+    >
+      {icon}
+      <span className="text-xs">{label}</span>
+    </Button>
+  );
+}
+
+function MobileSongInfoRow() {
+  return (
+    <div className="flex items-start justify-between gap-2">
+      <div className="flex-1 min-w-0">
+        <MemoSongInfo />
+      </div>
+      <div className="flex items-center gap-1 shrink-0 pt-1">
+        <LikeButton />
+        <FullscreenSettings />
+      </div>
+    </div>
+  );
+}
+
+function MobileBottomTabs({
+  view,
+  setView,
+  lyricsDisabled,
+}: {
+  view: MobileView;
+  setView: (view: MobileView) => void;
+  lyricsDisabled: boolean;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="shrink-0 flex items-center justify-center gap-6 pt-1 pb-2">
+      <MobileTabButton
+        icon={<Music className="size-4" />}
+        label={t("fullscreen.lyrics")}
+        active={view === "lyrics"}
+        disabled={lyricsDisabled}
+        onClick={() =>
+          !lyricsDisabled && setView(view === "lyrics" ? "playing" : "lyrics")
+        }
+      />
+      <FullscreenSettings />
+      <MobileTabButton
+        icon={<ListMusic className="size-4" />}
+        label={t("fullscreen.queue")}
+        active={view === "queue"}
+        disabled={false}
+        onClick={() => setView(view === "queue" ? "playing" : "queue")}
+      />
     </div>
   );
 }
@@ -38,24 +119,23 @@ function MobileMiniSongInfo() {
 export const MobileLayout = memo(function MobileLayout() {
   const [view, setView] = useState<MobileView>("playing");
   const { closeFullscreenPlayer } = useFullscreenPlayerState();
-  const { t } = useTranslation();
   const { hasLyrics } = useHasLyrics();
 
   const lyricsDisabled = hasLyrics === false;
 
   return (
     <div className="flex flex-col h-full w-full">
-      {/* Top bar */}
-      <div className="flex items-center gap-2 px-2 pt-1 pb-1 shrink-0 z-20 min-h-[40px]">
-        <AnimatePresence mode="wait">
-          {view === "playing" ? (
-            <motion.div
-              key="close"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-            >
+      <AnimatePresence mode="wait">
+        {view === "playing" && (
+          <motion.div
+            key="playing-view"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            className="flex flex-col h-full"
+          >
+            <div className="flex items-center px-2 pt-1 pb-1 shrink-0 z-20 min-h-[40px]">
               <Button
                 variant="ghost"
                 size="icon"
@@ -64,16 +144,46 @@ export const MobileLayout = memo(function MobileLayout() {
               >
                 <ChevronDown className="size-5" />
               </Button>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="back"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="flex items-center gap-1"
-            >
+            </div>
+
+            <div className="flex-1 flex items-center justify-center min-h-0 px-6">
+              <FullscreenSongArtwork />
+            </div>
+
+            <div className="shrink-0 px-4 pt-4">
+              <MobileSongInfoRow />
+            </div>
+
+            <div className="shrink-0 px-4 pt-2">
+              <FullscreenProgress thin />
+            </div>
+
+            <div className="shrink-0 flex items-center justify-center gap-1 pt-1">
+              <FullscreenControls />
+            </div>
+
+            <div className="shrink-0 px-4 pt-1 pb-1">
+              <MobileVolumeBar />
+            </div>
+
+            <MobileBottomTabs
+              view={view}
+              setView={setView}
+              lyricsDisabled={lyricsDisabled}
+            />
+          </motion.div>
+        )}
+
+        {view === "lyrics" && (
+          <motion.div
+            key="lyrics-view"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            className="flex flex-col h-full"
+          >
+            <div className="flex items-center gap-1 px-2 pt-1 pb-1 shrink-0 z-20 min-h-[40px]">
               <Button
                 variant="ghost"
                 size="icon"
@@ -82,116 +192,78 @@ export const MobileLayout = memo(function MobileLayout() {
               >
                 <ChevronLeft className="size-5" />
               </Button>
-              {view === "lyrics" && <MobileMiniSongInfo />}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+              <CompactSongInfo />
+            </div>
 
-      {/* Content area - switches between cover+info, lyrics, and queue */}
-      <div className="flex-1 overflow-hidden min-h-0">
-        <AnimatePresence mode="wait">
-          {view === "playing" && (
-            <motion.div
-              key="playing"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-              className="flex flex-col h-full justify-center px-4"
-            >
-              <div className="flex-1 flex items-center justify-center min-h-0">
-                <FullscreenSongArtwork />
-              </div>
-              <div className="pt-4 shrink-0">
-                <MemoSongInfo />
-              </div>
-            </motion.div>
-          )}
-
-          {view === "lyrics" && (
-            <motion.div
-              key="lyrics"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-              className="h-full px-2"
+            <div
+              className="flex-1 overflow-hidden min-h-0 px-2"
               data-vaul-no-drag
             >
               <MemoLyricsTab />
-            </motion.div>
-          )}
+            </div>
 
-          {view === "queue" && (
-            <motion.div
-              key="queue"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-              className="h-full px-2"
+            <div className="shrink-0 px-4 py-1">
+              <FullscreenProgress />
+            </div>
+
+            <div className="shrink-0 flex items-center justify-center gap-1 py-1">
+              <LikeButton />
+              <FullscreenControls />
+            </div>
+
+            <MobileBottomTabs
+              view={view}
+              setView={setView}
+              lyricsDisabled={lyricsDisabled}
+            />
+          </motion.div>
+        )}
+
+        {view === "queue" && (
+          <motion.div
+            key="queue-view"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            className="flex flex-col h-full"
+          >
+            <div className="flex items-center gap-1 px-2 pt-1 pb-1 shrink-0 z-20 min-h-[40px]">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-10 rounded-full hover:bg-foreground/20"
+                onClick={() => setView("playing")}
+              >
+                <ChevronLeft className="size-5" />
+              </Button>
+              <MobileMiniSongInfo />
+            </div>
+
+            <div
+              className="flex-1 overflow-hidden min-h-0 px-2"
               data-vaul-no-drag
             >
               <MemoSongQueue />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+            </div>
 
-      {/* Bottom controls - always visible */}
-      <div className="shrink-0 px-4 pb-2 pt-1">
-        <FullscreenProgress />
-        <div className="flex items-center justify-center gap-1 pt-1">
-          <LikeButton />
-          <FullscreenControls />
-        </div>
-        <div className="flex items-center justify-center gap-3 pt-1 pb-1">
-          {view !== "playing" && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-foreground/90 hover:text-foreground hover:bg-foreground/10 gap-1.5"
-              onClick={() => setView("playing")}
-            >
-              <X className="size-3.5" />
-              <span className="text-xs">{t("fullscreen.playing")}</span>
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`gap-1.5 ${
-              lyricsDisabled
-                ? "opacity-50 cursor-not-allowed text-foreground/70"
-                : view === "lyrics"
-                  ? "text-foreground hover:text-foreground"
-                  : "text-foreground/70 hover:text-foreground hover:bg-foreground/10"
-            }`}
-            onClick={() =>
-              !lyricsDisabled &&
-              setView(view === "lyrics" ? "playing" : "lyrics")
-            }
-            disabled={lyricsDisabled}
-          >
-            <Music className="size-4" />
-            <span className="text-xs">{t("fullscreen.lyrics")}</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`gap-1.5 ${
-              view === "queue"
-                ? "text-foreground hover:text-foreground"
-                : "text-foreground/70 hover:text-foreground hover:bg-foreground/10"
-            }`}
-            onClick={() => setView(view === "queue" ? "playing" : "queue")}
-          >
-            <ListMusic className="size-4" />
-            <span className="text-xs">{t("fullscreen.queue")}</span>
-          </Button>
-        </div>
-      </div>
+            <div className="shrink-0 px-4 py-1">
+              <FullscreenProgress />
+            </div>
+
+            <div className="shrink-0 flex items-center justify-center gap-1 py-1">
+              <LikeButton />
+              <FullscreenControls />
+            </div>
+
+            <MobileBottomTabs
+              view={view}
+              setView={setView}
+              lyricsDisabled={lyricsDisabled}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 });

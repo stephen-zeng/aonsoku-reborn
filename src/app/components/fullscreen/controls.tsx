@@ -62,7 +62,7 @@ export function FullscreenControls() {
       <motion.button
         whileTap={{ scale: 0.9 }}
         className={clsx(
-          "w-14 h-14 rounded-full shadow-lg bg-secondary-foreground",
+          "w-14 h-14 rounded-full bg-secondary-foreground",
           "flex items-center justify-center cursor-pointer",
           "hover:scale-105 transition-transform will-change-transform",
         )}
@@ -136,9 +136,9 @@ export function FullscreenControls() {
 export const buttonsStyle = {
   secondary:
     "relative w-11 h-11 sm:w-12 sm:h-12 rounded-full text-secondary-foreground hover:text-secondary-foreground data-[state=active]:text-primary hover:bg-transparent hover:scale-110 transition-transform will-change-transform",
-  secondaryIcon: "w-5 h-5 sm:w-6 sm:h-6 drop-shadow-lg",
+  secondaryIcon: "w-5 h-5 sm:w-6 sm:h-6",
   secondaryIconFilled:
-    "w-5 h-5 sm:w-6 sm:h-6 text-secondary-foreground fill-secondary-foreground drop-shadow-lg",
+    "w-5 h-5 sm:w-6 sm:h-6 text-secondary-foreground fill-secondary-foreground",
   activeDot: "player-button-active",
   style: {
     backfaceVisibility: "hidden" as const,

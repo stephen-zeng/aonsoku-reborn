@@ -8,7 +8,7 @@ import {
 } from "@/store/player.store";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 
-export function FullscreenProgress() {
+export function FullscreenProgress({ thin = false }: { thin?: boolean }) {
   const progress = usePlayerProgress();
   const [localProgress, setLocalProgress] = useState(progress);
   const [isSeeking, setIsSeeking] = useState(false);
@@ -62,7 +62,11 @@ export function FullscreenProgress() {
 
   return (
     <div className="flex items-center gap-2 sm:gap-3 w-full">
-      <div className="min-w-[36px] sm:min-w-[42px] text-right tabular-nums text-xs sm:text-sm text-foreground/70">
+      <div
+        className={`min-w-[36px] sm:min-w-[42px] text-right tabular-nums text-foreground/70 ${
+          thin ? "text-xs" : "text-xs sm:text-sm"
+        }`}
+      >
         {currentTime}
       </div>
 
@@ -73,7 +77,7 @@ export function FullscreenProgress() {
         tooltipTransformer={convertSecondsToTime}
         max={currentDuration}
         step={1}
-        className="w-full h-2 sm:h-3"
+        className={`w-full ${thin ? "h-2" : "h-2 sm:h-3"}`}
         onValueChange={([value]) => handleSeeking(value)}
         onValueCommit={([value]) => handleSeeked(value)}
         onPointerUp={handleSeekedFallback}
@@ -82,7 +86,11 @@ export function FullscreenProgress() {
         data-vaul-no-drag
       />
 
-      <div className="min-w-[36px] sm:min-w-[42px] text-left tabular-nums text-xs sm:text-sm text-foreground/70">
+      <div
+        className={`min-w-[36px] sm:min-w-[42px] text-left tabular-nums text-foreground/70 ${
+          thin ? "text-xs" : "text-xs sm:text-sm"
+        }`}
+      >
         {convertSecondsToTime(currentDuration ?? 0)}
       </div>
     </div>

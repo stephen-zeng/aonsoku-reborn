@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { usePlayerSonglist } from "@/store/player.store";
 import { subsonic } from "@/service/subsonic";
+import { usePlayerSonglist } from "@/store/player.store";
 import { areLyricsSynced } from "@/utils/lrc-converter";
 
 export function useHasLyrics() {

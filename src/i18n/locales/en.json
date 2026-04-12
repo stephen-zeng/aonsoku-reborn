@@ -273,6 +273,8 @@
     "noLyrics": "No lyrics found",
     "loadingLyrics": "Searching for lyrics…",
     "queue": "Queue",
+    "queueHistory": "History",
+    "queueContinue": "Continue Playing",
     "playing": "Playing now",
     "lyrics": "Lyrics",
     "switchButton": "Switch to Big Player"

@@ -25,12 +25,31 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork() {
             coverArtSize="700"
             effect="opacity"
             alt={`${artist} - ${title}`}
-            className="aspect-square object-cover rounded-2xl shadow-2xl"
+            className="aspect-square object-cover rounded-md"
             width="100%"
             height="100%"
           />
         </motion.div>
       </AnimatePresence>
     </div>
+  );
+});
+
+export const CompactSongArtwork = memo(function CompactSongArtwork() {
+  const { coverArt, artist, title } = usePlayerStore(
+    ({ songlist }) => songlist.currentSong,
+  );
+
+  return (
+    <CachedImage
+      coverArtId={coverArt}
+      coverArtType="song"
+      coverArtSize="100"
+      effect="opacity"
+      alt={`${artist} - ${title}`}
+      className="size-11 rounded object-cover"
+      width="44"
+      height="44"
+    />
   );
 });
