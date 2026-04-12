@@ -1,13 +1,20 @@
 import { ImageHeaderEffect } from "@/app/components/album/header-effect";
+import { IMAGE_HEADER_MAIN_GRADIENT } from "@/app/components/album/image-header-gradients";
 import { TableFallback } from "@/app/components/fallbacks/table-fallbacks";
 import { ShadowHeaderFallback } from "@/app/components/fallbacks/ui-fallbacks";
 import ListWrapper from "@/app/components/list-wrapper";
 import { MainGrid } from "@/app/components/main-grid";
 import { Skeleton } from "@/app/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 export function AlbumHeaderFallback() {
   return (
-    <div className="w-full px-3 py-3 md:px-8 md:py-6 bg-muted-foreground flex flex-col gap-2 md:gap-4 bg-gradient-to-b from-background/20 to-background md:to-background/50">
+    <div
+      className={cn(
+        IMAGE_HEADER_MAIN_GRADIENT,
+        "w-full px-3 py-3 md:px-8 md:py-6 bg-muted-foreground flex flex-col gap-2 md:gap-4",
+      )}
+    >
       <div className="flex flex-col items-center md:flex-row md:items-center w-full gap-3 md:gap-6 lg:gap-8">
         <Skeleton className="rounded shadow-header-image w-[200px] h-[200px] min-w-[200px] min-h-[200px] 2xl:w-[250px] 2xl:h-[250px] 2xl:min-w-[250px] 2xl:min-h-[250px] aspect-square" />
         <div className="flex w-full items-center flex-col md:items-start md:max-w-[calc(100%-216px)] 2xl:max-w-[calc(100%-266px)] md:justify-end">

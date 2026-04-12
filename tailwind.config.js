@@ -138,7 +138,7 @@ module.exports = {
       boxShadow: {
         "custom-3": "0 0 3px rgba(255, 255, 255, 0.03)",
         "custom-5": "0 0 5px rgba(255, 255, 255, 0.05)",
-        "header-image": "0 4px 35px rgba(0, 0, 0, 0.6)",
+        "header-image": "0 3px 20px rgba(0, 0, 0, 0.45)",
       },
       screens: {
         "mid-player": { raw: "(min-height: 133px) and (max-height: 170px)" },

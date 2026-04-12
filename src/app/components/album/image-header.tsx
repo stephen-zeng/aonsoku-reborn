@@ -13,6 +13,7 @@ import { getAverageColor } from "@/utils/getAverageColor";
 import { getTextSizeClass } from "@/utils/getTextSizeClass";
 import { AlbumArtistInfo, AlbumMultipleArtistsInfo } from "./artists";
 import { ImageHeaderEffect } from "./header-effect";
+import { IMAGE_HEADER_MAIN_GRADIENT } from "./image-header-gradients";
 
 interface HeaderSubtitleSectionProps {
   isPlaylist: boolean;
@@ -161,7 +162,7 @@ export default function ImageHeader({
         <div
           className={cn(
             "w-full px-3 py-3 md:px-8 md:py-6 flex gap-2 md:gap-4 relative md:absolute md:inset-0",
-            "bg-gradient-to-b from-background/20 to-background md:to-background/50",
+            IMAGE_HEADER_MAIN_GRADIENT,
             "flex-col",
           )}
           style={{ backgroundColor: bgColor }}
