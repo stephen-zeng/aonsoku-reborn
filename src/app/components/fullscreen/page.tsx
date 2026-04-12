@@ -1,7 +1,6 @@
 import { memo, ReactNode, useEffect } from "react";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerTitle,
   DrawerTrigger,
@@ -12,11 +11,8 @@ import { enterFullscreen, exitFullscreen } from "@/utils/browser";
 import { isDesktop } from "@/utils/desktop";
 import { setDesktopTitleBarColors } from "@/utils/theme";
 import { FullscreenBackdrop } from "./backdrop";
-import { CloseFullscreenButton } from "./buttons";
 import { FullscreenDragHandler } from "./drag-handler";
-import { FullscreenPlayer } from "./player";
-import { FullscreenSettings } from "./settings";
-import { FullscreenTabs } from "./tabs";
+import { FullscreenContent } from "./fullscreen-content";
 
 interface FullscreenModeProps {
   children: ReactNode;
@@ -25,6 +21,7 @@ interface FullscreenModeProps {
 }
 
 const MemoFullscreenBackdrop = memo(FullscreenBackdrop);
+const MemoFullscreenContent = memo(FullscreenContent);
 
 export default function FullscreenMode({
   children,
@@ -48,11 +45,8 @@ export default function FullscreenMode({
   }, []);
 
   async function handleFullscreen(open: boolean) {
-    // Call external onOpenChange if provided (always call this for controlled mode)
     onOpenChange?.(open);
 
-    // We set title bar colors to transparent,
-    // to not "unstyle" the big player appearance
     if (isDesktop()) setDesktopTitleBarColors(open);
 
     if (!autoFullscreenEnabled) return;
@@ -84,28 +78,8 @@ export default function FullscreenMode({
       >
         <MemoFullscreenBackdrop />
         <FullscreenDragHandler />
-        <div className="absolute inset-0 flex flex-col p-0 sm:p-0 2xl:p-8 sm:pt-10 2xl:pt-12 w-full h-full gap-4 bg-black/0 z-10 fullscreen-safe-area">
-          {/* First Row - Header */}
-          <div className="flex gap-2 items-center w-full h-[40px] px-4 sm:px-16 z-20 justify-end">
-            <FullscreenSettings />
-            <DrawerClose>
-              <CloseFullscreenButton />
-            </DrawerClose>
-          </div>
-
-          {/* Second Row - Content Area (Tabs/Queue for desktop, Song info for mobile) */}
-          <div className="w-full flex-1 overflow-hidden px-4 sm:px-16">
-            <div className="h-full">
-              <FullscreenTabs />
-            </div>
-          </div>
-
-          {/* Third Row - Controls (hidden on mobile, shows in Playing tab) */}
-          <div className="hidden sm:block h-[150px] min-h-[150px] px-16 py-2">
-            <div className="flex items-center">
-              <FullscreenPlayer />
-            </div>
-          </div>
+        <div className="absolute inset-0 flex flex-col bg-black/0 z-10 fullscreen-safe-area">
+          <MemoFullscreenContent />
         </div>
       </DrawerContent>
     </Drawer>

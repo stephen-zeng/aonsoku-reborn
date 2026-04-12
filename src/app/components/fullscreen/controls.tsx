@@ -1,4 +1,5 @@
 import { clsx } from "clsx";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Pause,
   Play,
@@ -7,7 +8,6 @@ import {
   SkipBack,
   SkipForward,
 } from "lucide-react";
-import { Fragment } from "react/jsx-runtime";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { Button } from "@/app/components/ui/button";
 import {
@@ -34,7 +34,7 @@ export function FullscreenControls() {
   } = usePlayerActions();
 
   return (
-    <Fragment>
+    <>
       <Button
         size="icon"
         variant="ghost"
@@ -59,19 +59,45 @@ export function FullscreenControls() {
       >
         <SkipBack className={buttonsStyle.secondaryIconFilled} />
       </Button>
-      <Button
-        size="icon"
-        variant="link"
-        className={buttonsStyle.main}
-        style={{ ...buttonsStyle.style }}
-        onClick={() => togglePlayPause()}
-      >
-        {isPlaying ? (
-          <Pause className={buttonsStyle.mainIcon} strokeWidth={1} />
-        ) : (
-          <Play className={buttonsStyle.mainIcon} />
+      <motion.button
+        whileTap={{ scale: 0.9 }}
+        className={clsx(
+          "w-14 h-14 rounded-full shadow-lg bg-secondary-foreground",
+          "flex items-center justify-center cursor-pointer",
+          "hover:scale-105 transition-transform will-change-transform",
         )}
-      </Button>
+        style={{ backfaceVisibility: "hidden" }}
+        onClick={() => togglePlayPause()}
+        aria-label={isPlaying ? "Pause" : "Play"}
+        type="button"
+      >
+        <AnimatePresence mode="wait">
+          {isPlaying ? (
+            <motion.div
+              key="pause"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.1 }}
+            >
+              <Pause
+                className="w-6 h-6 text-secondary fill-secondary"
+                strokeWidth={1}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="play"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.1 }}
+            >
+              <Play className="w-6 h-6 text-secondary fill-secondary" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.button>
       <Button
         size="icon"
         variant="ghost"
@@ -103,13 +129,11 @@ export function FullscreenControls() {
           <RepeatOne className={buttonsStyle.secondaryIcon} />
         )}
       </Button>
-    </Fragment>
+    </>
   );
 }
 
 export const buttonsStyle = {
-  main: "w-14 h-14 rounded-full shadow-lg bg-secondary-foreground hover:scale-105 transition-transform will-change-transform",
-  mainIcon: "w-6 h-6 text-secondary fill-secondary",
   secondary:
     "relative w-11 h-11 sm:w-12 sm:h-12 rounded-full text-secondary-foreground hover:text-secondary-foreground data-[state=active]:text-primary hover:bg-transparent hover:scale-110 transition-transform will-change-transform",
   secondaryIcon: "w-5 h-5 sm:w-6 sm:h-6 drop-shadow-lg",

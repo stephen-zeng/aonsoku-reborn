@@ -1,8 +1,8 @@
 import clsx from "clsx";
 import { useEffect, useMemo, useState } from "react";
 import { isSafari } from "react-device-detect";
-import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { getCoverArtUrl } from "@/api/httpClient";
+import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { usePlayerCurrentSong, useSongColor } from "@/store/player.store";
 import { isChromeOrFirefox } from "@/utils/browser";
 import { hexToRgba } from "@/utils/getAverageColor";
@@ -46,25 +46,24 @@ function OtherBackdrop() {
   return (
     <div className="relative w-full h-full transition-colors duration-1000 bg-black/0">
       <div
-        className="absolute -inset-10 bg-cover bg-center z-0 transition-[background-image] duration-1000"
+        className="absolute -inset-10 bg-cover bg-center z-0 transition-[background-image] duration-1000 scale-125"
         style={{
           backgroundImage: `url(${backgroundImage})`,
-          filter: `blur(${bigPlayerBlur.value}px)`,
+          filter: `blur(${bigPlayerBlur.value}px) saturate(1.5)`,
         }}
       />
-      <div className="bg-background/50 absolute inset-0 w-full h-full z-0 transition-colors duration-1000" />
+      <div className="absolute inset-0 w-full h-full z-0 bg-gradient-to-b from-black/30 via-background/70 to-background transition-colors duration-1000" />
     </div>
   );
 }
 
 function MacBackdrop() {
   const { coverArt, title } = usePlayerCurrentSong();
-  const { bigPlayerBlur } = useSongColor();
-  const { currentSongColor, currentSongColorIntensity } = useSongColor();
+  const { bigPlayerBlur, currentSongColor, currentSongColorIntensity } =
+    useSongColor();
 
   const backgroundColor = useMemo(() => {
     if (!currentSongColor) return undefined;
-
     return hexToRgba(currentSongColor, currentSongColorIntensity);
   }, [currentSongColor, currentSongColorIntensity]);
 
@@ -84,10 +83,10 @@ function MacBackdrop() {
         className="w-full bg-contain"
       />
       <div
-        className="absolute bg-background/50 inset-0 z-10"
+        className="absolute inset-0 z-10 bg-gradient-to-b from-black/30 via-background/70 to-background"
         style={{
-          WebkitBackdropFilter: `blur(${bigPlayerBlur.value}px)`,
-          backdropFilter: `blur(${bigPlayerBlur.value}px)`,
+          WebkitBackdropFilter: `blur(${bigPlayerBlur.value}px) saturate(1.5)`,
+          backdropFilter: `blur(${bigPlayerBlur.value}px) saturate(1.5)`,
         }}
       />
     </div>
@@ -99,7 +98,6 @@ function DynamicColorBackdrop() {
 
   const backgroundColor = useMemo(() => {
     if (!currentSongColor) return undefined;
-
     return hexToRgba(currentSongColor, currentSongColorIntensity);
   }, [currentSongColor, currentSongColorIntensity]);
 
@@ -114,7 +112,7 @@ function DynamicColorBackdrop() {
         <div
           className={clsx(
             "absolute inset-0 w-full h-full z-[1]",
-            "transition-[background-image] duration-1000 default-gradient",
+            "bg-gradient-to-b from-black/30 via-background/70 to-background transition-[background-image] duration-1000",
           )}
         />
         <div
