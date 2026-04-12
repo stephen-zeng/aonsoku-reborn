@@ -6,6 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import {
   ComponentPropsWithoutRef,
+  TouchEvent,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -44,6 +46,112 @@ type ResolvedUnsynced = {
 };
 
 type ResolvedLyrics = ResolvedSynced | ResolvedUnsynced;
+
+type InternalLyricLineObject = {
+  getElement(): HTMLElement;
+};
+
+type InternalLyricPlayerHandle = {
+  getElement(): HTMLElement;
+  resetScroll(): void;
+  setIsSeeking(isSeeking: boolean): void;
+  alignAnchor?: "top" | "center" | "bottom" | string;
+  alignPosition?: number;
+  currentLyricLineObjects?: InternalLyricLineObject[];
+  lyricLineElementMap?: WeakMap<HTMLElement, InternalLyricLineObject>;
+  lyricLinesIndexes?: WeakMap<InternalLyricLineObject, number>;
+  size?: [number, number];
+  targetAlignIndex?: number;
+};
+
+type TouchTapState = {
+  moved: boolean;
+  startedAt: number;
+  target: EventTarget | null;
+  x: number;
+  y: number;
+};
+
+const LYRIC_TAP_MAX_DISTANCE_PX = 10;
+const LYRIC_TAP_MAX_DURATION_MS = 250;
+const LYRIC_SEEK_DEDUP_MS = 400;
+const LYRIC_ALIGN_RESTORE_THRESHOLD_PX = 6;
+const LYRIC_TOUCH_SCROLL_BLUR_RESET_MS = 5000;
+
+function resolveLyricLineIndexFromTarget(
+  player: InternalLyricPlayerHandle | undefined,
+  target: EventTarget | null,
+): number | null {
+  if (!(target instanceof Node) || !player) return null;
+
+  const playerElement = player.getElement();
+  let currentNode: Node | null = target;
+
+  while (currentNode && currentNode !== playerElement) {
+    if (
+      currentNode instanceof HTMLElement &&
+      currentNode.parentElement === playerElement
+    ) {
+      const lyricLine = player.lyricLineElementMap?.get(currentNode);
+      if (!lyricLine) return null;
+
+      const lineIndex = player.lyricLinesIndexes?.get(lyricLine);
+      return typeof lineIndex === "number" ? lineIndex : null;
+    }
+
+    currentNode = currentNode.parentNode;
+  }
+
+  return null;
+}
+
+function isLyricPlayerAligned(
+  player: InternalLyricPlayerHandle | undefined,
+): boolean {
+  if (!player) return false;
+
+  const playerElement = player.getElement();
+  const targetAlignIndex = player.targetAlignIndex;
+  const targetLine =
+    typeof targetAlignIndex === "number"
+      ? player.currentLyricLineObjects?.[targetAlignIndex]
+      : undefined;
+
+  if (!targetLine || !playerElement.isConnected) {
+    return false;
+  }
+
+  const lineElement = targetLine.getElement();
+  if (!lineElement.isConnected) {
+    return false;
+  }
+
+  const playerRect = playerElement.getBoundingClientRect();
+  const lineRect = lineElement.getBoundingClientRect();
+  const playerHeight = player.size?.[1] ?? playerElement.clientHeight;
+  const alignPosition = player.alignPosition ?? 0.35;
+
+  let offset = lineRect.top - playerRect.top - playerHeight * alignPosition;
+
+  switch (player.alignAnchor) {
+    case "bottom":
+      offset += lineElement.clientHeight;
+      break;
+    case "center":
+      offset += lineElement.clientHeight / 2;
+      break;
+  }
+
+  return Math.abs(offset) <= LYRIC_ALIGN_RESTORE_THRESHOLD_PX;
+}
+
+function getInternalLyricPlayer(
+  playerRef: React.RefObject<LyricPlayerRef | null>,
+): InternalLyricPlayerHandle | undefined {
+  return playerRef.current?.lyricPlayer as
+    | InternalLyricPlayerHandle
+    | undefined;
+}
 
 function cleanUnsyncedLyrics(raw: string): string[] {
   return raw
@@ -175,9 +283,156 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
   const playerRef = usePlayerRef();
   const isPlaying = usePlayerIsPlaying();
   const [currentTime, setCurrentTime] = useState(0);
+  const [isTouchScrolling, setIsTouchScrolling] = useState(false);
   const animationFrameRef = useRef<number>();
+  const isTouchScrollingRef = useRef(false);
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
   const seekingTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const touchScrollBlurTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const lastManualSeekRef = useRef<{
+    lineIndex: number;
+    timestamp: number;
+  } | null>(null);
+  const touchTapStateRef = useRef<TouchTapState | null>(null);
+
+  const clearTouchScrollBlurTimer = useCallback(() => {
+    clearTimeout(touchScrollBlurTimerRef.current);
+  }, []);
+
+  const setTouchScrolling = useCallback((next: boolean) => {
+    isTouchScrollingRef.current = next;
+    setIsTouchScrolling((prev) => (prev === next ? prev : next));
+  }, []);
+
+  const scheduleTouchScrollBlurRestore = useCallback(() => {
+    clearTouchScrollBlurTimer();
+    touchScrollBlurTimerRef.current = setTimeout(() => {
+      setTouchScrolling(false);
+    }, LYRIC_TOUCH_SCROLL_BLUR_RESET_MS);
+  }, [clearTouchScrollBlurTimer, setTouchScrolling]);
+
+  const seekToLyricLine = useCallback(
+    (lineIndex: number) => {
+      const lyricLine = lyricLines[lineIndex];
+
+      if (!playerRef || !lyricLine || !Number.isFinite(lyricLine.startTime)) {
+        return;
+      }
+
+      const now = Date.now();
+      const lastManualSeek = lastManualSeekRef.current;
+
+      if (
+        lastManualSeek &&
+        lastManualSeek.lineIndex === lineIndex &&
+        now - lastManualSeek.timestamp < LYRIC_SEEK_DEDUP_MS
+      ) {
+        return;
+      }
+
+      lastManualSeekRef.current = {
+        lineIndex,
+        timestamp: now,
+      };
+
+      playerRef.currentTime = lyricLine.startTime / 1000;
+      if (isPlaying) {
+        playerRef.play().catch(() => {});
+      }
+
+      const player = getInternalLyricPlayer(lyricPlayerRef);
+      if (player) {
+        player.resetScroll();
+        player.setIsSeeking(true);
+        clearTimeout(seekingTimerRef.current);
+        seekingTimerRef.current = setTimeout(() => {
+          player.setIsSeeking(false);
+        }, 100);
+      }
+
+      setCurrentTime(lyricLine.startTime);
+    },
+    [isPlaying, lyricLines, playerRef],
+  );
+
+  const handleTouchStart = useCallback(
+    (event: TouchEvent<HTMLDivElement>) => {
+      clearTouchScrollBlurTimer();
+
+      if (event.touches.length !== 1) {
+        touchTapStateRef.current = null;
+        return;
+      }
+
+      const touch = event.touches[0];
+      touchTapStateRef.current = {
+        moved: false,
+        startedAt: Date.now(),
+        target: event.target,
+        x: touch.clientX,
+        y: touch.clientY,
+      };
+    },
+    [clearTouchScrollBlurTimer],
+  );
+
+  const handleTouchMove = useCallback(
+    (event: TouchEvent<HTMLDivElement>) => {
+      const touchTapState = touchTapStateRef.current;
+
+      if (!touchTapState || event.touches.length !== 1) {
+        return;
+      }
+
+      const touch = event.touches[0];
+      const movedX = Math.abs(touch.clientX - touchTapState.x);
+      const movedY = Math.abs(touch.clientY - touchTapState.y);
+
+      if (
+        !touchTapState.moved &&
+        (movedX > LYRIC_TAP_MAX_DISTANCE_PX ||
+          movedY > LYRIC_TAP_MAX_DISTANCE_PX)
+      ) {
+        touchTapState.moved = true;
+        setTouchScrolling(true);
+      }
+    },
+    [setTouchScrolling],
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    const touchTapState = touchTapStateRef.current;
+    touchTapStateRef.current = null;
+
+    if (!touchTapState) return;
+
+    if (touchTapState.moved) {
+      scheduleTouchScrollBlurRestore();
+      return;
+    }
+
+    if (Date.now() - touchTapState.startedAt > LYRIC_TAP_MAX_DURATION_MS) {
+      return;
+    }
+
+    const player = getInternalLyricPlayer(lyricPlayerRef);
+    const lineIndex = resolveLyricLineIndexFromTarget(
+      player,
+      touchTapState.target,
+    );
+
+    if (lineIndex !== null) {
+      seekToLyricLine(lineIndex);
+    }
+  }, [scheduleTouchScrollBlurRestore, seekToLyricLine]);
+
+  const handleTouchCancel = useCallback(() => {
+    if (touchTapStateRef.current?.moved || isTouchScrollingRef.current) {
+      scheduleTouchScrollBlurRestore();
+    }
+
+    touchTapStateRef.current = null;
+  }, [scheduleTouchScrollBlurRestore]);
 
   // Use requestAnimationFrame for smooth time updates
   useEffect(() => {
@@ -186,6 +441,17 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
     const updateTime = () => {
       const timeMs = Math.floor((playerRef.currentTime || 0) * 1000);
       setCurrentTime((prev) => (prev === timeMs ? prev : timeMs));
+
+      const player = getInternalLyricPlayer(lyricPlayerRef);
+      if (
+        isTouchScrollingRef.current &&
+        !touchTapStateRef.current &&
+        isLyricPlayerAligned(player)
+      ) {
+        clearTouchScrollBlurTimer();
+        setTouchScrolling(false);
+      }
+
       animationFrameRef.current = requestAnimationFrame(updateTime);
     };
 
@@ -196,11 +462,19 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
         cancelAnimationFrame(animationFrameRef.current);
       }
       clearTimeout(seekingTimerRef.current);
+      clearTouchScrollBlurTimer();
     };
-  }, [playerRef]);
+  }, [clearTouchScrollBlurTimer, playerRef, setTouchScrolling]);
 
   return (
-    <div className="w-full h-full text-left lrc-box" data-vaul-no-drag>
+    <div
+      className="w-full h-full text-left lrc-box"
+      data-vaul-no-drag
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchCancel}
+    >
       <LyricPlayer
         ref={lyricPlayerRef}
         style={{
@@ -214,39 +488,11 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
         lyricLines={lyricLines}
         currentTime={currentTime}
         alignAnchor="left"
-        enableBlur={true}
+        enableBlur={!isTouchScrolling}
         enableSpring={true}
         onLyricLineClick={(line) => {
-          if (
-            playerRef &&
-            line.lineIndex !== undefined &&
-            lyricLines[line.lineIndex]
-          ) {
-            const lyricLine = lyricLines[line.lineIndex];
-            if (Number.isFinite(lyricLine.startTime)) {
-              // Seek the audio element
-              playerRef.currentTime = lyricLine.startTime / 1000;
-              if (isPlaying) {
-                playerRef.play().catch(() => {});
-              }
-
-              // Prepare AMLL for seek: prevent cascade
-              // animation jitter on large time jumps
-              const lp = lyricPlayerRef.current?.lyricPlayer;
-              if (lp) {
-                lp.resetScroll();
-                lp.setIsSeeking(true);
-                clearTimeout(seekingTimerRef.current);
-                seekingTimerRef.current = setTimeout(() => {
-                  lp.setIsSeeking(false);
-                }, 100);
-              }
-
-              // Update time state immediately with exact
-              // target to avoid a conflicting RAF update
-              // with a rounded value
-              setCurrentTime(lyricLine.startTime);
-            }
+          if (line.lineIndex !== undefined) {
+            seekToLyricLine(line.lineIndex);
           }
         }}
       />
