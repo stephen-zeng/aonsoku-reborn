@@ -15,14 +15,46 @@ interface ScrollingTitleProps {
 const SCROLL_SPEED = 30;
 const INITIAL_DELAY = 2;
 const PAUSE_DURATION = 3;
+const EDGE_EASE_DURATION = 0.35;
 const TEXT_GAP = 80;
 const FADE_WIDTH = 20;
+const MIN_LINEAR_DISTANCE = 1;
 
 const MASK_STYLE = {
   left: -FADE_WIDTH,
   right: 0,
   maskImage: `linear-gradient(90deg, transparent 0px, rgb(0, 0, 0) ${FADE_WIDTH}px, rgb(0, 0, 0) calc(100% - ${FADE_WIDTH}px), transparent 100%)`,
 } as const;
+
+function createScrollAnimation(scrollDistance: number) {
+  const duration = scrollDistance / SCROLL_SPEED;
+  const edgeDuration = Math.min(EDGE_EASE_DURATION, duration / 2);
+  const edgeDistance = Math.min(
+    SCROLL_SPEED * edgeDuration,
+    scrollDistance / 2,
+  );
+  const linearDistance = scrollDistance - edgeDistance * 2;
+
+  if (linearDistance <= MIN_LINEAR_DISTANCE) {
+    return {
+      x: [0, -scrollDistance / 2, -scrollDistance],
+      transition: {
+        duration,
+        times: [0, 0.5, 1],
+        ease: ["easeOut", "easeIn"],
+      } as const,
+    };
+  }
+
+  return {
+    x: [0, -edgeDistance, -(scrollDistance - edgeDistance), -scrollDistance],
+    transition: {
+      duration,
+      times: [0, edgeDuration / duration, 1 - edgeDuration / duration, 1],
+      ease: ["easeOut", "linear", "easeIn"],
+    } as const,
+  };
+}
 
 export function ScrollingTitle({ children }: ScrollingTitleProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -70,8 +102,7 @@ export function ScrollingTitle({ children }: ScrollingTitleProps) {
     if (!overflow.isOverflowing || overflow.width <= 0) return;
 
     const scrollDistance = overflow.width + TEXT_GAP;
-    const duration = scrollDistance / SCROLL_SPEED;
-    const transition = { duration, ease: "easeInOut" } as const;
+    const animation = createScrollAnimation(scrollDistance);
     let isCancelled = false;
     const timeoutIds: ReturnType<typeof setTimeout>[] = [];
 
@@ -81,7 +112,10 @@ export function ScrollingTitle({ children }: ScrollingTitleProps) {
       });
 
       while (!isCancelled) {
-        await controls.start({ x: -scrollDistance, transition });
+        await controls.start({
+          x: animation.x,
+          transition: animation.transition,
+        });
 
         if (isCancelled) break;
 
