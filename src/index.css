@@ -358,6 +358,15 @@ svg#bars .eq-bar--4 {
   scrollbar-width: none;
 }
 
+.no-scrollbar {
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
+}
+
 #sync-lyrics-box .react-lrc-line {
   @apply w-fit m-auto max-w-[80%] text-balance;
 }

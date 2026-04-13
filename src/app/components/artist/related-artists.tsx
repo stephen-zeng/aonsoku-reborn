@@ -1,12 +1,7 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { PreviewCard } from "@/app/components/preview-card/card";
-import {
-  Carousel,
-  type CarouselApi,
-  CarouselContent,
-  CarouselItem,
-} from "@/app/components/ui/carousel";
 import { CarouselButton } from "@/app/components/ui/carousel-button";
+import { useScrollCarousel } from "@/app/hooks/use-scroll-carousel";
 import { useSongList } from "@/app/hooks/use-song-list";
 import { ROUTES } from "@/routes/routesList";
 import { usePlayerActions } from "@/store/player.store";
@@ -22,34 +17,18 @@ export default function RelatedArtistsList({
   similarArtists,
 }: RelatedArtistsListProps) {
   const { getArtistAllSongs } = useSongList();
-
-  const [api, setApi] = useState<CarouselApi>();
-  const [canScrollPrev, setCanScrollPrev] = useState<boolean>();
-  const [canScrollNext, setCanScrollNext] = useState<boolean>();
+  const { canScrollPrev, canScrollNext, handleScroll, scrollCarouselProps } =
+    useScrollCarousel(title);
   const { setSongList } = usePlayerActions();
-
-  if (similarArtists.length > 16) {
-    similarArtists = similarArtists.slice(0, 16);
-  }
+  const displayList = useMemo(
+    () => similarArtists.slice(0, 16),
+    [similarArtists],
+  );
 
   async function handlePlayArtistRadio(artist: ISimilarArtist) {
     const songList = await getArtistAllSongs(artist.id);
     if (songList) setSongList(songList, 0);
   }
-
-  useEffect(() => {
-    if (!api) {
-      return;
-    }
-
-    setCanScrollPrev(api.canScrollPrev());
-    setCanScrollNext(api.canScrollNext());
-
-    api.on("select", () => {
-      setCanScrollPrev(api.canScrollPrev());
-      setCanScrollNext(api.canScrollNext());
-    });
-  }, [api]);
 
   return (
     <div className="w-full flex flex-col mb-4">
@@ -57,57 +36,54 @@ export default function RelatedArtistsList({
         <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
           {title}
         </h3>
-        <div className="flex gap-2">
+        <div className="hidden sm:flex gap-2">
           <CarouselButton
             direction="prev"
             disabled={!canScrollPrev}
-            onClick={() => api?.scrollPrev()}
+            onClick={() => handleScroll("prev")}
           />
           <CarouselButton
             direction="next"
             disabled={!canScrollNext}
-            onClick={() => api?.scrollNext()}
+            onClick={() => handleScroll("next")}
           />
         </div>
       </div>
 
-      <div className="transform-gpu">
-        <Carousel
-          opts={{
-            align: "start",
-            slidesToScroll: "auto",
-          }}
-          setApi={setApi}
-        >
-          <CarouselContent>
-            {similarArtists.map((artist) => (
-              <CarouselItem key={artist.id} className="basis-1/6 2xl:basis-1/8">
-                <PreviewCard.Root>
-                  <PreviewCard.ImageWrapper
-                    link={ROUTES.ARTIST.PAGE(artist.id)}
-                  >
-                    <PreviewCard.Image
-                      coverArtId={artist.coverArt}
-                      coverArtType="artist"
-                      alt={artist.name}
-                    />
-                    <PreviewCard.PlayButton
-                      onClick={() => handlePlayArtistRadio(artist)}
-                    />
-                  </PreviewCard.ImageWrapper>
-                  <PreviewCard.InfoWrapper>
-                    <PreviewCard.Subtitle
-                      link={ROUTES.ARTIST.PAGE(artist.id)}
-                      className="mt-2"
-                    >
-                      {artist.name}
-                    </PreviewCard.Subtitle>
-                  </PreviewCard.InfoWrapper>
-                </PreviewCard.Root>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
+      <div
+        {...scrollCarouselProps}
+        className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pl-4 scroll-pl-4 pr-4 scroll-pr-4 no-scrollbar"
+      >
+        {displayList.map((artist, index) => (
+          <div
+            key={artist.id}
+            role="group"
+            aria-roledescription="slide"
+            aria-label={`${index + 1} of ${displayList.length}`}
+            className="shrink-0 snap-start w-1/6 2xl:w-1/8"
+          >
+            <PreviewCard.Root>
+              <PreviewCard.ImageWrapper link={ROUTES.ARTIST.PAGE(artist.id)}>
+                <PreviewCard.Image
+                  coverArtId={artist.coverArt}
+                  coverArtType="artist"
+                  alt={artist.name}
+                />
+                <PreviewCard.PlayButton
+                  onClick={() => handlePlayArtistRadio(artist)}
+                />
+              </PreviewCard.ImageWrapper>
+              <PreviewCard.InfoWrapper>
+                <PreviewCard.Subtitle
+                  link={ROUTES.ARTIST.PAGE(artist.id)}
+                  className="mt-2"
+                >
+                  {artist.name}
+                </PreviewCard.Subtitle>
+              </PreviewCard.InfoWrapper>
+            </PreviewCard.Root>
+          </div>
+        ))}
       </div>
     </div>
   );
