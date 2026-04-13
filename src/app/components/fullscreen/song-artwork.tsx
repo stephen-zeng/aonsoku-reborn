@@ -9,7 +9,7 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork() {
   );
 
   return (
-    <div className="w-full flex items-center justify-center px-6 sm:px-0">
+    <div className="w-full flex items-center justify-center">
       <AnimatePresence mode="wait">
         <motion.div
           key={id ?? "no-song"}
