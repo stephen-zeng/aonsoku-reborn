@@ -2,28 +2,31 @@ import { HeaderWithImageEffect } from "@/app/components/fallbacks/album-fallback
 import { PreviewListFallback } from "@/app/components/fallbacks/home-fallbacks";
 import { ArtistsTableFallback } from "@/app/components/fallbacks/song-fallbacks";
 import { TopSongsTableFallback } from "@/app/components/fallbacks/table-fallbacks";
-import { ButtonsBarFallback } from "@/app/components/fallbacks/ui-fallbacks";
+import { DetailButtonsFallback } from "@/app/components/fallbacks/ui-fallbacks";
 import ListWrapper from "@/app/components/list-wrapper";
 import { Skeleton } from "@/app/components/ui/skeleton";
 
-function ArtistButtonsFallback() {
+function ArtistInfoFallback() {
   return (
-    <ButtonsBarFallback>
-      <Skeleton className="rounded-full w-12 h-12 md:w-14 md:h-14" />
-      <Skeleton className="rounded-full w-14 h-14 md:order-first" />
-      <Skeleton className="rounded-full w-12 h-12 md:w-14 md:h-14 hidden md:inline-flex" />
-      <Skeleton className="rounded-full w-12 h-12 md:w-14 md:h-14 hidden md:inline-flex" />
-      <Skeleton className="rounded-full w-12 h-12 md:w-14 md:h-14" />
-    </ButtonsBarFallback>
+    <div className="w-full">
+      <DetailButtonsFallback />
+      <div className="flex flex-col gap-2 mt-2">
+        <Skeleton className="w-48 h-4 rounded" />
+        <div className="flex flex-col gap-1">
+          <Skeleton className="w-full h-3 rounded" />
+          <Skeleton className="w-3/4 h-3 rounded" />
+        </div>
+      </div>
+    </div>
   );
 }
 
 function ArtistFallback() {
   return (
-    <div className="w-full">
+    <div className="w-full bg-background min-h-content">
       <HeaderWithImageEffect />
       <ListWrapper>
-        <ArtistButtonsFallback />
+        <ArtistInfoFallback />
         <TopSongsTableFallback />
         <PreviewListFallback />
         <PreviewListFallback />

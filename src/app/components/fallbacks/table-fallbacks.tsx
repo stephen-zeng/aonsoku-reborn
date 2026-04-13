@@ -1,4 +1,4 @@
-import clsx from "clsx";
+import { cn } from "@/lib/utils";
 import { Skeleton } from "@/app/components/ui/skeleton";
 
 interface TableFallbackProps {
@@ -12,12 +12,12 @@ function SongsHeaderCells() {
   return (
     <>
       <Skeleton className="w-5 h-5 ml-2" />
-      <Skeleton className="w-8 h-5" />
+      <Skeleton className="w-36 h-5" />
       <Skeleton className="w-16 h-5 hidden lg:block" />
-      <Skeleton className="w-16 h-5 hidden md:block" />
+      <Skeleton className="w-12 h-5 hidden md:block" />
       <Skeleton className="w-12 h-5 hidden lg:block" />
       <Skeleton className="w-16 h-5 hidden 2xl:block" />
-      <Skeleton className="w-12 h-5 hidden 2xl:block" />
+      <Skeleton className="w-14 h-5 rounded-full hidden 2xl:block" />
       <Skeleton className="w-5 h-5 ml-auto mr-2" />
     </>
   );
@@ -107,7 +107,7 @@ function ArtistsHeaderCells() {
     <>
       <Skeleton className="w-5 h-5 ml-2" />
       <Skeleton className="w-20 h-5" />
-      <Skeleton className="w-20 h-5" />
+      <Skeleton className="w-20 h-5 hidden md:block" />
       <Skeleton className="w-5 h-5 ml-auto mr-2" />
     </>
   );
@@ -118,7 +118,7 @@ function ArtistsRowCells() {
     <>
       <Skeleton className="w-5 h-5 ml-2" />
       <Skeleton className="w-28 h-5" />
-      <Skeleton className="w-12 h-5" />
+      <Skeleton className="w-12 h-5 hidden md:block" />
       <div className="flex justify-end">
         <Skeleton className="w-5 h-5 mr-2" />
       </div>
@@ -171,43 +171,49 @@ export function TableFallback({
 
   return (
     <div
-      className={clsx(
-        "w-full rounded-md",
-        isClassic && "bg-background border",
+      className={cn(
+        "w-full",
+        isClassic && "rounded-md bg-background border",
         isModern && "bg-transparent",
       )}
     >
       <div
-        className={clsx(
+        className={cn(
           gridCols,
           "px-2 items-center grid",
-          isModern && "border-b",
+          isModern && "border-b border-foreground/20",
           isModern && isRegular && "mb-2",
           isRegular ? "h-12" : "h-[41px]",
         )}
       >
         <HeaderCells />
       </div>
-      {Array.from({ length }).map((_, index) => (
-        <div
-          key={index}
-          className={clsx(
-            gridCols,
-            "p-2 items-center grid",
-            isClassic && "border-t",
-          )}
-        >
-          <RowCells />
-        </div>
-      ))}
+      <div className={cn(isModern && "rounded-md")}>
+        {Array.from({ length }).map((_, index) => (
+          <div
+            key={index}
+            className={cn(
+              gridCols,
+              "p-2 items-center grid",
+              isClassic && "border-b last:border-b-0",
+              isModern && "rounded-md mb-1",
+            )}
+          >
+            <RowCells />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
 export function TopSongsTableFallback() {
   return (
-    <div className="w-full">
-      <Skeleton className="w-28 h-8 mb-4 mt-6 rounded" />
+    <div className="w-full mb-4">
+      <div className="flex items-center justify-between mb-4">
+        <Skeleton className="w-28 h-8 rounded" />
+        <Skeleton className="w-16 h-5 rounded" />
+      </div>
 
       <TableFallback variant="modern" />
     </div>

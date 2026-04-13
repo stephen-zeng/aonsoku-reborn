@@ -16,7 +16,7 @@ function PlaylistButtonsFallback() {
 
 export function PlaylistFallback() {
   return (
-    <div className="w-full">
+    <div className="w-full bg-background min-h-content">
       <HeaderWithImageEffect />
 
       <ListWrapper>

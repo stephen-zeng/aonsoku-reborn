@@ -34,11 +34,13 @@ export function AddButtonSkeleton() {
 
 export function CardSkeleton() {
   return (
-    <>
-      <Skeleton className="aspect-square" />
-      <Skeleton className="h-[13px] w-11/12 mt-2" />
-      <Skeleton className="h-3 w-1/2 mt-[7px]" />
-    </>
+    <div className="flex flex-col cursor-pointer">
+      <Skeleton className="aspect-square rounded" />
+      <div className="flex flex-col cursor-default mt-2">
+        <Skeleton className="h-4 w-11/12 truncate" />
+        <Skeleton className="h-3 w-1/2 -mt-1" />
+      </div>
+    </div>
   );
 }
 
@@ -47,5 +49,17 @@ export function ButtonsBarFallback({ children }: { children: ReactNode }) {
     <div className="w-full my-3 md:my-6 flex gap-1 items-center justify-center md:justify-start">
       {children}
     </div>
+  );
+}
+
+export function DetailButtonsFallback() {
+  return (
+    <ButtonsBarFallback>
+      <Skeleton className="rounded-full w-12 h-12 md:w-14 md:h-14" />
+      <Skeleton className="rounded-full w-14 h-14 md:order-first" />
+      <Skeleton className="rounded-full w-12 h-12 md:w-14 md:h-14 hidden md:inline-flex" />
+      <Skeleton className="rounded-full w-12 h-12 md:w-14 md:h-14 hidden md:inline-flex" />
+      <Skeleton className="rounded-full w-12 h-12 md:w-14 md:h-14" />
+    </ButtonsBarFallback>
   );
 }

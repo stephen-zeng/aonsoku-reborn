@@ -31,7 +31,7 @@ export function PlaylistsListFallback() {
     <div className="w-full h-content">
       <ShadowHeaderFallback actions={<AddButtonSkeleton />} />
 
-      <div className="w-full h-[calc(100%-80px)]">
+      <div className="w-full h-[calc(100%-80px)] overflow-auto">
         <TableFallback columns="playlists" />
       </div>
     </div>
@@ -43,7 +43,7 @@ export function RadiosListFallback() {
     <div className="w-full h-content">
       <ShadowHeaderFallback actions={<AddButtonSkeleton />} />
 
-      <div className="w-full h-[calc(100%-80px)]">
+      <div className="w-full h-[calc(100%-80px)] overflow-auto">
         <TableFallback columns="radios" length={5} />
       </div>
     </div>
@@ -87,7 +87,7 @@ export function ArtistsTableFallback() {
         actions={<Skeleton className="w-9 h-9 rounded-md" />}
       />
 
-      <div className="w-full h-[calc(100%-80px)]">
+      <div className="w-full h-[calc(100%-80px)] overflow-auto">
         <TableFallback columns="artists" />
       </div>
     </div>

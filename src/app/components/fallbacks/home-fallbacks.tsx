@@ -38,9 +38,11 @@ export function HomeFallback() {
 
 export function PreviewListFallback() {
   return (
-    <div className="w-full flex flex-col my-4">
+    <div className="w-full flex flex-col mt-4">
       <div className="flex justify-between items-center my-4">
-        <Skeleton className="w-52 h-8 rounded" />
+        <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+          <Skeleton className="w-52 h-8 rounded" />
+        </h3>
         <div className="flex items-center gap-4">
           <Skeleton className="w-16 h-5 rounded hidden sm:block" />
           <div className="hidden sm:flex gap-2">
