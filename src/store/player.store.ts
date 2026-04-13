@@ -184,6 +184,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               currentList: [],
               currentSongIndex: 0,
               radioList: [],
+              queueSource: null,
             },
             playerState: {
               isPlaying: false,
@@ -300,7 +301,13 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               sendCommand: null,
             },
             actions: {
-              setSongList: (songlist, index, shuffle = false, sourceId) => {
+              setSongList: (
+                songlist,
+                index,
+                shuffle = false,
+                sourceId,
+                sourceName,
+              ) => {
                 if (isRemoteActive()) {
                   if (songlist.length === 0) return;
 
@@ -368,6 +375,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.songlist.originalSongIndex = index;
                   state.playerState.mediaType = "song";
                   state.songlist.radioList = [];
+                  state.songlist.queueSource = sourceName ?? null;
                 });
 
                 if (shuffle) {
@@ -669,6 +677,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.songlist.currentList = [];
                   state.songlist.currentSong = {} as ISong;
                   state.songlist.radioList = [];
+                  state.songlist.queueSource = null;
                   state.songlist.originalSongIndex = 0;
                   state.songlist.currentSongIndex = 0;
                   state.playerState.mediaType = "song";
@@ -888,6 +897,47 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.songlist.shuffledList = newShuffledList;
                   state.songlist.currentSongIndex = updatedCurrentIndex;
                   state.songlist.originalSongIndex = updatedOriginalIndex;
+                });
+              },
+              clearHistory: () => {
+                if (isRemoteActive()) return;
+                const {
+                  currentList,
+                  originalList,
+                  shuffledList,
+                  currentSongIndex,
+                  currentSong,
+                } = get().songlist;
+
+                if (currentSongIndex <= 0) return;
+
+                const newCurrentList = currentList.slice(currentSongIndex);
+
+                const currentSongId =
+                  currentSong.id ?? currentList[currentSongIndex]?.id;
+                const originalIndex = originalList.findIndex(
+                  (song) => song.id === currentSongId,
+                );
+                const newOriginalList =
+                  originalIndex >= 0
+                    ? originalList.slice(originalIndex)
+                    : originalList;
+
+                const newOriginalSongIndex = Math.max(originalIndex, 0);
+
+                const newShuffledList =
+                  shuffledList.length > 0
+                    ? shuffledList.filter((song) =>
+                        newCurrentList.some((s) => s.id === song.id),
+                      )
+                    : [];
+
+                set((state) => {
+                  state.songlist.currentList = newCurrentList;
+                  state.songlist.originalList = newOriginalList;
+                  state.songlist.shuffledList = newShuffledList;
+                  state.songlist.currentSongIndex = 0;
+                  state.songlist.originalSongIndex = newOriginalSongIndex;
                 });
               },
               reorderQueue: (fromIndex, toIndex) => {
@@ -1115,6 +1165,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.songlist.currentSongIndex = 0;
                   state.songlist.originalSongIndex = 0;
                   state.songlist.currentSong = {} as ISong;
+                  state.songlist.queueSource = null;
                 });
               },
               exitRemoteControl: () => {
@@ -1135,6 +1186,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.songlist.currentSongIndex = 0;
                   state.songlist.originalSongIndex = 0;
                   state.songlist.currentSong = {} as ISong;
+                  state.songlist.queueSource = null;
                 });
               },
               registerRemoteSender: (
@@ -1484,6 +1536,9 @@ export const useSongColor = () =>
 
 export const usePlayerCurrentList = () =>
   usePlayerStore((state) => state.songlist.currentList);
+
+export const useQueueSource = () =>
+  usePlayerStore((state) => state.songlist.queueSource);
 
 export const useRemoteControlState = () =>
   usePlayerStore((state) => state.remoteControl);

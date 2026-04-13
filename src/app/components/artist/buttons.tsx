@@ -55,7 +55,7 @@ export function ArtistButtons({
     const songList = await getArtistAllSongs(artist?.id || "");
 
     if (songList) {
-      setSongList(songList, 0, shuffle);
+      setSongList(songList, 0, shuffle, undefined, artist.name);
     }
   }
 

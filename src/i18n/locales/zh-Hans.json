@@ -32,6 +32,7 @@
     "loading": "加载中…",
     "showDetails": "显示详情",
     "hideDetails": "隐藏详情",
+    "clear": "清除",
     "viewMode": {
       "modes": {
         "poster": "海报",
@@ -263,7 +264,10 @@
     "switchButton": "切换到大播放器",
     "noLyrics": "没有找到歌词",
     "loadingLyrics": "搜索歌词…",
-    "queue": "队列"
+    "queue": "队列",
+    "queueHistory": "历史记录",
+    "queueContinue": "继续播放",
+    "queueFromSource": "来自 {{source}}"
   },
   "logout": {
     "dialog": {

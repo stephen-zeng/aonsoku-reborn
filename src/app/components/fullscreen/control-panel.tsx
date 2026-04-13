@@ -6,7 +6,11 @@ import { MobileVolumeBar } from "./mobile-volume-bar";
 import { FullscreenProgress } from "./progress";
 import { VolumeContainer } from "./volume-container";
 
-type ControlPanelVariant = "desktop" | "mobile" | "mobile-secondary";
+type ControlPanelVariant =
+  | "desktop"
+  | "mobile"
+  | "mobile-secondary"
+  | "mobile-queue";
 
 interface ControlPanelProps {
   variant: ControlPanelVariant;
@@ -46,6 +50,19 @@ export const FullscreenControlPanel = memo(function FullscreenControlPanel({
           <MobileVolumeBar />
         </div>
       </div>
+    );
+  }
+
+  if (variant === "mobile-queue") {
+    return (
+      <>
+        <div className="shrink-0 px-4 py-1">
+          <FullscreenProgress thin stacked />
+        </div>
+        <div className="shrink-0 flex items-center justify-center gap-3 py-2">
+          <FullscreenControls />
+        </div>
+      </>
     );
   }
 

@@ -1,23 +1,41 @@
-import { memo, useMemo } from "react";
+import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import {
+  closestCenter,
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { memo, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { LoopState } from "@/types/playerContext";
+import { getCoverArtUrl } from "@/api/httpClient";
+import { Button } from "@/app/components/ui/button";
 import {
   usePlayerActions,
   usePlayerCurrentList,
   usePlayerCurrentSong,
   usePlayerCurrentSongIndex,
-  usePlayerIsPlaying,
-  usePlayerLoop,
-  usePlayerShuffle,
+  useQueueSource,
 } from "@/store/player.store";
 import type { ISong } from "@/types/responses/song";
-import { QueueSection } from "./queue-section";
+import { QueueCurrentSong } from "./queue-current-song";
+
+const POINTER_SENSOR_OPTIONS = {
+  activationConstraint: { distance: 5 },
+};
 
 export const FullscreenSongQueue = memo(function FullscreenSongQueue() {
   const currentList = usePlayerCurrentList();
   const currentSongIndex = usePlayerCurrentSongIndex();
   const currentSong = usePlayerCurrentSong();
-  const isPlaying = usePlayerIsPlaying();
 
   const history = useMemo(
     () => currentList.slice(0, currentSongIndex),
@@ -37,117 +55,242 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue() {
   }
 
   return (
-    <QueueModeControls
+    <UnifiedQueueView
       history={history}
       upcoming={upcoming}
       currentSong={currentSong}
       currentSongIndex={currentSongIndex}
       currentList={currentList}
-      isPlaying={isPlaying}
     />
   );
 });
 
-function QueueModeControls({
+function UnifiedQueueView({
   history,
   upcoming,
   currentSong,
   currentSongIndex,
   currentList,
-  isPlaying,
 }: {
   history: ISong[];
   upcoming: ISong[];
   currentSong: ISong;
   currentSongIndex: number;
   currentList: ISong[];
-  isPlaying: boolean;
 }) {
   const { t } = useTranslation();
+  const { setSongList, clearHistory, reorderQueue } = usePlayerActions();
+  const queueSource = useQueueSource();
+  const [activeItem, setActiveItem] = useState<ISong | null>(null);
+
+  const sensors = useSensors(useSensor(PointerSensor, POINTER_SENSOR_OPTIONS));
+
+  const sortableItems = useMemo(
+    () => upcoming.map((song) => song.id),
+    [upcoming],
+  );
+
+  function handleDragStart(event: DragStartEvent) {
+    const song = upcoming.find((s) => s.id === event.active.id);
+    setActiveItem(song ?? null);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    setActiveItem(null);
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const fromLocalIndex = upcoming.findIndex((s) => s.id === active.id);
+    const toLocalIndex = upcoming.findIndex((s) => s.id === over.id);
+    if (fromLocalIndex === -1 || toLocalIndex === -1) return;
+
+    const fromGlobalIndex = currentSongIndex + 1 + fromLocalIndex;
+    const toGlobalIndex = currentSongIndex + 1 + toLocalIndex;
+
+    reorderQueue(fromGlobalIndex, toGlobalIndex);
+  }
 
   return (
-    <div className="flex flex-col h-full gap-2">
+    <div className="flex flex-col h-full overflow-y-auto" data-vaul-no-drag>
       {history.length > 0 && (
-        <QueueSection
-          title={t("fullscreen.queueHistory")}
-          songs={history}
-          currentSong={currentSong}
-          isPlaying={isPlaying}
-          startIndex={0}
-          fullList={currentList}
-        />
+        <div className="shrink-0">
+          <div className="flex items-center justify-between px-2 py-1">
+            <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
+              {t("fullscreen.queueHistory")}
+            </h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs text-foreground/50 hover:text-foreground"
+              onClick={clearHistory}
+            >
+              {t("generic.clear")}
+            </Button>
+          </div>
+          {history.map((song, idx) => {
+            const globalIndex = idx;
+            const isActive = currentSong.id === song.id;
+            return (
+              <QueueListRow
+                key={song.id}
+                song={song}
+                isActive={isActive}
+                onClick={() => setSongList(currentList, globalIndex)}
+              />
+            );
+          })}
+        </div>
       )}
 
-      <div className="flex items-center justify-center gap-2 py-1 shrink-0">
-        <ShuffleToggle />
-        <RepeatToggle />
+      <div className="shrink-0 px-2 py-2 border-t border-foreground/10">
+        <QueueCurrentSong />
       </div>
 
       {upcoming.length > 0 && (
-        <QueueSection
-          title={t("fullscreen.queueContinue")}
-          songs={upcoming}
-          currentSong={currentSong}
-          isPlaying={isPlaying}
-          startIndex={currentSongIndex + 1}
-          fullList={currentList}
-        />
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={sortableItems}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="shrink-0">
+              <div className="flex items-center justify-between px-2 py-1">
+                <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
+                  {t("fullscreen.queueContinue")}
+                </h3>
+              </div>
+              {queueSource && (
+                <p className="text-xs text-foreground/50 px-2 pb-1">
+                  {t("fullscreen.queueFromSource", { source: queueSource })}
+                </p>
+              )}
+              {upcoming.map((song, idx) => {
+                const globalIndex = currentSongIndex + 1 + idx;
+                const isActive = currentSong.id === song.id;
+                return (
+                  <SortableUpcomingRow
+                    key={song.id}
+                    song={song}
+                    isActive={isActive}
+                    onClick={() => setSongList(currentList, globalIndex)}
+                  />
+                );
+              })}
+            </div>
+          </SortableContext>
+          {createPortal(
+            <DragOverlay>
+              {activeItem && (
+                <QueueListRow
+                  song={activeItem}
+                  isActive={currentSong.id === activeItem.id}
+                  onClick={() => {}}
+                  showDragHandle={false}
+                />
+              )}
+            </DragOverlay>,
+            document.body,
+          )}
+        </DndContext>
+      )}
+
+      {upcoming.length === 0 && history.length === 0 && (
+        <div className="flex-1" />
       )}
     </div>
   );
 }
 
-function ShuffleToggle() {
-  const isShuffleActive = usePlayerShuffle();
-  const { toggleShuffle } = usePlayerActions();
-  const { t } = useTranslation();
+interface QueueListRowProps {
+  song: ISong;
+  isActive: boolean;
+  onClick: () => void;
+  showDragHandle?: boolean;
+  interactive?: boolean;
+}
+
+const QueueListRow = memo(function QueueListRow({
+  song,
+  isActive,
+  onClick,
+  showDragHandle = false,
+  interactive = true,
+}: QueueListRowProps) {
+  const coverArtUrl = getCoverArtUrl(song.coverArt, "song", "100");
 
   return (
-    <button
-      type="button"
-      onClick={toggleShuffle}
-      title={
-        isShuffleActive
-          ? t("player.tooltips.shuffle.disable")
-          : t("player.tooltips.shuffle.enable")
+    <div
+      className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted/50 transition-colors ${
+        isActive ? "bg-accent" : ""
+      }`}
+      onClick={onClick}
+      onKeyDown={
+        interactive
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
       }
-      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-        isShuffleActive
-          ? "bg-foreground/15 text-foreground"
-          : "text-foreground/60 border border-foreground/30 hover:text-foreground hover:bg-foreground/10"
-      }`}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
     >
-      {isShuffleActive
-        ? t("player.tooltips.shuffle.disable")
-        : t("player.tooltips.shuffle.enable")}
-    </button>
+      <div className="w-9 h-9 rounded shrink-0 overflow-hidden bg-accent">
+        <img
+          src={coverArtUrl}
+          className="w-9 h-9 object-cover"
+          alt={`${song.title} - ${song.artist}`}
+          loading="lazy"
+        />
+      </div>
+      <div className="flex flex-col min-w-0 flex-1">
+        <span
+          className={`text-sm font-medium truncate ${
+            isActive ? "text-primary" : ""
+          }`}
+        >
+          {song.title}
+        </span>
+        <span className="text-xs text-foreground/70 truncate">
+          {song.artist}
+        </span>
+      </div>
+      {showDragHandle && (
+        <span className="text-foreground/30 shrink-0 cursor-grab select-none px-1">
+          ≡
+        </span>
+      )}
+    </div>
   );
-}
+});
 
-function RepeatToggle() {
-  const loopState = usePlayerLoop();
-  const { toggleLoop } = usePlayerActions();
-  const { t } = useTranslation();
+const SortableUpcomingRow = memo(function SortableUpcomingRow(
+  props: QueueListRowProps,
+) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: props.song.id });
 
-  const isActive = loopState !== LoopState.Off;
-
-  const label =
-    loopState === LoopState.One
-      ? t("player.tooltips.repeat.enableOne")
-      : t("player.tooltips.repeat.enable");
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : undefined,
+  };
 
   return (
-    <button
-      type="button"
-      onClick={toggleLoop}
-      title={isActive ? t("player.tooltips.repeat.disable") : label}
-      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-        isActive
-          ? "bg-foreground/15 text-foreground"
-          : "text-foreground/60 border border-foreground/30 hover:text-foreground hover:bg-foreground/10"
-      }`}
-    >
-      {isActive ? t("player.tooltips.repeat.disable") : label}
-    </button>
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <QueueListRow {...props} interactive={false} showDragHandle />
+    </div>
   );
-}
+});

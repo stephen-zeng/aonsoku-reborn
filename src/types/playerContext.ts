@@ -22,6 +22,7 @@ export interface ISongList {
   originalList: ISong[];
   originalSongIndex: number;
   radioList: Radio[];
+  queueSource: string | null;
 }
 
 export type FullscreenPlayerTab = "queue" | "playing" | "lyrics";
@@ -144,6 +145,7 @@ export interface IPlayerActions {
     index: number,
     shuffle?: boolean,
     sourceId?: { albumId: string } | { playlistId: string },
+    sourceName?: string,
   ) => void;
   setCurrentSong: () => void;
   checkIsSongStarred: () => void;
@@ -170,12 +172,15 @@ export interface IPlayerActions {
   setNextOnQueue: (
     songlist: ISong[],
     sourceId?: { albumId: string } | { playlistId: string },
+    sourceName?: string,
   ) => void;
   setLastOnQueue: (
     songlist: ISong[],
     sourceId?: { albumId: string } | { playlistId: string },
+    sourceName?: string,
   ) => void;
   removeSongFromQueue: (id: string) => void;
+  clearHistory: () => void;
   reorderQueue: (fromIndex: number, toIndex: number) => void;
   setMainDrawerState: (state: boolean) => void;
   setQueueState: (state: boolean) => void;

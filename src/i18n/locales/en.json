@@ -32,6 +32,7 @@
     "hideDetails": "Hide details",
     "viewAll": "View all",
     "loading": "Loading…",
+    "clear": "Clear",
     "viewMode": {
       "label": "View Mode",
       "modes": {
@@ -275,6 +276,7 @@
     "queue": "Queue",
     "queueHistory": "History",
     "queueContinue": "Continue Playing",
+    "queueFromSource": "From {{source}}",
     "playing": "Playing now",
     "lyrics": "Lyrics",
     "switchButton": "Switch to Big Player"

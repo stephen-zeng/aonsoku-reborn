@@ -227,7 +227,7 @@ export const MobileLayout = memo(function MobileLayout() {
               <MemoSongQueue />
             </div>
 
-            <FullscreenControlPanel variant="mobile-secondary" />
+            <FullscreenControlPanel variant="mobile-queue" />
           </motion.div>
         )}
       </AnimatePresence>
