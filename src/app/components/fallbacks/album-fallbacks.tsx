@@ -1,13 +1,20 @@
 import { ImageHeaderEffect } from "@/app/components/album/header-effect";
 import { IMAGE_HEADER_MAIN_GRADIENT } from "@/app/components/album/image-header-gradients";
 import { TableFallback } from "@/app/components/fallbacks/table-fallbacks";
-import { ShadowHeaderFallback } from "@/app/components/fallbacks/ui-fallbacks";
+import {
+  ButtonsBarFallback,
+  CardSkeleton,
+  ShadowHeaderFallback,
+} from "@/app/components/fallbacks/ui-fallbacks";
 import ListWrapper from "@/app/components/list-wrapper";
-import { MainGrid } from "@/app/components/main-grid";
 import { Skeleton } from "@/app/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-export function AlbumHeaderFallback() {
+export function AlbumHeaderFallback({
+  showSecondaryBadges = false,
+}: {
+  showSecondaryBadges?: boolean;
+}) {
   return (
     <div
       className={cn(
@@ -24,23 +31,47 @@ export function AlbumHeaderFallback() {
           <div className="hidden md:flex gap-2 mt-1 md:mt-2">
             <Skeleton className="h-[22px] w-12 rounded-full" />
             <Skeleton className="h-[22px] w-12 rounded-full" />
-            <Skeleton className="h-[22px] w-12 rounded-full" />
+            {showSecondaryBadges && (
+              <>
+                <Skeleton className="h-[22px] w-3 rounded-full" />
+                <Skeleton className="h-[22px] w-16 rounded-full" />
+                <Skeleton className="h-[22px] w-20 rounded-full" />
+              </>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="md:hidden flex gap-2 justify-center">
+      <div className="md:hidden flex flex-col items-center gap-2">
         <Skeleton className="h-[22px] w-12 rounded-full" />
         <Skeleton className="h-[22px] w-12 rounded-full" />
-        <Skeleton className="h-[22px] w-12 rounded-full" />
+        {showSecondaryBadges && (
+          <>
+            <Skeleton className="h-[22px] w-3 rounded-full" />
+            <Skeleton className="h-[22px] w-16 rounded-full" />
+          </>
+        )}
       </div>
+    </div>
+  );
+}
+
+export function HeaderWithImageEffect({
+  showSecondaryBadges = false,
+}: {
+  showSecondaryBadges?: boolean;
+}) {
+  return (
+    <div className="relative">
+      <AlbumHeaderFallback showSecondaryBadges={showSecondaryBadges} />
+      <ImageHeaderEffect className="bg-muted-foreground" />
     </div>
   );
 }
 
 export function PlayButtonsFallback() {
   return (
-    <div className="my-3 md:my-6 flex gap-1 items-center justify-center md:justify-start">
+    <ButtonsBarFallback>
       <Skeleton className="rounded-full w-14 h-14" />
       <div className="flex items-center justify-center w-12 h-12 md:w-14 md:h-14">
         <Skeleton className="rounded-full w-7 h-7" />
@@ -48,6 +79,15 @@ export function PlayButtonsFallback() {
       <div className="flex items-center justify-center w-12 h-12 md:w-14 md:h-14">
         <Skeleton className="rounded-full w-7 h-7" />
       </div>
+    </ButtonsBarFallback>
+  );
+}
+
+function AlbumInfoFallback() {
+  return (
+    <div className="flex gap-2 items-center">
+      <Skeleton className="w-12 h-4 rounded-full" />
+      <Skeleton className="w-12 h-4 rounded-full" />
     </div>
   );
 }
@@ -55,12 +95,10 @@ export function PlayButtonsFallback() {
 export function AlbumFallback() {
   return (
     <div className="w-full">
-      <div className="relative">
-        <AlbumHeaderFallback />
-        <ImageHeaderEffect className="bg-muted-foreground" />
-      </div>
+      <HeaderWithImageEffect showSecondaryBadges />
       <ListWrapper>
         <PlayButtonsFallback />
+        <AlbumInfoFallback />
         <TableFallback variant="modern" />
       </ListWrapper>
     </div>
@@ -69,10 +107,17 @@ export function AlbumFallback() {
 
 export function AlbumsFallback() {
   return (
-    <div className="w-full">
-      <ShadowHeaderFallback />
+    <div className="w-full h-full">
+      <ShadowHeaderFallback
+        actions={
+          <div className="flex gap-2">
+            <Skeleton className="w-8 h-8 rounded-md" />
+            <Skeleton className="w-32 h-9 rounded-md" />
+          </div>
+        }
+      />
 
-      <ListWrapper className="mt-6 flex flex-col gap-4">
+      <ListWrapper className="pt-[--shadow-header-distance] px-0">
         <GridFallback />
       </ListWrapper>
     </div>
@@ -81,14 +126,12 @@ export function AlbumsFallback() {
 
 function GridFallback() {
   return (
-    <MainGrid>
-      {Array.from({ length: 40 }).map((_, index) => (
+    <div className="grid grid-cols-4 lg:grid-cols-6 2xl:grid-cols-8 gap-4 h-full">
+      {Array.from({ length: 16 }).map((_, index) => (
         <div key={"card-fallback-" + index}>
-          <Skeleton className="aspect-square" />
-          <Skeleton className="h-[13px] w-11/12 mt-2" />
-          <Skeleton className="h-3 w-1/2 mt-[7px]" />
+          <CardSkeleton />
         </div>
       ))}
-    </MainGrid>
+    </div>
   );
 }

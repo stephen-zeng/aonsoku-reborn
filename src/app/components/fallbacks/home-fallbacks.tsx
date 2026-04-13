@@ -1,3 +1,4 @@
+import { CardSkeleton } from "@/app/components/fallbacks/ui-fallbacks";
 import { Skeleton } from "@/app/components/ui/skeleton";
 
 export function HeaderFallback() {
@@ -38,11 +39,14 @@ export function HomeFallback() {
 export function PreviewListFallback() {
   return (
     <div className="w-full flex flex-col my-4">
-      <div className="flex justify-between my-4">
+      <div className="flex justify-between items-center my-4">
         <Skeleton className="w-52 h-8 rounded" />
-        <div className="hidden sm:flex gap-2">
-          <Skeleton className="w-8 h-8 rounded-full" />
-          <Skeleton className="w-8 h-8 rounded-full" />
+        <div className="flex items-center gap-4">
+          <Skeleton className="w-16 h-5 rounded hidden sm:block" />
+          <div className="hidden sm:flex gap-2">
+            <Skeleton className="w-8 h-8 rounded-full" />
+            <Skeleton className="w-8 h-8 rounded-full" />
+          </div>
         </div>
       </div>
 
@@ -57,9 +61,7 @@ export function SongsCarouselFallback() {
       <div className="hidden 2xl:flex gap-4">
         {Array.from({ length: 8 }).map((_, index) => (
           <div className="basis-1/8" key={"large-" + index}>
-            <Skeleton className="aspect-square" />
-            <Skeleton className="h-[13px] w-11/12 mt-2" />
-            <Skeleton className="h-3 w-1/2 mt-[7px]" />
+            <CardSkeleton />
           </div>
         ))}
       </div>
@@ -67,9 +69,7 @@ export function SongsCarouselFallback() {
       <div className="hidden sm:flex 2xl:hidden gap-4">
         {Array.from({ length: 6 }).map((_, index) => (
           <div className="basis-1/6" key={"small-" + index}>
-            <Skeleton className="aspect-square" />
-            <Skeleton className="h-[13px] w-11/12 mt-2" />
-            <Skeleton className="h-3 w-1/2 mt-[7px]" />
+            <CardSkeleton />
           </div>
         ))}
       </div>
@@ -77,9 +77,7 @@ export function SongsCarouselFallback() {
       <div className="flex sm:hidden gap-3">
         {Array.from({ length: 3 }).map((_, index) => (
           <div className="basis-1/3" key={"mobile-" + index}>
-            <Skeleton className="aspect-square" />
-            <Skeleton className="h-[13px] w-11/12 mt-2" />
-            <Skeleton className="h-3 w-1/2 mt-[7px]" />
+            <CardSkeleton />
           </div>
         ))}
       </div>

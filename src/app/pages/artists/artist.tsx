@@ -4,7 +4,7 @@ import ImageHeader from "@/app/components/album/image-header";
 import ArtistTopSongs from "@/app/components/artist/artist-top-songs";
 import { ArtistInfo } from "@/app/components/artist/info";
 import RelatedArtistsList from "@/app/components/artist/related-artists";
-import { AlbumFallback } from "@/app/components/fallbacks/album-fallbacks";
+import { ArtistFallback } from "@/app/components/fallbacks/artists";
 import { PreviewListFallback } from "@/app/components/fallbacks/home-fallbacks";
 import { TopSongsTableFallback } from "@/app/components/fallbacks/table-fallbacks";
 import { BadgesData } from "@/app/components/header-info";
@@ -34,11 +34,11 @@ export default function Artist() {
     artist?.name,
   );
 
-  if (artistIsLoading) return <AlbumFallback />;
+  if (artistIsLoading) return <ArtistFallback />;
   if (isFetched && !artist) {
     return <ErrorPage status={404} statusText="Not Found" />;
   }
-  if (!artist) return <AlbumFallback />;
+  if (!artist) return <ArtistFallback />;
 
   function getSongCount() {
     if (!artist) return null;
