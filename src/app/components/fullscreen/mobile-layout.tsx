@@ -1,8 +1,15 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronLeft } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ListMusic,
+  MicVocalIcon,
+} from "lucide-react";
 import { memo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
+import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
+import { cn } from "@/lib/utils";
 import { useFullscreenPlayerState, usePlayerStore } from "@/store/player.store";
 import { ArtworkWithInfo } from "./artwork-with-info";
 import { FullscreenControlPanel } from "./control-panel";
@@ -14,7 +21,9 @@ import { CompactSongInfo } from "./song-info";
 const MemoLyricsTab = memo(LyricsTab);
 const MemoSongQueue = memo(FullscreenSongQueue);
 
-function MobileMiniSongInfo() {
+const VIEW_TRANSITION = { duration: 0.2, ease: [0.4, 0, 0.2, 1] } as const;
+
+const MobileMiniSongInfo = memo(function MobileMiniSongInfo() {
   const currentSong = usePlayerStore((state) => state.songlist.currentSong);
 
   return (
@@ -26,7 +35,7 @@ function MobileMiniSongInfo() {
       </p>
     </div>
   );
-}
+});
 
 function MobileHeader({
   icon,
@@ -60,6 +69,82 @@ function MobileHeader({
   );
 }
 
+function MobileTabButton({
+  icon,
+  active,
+  disabled = false,
+  onClick,
+  label,
+}: {
+  icon: ReactNode;
+  active: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      role="tab"
+      aria-selected={active}
+      className={cn(
+        "size-10 rounded-full",
+        disabled && "opacity-50 cursor-not-allowed text-foreground/70",
+        !disabled &&
+          active &&
+          "text-foreground hover:text-foreground bg-foreground/10",
+        !disabled &&
+          !active &&
+          "text-foreground/70 hover:text-foreground hover:bg-foreground/10",
+      )}
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+    >
+      {icon}
+    </Button>
+  );
+}
+
+const MobileBottomTabs = memo(function MobileBottomTabs() {
+  const { t } = useTranslation();
+  const { fullscreenPlayerTab, setFullscreenPlayerTab } =
+    useFullscreenPlayerState();
+  const { hasLyrics } = useHasLyrics();
+
+  const lyricsDisabled = hasLyrics === false;
+
+  return (
+    <div
+      className="shrink-0 flex items-center justify-center gap-4 pt-1 pb-2"
+      role="tablist"
+    >
+      <MobileTabButton
+        icon={<MicVocalIcon className="size-5" />}
+        label={t("fullscreen.lyrics")}
+        active={fullscreenPlayerTab === "lyrics"}
+        disabled={lyricsDisabled}
+        onClick={() =>
+          setFullscreenPlayerTab(
+            fullscreenPlayerTab === "lyrics" ? "playing" : "lyrics",
+          )
+        }
+      />
+      <MobileTabButton
+        icon={<ListMusic className="size-5" />}
+        label={t("fullscreen.queue")}
+        active={fullscreenPlayerTab === "queue"}
+        onClick={() =>
+          setFullscreenPlayerTab(
+            fullscreenPlayerTab === "queue" ? "playing" : "queue",
+          )
+        }
+      />
+    </div>
+  );
+});
+
 export const MobileLayout = memo(function MobileLayout() {
   const { t } = useTranslation();
   const { closeFullscreenPlayer, fullscreenPlayerTab, setFullscreenPlayerTab } =
@@ -74,7 +159,7 @@ export const MobileLayout = memo(function MobileLayout() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            transition={VIEW_TRANSITION}
             className="flex flex-col h-full"
           >
             <MobileHeader
@@ -96,7 +181,7 @@ export const MobileLayout = memo(function MobileLayout() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            transition={VIEW_TRANSITION}
             className="flex flex-col h-full"
           >
             <MobileHeader
@@ -124,7 +209,7 @@ export const MobileLayout = memo(function MobileLayout() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            transition={VIEW_TRANSITION}
             className="flex flex-col h-full"
           >
             <MobileHeader
@@ -146,6 +231,7 @@ export const MobileLayout = memo(function MobileLayout() {
           </motion.div>
         )}
       </AnimatePresence>
+      <MobileBottomTabs />
     </div>
   );
 });
