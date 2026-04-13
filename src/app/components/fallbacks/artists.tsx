@@ -10,6 +10,13 @@ function ArtistInfoFallback() {
   return (
     <div className="w-full">
       <DetailButtonsFallback />
+      <div className="flex flex-wrap gap-2 items-center text-sm mt-2">
+        <Skeleton className="w-16 h-4 rounded-full" />
+        <Skeleton className="w-3 h-3 rounded-full" />
+        <Skeleton className="w-16 h-4 rounded-full" />
+        <Skeleton className="w-3 h-3 rounded-full" />
+        <Skeleton className="w-20 h-4 rounded-full" />
+      </div>
       <div className="flex flex-col gap-2 mt-2">
         <Skeleton className="w-48 h-4 rounded" />
         <div className="flex flex-col gap-1">
@@ -24,7 +31,7 @@ function ArtistInfoFallback() {
 function ArtistFallback() {
   return (
     <div className="w-full bg-background min-h-content">
-      <HeaderWithImageEffect />
+      <HeaderWithImageEffect showMobileSubtitle={false} />
       <ListWrapper>
         <ArtistInfoFallback />
         <TopSongsTableFallback />

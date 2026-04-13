@@ -10,6 +10,18 @@ import ListWrapper from "@/app/components/list-wrapper";
 import { Skeleton } from "@/app/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
+interface HeaderContentProps {
+  showSecondaryBadges?: boolean;
+  showArtistAboveCover?: boolean;
+  showMobileSubtitle?: boolean;
+}
+
+const defaultHeaderContentProps: Required<HeaderContentProps> = {
+  showSecondaryBadges: false,
+  showArtistAboveCover: false,
+  showMobileSubtitle: true,
+};
+
 function ArtistAboveCoverFallback() {
   return (
     <div className="md:hidden flex justify-center items-center gap-2">
@@ -20,12 +32,10 @@ function ArtistAboveCoverFallback() {
 }
 
 function AlbumHeaderContent({
-  showSecondaryBadges = false,
-  showArtistAboveCover = false,
-}: {
-  showSecondaryBadges?: boolean;
-  showArtistAboveCover?: boolean;
-}) {
+  showSecondaryBadges = defaultHeaderContentProps.showSecondaryBadges,
+  showArtistAboveCover = defaultHeaderContentProps.showArtistAboveCover,
+  showMobileSubtitle = defaultHeaderContentProps.showMobileSubtitle,
+}: HeaderContentProps) {
   return (
     <>
       {showArtistAboveCover && <ArtistAboveCoverFallback />}
@@ -51,21 +61,15 @@ function AlbumHeaderContent({
       </div>
 
       <div className="md:hidden flex flex-col items-center text-sm">
-        {!showArtistAboveCover && (
+        {showMobileSubtitle && (
           <Skeleton className="h-3 w-24 rounded mb-1 opacity-80" />
         )}
         <div className="flex flex-wrap justify-center gap-1">
           <Skeleton className="h-[22px] w-12 rounded-full" />
           <Skeleton className="h-[22px] w-12 rounded-full" />
-          {showSecondaryBadges && (
-            <>
-              <Skeleton className="h-[22px] w-3 rounded-full" />
-              <Skeleton className="h-[22px] w-16 rounded-full" />
-            </>
-          )}
         </div>
         {showSecondaryBadges && (
-          <div className="flex flex-wrap justify-center gap-1">
+          <div className="flex flex-wrap justify-center gap-1 mt-1">
             <Skeleton className="h-[22px] w-12 rounded-full" />
             <Skeleton className="h-[22px] w-20 rounded-full" />
           </div>
@@ -78,20 +82,19 @@ function AlbumHeaderContent({
 export function AlbumHeaderFallback({
   showSecondaryBadges = false,
   showArtistAboveCover = false,
-}: {
-  showSecondaryBadges?: boolean;
-  showArtistAboveCover?: boolean;
-}) {
+  showMobileSubtitle = true,
+}: HeaderContentProps) {
   return (
     <div
       className={cn(
         IMAGE_HEADER_MAIN_GRADIENT,
-        "w-full px-3 py-3 md:px-8 md:py-6 bg-muted-foreground flex flex-col gap-2 md:gap-4",
+        "w-full px-3 py-3 md:px-8 md:py-6 bg-muted flex flex-col gap-2 md:gap-4",
       )}
     >
       <AlbumHeaderContent
         showSecondaryBadges={showSecondaryBadges}
         showArtistAboveCover={showArtistAboveCover}
+        showMobileSubtitle={showMobileSubtitle}
       />
     </div>
   );
@@ -100,26 +103,25 @@ export function AlbumHeaderFallback({
 export function HeaderWithImageEffect({
   showSecondaryBadges = false,
   showArtistAboveCover = false,
-}: {
-  showSecondaryBadges?: boolean;
-  showArtistAboveCover?: boolean;
-}) {
+  showMobileSubtitle = true,
+}: HeaderContentProps) {
   return (
     <div className="flex flex-col relative w-full">
       <div className="relative w-full h-auto md:h-[calc(3rem+200px)] 2xl:h-[calc(3rem+250px)]">
         <div
           className={cn(
             IMAGE_HEADER_MAIN_GRADIENT,
-            "w-full px-3 py-3 md:px-8 md:py-6 bg-muted-foreground flex flex-col gap-2 md:gap-4 relative md:absolute md:inset-0",
+            "w-full px-3 py-3 md:px-8 md:py-6 bg-muted flex flex-col gap-2 md:gap-4 relative md:absolute md:inset-0",
           )}
         >
           <AlbumHeaderContent
             showSecondaryBadges={showSecondaryBadges}
             showArtistAboveCover={showArtistAboveCover}
+            showMobileSubtitle={showMobileSubtitle}
           />
         </div>
 
-        <ImageHeaderEffect className="bg-muted-foreground" />
+        <ImageHeaderEffect className="bg-muted-foreground/50" />
       </div>
     </div>
   );

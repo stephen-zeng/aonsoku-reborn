@@ -145,6 +145,7 @@ export default function ImageHeader({
   const hasMultipleArtists = artists ? artists.length > 1 : false;
   const showArtistAboveCover =
     !isPlaylist && (hasMultipleArtists || (subtitle && artistId));
+  const showMobileSubtitle = !showArtistAboveCover && !!subtitle;
   const allBadges: BadgesData = secondaryBadges
     ? [...badges, ...secondaryBadges]
     : badges;
@@ -156,7 +157,11 @@ export default function ImageHeader({
       <div className="relative w-full h-auto md:h-[calc(3rem+200px)] 2xl:h-[calc(3rem+250px)]">
         {!loaded && (
           <div className="absolute inset-0 z-20">
-            <AlbumHeaderFallback />
+            <AlbumHeaderFallback
+              showArtistAboveCover={showArtistAboveCover}
+              showMobileSubtitle={showMobileSubtitle}
+              showSecondaryBadges={!!hasSecondaryBadges}
+            />
           </div>
         )}
         <div
@@ -253,7 +258,7 @@ export default function ImageHeader({
         </div>
 
         {!loaded ? (
-          <ImageHeaderEffect className="bg-muted-foreground" />
+          <ImageHeaderEffect className="bg-muted-foreground/50" />
         ) : (
           <ImageHeaderEffect style={{ backgroundColor: bgColor }} />
         )}
