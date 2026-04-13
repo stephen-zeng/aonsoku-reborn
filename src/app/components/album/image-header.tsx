@@ -169,8 +169,9 @@ export default function ImageHeader({
             "w-full px-3 py-3 md:px-8 md:py-6 flex gap-2 md:gap-4 relative md:absolute md:inset-0",
             IMAGE_HEADER_MAIN_GRADIENT,
             "flex-col",
+            !loaded && "bg-background-foreground",
           )}
-          style={{ backgroundColor: bgColor }}
+          style={loaded ? { backgroundColor: bgColor } : undefined}
         >
           {showArtistAboveCover && (
             <div className="md:hidden flex justify-center">
@@ -258,7 +259,7 @@ export default function ImageHeader({
         </div>
 
         {!loaded ? (
-          <ImageHeaderEffect className="bg-muted-foreground/50" />
+          <ImageHeaderEffect className="bg-background-foreground" />
         ) : (
           <ImageHeaderEffect style={{ backgroundColor: bgColor }} />
         )}

@@ -88,7 +88,7 @@ export function AlbumHeaderFallback({
     <div
       className={cn(
         IMAGE_HEADER_MAIN_GRADIENT,
-        "w-full px-3 py-3 md:px-8 md:py-6 bg-muted flex flex-col gap-2 md:gap-4",
+        "w-full px-3 py-3 md:px-8 md:py-6 bg-background-foreground flex flex-col gap-2 md:gap-4",
       )}
     >
       <AlbumHeaderContent
@@ -111,7 +111,7 @@ export function HeaderWithImageEffect({
         <div
           className={cn(
             IMAGE_HEADER_MAIN_GRADIENT,
-            "w-full px-3 py-3 md:px-8 md:py-6 bg-muted flex flex-col gap-2 md:gap-4 relative md:absolute md:inset-0",
+            "w-full px-3 py-3 md:px-8 md:py-6 bg-background-foreground flex flex-col gap-2 md:gap-4 relative md:absolute md:inset-0",
           )}
         >
           <AlbumHeaderContent
@@ -121,7 +121,7 @@ export function HeaderWithImageEffect({
           />
         </div>
 
-        <ImageHeaderEffect className="bg-muted-foreground/50" />
+        <ImageHeaderEffect className="bg-background-foreground" />
       </div>
     </div>
   );
