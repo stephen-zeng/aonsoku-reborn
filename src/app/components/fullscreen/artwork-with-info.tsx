@@ -1,9 +1,8 @@
 import { memo } from "react";
+import { CONTENT_MAX_WIDTH } from "./constants";
 import { LikeButton } from "./like-button";
 import { FullscreenSongArtwork } from "./song-artwork";
 import { AlbumName, SongInfo } from "./song-info";
-
-const CONTENT_MAX_WIDTH = "max-w-[min(85vw,400px)] sm:max-w-[min(50vw,480px)]";
 
 export const ArtworkWithInfo = memo(function ArtworkWithInfo() {
   return (

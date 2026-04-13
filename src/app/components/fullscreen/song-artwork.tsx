@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { memo } from "react";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { usePlayerStore } from "@/store/player.store";
+import { CONTENT_MAX_WIDTH } from "./constants";
 
 export const FullscreenSongArtwork = memo(function FullscreenSongArtwork() {
   const { coverArt, artist, title, id } = usePlayerStore(
@@ -17,7 +18,7 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork() {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 1.05 }}
           transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-          className="w-full max-w-[min(85vw,400px)] sm:max-w-[min(50vw,480px)] aspect-square"
+          className={`w-full ${CONTENT_MAX_WIDTH} aspect-square`}
         >
           <CachedImage
             coverArtId={coverArt}

@@ -6,12 +6,10 @@ import { Button } from "@/app/components/ui/button";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useFullscreenPlayerState } from "@/store/player.store";
 import { ArtworkWithInfo } from "./artwork-with-info";
-import { FullscreenControls } from "./controls";
+import { FullscreenControlPanel } from "./control-panel";
 import { LyricsTab } from "./lyrics";
-import { FullscreenProgress } from "./progress";
 import { FullscreenSongQueue } from "./queue";
 import { FullscreenSettings } from "./settings";
-import { VolumeContainer } from "./volume-container";
 
 const MemoSongQueue = memo(FullscreenSongQueue);
 const MemoLyricsTab = memo(LyricsTab);
@@ -78,13 +76,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
           <ArtworkWithInfo />
         </div>
 
-        <div className="flex flex-col gap-3 pb-2">
-          <FullscreenProgress />
-          <div className="flex items-center justify-center gap-4">
-            <FullscreenControls />
-            <VolumeContainer />
-          </div>
-        </div>
+        <FullscreenControlPanel variant="desktop" />
       </div>
 
       <div

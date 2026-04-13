@@ -5,11 +5,8 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { useFullscreenPlayerState, usePlayerStore } from "@/store/player.store";
 import { ArtworkWithInfo } from "./artwork-with-info";
-import { FullscreenControls } from "./controls";
-import { LikeButton } from "./like-button";
+import { FullscreenControlPanel } from "./control-panel";
 import { LyricsTab } from "./lyrics";
-import { MobileVolumeBar } from "./mobile-volume-bar";
-import { FullscreenProgress } from "./progress";
 import { FullscreenSongQueue } from "./queue";
 import { FullscreenSettings } from "./settings";
 import { CompactSongInfo } from "./song-info";
@@ -63,21 +60,6 @@ function MobileHeader({
   );
 }
 
-function MobileSecondaryFooter() {
-  return (
-    <>
-      <div className="shrink-0 px-4 py-1">
-        <FullscreenProgress />
-      </div>
-
-      <div className="shrink-0 flex items-center justify-center gap-1 py-1">
-        <LikeButton />
-        <FullscreenControls />
-      </div>
-    </>
-  );
-}
-
 export const MobileLayout = memo(function MobileLayout() {
   const { t } = useTranslation();
   const { closeFullscreenPlayer, fullscreenPlayerTab, setFullscreenPlayerTab } =
@@ -104,17 +86,7 @@ export const MobileLayout = memo(function MobileLayout() {
               <ArtworkWithInfo />
             </div>
 
-            <div className="shrink-0 px-4 pt-2">
-              <FullscreenProgress thin />
-            </div>
-
-            <div className="shrink-0 flex items-center justify-center gap-1 pt-1">
-              <FullscreenControls />
-            </div>
-
-            <div className="shrink-0 px-4 pt-1 pb-1">
-              <MobileVolumeBar />
-            </div>
+            <FullscreenControlPanel variant="mobile" />
           </motion.div>
         )}
 
@@ -142,7 +114,7 @@ export const MobileLayout = memo(function MobileLayout() {
               <MemoLyricsTab />
             </div>
 
-            <MobileSecondaryFooter />
+            <FullscreenControlPanel variant="mobile-secondary" />
           </motion.div>
         )}
 
@@ -170,7 +142,7 @@ export const MobileLayout = memo(function MobileLayout() {
               <MemoSongQueue />
             </div>
 
-            <MobileSecondaryFooter />
+            <FullscreenControlPanel variant="mobile-secondary" />
           </motion.div>
         )}
       </AnimatePresence>
