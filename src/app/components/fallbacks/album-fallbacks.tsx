@@ -155,7 +155,7 @@ export function AlbumFallback() {
 
 export function AlbumsFallback() {
   return (
-    <div className="w-full h-content">
+    <div className="w-full h-full">
       <ShadowHeaderFallback
         actions={
           <div className="flex gap-2">
@@ -165,7 +165,7 @@ export function AlbumsFallback() {
         }
       />
 
-      <ListWrapper className="pt-shadow-header-distance px-0">
+      <ListWrapper className="pt-[--shadow-header-distance] px-0">
         <GridFallback />
       </ListWrapper>
     </div>
@@ -174,9 +174,9 @@ export function AlbumsFallback() {
 
 function GridFallback() {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-8 gap-4">
-      {Array.from({ length: 16 }).map((_, index) => (
-        <CardSkeleton key={"card-fallback-" + index} />
+    <div className="grid grid-cols-2 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-8 gap-3 md:gap-4 px-4 md:px-8">
+      {Array.from({ length: 24 }, (_, i) => (
+        <CardSkeleton key={"card-fallback-" + i} />
       ))}
     </div>
   );

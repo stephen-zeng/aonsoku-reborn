@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 import { Skeleton } from "@/app/components/ui/skeleton";
 
 interface ShadowHeaderFallbackProps {
@@ -11,14 +12,22 @@ export function ShadowHeaderFallback({
   hasCount = true,
 }: ShadowHeaderFallbackProps) {
   return (
-    <div className="flex items-center justify-between px-4 md:px-8 h-[--shadow-header-height] border-b bg-background relative w-full">
-      <div className="flex items-center gap-2">
-        <Skeleton className="w-28 h-8" />
-        {hasCount && <Skeleton className="w-11 h-[22px] rounded-full" />}
-      </div>
-      {actions && (
-        <div className="flex gap-2 flex-1 justify-end flex-wrap">{actions}</div>
+    <div
+      className={cn(
+        "flex items-center justify-start px-4 md:px-8 h-[--shadow-header-height] border-b bg-background",
+        "fixed top-header right-0 left-0 md:left-mini-sidebar z-30",
+        "backdrop-blur-lg supports-[backdrop-filter]:bg-background/80",
       )}
+    >
+      <div className="w-full flex justify-between">
+        <div className="flex items-center gap-2">
+          <Skeleton className="w-28 h-8" />
+          {hasCount && <Skeleton className="w-11 h-[22px] rounded-full" />}
+        </div>
+        {actions && (
+          <div className="flex gap-2 justify-end flex-wrap">{actions}</div>
+        )}
+      </div>
     </div>
   );
 }
@@ -34,11 +43,11 @@ export function AddButtonSkeleton() {
 
 export function CardSkeleton() {
   return (
-    <div className="flex flex-col cursor-pointer">
-      <Skeleton className="aspect-square rounded" />
-      <div className="flex flex-col cursor-default mt-2">
-        <Skeleton className="h-4 w-11/12 truncate" />
-        <Skeleton className="h-3 w-1/2 -mt-1" />
+    <div className="cursor-pointer">
+      <Skeleton className="aspect-square rounded overflow-hidden" />
+      <div className="flex flex-col cursor-default">
+        <Skeleton className="h-7 w-11/12" />
+        <Skeleton className="h-5 w-1/2 -mt-1" />
       </div>
     </div>
   );
