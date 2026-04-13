@@ -33,14 +33,16 @@ export const FullscreenControlPanel = memo(function FullscreenControlPanel({
 
   if (variant === "mobile") {
     return (
-      <div className={`shrink-0 mx-auto w-full ${CONTENT_MAX_WIDTH}`}>
-        <div className="px-4 pt-2">
-          <FullscreenProgress thin />
+      <div
+        className={`flex-1 min-h-0 mx-auto w-full ${CONTENT_MAX_WIDTH} flex flex-col justify-between py-5`}
+      >
+        <div className="px-4">
+          <FullscreenProgress thin stacked />
         </div>
-        <div className="flex items-center justify-center gap-1 pt-1">
+        <div className="flex items-center justify-center gap-3">
           <FullscreenControls />
         </div>
-        <div className="px-4 pt-1 pb-1">
+        <div className="px-4" data-vaul-no-drag>
           <MobileVolumeBar />
         </div>
       </div>

@@ -8,7 +8,15 @@ import {
 } from "@/store/player.store";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 
-export function FullscreenProgress({ thin = false }: { thin?: boolean }) {
+const STACKED_TIME_LABEL_CLASS = "tabular-nums text-foreground/50 text-xs";
+
+export function FullscreenProgress({
+  thin = false,
+  stacked = false,
+}: {
+  thin?: boolean;
+  stacked?: boolean;
+}) {
   const progress = usePlayerProgress();
   const [localProgress, setLocalProgress] = useState(progress);
   const [isSeeking, setIsSeeking] = useState(false);
@@ -60,6 +68,36 @@ export function FullscreenProgress({ thin = false }: { thin?: boolean }) {
     isSeeking ? localProgress : progress,
   );
 
+  const sliderProps = {
+    variant: "secondary" as const,
+    defaultValue: [0] as [number],
+    value: (isSeeking ? [localProgress] : [progress]) as [number],
+    tooltipTransformer: convertSecondsToTime,
+    max: currentDuration,
+    step: 1,
+    className: `w-full ${thin ? "h-2" : "h-2 sm:h-3"}`,
+    onValueChange: ([value]: [number]) => handleSeeking(value),
+    onValueCommit: ([value]: [number]) => handleSeeked(value),
+    onPointerUp: handleSeekedFallback,
+    onMouseUp: handleSeekedFallback,
+    onTouchEnd: handleSeekedFallback,
+    "data-vaul-no-drag": true,
+  };
+
+  if (stacked) {
+    return (
+      <div className="w-full">
+        <ProgressSlider {...sliderProps} />
+        <div className="flex justify-between mt-1">
+          <div className={STACKED_TIME_LABEL_CLASS}>{currentTime}</div>
+          <div className={STACKED_TIME_LABEL_CLASS}>
+            {convertSecondsToTime(currentDuration ?? 0)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-2 sm:gap-3 w-full">
       <div
@@ -70,21 +108,7 @@ export function FullscreenProgress({ thin = false }: { thin?: boolean }) {
         {currentTime}
       </div>
 
-      <ProgressSlider
-        variant="secondary"
-        defaultValue={[0]}
-        value={isSeeking ? [localProgress] : [progress]}
-        tooltipTransformer={convertSecondsToTime}
-        max={currentDuration}
-        step={1}
-        className={`w-full ${thin ? "h-2" : "h-2 sm:h-3"}`}
-        onValueChange={([value]) => handleSeeking(value)}
-        onValueCommit={([value]) => handleSeeked(value)}
-        onPointerUp={handleSeekedFallback}
-        onMouseUp={handleSeekedFallback}
-        onTouchEnd={handleSeekedFallback}
-        data-vaul-no-drag
-      />
+      <ProgressSlider {...sliderProps} />
 
       <div
         className={`min-w-[36px] sm:min-w-[42px] text-left tabular-nums text-foreground/70 ${

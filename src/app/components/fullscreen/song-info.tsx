@@ -17,7 +17,7 @@ export const SongInfo = memo(function SongInfo() {
   const currentSong = usePlayerStore((state) => state.songlist.currentSong);
 
   return (
-    <div className="flex flex-col gap-0.5 w-full overflow-visible">
+    <div className="flex flex-col gap-1 w-full overflow-visible">
       <AnimatePresence mode="wait">
         <motion.div
           key={currentSong.id ?? "no-song"}

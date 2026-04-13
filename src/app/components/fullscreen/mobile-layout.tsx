@@ -40,7 +40,7 @@ function MobileHeader({
   children?: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-1 px-2 pt-1 pb-1 shrink-0 z-20 min-h-[40px]">
+    <div className="flex items-center gap-2 px-3 pt-2 pb-2 shrink-0 z-20 min-h-[40px]">
       <Button
         variant="ghost"
         size="icon"
@@ -82,7 +82,7 @@ export const MobileLayout = memo(function MobileLayout() {
               onClick={() => closeFullscreenPlayer()}
             />
 
-            <div className="flex-1 flex flex-col items-center justify-center min-h-0">
+            <div className="flex flex-col items-center justify-start pt-2 min-h-0">
               <ArtworkWithInfo />
             </div>
 

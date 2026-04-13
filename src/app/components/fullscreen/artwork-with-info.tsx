@@ -7,13 +7,13 @@ import { AlbumName, SongInfo } from "./song-info";
 export const ArtworkWithInfo = memo(function ArtworkWithInfo() {
   return (
     <div className="w-full flex flex-col items-center">
-      <div className={`w-full ${CONTENT_MAX_WIDTH} pb-2`}>
+      <div className={`w-full ${CONTENT_MAX_WIDTH} pb-3`}>
         <AlbumName />
       </div>
 
       <FullscreenSongArtwork />
 
-      <div className={`w-full ${CONTENT_MAX_WIDTH} pt-2`}>
+      <div className={`w-full ${CONTENT_MAX_WIDTH} pt-3`}>
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0 overflow-visible">
             <SongInfo />
