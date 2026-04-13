@@ -12,8 +12,10 @@ import { cn } from "@/lib/utils";
 
 export function AlbumHeaderFallback({
   showSecondaryBadges = false,
+  showArtistAboveCover = false,
 }: {
   showSecondaryBadges?: boolean;
+  showArtistAboveCover?: boolean;
 }) {
   return (
     <div
@@ -22,13 +24,19 @@ export function AlbumHeaderFallback({
         "w-full px-3 py-3 md:px-8 md:py-6 bg-muted-foreground flex flex-col gap-2 md:gap-4",
       )}
     >
+      {showArtistAboveCover && (
+        <div className="md:hidden flex justify-center">
+          <Skeleton className="h-4 w-24 rounded" />
+        </div>
+      )}
+
       <div className="flex flex-col items-center md:flex-row md:items-center w-full gap-3 md:gap-6 lg:gap-8">
         <Skeleton className="rounded shadow-header-image w-[200px] h-[200px] min-w-[200px] min-h-[200px] 2xl:w-[250px] 2xl:h-[250px] 2xl:min-w-[250px] 2xl:min-h-[250px] aspect-square" />
         <div className="flex w-full items-center flex-col md:items-start md:max-w-[calc(100%-216px)] 2xl:max-w-[calc(100%-266px)] md:justify-end">
           <Skeleton className="h-3 md:h-4 2xl:h-5 w-16 mb-2" />
           <Skeleton className="h-6 md:h-12 w-[200px] md:w-[260px] mb-2" />
 
-          <div className="hidden md:flex flex-wrap gap-2 mt-1 md:mt-2 justify-center md:justify-start text-sm">
+          <div className="hidden md:flex flex-wrap items-center gap-2 mt-1 md:mt-2 justify-center md:justify-start text-sm">
             <Skeleton className="h-[22px] w-12 rounded-full" />
             <Skeleton className="h-[22px] w-12 rounded-full" />
             {showSecondaryBadges && (
@@ -42,14 +50,25 @@ export function AlbumHeaderFallback({
         </div>
       </div>
 
-      <div className="md:hidden flex flex-wrap justify-center gap-2 text-sm">
-        <Skeleton className="h-[22px] w-12 rounded-full" />
-        <Skeleton className="h-[22px] w-12 rounded-full" />
+      <div className="md:hidden flex flex-col items-center text-sm">
+        {!showArtistAboveCover && (
+          <Skeleton className="h-3 w-24 rounded mb-1" />
+        )}
+        <div className="flex flex-wrap justify-center gap-1">
+          <Skeleton className="h-[22px] w-12 rounded-full" />
+          <Skeleton className="h-[22px] w-12 rounded-full" />
+          {showSecondaryBadges && (
+            <>
+              <Skeleton className="h-[22px] w-3 rounded-full" />
+              <Skeleton className="h-[22px] w-16 rounded-full" />
+            </>
+          )}
+        </div>
         {showSecondaryBadges && (
-          <>
-            <Skeleton className="h-[22px] w-3 rounded-full" />
-            <Skeleton className="h-[22px] w-16 rounded-full" />
-          </>
+          <div className="flex flex-wrap justify-center gap-1">
+            <Skeleton className="h-[22px] w-12 rounded-full" />
+            <Skeleton className="h-[22px] w-20 rounded-full" />
+          </div>
         )}
       </div>
     </div>
@@ -58,12 +77,17 @@ export function AlbumHeaderFallback({
 
 export function HeaderWithImageEffect({
   showSecondaryBadges = false,
+  showArtistAboveCover = false,
 }: {
   showSecondaryBadges?: boolean;
+  showArtistAboveCover?: boolean;
 }) {
   return (
     <div className="relative">
-      <AlbumHeaderFallback showSecondaryBadges={showSecondaryBadges} />
+      <AlbumHeaderFallback
+        showSecondaryBadges={showSecondaryBadges}
+        showArtistAboveCover={showArtistAboveCover}
+      />
       <ImageHeaderEffect className="bg-muted-foreground" />
     </div>
   );
@@ -85,7 +109,7 @@ function AlbumInfoFallback() {
 export function AlbumFallback() {
   return (
     <div className="w-full bg-background min-h-content">
-      <HeaderWithImageEffect showSecondaryBadges />
+      <HeaderWithImageEffect showSecondaryBadges showArtistAboveCover />
       <ListWrapper>
         <PlayButtonsFallback />
         <AlbumInfoFallback />
