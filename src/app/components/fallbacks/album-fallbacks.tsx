@@ -19,7 +19,7 @@ function ArtistAboveCoverFallback() {
   );
 }
 
-export function AlbumHeaderFallback({
+function AlbumHeaderContent({
   showSecondaryBadges = false,
   showArtistAboveCover = false,
 }: {
@@ -27,12 +27,7 @@ export function AlbumHeaderFallback({
   showArtistAboveCover?: boolean;
 }) {
   return (
-    <div
-      className={cn(
-        IMAGE_HEADER_MAIN_GRADIENT,
-        "w-full px-3 py-3 md:px-8 md:py-6 bg-muted-foreground flex flex-col gap-2 md:gap-4 relative md:absolute md:inset-0",
-      )}
-    >
+    <>
       {showArtistAboveCover && <ArtistAboveCoverFallback />}
 
       <div className="flex flex-col items-center md:flex-row md:items-center w-full gap-3 md:gap-6 lg:gap-8">
@@ -76,6 +71,28 @@ export function AlbumHeaderFallback({
           </div>
         )}
       </div>
+    </>
+  );
+}
+
+export function AlbumHeaderFallback({
+  showSecondaryBadges = false,
+  showArtistAboveCover = false,
+}: {
+  showSecondaryBadges?: boolean;
+  showArtistAboveCover?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        IMAGE_HEADER_MAIN_GRADIENT,
+        "w-full px-3 py-3 md:px-8 md:py-6 bg-muted-foreground flex flex-col gap-2 md:gap-4",
+      )}
+    >
+      <AlbumHeaderContent
+        showSecondaryBadges={showSecondaryBadges}
+        showArtistAboveCover={showArtistAboveCover}
+      />
     </div>
   );
 }
@@ -90,10 +107,18 @@ export function HeaderWithImageEffect({
   return (
     <div className="flex flex-col relative w-full">
       <div className="relative w-full h-auto md:h-[calc(3rem+200px)] 2xl:h-[calc(3rem+250px)]">
-        <AlbumHeaderFallback
-          showSecondaryBadges={showSecondaryBadges}
-          showArtistAboveCover={showArtistAboveCover}
-        />
+        <div
+          className={cn(
+            IMAGE_HEADER_MAIN_GRADIENT,
+            "w-full px-3 py-3 md:px-8 md:py-6 bg-muted-foreground flex flex-col gap-2 md:gap-4 relative md:absolute md:inset-0",
+          )}
+        >
+          <AlbumHeaderContent
+            showSecondaryBadges={showSecondaryBadges}
+            showArtistAboveCover={showArtistAboveCover}
+          />
+        </div>
+
         <ImageHeaderEffect className="bg-muted-foreground" />
       </div>
     </div>
