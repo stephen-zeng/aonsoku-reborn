@@ -15,8 +15,8 @@ import {
   usePlayerLoop,
   usePlayerMediaType,
   usePlayerPrevAndNext,
-  usePlayerRef,
   usePlayerSonglist,
+  usePlayerStore,
   useReplayGainState,
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
@@ -65,7 +65,6 @@ export function Player() {
   const isPlaying = usePlayerIsPlaying();
   const { isSong, isRadio } = usePlayerMediaType();
   const loopState = usePlayerLoop();
-  const audioPlayerRef = usePlayerRef();
   const isRemoteControlActive = useIsRemoteControlActive();
   const { replayGainType, replayGainPreAmp, replayGainDefaultGain } =
     useReplayGainState();
@@ -74,6 +73,7 @@ export function Player() {
 
   const song = currentList[currentSongIndex];
   const radio = radioList[currentSongIndex];
+  const songId = song?.id;
   const audioSrc = song?.id ? getSongStreamUrl(song.id) : "";
 
   const getAudioRef = useCallback(() => {
@@ -82,21 +82,24 @@ export function Player() {
     return audioRef;
   }, [isRadio]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: audioRef needed
   useEffect(() => {
-    if (!isSong && !song) return;
+    if (!isSong || !songId) return;
     if (isRemoteControlActive) return;
 
-    if (audioPlayerRef === null && audioRef.current)
-      setAudioPlayerRef(audioRef.current);
-  }, [
-    audioPlayerRef,
-    audioRef,
-    isRemoteControlActive,
-    isSong,
-    setAudioPlayerRef,
-    song,
-  ]);
+    const currentAudio = audioRef.current;
+    if (
+      currentAudio &&
+      currentAudio !== usePlayerStore.getState().playerState.audioPlayerRef
+    ) {
+      setAudioPlayerRef(currentAudio);
+    }
+
+    return () => {
+      if (currentAudio) {
+        setAudioPlayerRef(null);
+      }
+    };
+  }, [isRemoteControlActive, isSong, setAudioPlayerRef, songId]);
 
   useEffect(() => {
     const checkIsMobile = () => {

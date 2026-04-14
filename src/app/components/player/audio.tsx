@@ -17,6 +17,8 @@ import {
   useRemoteControlState,
   useReplayGainActions,
   useReplayGainState,
+  usePlayerActions,
+  usePlayerStore,
 } from "@/store/player.store";
 import { logger } from "@/utils/logger";
 import { calculateReplayGain, ReplayGainParams } from "@/utils/replayGain";
@@ -31,6 +33,9 @@ export function AudioPlayer({
   audioRef,
   replayGain,
   src,
+  onLoadedMetadata,
+  onTimeUpdate,
+  onCanPlay,
   ...props
 }: AudioPlayerProps) {
   const { t } = useTranslation();
@@ -43,10 +48,14 @@ export function AudioPlayer({
   const isPlaying = usePlayerIsPlaying();
   const { active: isRemoteControlActive } = useRemoteControlState();
 
-  // Use native audio by default, only use AudioContext when acting as a remote controller
   const shouldUseNativeAudio = !isRemoteControlActive;
 
-  // Update audio source only when it actually changes and is valid
+  const retryCountRef = useRef(0);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingResumePositionRef = useRef<number | null>(null);
+  const resumeGuardActiveRef = useRef(false);
+  const MAX_RETRIES = 5;
+
   useEffect(() => {
     if (src !== audioSrc) {
       logger.info("Audio source changed", {
@@ -54,12 +63,13 @@ export function AudioPlayer({
         useNativeAudio: shouldUseNativeAudio,
         isRemoteControlActive,
       });
-      // Clear any pending retry when the source changes
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
         retryTimeoutRef.current = null;
       }
       retryCountRef.current = 0;
+      pendingResumePositionRef.current = null;
+      resumeGuardActiveRef.current = false;
       setAudioSrc(src || undefined);
     }
   }, [src, audioSrc, shouldUseNativeAudio, isRemoteControlActive]);
@@ -67,7 +77,6 @@ export function AudioPlayer({
   const gainValue = useMemo(() => {
     const audioVolume = perceptualToGain(volume);
 
-    // In native audio mode, don't use replay gain - just use volume
     if (shouldUseNativeAudio) {
       return audioVolume * 1;
     }
@@ -82,21 +91,17 @@ export function AudioPlayer({
 
   const { resumeContext, setupGain } = useAudioContext(audioRef.current);
 
-  // Ignore AudioContext gain in native mode, when not a song, or when there's a replay gain error
   const ignoreGain = shouldUseNativeAudio || !isSong || replayGainError;
 
-  // In native mode, set audio volume directly instead of using gain node
   useEffect(() => {
     if (!audioRef.current) return;
 
     if (shouldUseNativeAudio) {
-      // Use native volume control
       audioRef.current.volume = perceptualToGain(volume);
       logger.info("Native audio volume set:", perceptualToGain(volume));
       return;
     }
 
-    // Use AudioContext gain when in remote control mode
     if (ignoreGain) return;
     if (gainValue === previousGain) return;
 
@@ -113,16 +118,25 @@ export function AudioPlayer({
     volume,
   ]);
 
-  const retryCountRef = useRef(0);
-  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const MAX_RETRIES = 5;
-
   const scheduleRetry = useCallback(
     (audio: HTMLAudioElement) => {
       if (retryCountRef.current >= MAX_RETRIES) {
         toast.error(t("warnings.songError"));
         retryCountRef.current = 0;
+        pendingResumePositionRef.current = null;
+        resumeGuardActiveRef.current = false;
         return;
+      }
+
+      const storeProgress = usePlayerStore.getState().playerProgress.progress;
+      const resumePosition = Math.max(audio.currentTime, storeProgress);
+      pendingResumePositionRef.current = resumePosition;
+      resumeGuardActiveRef.current = true;
+      logger.info("Retry will resume at position:", resumePosition);
+
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
       }
 
       retryCountRef.current += 1;
@@ -131,14 +145,28 @@ export function AudioPlayer({
         `Retrying audio (attempt ${retryCountRef.current}) in ${delay}ms`,
       );
 
+      const currentSrc = audio.src;
+
       retryTimeoutRef.current = setTimeout(() => {
-        audio.load();
-        audio.play().catch((err) => {
+        const currentAudio = audioRef.current;
+        if (
+          !currentAudio ||
+          currentAudio.src !== currentSrc ||
+          currentAudio.paused
+        ) {
+          logger.info("Retry skipped: source changed or audio paused");
+          pendingResumePositionRef.current = null;
+          resumeGuardActiveRef.current = false;
+          return;
+        }
+
+        currentAudio.load();
+        currentAudio.play().catch((err) => {
           logger.error("Retry play failed:", err);
         });
       }, delay);
     },
-    [t],
+    [t, audioRef],
   );
 
   const handleSongError = useCallback(() => {
@@ -179,6 +207,9 @@ export function AudioPlayer({
     t,
   ]);
 
+  const handleSongErrorRef = useRef(handleSongError);
+  handleSongErrorRef.current = handleSongError;
+
   const handleRadioError = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -186,12 +217,14 @@ export function AudioPlayer({
     scheduleRetry(audio);
   }, [audioRef, scheduleRetry]);
 
-  // Reset retry count on successful play and clear pending retries on unmount
   useEffect(() => {
     return () => {
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
       }
+      retryCountRef.current = 0;
+      pendingResumePositionRef.current = null;
+      resumeGuardActiveRef.current = false;
     };
   }, []);
 
@@ -201,7 +234,10 @@ export function AudioPlayer({
       clearTimeout(retryTimeoutRef.current);
       retryTimeoutRef.current = null;
     }
+    resumeGuardActiveRef.current = false;
   }, []);
+
+  const { setProgress: setStoreProgress } = usePlayerActions();
 
   useEffect(() => {
     async function handleSong() {
@@ -215,39 +251,31 @@ export function AudioPlayer({
         }
 
         if (isPlaying) {
-          // Only resume AudioContext if in remote control mode (not using native audio)
           if (isSong && !shouldUseNativeAudio) {
             await resumeContext();
           }
-          // Try to play, and if it fails due to autoplay policy, log it
           const playPromise = audio.play();
           if (playPromise !== undefined) {
             playPromise.catch((error) => {
               logger.error("Play was prevented:", error);
-              // If play was prevented, try to resume on next user interaction
             });
           }
         } else {
           audio.pause();
-          // Ensure audio is fully stopped and won't continue playing
-          // This is especially important on mobile devices
           if (audio.currentTime > 0) {
-            // Force stop by setting currentTime to itself
-            // This clears the audio buffer on some browsers
             const currentTime = audio.currentTime;
             audio.currentTime = currentTime;
           }
         }
       } catch (error) {
         logger.error("Audio playback failed", error);
-        handleSongError();
+        handleSongErrorRef.current();
       }
     }
     if (isSong) handleSong();
   }, [
     audioRef,
     audioSrc,
-    handleSongError,
     isPlaying,
     isSong,
     resumeContext,
@@ -276,8 +304,52 @@ export function AudioPlayer({
     return undefined;
   }, [handleRadioError, handleSongError, isRadio, isSong]);
 
+  const applyPendingResume = useCallback(
+    (audio: HTMLAudioElement) => {
+      const resumePos = pendingResumePositionRef.current;
+      if (resumePos === null) return;
+
+      logger.info("Applying pending resume position:", resumePos);
+      audio.currentTime = resumePos;
+      setStoreProgress(Math.floor(resumePos));
+    },
+    [setStoreProgress],
+  );
+
+  const handleLoadedMetadata = useCallback(
+    (e: React.SyntheticEvent<HTMLAudioElement>) => {
+      onLoadedMetadata?.(e);
+    },
+    [onLoadedMetadata],
+  );
+
+  const handleCanPlay = useCallback(
+    (e: React.SyntheticEvent<HTMLAudioElement>) => {
+      const audio = e.currentTarget;
+      if (
+        resumeGuardActiveRef.current &&
+        pendingResumePositionRef.current !== null
+      ) {
+        applyPendingResume(audio);
+        pendingResumePositionRef.current = null;
+      }
+      resumeGuardActiveRef.current = false;
+      onCanPlay?.(e);
+    },
+    [applyPendingResume, onCanPlay],
+  );
+
+  const handleTimeUpdate = useCallback(
+    (e: React.SyntheticEvent<HTMLAudioElement>) => {
+      if (resumeGuardActiveRef.current) {
+        return;
+      }
+      onTimeUpdate?.(e);
+    },
+    [onTimeUpdate],
+  );
+
   const crossOrigin = useMemo(() => {
-    // In native audio mode, don't use crossOrigin as we're not using AudioContext
     if (shouldUseNativeAudio) return undefined;
 
     if (!isSong || replayGainError) return undefined;
@@ -296,6 +368,9 @@ export function AudioPlayer({
         handlePlaySuccess();
         props.onPlay?.(e);
       }}
+      onLoadedMetadata={handleLoadedMetadata}
+      onTimeUpdate={handleTimeUpdate}
+      onCanPlay={handleCanPlay}
       playsInline
       preload="auto"
     />
