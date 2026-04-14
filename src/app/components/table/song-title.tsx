@@ -51,7 +51,7 @@ export function TableSongTitle({
                 ? stopTextInteraction
                 : undefined
           }
-          onTouchEnd={disableTextNavigation ? stopTextInteraction : undefined}
+          onTouchEnd={undefined}
         >
           {song.title}
         </span>

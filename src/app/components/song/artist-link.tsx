@@ -45,10 +45,6 @@ export function ArtistLink({
           onClick?.(e as MouseEvent<HTMLSpanElement>);
         }}
         onTouchEnd={(e) => {
-          if (suppressInteraction) {
-            e.stopPropagation();
-          }
-
           onTouchEnd?.(e as TouchEvent<HTMLSpanElement>);
         }}
       >
