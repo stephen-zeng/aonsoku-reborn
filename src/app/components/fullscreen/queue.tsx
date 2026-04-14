@@ -1,18 +1,13 @@
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
-import {
-  closestCenter,
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
+import type { SyntheticListenerMap } from "@dnd-kit/core";
+import { closestCenter, DndContext, DragOverlay } from "@dnd-kit/core";
 import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { GripVertical } from "lucide-react";
 import {
   memo,
   useEffect,
@@ -22,6 +17,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import { useQueueDndSensors } from "@/app/components/queue/dnd-sensors";
 import { useTranslation } from "react-i18next";
 import { getCoverArtUrl } from "@/api/httpClient";
 import { Button } from "@/app/components/ui/button";
@@ -34,10 +30,6 @@ import {
 } from "@/store/player.store";
 import type { ISong } from "@/types/responses/song";
 import { QueueCurrentSong } from "./queue-current-song";
-
-const POINTER_SENSOR_OPTIONS = {
-  activationConstraint: { distance: 5 },
-};
 
 function syncQueueCurrentSongPosition({
   container,
@@ -125,7 +117,7 @@ function UnifiedQueueView({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentSongRef = useRef<HTMLDivElement>(null);
 
-  const sensors = useSensors(useSensor(PointerSensor, POINTER_SENSOR_OPTIONS));
+  const sensors = useQueueDndSensors();
   const queueScrollKey = `${currentSong.id}:${currentSongIndex}:${currentList.length}`;
 
   useLayoutEffect(() => {
@@ -273,6 +265,7 @@ function UnifiedQueueView({
                   song={activeItem}
                   isActive={currentSong.id === activeItem.id}
                   onClick={() => {}}
+                  interactive={false}
                   showDragHandle={false}
                 />
               )}
@@ -291,6 +284,7 @@ interface QueueListRowProps {
   onClick: () => void;
   showDragHandle?: boolean;
   interactive?: boolean;
+  dragHandleProps?: SyntheticListenerMap;
 }
 
 const QueueListRow = memo(function QueueListRow({
@@ -299,6 +293,7 @@ const QueueListRow = memo(function QueueListRow({
   onClick,
   showDragHandle = false,
   interactive = true,
+  dragHandleProps,
 }: QueueListRowProps) {
   const coverArtUrl = getCoverArtUrl(song.coverArt, "song", "100");
 
@@ -342,8 +337,12 @@ const QueueListRow = memo(function QueueListRow({
         </span>
       </div>
       {showDragHandle && (
-        <span className="text-foreground/30 shrink-0 cursor-grab select-none px-1">
-          ≡
+        <span
+          className="text-foreground/30 shrink-0 cursor-grab select-none px-1"
+          onClick={(e) => e.stopPropagation()}
+          {...dragHandleProps}
+        >
+          <GripVertical className="w-4 h-4" />
         </span>
       )}
     </div>
@@ -362,15 +361,23 @@ const SortableUpcomingRow = memo(function SortableUpcomingRow(
     isDragging,
   } = useSortable({ id: props.song.id });
 
+  const { role: _, tabIndex: __, ...restAttributes } = attributes;
+
   const style = {
     transform: CSS.Translate.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : undefined,
+    zIndex: isDragging ? 1 : undefined,
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <QueueListRow {...props} interactive={false} showDragHandle />
+    <div ref={setNodeRef} style={style} {...restAttributes}>
+      <QueueListRow
+        {...props}
+        interactive
+        showDragHandle
+        dragHandleProps={listeners}
+      />
     </div>
   );
 });
