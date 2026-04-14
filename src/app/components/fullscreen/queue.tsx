@@ -29,7 +29,7 @@ import {
   useQueueSource,
 } from "@/store/player.store";
 import type { ISong } from "@/types/responses/song";
-import { QueueCurrentSong } from "./queue-current-song";
+import { QueueCurrentSong, QueueModeButtons } from "./queue-current-song";
 
 function syncQueueCurrentSongPosition({
   container,
@@ -222,58 +222,57 @@ function UnifiedQueueView({
         <QueueCurrentSong />
       </div>
 
-      {upcoming.length > 0 && (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={sortableItems}
+          strategy={verticalListSortingStrategy}
         >
-          <SortableContext
-            items={sortableItems}
-            strategy={verticalListSortingStrategy}
-          >
-            <div className="shrink-0">
-              <div className="flex items-center justify-between px-2 py-1">
-                <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
-                  {t("fullscreen.queueContinue")}
-                </h3>
-              </div>
-              {queueSource && (
-                <p className="text-xs text-foreground/50 px-2 pb-1">
-                  {t("fullscreen.queueFromSource", { source: queueSource })}
-                </p>
-              )}
-              {upcoming.map((song, idx) => {
-                const globalIndex = currentSongIndex + 1 + idx;
-                const isActive = currentSong.id === song.id;
-                return (
-                  <SortableUpcomingRow
-                    key={song.id}
-                    song={song}
-                    isActive={isActive}
-                    onClick={() => setSongList(currentList, globalIndex)}
-                  />
-                );
-              })}
+          <div className="sticky top-0 z-10 px-2 pt-1 pb-1 bg-background/80 backdrop-blur-sm border-b border-foreground/10">
+            <QueueModeButtons />
+            <div className="flex items-center justify-between px-2 pt-1">
+              <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
+                {t("fullscreen.queueContinue")}
+              </h3>
             </div>
-          </SortableContext>
-          {createPortal(
-            <DragOverlay>
-              {activeItem && (
-                <QueueListRow
-                  song={activeItem}
-                  isActive={currentSong.id === activeItem.id}
-                  onClick={() => {}}
-                  interactive={false}
-                  showDragHandle={false}
-                />
-              )}
-            </DragOverlay>,
-            document.body,
-          )}
-        </DndContext>
-      )}
+            {queueSource && (
+              <p className="text-xs text-foreground/50 px-2 pb-1 truncate">
+                {t("fullscreen.queueFromSource", { source: queueSource })}
+              </p>
+            )}
+          </div>
+          {upcoming.map((song, idx) => {
+            const globalIndex = currentSongIndex + 1 + idx;
+            const isActive = currentSong.id === song.id;
+            return (
+              <SortableUpcomingRow
+                key={song.id}
+                song={song}
+                isActive={isActive}
+                onClick={() => setSongList(currentList, globalIndex)}
+              />
+            );
+          })}
+        </SortableContext>
+        {createPortal(
+          <DragOverlay>
+            {activeItem && (
+              <QueueListRow
+                song={activeItem}
+                isActive={currentSong.id === activeItem.id}
+                onClick={() => {}}
+                interactive={false}
+                showDragHandle={false}
+              />
+            )}
+          </DragOverlay>,
+          document.body,
+        )}
+      </DndContext>
     </div>
   );
 }

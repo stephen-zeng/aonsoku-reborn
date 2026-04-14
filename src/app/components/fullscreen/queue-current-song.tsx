@@ -63,7 +63,7 @@ export const QueueCurrentSong = memo(function QueueCurrentSong() {
   );
 });
 
-const QueueModeButtons = memo(function QueueModeButtons() {
+export const QueueModeButtons = memo(function QueueModeButtons() {
   const isShuffleActive = usePlayerShuffle();
   const loopState = usePlayerLoop();
   const { toggleShuffle, toggleLoop } = usePlayerActions();
