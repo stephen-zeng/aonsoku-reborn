@@ -230,7 +230,7 @@ function UnifiedQueueView({
         </div>
       )}
 
-      <div ref={currentSongRef} className="shrink-0 px-2 py-2">
+      <div ref={currentSongRef} className="shrink-0 px-2 pt-2 pb-1">
         <QueueCurrentSong />
       </div>
 
@@ -252,7 +252,7 @@ function UnifiedQueueView({
             }}
           >
             <QueueModeButtons />
-            <div className="flex items-center justify-between px-2 pt-1">
+            <div className="flex items-center justify-between px-2 pt-3">
               <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
                 {t("fullscreen.queueContinue")}
               </h3>
