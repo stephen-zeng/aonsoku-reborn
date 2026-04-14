@@ -76,7 +76,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
           <ArtworkWithInfo />
         </div>
 
-        <FullscreenControlPanel variant="desktop" />
+        <FullscreenControlPanel />
       </div>
 
       <div

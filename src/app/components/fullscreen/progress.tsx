@@ -75,7 +75,7 @@ export function FullscreenProgress({
     tooltipTransformer: convertSecondsToTime,
     max: currentDuration,
     step: 1,
-    className: `w-full ${thin ? "h-2" : "h-2 sm:h-3"}`,
+    className: "w-full h-2 sm:h-3",
     onValueChange: ([value]: [number]) => handleSeeking(value),
     onValueCommit: ([value]: [number]) => handleSeeked(value),
     onPointerUp: handleSeekedFallback,

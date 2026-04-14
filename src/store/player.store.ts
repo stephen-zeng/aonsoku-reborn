@@ -1399,11 +1399,15 @@ export const usePlayerCurrentSongIndex = () =>
 export const usePlayerProgress = () =>
   usePlayerStore((state) => state.playerProgress.progress);
 
-export const usePlayerVolume = () => ({
-  volume: usePlayerStore((state) => state.playerState.volume),
-  setVolume: usePlayerStore((state) => state.actions.setVolume),
-  handleVolumeWheel: usePlayerStore((state) => state.actions.handleVolumeWheel),
-});
+export const usePlayerVolume = () =>
+  usePlayerStore(
+    (state) => ({
+      volume: state.playerState.volume,
+      setVolume: state.actions.setVolume,
+      handleVolumeWheel: state.actions.handleVolumeWheel,
+    }),
+    shallow,
+  );
 
 export const useVolumeSettings = () =>
   usePlayerStore((state) => state.settings.volume);
@@ -1464,10 +1468,13 @@ export const usePlayerLoop = () =>
   usePlayerStore((state) => state.playerState.loopState);
 
 export const usePlayerPrevAndNext = () =>
-  usePlayerStore((state) => ({
-    hasPrev: state.playerState.hasPrev,
-    hasNext: state.playerState.hasNext,
-  }));
+  usePlayerStore(
+    (state) => ({
+      hasPrev: state.playerState.hasPrev,
+      hasNext: state.playerState.hasNext,
+    }),
+    shallow,
+  );
 
 export const usePlayerRef = () =>
   usePlayerStore((state) => state.playerState.audioPlayerRef);
@@ -1497,15 +1504,19 @@ export const useLyricsState = () =>
   }));
 
 export const useFullscreenPlayerState = () =>
-  usePlayerStore((state) => ({
-    fullscreenPlayerOpen: state.playerState.fullscreenPlayerOpen,
-    fullscreenPlayerTab: state.playerState.fullscreenPlayerTab,
-    desktopFullscreenPanelView: state.playerState.desktopFullscreenPanelView,
-    openFullscreenPlayer: state.actions.openFullscreenPlayer,
-    closeFullscreenPlayer: state.actions.closeFullscreenPlayer,
-    setFullscreenPlayerTab: state.actions.setFullscreenPlayerTab,
-    setDesktopFullscreenPanelView: state.actions.setDesktopFullscreenPanelView,
-  }));
+  usePlayerStore(
+    (state) => ({
+      fullscreenPlayerOpen: state.playerState.fullscreenPlayerOpen,
+      fullscreenPlayerTab: state.playerState.fullscreenPlayerTab,
+      desktopFullscreenPanelView: state.playerState.desktopFullscreenPanelView,
+      openFullscreenPlayer: state.actions.openFullscreenPlayer,
+      closeFullscreenPlayer: state.actions.closeFullscreenPlayer,
+      setFullscreenPlayerTab: state.actions.setFullscreenPlayerTab,
+      setDesktopFullscreenPanelView:
+        state.actions.setDesktopFullscreenPanelView,
+    }),
+    shallow,
+  );
 
 export const useSongColor = () =>
   usePlayerStore((state) => {

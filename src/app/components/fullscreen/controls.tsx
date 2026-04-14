@@ -8,6 +8,7 @@ import {
   SkipBack,
   SkipForward,
 } from "lucide-react";
+import { memo } from "react";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { Button } from "@/app/components/ui/button";
 import {
@@ -19,7 +20,7 @@ import {
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
 
-export function FullscreenControls() {
+function FullscreenControls() {
   const isPlaying = usePlayerIsPlaying();
   const isShuffleActive = usePlayerShuffle();
   const loopState = usePlayerLoop();
@@ -132,6 +133,8 @@ export function FullscreenControls() {
     </>
   );
 }
+
+export const MemoFullscreenControls = memo(FullscreenControls);
 
 export const buttonsStyle = {
   secondary:

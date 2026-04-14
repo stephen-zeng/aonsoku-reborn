@@ -170,7 +170,7 @@ export const MobileLayout = memo(function MobileLayout() {
         </AnimatePresence>
       </div>
 
-      <FullscreenControlPanel variant="mobile" />
+      <FullscreenControlPanel />
       <MobileBottomTabs />
     </div>
   );
