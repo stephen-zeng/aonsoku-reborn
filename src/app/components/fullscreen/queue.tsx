@@ -232,7 +232,13 @@ function UnifiedQueueView({
           items={sortableItems}
           strategy={verticalListSortingStrategy}
         >
-          <div className="sticky top-0 z-10 px-2 pt-1 pb-1 bg-background/80 backdrop-blur-sm border-b border-foreground/10">
+          <div
+            className="sticky top-0 z-10 px-2 pt-1 pb-1"
+            style={{
+              background:
+                "linear-gradient(var(--queue-bg-overlay, transparent), var(--queue-bg-overlay, transparent)), linear-gradient(var(--fullscreen-backdrop-bg, transparent), var(--fullscreen-backdrop-bg, transparent)), hsl(var(--background))",
+            }}
+          >
             <QueueModeButtons />
             <div className="flex items-center justify-between px-2 pt-1">
               <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">

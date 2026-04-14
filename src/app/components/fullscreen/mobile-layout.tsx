@@ -163,6 +163,9 @@ export const MobileLayout = memo(function MobileLayout() {
               transition={VIEW_TRANSITION}
               className="flex-1 overflow-hidden min-h-0 px-2"
               data-vaul-no-drag
+              style={
+                { "--queue-bg-overlay": "transparent" } as React.CSSProperties
+              }
             >
               <MemoSongQueue />
             </motion.div>
