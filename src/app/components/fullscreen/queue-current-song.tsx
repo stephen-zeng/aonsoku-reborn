@@ -42,7 +42,7 @@ export const QueueCurrentSong = memo(function QueueCurrentSong() {
             {currentSong.artist}
           </span>
         </div>
-        <LikeButton />
+        <LikeButton className="shrink-0 size-8 rounded-full" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
