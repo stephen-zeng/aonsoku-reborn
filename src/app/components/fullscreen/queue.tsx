@@ -215,10 +215,7 @@ function UnifiedQueueView({
         </div>
       )}
 
-      <div
-        ref={currentSongRef}
-        className="shrink-0 px-2 py-2 border-t border-foreground/10"
-      >
+      <div ref={currentSongRef} className="shrink-0 px-2 py-2">
         <QueueCurrentSong />
       </div>
 
