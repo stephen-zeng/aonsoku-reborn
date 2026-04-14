@@ -337,7 +337,7 @@ const QueueListRow = memo(function QueueListRow({
       </div>
       {showDragHandle && (
         <span
-          className="text-foreground/30 shrink-0 cursor-grab select-none px-1"
+          className="text-foreground/30 shrink-0 cursor-grab select-none px-1 py-2 -my-2 touch-none"
           onClick={(e) => e.stopPropagation()}
           {...dragHandleProps}
         >

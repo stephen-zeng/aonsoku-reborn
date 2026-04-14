@@ -88,7 +88,7 @@ export const QueueItemRow = forwardRef<
         {...dragAttributes}
       >
         <span
-          className="text-foreground/30 shrink-0 cursor-grab select-none"
+          className="text-foreground/30 shrink-0 cursor-grab select-none py-2 -my-2 touch-none"
           {...dragListeners}
         >
           <GripVertical className="w-4 h-4" />
