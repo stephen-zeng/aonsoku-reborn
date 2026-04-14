@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ListMusic, MicVocalIcon, X } from "lucide-react";
+import { ChevronDown, ListMusic, MicVocalIcon } from "lucide-react";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
@@ -40,7 +40,16 @@ export const DesktopLayout = memo(function DesktopLayout() {
       <div
         className={`flex flex-col h-full shrink-0 px-8 sm:px-12 pt-6 pb-4 justify-between transition-[width] duration-300 ${rightPanelView ? "w-1/2" : "w-full"}`}
       >
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-10 rounded-full hover:bg-foreground/20"
+            onClick={() => closeFullscreenPlayer()}
+          >
+            <ChevronDown className="size-5" />
+          </Button>
+          <div className="flex-1" />
           {!rightPanelView && (
             <>
               <Button
@@ -63,14 +72,6 @@ export const DesktopLayout = memo(function DesktopLayout() {
             </>
           )}
           <FullscreenSettings />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-10 rounded-full hover:bg-foreground/20"
-            onClick={() => closeFullscreenPlayer()}
-          >
-            <X className="size-5" />
-          </Button>
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center min-h-0 py-4">
