@@ -25,7 +25,7 @@ export const QueueCurrentSong = memo(function QueueCurrentSong() {
   const coverArtUrl = getCoverArtUrl(currentSong.coverArt, "song", "100");
 
   return (
-    <div className="flex flex-col gap-2 py-2">
+    <div className="py-2">
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded overflow-hidden shrink-0 bg-accent">
           <img
@@ -58,7 +58,6 @@ export const QueueCurrentSong = memo(function QueueCurrentSong() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <QueueModeButtons />
     </div>
   );
 });
