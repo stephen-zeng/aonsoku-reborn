@@ -264,13 +264,15 @@ function UnifiedQueueView({
         {createPortal(
           <DragOverlay>
             {activeItem && (
-              <QueueListRow
-                song={activeItem}
-                isActive={currentSong.id === activeItem.id}
-                onClick={() => {}}
-                interactive={false}
-                showDragHandle={false}
-              />
+              <div className="bg-background rounded-md shadow-lg">
+                <QueueListRow
+                  song={activeItem}
+                  isActive={currentSong.id === activeItem.id}
+                  onClick={() => {}}
+                  interactive={false}
+                  showDragHandle={false}
+                />
+              </div>
             )}
           </DragOverlay>,
           document.body,
