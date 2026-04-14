@@ -1,16 +1,11 @@
 import { memo } from "react";
 import { CONTENT_MAX_WIDTH } from "./constants";
 import { FullscreenControls } from "./controls";
-import { LikeButton } from "./like-button";
 import { MobileVolumeBar } from "./mobile-volume-bar";
 import { FullscreenProgress } from "./progress";
 import { VolumeContainer } from "./volume-container";
 
-type ControlPanelVariant =
-  | "desktop"
-  | "mobile"
-  | "mobile-secondary"
-  | "mobile-queue";
+type ControlPanelVariant = "desktop" | "mobile";
 
 interface ControlPanelProps {
   variant: ControlPanelVariant;
@@ -35,46 +30,19 @@ export const FullscreenControlPanel = memo(function FullscreenControlPanel({
     );
   }
 
-  if (variant === "mobile") {
-    return (
-      <div
-        className={`flex-1 min-h-0 mx-auto w-full ${CONTENT_MAX_WIDTH} flex flex-col justify-between py-5`}
-      >
-        <div className="px-4">
-          <FullscreenProgress thin stacked />
-        </div>
-        <div className="flex items-center justify-center gap-3">
-          <FullscreenControls />
-        </div>
-        <div className="px-4" data-vaul-no-drag>
-          <MobileVolumeBar />
-        </div>
-      </div>
-    );
-  }
-
-  if (variant === "mobile-queue") {
-    return (
-      <>
-        <div className="shrink-0 px-4 py-1">
-          <FullscreenProgress thin stacked />
-        </div>
-        <div className="shrink-0 flex items-center justify-center gap-3 py-2">
-          <FullscreenControls />
-        </div>
-      </>
-    );
-  }
-
   return (
-    <>
-      <div className="shrink-0 px-4 py-1">
-        <FullscreenProgress />
+    <div
+      className={`shrink-0 mx-auto w-full ${CONTENT_MAX_WIDTH} flex flex-col justify-between py-5`}
+    >
+      <div className="px-4">
+        <FullscreenProgress thin stacked />
       </div>
-      <div className="shrink-0 flex items-center justify-center gap-1 py-1">
-        <LikeButton />
+      <div className="flex items-center justify-center gap-3">
         <FullscreenControls />
       </div>
-    </>
+      <div className="px-4" data-vaul-no-drag>
+        <MobileVolumeBar />
+      </div>
+    </div>
   );
 });

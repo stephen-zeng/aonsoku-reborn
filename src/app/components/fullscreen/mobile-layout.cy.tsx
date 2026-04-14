@@ -44,7 +44,7 @@ describe("MobileLayout", () => {
       cy.contains("Continue Playing").should("be.visible");
       cy.contains(songs[1].title).should("be.visible");
 
-      cy.get('button[aria-label="Back"]').click();
+      cy.get('button[aria-label="Queue"]').click();
       cy.contains("Continue Playing").should("not.exist");
       cy.contains(songs[0].title).should("be.visible");
     });
