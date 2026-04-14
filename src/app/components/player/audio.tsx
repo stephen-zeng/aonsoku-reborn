@@ -369,6 +369,7 @@ export function AudioPlayer({
         props.onPlay?.(e);
       }}
       onLoadedMetadata={handleLoadedMetadata}
+      onDurationChange={(e) => props.onDurationChange?.(e)}
       onTimeUpdate={handleTimeUpdate}
       onCanPlay={handleCanPlay}
       playsInline

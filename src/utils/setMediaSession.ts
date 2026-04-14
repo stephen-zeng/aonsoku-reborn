@@ -2,6 +2,7 @@ import { getCoverArtUrl } from "@/api/httpClient";
 import { usePlayerStore } from "@/store/player.store";
 import { LanControlMessageType } from "@/types/lanControl";
 import { ISong } from "@/types/responses/song";
+import { isValidDuration } from "./duration";
 
 const MEDIA_SESSION_COVER_SIZE = "300";
 
@@ -152,8 +153,7 @@ function setPositionState(
 ) {
   if (!isMediaSessionSupported()) return;
 
-  // Validate inputs
-  if (typeof duration !== "number" || duration < 0) {
+  if (!isValidDuration(duration)) {
     console.warn("[MediaSession] Invalid duration:", duration);
     return;
   }
@@ -183,7 +183,6 @@ function setPositionState(
       playbackRate,
     });
   } catch (error) {
-    // Position state might not be supported on all browsers
     console.warn("[MediaSession] Failed to set position state:", error);
   }
 }

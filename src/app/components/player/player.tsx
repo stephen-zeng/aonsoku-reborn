@@ -10,7 +10,6 @@ import {
   useFullscreenPlayerState,
   useIsRemoteControlActive,
   usePlayerActions,
-  usePlayerDuration,
   usePlayerIsPlaying,
   usePlayerLoop,
   usePlayerMediaType,
@@ -21,8 +20,8 @@ import {
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
 import { hasPiPSupport } from "@/utils/browser";
+import { isValidDuration } from "@/utils/duration";
 import { ReplayGainParams } from "@/utils/replayGain";
-import { manageMediaSession } from "@/utils/setMediaSession";
 import { perceptualToGain } from "@/utils/volume";
 import { AudioPlayer } from "./audio";
 import { PlayerClearQueueButton } from "./clear-queue-button";
@@ -69,7 +68,6 @@ export function Player() {
   const { replayGainType, replayGainPreAmp, replayGainDefaultGain } =
     useReplayGainState();
   const { hasNext } = usePlayerPrevAndNext();
-  const currentDuration = usePlayerDuration();
 
   const song = currentList[currentSongIndex];
   const radio = radioList[currentSongIndex];
@@ -112,17 +110,31 @@ export function Player() {
     return () => window.removeEventListener("resize", checkIsMobile);
   }, []);
 
+  const updateAudioDuration = useCallback(() => {
+    const audio = getAudioRef().current;
+    if (!audio) return;
+
+    const audioDuration = audio.duration;
+    if (isValidDuration(audioDuration)) {
+      const roundedDuration = Math.round(audioDuration);
+      const currentDur = usePlayerStore.getState().playerState.currentDuration;
+      if (currentDur !== roundedDuration) {
+        setCurrentDuration(roundedDuration);
+      }
+    }
+  }, [getAudioRef, setCurrentDuration]);
+
   const setupDuration = useCallback(() => {
     const audio = getAudioRef().current;
     if (!audio) return;
 
-    if (isSong && song) {
-      setCurrentDuration(song.duration);
+    if (isSong) {
+      updateAudioDuration();
     }
 
     const progress = getCurrentProgress();
     audio.currentTime = progress;
-  }, [getAudioRef, isSong, song, setCurrentDuration, getCurrentProgress]);
+  }, [getAudioRef, isSong, updateAudioDuration, getCurrentProgress]);
 
   const setupProgress = useCallback(() => {
     const audio = getAudioRef().current;
@@ -130,16 +142,7 @@ export function Player() {
 
     const currentProgress = Math.floor(audio.currentTime);
     setProgress(currentProgress);
-
-    // Update media session position state for iOS and other platforms
-    if (currentDuration && currentDuration > 0) {
-      manageMediaSession.setPositionState(
-        currentDuration,
-        currentProgress,
-        audio.playbackRate,
-      );
-    }
-  }, [getAudioRef, setProgress, currentDuration]);
+  }, [getAudioRef, setProgress]);
 
   const setupInitialVolume = useCallback(() => {
     const audio = getAudioRef().current;
@@ -263,6 +266,7 @@ export function Player() {
           onPlay={() => setPlayingState(true)}
           onPause={() => setPlayingState(false)}
           onLoadedMetadata={setupDuration}
+          onDurationChange={updateAudioDuration}
           onTimeUpdate={setupProgress}
           onEnded={handleSongEnded}
           onLoadStart={setupInitialVolume}
