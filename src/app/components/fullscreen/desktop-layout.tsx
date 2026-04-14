@@ -4,6 +4,7 @@ import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
+import { cn } from "@/lib/utils";
 import { useFullscreenPlayerState } from "@/store/player.store";
 import { ArtworkWithInfo } from "./artwork-with-info";
 import { FullscreenControlPanel } from "./control-panel";
@@ -88,18 +89,41 @@ export const DesktopLayout = memo(function DesktopLayout() {
         <div className="flex items-center justify-between px-4 pt-6 pb-2">
           <div className="flex gap-1">
             <Button
-              variant={rightPanelView === "queue" ? "secondary" : "ghost"}
+              variant="ghost"
               size="sm"
-              className="gap-1.5"
+              className={cn(
+                "gap-1.5",
+                rightPanelView === "queue" && "rounded-md",
+              )}
+              style={
+                rightPanelView === "queue"
+                  ? {
+                      background:
+                        "linear-gradient(var(--queue-bg-overlay, transparent), var(--queue-bg-overlay, transparent)), linear-gradient(var(--fullscreen-backdrop-bg, transparent), var(--fullscreen-backdrop-bg, transparent)), hsl(var(--background))",
+                    }
+                  : undefined
+              }
               onClick={handleQueueClick}
             >
               <ListMusic className="size-4" />
               {t("fullscreen.queue")}
             </Button>
             <Button
-              variant={rightPanelView === "lyrics" ? "secondary" : "ghost"}
+              variant="ghost"
               size="sm"
-              className={`gap-1.5 ${lyricsDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={cn(
+                "gap-1.5",
+                lyricsDisabled && "opacity-50 cursor-not-allowed",
+                rightPanelView === "lyrics" && "rounded-md",
+              )}
+              style={
+                rightPanelView === "lyrics"
+                  ? {
+                      background:
+                        "linear-gradient(var(--queue-bg-overlay, transparent), var(--queue-bg-overlay, transparent)), linear-gradient(var(--fullscreen-backdrop-bg, transparent), var(--fullscreen-backdrop-bg, transparent)), hsl(var(--background))",
+                    }
+                  : undefined
+              }
               onClick={handleLyricsClick}
               disabled={lyricsDisabled}
             >

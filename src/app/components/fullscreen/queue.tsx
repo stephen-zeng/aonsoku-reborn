@@ -116,6 +116,7 @@ function UnifiedQueueView({
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentSongRef = useRef<HTMLDivElement>(null);
+  const [dragOverlayBg, setDragOverlayBg] = useState<string>("");
 
   const sensors = useQueueDndSensors();
   const queueScrollKey = `${currentSong.id}:${currentSongIndex}:${currentList.length}`;
@@ -161,10 +162,24 @@ function UnifiedQueueView({
   function handleDragStart(event: DragStartEvent) {
     const song = upcoming.find((s) => s.id === event.active.id);
     setActiveItem(song ?? null);
+
+    const el = scrollContainerRef.current;
+    if (el) {
+      const computed = getComputedStyle(el);
+      const backdrop = computed
+        .getPropertyValue("--fullscreen-backdrop-bg")
+        .trim();
+      const overlay = computed.getPropertyValue("--queue-bg-overlay").trim();
+      const bg = computed.backgroundColor;
+      setDragOverlayBg(
+        `linear-gradient(${overlay || "transparent"}, ${overlay || "transparent"}), linear-gradient(${backdrop || "transparent"}, ${backdrop || "transparent"}), ${bg}`,
+      );
+    }
   }
 
   function handleDragEnd(event: DragEndEvent) {
     setActiveItem(null);
+    setDragOverlayBg("");
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -264,7 +279,10 @@ function UnifiedQueueView({
         {createPortal(
           <DragOverlay>
             {activeItem && (
-              <div className="bg-background rounded-md shadow-lg">
+              <div
+                className="rounded-md shadow-lg"
+                style={{ background: dragOverlayBg || undefined }}
+              >
                 <QueueListRow
                   song={activeItem}
                   isActive={currentSong.id === activeItem.id}
