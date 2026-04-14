@@ -12,7 +12,7 @@ export const FullscreenControlPanel = memo(function FullscreenControlPanel() {
       <div className="px-4">
         <FullscreenProgress thin stacked />
       </div>
-      <div className="flex items-center justify-center gap-3">
+      <div className="flex items-center justify-center gap-6 sm:gap-3">
         <MemoFullscreenControls />
       </div>
       <div className="px-4" data-vaul-no-drag>

@@ -11,6 +11,7 @@ import {
 import { memo } from "react";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { Button } from "@/app/components/ui/button";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import {
   usePlayerActions,
   usePlayerIsPlaying,
@@ -33,23 +34,26 @@ function FullscreenControls() {
     togglePlayPause,
     toggleLoop,
   } = usePlayerActions();
+  const isMobile = useIsMobile();
 
   return (
     <>
-      <Button
-        size="icon"
-        variant="ghost"
-        data-state={isShuffleActive && "active"}
-        className={clsx(
-          buttonsStyle.secondary,
-          isShuffleActive && buttonsStyle.activeDot,
-        )}
-        style={{ ...buttonsStyle.style }}
-        onClick={() => toggleShuffle()}
-        disabled={isPlayingOneSong() || !hasNext}
-      >
-        <Shuffle className={buttonsStyle.secondaryIcon} />
-      </Button>
+      {!isMobile && (
+        <Button
+          size="icon"
+          variant="ghost"
+          data-state={isShuffleActive && "active"}
+          className={clsx(
+            buttonsStyle.secondary,
+            isShuffleActive && buttonsStyle.activeDot,
+          )}
+          style={{ ...buttonsStyle.style }}
+          onClick={() => toggleShuffle()}
+          disabled={isPlayingOneSong() || !hasNext}
+        >
+          <Shuffle className={buttonsStyle.secondaryIcon} />
+        </Button>
+      )}
       <Button
         size="icon"
         variant="ghost"
@@ -109,27 +113,29 @@ function FullscreenControls() {
       >
         <SkipForward className={buttonsStyle.secondaryIconFilled} />
       </Button>
-      <Button
-        size="icon"
-        variant="ghost"
-        data-state={loopState !== LoopState.Off && "active"}
-        className={clsx(
-          buttonsStyle.secondary,
-          loopState !== LoopState.Off && buttonsStyle.activeDot,
-        )}
-        onClick={() => toggleLoop()}
-        style={{ ...buttonsStyle.style }}
-      >
-        {loopState === LoopState.Off && (
-          <Repeat className={buttonsStyle.secondaryIcon} />
-        )}
-        {loopState === LoopState.All && (
-          <Repeat className={buttonsStyle.secondaryIcon} />
-        )}
-        {loopState === LoopState.One && (
-          <RepeatOne className={buttonsStyle.secondaryIcon} />
-        )}
-      </Button>
+      {!isMobile && (
+        <Button
+          size="icon"
+          variant="ghost"
+          data-state={loopState !== LoopState.Off && "active"}
+          className={clsx(
+            buttonsStyle.secondary,
+            loopState !== LoopState.Off && buttonsStyle.activeDot,
+          )}
+          onClick={() => toggleLoop()}
+          style={{ ...buttonsStyle.style }}
+        >
+          {loopState === LoopState.Off && (
+            <Repeat className={buttonsStyle.secondaryIcon} />
+          )}
+          {loopState === LoopState.All && (
+            <Repeat className={buttonsStyle.secondaryIcon} />
+          )}
+          {loopState === LoopState.One && (
+            <RepeatOne className={buttonsStyle.secondaryIcon} />
+          )}
+        </Button>
+      )}
     </>
   );
 }
