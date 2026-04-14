@@ -98,20 +98,6 @@ export interface IPrivacySettings {
   setLrcLibEnabled: (value: boolean) => void;
 }
 
-interface IBlurSettings {
-  value: number;
-  settings: {
-    min: number;
-    max: number;
-    step: number;
-  };
-}
-
-interface IBigPlayerSettings {
-  useSongColor: boolean;
-  blur: IBlurSettings;
-}
-
 interface IQueueSettings {
   useSongColor: boolean;
 }
@@ -119,7 +105,6 @@ interface IQueueSettings {
 interface IColorsSettings {
   currentSongColor: string | null;
   currentSongColorIntensity: number;
-  bigPlayer: IBigPlayerSettings;
   queue: IQueueSettings;
 }
 
@@ -201,8 +186,6 @@ export interface IPlayerActions {
   setCurrentSongColor: (value: string | null) => void;
   setCurrentSongIntensity: (value: number) => void;
   setUseSongColorOnQueue: (value: boolean) => void;
-  setUseSongColorOnBigPlayer: (value: boolean) => void;
-  setBigPlayerBlurValue: (value: number) => void;
   enterRemoteControl: (device: RemoteDeviceInfo | null) => void;
   exitRemoteControl: () => void;
   registerRemoteSender: (

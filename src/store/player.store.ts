@@ -27,12 +27,6 @@ const miniStores = {
   songlist: "player_songlist",
 };
 
-const blurSettings = {
-  min: 20,
-  max: 100,
-  step: 10,
-};
-
 export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
   subscribeWithSelector(
     persist(
@@ -283,13 +277,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               colors: {
                 currentSongColor: null,
                 currentSongColorIntensity: 0.65,
-                bigPlayer: {
-                  useSongColor: false,
-                  blur: {
-                    value: 40,
-                    settings: blurSettings,
-                  },
-                },
                 queue: {
                   useSongColor: false,
                 },
@@ -1140,9 +1127,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               resetConfig: () => {
                 set((state) => {
                   state.settings.colors.queue.useSongColor = false;
-                  state.settings.colors.bigPlayer.useSongColor = false;
-                  state.settings.colors.bigPlayer.blur.value = 40;
-                  state.settings.colors.bigPlayer.blur.settings = blurSettings;
                   state.settings.colors.currentSongColorIntensity = 0.65;
                   state.settings.fullscreen.autoFullscreenEnabled = false;
                   state.settings.lyrics.preferSyncedLyrics = false;
@@ -1168,16 +1152,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               setUseSongColorOnQueue: (value) => {
                 set((state) => {
                   state.settings.colors.queue.useSongColor = value;
-                });
-              },
-              setUseSongColorOnBigPlayer: (value) => {
-                set((state) => {
-                  state.settings.colors.bigPlayer.useSongColor = value;
-                });
-              },
-              setBigPlayerBlurValue: (value) => {
-                set((state) => {
-                  state.settings.colors.bigPlayer.blur.value = value;
                 });
               },
               enterRemoteControl: (device: RemoteDeviceInfo | null) => {
@@ -1298,7 +1272,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
             "playerState.fullscreenPlayerOpen",
             "playerState.fullscreenPlayerTab",
             "playerState.desktopFullscreenPanelView",
-            "state.settings.colors.bigPlayer.blur.settings",
             "remoteControl",
           ]);
 
@@ -1566,12 +1539,9 @@ export const useSongColor = () =>
   usePlayerStore((state) => {
     const { currentSongColor, currentSongColorIntensity, queue } =
       state.settings.colors;
-    const { useSongColor, blur } = state.settings.colors.bigPlayer;
     const {
       setCurrentSongColor,
       setUseSongColorOnQueue,
-      setUseSongColorOnBigPlayer,
-      setBigPlayerBlurValue,
       setCurrentSongIntensity,
     } = state.actions;
 
@@ -1581,11 +1551,7 @@ export const useSongColor = () =>
       currentSongColorIntensity,
       setCurrentSongIntensity,
       useSongColorOnQueue: queue.useSongColor,
-      useSongColorOnBigPlayer: useSongColor,
       setUseSongColorOnQueue,
-      setUseSongColorOnBigPlayer,
-      bigPlayerBlur: blur,
-      setBigPlayerBlurValue,
     };
   });
 

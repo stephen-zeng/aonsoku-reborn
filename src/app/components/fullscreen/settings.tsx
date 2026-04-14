@@ -14,15 +14,9 @@ import { cn } from "@/lib/utils";
 import { useSongColor } from "@/store/player.store";
 
 export function FullscreenSettings() {
-  const { useSongColorOnBigPlayer } = useSongColor();
-
   return (
     <DynamicSettingsPopover>
-      <>
-        <DynamicColorOption showSeparator={false} />
-        {useSongColorOnBigPlayer && <ColorIntensityOption />}
-        {!useSongColorOnBigPlayer && <ImageBlurSizeOption />}
-      </>
+      <ColorIntensityOption showSeparator={false} />
     </DynamicSettingsPopover>
   );
 }
@@ -71,23 +65,6 @@ type OptionProps = Omit<
   "text"
 >;
 
-function DynamicColorOption(props: OptionProps) {
-  const { t } = useTranslation();
-  const { useSongColorOnBigPlayer, setUseSongColorOnBigPlayer } =
-    useSongColor();
-
-  return (
-    <SettingWrapper text={t("settings.appearance.colors.group")} {...props}>
-      <Switch
-        checked={useSongColorOnBigPlayer}
-        onCheckedChange={() =>
-          setUseSongColorOnBigPlayer(!useSongColorOnBigPlayer)
-        }
-      />
-    </SettingWrapper>
-  );
-}
-
 function QueueDynamicColorOption(props: OptionProps) {
   const { t } = useTranslation();
   const { useSongColorOnQueue, setUseSongColorOnQueue } = useSongColor();
@@ -120,27 +97,6 @@ function ColorIntensityOption(props: OptionProps) {
         step={0.05}
         tooltipValue={intensityTooltip}
         onValueChange={([value]) => setCurrentSongIntensity(value)}
-      />
-    </SettingWrapper>
-  );
-}
-
-function ImageBlurSizeOption(props: OptionProps) {
-  const { t } = useTranslation();
-  const { bigPlayerBlur, setBigPlayerBlurValue } = useSongColor();
-
-  return (
-    <SettingWrapper
-      text={t("settings.appearance.colors.bigPlayer.blurSize")}
-      {...props}
-    >
-      <Slider
-        defaultValue={[bigPlayerBlur.value]}
-        min={bigPlayerBlur.settings.min}
-        max={bigPlayerBlur.settings.max}
-        step={bigPlayerBlur.settings.step}
-        tooltipValue={`${bigPlayerBlur.value}px`}
-        onValueChange={([value]) => setBigPlayerBlurValue(value)}
       />
     </SettingWrapper>
   );
