@@ -942,11 +942,35 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               },
               reorderQueue: (fromIndex, toIndex) => {
                 if (isRemoteActive()) return;
-                const { currentList, currentSongIndex } = get().songlist;
+                if (fromIndex === toIndex) return;
+
+                const {
+                  currentList,
+                  originalList,
+                  shuffledList,
+                  currentSongIndex,
+                  originalSongIndex,
+                } = get().songlist;
 
                 const newList = arrayMove(currentList, fromIndex, toIndex);
 
-                // Recalculate currentSongIndex
+                const movedSong = currentList[fromIndex];
+                const origFromIndex = originalList.findIndex(
+                  (s) => s.id === movedSong.id,
+                );
+                const origToIndex = originalList.findIndex(
+                  (s) => s.id === currentList[toIndex].id,
+                );
+                const newOriginalList =
+                  origFromIndex >= 0 && origToIndex >= 0
+                    ? arrayMove(originalList, origFromIndex, origToIndex)
+                    : originalList;
+
+                const newShuffledList =
+                  shuffledList.length > 0
+                    ? arrayMove(shuffledList, fromIndex, toIndex)
+                    : shuffledList;
+
                 let newSongIndex = currentSongIndex;
                 if (currentSongIndex === fromIndex) {
                   newSongIndex = toIndex;
@@ -962,9 +986,29 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   newSongIndex = currentSongIndex + 1;
                 }
 
+                let newOriginalIndex = originalSongIndex;
+                if (origFromIndex >= 0 && origToIndex >= 0) {
+                  if (originalSongIndex === origFromIndex) {
+                    newOriginalIndex = origToIndex;
+                  } else if (
+                    origFromIndex < originalSongIndex &&
+                    origToIndex >= originalSongIndex
+                  ) {
+                    newOriginalIndex = originalSongIndex - 1;
+                  } else if (
+                    origFromIndex > originalSongIndex &&
+                    origToIndex <= originalSongIndex
+                  ) {
+                    newOriginalIndex = originalSongIndex + 1;
+                  }
+                }
+
                 set((state) => {
                   state.songlist.currentList = newList;
+                  state.songlist.originalList = newOriginalList;
+                  state.songlist.shuffledList = newShuffledList;
                   state.songlist.currentSongIndex = newSongIndex;
+                  state.songlist.originalSongIndex = newOriginalIndex;
                 });
               },
               setMainDrawerState: (status) => {
