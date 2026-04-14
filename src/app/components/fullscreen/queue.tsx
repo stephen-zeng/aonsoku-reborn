@@ -39,6 +39,38 @@ const POINTER_SENSOR_OPTIONS = {
   activationConstraint: { distance: 5 },
 };
 
+function syncQueueCurrentSongPosition({
+  container,
+  el,
+  behavior,
+}: {
+  container: HTMLDivElement;
+  el: HTMLDivElement;
+  behavior?: ScrollBehavior;
+}) {
+  if (container.clientHeight === 0) return;
+
+  container.style.setProperty("--queue-scroll-pad", "0px");
+
+  const currentTop =
+    el.getBoundingClientRect().top -
+    container.getBoundingClientRect().top +
+    container.scrollTop;
+  const remainingHeight = container.scrollHeight - currentTop;
+  const scrollPad = Math.max(0, container.clientHeight - remainingHeight);
+
+  container.style.setProperty("--queue-scroll-pad", `${scrollPad}px`);
+
+  const distance = Math.abs(
+    el.getBoundingClientRect().top - container.getBoundingClientRect().top,
+  );
+  const resolvedBehavior: ScrollBehavior =
+    behavior ??
+    (distance > container.clientHeight * 0.5 ? "instant" : "smooth");
+
+  el.scrollIntoView({ block: "start", behavior: resolvedBehavior });
+}
+
 export const FullscreenSongQueue = memo(function FullscreenSongQueue() {
   const currentList = usePlayerCurrentList();
   const currentSongIndex = usePlayerCurrentSongIndex();
@@ -94,43 +126,32 @@ function UnifiedQueueView({
   const currentSongRef = useRef<HTMLDivElement>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, POINTER_SENSOR_OPTIONS));
+  const queueScrollKey = `${currentSong.id}:${currentSongIndex}:${currentList.length}`;
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: re-scroll on song/queue change
   useLayoutEffect(() => {
+    if (!queueScrollKey) return;
+
     const el = currentSongRef.current;
     const container = scrollContainerRef.current;
-    if (!el || !container || container.clientHeight === 0) return;
+    if (!el || !container) return;
 
-    container.style.setProperty(
-      "--queue-scroll-pad",
-      `${container.clientHeight}px`,
-    );
-
-    const distance = Math.abs(
-      el.getBoundingClientRect().top - container.getBoundingClientRect().top,
-    );
-    const behavior: ScrollBehavior =
-      distance > container.clientHeight * 0.5 ? "instant" : "smooth";
-
-    el.scrollIntoView({ block: "start", behavior });
-  }, [currentSongIndex, history, upcoming]);
+    syncQueueCurrentSongPosition({ container, el });
+  }, [queueScrollKey]);
 
   useEffect(() => {
+    const el = currentSongRef.current;
     const container = scrollContainerRef.current;
-    if (!container) return;
+    if (!el || !container) return;
 
     let rafId = 0;
     const observer = new ResizeObserver(() => {
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
-        if (!container || container.clientHeight === 0) return;
-        container.style.setProperty(
-          "--queue-scroll-pad",
-          `${container.clientHeight}px`,
-        );
-        const el = currentSongRef.current;
-        if (!el) return;
-        el.scrollIntoView({ block: "start", behavior: "instant" });
+        syncQueueCurrentSongPosition({
+          container,
+          el,
+          behavior: "instant",
+        });
       });
     });
     observer.observe(container);
