@@ -13,7 +13,14 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { memo, useMemo, useState } from "react";
+import {
+  memo,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { getCoverArtUrl } from "@/api/httpClient";
@@ -83,7 +90,55 @@ function UnifiedQueueView({
   const queueSource = useQueueSource();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const currentSongRef = useRef<HTMLDivElement>(null);
+
   const sensors = useSensors(useSensor(PointerSensor, POINTER_SENSOR_OPTIONS));
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-scroll on song/queue change
+  useLayoutEffect(() => {
+    const el = currentSongRef.current;
+    const container = scrollContainerRef.current;
+    if (!el || !container || container.clientHeight === 0) return;
+
+    container.style.setProperty(
+      "--queue-scroll-pad",
+      `${container.clientHeight}px`,
+    );
+
+    const distance = Math.abs(
+      el.getBoundingClientRect().top - container.getBoundingClientRect().top,
+    );
+    const behavior: ScrollBehavior =
+      distance > container.clientHeight * 0.5 ? "instant" : "smooth";
+
+    el.scrollIntoView({ block: "start", behavior });
+  }, [currentSongIndex, history, upcoming]);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    let rafId = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        if (!container || container.clientHeight === 0) return;
+        container.style.setProperty(
+          "--queue-scroll-pad",
+          `${container.clientHeight}px`,
+        );
+        const el = currentSongRef.current;
+        if (!el) return;
+        el.scrollIntoView({ block: "start", behavior: "instant" });
+      });
+    });
+    observer.observe(container);
+    return () => {
+      cancelAnimationFrame(rafId);
+      observer.disconnect();
+    };
+  }, []);
 
   const sortableItems = useMemo(
     () => upcoming.map((song) => song.id),
@@ -111,7 +166,12 @@ function UnifiedQueueView({
   }
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto" data-vaul-no-drag>
+    <div
+      className="flex flex-col h-full overflow-y-auto"
+      style={{ paddingBottom: "var(--queue-scroll-pad, 0px)" }}
+      data-vaul-no-drag
+      ref={scrollContainerRef}
+    >
       {history.length > 0 && (
         <div className="shrink-0">
           <div className="flex items-center justify-between px-2 py-1">
@@ -142,7 +202,10 @@ function UnifiedQueueView({
         </div>
       )}
 
-      <div className="shrink-0 px-2 py-2 border-t border-foreground/10">
+      <div
+        ref={currentSongRef}
+        className="shrink-0 px-2 py-2 border-t border-foreground/10"
+      >
         <QueueCurrentSong />
       </div>
 
@@ -196,10 +259,6 @@ function UnifiedQueueView({
             document.body,
           )}
         </DndContext>
-      )}
-
-      {upcoming.length === 0 && history.length === 0 && (
-        <div className="flex-1" />
       )}
     </div>
   );
