@@ -14,7 +14,6 @@ import { FullscreenSongQueue } from "./queue";
 import { FullscreenSettings } from "./settings";
 
 const MemoLyricsTab = memo(LyricsTab);
-const MemoSongQueue = memo(FullscreenSongQueue);
 
 const VIEW_TRANSITION = { duration: 0.2, ease: [0.4, 0, 0.2, 1] } as const;
 
@@ -168,7 +167,7 @@ export const MobileLayout = memo(function MobileLayout() {
                 { "--queue-bg-overlay": "transparent" } as React.CSSProperties
               }
             >
-              <MemoSongQueue />
+              <FullscreenSongQueue />
             </motion.div>
           )}
         </AnimatePresence>

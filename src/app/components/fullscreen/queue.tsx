@@ -1,5 +1,8 @@
-import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
-import type { SyntheticListenerMap } from "@dnd-kit/core";
+import type {
+  DragEndEvent,
+  DragStartEvent,
+  SyntheticListenerMap,
+} from "@dnd-kit/core";
 import { closestCenter, DndContext, DragOverlay } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -17,9 +20,9 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { useQueueDndSensors } from "@/app/components/queue/dnd-sensors";
 import { useTranslation } from "react-i18next";
 import { getCoverArtUrl } from "@/api/httpClient";
+import { useQueueDndSensors } from "@/app/components/queue/dnd-sensors";
 import { Button } from "@/app/components/ui/button";
 import {
   usePlayerActions,
@@ -31,28 +34,42 @@ import {
 import type { ISong } from "@/types/responses/song";
 import { QueueCurrentSong, QueueModeButtons } from "./queue-current-song";
 
+/**
+ * Scrolls the queue so that the current song element sits at the very top
+ * of the visible area.  When the remaining content below the current song
+ * is shorter than the container, a spacer div is inflated so the container
+ * can still scroll far enough — this prevents the current song from being
+ * stuck mid-view when near the end of the queue.
+ *
+ * CAVEATS for future maintainers:
+ *  1. `distance` and `resolvedBehavior` are computed *before* any DOM writes
+ *     because `getBoundingClientRect` values shift once we mutate the spacer.
+ *  2. `spacer.style.height` is reset to "0px" first so that `offsetHeight`
+ *     reads inside the loop reflect real content only (the spacer itself
+ *     contributes 0).  If you remove this reset the spacer will inflate
+ *     `contentBelowTop` and the calculation will be wrong.
+ *  3. The loop skips children with `offsetParent === null` (display:none,
+ *     e.g. DndKit's HiddenText) and `position:fixed` (e.g. DndKit's
+ *     LiveRegion) because they don't contribute to in-flow scroll height.
+ *  4. After setting the spacer to its final height we do NOT read layout
+ *     again — `scrollTop` / `scrollTo` with the pre-calculated `currentTop`
+ *     is sufficient because the spacer only extends content *below* the
+ *     current song and cannot affect its offset from the container top.
+ */
 function syncQueueCurrentSongPosition({
   container,
   el,
+  spacer,
   behavior,
 }: {
   container: HTMLDivElement;
   el: HTMLDivElement;
+  spacer: HTMLDivElement;
   behavior?: ScrollBehavior;
 }) {
   if (container.clientHeight === 0) return;
 
-  container.style.setProperty("--queue-scroll-pad", "0px");
-
-  const currentTop =
-    el.getBoundingClientRect().top -
-    container.getBoundingClientRect().top +
-    container.scrollTop;
-  const remainingHeight = container.scrollHeight - currentTop;
-  const scrollPad = Math.max(0, container.clientHeight - remainingHeight);
-
-  container.style.setProperty("--queue-scroll-pad", `${scrollPad}px`);
-
+  // Determine scroll behavior BEFORE any DOM mutations, using current positions.
   const distance = Math.abs(
     el.getBoundingClientRect().top - container.getBoundingClientRect().top,
   );
@@ -60,10 +77,46 @@ function syncQueueCurrentSongPosition({
     behavior ??
     (distance > container.clientHeight * 0.5 ? "instant" : "smooth");
 
-  el.scrollIntoView({ block: "start", behavior: resolvedBehavior });
+  // Compute el's offset from the scroll container's content top.
+  const currentTop =
+    el.getBoundingClientRect().top -
+    container.getBoundingClientRect().top +
+    container.scrollTop;
+
+  // Reset spacer so it doesn't inflate measurements.
+  spacer.style.height = "0px";
+
+  // To compute how much content sits below the top edge of el,
+  // we sum the offsetHeight of every direct container child from el onward,
+  // skipping fixed-position and hidden elements (e.g. DndKit accessibility nodes).
+  let contentBelowTop = 0;
+  let foundCurrent = false;
+  for (const child of container.children) {
+    if (child === el) foundCurrent = true;
+    if (foundCurrent) {
+      const styled = child as HTMLElement;
+      if (styled.offsetParent === null) continue;
+      const computed = getComputedStyle(styled);
+      if (computed.position === "fixed") continue;
+      contentBelowTop += styled.offsetHeight;
+    }
+  }
+
+  const scrollPad = Math.max(0, container.clientHeight - contentBelowTop);
+  spacer.style.height = `${scrollPad}px`;
+
+  if (resolvedBehavior === "instant") {
+    container.scrollTop = currentTop;
+  } else {
+    container.scrollTo({ top: currentTop, behavior: "smooth" });
+  }
 }
 
-export const FullscreenSongQueue = memo(function FullscreenSongQueue() {
+export const FullscreenSongQueue = memo(function FullscreenSongQueue({
+  hideModeButtons = false,
+}: {
+  hideModeButtons?: boolean;
+}) {
   const currentList = usePlayerCurrentList();
   const currentSongIndex = usePlayerCurrentSongIndex();
   const currentSong = usePlayerCurrentSong();
@@ -92,6 +145,7 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue() {
       currentSong={currentSong}
       currentSongIndex={currentSongIndex}
       currentList={currentList}
+      hideModeButtons={hideModeButtons}
     />
   );
 });
@@ -102,51 +156,72 @@ function UnifiedQueueView({
   currentSong,
   currentSongIndex,
   currentList,
+  hideModeButtons,
 }: {
   history: ISong[];
   upcoming: ISong[];
   currentSong: ISong;
   currentSongIndex: number;
   currentList: ISong[];
+  hideModeButtons: boolean;
 }) {
   const { t } = useTranslation();
   const { setSongList, clearHistory, reorderQueue } = usePlayerActions();
   const queueSource = useQueueSource();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
 
+  // Refs must be read inside the rAF callback, not captured at mount time,
+  // because React may replace the underlying DOM element between renders.
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentSongRef = useRef<HTMLDivElement>(null);
+  // Spacer div sits at the very bottom of the scroll container and is
+  // dynamically sized by syncQueueCurrentSongPosition so that the scroll
+  // container can always scroll the current song to the very top, even when
+  // there aren't enough upcoming tracks to fill the viewport.
+  // DO NOT remove `shrink-0` — without it the flex container would compress
+  // the spacer to 0 instead of honouring its inline height.
+  const spacerRef = useRef<HTMLDivElement>(null);
   const [dragOverlayBg, setDragOverlayBg] = useState<string>("");
 
   const sensors = useQueueDndSensors();
   const queueScrollKey = `${currentSong.id}:${currentSongIndex}:${currentList.length}`;
 
+  // Scroll the current song into view whenever the queue content changes
+  // (song change, index change, or list length change).  useLayoutEffect
+  // fires synchronously after DOM mutations so the user never sees the
+  // old scroll position.
   useLayoutEffect(() => {
     if (!queueScrollKey) return;
 
     const el = currentSongRef.current;
     const container = scrollContainerRef.current;
-    if (!el || !container) return;
+    const spacer = spacerRef.current;
+    if (!el || !container || !spacer) return;
 
-    syncQueueCurrentSongPosition({ container, el });
+    syncQueueCurrentSongPosition({ container, el, spacer });
   }, [queueScrollKey]);
 
+  // Re-scroll when the container resizes (e.g. panel open/close, orientation
+  // change).  Reads refs inside the rAF callback to avoid stale closures.
   useEffect(() => {
-    const el = currentSongRef.current;
-    const container = scrollContainerRef.current;
-    if (!el || !container) return;
-
     let rafId = 0;
     const observer = new ResizeObserver(() => {
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
+        const el = currentSongRef.current;
+        const container = scrollContainerRef.current;
+        const spacer = spacerRef.current;
+        if (!el || !container || !spacer) return;
         syncQueueCurrentSongPosition({
           container,
           el,
+          spacer,
           behavior: "instant",
         });
       });
     });
+    const container = scrollContainerRef.current;
+    if (!container) return;
     observer.observe(container);
     return () => {
       cancelAnimationFrame(rafId);
@@ -195,8 +270,7 @@ function UnifiedQueueView({
 
   return (
     <div
-      className="flex flex-col h-full overflow-y-auto"
-      style={{ paddingBottom: "var(--queue-scroll-pad, 0px)" }}
+      className="flex flex-col h-full overflow-y-auto no-scrollbar"
       data-vaul-no-drag
       ref={scrollContainerRef}
     >
@@ -251,8 +325,10 @@ function UnifiedQueueView({
                 "linear-gradient(var(--queue-bg-overlay, transparent), var(--queue-bg-overlay, transparent)), linear-gradient(var(--fullscreen-backdrop-bg, transparent), var(--fullscreen-backdrop-bg, transparent)), hsl(var(--background))",
             }}
           >
-            <QueueModeButtons />
-            <div className="flex items-center justify-between px-2 pt-3">
+            {!hideModeButtons && <QueueModeButtons />}
+            <div
+              className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
+            >
               <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
                 {t("fullscreen.queueContinue")}
               </h3>
@@ -296,6 +372,7 @@ function UnifiedQueueView({
           document.body,
         )}
       </DndContext>
+      <div ref={spacerRef} className="shrink-0" aria-hidden="true" />
     </div>
   );
 }

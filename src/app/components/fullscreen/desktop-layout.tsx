@@ -12,7 +12,6 @@ import { LyricsTab } from "./lyrics";
 import { FullscreenSongQueue } from "./queue";
 import { FullscreenSettings } from "./settings";
 
-const MemoSongQueue = memo(FullscreenSongQueue);
 const MemoLyricsTab = memo(LyricsTab);
 
 export const DesktopLayout = memo(function DesktopLayout() {
@@ -145,7 +144,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
                 transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
                 className="h-full"
               >
-                <MemoSongQueue />
+                <FullscreenSongQueue hideModeButtons />
               </motion.div>
             )}
             {rightPanelView === "lyrics" && (
