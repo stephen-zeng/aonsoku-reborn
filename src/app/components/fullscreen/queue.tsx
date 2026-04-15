@@ -296,7 +296,7 @@ function UnifiedQueueView({
             </Button>
           </div>
           {[...playHistory].reverse().map((song, idx) => {
-            const isActive = currentSong.id === song.id;
+            const isActive = false;
             return (
               <QueueListRow
                 key={`${song.id}-${idx}`}
