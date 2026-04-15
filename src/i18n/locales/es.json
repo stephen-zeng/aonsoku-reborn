@@ -67,6 +67,17 @@
     "dracula": "Drácula",
     "tinacious-design": "Tinacious Design"
   },
+  "favorites": {
+    "headline": "Favoritos",
+    "songCount_one": "{{count}} canción",
+    "songCount_other": "{{count}} canciones",
+    "duration": "~ {{duration}}",
+    "noSongs": "¡Aún no hay canciones favoritas!",
+    "buttons": {
+      "play": "Reproducir {{name}}",
+      "shuffle": "Reproducir {{name}} en orden aleatorio"
+    }
+  },
   "playlist": {
     "headline": "Lista de reproducción",
     "songCount_one": "{{count}} canción",

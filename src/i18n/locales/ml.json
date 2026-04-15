@@ -8,5 +8,16 @@
     "songs": "ഗാനങ്ങൾ",
     "albums": "ആൽബങ്ങൾ",
     "playlists": "പ്ലേലിസ്റ്റുകൾ"
+  },
+  "favorites": {
+    "headline": "പ്രിയപ്പെട്ടവ",
+    "songCount_one": "{{count}} ഗാനം",
+    "songCount_other": "{{count}} ഗാനങ്ങൾ",
+    "duration": "~ {{duration}}",
+    "noSongs": "ഇതുവരെ പ്രിയപ്പെട്ട ഗാനങ്ങൾ ഇല്ല!",
+    "buttons": {
+      "play": "{{name}} പ്ലേ ചെയ്യുക",
+      "shuffle": "{{name}} ഷഫിൽ ചെയ്യുക"
+    }
   }
 }

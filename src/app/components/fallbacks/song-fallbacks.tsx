@@ -1,8 +1,11 @@
+import { HeaderWithImageEffect } from "@/app/components/fallbacks/album-fallbacks";
 import { TableFallback } from "@/app/components/fallbacks/table-fallbacks";
 import {
   AddButtonSkeleton,
+  ButtonsBarFallback,
   ShadowHeaderFallback,
 } from "@/app/components/fallbacks/ui-fallbacks";
+import ListWrapper from "@/app/components/list-wrapper";
 import { Skeleton } from "@/app/components/ui/skeleton";
 
 export function InfinitySongListFallback() {
@@ -90,6 +93,28 @@ export function ArtistsTableFallback() {
       <div className="w-full h-[calc(100%-80px)] overflow-auto">
         <TableFallback columns="artists" />
       </div>
+    </div>
+  );
+}
+
+function FavoritesButtonsFallback() {
+  return (
+    <ButtonsBarFallback>
+      <Skeleton className="rounded-full w-12 h-12 md:w-14 md:h-14" />
+      <Skeleton className="rounded-full w-14 h-14 md:order-first" />
+    </ButtonsBarFallback>
+  );
+}
+
+export function FavoritesFallback() {
+  return (
+    <div className="w-full bg-background min-h-content">
+      <HeaderWithImageEffect />
+
+      <ListWrapper>
+        <FavoritesButtonsFallback />
+        <TableFallback variant="modern" length={20} />
+      </ListWrapper>
     </div>
   );
 }

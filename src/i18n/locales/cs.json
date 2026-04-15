@@ -65,6 +65,17 @@
     "noctis-lilac": "Noctis Lilac",
     "achiever": "Achiever"
   },
+  "favorites": {
+    "headline": "Oblíbené",
+    "songCount_one": "{{count}} skladba",
+    "songCount_other": "{{count}} skladeb",
+    "duration": "~ {{duration}}",
+    "noSongs": "Zatím žádné oblíbené skladby!",
+    "buttons": {
+      "play": "Přehrát {{name}}",
+      "shuffle": "Přehrát {{name}} náhodně"
+    }
+  },
   "playlist": {
     "headline": "Playlist",
     "songCount_one": "{{count}} skladba",

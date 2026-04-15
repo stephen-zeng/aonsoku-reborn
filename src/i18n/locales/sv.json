@@ -57,6 +57,17 @@
     "marmalade-beaver": "Marmalade Beaver",
     "vim-dark-soft": "Vim Mörk Mjuk"
   },
+  "favorites": {
+    "headline": "Favoriter",
+    "songCount_one": "{{count}} låt",
+    "songCount_other": "{{count}} låtar",
+    "duration": "~ {{duration}}",
+    "noSongs": "Inga favoritlåtar ännu!",
+    "buttons": {
+      "play": "Spela {{name}}",
+      "shuffle": "Spela {{name}} i blandad ordning"
+    }
+  },
   "playlist": {
     "form": {
       "labels": {

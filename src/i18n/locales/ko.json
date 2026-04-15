@@ -35,6 +35,16 @@
     "radios": "라디오",
     "emptyPlaylist": "생성된 재생목록 없음"
   },
+  "favorites": {
+    "headline": "즐겨찾기",
+    "songCount": "{{count}}곡",
+    "duration": "~ {{duration}}",
+    "noSongs": "즐겨찾기한 곡이 아직 없습니다!",
+    "buttons": {
+      "play": "{{name}} 재생",
+      "shuffle": "{{name}} 임의 재생"
+    }
+  },
   "playlist": {
     "buttons": {
       "play": "{{name}} 재생",

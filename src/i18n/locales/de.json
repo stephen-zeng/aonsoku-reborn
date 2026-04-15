@@ -38,6 +38,17 @@
     "vue-dark": "Vue Dark",
     "vim-dark-soft": "Vim Dark Soft"
   },
+  "favorites": {
+    "headline": "Favoriten",
+    "songCount_one": "{{count}} Lied",
+    "songCount_other": "{{count}} Lieder",
+    "duration": "~ {{duration}}",
+    "noSongs": "Noch keine Favoriten!",
+    "buttons": {
+      "play": "{{name}} abspielen",
+      "shuffle": "{{name}} zufällig abspielen"
+    }
+  },
   "playlist": {
     "form": {
       "create": {

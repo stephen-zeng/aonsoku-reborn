@@ -12,6 +12,7 @@ import {
 import { HomeFallback } from "@/app/components/fallbacks/home-fallbacks";
 import { PlaylistFallback } from "@/app/components/fallbacks/playlist-fallbacks";
 import {
+  FavoritesFallback,
   InfinitySongListFallback,
   MobileLibraryFallback,
   PlaylistsListFallback,
@@ -91,7 +92,7 @@ export const router = createHashRouter([
         path: ROUTES.LIBRARY.FAVORITES,
         errorElement: <ErrorPage />,
         element: (
-          <Suspense fallback={<InfinitySongListFallback />}>
+          <Suspense fallback={<FavoritesFallback />}>
             <Favorites />
           </Suspense>
         ),

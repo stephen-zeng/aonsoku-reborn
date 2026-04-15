@@ -125,6 +125,17 @@
     "playlists": "Playlisty",
     "emptyPlaylist": "Nie utworzono jeszcze playlist"
   },
+  "favorites": {
+    "headline": "Ulubione",
+    "songCount_one": "{{count}} utwór",
+    "songCount_other": "{{count}} utworów",
+    "duration": "~ {{duration}}",
+    "noSongs": "Brak ulubionych utworów!",
+    "buttons": {
+      "play": "Odtwórz {{name}}",
+      "shuffle": "Odtwórz {{name}} losowo"
+    }
+  },
   "playlist": {
     "headline": "Playlista",
     "songCount_one": "{{count}} piosenka",

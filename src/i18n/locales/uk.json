@@ -20,6 +20,17 @@
     "beta": "Beta",
     "hideDetails": "Приховати деталі"
   },
+  "favorites": {
+    "headline": "Улюблене",
+    "songCount_one": "{{count}} пісня",
+    "songCount_other": "{{count}} пісень",
+    "duration": "~ {{duration}}",
+    "noSongs": "Поки немає улюблених пісень!",
+    "buttons": {
+      "play": "Відтворити {{name}}",
+      "shuffle": "Відтворити {{name}} в випадковому порядку"
+    }
+  },
   "playlist": {
     "headline": "Список відтворення",
     "refresh": "Оновити список відтворення",

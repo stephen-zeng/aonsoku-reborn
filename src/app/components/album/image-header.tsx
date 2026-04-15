@@ -1,6 +1,6 @@
 import randomCSSHexColor from "@chriscodesthings/random-css-hex-color";
 import clsx from "clsx";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { getCoverArtUrl } from "@/api/httpClient";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { AlbumHeaderFallback } from "@/app/components/fallbacks/album-fallbacks";
@@ -16,7 +16,7 @@ import { ImageHeaderEffect } from "./header-effect";
 import { IMAGE_HEADER_MAIN_GRADIENT } from "./image-header-gradients";
 
 interface HeaderSubtitleSectionProps {
-  isPlaylist: boolean;
+  showSimpleSubtitle: boolean;
   artists?: IFeaturedArtist[];
   subtitle?: string;
   artistId?: string;
@@ -25,7 +25,7 @@ interface HeaderSubtitleSectionProps {
 }
 
 function HeaderSubtitleSection({
-  isPlaylist,
+  showSimpleSubtitle,
   artists,
   subtitle,
   artistId,
@@ -36,14 +36,14 @@ function HeaderSubtitleSection({
 
   return (
     <div className={className}>
-      {!isPlaylist && artists && hasMultipleArtists && (
+      {!showSimpleSubtitle && artists && hasMultipleArtists && (
         <div className="flex flex-wrap items-center justify-center md:justify-start mt-1 md:mt-2">
           <AlbumMultipleArtistsInfo artists={artists} />
           <HeaderInfoGenerator badges={badges} />
         </div>
       )}
 
-      {!isPlaylist && subtitle && !hasMultipleArtists && (
+      {!showSimpleSubtitle && subtitle && !hasMultipleArtists && (
         <>
           {artistId ? (
             <div className="flex flex-wrap items-center justify-center md:justify-start mt-1 md:mt-2">
@@ -58,7 +58,7 @@ function HeaderSubtitleSection({
         </>
       )}
 
-      {isPlaylist && subtitle && (
+      {showSimpleSubtitle && subtitle && (
         <>
           <p className="text-xs md:text-sm opacity-80 drop-shadow line-clamp-2 mt-1 mb-1 md:mb-2">
             {subtitle}
@@ -89,6 +89,8 @@ interface ImageHeaderProps {
   badges: BadgesData;
   secondaryBadges?: BadgesData;
   isPlaylist?: boolean;
+  showSimpleSubtitle?: boolean;
+  customIcon?: ReactNode;
 }
 
 export default function ImageHeader({
@@ -104,12 +106,18 @@ export default function ImageHeader({
   badges,
   secondaryBadges,
   isPlaylist = false,
+  showSimpleSubtitle,
+  customIcon,
 }: ImageHeaderProps) {
-  const [loaded, setLoaded] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [bgColor, setBgColor] = useState("");
+  const simpleSubtitle = showSimpleSubtitle ?? isPlaylist;
 
-  const lightboxSrc = getCoverArtUrl(coverArtId, coverArtType, "700");
+  const [loaded, setLoaded] = useState(!!customIcon);
+  const [open, setOpen] = useState(false);
+  const [bgColor, setBgColor] = useState(customIcon ? "var(--background)" : "");
+
+  const lightboxSrc = !customIcon
+    ? getCoverArtUrl(coverArtId, coverArtType, "700")
+    : "";
 
   function getImage() {
     return document.getElementById("cover-art-image") as HTMLImageElement;
@@ -143,8 +151,10 @@ export default function ImageHeader({
   }
 
   const hasMultipleArtists = artists ? artists.length > 1 : false;
-  const showArtistAboveCover =
-    !isPlaylist && (hasMultipleArtists || (subtitle && artistId));
+  const showArtistAboveCover = !!(
+    !simpleSubtitle &&
+    (hasMultipleArtists || (subtitle && artistId))
+  );
   const showMobileSubtitle = !showArtistAboveCover && !!subtitle;
   const allBadges: BadgesData = secondaryBadges
     ? [...badges, ...secondaryBadges]
@@ -190,25 +200,31 @@ export default function ImageHeader({
                 "2xl:w-[250px] 2xl:h-[250px] 2xl:min-w-[250px] 2xl:min-h-[250px]",
                 "bg-skeleton aspect-square bg-cover bg-center rounded",
                 "shadow-header-image overflow-hidden",
-                "hover:scale-[1.02] ease-linear duration-100",
+                !customIcon && "hover:scale-[1.02] ease-linear duration-100",
               )}
             >
-              <CachedImage
-                key={coverArtId}
-                effect="opacity"
-                crossOrigin="anonymous"
-                id="cover-art-image"
-                coverArtId={coverArtId}
-                coverArtType={coverArtType}
-                coverArtSize={coverArtSize}
-                alt={coverArtAlt}
-                className="aspect-square object-cover w-full h-full cursor-pointer"
-                width="100%"
-                height="100%"
-                onLoad={handleLoadImage}
-                onError={handleError}
-                onClick={() => setOpen(true)}
-              />
+              {customIcon ? (
+                <div className="flex items-center justify-center w-full h-full text-foreground/80">
+                  {customIcon}
+                </div>
+              ) : (
+                <CachedImage
+                  key={coverArtId}
+                  effect="opacity"
+                  crossOrigin="anonymous"
+                  id="cover-art-image"
+                  coverArtId={coverArtId}
+                  coverArtType={coverArtType}
+                  coverArtSize={coverArtSize}
+                  alt={coverArtAlt}
+                  className="aspect-square object-cover w-full h-full cursor-pointer"
+                  width="100%"
+                  height="100%"
+                  onLoad={handleLoadImage}
+                  onError={handleError}
+                  onClick={() => setOpen(true)}
+                />
+              )}
             </div>
 
             <div className="flex w-full items-center flex-col md:items-start md:max-w-[calc(100%-216px)] 2xl:max-w-[calc(100%-266px)] md:justify-end z-10">
@@ -226,7 +242,7 @@ export default function ImageHeader({
               </h1>
 
               <HeaderSubtitleSection
-                isPlaylist={isPlaylist}
+                showSimpleSubtitle={simpleSubtitle}
                 artists={artists}
                 subtitle={subtitle}
                 artistId={artistId}
@@ -237,11 +253,11 @@ export default function ImageHeader({
           </div>
 
           <div className="md:hidden flex flex-col items-center">
-            {!isPlaylist && subtitle && !showArtistAboveCover && (
+            {!simpleSubtitle && subtitle && !showArtistAboveCover && (
               <p className="opacity-80 text-xs font-medium mb-1">{subtitle}</p>
             )}
 
-            {isPlaylist && subtitle && (
+            {simpleSubtitle && subtitle && (
               <p className="text-xs opacity-80 drop-shadow line-clamp-2 mt-1 mb-1">
                 {subtitle}
               </p>
@@ -265,12 +281,14 @@ export default function ImageHeader({
         )}
       </div>
 
-      <CustomLightBox
-        open={open}
-        close={setOpen}
-        src={lightboxSrc}
-        alt={coverArtAlt}
-      />
+      {!customIcon && (
+        <CustomLightBox
+          open={open}
+          close={setOpen}
+          src={lightboxSrc}
+          alt={coverArtAlt}
+        />
+      )}
     </div>
   );
 }

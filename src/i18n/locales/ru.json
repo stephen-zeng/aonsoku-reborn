@@ -187,6 +187,17 @@
       "connecting": "Подключение…"
     }
   },
+  "favorites": {
+    "headline": "Избранное",
+    "songCount_one": "{{count}} песня",
+    "songCount_other": "{{count}} песен",
+    "duration": "~ {{duration}}",
+    "noSongs": "Пока нет избранных песен!",
+    "buttons": {
+      "play": "Воспроизвести {{name}}",
+      "shuffle": "Воспроизвести {{name}} в случайном порядке"
+    }
+  },
   "playlist": {
     "duration": "около {{duration}}",
     "refresh": "Обновить плейлисты",

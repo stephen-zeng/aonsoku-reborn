@@ -62,6 +62,17 @@
     "vue-dark": "Vue Dark",
     "vim-dark-soft": "Vim Dark Soft"
   },
+  "favorites": {
+    "headline": "Favoriler",
+    "songCount_one": "{{count}} şarkı",
+    "songCount_other": "{{count}} şarkı",
+    "duration": "~ {{duration}}",
+    "noSongs": "Henüz favori şarkı yok!",
+    "buttons": {
+      "play": "{{name}} Çal",
+      "shuffle": "{{name}} Karışık çal"
+    }
+  },
   "playlist": {
     "headline": "Çalma Listesi",
     "songCount_one": "{{count}} şarkı",

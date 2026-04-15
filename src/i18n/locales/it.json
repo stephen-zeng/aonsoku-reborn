@@ -17,6 +17,17 @@
     "artists": "Artisti",
     "playlists": "Playlist"
   },
+  "favorites": {
+    "headline": "Preferiti",
+    "songCount_one": "{{count}} canzone",
+    "songCount_other": "{{count}} canzoni",
+    "duration": "~ {{duration}}",
+    "noSongs": "Nessuna canzone preferita!",
+    "buttons": {
+      "play": "Riproduci {{name}}",
+      "shuffle": "Riproduci {{name}} in ordine casuale"
+    }
+  },
   "playlist": {
     "form": {
       "labels": {

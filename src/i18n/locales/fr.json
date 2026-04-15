@@ -1,4 +1,15 @@
 {
+  "favorites": {
+    "headline": "Favoris",
+    "songCount_one": "{{count}} chanson",
+    "songCount_other": "{{count}} chansons",
+    "duration": "~ {{duration}}",
+    "noSongs": "Pas encore de chansons favorites !",
+    "buttons": {
+      "play": "Lire {{name}}",
+      "shuffle": "Lire {{name}} en aléatoire"
+    }
+  },
   "playlist": {
     "duration": "environ {{duration}}",
     "buttons": {

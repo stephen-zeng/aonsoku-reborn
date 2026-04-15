@@ -254,6 +254,17 @@
       }
     }
   },
+  "favorites": {
+    "headline": "Favoritos",
+    "songCount_one": "{{count}} música",
+    "songCount_other": "{{count}} músicas",
+    "duration": "~ {{duration}}",
+    "noSongs": "Ainda não há músicas favoritas!",
+    "buttons": {
+      "play": "Reproduzir {{name}}",
+      "shuffle": "Reproduzir {{name}} em ordem aleatória"
+    }
+  },
   "playlist": {
     "headline": "Playlist",
     "songCount_one": "{{count}} música",

@@ -66,6 +66,17 @@
     "vue-dark": "Vue Dark",
     "vim-dark-soft": "Vim Dark Soft"
   },
+  "favorites": {
+    "headline": "Favorites",
+    "songCount_one": "{{count}} song",
+    "songCount_other": "{{count}} songs",
+    "duration": "~ {{duration}}",
+    "noSongs": "No favorite songs yet!",
+    "buttons": {
+      "play": "Play {{name}}",
+      "shuffle": "Play {{name}} in shuffle mode"
+    }
+  },
   "playlist": {
     "headline": "Playlist",
     "songCount_one": "{{count}} song",

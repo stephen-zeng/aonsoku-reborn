@@ -66,6 +66,16 @@
     "dracula": "Dracula",
     "tinacious-design": "Tinacious Design"
   },
+  "favorites": {
+    "headline": "收藏夹",
+    "songCount": "{{count}} 首歌曲",
+    "duration": "约 {{duration}}",
+    "noSongs": "还没有收藏的歌曲！",
+    "buttons": {
+      "play": "播放{{name}}",
+      "shuffle": "随机播放{{name}}"
+    }
+  },
   "playlist": {
     "headline": "播放列表",
     "duration": "约 {{duration}}",
