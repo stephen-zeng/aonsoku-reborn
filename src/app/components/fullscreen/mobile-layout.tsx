@@ -134,9 +134,10 @@ export const MobileLayout = memo(function MobileLayout() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={VIEW_TRANSITION}
-              className="flex flex-col items-center overflow-hidden pt-2 flex-1 min-h-0"
+              className="flex flex-col items-center overflow-hidden min-h-0 flex-1"
             >
               <ArtworkWithInfo />
+              <FullscreenControlPanel expanded />
             </motion.div>
           )}
 
@@ -173,7 +174,6 @@ export const MobileLayout = memo(function MobileLayout() {
         </AnimatePresence>
       </div>
 
-      <FullscreenControlPanel />
       <MobileBottomTabs />
     </div>
   );

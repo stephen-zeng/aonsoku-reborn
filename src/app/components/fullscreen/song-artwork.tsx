@@ -10,7 +10,7 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork() {
   );
 
   return (
-    <div className="w-full flex items-center justify-center">
+    <div className="w-full flex items-center justify-center min-h-0 max-h-full">
       <AnimatePresence mode="wait">
         <motion.div
           key={id ?? "no-song"}
@@ -18,7 +18,7 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork() {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 1.05 }}
           transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-          className={`w-full ${CONTENT_MAX_WIDTH} aspect-square`}
+          className={`w-full ${CONTENT_MAX_WIDTH} aspect-square max-h-full`}
         >
           <CachedImage
             coverArtId={coverArt}

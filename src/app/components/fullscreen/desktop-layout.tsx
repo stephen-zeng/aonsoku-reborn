@@ -38,14 +38,15 @@ export const DesktopLayout = memo(function DesktopLayout() {
   return (
     <div className="flex h-full w-full overflow-hidden">
       <div
-        className={`flex flex-col h-full shrink-0 px-8 sm:px-12 pt-6 pb-4 justify-between transition-[width] duration-300 ${rightPanelView ? "w-1/2" : "w-full"}`}
+        className={`flex flex-col h-full shrink-0 px-8 sm:px-12 pt-6 pb-4 transition-[width] duration-300 ${rightPanelView ? "w-1/2" : "w-full"}`}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <Button
             variant="ghost"
             size="icon"
             className="size-10 rounded-full hover:bg-foreground/20"
             onClick={() => closeFullscreenPlayer()}
+            aria-label="Close"
           >
             <ChevronDown className="size-5" />
           </Button>
@@ -57,6 +58,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
                 size="icon"
                 className="size-10 rounded-full hover:bg-foreground/20"
                 onClick={handleQueueClick}
+                aria-label={t("fullscreen.queue")}
               >
                 <ListMusic className="size-4" />
               </Button>
@@ -66,6 +68,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
                 className={`size-10 rounded-full hover:bg-foreground/20 ${lyricsDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
                 onClick={handleLyricsClick}
                 disabled={lyricsDisabled}
+                aria-label={t("fullscreen.lyrics")}
               >
                 <MicVocalIcon className="size-4" />
               </Button>
@@ -74,15 +77,16 @@ export const DesktopLayout = memo(function DesktopLayout() {
           <FullscreenSettings />
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center min-h-0 py-4">
-          <ArtworkWithInfo />
+        <div className="flex-1 flex flex-col items-center justify-center min-h-0">
+          <div className="flex flex-col items-center w-full max-h-full overflow-y-hidden">
+            <ArtworkWithInfo className="flex-1 min-h-0" />
+            <FullscreenControlPanel />
+          </div>
         </div>
-
-        <FullscreenControlPanel />
       </div>
 
       <div
-        className={`shrink-0 flex flex-col h-full border-l border-foreground/10 bg-black/5 overflow-hidden transition-[width] duration-300 ${rightPanelView ? "w-1/2" : "w-0"}`}
+        className={`shrink-0 flex flex-col h-full bg-black/5 overflow-hidden transition-[width] duration-300 ${rightPanelView ? "w-1/2 border-l border-foreground/10" : "w-0"}`}
         style={
           { "--queue-bg-overlay": "rgba(0, 0, 0, 0.05)" } as React.CSSProperties
         }

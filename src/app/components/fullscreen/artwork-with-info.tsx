@@ -1,12 +1,19 @@
+import { clsx } from "clsx";
 import { memo } from "react";
 import { CONTENT_MAX_WIDTH } from "./constants";
 import { LikeButton } from "./like-button";
 import { FullscreenSongArtwork } from "./song-artwork";
 import { AlbumName, SongInfo } from "./song-info";
 
-export const ArtworkWithInfo = memo(function ArtworkWithInfo() {
+export const ArtworkWithInfo = memo(function ArtworkWithInfo({
+  className,
+}: {
+  className?: string;
+}) {
   return (
-    <div className="w-full flex flex-col items-center">
+    <div
+      className={clsx("w-full flex flex-col items-center min-h-0", className)}
+    >
       <div className={`w-full ${CONTENT_MAX_WIDTH} pb-3`}>
         <AlbumName />
       </div>
