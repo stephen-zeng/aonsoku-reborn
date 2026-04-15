@@ -11,6 +11,7 @@ import { FullscreenControlPanel } from "./control-panel";
 import { LyricsTab } from "./lyrics";
 import { FullscreenSongQueue } from "./queue";
 import { FullscreenSettings } from "./settings";
+import { FULLSCREEN_QUEUE_BG_CLASS } from "./constants";
 
 const MemoLyricsTab = memo(LyricsTab);
 
@@ -94,15 +95,8 @@ export const DesktopLayout = memo(function DesktopLayout() {
               className={cn(
                 "gap-1.5",
                 rightPanelView === "queue" && "rounded-md",
+                rightPanelView === "queue" && FULLSCREEN_QUEUE_BG_CLASS,
               )}
-              style={
-                rightPanelView === "queue"
-                  ? {
-                      background:
-                        "linear-gradient(var(--queue-bg-overlay, transparent), var(--queue-bg-overlay, transparent)), linear-gradient(var(--fullscreen-backdrop-bg, transparent), var(--fullscreen-backdrop-bg, transparent)), hsl(var(--background))",
-                    }
-                  : undefined
-              }
               onClick={handleQueueClick}
             >
               <ListMusic className="size-4" />
@@ -115,15 +109,8 @@ export const DesktopLayout = memo(function DesktopLayout() {
                 "gap-1.5",
                 lyricsDisabled && "opacity-50 cursor-not-allowed",
                 rightPanelView === "lyrics" && "rounded-md",
+                rightPanelView === "lyrics" && FULLSCREEN_QUEUE_BG_CLASS,
               )}
-              style={
-                rightPanelView === "lyrics"
-                  ? {
-                      background:
-                        "linear-gradient(var(--queue-bg-overlay, transparent), var(--queue-bg-overlay, transparent)), linear-gradient(var(--fullscreen-backdrop-bg, transparent), var(--fullscreen-backdrop-bg, transparent)), hsl(var(--background))",
-                    }
-                  : undefined
-              }
               onClick={handleLyricsClick}
               disabled={lyricsDisabled}
             >

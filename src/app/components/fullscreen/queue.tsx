@@ -33,6 +33,7 @@ import {
 } from "@/store/player.store";
 import type { ISong } from "@/types/responses/song";
 import { QueueCurrentSong, QueueModeButtons } from "./queue-current-song";
+import { FULLSCREEN_QUEUE_BG_CLASS } from "./constants";
 
 /**
  * Scrolls the queue so that the current song element sits at the very top
@@ -238,17 +239,11 @@ function UnifiedQueueView({
     const song = upcoming.find((s) => s.id === event.active.id);
     setActiveItem(song ?? null);
 
-    const el = scrollContainerRef.current;
+    const el = scrollContainerRef.current?.querySelector<HTMLDivElement>(
+      `.${FULLSCREEN_QUEUE_BG_CLASS}`,
+    );
     if (el) {
-      const computed = getComputedStyle(el);
-      const backdrop = computed
-        .getPropertyValue("--fullscreen-backdrop-bg")
-        .trim();
-      const overlay = computed.getPropertyValue("--queue-bg-overlay").trim();
-      const bg = computed.backgroundColor;
-      setDragOverlayBg(
-        `linear-gradient(${overlay || "transparent"}, ${overlay || "transparent"}), linear-gradient(${backdrop || "transparent"}, ${backdrop || "transparent"}), ${bg}`,
-      );
+      setDragOverlayBg(getComputedStyle(el).background);
     }
   }
 
@@ -275,7 +270,7 @@ function UnifiedQueueView({
       ref={scrollContainerRef}
     >
       {history.length > 0 && (
-        <div className="shrink-0">
+        <div className={`shrink-0 ${FULLSCREEN_QUEUE_BG_CLASS}`}>
           <div className="flex items-center justify-between px-2 py-1">
             <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
               {t("fullscreen.queueHistory")}
@@ -304,7 +299,10 @@ function UnifiedQueueView({
         </div>
       )}
 
-      <div ref={currentSongRef} className="shrink-0 px-2 pt-2 pb-1">
+      <div
+        ref={currentSongRef}
+        className={`shrink-0 px-2 pt-2 pb-1 ${FULLSCREEN_QUEUE_BG_CLASS}`}
+      >
         <QueueCurrentSong />
       </div>
 
@@ -318,39 +316,38 @@ function UnifiedQueueView({
           items={sortableItems}
           strategy={verticalListSortingStrategy}
         >
-          <div
-            className="sticky top-0 z-10 px-2 pt-1 pb-1"
-            style={{
-              background:
-                "linear-gradient(var(--queue-bg-overlay, transparent), var(--queue-bg-overlay, transparent)), linear-gradient(var(--fullscreen-backdrop-bg, transparent), var(--fullscreen-backdrop-bg, transparent)), hsl(var(--background))",
-            }}
-          >
-            {!hideModeButtons && <QueueModeButtons />}
-            <div
-              className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
-            >
-              <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
-                {t("fullscreen.queueContinue")}
-              </h3>
+          {/* Wrapper provides the composite background so the sticky header
+              blends seamlessly with the content below it. Without this, a
+              white/uncolored strip appears at the header edges on scroll. */}
+          <div className={FULLSCREEN_QUEUE_BG_CLASS}>
+            <div className="sticky top-0 z-10 px-2 pt-1 pb-1">
+              {!hideModeButtons && <QueueModeButtons />}
+              <div
+                className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
+              >
+                <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
+                  {t("fullscreen.queueContinue")}
+                </h3>
+              </div>
+              {queueSource && (
+                <p className="text-xs text-foreground/50 px-2 pb-1 truncate">
+                  {t("fullscreen.queueFromSource", { source: queueSource })}
+                </p>
+              )}
             </div>
-            {queueSource && (
-              <p className="text-xs text-foreground/50 px-2 pb-1 truncate">
-                {t("fullscreen.queueFromSource", { source: queueSource })}
-              </p>
-            )}
+            {upcoming.map((song, idx) => {
+              const globalIndex = currentSongIndex + 1 + idx;
+              const isActive = currentSong.id === song.id;
+              return (
+                <SortableUpcomingRow
+                  key={song.id}
+                  song={song}
+                  isActive={isActive}
+                  onClick={() => setSongList(currentList, globalIndex)}
+                />
+              );
+            })}
           </div>
-          {upcoming.map((song, idx) => {
-            const globalIndex = currentSongIndex + 1 + idx;
-            const isActive = currentSong.id === song.id;
-            return (
-              <SortableUpcomingRow
-                key={song.id}
-                song={song}
-                isActive={isActive}
-                onClick={() => setSongList(currentList, globalIndex)}
-              />
-            );
-          })}
         </SortableContext>
         {createPortal(
           <DragOverlay>

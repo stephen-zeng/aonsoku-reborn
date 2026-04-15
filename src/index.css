@@ -60,6 +60,19 @@
     }
   }
 
+  /* Fullscreen player queue background — composites queue overlay + backdrop + base background */
+  .fullscreen-queue-bg {
+    background: linear-gradient(
+        var(--queue-bg-overlay, transparent),
+        var(--queue-bg-overlay, transparent)
+      ),
+      linear-gradient(
+        var(--fullscreen-backdrop-bg, transparent),
+        var(--fullscreen-backdrop-bg, transparent)
+      ),
+      hsl(var(--background));
+  }
+
   /* Resize drag: lock cursor and suppress transitions */
   body.is-resizing {
     cursor: col-resize !important;
