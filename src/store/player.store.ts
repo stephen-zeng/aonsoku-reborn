@@ -503,12 +503,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.songlist.currentList = newCurrentList;
                   state.songlist.originalList = newOriginalList;
                 });
-
-                const { isPlaying } = get().playerState;
-
-                if (!isPlaying) {
-                  get().actions.setPlayingState(true);
-                }
               },
               setLastOnQueue: (list, sourceId) => {
                 if (isRemoteActive()) {
@@ -546,12 +540,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.songlist.currentList = newCurrentList;
                   state.songlist.originalList = newOriginalList;
                 });
-
-                const { isPlaying } = get().playerState;
-
-                if (!isPlaying) {
-                  get().actions.setPlayingState(true);
-                }
               },
               setPlayRadio: (list, index) => {
                 if (isRemoteActive()) return;

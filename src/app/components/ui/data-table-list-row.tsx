@@ -51,13 +51,14 @@ export function TableListRow<TData>({
   function handleTouchEnd(e: TouchEvent<HTMLDivElement>) {
     clearTimeout(tapTimeout);
     if (isTap) {
-      // Check if the touch target is within a button or interactive element
+      // Check if the touch target is within a button, interactive element, or menu
       const target = e.target as HTMLElement;
       const isButton = target.closest("button");
       const isInteractive = target.closest('[role="button"]');
+      const isMenuContent = target.closest("[data-radix-menu-content]");
 
-      // Don't trigger the row tap if touching a button or interactive element
-      if (!isButton && !isInteractive) {
+      // Don't trigger the row tap if touching a button, interactive element, or menu
+      if (!isButton && !isInteractive && !isMenuContent) {
         handleRowTap(e, row);
       }
     }

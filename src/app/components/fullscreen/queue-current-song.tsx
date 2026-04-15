@@ -52,6 +52,7 @@ export const QueueCurrentSong = memo(function QueueCurrentSong() {
               variant="ghost"
               size="icon"
               className="shrink-0 size-8 rounded-full"
+              onClick={(e) => e.stopPropagation()}
             >
               <EllipsisVertical className="w-4 h-4" />
             </Button>
