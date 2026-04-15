@@ -20,8 +20,9 @@ import { ISong } from "@/types/responses/song";
 import { areSongListsEqual } from "@/utils/compareSongLists";
 import { isDesktop } from "@/utils/desktop";
 import { discordRpc } from "@/utils/discordRpc";
+import debounce from "lodash/debounce";
 import { addNextSongList, shuffleSongList } from "@/utils/songListFunctions";
-import { idbStorage } from "./idb";
+import { get as idbGet, set as idbSet } from "idb-keyval";
 
 const miniStores = {
   songlist: "player_songlist",
@@ -1265,19 +1266,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
         name: "player_store",
         version: 1,
         merge: (persistedState, currentState) => {
-          let merged = merge(currentState, persistedState);
-
-          idbStorage.getItem<ISongList>(miniStores.songlist, (value) => {
-            if (!value) return;
-
-            const newState = {
-              songlist: value,
-            };
-
-            merged = merge(merged, newState);
-          });
-
-          return merged;
+          return merge(currentState, persistedState);
         },
         partialize: (state) => {
           const appStore = omit(state, [
@@ -1297,21 +1286,54 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
 
           return appStore;
         },
+        onRehydrateStorage: () => {
+          return (_state, error) => {
+            if (error) {
+              songlistHydrated.value = true;
+              return;
+            }
+            idbGet<ISongList>(miniStores.songlist)
+              .then((value) => {
+                if (value) {
+                  const current = usePlayerStore.getState().songlist;
+                  if (
+                    current.currentList.length === 0 &&
+                    current.originalList.length === 0
+                  ) {
+                    usePlayerStore.setState({
+                      songlist: value,
+                    });
+                  }
+                }
+              })
+              .catch(() => {})
+              .finally(() => {
+                songlistHydrated.value = true;
+              });
+          };
+        },
       },
     ),
   ),
   shallow,
 );
 
+const songlistHydrated = { value: false };
+
 usePlayerStore.subscribe(
   (state) => [state.songlist],
   ([songlist]) => {
-    idbStorage.setItem(miniStores.songlist, songlist);
+    if (!songlistHydrated.value) return;
+    debouncedIdbSonglistWrite(songlist);
   },
   {
     equalityFn: shallow,
   },
 );
+
+const debouncedIdbSonglistWrite = debounce((songlist: ISongList) => {
+  idbSet(miniStores.songlist, songlist);
+}, 300);
 
 usePlayerStore.subscribe(
   (state) => [state.songlist.currentList, state.songlist.currentSongIndex],

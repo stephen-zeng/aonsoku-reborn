@@ -5,7 +5,7 @@ import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
 import type { IPlayHistoryContext } from "@/types/playHistory";
 import type { ISong } from "@/types/responses/song";
-import { idbStorage } from "./idb";
+import { createIdbStorage } from "./idb";
 
 const IDB_KEY = "player_history";
 
@@ -53,7 +53,7 @@ export const usePlayHistoryStore = createWithEqualityFn<IPlayHistoryContext>()(
     {
       name: IDB_KEY,
       version: 1,
-      storage: idbStorage,
+      storage: createIdbStorage<IPlayHistoryContext>(),
       merge: (persistedState, currentState) =>
         merge(currentState, persistedState),
       partialize: (state) => ({
