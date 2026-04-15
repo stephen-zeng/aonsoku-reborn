@@ -1,10 +1,5 @@
 import clsx from "clsx";
-import {
-  type ComponentPropsWithoutRef,
-  type MouseEvent,
-  type RefAttributes,
-  type TouchEvent,
-} from "react";
+import { type ComponentPropsWithoutRef, type RefAttributes } from "react";
 import { Link, LinkProps } from "react-router-dom";
 import { Dot } from "@/app/components/dot";
 import { cn } from "@/lib/utils";
@@ -18,36 +13,20 @@ export type LinkWithoutTo = Omit<LinkProps, "to"> &
 type ArtistLinkProps = LinkWithoutTo & {
   artistId?: string;
   disableNavigation?: boolean;
-  suppressInteraction?: boolean;
 };
 
 export function ArtistLink({
   artistId,
   className,
   disableNavigation = false,
-  suppressInteraction = false,
   onContextMenu,
   ...props
 }: ArtistLinkProps) {
   if (disableNavigation || !artistId) {
     const spanProps = props as unknown as ComponentPropsWithoutRef<"span">;
-    const { onClick, onTouchEnd, ...restSpanProps } = spanProps;
 
     return (
-      <span
-        className={cn("truncate", className)}
-        {...restSpanProps}
-        onClick={(e) => {
-          if (suppressInteraction) {
-            e.stopPropagation();
-          }
-
-          onClick?.(e as MouseEvent<HTMLSpanElement>);
-        }}
-        onTouchEnd={(e) => {
-          onTouchEnd?.(e as TouchEvent<HTMLSpanElement>);
-        }}
-      >
+      <span className={cn("truncate", className)} {...spanProps}>
         {props.children}
       </span>
     );
@@ -71,7 +50,6 @@ type ArtistsLinksProps = {
   artists: IFeaturedArtist[];
   onClickLink?: () => void;
   disableNavigation?: boolean;
-  suppressInteraction?: boolean;
   className?: string;
   linkClassName?: string;
   linkTestId?: string;
@@ -81,7 +59,6 @@ export function ArtistsLinks({
   artists,
   onClickLink,
   disableNavigation = false,
-  suppressInteraction = false,
   className,
   linkClassName,
   linkTestId,
@@ -107,7 +84,6 @@ export function ArtistsLinks({
           <ArtistLink
             artistId={id}
             disableNavigation={disableNavigation}
-            suppressInteraction={suppressInteraction}
             className={linkClassName}
             data-testid={linkTestId}
             title={showTitle(index, name)}

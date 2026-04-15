@@ -1,4 +1,3 @@
-import { type MouseEvent, type TouchEvent } from "react";
 import { ArtistLink, ArtistsLinks } from "@/app/components/song/artist-link";
 import { CoverImage } from "@/app/components/table/cover-image";
 import { cn } from "@/lib/utils";
@@ -18,12 +17,6 @@ export function TableSongTitle({
 
   function handleArtistLinkClick() {
     if (mainDrawerState) closeDrawer();
-  }
-
-  function stopTextInteraction(
-    e: MouseEvent<HTMLElement> | TouchEvent<HTMLElement>,
-  ) {
-    e.stopPropagation();
   }
 
   return (
@@ -47,9 +40,7 @@ export function TableSongTitle({
                   e.stopPropagation();
                   onPlay();
                 }
-              : disableTextNavigation
-                ? stopTextInteraction
-                : undefined
+              : undefined
           }
           onTouchEnd={undefined}
         >
@@ -86,7 +77,6 @@ export function TableArtists({
         artists={artists}
         disableNavigation={disableTextNavigation}
         onClickLink={onClickLink}
-        suppressInteraction={disableTextNavigation}
         className="w-full gap-1 text-xs text-foreground/70 maskImage-marquee-fade-finished"
         linkClassName="text-xs text-foreground/70 text-nowrap"
         linkTestId="track-artist-url"
@@ -104,7 +94,6 @@ export function TableArtists({
     <ArtistLink
       artistId={artistId}
       disableNavigation={disableTextNavigation}
-      suppressInteraction={disableTextNavigation}
       className="text-xs text-foreground/70 text-nowrap"
       data-testid="track-artist-url"
       onClick={onClickLink}

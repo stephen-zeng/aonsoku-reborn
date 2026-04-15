@@ -150,6 +150,13 @@ export function songsColumns({
         </MemoDataTableColumnHeader>
       ),
       cell: ({ row }) => {
+        if (disableTextNavigation) {
+          return (
+            <span className="truncate text-foreground/70">
+              {row.original.album}
+            </span>
+          );
+        }
         return (
           <MemoLink
             to={ROUTES.ALBUM.PAGE(row.original.albumId)}

@@ -59,9 +59,9 @@ export function SongListLayout({
   const columns = useMemo(
     () =>
       songsColumns({
-        disableTextNavigation: isMobile,
+        disableTextNavigation: true,
       }),
-    [isMobile],
+    [],
   );
   const columnsToShow = isMobile ? COLUMNS_MOBILE : COLUMNS_DESKTOP;
 

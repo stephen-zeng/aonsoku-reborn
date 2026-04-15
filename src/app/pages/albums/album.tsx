@@ -34,9 +34,9 @@ export default function Album() {
   const columns = useMemo(
     () =>
       songsColumns({
-        disableTextNavigation: isMobile,
+        disableTextNavigation: true,
       }),
-    [isMobile],
+    [],
   );
 
   const {

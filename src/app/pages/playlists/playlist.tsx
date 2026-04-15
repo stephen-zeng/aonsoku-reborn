@@ -25,9 +25,9 @@ export default function Playlist() {
   const columns = useMemo(
     () =>
       songsColumns({
-        disableTextNavigation: isMobile,
+        disableTextNavigation: true,
       }),
-    [isMobile],
+    [],
   );
   const { setSongList } = usePlayerActions();
 
