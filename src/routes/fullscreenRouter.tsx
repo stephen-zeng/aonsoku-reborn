@@ -22,13 +22,22 @@ type FullscreenHistoryState = {
   closeSteps: 1 | 2;
 };
 
-let _navigate: NavigateFunction | null = null;
-let _isMobile = false;
-let _currentSearchParams: URLSearchParams = new URLSearchParams();
-let _currentLocationState: unknown = null;
+type FullscreenNavState = {
+  navigate: NavigateFunction | null;
+  isMobile: boolean;
+  searchParams: URLSearchParams;
+  locationState: unknown;
+};
+
+const navState: FullscreenNavState = {
+  navigate: null,
+  isMobile: false,
+  searchParams: new URLSearchParams(),
+  locationState: null,
+};
 
 export function setFullscreenNavigator(navigate: NavigateFunction | null) {
-  _navigate = navigate;
+  navState.navigate = navigate;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -48,17 +57,17 @@ function isFullscreenHistoryState(
 }
 
 function getFullscreenHistoryState(): FullscreenHistoryState | null {
-  if (!isRecord(_currentLocationState)) return null;
+  if (!isRecord(navState.locationState)) return null;
 
-  const historyState = _currentLocationState[FULLSCREEN_HISTORY_STATE_KEY];
+  const historyState = navState.locationState[FULLSCREEN_HISTORY_STATE_KEY];
   return isFullscreenHistoryState(historyState) ? historyState : null;
 }
 
 function buildNavigationState(
   historyState: FullscreenHistoryState | null,
 ): Record<string, unknown> | undefined {
-  const nextState = isRecord(_currentLocationState)
-    ? { ..._currentLocationState }
+  const nextState = isRecord(navState.locationState)
+    ? { ...navState.locationState }
     : {};
 
   if (historyState) {
@@ -71,7 +80,7 @@ function buildNavigationState(
 }
 
 function buildSearch(playerTab: string | null): string {
-  const params = new URLSearchParams(_currentSearchParams);
+  const params = new URLSearchParams(navState.searchParams);
   if (playerTab) {
     params.set(PLAYER_SEARCH_PARAM, playerTab);
   } else {
@@ -103,7 +112,7 @@ function navigateWithSearch(
     historyState?: FullscreenHistoryState | null;
   },
 ) {
-  _navigate?.(
+  navState.navigate?.(
     { search: buildSearch(playerTab) },
     {
       replace: options?.replace,
@@ -113,7 +122,7 @@ function navigateWithSearch(
 }
 
 export function openFullscreenPlayerWithHistory(tab: FullscreenPlayerTab) {
-  if (!_navigate) return;
+  if (!navState.navigate) return;
 
   const playerStore = usePlayerStore.getState();
   const { fullscreenPlayerOpen } = playerStore.playerState;
@@ -125,7 +134,7 @@ export function openFullscreenPlayerWithHistory(tab: FullscreenPlayerTab) {
 
   playerStore.actions.openFullscreenPlayer(tab);
 
-  if (!_isMobile) {
+  if (!navState.isMobile) {
     navigateWithSearch(tab, { replace: false });
     return;
   }
@@ -151,7 +160,7 @@ export function openFullscreenPlayerWithHistory(tab: FullscreenPlayerTab) {
 }
 
 export function setFullscreenTabWithHistory(tab: FullscreenPlayerTab) {
-  if (!_navigate) return;
+  if (!navState.navigate) return;
 
   const playerStore = usePlayerStore.getState();
   const { fullscreenPlayerTab } = playerStore.playerState;
@@ -159,7 +168,7 @@ export function setFullscreenTabWithHistory(tab: FullscreenPlayerTab) {
 
   playerStore.actions.setFullscreenPlayerTab(tab);
 
-  if (!_isMobile) {
+  if (!navState.isMobile) {
     navigateWithSearch(tab, { replace: true });
     return;
   }
@@ -171,7 +180,7 @@ export function setFullscreenTabWithHistory(tab: FullscreenPlayerTab) {
 
   if (tab === "playing") {
     if (historyState.step === "detail") {
-      _navigate(-1);
+      navState.navigate(-1);
       return;
     }
 
@@ -206,12 +215,12 @@ export function setFullscreenTabWithHistory(tab: FullscreenPlayerTab) {
 }
 
 export function closeFullscreenPlayerWithHistory() {
-  if (!_navigate) return;
+  if (!navState.navigate) return;
 
   const historyState = getFullscreenHistoryState();
 
   if (historyState) {
-    _navigate(-historyState.closeSteps);
+    navState.navigate(-historyState.closeSteps);
     return;
   }
 
@@ -225,9 +234,9 @@ export function FullscreenPlayerRouter() {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    _isMobile = isMobile;
-    _currentSearchParams = new URLSearchParams(searchParams.toString());
-    _currentLocationState = location.state;
+    navState.isMobile = isMobile;
+    navState.searchParams = new URLSearchParams(searchParams.toString());
+    navState.locationState = location.state;
   }, [isMobile, location.state, searchParams]);
 
   useEffect(() => {

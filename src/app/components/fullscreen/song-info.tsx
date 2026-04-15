@@ -19,7 +19,12 @@ export const SongInfo = memo(function SongInfo({
 }: {
   compact?: boolean;
 }) {
-  const currentSong = usePlayerStore((state) => state.songlist.currentSong);
+  const currentSong = usePlayerStore(
+    (state) => state.songlist.currentSong,
+    (a, b) => a.id === b.id,
+  );
+
+  if (!currentSong?.id) return null;
 
   return (
     <div
@@ -79,7 +84,12 @@ export const AlbumName = memo(function AlbumName({
 }: {
   compact?: boolean;
 }) {
-  const currentSong = usePlayerStore((state) => state.songlist.currentSong);
+  const currentSong = usePlayerStore(
+    (state) => state.songlist.currentSong,
+    (a, b) => a.id === b.id,
+  );
+
+  if (!currentSong?.id) return null;
 
   return (
     <AnimatePresence mode="wait">
@@ -107,7 +117,12 @@ export const AlbumName = memo(function AlbumName({
 });
 
 export const CompactSongInfo = memo(function CompactSongInfo() {
-  const currentSong = usePlayerStore((state) => state.songlist.currentSong);
+  const currentSong = usePlayerStore(
+    (state) => state.songlist.currentSong,
+    (a, b) => a.id === b.id,
+  );
+
+  if (!currentSong?.id) return null;
 
   return (
     <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -122,13 +137,16 @@ export const CompactSongInfo = memo(function CompactSongInfo() {
   );
 });
 
-function ArtistNames({ song }: { song: ISong }) {
-  const { artist, artists } = song;
+const ArtistNames = memo(
+  function ArtistNames({ song }: { song: ISong }) {
+    const { artist, artists } = song;
 
-  if (artists && artists.length > 1) {
-    const data = artists.slice(0, ALBUM_ARTISTS_MAX_NUMBER);
-    return <p>{data.map(({ name }) => name).join(", ")}</p>;
-  }
+    if (artists && artists.length > 1) {
+      const data = artists.slice(0, ALBUM_ARTISTS_MAX_NUMBER);
+      return <p>{data.map(({ name }) => name).join(", ")}</p>;
+    }
 
-  return <p>{artist}</p>;
-}
+    return <p>{artist}</p>;
+  },
+  (prev, next) => prev.song.id === next.song.id,
+);

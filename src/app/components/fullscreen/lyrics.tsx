@@ -1,6 +1,6 @@
 import type { LyricLine } from "@applemusic-like-lyrics/core";
 import type { LyricPlayerRef } from "@applemusic-like-lyrics/react";
-import { LyricPlayer } from "@applemusic-like-lyrics/react";
+import { lazy, Suspense } from "react";
 import "@applemusic-like-lyrics/core/style.css";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
@@ -13,7 +13,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { useTranslation } from "react-i18next";
 import {
   ScrollArea,
   scrollAreaViewportSelector,
@@ -33,6 +32,14 @@ import {
   LRC_METADATA_REGEX,
   LRC_TIMESTAMP_REGEX,
 } from "@/utils/lrc-converter";
+import { logger } from "@/utils/logger";
+import { useTranslation } from "react-i18next";
+
+const LyricPlayer = lazy(() =>
+  import("@applemusic-like-lyrics/react").then((m) => ({
+    default: m.LyricPlayer,
+  })),
+);
 
 type ResolvedSynced = {
   type: "synced";
@@ -186,12 +193,14 @@ export function LyricsTab() {
   const { data: lyrics, isLoading: isLoadingLyrics } = useQuery({
     queryKey: ["get-lyrics", artist, title, duration],
     queryFn: () => subsonic.lyrics.getLyrics({ artist, title, duration }),
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: structuredLyrics, isLoading: isLoadingStructured } = useQuery({
     queryKey: ["get-structured-lyrics", songId],
     queryFn: () => subsonic.lyrics.getStructuredLyrics(songId),
     enabled: !!songId,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Resolve the best lyrics source into a render-ready format.
@@ -283,6 +292,7 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
   const playerRef = usePlayerRef();
   const isPlaying = usePlayerIsPlaying();
   const [currentTime, setCurrentTime] = useState(0);
+  const currentTimeRef = useRef(0);
   const [isTouchScrolling, setIsTouchScrolling] = useState(false);
   const animationFrameRef = useRef<number>();
   const isTouchScrollingRef = useRef(false);
@@ -337,7 +347,11 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
 
       playerRef.currentTime = lyricLine.startTime / 1000;
       if (isPlaying) {
-        playerRef.play().catch(() => {});
+        playerRef.play().catch((e) => {
+          if (e.name !== "AbortError") {
+            logger.warn("Lyric seek play failed", e);
+          }
+        });
       }
 
       const player = getInternalLyricPlayer(lyricPlayerRef);
@@ -351,6 +365,7 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
       }
 
       setCurrentTime(lyricLine.startTime);
+      currentTimeRef.current = lyricLine.startTime;
     },
     [isPlaying, lyricLines, playerRef],
   );
@@ -440,7 +455,10 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
 
     const updateTime = () => {
       const timeMs = Math.floor((playerRef.currentTime || 0) * 1000);
-      setCurrentTime((prev) => (prev === timeMs ? prev : timeMs));
+      if (currentTimeRef.current !== timeMs) {
+        currentTimeRef.current = timeMs;
+        setCurrentTime(timeMs);
+      }
 
       const player = getInternalLyricPlayer(lyricPlayerRef);
       if (
@@ -476,27 +494,29 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchCancel}
     >
-      <LyricPlayer
-        ref={lyricPlayerRef}
-        style={{
-          width: "100%",
-          height: "100%",
-          maxWidth: "100%",
-          maxHeight: "100%",
-          contain: "paint layout",
-          overflow: "hidden",
-        }}
-        lyricLines={lyricLines}
-        currentTime={currentTime}
-        alignAnchor="left"
-        enableBlur={!isTouchScrolling}
-        enableSpring={true}
-        onLyricLineClick={(line) => {
-          if (line.lineIndex !== undefined) {
-            seekToLyricLine(line.lineIndex);
-          }
-        }}
-      />
+      <Suspense fallback={null}>
+        <LyricPlayer
+          ref={lyricPlayerRef}
+          style={{
+            width: "100%",
+            height: "100%",
+            maxWidth: "100%",
+            maxHeight: "100%",
+            contain: "paint layout",
+            overflow: "hidden",
+          }}
+          lyricLines={lyricLines}
+          currentTime={currentTime}
+          alignAnchor="left"
+          enableBlur={!isTouchScrolling}
+          enableSpring={true}
+          onLyricLineClick={(line) => {
+            if (line.lineIndex !== undefined) {
+              seekToLyricLine(line.lineIndex);
+            }
+          }}
+        />
+      </Suspense>
     </div>
   );
 }

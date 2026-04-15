@@ -145,7 +145,7 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
         <ProgressSlider
           defaultValue={[0]}
           value={isLocalSeeking ? [localProgress] : [progress]}
-          max={currentDuration}
+          max={currentDuration ?? 0}
           step={1}
           className="cursor-pointer w-[32rem]"
           isBuffering={isBuffering}

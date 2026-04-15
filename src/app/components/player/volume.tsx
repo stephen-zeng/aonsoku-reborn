@@ -1,10 +1,11 @@
 import clsx from "clsx";
-import { ComponentPropsWithoutRef, RefObject, useRef, WheelEvent } from "react";
+import { ComponentPropsWithoutRef, RefObject, WheelEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { VolumeIcon } from "@/app/components/icons/volume-icon";
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { Slider } from "@/app/components/ui/slider";
+import { useMuteToggle } from "@/app/hooks/use-mute-toggle";
 import { usePlayerHotkeys } from "@/app/hooks/use-audio-hotkeys";
 import { cn } from "@/lib/utils";
 import { usePlayerVolume, useVolumeSettings } from "@/store/player.store";
@@ -55,25 +56,11 @@ export function PlayerVolume({ disabled, audioRef }: PlayerVolumeProps) {
 type MuteButtonProps = ComponentPropsWithoutRef<typeof Button>;
 
 export function MuteButton({ className, ...props }: MuteButtonProps) {
-  const { volume, setVolume, handleVolumeWheel } = usePlayerVolume();
-  const lastVolumeRef = useRef<number>(0);
-
-  const isMute = volume === 0;
-
-  function handleMuteClick() {
-    if (!lastVolumeRef) return;
-
-    const lastVolume = lastVolumeRef.current;
-    const volumeSafety = lastVolume >= 1 ? lastVolume : 100;
-    const newVolume = isMute ? volumeSafety : 0;
-
-    lastVolumeRef.current = volume;
-    setVolume(newVolume);
-  }
+  const { handleMuteClick } = useMuteToggle();
+  const { handleVolumeWheel } = usePlayerVolume();
 
   function handleWheel(e: WheelEvent) {
-    const isScrollingDown = e.deltaY > 0;
-    handleVolumeWheel(isScrollingDown);
+    handleVolumeWheel(e.deltaY > 0);
   }
 
   return (
@@ -99,8 +86,7 @@ export function VolumeSlider({
   const { min, max, step } = useVolumeSettings();
 
   function handleWheel(e: WheelEvent) {
-    const isScrollingDown = e.deltaY > 0;
-    handleVolumeWheel(isScrollingDown);
+    handleVolumeWheel(e.deltaY > 0);
   }
 
   return (

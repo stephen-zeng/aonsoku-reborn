@@ -279,7 +279,8 @@
     "queueFromSource": "From {{source}}",
     "playing": "Playing now",
     "lyrics": "Lyrics",
-    "switchButton": "Switch to Big Player"
+    "switchButton": "Switch to Big Player",
+    "emptyQueue": "No songs in queue"
   },
   "logout": {
     "dialog": {
@@ -347,6 +348,9 @@
       },
       "like": "Like {{song}} by {{artist}}",
       "dislike": "Remove like from {{song}} by {{artist}}",
+      "star": "Star current song",
+      "unstar": "Unstar current song",
+      "progress": "Seek",
       "miniPlayer": {
         "open": "Open Miniplayer",
         "close": "Close Miniplayer"

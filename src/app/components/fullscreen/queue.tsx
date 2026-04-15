@@ -126,6 +126,7 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
   const currentList = usePlayerCurrentList();
   const currentSongIndex = usePlayerCurrentSongIndex();
   const currentSong = usePlayerCurrentSong();
+  const { t } = useTranslation();
   const playHistory = usePlayHistory();
   const filteredHistory = useMemo(() => {
     if (playHistory.length > 0 && playHistory[0].id === currentSong.id) {
@@ -143,7 +144,7 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
   if (currentList.length === 0 && filteredHistory.length === 0) {
     return (
       <div className="flex justify-center items-center h-full">
-        <span className="text-foreground/70">No songs in queue</span>
+        <span className="text-foreground/70">{t("fullscreen.emptyQueue")}</span>
       </div>
     );
   }
@@ -304,14 +305,15 @@ function UnifiedQueueView({
               {t("generic.clear")}
             </Button>
           </div>
-          {[...playHistory].reverse().map((song, idx) => {
-            const isActive = false;
+          {playHistory.map((song, idx) => {
+            const displayIdx = playHistory.length - 1 - idx;
+            const displaySong = playHistory[displayIdx];
             return (
               <QueueListRow
-                key={`${song.id}-${idx}`}
-                song={song}
-                isActive={isActive}
-                onClick={() => playSong(song)}
+                key={`${displaySong.id}-${displayIdx}`}
+                song={displaySong}
+                isActive={false}
+                onClick={() => playSong(displaySong)}
               />
             );
           })}

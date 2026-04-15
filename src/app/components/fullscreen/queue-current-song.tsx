@@ -21,7 +21,10 @@ import {
 import { LoopState } from "@/types/playerContext";
 
 export const QueueCurrentSong = memo(function QueueCurrentSong() {
-  const currentSong = usePlayerStore((state) => state.songlist.currentSong);
+  const currentSong = usePlayerStore(
+    (state) => state.songlist.currentSong,
+    (a, b) => a.id === b.id,
+  );
   const coverArtUrl = getCoverArtUrl(currentSong.coverArt, "song", "100");
 
   return (

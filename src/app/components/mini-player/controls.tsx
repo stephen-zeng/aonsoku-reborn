@@ -1,6 +1,6 @@
 import { clsx } from "clsx";
+import { Heart } from "lucide-react";
 import {
-  Heart,
   Pause,
   Play,
   Repeat,
@@ -10,30 +10,27 @@ import {
 } from "lucide-react";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { Button } from "@/app/components/ui/button";
+import { usePlaybackControls } from "@/app/hooks/use-playback-controls";
+import { usePlayerSongStarred } from "@/store/player.store";
 import { cn } from "@/lib/utils";
-import {
-  usePlayerActions,
-  usePlayerIsPlaying,
-  usePlayerLoop,
-  usePlayerPrevAndNext,
-  usePlayerShuffle,
-  usePlayerSongStarred,
-} from "@/store/player.store";
-import { LoopState } from "@/types/playerContext";
 
 export function MiniPlayerControls() {
-  const isPlaying = usePlayerIsPlaying();
-  const isShuffleActive = usePlayerShuffle();
-  const loopState = usePlayerLoop();
-  const { hasPrev, hasNext } = usePlayerPrevAndNext();
   const {
+    isPlaying,
+    isShuffleActive,
+    cannotSkipPrev,
+    cannotSkipNext,
+    isLoopOff,
+    isLoopAll,
+    isLoopOne,
     isPlayingOneSong,
     toggleShuffle,
-    playNextSong,
     playPrevSong,
     togglePlayPause,
+    playNextSong,
     toggleLoop,
-  } = usePlayerActions();
+    hasNext,
+  } = usePlaybackControls();
 
   return (
     <div className="flex items-center">
@@ -63,7 +60,7 @@ export function MiniPlayerControls() {
         )}
         style={{ ...buttonsStyle.style }}
         onClick={() => playPrevSong()}
-        disabled={!hasPrev}
+        disabled={cannotSkipPrev}
       >
         <SkipBack className={buttonsStyle.secondaryIconFilled} width={20} />
       </Button>
@@ -100,26 +97,25 @@ export function MiniPlayerControls() {
         )}
         style={{ ...buttonsStyle.style }}
         onClick={() => playNextSong()}
-        disabled={!hasNext && loopState !== LoopState.All}
+        disabled={cannotSkipNext}
       >
         <SkipForward className={buttonsStyle.secondaryIconFilled} size={20} />
       </Button>
       <Button
         size="icon"
         variant="ghost"
-        data-state={loopState !== LoopState.Off && "active"}
         className={clsx(
           buttonsStyle.secondary,
           buttonsStyle.removeRing,
-          loopState !== LoopState.Off && buttonsStyle.activeDot,
+          !isLoopOff && buttonsStyle.activeDot,
           "mini-player:hidden",
         )}
         onClick={() => toggleLoop()}
         style={{ ...buttonsStyle.style }}
       >
-        {loopState === LoopState.Off && <Repeat size={18} />}
-        {loopState === LoopState.All && <Repeat size={18} />}
-        {loopState === LoopState.One && <RepeatOne size={18} />}
+        {isLoopOff && <Repeat size={18} />}
+        {isLoopAll && <Repeat size={18} />}
+        {isLoopOne && <RepeatOne size={18} />}
       </Button>
     </div>
   );
@@ -127,7 +123,7 @@ export function MiniPlayerControls() {
 
 export function MiniPlayerLikeButton() {
   const isSongStarred = usePlayerSongStarred();
-  const { starCurrentSong } = usePlayerActions();
+  const { starCurrentSong } = usePlaybackControls();
 
   return (
     <Button

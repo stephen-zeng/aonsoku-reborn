@@ -4,7 +4,12 @@ const MOBILE_BREAKPOINT = 768;
 const SHORT_VIEWPORT_HEIGHT = 700;
 
 function useMediaQuery(query: string) {
-  const [matches, setMatches] = useState<boolean | undefined>(undefined);
+  const [matches, setMatches] = useState(() => {
+    if (typeof window !== "undefined") {
+      return window.matchMedia(query).matches;
+    }
+    return false;
+  });
 
   useEffect(() => {
     const mql = window.matchMedia(query);
@@ -16,7 +21,7 @@ function useMediaQuery(query: string) {
     return () => mql.removeEventListener("change", onChange);
   }, [query]);
 
-  return !!matches;
+  return matches;
 }
 
 export function useIsMobile() {

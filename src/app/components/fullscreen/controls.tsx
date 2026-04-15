@@ -1,4 +1,4 @@
-import { clsx } from "clsx";
+import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Pause,
@@ -12,28 +12,27 @@ import { memo } from "react";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { Button } from "@/app/components/ui/button";
 import { useIsMobile } from "@/app/hooks/use-mobile";
-import {
-  usePlayerActions,
-  usePlayerIsPlaying,
-  usePlayerLoop,
-  usePlayerPrevAndNext,
-  usePlayerShuffle,
-} from "@/store/player.store";
+import { usePlaybackControls } from "@/app/hooks/use-playback-controls";
 import { LoopState } from "@/types/playerContext";
 
 function FullscreenControls() {
-  const isPlaying = usePlayerIsPlaying();
-  const isShuffleActive = usePlayerShuffle();
-  const loopState = usePlayerLoop();
-  const { hasPrev, hasNext } = usePlayerPrevAndNext();
   const {
+    isPlaying,
+    isShuffleActive,
+    loopState,
+    cannotSkipPrev,
+    cannotSkipNext,
+    isLoopOff,
+    isLoopAll,
+    isLoopOne,
     isPlayingOneSong,
     toggleShuffle,
-    playNextSong,
     playPrevSong,
     togglePlayPause,
+    playNextSong,
     toggleLoop,
-  } = usePlayerActions();
+    hasNext,
+  } = usePlaybackControls();
   const isMobile = useIsMobile();
 
   return (
@@ -60,7 +59,7 @@ function FullscreenControls() {
         className={buttonsStyle.secondary}
         style={{ ...buttonsStyle.style }}
         onClick={() => playPrevSong()}
-        disabled={!hasPrev}
+        disabled={cannotSkipPrev}
       >
         <SkipBack className={buttonsStyle.secondaryIconFilled} />
       </Button>
@@ -109,7 +108,7 @@ function FullscreenControls() {
         className={buttonsStyle.secondary}
         style={{ ...buttonsStyle.style }}
         onClick={() => playNextSong()}
-        disabled={!hasNext && loopState !== LoopState.All}
+        disabled={cannotSkipNext}
       >
         <SkipForward className={buttonsStyle.secondaryIconFilled} />
       </Button>
@@ -125,15 +124,9 @@ function FullscreenControls() {
           onClick={() => toggleLoop()}
           style={{ ...buttonsStyle.style }}
         >
-          {loopState === LoopState.Off && (
-            <Repeat className={buttonsStyle.secondaryIcon} />
-          )}
-          {loopState === LoopState.All && (
-            <Repeat className={buttonsStyle.secondaryIcon} />
-          )}
-          {loopState === LoopState.One && (
-            <RepeatOne className={buttonsStyle.secondaryIcon} />
-          )}
+          {isLoopOff && <Repeat className={buttonsStyle.secondaryIcon} />}
+          {isLoopAll && <Repeat className={buttonsStyle.secondaryIcon} />}
+          {isLoopOne && <RepeatOne className={buttonsStyle.secondaryIcon} />}
         </Button>
       )}
     </>

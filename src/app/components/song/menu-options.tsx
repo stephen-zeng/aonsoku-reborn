@@ -19,24 +19,27 @@ interface MenuLikeButtonProps {
 }
 
 function MenuLikeButton({ variant, song }: MenuLikeButtonProps) {
-  const [isStarred, setIsStarred] = useState(
-    typeof song.starred === "string",
-  );
+  const [isStarred, setIsStarred] = useState(typeof song.starred === "string");
   const { currentSong } = usePlayerSonglist();
   const { isSong } = usePlayerMediaType();
   const { starCurrentSong, starSongInQueue } = usePlayerActions();
 
   async function handleToggleStar() {
     const newState = !isStarred;
-    await subsonic.star.handleStarItem({
-      id: song.id,
-      starred: isStarred,
-    });
     setIsStarred(newState);
 
-    if (isSong) {
-      const isSongPlaying = currentSong.id === song.id;
-      isSongPlaying ? starCurrentSong() : starSongInQueue(song.id);
+    try {
+      await subsonic.star.handleStarItem({
+        id: song.id,
+        starred: isStarred,
+      });
+
+      if (isSong) {
+        const isSongPlaying = currentSong.id === song.id;
+        isSongPlaying ? starCurrentSong() : starSongInQueue(song.id);
+      }
+    } catch {
+      setIsStarred(!newState);
     }
   }
 

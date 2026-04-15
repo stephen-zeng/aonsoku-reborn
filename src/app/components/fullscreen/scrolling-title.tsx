@@ -1,12 +1,6 @@
 import { motion, useAnimationControls } from "framer-motion";
-import {
-  ReactNode,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { ReactNode, useEffect } from "react";
+import { useTextOverflow } from "@/app/hooks/use-text-overflow";
 
 interface ScrollingTitleProps {
   children: ReactNode;
@@ -50,62 +44,20 @@ function createScrollAnimation(scrollDistance: number) {
     x: [0, -edgeDistance, -(scrollDistance - edgeDistance), -scrollDistance],
     transition: {
       duration,
-      times: [0, edgeDuration / duration, 1 - edgeDuration / duration, 1],
+      times: [edgeDuration / duration, 1 - edgeDuration / duration, 1],
       ease: ["easeOut", "linear", "easeIn"],
     } as const,
   };
 }
 
 export function ScrollingTitle({ children }: ScrollingTitleProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLDivElement>(null);
+  const { containerRef, textRef, overflow, calculateOverflow } =
+    useTextOverflow();
   const controls = useAnimationControls();
-  const [overflow, setOverflow] = useState({
-    width: 0,
-    height: 0,
-    isOverflowing: false,
-  });
-
-  const calculateOverflow = useCallback(() => {
-    if (!containerRef.current || !textRef.current) return;
-
-    const containerWidth = containerRef.current.offsetWidth;
-    const measuredWidth = textRef.current.scrollWidth;
-    const measuredHeight = textRef.current.offsetHeight;
-    const isOverflowing = measuredWidth > containerWidth;
-
-    setOverflow((prev) =>
-      prev.width === measuredWidth &&
-      prev.height === measuredHeight &&
-      prev.isOverflowing === isOverflowing
-        ? prev
-        : {
-            width: measuredWidth,
-            height: measuredHeight,
-            isOverflowing,
-          },
-    );
-  }, []);
-
-  useLayoutEffect(() => {
-    let rafId: number;
-    const handleResize = () => {
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(calculateOverflow);
-    };
-
-    calculateOverflow();
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      cancelAnimationFrame(rafId);
-    };
-  }, [calculateOverflow]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: need children to reset animation on content change
   useEffect(() => {
     controls.set({ x: 0 });
-    setOverflow({ width: 0, height: 0, isOverflowing: false });
     calculateOverflow();
   }, [children, controls, calculateOverflow]);
 
@@ -135,6 +87,8 @@ export function ScrollingTitle({ children }: ScrollingTitleProps) {
         await new Promise<void>((resolve) => {
           timeoutIds.push(setTimeout(resolve, PAUSE_DURATION * 1000));
         });
+
+        if (isCancelled) break;
       }
     }
 

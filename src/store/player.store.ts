@@ -19,6 +19,7 @@ import { ISong } from "@/types/responses/song";
 import { areSongListsEqual } from "@/utils/compareSongLists";
 import { isDesktop } from "@/utils/desktop";
 import { discordRpc } from "@/utils/discordRpc";
+import { logger } from "@/utils/logger";
 import debounce from "lodash/debounce";
 import { addNextSongList, shuffleSongList } from "@/utils/songListFunctions";
 import { get as idbGet, set as idbSet } from "idb-keyval";
@@ -1307,6 +1308,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
         onRehydrateStorage: () => {
           return (_state, error) => {
             if (error) {
+              logger.error("Player store rehydration failed", error);
               songlistHydrated.value = true;
               return;
             }
@@ -1324,7 +1326,9 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   }
                 }
               })
-              .catch(() => {})
+              .catch((error: unknown) => {
+                logger.error("Failed to load songlist from IDB", error);
+              })
               .finally(() => {
                 songlistHydrated.value = true;
               });

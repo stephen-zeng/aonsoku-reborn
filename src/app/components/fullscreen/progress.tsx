@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { ProgressSlider } from "@/app/components/ui/slider";
+import { useAudioSeeking } from "@/app/hooks/use-audio-seeking";
 import {
-  usePlayerActions,
   usePlayerDuration,
   usePlayerIsBuffering,
   usePlayerProgress,
@@ -19,62 +20,37 @@ export function FullscreenProgress({
   stacked?: boolean;
 }) {
   const progress = usePlayerProgress();
-  const [localProgress, setLocalProgress] = useState(progress);
-  const [isSeeking, setIsSeeking] = useState(false);
   const audioPlayerRef = usePlayerRef();
   const currentDuration = usePlayerDuration();
   const isBuffering = usePlayerIsBuffering();
-  const { setProgress } = usePlayerActions();
+  const { t } = useTranslation();
 
-  useEffect(() => {
-    if (!isSeeking) {
-      setLocalProgress(progress);
-    }
-  }, [progress, isSeeking]);
-
-  const updateAudioCurrentTime = useCallback(
-    (value: number) => {
-      if (audioPlayerRef) {
-        audioPlayerRef.currentTime = value;
-      }
-    },
+  const audioRef = useMemo(
+    () => ({ current: audioPlayerRef }),
     [audioPlayerRef],
   );
-
-  const handleSeeking = useCallback((amount: number) => {
-    setIsSeeking(true);
-    setLocalProgress(amount);
-  }, []);
-
-  const handleSeeked = useCallback(
-    (amount: number) => {
-      setIsSeeking(false);
-      updateAudioCurrentTime(amount);
-      setProgress(amount);
-      setLocalProgress(amount);
-    },
-    [setProgress, updateAudioCurrentTime],
-  );
-
-  const handleSeekedFallback = useCallback(() => {
-    if (isSeeking) {
-      setIsSeeking(false);
-      if (localProgress !== progress) {
-        updateAudioCurrentTime(localProgress);
-        setProgress(localProgress);
-      }
-    }
-  }, [isSeeking, localProgress, progress, setProgress, updateAudioCurrentTime]);
+  const {
+    localProgress,
+    isLocalSeeking: isSeeking,
+    handleSeeking,
+    handleSeeked,
+    handleSeekedFallback,
+  } = useAudioSeeking({ audioRef });
 
   const currentTime = convertSecondsToTime(
     isSeeking ? localProgress : progress,
+  );
+
+  const songDuration = useMemo(
+    () => convertSecondsToTime(currentDuration ?? 0),
+    [currentDuration],
   );
 
   const sliderProps = {
     variant: "secondary" as const,
     defaultValue: [0] as [number],
     value: (isSeeking ? [localProgress] : [progress]) as [number],
-    max: currentDuration,
+    max: currentDuration ?? 0,
     step: 1,
     isBuffering,
     className: "w-full h-2 sm:h-3",
@@ -84,6 +60,7 @@ export function FullscreenProgress({
     onMouseUp: handleSeekedFallback,
     onTouchEnd: handleSeekedFallback,
     "data-vaul-no-drag": true,
+    "aria-label": t("player.tooltips.progress"),
   };
 
   if (stacked) {
@@ -92,9 +69,7 @@ export function FullscreenProgress({
         <ProgressSlider {...sliderProps} />
         <div className="flex justify-between mt-1">
           <div className={STACKED_TIME_LABEL_CLASS}>{currentTime}</div>
-          <div className={STACKED_TIME_LABEL_CLASS}>
-            {convertSecondsToTime(currentDuration ?? 0)}
-          </div>
+          <div className={STACKED_TIME_LABEL_CLASS}>{songDuration}</div>
         </div>
       </div>
     );
@@ -117,7 +92,7 @@ export function FullscreenProgress({
           thin ? "text-xs" : "text-xs sm:text-sm"
         }`}
       >
-        {convertSecondsToTime(currentDuration ?? 0)}
+        {songDuration}
       </div>
     </div>
   );
