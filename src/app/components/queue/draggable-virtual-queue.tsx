@@ -1,12 +1,5 @@
-import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import { closestCenter, DndContext, DragOverlay } from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -14,6 +7,7 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useQueueDndSensors } from "@/app/components/queue/dnd-sensors";
 import {
   ScrollArea,
   scrollAreaViewportSelector,
@@ -21,10 +15,6 @@ import {
 import { usePlayerActions } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { QueueItemRow, SortableQueueItem } from "./queue-item-row";
-
-const POINTER_SENSOR_OPTIONS = {
-  activationConstraint: { distance: 5 },
-};
 
 interface DraggableVirtualQueueProps {
   currentList: ISong[];
@@ -66,7 +56,7 @@ export function DraggableVirtualQueue({
     }
   }, [currentSongIndex, virtualizer]);
 
-  const sensors = useSensors(useSensor(PointerSensor, POINTER_SENSOR_OPTIONS));
+  const sensors = useQueueDndSensors();
 
   const items = useMemo(
     () => currentList.map((song) => song.id),

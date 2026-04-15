@@ -32,6 +32,7 @@
     "hideDetails": "Hide details",
     "viewAll": "View all",
     "loading": "Loading…",
+    "clear": "Clear",
     "viewMode": {
       "label": "View Mode",
       "modes": {
@@ -273,9 +274,13 @@
     "noLyrics": "No lyrics found",
     "loadingLyrics": "Searching for lyrics…",
     "queue": "Queue",
+    "queueHistory": "History",
+    "queueContinue": "Continue Playing",
+    "queueFromSource": "From {{source}}",
     "playing": "Playing now",
     "lyrics": "Lyrics",
-    "switchButton": "Switch to Big Player"
+    "switchButton": "Switch to Big Player",
+    "emptyQueue": "No songs in queue"
   },
   "logout": {
     "dialog": {
@@ -343,6 +348,9 @@
       },
       "like": "Like {{song}} by {{artist}}",
       "dislike": "Remove like from {{song}} by {{artist}}",
+      "star": "Star current song",
+      "unstar": "Unstar current song",
+      "progress": "Seek",
       "miniPlayer": {
         "open": "Open Miniplayer",
         "close": "Close Miniplayer"
@@ -588,6 +596,14 @@
         "showTranslation": {
           "label": "Show translation",
           "info": "When available, show translated lyrics below the original lyrics."
+        }
+      },
+      "history": {
+        "group": "Play History",
+        "description": "Songs that play for more than 10 seconds are recorded in your play history.",
+        "maxSize": {
+          "label": "Maximum history size",
+          "info": "The maximum number of songs to keep in play history. Older entries are removed when the limit is exceeded."
         }
       }
     },

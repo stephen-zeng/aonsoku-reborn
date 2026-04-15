@@ -1,3 +1,27 @@
+@property --queue-backdrop-r {
+  syntax: "<integer>";
+  inherits: true;
+  initial-value: 0;
+}
+
+@property --queue-backdrop-g {
+  syntax: "<integer>";
+  inherits: true;
+  initial-value: 0;
+}
+
+@property --queue-backdrop-b {
+  syntax: "<integer>";
+  inherits: true;
+  initial-value: 0;
+}
+
+@property --queue-backdrop-alpha {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -60,6 +84,44 @@
     }
   }
 
+  /* Fullscreen player queue background — base colour + pseudo-element layers.
+      ::before = dynamic backdrop colour (transitions on track/intensity change
+      via @property-registered R/G/B/alpha components).
+      ::after = static queue overlay (e.g. rgba(0,0,0,0.05) on desktop).
+      Content naturally paints above both pseudo-elements. */
+  .fullscreen-queue-bg {
+    position: relative;
+    isolation: isolate;
+    background: hsl(var(--background));
+  }
+
+  .fullscreen-queue-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    transition:
+      --queue-backdrop-r 1000ms,
+      --queue-backdrop-g 1000ms,
+      --queue-backdrop-b 1000ms,
+      --queue-backdrop-alpha 1000ms;
+    background-color: rgb(
+      var(--queue-backdrop-r, 0) var(--queue-backdrop-g, 0)
+        var(--queue-backdrop-b, 0) /
+      var(--queue-backdrop-alpha, 0)
+    );
+    pointer-events: none;
+  }
+
+  .fullscreen-queue-bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--queue-bg-overlay, transparent);
+    pointer-events: none;
+  }
+
   /* Resize drag: lock cursor and suppress transitions */
   body.is-resizing {
     cursor: col-resize !important;
@@ -87,6 +149,22 @@
     --titlebar-area-width: env(titlebar-area-width, 100%);
     --titlebar-area-height: env(titlebar-area-height, var(--header-height));
   }
+}
+
+/* Fullscreen backdrop layer — uses the same @property-registered R/G/B/alpha
+   components as the queue for smooth transitions on intensity changes.
+   Placed outside @layer base to win over utility-layer transition-colors. */
+.fullscreen-backdrop-layer {
+  transition:
+    --queue-backdrop-r 1000ms,
+    --queue-backdrop-g 1000ms,
+    --queue-backdrop-b 1000ms,
+    --queue-backdrop-alpha 1000ms;
+  background-color: rgb(
+    var(--queue-backdrop-r, 0) var(--queue-backdrop-g, 0)
+      var(--queue-backdrop-b, 0) /
+    var(--queue-backdrop-alpha, 0)
+  );
 }
 
 .electron-drag {
@@ -356,6 +434,15 @@ svg#bars .eq-bar--4 {
 
   /* firefox */
   scrollbar-width: none;
+}
+
+.no-scrollbar {
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
 }
 
 #sync-lyrics-box .react-lrc-line {

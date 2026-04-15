@@ -3,7 +3,7 @@ import { PlusIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { ShadowHeader } from "@/app/components/album/shadow-header";
-import { SongListFallback } from "@/app/components/fallbacks/song-fallbacks";
+import { PlaylistsListFallback } from "@/app/components/fallbacks/song-fallbacks";
 import { HeaderTitle } from "@/app/components/header-title";
 import { EmptyPlaylistsPage } from "@/app/components/playlist/empty-page";
 import { Button } from "@/app/components/ui/button";
@@ -26,7 +26,7 @@ export default function PlaylistsPage() {
   const columns = playlistsColumns();
   const navigate = useNavigate();
 
-  if (isLoading) return <SongListFallback />;
+  if (isLoading) return <PlaylistsListFallback />;
   if (!playlists) return null;
 
   const showTable = playlists.length > 0;

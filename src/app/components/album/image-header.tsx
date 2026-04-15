@@ -1,12 +1,11 @@
 import randomCSSHexColor from "@chriscodesthings/random-css-hex-color";
 import clsx from "clsx";
 import { useState } from "react";
-
+import { getCoverArtUrl } from "@/api/httpClient";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { AlbumHeaderFallback } from "@/app/components/fallbacks/album-fallbacks";
 import { BadgesData, HeaderInfoGenerator } from "@/app/components/header-info";
 import { CustomLightBox } from "@/app/components/lightbox";
-import { getCoverArtUrl } from "@/api/httpClient";
 import { cn } from "@/lib/utils";
 import { CoverArt } from "@/types/coverArtType";
 import { IFeaturedArtist } from "@/types/responses/artist";
@@ -14,6 +13,7 @@ import { getAverageColor } from "@/utils/getAverageColor";
 import { getTextSizeClass } from "@/utils/getTextSizeClass";
 import { AlbumArtistInfo, AlbumMultipleArtistsInfo } from "./artists";
 import { ImageHeaderEffect } from "./header-effect";
+import { IMAGE_HEADER_MAIN_GRADIENT } from "./image-header-gradients";
 
 interface HeaderSubtitleSectionProps {
   isPlaylist: boolean;
@@ -145,6 +145,7 @@ export default function ImageHeader({
   const hasMultipleArtists = artists ? artists.length > 1 : false;
   const showArtistAboveCover =
     !isPlaylist && (hasMultipleArtists || (subtitle && artistId));
+  const showMobileSubtitle = !showArtistAboveCover && !!subtitle;
   const allBadges: BadgesData = secondaryBadges
     ? [...badges, ...secondaryBadges]
     : badges;
@@ -156,16 +157,21 @@ export default function ImageHeader({
       <div className="relative w-full h-auto md:h-[calc(3rem+200px)] 2xl:h-[calc(3rem+250px)]">
         {!loaded && (
           <div className="absolute inset-0 z-20">
-            <AlbumHeaderFallback />
+            <AlbumHeaderFallback
+              showArtistAboveCover={showArtistAboveCover}
+              showMobileSubtitle={showMobileSubtitle}
+              showSecondaryBadges={!!hasSecondaryBadges}
+            />
           </div>
         )}
         <div
           className={cn(
             "w-full px-3 py-3 md:px-8 md:py-6 flex gap-2 md:gap-4 relative md:absolute md:inset-0",
-            "bg-gradient-to-b from-background/20 to-background md:to-background/50",
+            IMAGE_HEADER_MAIN_GRADIENT,
             "flex-col",
+            !loaded && "bg-background-foreground",
           )}
-          style={{ backgroundColor: bgColor }}
+          style={loaded ? { backgroundColor: bgColor } : undefined}
         >
           {showArtistAboveCover && (
             <div className="md:hidden flex justify-center">
@@ -253,7 +259,7 @@ export default function ImageHeader({
         </div>
 
         {!loaded ? (
-          <ImageHeaderEffect className="bg-muted-foreground" />
+          <ImageHeaderEffect className="bg-background-foreground" />
         ) : (
           <ImageHeaderEffect style={{ backgroundColor: bgColor }} />
         )}

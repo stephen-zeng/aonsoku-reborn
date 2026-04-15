@@ -1,13 +1,7 @@
 import { clsx } from "clsx";
-import {
-  ReactNode,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { ReactNode, useEffect, useState } from "react";
 import Marquee from "react-fast-marquee";
+import { useTextOverflow } from "@/app/hooks/use-text-overflow";
 
 interface MarqueeTitleProps {
   children: ReactNode;
@@ -15,48 +9,21 @@ interface MarqueeTitleProps {
 }
 
 export function MarqueeTitle({ children, gap }: MarqueeTitleProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLDivElement>(null);
-  const [isOverflowing, setIsOverflowing] = useState(false);
+  const { containerRef, textRef, overflow, calculateOverflow } =
+    useTextOverflow();
   const [isFinished, setIsFinished] = useState(false);
   const [marqueeKey, setMarqueeKey] = useState("");
-  const [containerKey, setContainerKey] = useState("");
+  const isOverflowing = overflow.isOverflowing;
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: needed to calculate properly
-  const calculateOverflow = useCallback(() => {
-    if (!containerRef.current || !textRef.current) return;
-
-    const containerWidth = containerRef.current.offsetWidth;
-    const textWidth = textRef.current.offsetWidth;
-
-    const isOversizing = textWidth > containerWidth;
-
-    if (isOverflowing && !isOversizing) {
-      setMarqueeKey(Math.random().toString());
-    }
-
-    setIsOverflowing(isOversizing);
-  }, [containerRef, textRef, isOverflowing]);
-
-  useLayoutEffect(() => {
-    const handleResize = () => {
-      requestAnimationFrame(calculateOverflow);
-    };
-
-    calculateOverflow();
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [calculateOverflow]);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: needed to reset states
   useEffect(() => {
-    setIsOverflowing(false);
-    setIsFinished(false);
-    setMarqueeKey(Math.random().toString());
-    setContainerKey(Math.random().toString());
+    if (isOverflowing) return;
+    setMarqueeKey((prev) => (prev === "" ? "init" : prev));
+  }, [isOverflowing]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: needed to reset on content change
+  useEffect(() => {
+    setIsFinished(false);
+    setMarqueeKey(`marquee-${Date.now()}`);
     calculateOverflow();
   }, [calculateOverflow, children]);
 
@@ -64,7 +31,6 @@ export function MarqueeTitle({ children, gap }: MarqueeTitleProps) {
     <div className="relative">
       {/* Not shown in screen, its just for calculations */}
       <div
-        key={containerKey}
         className="w-full overflow-hidden whitespace-nowrap opacity-0 absolute left-0 right-0 bottom-0 pointer-events-none"
         ref={containerRef}
       >

@@ -32,6 +32,7 @@
     "loading": "加载中…",
     "showDetails": "显示详情",
     "hideDetails": "隐藏详情",
+    "clear": "清除",
     "viewMode": {
       "modes": {
         "poster": "海报",
@@ -263,7 +264,11 @@
     "switchButton": "切换到大播放器",
     "noLyrics": "没有找到歌词",
     "loadingLyrics": "搜索歌词…",
-    "queue": "队列"
+    "queue": "队列",
+    "queueHistory": "历史记录",
+    "queueContinue": "继续播放",
+    "queueFromSource": "来自 {{source}}",
+    "emptyQueue": "队列中没有歌曲"
   },
   "logout": {
     "dialog": {
@@ -322,6 +327,9 @@
       "next": "下一曲",
       "previous": "上一曲",
       "dislike": "取消喜欢 {{artist}} 的 {{song}}",
+      "star": "收藏当前歌曲",
+      "unstar": "取消收藏当前歌曲",
+      "progress": "跳转",
       "volume": {
         "mute": "静音",
         "unmute": "取消静音"
@@ -587,6 +595,14 @@
         "showTranslation": {
           "label": "显示翻译歌词",
           "info": "当翻译歌词可用时，在原文歌词下方显示翻译。"
+        }
+      },
+      "history": {
+        "group": "播放历史",
+        "description": "播放超过10秒的歌曲会被记录到播放历史中。",
+        "maxSize": {
+          "label": "历史记录上限",
+          "info": "播放历史中保留的最大歌曲数量。超出限制时，较早的记录将被移除。"
         }
       }
     },

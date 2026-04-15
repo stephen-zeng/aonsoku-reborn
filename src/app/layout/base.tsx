@@ -7,6 +7,7 @@ import { BottomNavigation } from "@/app/layout/bottom-navigation";
 import { Header } from "@/app/layout/header";
 import { MiniSidebar } from "@/app/layout/mini-sidebar";
 import { Sidebar } from "@/app/layout/sidebar";
+import { FullscreenPlayerRouter } from "@/routes/fullscreenRouter";
 import { useUiStore } from "@/store/ui.store";
 import { MainRoutes } from "./main";
 
@@ -54,6 +55,7 @@ export default function BaseLayout() {
       <MemoSongInfoDialog />
       <MemoRemovePlaylistDialog />
       <MemoMainDrawerPage />
+      <FullscreenPlayerRouter />
     </div>
   );
 }

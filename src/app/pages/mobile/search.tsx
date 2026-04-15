@@ -1,26 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
-import { SearchIcon } from "lucide-react";
-import { useRef, useState } from "react";
+import { Play, SearchIcon } from "lucide-react";
+import { type MouseEvent, type TouchEvent, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
+import { getCoverArtUrl } from "@/api/httpClient";
+import Image from "@/app/components/image";
+import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { useSongList } from "@/app/hooks/use-song-list";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
+import { CoverArt } from "@/types/coverArtType";
+import { Albums } from "@/types/responses/album";
+import { ISimilarArtist } from "@/types/responses/artist";
+import { ISong } from "@/types/responses/song";
 import { byteLength } from "@/utils/byteLength";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
-import Image from "@/app/components/image";
-import { Button } from "@/app/components/ui/button";
-import { Play } from "lucide-react";
-import { ISimilarArtist } from "@/types/responses/artist";
-import { Albums } from "@/types/responses/album";
-import { ISong } from "@/types/responses/song";
-import { CoverArt } from "@/types/coverArtType";
-import { Link } from "react-router-dom";
-import { getCoverArtUrl } from "@/api/httpClient";
 
 interface MobileResultItemProps {
   coverArt: string;
@@ -29,6 +27,7 @@ interface MobileResultItemProps {
   subtitle: string;
   onRowClick: () => void;
   onPlayClick: () => void;
+  disableTextNavigation?: boolean;
 }
 
 function MobileResultItem({
@@ -38,8 +37,15 @@ function MobileResultItem({
   subtitle,
   onRowClick,
   onPlayClick,
+  disableTextNavigation = false,
 }: MobileResultItemProps) {
   const src = getCoverArtUrl(coverArt, coverArtType, "100");
+
+  function handleTextClick(
+    e: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>,
+  ) {
+    e.stopPropagation();
+  }
 
   return (
     <button
@@ -54,7 +60,11 @@ function MobileResultItem({
         className="aspect-square object-cover rounded shadow flex-shrink-0"
         alt={`${subtitle} - ${title}`}
       />
-      <div className="flex flex-col justify-center flex-1 min-w-0">
+      <div
+        className="flex flex-col justify-center flex-1 min-w-0"
+        onClick={disableTextNavigation ? handleTextClick : undefined}
+        onTouchEnd={disableTextNavigation ? handleTextClick : undefined}
+      >
         <span className="font-medium text-sm truncate">{title}</span>
         <span className="text-xs text-muted-foreground truncate">
           {subtitle}
@@ -138,14 +148,14 @@ export default function MobileSearch() {
     setQuery(value);
   }, 500);
 
-  async function handlePlayAlbum(albumId: string) {
+  async function handlePlayAlbum(albumId: string, albumName: string) {
     const albumSongs = await getAlbumSongs(albumId);
-    if (albumSongs) setSongList(albumSongs, 0);
+    if (albumSongs) setSongList(albumSongs, 0, false, { albumId }, albumName);
   }
 
   async function handlePlayArtist(artist: ISimilarArtist) {
     const artistSongs = await getArtistAllSongs(artist.id);
-    if (artistSongs) setSongList(artistSongs, 0);
+    if (artistSongs) setSongList(artistSongs, 0, false, undefined, artist.name);
   }
 
   return (
@@ -188,7 +198,7 @@ export default function MobileSearch() {
                 title={album.name}
                 subtitle={album.artist}
                 onRowClick={() => navigate(ROUTES.ALBUM.PAGE(album.id))}
-                onPlayClick={() => handlePlayAlbum(album.id)}
+                onPlayClick={() => handlePlayAlbum(album.id, album.name)}
               />
             ))}
           </ResultSection>
@@ -206,6 +216,7 @@ export default function MobileSearch() {
                 coverArtType="song"
                 title={song.title}
                 subtitle={song.artist}
+                disableTextNavigation={true}
                 onRowClick={() => navigate(ROUTES.ALBUM.PAGE(song.albumId))}
                 onPlayClick={() => playSong(song)}
               />

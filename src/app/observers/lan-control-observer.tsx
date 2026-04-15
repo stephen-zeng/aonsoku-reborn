@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
+import { subsonic } from "@/service/subsonic";
 import {
   useLanControlActions,
   useLanControlConfig,
@@ -19,12 +20,15 @@ import {
   usePlayerVolume,
 } from "@/store/player.store";
 import {
+  AddAlbumToQueueData,
+  AddPlaylistToQueueData,
+  AddToQueueData,
   CurrentSongData,
   LanControlMessage,
   LanControlMessageType,
   LanControlServerInfo,
-  PlayerStateData,
   PlayAlbumData,
+  PlayerStateData,
   PlayPlaylistData,
   PlaySongData,
   QueueData,
@@ -32,13 +36,9 @@ import {
   SetRepeatData,
   SetShuffleData,
   VolumeData,
-  AddToQueueData,
-  AddAlbumToQueueData,
-  AddPlaylistToQueueData,
 } from "@/types/lanControl";
 import { LoopState } from "@/types/playerContext";
 import { isDesktop } from "@/utils/desktop";
-import { subsonic } from "@/service/subsonic";
 
 function mapLoopState(loop: LoopState): PlayerStateData["repeatMode"] {
   switch (loop) {
@@ -336,7 +336,13 @@ export function LanControlObserver() {
               .then((album) => {
                 if (album && album.song) {
                   const startIndex = payload.songIndex ?? 0;
-                  playerActions.setSongList(album.song, startIndex);
+                  playerActions.setSongList(
+                    album.song,
+                    startIndex,
+                    false,
+                    { albumId: album.id },
+                    album.name,
+                  );
                 }
               })
               .catch((error) => {
@@ -353,7 +359,13 @@ export function LanControlObserver() {
               .then((playlist) => {
                 if (playlist && playlist.entry) {
                   const startIndex = payload.songIndex ?? 0;
-                  playerActions.setSongList(playlist.entry, startIndex);
+                  playerActions.setSongList(
+                    playlist.entry,
+                    startIndex,
+                    false,
+                    { playlistId: playlist.id },
+                    playlist.name,
+                  );
                 }
               })
               .catch((error) => {
@@ -370,7 +382,13 @@ export function LanControlObserver() {
               .then((album) => {
                 if (album && album.song) {
                   const startIndex = payload.songIndex ?? 0;
-                  playerActions.setSongList(album.song, startIndex, true);
+                  playerActions.setSongList(
+                    album.song,
+                    startIndex,
+                    true,
+                    { albumId: album.id },
+                    album.name,
+                  );
                 }
               })
               .catch((error) => {
@@ -387,7 +405,13 @@ export function LanControlObserver() {
               .then((playlist) => {
                 if (playlist && playlist.entry) {
                   const startIndex = payload.songIndex ?? 0;
-                  playerActions.setSongList(playlist.entry, startIndex, true);
+                  playerActions.setSongList(
+                    playlist.entry,
+                    startIndex,
+                    true,
+                    { playlistId: playlist.id },
+                    playlist.name,
+                  );
                 }
               })
               .catch((error) => {

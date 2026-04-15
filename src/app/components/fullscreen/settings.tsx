@@ -14,15 +14,9 @@ import { cn } from "@/lib/utils";
 import { useSongColor } from "@/store/player.store";
 
 export function FullscreenSettings() {
-  const { useSongColorOnBigPlayer } = useSongColor();
-
   return (
     <DynamicSettingsPopover>
-      <>
-        <DynamicColorOption showSeparator={false} />
-        {useSongColorOnBigPlayer && <ColorIntensityOption />}
-        {!useSongColorOnBigPlayer && <ImageBlurSizeOption />}
-      </>
+      <ColorIntensityOption showSeparator={false} />
     </DynamicSettingsPopover>
   );
 }
@@ -45,6 +39,8 @@ interface PopoverProps {
 }
 
 function DynamicSettingsPopover({ children }: PopoverProps) {
+  const { t } = useTranslation();
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -52,6 +48,7 @@ function DynamicSettingsPopover({ children }: PopoverProps) {
           variant="ghost"
           size="icon"
           className="size-10 rounded-full hover:bg-foreground/20 data-[state=open]:bg-foreground/20"
+          aria-label={t("settings.label")}
         >
           <SlidersHorizontal className="size-4" strokeWidth={2.5} />
         </Button>
@@ -67,23 +64,6 @@ type OptionProps = Omit<
   ComponentPropsWithoutRef<typeof SettingWrapper>,
   "text"
 >;
-
-function DynamicColorOption(props: OptionProps) {
-  const { t } = useTranslation();
-  const { useSongColorOnBigPlayer, setUseSongColorOnBigPlayer } =
-    useSongColor();
-
-  return (
-    <SettingWrapper text={t("settings.appearance.colors.group")} {...props}>
-      <Switch
-        checked={useSongColorOnBigPlayer}
-        onCheckedChange={() =>
-          setUseSongColorOnBigPlayer(!useSongColorOnBigPlayer)
-        }
-      />
-    </SettingWrapper>
-  );
-}
 
 function QueueDynamicColorOption(props: OptionProps) {
   const { t } = useTranslation();
@@ -103,8 +83,6 @@ function ColorIntensityOption(props: OptionProps) {
   const { t } = useTranslation();
   const { currentSongColorIntensity, setCurrentSongIntensity } = useSongColor();
 
-  const intensityTooltip = `${Math.round(currentSongColorIntensity * 100)}%`;
-
   return (
     <SettingWrapper
       text={t("settings.appearance.colors.queue.intensity")}
@@ -115,29 +93,7 @@ function ColorIntensityOption(props: OptionProps) {
         min={0.3}
         max={1.0}
         step={0.05}
-        tooltipValue={intensityTooltip}
         onValueChange={([value]) => setCurrentSongIntensity(value)}
-      />
-    </SettingWrapper>
-  );
-}
-
-function ImageBlurSizeOption(props: OptionProps) {
-  const { t } = useTranslation();
-  const { bigPlayerBlur, setBigPlayerBlurValue } = useSongColor();
-
-  return (
-    <SettingWrapper
-      text={t("settings.appearance.colors.bigPlayer.blurSize")}
-      {...props}
-    >
-      <Slider
-        defaultValue={[bigPlayerBlur.value]}
-        min={bigPlayerBlur.settings.min}
-        max={bigPlayerBlur.settings.max}
-        step={bigPlayerBlur.settings.step}
-        tooltipValue={`${bigPlayerBlur.value}px`}
-        onValueChange={([value]) => setBigPlayerBlurValue(value)}
       />
     </SettingWrapper>
   );

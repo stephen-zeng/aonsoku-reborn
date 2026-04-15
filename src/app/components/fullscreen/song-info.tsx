@@ -1,64 +1,152 @@
+import { clsx } from "clsx";
+import { AnimatePresence, motion } from "framer-motion";
 import { memo } from "react";
-import { Dot } from "@/app/components/dot";
-import { MarqueeTitle } from "@/app/components/fullscreen/marquee-title";
-import { Badge } from "@/app/components/ui/badge";
 import { usePlayerStore } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
-import { FullscreenSongImage } from "./song-image";
+import { ScrollingTitle } from "./scrolling-title";
+import { CompactSongArtwork } from "./song-artwork";
 
-const MemoFullscreenSongImage = memo(FullscreenSongImage);
+const TEXT_TRANSITION = { duration: 0.25, ease: [0.4, 0, 0.2, 1] } as const;
+const TEXT_TRANSITION_DELAYED = {
+  duration: 0.25,
+  ease: [0.4, 0, 0.2, 1],
+  delay: 0.05,
+} as const;
 
-export function SongInfo() {
-  const currentSong = usePlayerStore((state) => state.songlist.currentSong);
+export const SongInfo = memo(function SongInfo({
+  compact = false,
+}: {
+  compact?: boolean;
+}) {
+  const currentSong = usePlayerStore(
+    (state) => state.songlist.currentSong,
+    (a, b) => a.id === b.id,
+  );
+
+  if (!currentSong?.id) return null;
 
   return (
-    <div className="flex flex-col sm:flex-row items-center sm:justify-start h-auto sm:h-full sm:min-h-full sm:max-h-full gap-2 sm:gap-4 2xl:gap-6 flex-1 pt-2 overflow-hidden">
-      <MemoFullscreenSongImage />
+    <div
+      className={clsx(
+        "flex w-full min-w-0 flex-col",
+        compact ? "gap-0.5" : "gap-1",
+      )}
+    >
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentSong.id ?? "no-song"}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={TEXT_TRANSITION}
+          className="w-full min-w-0 overflow-hidden"
+        >
+          <ScrollingTitle>
+            <h2
+              className={clsx(
+                "font-bold tracking-tight",
+                compact ? "text-xl sm:text-2xl" : "text-2xl sm:text-3xl",
+              )}
+            >
+              {currentSong.title}
+            </h2>
+          </ScrollingTitle>
+        </motion.div>
+      </AnimatePresence>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentSong.id ?? "no-song-sub"}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={TEXT_TRANSITION_DELAYED}
+          className="w-full min-w-0 overflow-hidden"
+        >
+          <ScrollingTitle>
+            <div
+              className={clsx(
+                compact ? "text-xs" : "text-sm",
+                "text-foreground/70",
+              )}
+            >
+              <ArtistNames song={currentSong} />
+            </div>
+          </ScrollingTitle>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+});
 
-      <div className="flex flex-col w-full sm:w-[66%] max-w-full h-auto sm:h-full sm:max-h-[450px] 2xl:max-h-[550px] justify-center sm:justify-end text-center sm:text-left overflow-hidden px-4 sm:px-0">
-        <MarqueeTitle gap="mr-6">
-          <h2 className="scroll-m-20 text-2xl sm:text-4xl 2xl:text-5xl font-bold tracking-tight py-1 sm:py-2 2xl:py-3 drop-shadow-lg">
-            {currentSong.title}
-          </h2>
-        </MarqueeTitle>
-        <div className="text-sm sm:text-base 2xl:text-lg flex gap-1 text-foreground/70 justify-center sm:justify-start truncate maskImage-marquee-fade-finished">
-          <p className="truncate drop-shadow-lg text-foreground">
+export const AlbumName = memo(function AlbumName({
+  compact = false,
+}: {
+  compact?: boolean;
+}) {
+  const currentSong = usePlayerStore(
+    (state) => state.songlist.currentSong,
+    (a, b) => a.id === b.id,
+  );
+
+  if (!currentSong?.id) return null;
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={currentSong.id ?? "no-album"}
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 8 }}
+        transition={TEXT_TRANSITION}
+        className="w-full min-w-0 overflow-hidden text-center"
+      >
+        <ScrollingTitle>
+          <p
+            className={clsx(
+              compact ? "text-xs" : "text-sm",
+              "text-foreground/70",
+            )}
+          >
             {currentSong.album}
           </p>
-          <Dot className="text-foreground/70" />
-          <ArtistNames song={currentSong} />
-        </div>
-        <div className="flex gap-2 mt-1 sm:mt-2 2xl:mt-3 mb-[1px] justify-center sm:justify-start">
-          {currentSong.genre && (
-            <Badge variant="neutral">{currentSong.genre}</Badge>
-          )}
-          {currentSong.year && (
-            <Badge variant="neutral">{currentSong.year}</Badge>
-          )}
-        </div>
+        </ScrollingTitle>
+      </motion.div>
+    </AnimatePresence>
+  );
+});
+
+export const CompactSongInfo = memo(function CompactSongInfo() {
+  const currentSong = usePlayerStore(
+    (state) => state.songlist.currentSong,
+    (a, b) => a.id === b.id,
+  );
+
+  if (!currentSong?.id) return null;
+
+  return (
+    <div className="flex items-center gap-2 min-w-0 flex-1">
+      <CompactSongArtwork />
+      <div className="flex flex-col min-w-0">
+        <p className="text-sm font-medium truncate">{currentSong.title}</p>
+        <p className="text-xs text-foreground/70 truncate">
+          {currentSong.artist}
+        </p>
       </div>
     </div>
   );
-}
+});
 
-function ArtistNames({ song }: { song: ISong }) {
-  const { artist, artists } = song;
+const ArtistNames = memo(
+  function ArtistNames({ song }: { song: ISong }) {
+    const { artist, artists } = song;
 
-  if (artists && artists.length > 1) {
-    const data = artists.slice(0, ALBUM_ARTISTS_MAX_NUMBER);
+    if (artists && artists.length > 1) {
+      const data = artists.slice(0, ALBUM_ARTISTS_MAX_NUMBER);
+      return <p>{data.map(({ name }) => name).join(", ")}</p>;
+    }
 
-    return (
-      <div className="flex items-center gap-1">
-        {data.map(({ id, name }, index) => (
-          <div key={id} className="flex">
-            <p className="truncate drop-shadow-lg">{name}</p>
-            {index < data.length - 1 && ","}
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  return <p className="truncate drop-shadow-lg">{artist}</p>;
-}
+    return <p>{artist}</p>;
+  },
+  (prev, next) => prev.song.id === next.song.id,
+);

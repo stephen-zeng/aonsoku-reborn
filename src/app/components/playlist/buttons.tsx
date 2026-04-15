@@ -23,7 +23,13 @@ export function PlaylistButtons({ playlist }: PlaylistButtonsProps) {
       <Actions.Button
         tooltip={buttonsTooltips.shuffle}
         onClick={() =>
-          setSongList(playlist.entry, 0, true, { playlistId: playlist.id })
+          setSongList(
+            playlist.entry,
+            0,
+            true,
+            { playlistId: playlist.id },
+            playlist.name,
+          )
         }
         disabled={!playlist.entry}
       >
@@ -35,7 +41,13 @@ export function PlaylistButtons({ playlist }: PlaylistButtonsProps) {
         buttonStyle="primary"
         className="md:order-first"
         onClick={() =>
-          setSongList(playlist.entry, 0, false, { playlistId: playlist.id })
+          setSongList(
+            playlist.entry,
+            0,
+            false,
+            { playlistId: playlist.id },
+            playlist.name,
+          )
         }
         disabled={!playlist.entry}
       >

@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { RefAttributes } from "react";
+import { type ComponentPropsWithoutRef, type RefAttributes } from "react";
 import { Link, LinkProps } from "react-router-dom";
 import { Dot } from "@/app/components/dot";
 import { cn } from "@/lib/utils";
@@ -12,21 +12,35 @@ export type LinkWithoutTo = Omit<LinkProps, "to"> &
 
 type ArtistLinkProps = LinkWithoutTo & {
   artistId?: string;
+  disableNavigation?: boolean;
 };
 
-export function ArtistLink({ artistId, className, ...props }: ArtistLinkProps) {
+export function ArtistLink({
+  artistId,
+  className,
+  disableNavigation = false,
+  onContextMenu,
+  ...props
+}: ArtistLinkProps) {
+  if (disableNavigation || !artistId) {
+    const spanProps = props as unknown as ComponentPropsWithoutRef<"span">;
+
+    return (
+      <span className={cn("truncate", className)} {...spanProps}>
+        {props.children}
+      </span>
+    );
+  }
+
   return (
     <Link
-      className={cn(
-        "truncate",
-        className,
-        artistId ? "hover:underline" : "pointer-events-none",
-      )}
+      className={cn("truncate hover:underline", className)}
       {...props}
-      to={ROUTES.ARTIST.PAGE(artistId ?? "")}
+      to={ROUTES.ARTIST.PAGE(artistId)}
       onContextMenu={(e) => {
         e.stopPropagation();
         e.preventDefault();
+        onContextMenu?.(e);
       }}
     />
   );
@@ -35,9 +49,20 @@ export function ArtistLink({ artistId, className, ...props }: ArtistLinkProps) {
 type ArtistsLinksProps = {
   artists: IFeaturedArtist[];
   onClickLink?: () => void;
+  disableNavigation?: boolean;
+  className?: string;
+  linkClassName?: string;
+  linkTestId?: string;
 };
 
-export function ArtistsLinks({ artists, onClickLink }: ArtistsLinksProps) {
+export function ArtistsLinks({
+  artists,
+  onClickLink,
+  disableNavigation = false,
+  className,
+  linkClassName,
+  linkTestId,
+}: ArtistsLinksProps) {
   const data = artists.slice(0, TABLE_ARTISTS_MAX_NUMBER);
   const showThreeDots = artists.length > TABLE_ARTISTS_MAX_NUMBER;
 
@@ -50,7 +75,7 @@ export function ArtistsLinks({ artists, onClickLink }: ArtistsLinksProps) {
   }
 
   return (
-    <div className="flex items-center truncate">
+    <div className={cn("flex items-center truncate", className)}>
       {data.map(({ id, name }, index) => (
         <div
           key={id}
@@ -58,6 +83,9 @@ export function ArtistsLinks({ artists, onClickLink }: ArtistsLinksProps) {
         >
           <ArtistLink
             artistId={id}
+            disableNavigation={disableNavigation}
+            className={linkClassName}
+            data-testid={linkTestId}
             title={showTitle(index, name)}
             onClick={() => {
               if (onClickLink) onClickLink();

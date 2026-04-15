@@ -244,4 +244,90 @@ describe('Player Component', () => {
         .and('have.class', 'fill-red-500')
     })
   })
+
+  it('should use audio element duration instead of metadata for local playback', () => {
+    cy.fixture('songs/random').then((songs: ISong[]) => {
+      const song = songs[0]
+      usePlayerStore.getState().actions.setSongList([song], 0)
+      usePlayerStore.getState().actions.setPlayingState(false)
+
+      cy.mount(<Player />)
+
+      cy.getByTestId<HTMLAudioElement>('player-song-audio').then(($audio) => {
+        const audio = $audio[0]
+
+        Object.defineProperty(audio, 'duration', {
+          writable: true,
+          value: 300.4,
+        })
+
+        cy.stub(audio, 'load').as('loadStub')
+        cy.stub(audio, 'play').as('playStub')
+        audio.removeAttribute('autoplay')
+      })
+
+      cy.getByTestId('player-current-time').should('have.text', '00:00')
+
+      cy.getByTestId<HTMLAudioElement>('player-song-audio').then(($audio) => {
+        const audio = $audio[0]
+        const duration = usePlayerStore.getState().playerState.currentDuration
+
+        cy.wrap(duration).should('equal', Math.round(audio.duration))
+      })
+    })
+  })
+
+  it('should not prematurely switch songs when metadata duration is shorter than actual duration', () => {
+    cy.fixture('songs/random').then((songs: ISong[]) => {
+      const song = { ...songs[0], duration: 180 }
+      usePlayerStore.getState().actions.setSongList([song], 0)
+      usePlayerStore.getState().actions.setPlayingState(false)
+
+      cy.mount(<Player />)
+
+      cy.getByTestId<HTMLAudioElement>('player-song-audio').then(($audio) => {
+        const audio = $audio[0]
+
+        Object.defineProperty(audio, 'duration', {
+          writable: true,
+          value: 300,
+        })
+
+        cy.stub(audio, 'load').as('loadStub')
+        cy.stub(audio, 'play').as('playStub')
+        audio.removeAttribute('autoplay')
+      })
+
+      cy.getByTestId('player-duration-time').should('have.text', '05:00')
+    })
+  })
+
+  it('should handle invalid audio duration gracefully', () => {
+    cy.fixture('songs/random').then((songs: ISong[]) => {
+      const song = songs[0]
+      usePlayerStore.getState().actions.setSongList([song], 0)
+      usePlayerStore.getState().actions.setPlayingState(false)
+      usePlayerStore.getState().actions.setCurrentDuration(0)
+
+      cy.mount(<Player />)
+
+      cy.getByTestId<HTMLAudioElement>('player-song-audio').then(($audio) => {
+        const audio = $audio[0]
+
+        Object.defineProperty(audio, 'duration', {
+          writable: true,
+          value: NaN,
+        })
+
+        cy.stub(audio, 'load').as('loadStub')
+        cy.stub(audio, 'play').as('playStub')
+        audio.removeAttribute('autoplay')
+      })
+
+      cy.getByTestId<HTMLAudioElement>('player-song-audio').then(() => {
+        const duration = usePlayerStore.getState().playerState.currentDuration
+        expect(duration).to.equal(0)
+      })
+    })
+  })
 })

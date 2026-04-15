@@ -1,9 +1,10 @@
-import { type ReactNode, useMemo } from "react";
-import { isMobile } from "react-device-detect";
+import { type ReactNode, useCallback, useMemo, useRef } from "react";
+import type { Row } from "@tanstack/react-table";
 import { ShadowHeader } from "@/app/components/album/shadow-header";
 import { InfinitySongListFallback } from "@/app/components/fallbacks/song-fallbacks";
 import { HeaderTitle } from "@/app/components/header-title";
 import { DataTableList } from "@/app/components/ui/data-table-list";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import { songsColumns } from "@/app/tables/songs-columns";
 import { usePlayerActions } from "@/store/player.store";
 import { ColumnFilter } from "@/types/columnFilter";
@@ -33,6 +34,7 @@ interface SongListLayoutProps {
   hasNextPage: boolean;
   headerActions?: ReactNode;
   noRowsMessage?: string;
+  sourceName?: string;
 }
 
 export function SongListLayout({
@@ -46,17 +48,38 @@ export function SongListLayout({
   hasNextPage,
   headerActions,
   noRowsMessage,
+  sourceName,
 }: SongListLayoutProps) {
   const { setSongList } = usePlayerActions();
-  const columns = useMemo(() => songsColumns(), []);
+  const isMobile = useIsMobile();
+  const songlistRef = useRef(songlist);
+  songlistRef.current = songlist;
+  const sourceNameRef = useRef(sourceName);
+  sourceNameRef.current = sourceName;
+  const columns = useMemo(
+    () =>
+      songsColumns({
+        disableTextNavigation: true,
+      }),
+    [],
+  );
   const columnsToShow = isMobile ? COLUMNS_MOBILE : COLUMNS_DESKTOP;
+
+  const handlePlaySong = useCallback(
+    (row: Row<ISong>) => {
+      setSongList(
+        songlistRef.current,
+        row.index,
+        false,
+        undefined,
+        sourceNameRef.current,
+      );
+    },
+    [setSongList],
+  );
 
   if (isLoading && !isFetchingNextPage) {
     return <InfinitySongListFallback />;
-  }
-
-  function handlePlaySong(index: number) {
-    setSongList(songlist, index);
   }
 
   return (
@@ -83,7 +106,7 @@ export function SongListLayout({
         <DataTableList
           columns={columns}
           data={songlist}
-          handlePlaySong={(row) => handlePlaySong(row.index)}
+          handlePlaySong={handlePlaySong}
           columnFilter={columnsToShow}
           fetchNextPage={fetchNextPage}
           hasNextPage={hasNextPage}

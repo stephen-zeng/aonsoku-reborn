@@ -1,7 +1,8 @@
 import { useSortable } from "@dnd-kit/sortable";
+import type { DraggableAttributes, SyntheticListenerMap } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
-import { EllipsisVertical, PlayIcon } from "lucide-react";
+import { EllipsisVertical, GripVertical, PlayIcon } from "lucide-react";
 import { CSSProperties, forwardRef, useState } from "react";
 import { getCoverArtUrl } from "@/api/httpClient";
 import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
@@ -58,8 +59,8 @@ export function SortableQueueItem({
 }
 
 interface InternalQueueItemRowProps extends QueueItemRowProps {
-  dragAttributes?: Record<string, unknown>;
-  dragListeners?: Record<string, unknown>;
+  dragAttributes?: DraggableAttributes;
+  dragListeners?: SyntheticListenerMap;
 }
 
 export const QueueItemRow = forwardRef<
@@ -79,14 +80,19 @@ export const QueueItemRow = forwardRef<
       <div
         ref={ref}
         className={clsx([
-          "group/queuerow flex items-center w-full h-16 text-sm rounded-md cursor-grab px-3 gap-2",
+          "group/queuerow flex items-center w-full h-16 text-sm rounded-md px-3 gap-2",
           "hover:bg-muted",
           isActive && "bg-accent",
         ])}
         style={style}
         {...dragAttributes}
-        {...dragListeners}
       >
+        <span
+          className="text-foreground/30 shrink-0 cursor-grab select-none py-2 -my-2 touch-none"
+          {...dragListeners}
+        >
+          <GripVertical className="w-4 h-4" />
+        </span>
         <div
           className="group/cover relative w-10 h-10 flex-shrink-0 cursor-pointer"
           onClick={(e) => {

@@ -12,17 +12,10 @@ import { useTranslation } from "react-i18next";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
+import { usePlaybackControls } from "@/app/hooks/use-playback-controls";
 import { usePlayerHotkeys } from "@/app/hooks/use-audio-hotkeys";
+import { usePlayerMediaType } from "@/store/player.store";
 import { cn } from "@/lib/utils";
-import {
-  usePlayerActions,
-  usePlayerIsPlaying,
-  usePlayerLoop,
-  usePlayerMediaType,
-  usePlayerPrevAndNext,
-  usePlayerShuffle,
-} from "@/store/player.store";
-import { LoopState } from "@/types/playerContext";
 import { Radio } from "@/types/responses/radios";
 import { ISong } from "@/types/responses/song";
 
@@ -34,18 +27,23 @@ interface PlayerControlsProps {
 export function PlayerControls({ song, radio }: PlayerControlsProps) {
   const { t } = useTranslation();
   const { isSong } = usePlayerMediaType();
-  const isShuffleActive = usePlayerShuffle();
-  const { hasPrev, hasNext } = usePlayerPrevAndNext();
-  const loopState = usePlayerLoop();
-  const isPlaying = usePlayerIsPlaying();
   const {
+    isPlaying,
+    isShuffleActive,
+    loopState,
+    cannotSkipPrev,
+    cannotSkipNext,
+    isLoopOff,
+    isLoopAll,
+    isLoopOne,
     isPlayingOneSong,
     toggleShuffle,
-    toggleLoop,
-    togglePlayPause,
     playPrevSong,
+    togglePlayPause,
     playNextSong,
-  } = usePlayerActions();
+    toggleLoop,
+    hasNext,
+  } = usePlaybackControls();
   const { useAudioHotkeys } = usePlayerHotkeys();
 
   useAudioHotkeys("space", togglePlayPause);
@@ -70,9 +68,9 @@ export function PlayerControls({ song, radio }: PlayerControlsProps) {
     1: t("player.tooltips.repeat.enableOne"),
     2: t("player.tooltips.repeat.disable"),
   };
-  const repeatTooltip = repeatTooltips[loopState];
+  const repeatTooltip =
+    repeatTooltips[loopState as keyof typeof repeatTooltips];
 
-  const cannotGotoNextSong = !hasNext && loopState !== LoopState.All;
   const disableButtons = !song && !radio;
 
   return (
@@ -94,7 +92,7 @@ export function PlayerControls({ song, radio }: PlayerControlsProps) {
       )}
 
       <PlayerButton
-        disabled={disableButtons || !hasPrev}
+        disabled={disableButtons || cannotSkipPrev}
         onClick={playPrevSong}
         data-testid="player-button-prev"
         tooltip={previousTooltip}
@@ -117,7 +115,7 @@ export function PlayerControls({ song, radio }: PlayerControlsProps) {
       </PlayerButton>
 
       <PlayerButton
-        disabled={disableButtons || cannotGotoNextSong}
+        disabled={disableButtons || cannotSkipNext}
         onClick={playNextSong}
         data-testid="player-button-next"
         tooltip={nextTooltip}
@@ -127,21 +125,15 @@ export function PlayerControls({ song, radio }: PlayerControlsProps) {
 
       {isSong && (
         <PlayerButton
-          className={clsx(
-            loopState !== LoopState.Off && "player-button-active",
-          )}
+          className={clsx(!isLoopOff && "player-button-active")}
           disabled={!song}
           onClick={toggleLoop}
           data-testid="player-button-loop"
           tooltip={repeatTooltip}
         >
-          {loopState === LoopState.Off && (
-            <Repeat className="text-secondary-foreground" />
-          )}
-          {loopState === LoopState.All && <Repeat className="text-primary" />}
-          {loopState === LoopState.One && (
-            <RepeatOne className="text-primary" />
-          )}
+          {isLoopOff && <Repeat className="text-secondary-foreground" />}
+          {isLoopAll && <Repeat className="text-primary" />}
+          {isLoopOne && <RepeatOne className="text-primary" />}
         </PlayerButton>
       )}
     </div>

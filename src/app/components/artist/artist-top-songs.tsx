@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { DataTable } from "@/app/components/ui/data-table";
@@ -16,7 +17,13 @@ interface TopSongsProps {
 export default function ArtistTopSongs({ topSongs, artist }: TopSongsProps) {
   const { t } = useTranslation();
   const { setSongList } = usePlayerActions();
-  const columns = songsColumns();
+  const columns = useMemo(
+    () =>
+      songsColumns({
+        disableTextNavigation: true,
+      }),
+    [],
+  );
   const topTenSongs = topSongs.length > 10 ? topSongs.slice(0, 10) : topSongs;
   const { id, name } = artist;
 
@@ -53,7 +60,9 @@ export default function ArtistTopSongs({ topSongs, artist }: TopSongsProps) {
       <DataTable
         columns={columns}
         data={topTenSongs}
-        handlePlaySong={(row) => setSongList(topTenSongs, row.index)}
+        handlePlaySong={(row) =>
+          setSongList(topTenSongs, row.index, false, undefined, name)
+        }
         columnFilter={columnsToShow}
         variant="modern"
       />

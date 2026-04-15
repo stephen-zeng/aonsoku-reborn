@@ -1,29 +1,33 @@
-import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play, SkipForward } from "lucide-react";
+import { memo, useCallback, useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
+import { getSongStreamUrl } from "@/api/httpClient";
 import { MiniPlayerButton } from "@/app/components/mini-player/button";
 import { RadioInfo } from "@/app/components/player/radio-info";
 import { TrackInfo } from "@/app/components/player/track-info";
 import { Button } from "@/app/components/ui/button";
-import { getSongStreamUrl } from "@/api/httpClient";
+import { usePlayHistory } from "@/app/hooks/use-play-history";
+import { usePlayerBreakpoint } from "@/app/hooks/use-player-breakpoint";
 import {
-  getVolume,
+  useIsRemoteControlActive,
   usePlayerActions,
   usePlayerIsPlaying,
   usePlayerLoop,
   usePlayerMediaType,
-  usePlayerRef,
-  usePlayerSonglist,
-  useIsRemoteControlActive,
-  useReplayGainState,
   usePlayerPrevAndNext,
-  usePlayerDuration,
-  useFullscreenPlayerState,
+  usePlayerSonglist,
+  usePlayerStore,
+  useReplayGainState,
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
+import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import { hasPiPSupport } from "@/utils/browser";
-import { ReplayGainParams } from "@/utils/replayGain";
-import { perceptualToGain } from "@/utils/volume";
-import { manageMediaSession } from "@/utils/setMediaSession";
+import { isValidDuration } from "@/utils/duration";
+import {
+  resolveReplayGainParams,
+  type ReplayGainParams,
+} from "@/utils/replayGain";
 import { AudioPlayer } from "./audio";
 import { PlayerClearQueueButton } from "./clear-queue-button";
 import { PlayerControls } from "./controls";
@@ -46,14 +50,14 @@ const MemoMiniPlayerButton = memo(MiniPlayerButton);
 const MemoAudioPlayer = memo(AudioPlayer);
 
 export function Player() {
+  const { t } = useTranslation();
   const audioRef = useRef<HTMLAudioElement>(null);
   const radioRef = useRef<HTMLAudioElement>(null);
-  const [isMobile, setIsMobile] = useState(false);
-  const [isBuffering, setIsBuffering] = useState(false);
-  const { openFullscreenPlayer } = useFullscreenPlayerState();
+  const isMobile = usePlayerBreakpoint();
   const {
     setAudioPlayerRef,
     setCurrentDuration,
+    setIsBuffering: setStoreIsBuffering,
     setProgress,
     setPlayingState,
     handleSongEnded,
@@ -65,15 +69,16 @@ export function Player() {
   const isPlaying = usePlayerIsPlaying();
   const { isSong, isRadio } = usePlayerMediaType();
   const loopState = usePlayerLoop();
-  const audioPlayerRef = usePlayerRef();
   const isRemoteControlActive = useIsRemoteControlActive();
   const { replayGainType, replayGainPreAmp, replayGainDefaultGain } =
     useReplayGainState();
   const { hasNext } = usePlayerPrevAndNext();
-  const currentDuration = usePlayerDuration();
+
+  usePlayHistory();
 
   const song = currentList[currentSongIndex];
   const radio = radioList[currentSongIndex];
+  const songId = song?.id;
   const audioSrc = song?.id ? getSongStreamUrl(song.id) : "";
 
   const getAudioRef = useCallback(() => {
@@ -82,44 +87,50 @@ export function Player() {
     return audioRef;
   }, [isRadio]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: audioRef needed
   useEffect(() => {
-    if (!isSong && !song) return;
+    if (!isSong || !songId) return;
     if (isRemoteControlActive) return;
 
-    if (audioPlayerRef === null && audioRef.current)
-      setAudioPlayerRef(audioRef.current);
-  }, [
-    audioPlayerRef,
-    audioRef,
-    isRemoteControlActive,
-    isSong,
-    setAudioPlayerRef,
-    song,
-  ]);
+    const currentAudio = audioRef.current;
+    if (
+      currentAudio &&
+      currentAudio !== usePlayerStore.getState().playerState.audioPlayerRef
+    ) {
+      setAudioPlayerRef(currentAudio);
+    }
 
-  useEffect(() => {
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 640);
+    return () => {
+      if (currentAudio) {
+        setAudioPlayerRef(null);
+      }
     };
+  }, [isRemoteControlActive, isSong, setAudioPlayerRef, songId]);
 
-    checkIsMobile();
-    window.addEventListener("resize", checkIsMobile);
+  const updateAudioDuration = useCallback(() => {
+    const audio = getAudioRef().current;
+    if (!audio) return;
 
-    return () => window.removeEventListener("resize", checkIsMobile);
-  }, []);
+    const audioDuration = audio.duration;
+    if (isValidDuration(audioDuration)) {
+      const roundedDuration = Math.round(audioDuration);
+      const currentDur = usePlayerStore.getState().playerState.currentDuration;
+      if (currentDur !== roundedDuration) {
+        setCurrentDuration(roundedDuration);
+      }
+    }
+  }, [getAudioRef, setCurrentDuration]);
 
   const setupDuration = useCallback(() => {
     const audio = getAudioRef().current;
     if (!audio) return;
 
-    if (isSong && song) {
-      setCurrentDuration(song.duration);
+    if (isSong) {
+      updateAudioDuration();
     }
 
     const progress = getCurrentProgress();
     audio.currentTime = progress;
-  }, [getAudioRef, isSong, song, setCurrentDuration, getCurrentProgress]);
+  }, [getAudioRef, isSong, updateAudioDuration, getCurrentProgress]);
 
   const setupProgress = useCallback(() => {
     const audio = getAudioRef().current;
@@ -127,40 +138,18 @@ export function Player() {
 
     const currentProgress = Math.floor(audio.currentTime);
     setProgress(currentProgress);
+  }, [getAudioRef, setProgress]);
 
-    // Update media session position state for iOS and other platforms
-    if (currentDuration && currentDuration > 0) {
-      manageMediaSession.setPositionState(
-        currentDuration,
-        currentProgress,
-        audio.playbackRate,
-      );
-    }
-  }, [getAudioRef, setProgress, currentDuration]);
-
-  const setupInitialVolume = useCallback(() => {
-    const audio = getAudioRef().current;
-    if (!audio) return;
-
-    audio.volume = perceptualToGain(getVolume());
-  }, [getAudioRef]);
-
-  function getTrackReplayGain(): ReplayGainParams {
-    const preAmp = replayGainPreAmp;
-    const defaultGain = replayGainDefaultGain;
-
-    if (!song || !song.replayGain) {
-      return { gain: defaultGain, peak: 1, preAmp };
-    }
-
-    if (replayGainType === "album") {
-      const { albumGain = defaultGain, albumPeak = 1 } = song.replayGain;
-      return { gain: albumGain, peak: albumPeak, preAmp };
-    }
-
-    const { trackGain = defaultGain, trackPeak = 1 } = song.replayGain;
-    return { gain: trackGain, peak: trackPeak, preAmp };
-  }
+  const trackReplayGain = useMemo(
+    (): ReplayGainParams =>
+      resolveReplayGainParams(
+        song?.replayGain,
+        replayGainType,
+        replayGainPreAmp,
+        replayGainDefaultGain,
+      ),
+    [song, replayGainType, replayGainPreAmp, replayGainDefaultGain],
+  );
 
   const handleFooterClick = useCallback(
     (event: React.MouseEvent) => {
@@ -173,11 +162,40 @@ export function Player() {
       const isInteractive = isControlButton || isSlider;
 
       if (!isInteractive) {
-        openFullscreenPlayer("playing");
+        openFullscreenPlayerWithHistory("playing");
       }
     },
-    [isMobile, openFullscreenPlayer],
+    [isMobile],
   );
+
+  const handleAudioPlay = useCallback(
+    () => setPlayingState(true),
+    [setPlayingState],
+  );
+  const handleAudioPause = useCallback(
+    () => setPlayingState(false),
+    [setPlayingState],
+  );
+  const handleAudioWaiting = useCallback(
+    () => setStoreIsBuffering(true),
+    [setStoreIsBuffering],
+  );
+  const handleAudioPlaying = useCallback(
+    () => setStoreIsBuffering(false),
+    [setStoreIsBuffering],
+  );
+  const handleAudioCanPlay = useCallback(() => {
+    setStoreIsBuffering(false);
+    updateAudioDuration();
+  }, [setStoreIsBuffering, updateAudioDuration]);
+
+  const handlePlaybackError = useCallback(() => {
+    toast.error(t("warnings.songError"));
+  }, [t]);
+
+  const handleReplayGainError = useCallback(() => {
+    toast.error(t("warnings.songError"));
+  }, [t]);
 
   return (
     <footer
@@ -194,12 +212,7 @@ export function Player() {
         <div className="hidden sm:col-span-2 sm:flex flex-col justify-center items-center px-4 gap-1">
           <MemoPlayerControls song={song} radio={radio} />
 
-          {isSong && (
-            <MemoPlayerProgress
-              audioRef={getAudioRef()}
-              isBuffering={isBuffering}
-            />
-          )}
+          {isSong && <MemoPlayerProgress audioRef={getAudioRef()} />}
         </div>
         {/* Mobile Controls - Only Play/Pause and Next */}
         <div className="flex sm:hidden items-center gap-1">
@@ -252,20 +265,22 @@ export function Player() {
 
       {isSong && song && !isRemoteControlActive && (
         <MemoAudioPlayer
-          replayGain={getTrackReplayGain()}
+          replayGain={trackReplayGain}
           src={audioSrc}
           autoPlay={isPlaying}
           audioRef={audioRef}
           loop={loopState === LoopState.One}
-          onPlay={() => setPlayingState(true)}
-          onPause={() => setPlayingState(false)}
+          onPlay={handleAudioPlay}
+          onPause={handleAudioPause}
           onLoadedMetadata={setupDuration}
+          onDurationChange={updateAudioDuration}
           onTimeUpdate={setupProgress}
           onEnded={handleSongEnded}
-          onLoadStart={setupInitialVolume}
-          onWaiting={() => setIsBuffering(true)}
-          onPlaying={() => setIsBuffering(false)}
-          onCanPlay={() => setIsBuffering(false)}
+          onWaiting={handleAudioWaiting}
+          onPlaying={handleAudioPlaying}
+          onCanPlay={handleAudioCanPlay}
+          onPlaybackError={handlePlaybackError}
+          onReplayGainError={handleReplayGainError}
           data-testid="player-song-audio"
         />
       )}
@@ -275,9 +290,11 @@ export function Player() {
           src={radio.streamUrl}
           autoPlay={isPlaying}
           audioRef={radioRef}
-          onPlay={() => setPlayingState(true)}
-          onPause={() => setPlayingState(false)}
-          onLoadStart={setupInitialVolume}
+          onPlay={handleAudioPlay}
+          onPause={handleAudioPause}
+          onWaiting={handleAudioWaiting}
+          onPlaying={handleAudioPlaying}
+          onCanPlay={handleAudioCanPlay}
           data-testid="player-radio-audio"
         />
       )}

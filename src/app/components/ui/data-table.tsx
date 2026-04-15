@@ -265,6 +265,9 @@ export function DataTable<TData, TValue>({
     (e: MouseEvent<HTMLDivElement>, row: Row<TData>) => {
       if (!allowRowSelection) return;
 
+      const target = e.target as HTMLElement;
+      if (target.closest("[data-radix-menu-content]")) return;
+
       // Check the correct key depending on the OS (Meta for macOS, Ctrl for others)
       const isMultiSelectKey = isMacOs ? e.metaKey : e.ctrlKey;
 
@@ -323,10 +326,13 @@ export function DataTable<TData, TValue>({
 
   const handleRowDbClick = useCallback(
     (e: MouseEvent<HTMLDivElement>, row: Row<TData>) => {
-      if (handlePlaySong) {
-        e.stopPropagation();
-        handlePlaySong(row);
-      }
+      if (!handlePlaySong) return;
+
+      const target = e.target as HTMLElement;
+      if (target.closest("[data-radix-menu-content]")) return;
+
+      e.stopPropagation();
+      handlePlaySong(row);
     },
     [handlePlaySong],
   );
@@ -339,9 +345,10 @@ export function DataTable<TData, TValue>({
         const target = e.target as HTMLElement;
         const isButton = target.closest("button");
         const isInteractive = target.closest('[role="button"]');
+        const isMenuContent = target.closest("[data-radix-menu-content]");
 
-        // Don't trigger the row tap if touching a button or interactive element
-        if (!isButton && !isInteractive) {
+        // Don't trigger the row tap if touching a button, interactive element, or menu
+        if (!isButton && !isInteractive && !isMenuContent) {
           e.stopPropagation();
           handlePlaySong(row);
         }

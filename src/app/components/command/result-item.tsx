@@ -1,6 +1,6 @@
 import { Play } from "lucide-react";
-import Image from "@/app/components/image";
 import { getCoverArtUrl } from "@/api/httpClient";
+import Image from "@/app/components/image";
 import { Button } from "@/app/components/ui/button";
 import { CoverArt } from "@/types/coverArtType";
 

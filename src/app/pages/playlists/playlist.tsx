@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import ImageHeader from "@/app/components/album/image-header";
@@ -8,6 +9,7 @@ import ListWrapper from "@/app/components/list-wrapper";
 import { PlaylistButtons } from "@/app/components/playlist/buttons";
 import { RemoveSongFromPlaylistDialog } from "@/app/components/playlist/remove-song-dialog";
 import { DataTable } from "@/app/components/ui/data-table";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import ErrorPage from "@/app/pages/error-page";
 import { songsColumns } from "@/app/tables/songs-columns";
 import { subsonic } from "@/service/subsonic";
@@ -15,12 +17,18 @@ import { usePlayerActions } from "@/store/player.store";
 import { ColumnFilter } from "@/types/columnFilter";
 import { convertSecondsToHumanRead } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
-import { isMobile } from "react-device-detect";
 
 export default function Playlist() {
   const { playlistId } = useParams() as { playlistId: string };
   const { t } = useTranslation();
-  const columns = songsColumns();
+  const isMobile = useIsMobile();
+  const columns = useMemo(
+    () =>
+      songsColumns({
+        disableTextNavigation: true,
+      }),
+    [],
+  );
   const { setSongList } = usePlayerActions();
 
   const {
@@ -82,9 +90,15 @@ export default function Playlist() {
           columns={columns}
           data={playlist.entry ?? []}
           handlePlaySong={(row) =>
-            setSongList(playlist.entry, row.index, false, {
-              playlistId: playlist.id,
-            })
+            setSongList(
+              playlist.entry,
+              row.index,
+              false,
+              {
+                playlistId: playlist.id,
+              },
+              playlist.name,
+            )
           }
           columnFilter={columnsToShow}
           noRowsMessage={t("playlist.noSongList")}
