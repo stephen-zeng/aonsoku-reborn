@@ -126,6 +126,10 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
   const currentSongIndex = usePlayerCurrentSongIndex();
   const currentSong = usePlayerCurrentSong();
   const playHistory = usePlayHistory();
+  const filteredHistory = useMemo(
+    () => playHistory.filter((s) => s.id !== currentSong.id),
+    [playHistory, currentSong.id],
+  );
   const { clearHistory: clearPlayHistory } = usePlayHistoryActions();
 
   const upcoming = useMemo(
@@ -133,7 +137,7 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
     [currentList, currentSongIndex],
   );
 
-  if (currentList.length === 0 && playHistory.length === 0) {
+  if (currentList.length === 0 && filteredHistory.length === 0) {
     return (
       <div className="flex justify-center items-center h-full">
         <span className="text-foreground/70">No songs in queue</span>
@@ -143,7 +147,7 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
 
   return (
     <UnifiedQueueView
-      playHistory={playHistory}
+      playHistory={filteredHistory}
       upcoming={upcoming}
       currentSong={currentSong}
       currentSongIndex={currentSongIndex}
