@@ -152,6 +152,7 @@ export const MobileLayout = memo(function MobileLayout() {
               transition={VIEW_TRANSITION}
               className={`flex-1 overflow-hidden min-h-0 mx-auto w-full ${CONTENT_MAX_WIDTH}`}
               data-vaul-no-drag
+              onClick={(e) => e.stopPropagation()}
             >
               <MemoLyricsTab />
             </motion.div>
@@ -166,6 +167,7 @@ export const MobileLayout = memo(function MobileLayout() {
               transition={VIEW_TRANSITION}
               className={`flex-1 overflow-hidden min-h-0 mx-auto w-full ${CONTENT_MAX_WIDTH}`}
               data-vaul-no-drag
+              onClick={(e) => e.stopPropagation()}
               style={
                 { "--queue-bg-overlay": "transparent" } as React.CSSProperties
               }

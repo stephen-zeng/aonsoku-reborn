@@ -470,6 +470,7 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
     <div
       className="w-full h-full text-left lrc-box"
       data-vaul-no-drag
+      onClick={(e) => e.stopPropagation()}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
