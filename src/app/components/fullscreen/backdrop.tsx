@@ -1,18 +1,11 @@
-import { useMemo } from "react";
-import { useSongColor } from "@/store/player.store";
-import { hexToRgba } from "@/utils/getAverageColor";
+import { useBackdropBg } from "@/app/hooks/use-backdrop-bg";
 
 export function FullscreenBackdrop() {
   return <DynamicColorBackdrop />;
 }
 
 function DynamicColorBackdrop() {
-  const { currentSongColor, currentSongColorIntensity } = useSongColor();
-
-  const backgroundColor = useMemo(() => {
-    if (!currentSongColor) return undefined;
-    return hexToRgba(currentSongColor, currentSongColorIntensity);
-  }, [currentSongColor, currentSongColorIntensity]);
+  const backgroundColor = useBackdropBg();
 
   return (
     <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">

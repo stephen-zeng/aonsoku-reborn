@@ -1,4 +1,4 @@
-import { memo, ReactNode, useEffect, useMemo } from "react";
+import { memo, ReactNode, useEffect } from "react";
 import {
   Drawer,
   DrawerContent,
@@ -6,14 +6,10 @@ import {
   DrawerTrigger,
 } from "@/app/components/ui/drawer";
 import { useAppWindow } from "@/app/hooks/use-app-window";
-import {
-  useFullscreenPlayerSettings,
-  useSongColor,
-} from "@/store/player.store";
+import { useFullscreenPlayerSettings } from "@/store/player.store";
 import { enterFullscreen, exitFullscreen } from "@/utils/browser";
 import { isDesktop } from "@/utils/desktop";
 import { setDesktopTitleBarColors } from "@/utils/theme";
-import { hexToRgba } from "@/utils/getAverageColor";
 import { navigateFromFullscreen } from "@/routes/fullscreenRouter";
 import { FullscreenBackdrop } from "./backdrop";
 import { FullscreenDragHandler } from "./drag-handler";
@@ -35,14 +31,6 @@ export default function FullscreenMode({
 }: FullscreenModeProps) {
   const { enterFullscreenWindow, exitFullscreenWindow } = useAppWindow();
   const { autoFullscreenEnabled } = useFullscreenPlayerSettings();
-  const { currentSongColor, currentSongColorIntensity } = useSongColor();
-
-  const backdropBg = useMemo(() => {
-    if (!currentSongColor) return "transparent";
-    return (
-      hexToRgba(currentSongColor, currentSongColorIntensity) ?? "transparent"
-    );
-  }, [currentSongColor, currentSongColorIntensity]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: initial useEffect
   useEffect(() => {
@@ -95,12 +83,7 @@ export default function FullscreenMode({
       >
         <MemoFullscreenBackdrop />
         <FullscreenDragHandler />
-        <div
-          className="absolute inset-0 flex flex-col bg-black/0 z-10 fullscreen-safe-area"
-          style={
-            { "--fullscreen-backdrop-bg": backdropBg } as React.CSSProperties
-          }
-        >
+        <div className="absolute inset-0 flex flex-col bg-black/0 z-10 fullscreen-safe-area">
           <MemoFullscreenContent />
         </div>
       </DrawerContent>

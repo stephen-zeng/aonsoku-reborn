@@ -3,6 +3,7 @@ import { ChevronDown, ListMusic, MicVocalIcon } from "lucide-react";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
+import { useBackdropBg } from "@/app/hooks/use-backdrop-bg";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { cn } from "@/lib/utils";
 import { navigateFromFullscreen } from "@/routes/fullscreenRouter";
@@ -12,7 +13,6 @@ import { FullscreenControlPanel } from "./control-panel";
 import { LyricsTab } from "./lyrics";
 import { FullscreenSongQueue } from "./queue";
 import { FullscreenSettings } from "./settings";
-import { FULLSCREEN_QUEUE_BG_CLASS } from "./constants";
 
 const MemoLyricsTab = memo(LyricsTab);
 
@@ -23,8 +23,12 @@ export const DesktopLayout = memo(function DesktopLayout() {
   } = useFullscreenPlayerState();
   const { t } = useTranslation();
   const { hasLyrics } = useHasLyrics();
+  const backdropBg = useBackdropBg();
 
   const lyricsDisabled = hasLyrics === false;
+
+  const tabStyle = (view: string) =>
+    rightPanelView === view ? { backgroundColor: backdropBg } : undefined;
 
   function handleQueueClick() {
     setRightPanelView(rightPanelView === "queue" ? null : "queue");
@@ -97,10 +101,10 @@ export const DesktopLayout = memo(function DesktopLayout() {
               variant="ghost"
               size="sm"
               className={cn(
-                "gap-1.5",
+                "gap-1.5 transition-[background-color] duration-1000",
                 rightPanelView === "queue" && "rounded-md",
-                rightPanelView === "queue" && FULLSCREEN_QUEUE_BG_CLASS,
               )}
+              style={tabStyle("queue")}
               onClick={handleQueueClick}
             >
               <ListMusic className="size-4" />
@@ -110,11 +114,11 @@ export const DesktopLayout = memo(function DesktopLayout() {
               variant="ghost"
               size="sm"
               className={cn(
-                "gap-1.5",
+                "gap-1.5 transition-[background-color] duration-1000",
                 lyricsDisabled && "opacity-50 cursor-not-allowed",
                 rightPanelView === "lyrics" && "rounded-md",
-                rightPanelView === "lyrics" && FULLSCREEN_QUEUE_BG_CLASS,
               )}
+              style={tabStyle("lyrics")}
               onClick={handleLyricsClick}
               disabled={lyricsDisabled}
             >

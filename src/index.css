@@ -1,3 +1,9 @@
+@property --queue-backdrop-bg {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -60,17 +66,34 @@
     }
   }
 
-  /* Fullscreen player queue background — composites queue overlay + backdrop + base background */
+  /* Fullscreen player queue background — base colour + pseudo-element layers.
+     ::before = dynamic backdrop colour (transitions on track change via
+     @property-registered --queue-backdrop-bg).
+     ::after = static queue overlay (e.g. rgba(0,0,0,0.05) on desktop).
+     Content naturally paints above both pseudo-elements. */
   .fullscreen-queue-bg {
-    background: linear-gradient(
-        var(--queue-bg-overlay, transparent),
-        var(--queue-bg-overlay, transparent)
-      ),
-      linear-gradient(
-        var(--fullscreen-backdrop-bg, transparent),
-        var(--fullscreen-backdrop-bg, transparent)
-      ),
-      hsl(var(--background));
+    position: relative;
+    isolation: isolate;
+    background: hsl(var(--background));
+  }
+
+  .fullscreen-queue-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    transition: background-color 1000ms;
+    background-color: var(--queue-backdrop-bg, transparent);
+    pointer-events: none;
+  }
+
+  .fullscreen-queue-bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--queue-bg-overlay, transparent);
+    pointer-events: none;
   }
 
   /* Resize drag: lock cursor and suppress transitions */
