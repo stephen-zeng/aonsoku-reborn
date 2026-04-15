@@ -72,7 +72,6 @@ export function FullscreenProgress({
     variant: "secondary" as const,
     defaultValue: [0] as [number],
     value: (isSeeking ? [localProgress] : [progress]) as [number],
-    tooltipTransformer: convertSecondsToTime,
     max: currentDuration,
     step: 1,
     className: "w-full h-2 sm:h-3",

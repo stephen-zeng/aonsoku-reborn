@@ -83,8 +83,6 @@ function ColorIntensityOption(props: OptionProps) {
   const { t } = useTranslation();
   const { currentSongColorIntensity, setCurrentSongIntensity } = useSongColor();
 
-  const intensityTooltip = `${Math.round(currentSongColorIntensity * 100)}%`;
-
   return (
     <SettingWrapper
       text={t("settings.appearance.colors.queue.intensity")}
@@ -95,7 +93,6 @@ function ColorIntensityOption(props: OptionProps) {
         min={0.3}
         max={1.0}
         step={0.05}
-        tooltipValue={intensityTooltip}
         onValueChange={([value]) => setCurrentSongIntensity(value)}
       />
     </SettingWrapper>

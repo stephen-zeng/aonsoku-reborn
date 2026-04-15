@@ -198,7 +198,6 @@ export function PlayerProgress({
         <ProgressSlider
           defaultValue={[0]}
           value={isLocalSeeking ? [localProgress] : [progress]}
-          tooltipTransformer={convertSecondsToTime}
           max={currentDuration}
           step={1}
           className="cursor-pointer w-[32rem]"

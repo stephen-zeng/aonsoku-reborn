@@ -124,7 +124,6 @@ export function VolumeSlider({
         disabled && "pointer-events-none opacity-50",
       )}
       data-testid="player-volume-slider"
-      tooltipValue={volume.toString()}
       {...props}
       value={[volume]}
       min={min}
