@@ -272,7 +272,10 @@ export function Player() {
           onLoadStart={setupInitialVolume}
           onWaiting={() => setIsBuffering(true)}
           onPlaying={() => setIsBuffering(false)}
-          onCanPlay={() => setIsBuffering(false)}
+          onCanPlay={() => {
+            setIsBuffering(false);
+            updateAudioDuration();
+          }}
           data-testid="player-song-audio"
         />
       )}

@@ -389,8 +389,12 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 const { currentList, currentSongIndex } = get().songlist;
 
                 if (currentList.length > 0) {
+                  const song = currentList[currentSongIndex];
                   set((state) => {
-                    state.songlist.currentSong = currentList[currentSongIndex];
+                    state.songlist.currentSong = song;
+                    state.playerState.currentDuration = song?.duration
+                      ? Math.round(song.duration)
+                      : 0;
                   });
                 }
               },
