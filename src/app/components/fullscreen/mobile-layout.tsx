@@ -8,7 +8,7 @@ import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useIsShortViewport } from "@/app/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import {
-  navigateFromFullscreen,
+  closeFullscreenPlayerWithHistory,
   setFullscreenTabWithHistory,
 } from "@/routes/fullscreenRouter";
 import { useFullscreenPlayerState } from "@/store/player.store";
@@ -160,7 +160,7 @@ export const MobileLayout = memo(function MobileLayout({
   return (
     <div className="flex flex-col h-full w-full">
       <MobileHeader
-        onClose={navigateFromFullscreen}
+        onClose={closeFullscreenPlayerWithHistory}
         showDragHandle={showDragHandle}
         compact={useCompactPlayingLayout}
       />

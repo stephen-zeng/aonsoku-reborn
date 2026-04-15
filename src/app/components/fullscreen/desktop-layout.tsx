@@ -6,7 +6,7 @@ import { Button } from "@/app/components/ui/button";
 import { useBackdropBg } from "@/app/hooks/use-backdrop-bg";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { cn } from "@/lib/utils";
-import { navigateFromFullscreen } from "@/routes/fullscreenRouter";
+import { closeFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import { useFullscreenPlayerState } from "@/store/player.store";
 import { ArtworkWithInfo } from "./artwork-with-info";
 import { FullscreenControlPanel } from "./control-panel";
@@ -49,7 +49,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
             variant="ghost"
             size="icon"
             className="size-10 rounded-full hover:bg-foreground/20"
-            onClick={navigateFromFullscreen}
+            onClick={closeFullscreenPlayerWithHistory}
             aria-label="Close"
           >
             <ChevronDown className="size-5" />

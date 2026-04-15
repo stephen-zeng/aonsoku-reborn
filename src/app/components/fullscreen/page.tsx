@@ -6,7 +6,7 @@ import {
   DrawerTrigger,
 } from "@/app/components/ui/drawer";
 import { useAppWindow } from "@/app/hooks/use-app-window";
-import { navigateFromFullscreen } from "@/routes/fullscreenRouter";
+import { closeFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import { useFullscreenPlayerSettings } from "@/store/player.store";
 import { enterFullscreen, exitFullscreen } from "@/utils/browser";
 import { isDesktop } from "@/utils/desktop";
@@ -49,7 +49,7 @@ export default function FullscreenMode({
     onOpenChange?.(open);
 
     if (!open) {
-      navigateFromFullscreen();
+      closeFullscreenPlayerWithHistory();
     }
 
     if (isDesktop()) setDesktopTitleBarColors(open);
