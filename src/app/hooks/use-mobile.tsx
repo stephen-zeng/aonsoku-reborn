@@ -1,19 +1,28 @@
 import { useEffect, useState } from "react";
 
 const MOBILE_BREAKPOINT = 768;
+const SHORT_VIEWPORT_HEIGHT = 700;
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = useState<boolean | undefined>(undefined);
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    };
-    mql.addEventListener("change", onChange);
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    return () => mql.removeEventListener("change", onChange);
-  }, []);
+    const mql = window.matchMedia(query);
+    const onChange = (event: MediaQueryListEvent) => setMatches(event.matches);
 
-  return !!isMobile;
+    mql.addEventListener("change", onChange);
+    setMatches(mql.matches);
+
+    return () => mql.removeEventListener("change", onChange);
+  }, [query]);
+
+  return !!matches;
+}
+
+export function useIsMobile() {
+  return useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+}
+
+export function useIsShortViewport() {
+  return useMediaQuery(`(max-height: ${SHORT_VIEWPORT_HEIGHT}px)`);
 }

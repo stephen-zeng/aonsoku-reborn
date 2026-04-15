@@ -6,11 +6,11 @@ import {
   DrawerTrigger,
 } from "@/app/components/ui/drawer";
 import { useAppWindow } from "@/app/hooks/use-app-window";
+import { navigateFromFullscreen } from "@/routes/fullscreenRouter";
 import { useFullscreenPlayerSettings } from "@/store/player.store";
 import { enterFullscreen, exitFullscreen } from "@/utils/browser";
 import { isDesktop } from "@/utils/desktop";
 import { setDesktopTitleBarColors } from "@/utils/theme";
-import { navigateFromFullscreen } from "@/routes/fullscreenRouter";
 import { FullscreenBackdrop } from "./backdrop";
 import { FullscreenDragHandler } from "./drag-handler";
 import { FullscreenContent } from "./fullscreen-content";
@@ -77,7 +77,7 @@ export default function FullscreenMode({
       <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerTitle className="sr-only">Big Player</DrawerTitle>
       <DrawerContent
-        className="h-screen w-screen rounded-t-none border-none select-none cursor-default mt-0"
+        className="mt-0 h-dvh max-h-dvh w-screen rounded-t-none border-none select-none cursor-default"
         showHandle={false}
         aria-describedby={undefined}
       >

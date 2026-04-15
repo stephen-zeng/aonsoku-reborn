@@ -7,28 +7,43 @@ import { AlbumName, SongInfo } from "./song-info";
 
 export const ArtworkWithInfo = memo(function ArtworkWithInfo({
   className,
+  compact = false,
 }: {
   className?: string;
+  compact?: boolean;
 }) {
   return (
     <div
       className={clsx(
         "flex w-full min-h-0 min-w-0 flex-col items-center",
+        compact && "justify-center",
         className,
       )}
     >
-      <div className={`w-full min-w-0 ${CONTENT_MAX_WIDTH} pb-3`}>
-        <AlbumName />
+      <div
+        className={clsx(
+          "w-full min-w-0",
+          CONTENT_MAX_WIDTH,
+          compact ? "pb-2" : "pb-3",
+        )}
+      >
+        <AlbumName compact={compact} />
       </div>
 
-      <FullscreenSongArtwork />
+      <FullscreenSongArtwork compact={compact} />
 
-      <div className={`w-full min-w-0 ${CONTENT_MAX_WIDTH} pt-3`}>
+      <div
+        className={clsx(
+          "w-full min-w-0",
+          CONTENT_MAX_WIDTH,
+          compact ? "pt-2" : "pt-3",
+        )}
+      >
         <div className="flex min-w-0 items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <SongInfo />
+            <SongInfo compact={compact} />
           </div>
-          <div className="shrink-0 pt-1">
+          <div className={clsx("shrink-0", compact ? "pt-0.5" : "pt-1")}>
             <LikeButton />
           </div>
         </div>

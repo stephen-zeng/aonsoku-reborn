@@ -3,7 +3,9 @@ import { ChevronDown, ListMusic, MicVocalIcon } from "lucide-react";
 import { memo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
+import { DrawerHandle } from "@/app/components/ui/drawer";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
+import { useIsShortViewport } from "@/app/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import {
   navigateFromFullscreen,
@@ -25,22 +27,47 @@ const HEADER_ICON = <ChevronDown className="size-5" />;
 
 const MobileHeader = memo(function MobileHeader({
   onClose,
+  showDragHandle = false,
+  compact = false,
 }: {
   onClose: () => void;
+  showDragHandle?: boolean;
+  compact?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-2 px-3 pt-2 pb-2 shrink-0 z-20 min-h-[40px]">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="size-10 rounded-full hover:bg-foreground/20"
-        onClick={onClose}
-        aria-label="Close"
+    <div className="shrink-0 z-20">
+      {showDragHandle && (
+        <div
+          className={cn(
+            "flex justify-center",
+            compact ? "pt-1 pb-0.5" : "pt-1.5 pb-1",
+          )}
+        >
+          <DrawerHandle
+            preventCycle
+            data-testid="fullscreen-drag-handle"
+            aria-label="Drag to close"
+          />
+        </div>
+      )}
+      <div
+        className={cn(
+          "flex items-center gap-2 px-3 shrink-0 min-h-[40px]",
+          compact ? "pt-1 pb-1.5" : "pt-2 pb-2",
+        )}
       >
-        {HEADER_ICON}
-      </Button>
-      <div className="flex-1" />
-      <FullscreenSettings />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-10 rounded-full hover:bg-foreground/20"
+          onClick={onClose}
+          aria-label="Close"
+        >
+          {HEADER_ICON}
+        </Button>
+        <div className="flex-1" />
+        <FullscreenSettings />
+      </div>
     </div>
   );
 });
@@ -120,12 +147,23 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
   );
 });
 
-export const MobileLayout = memo(function MobileLayout() {
+export const MobileLayout = memo(function MobileLayout({
+  showDragHandle = false,
+}: {
+  showDragHandle?: boolean;
+}) {
   const { fullscreenPlayerTab } = useFullscreenPlayerState();
+  const isShortViewport = useIsShortViewport();
+  const useCompactPlayingLayout =
+    fullscreenPlayerTab === "playing" && isShortViewport;
 
   return (
     <div className="flex flex-col h-full w-full">
-      <MobileHeader onClose={navigateFromFullscreen} />
+      <MobileHeader
+        onClose={navigateFromFullscreen}
+        showDragHandle={showDragHandle}
+        compact={useCompactPlayingLayout}
+      />
 
       <div className="flex-1 min-h-0 flex flex-col">
         <AnimatePresence mode="wait">
@@ -136,10 +174,22 @@ export const MobileLayout = memo(function MobileLayout() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={VIEW_TRANSITION}
-              className="flex flex-col items-center overflow-hidden min-h-0 flex-1"
+              className={cn(
+                "flex min-h-0 flex-1 flex-col items-center overflow-hidden",
+                useCompactPlayingLayout && "justify-between",
+              )}
             >
-              <ArtworkWithInfo />
-              <FullscreenControlPanel expanded />
+              <ArtworkWithInfo
+                compact={useCompactPlayingLayout}
+                className={cn(
+                  "w-full",
+                  useCompactPlayingLayout ? "flex-1 px-4" : "min-h-0",
+                )}
+              />
+              <FullscreenControlPanel
+                compact={useCompactPlayingLayout}
+                expanded={!useCompactPlayingLayout}
+              />
             </motion.div>
           )}
 

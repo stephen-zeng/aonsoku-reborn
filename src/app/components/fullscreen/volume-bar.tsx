@@ -36,7 +36,11 @@ export function VolumeBar() {
   }, [volume]);
 
   return (
-    <div className="flex items-center gap-2 w-full" onWheel={handleWheel}>
+    <div
+      className="flex w-full min-w-0 items-center gap-2"
+      data-testid="fullscreen-volume-bar"
+      onWheel={handleWheel}
+    >
       <Button
         variant="ghost"
         size="icon"
@@ -56,7 +60,7 @@ export function VolumeBar() {
         min={min}
         max={max}
         step={step}
-        className="w-full h-3"
+        className="h-3 w-full min-w-0"
         onValueChange={([value]) => setVolume(value)}
         aria-label={t("player.tooltips.volume.mute")}
       />

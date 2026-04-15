@@ -1,10 +1,15 @@
+import { clsx } from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { memo } from "react";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { usePlayerStore } from "@/store/player.store";
 import { CONTENT_MAX_WIDTH } from "./constants";
 
-export const FullscreenSongArtwork = memo(function FullscreenSongArtwork() {
+export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
+  compact = false,
+}: {
+  compact?: boolean;
+}) {
   const { coverArt, artist, title, id } = usePlayerStore(
     ({ songlist }) => songlist.currentSong,
   );
@@ -18,7 +23,12 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork() {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 1.05 }}
           transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-          className={`w-full ${CONTENT_MAX_WIDTH} aspect-square max-h-full`}
+          className={clsx(
+            "aspect-square w-full",
+            compact
+              ? "max-h-[42vh] max-w-[260px]"
+              : `${CONTENT_MAX_WIDTH} max-h-full`,
+          )}
         >
           <CachedImage
             coverArtId={coverArt}

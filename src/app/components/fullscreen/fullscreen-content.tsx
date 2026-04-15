@@ -5,5 +5,5 @@ import { MobileLayout } from "./mobile-layout";
 export function FullscreenContent() {
   const isMobile = useIsMobile();
 
-  return isMobile ? <MobileLayout /> : <DesktopLayout />;
+  return isMobile ? <MobileLayout showDragHandle /> : <DesktopLayout />;
 }

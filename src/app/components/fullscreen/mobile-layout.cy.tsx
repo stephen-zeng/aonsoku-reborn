@@ -49,4 +49,20 @@ describe("MobileLayout", () => {
       cy.contains(songs[0].title).should("be.visible");
     });
   });
+
+  it("keeps the volume bar visible on compact mobile heights", () => {
+    cy.viewport(375, 667);
+
+    cy.fixture("songs/random").then((songs: ISong[]) => {
+      const { actions } = usePlayerStore.getState();
+
+      actions.setSongList(songs, 0);
+      actions.openFullscreenPlayer("playing");
+
+      mountMobileLayout();
+
+      cy.get('[data-testid="fullscreen-volume-bar"]').should("be.visible");
+      cy.get('[role="tablist"]').should("be.visible");
+    });
+  });
 });

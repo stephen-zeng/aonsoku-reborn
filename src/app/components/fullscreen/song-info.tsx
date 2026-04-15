@@ -1,10 +1,11 @@
+import { clsx } from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { memo } from "react";
 import { usePlayerStore } from "@/store/player.store";
-import { CompactSongArtwork } from "./song-artwork";
-import { ScrollingTitle } from "./scrolling-title";
 import { ISong } from "@/types/responses/song";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
+import { ScrollingTitle } from "./scrolling-title";
+import { CompactSongArtwork } from "./song-artwork";
 
 const TEXT_TRANSITION = { duration: 0.25, ease: [0.4, 0, 0.2, 1] } as const;
 const TEXT_TRANSITION_DELAYED = {
@@ -13,11 +14,20 @@ const TEXT_TRANSITION_DELAYED = {
   delay: 0.05,
 } as const;
 
-export const SongInfo = memo(function SongInfo() {
+export const SongInfo = memo(function SongInfo({
+  compact = false,
+}: {
+  compact?: boolean;
+}) {
   const currentSong = usePlayerStore((state) => state.songlist.currentSong);
 
   return (
-    <div className="flex w-full min-w-0 flex-col gap-1">
+    <div
+      className={clsx(
+        "flex w-full min-w-0 flex-col",
+        compact ? "gap-0.5" : "gap-1",
+      )}
+    >
       <AnimatePresence mode="wait">
         <motion.div
           key={currentSong.id ?? "no-song"}
@@ -28,7 +38,12 @@ export const SongInfo = memo(function SongInfo() {
           className="w-full min-w-0 overflow-hidden"
         >
           <ScrollingTitle>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            <h2
+              className={clsx(
+                "font-bold tracking-tight",
+                compact ? "text-xl sm:text-2xl" : "text-2xl sm:text-3xl",
+              )}
+            >
               {currentSong.title}
             </h2>
           </ScrollingTitle>
@@ -44,7 +59,12 @@ export const SongInfo = memo(function SongInfo() {
           className="w-full min-w-0 overflow-hidden"
         >
           <ScrollingTitle>
-            <div className="text-sm text-foreground/70">
+            <div
+              className={clsx(
+                compact ? "text-xs" : "text-sm",
+                "text-foreground/70",
+              )}
+            >
               <ArtistNames song={currentSong} />
             </div>
           </ScrollingTitle>
@@ -54,7 +74,11 @@ export const SongInfo = memo(function SongInfo() {
   );
 });
 
-export const AlbumName = memo(function AlbumName() {
+export const AlbumName = memo(function AlbumName({
+  compact = false,
+}: {
+  compact?: boolean;
+}) {
   const currentSong = usePlayerStore((state) => state.songlist.currentSong);
 
   return (
@@ -68,7 +92,14 @@ export const AlbumName = memo(function AlbumName() {
         className="w-full min-w-0 overflow-hidden text-center"
       >
         <ScrollingTitle>
-          <p className="text-sm text-foreground/70">{currentSong.album}</p>
+          <p
+            className={clsx(
+              compact ? "text-xs" : "text-sm",
+              "text-foreground/70",
+            )}
+          >
+            {currentSong.album}
+          </p>
         </ScrollingTitle>
       </motion.div>
     </AnimatePresence>
