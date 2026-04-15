@@ -126,10 +126,12 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
   const currentSongIndex = usePlayerCurrentSongIndex();
   const currentSong = usePlayerCurrentSong();
   const playHistory = usePlayHistory();
-  const filteredHistory = useMemo(
-    () => playHistory.filter((s) => s.id !== currentSong.id),
-    [playHistory, currentSong.id],
-  );
+  const filteredHistory = useMemo(() => {
+    if (playHistory.length > 0 && playHistory[0].id === currentSong.id) {
+      return playHistory.slice(1);
+    }
+    return playHistory;
+  }, [playHistory, currentSong.id]);
   const { clearHistory: clearPlayHistory } = usePlayHistoryActions();
 
   const upcoming = useMemo(
