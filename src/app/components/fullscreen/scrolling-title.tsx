@@ -60,19 +60,30 @@ export function ScrollingTitle({ children }: ScrollingTitleProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const controls = useAnimationControls();
-  const [overflow, setOverflow] = useState({ width: 0, isOverflowing: false });
+  const [overflow, setOverflow] = useState({
+    width: 0,
+    height: 0,
+    isOverflowing: false,
+  });
 
   const calculateOverflow = useCallback(() => {
     if (!containerRef.current || !textRef.current) return;
 
     const containerWidth = containerRef.current.offsetWidth;
     const measuredWidth = textRef.current.scrollWidth;
+    const measuredHeight = textRef.current.offsetHeight;
     const isOverflowing = measuredWidth > containerWidth;
 
     setOverflow((prev) =>
-      prev.width === measuredWidth && prev.isOverflowing === isOverflowing
+      prev.width === measuredWidth &&
+      prev.height === measuredHeight &&
+      prev.isOverflowing === isOverflowing
         ? prev
-        : { width: measuredWidth, isOverflowing },
+        : {
+            width: measuredWidth,
+            height: measuredHeight,
+            isOverflowing,
+          },
     );
   }, []);
 
@@ -94,7 +105,7 @@ export function ScrollingTitle({ children }: ScrollingTitleProps) {
   // biome-ignore lint/correctness/useExhaustiveDependencies: need children to reset animation on content change
   useEffect(() => {
     controls.set({ x: 0 });
-    setOverflow({ width: 0, isOverflowing: false });
+    setOverflow({ width: 0, height: 0, isOverflowing: false });
     calculateOverflow();
   }, [children, controls, calculateOverflow]);
 
@@ -138,7 +149,11 @@ export function ScrollingTitle({ children }: ScrollingTitleProps) {
 
   if (!overflow.isOverflowing) {
     return (
-      <div ref={containerRef} className="overflow-hidden">
+      <div
+        ref={containerRef}
+        className="w-full min-w-0 overflow-hidden"
+        data-testid="scrolling-title"
+      >
         <div ref={textRef} className="inline-block whitespace-nowrap">
           {children}
         </div>
@@ -147,8 +162,19 @@ export function ScrollingTitle({ children }: ScrollingTitleProps) {
   }
 
   return (
-    <div ref={containerRef} className="relative">
-      <div className="absolute top-0 bottom-0" style={MASK_STYLE}>
+    <div
+      ref={containerRef}
+      className="relative w-full min-w-0 overflow-hidden"
+      style={{
+        minHeight: overflow.height > 0 ? `${overflow.height}px` : undefined,
+      }}
+      data-testid="scrolling-title"
+    >
+      <div
+        className="absolute inset-y-0 overflow-hidden"
+        style={MASK_STYLE}
+        aria-hidden
+      >
         <motion.div
           animate={controls}
           className="inline-flex whitespace-nowrap"
@@ -160,7 +186,6 @@ export function ScrollingTitle({ children }: ScrollingTitleProps) {
           </div>
         </motion.div>
       </div>
-      <div className="invisible whitespace-nowrap">{children}</div>
     </div>
   );
 }

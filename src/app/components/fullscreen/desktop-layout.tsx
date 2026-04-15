@@ -42,7 +42,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
   return (
     <div className="flex h-full w-full overflow-hidden">
       <div
-        className={`flex flex-col h-full shrink-0 px-8 sm:px-12 pt-6 pb-4 transition-[width] duration-300 ${rightPanelView ? "w-1/2" : "w-full"}`}
+        className={`flex h-full min-w-0 shrink-0 flex-col px-8 pt-6 pb-4 transition-[width] duration-300 sm:px-12 ${rightPanelView ? "w-1/2" : "w-full"}`}
       >
         <div className="flex items-center gap-2 shrink-0">
           <Button
@@ -81,8 +81,8 @@ export const DesktopLayout = memo(function DesktopLayout() {
           <FullscreenSettings />
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center min-h-0">
-          <div className="flex flex-col items-center w-full max-h-full overflow-y-hidden">
+        <div className="flex min-w-0 flex-1 flex-col items-center justify-center min-h-0">
+          <div className="flex w-full min-w-0 flex-col items-center max-h-full overflow-y-hidden">
             <ArtworkWithInfo className="flex-1 min-h-0" />
             <FullscreenControlPanel />
           </div>

@@ -12,17 +12,20 @@ export const ArtworkWithInfo = memo(function ArtworkWithInfo({
 }) {
   return (
     <div
-      className={clsx("w-full flex flex-col items-center min-h-0", className)}
+      className={clsx(
+        "flex w-full min-h-0 min-w-0 flex-col items-center",
+        className,
+      )}
     >
-      <div className={`w-full ${CONTENT_MAX_WIDTH} pb-3`}>
+      <div className={`w-full min-w-0 ${CONTENT_MAX_WIDTH} pb-3`}>
         <AlbumName />
       </div>
 
       <FullscreenSongArtwork />
 
-      <div className={`w-full ${CONTENT_MAX_WIDTH} pt-3`}>
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0 overflow-visible">
+      <div className={`w-full min-w-0 ${CONTENT_MAX_WIDTH} pt-3`}>
+        <div className="flex min-w-0 items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
             <SongInfo />
           </div>
           <div className="shrink-0 pt-1">

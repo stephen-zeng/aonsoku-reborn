@@ -17,7 +17,7 @@ export const SongInfo = memo(function SongInfo() {
   const currentSong = usePlayerStore((state) => state.songlist.currentSong);
 
   return (
-    <div className="flex flex-col gap-1 w-full overflow-visible">
+    <div className="flex w-full min-w-0 flex-col gap-1">
       <AnimatePresence mode="wait">
         <motion.div
           key={currentSong.id ?? "no-song"}
@@ -25,7 +25,7 @@ export const SongInfo = memo(function SongInfo() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={TEXT_TRANSITION}
-          className="w-full overflow-visible"
+          className="w-full min-w-0 overflow-hidden"
         >
           <ScrollingTitle>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
@@ -41,7 +41,7 @@ export const SongInfo = memo(function SongInfo() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={TEXT_TRANSITION_DELAYED}
-          className="w-full"
+          className="w-full min-w-0 overflow-hidden"
         >
           <ScrollingTitle>
             <div className="text-sm text-foreground/70">
@@ -65,7 +65,7 @@ export const AlbumName = memo(function AlbumName() {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 8 }}
         transition={TEXT_TRANSITION}
-        className="text-center"
+        className="w-full min-w-0 overflow-hidden text-center"
       >
         <ScrollingTitle>
           <p className="text-sm text-foreground/70">{currentSong.album}</p>
