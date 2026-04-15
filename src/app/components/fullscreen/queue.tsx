@@ -281,8 +281,10 @@ function UnifiedQueueView({
       ref={scrollContainerRef}
     >
       {playHistory.length > 0 && (
-        <div className={`shrink-0 ${FULLSCREEN_QUEUE_BG_CLASS}`}>
-          <div className="flex items-center justify-between px-2 py-1">
+        <div className={FULLSCREEN_QUEUE_BG_CLASS}>
+          <div
+            className={`${FULLSCREEN_QUEUE_BG_CLASS} sticky top-0 z-10 flex items-center justify-between px-2 py-1`}
+          >
             <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
               {t("fullscreen.queueHistory")}
             </h3>
