@@ -593,6 +593,14 @@
           "label": "Show translation",
           "info": "When available, show translated lyrics below the original lyrics."
         }
+      },
+      "history": {
+        "group": "Play History",
+        "description": "Songs that play for more than 10 seconds are recorded in your play history.",
+        "maxSize": {
+          "label": "Maximum history size",
+          "info": "The maximum number of songs to keep in play history. Older entries are removed when the limit is exceeded."
+        }
       }
     },
     "privacy": {

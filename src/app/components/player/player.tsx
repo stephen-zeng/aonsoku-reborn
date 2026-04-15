@@ -5,6 +5,7 @@ import { MiniPlayerButton } from "@/app/components/mini-player/button";
 import { RadioInfo } from "@/app/components/player/radio-info";
 import { TrackInfo } from "@/app/components/player/track-info";
 import { Button } from "@/app/components/ui/button";
+import { usePlayHistoryStore } from "@/store/playHistory.store";
 import {
   getVolume,
   useIsRemoteControlActive,
@@ -49,6 +50,10 @@ export function Player() {
   const radioRef = useRef<HTMLAudioElement>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
+  const playHistoryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const playedSongIdRef = useRef<string | null>(null);
   const {
     setAudioPlayerRef,
     setCurrentDuration,
@@ -108,6 +113,38 @@ export function Player() {
 
     return () => window.removeEventListener("resize", checkIsMobile);
   }, []);
+
+  useEffect(() => {
+    if (playHistoryTimerRef.current) {
+      clearTimeout(playHistoryTimerRef.current);
+      playHistoryTimerRef.current = null;
+    }
+
+    if (!isSong || !songId || !isPlaying || isRemoteControlActive) {
+      playedSongIdRef.current = null;
+      return;
+    }
+
+    const currentSong = usePlayerStore.getState().songlist.currentSong;
+    if (!currentSong) return;
+
+    playedSongIdRef.current = songId;
+    const songToRecord = { ...currentSong };
+
+    playHistoryTimerRef.current = setTimeout(() => {
+      if (playedSongIdRef.current === songId) {
+        usePlayHistoryStore.getState().actions.addToHistory(songToRecord);
+      }
+    }, 10_000);
+
+    return () => {
+      if (playHistoryTimerRef.current) {
+        clearTimeout(playHistoryTimerRef.current);
+        playHistoryTimerRef.current = null;
+      }
+      playedSongIdRef.current = null;
+    };
+  }, [isSong, songId, isPlaying, isRemoteControlActive]);
 
   const updateAudioDuration = useCallback(() => {
     const audio = getAudioRef().current;

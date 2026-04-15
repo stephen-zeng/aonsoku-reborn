@@ -25,10 +25,14 @@ import { getCoverArtUrl } from "@/api/httpClient";
 import { useQueueDndSensors } from "@/app/components/queue/dnd-sensors";
 import { Button } from "@/app/components/ui/button";
 import {
+  usePlayHistory,
+  usePlayHistoryActions,
+} from "@/store/playHistory.store";
+import {
   usePlayerActions,
-  usePlayerCurrentList,
   usePlayerCurrentSong,
   usePlayerCurrentSongIndex,
+  usePlayerCurrentList,
   useQueueSource,
 } from "@/store/player.store";
 import type { ISong } from "@/types/responses/song";
@@ -121,17 +125,15 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
   const currentList = usePlayerCurrentList();
   const currentSongIndex = usePlayerCurrentSongIndex();
   const currentSong = usePlayerCurrentSong();
+  const playHistory = usePlayHistory();
+  const { clearHistory: clearPlayHistory } = usePlayHistoryActions();
 
-  const history = useMemo(
-    () => currentList.slice(0, currentSongIndex),
-    [currentList, currentSongIndex],
-  );
   const upcoming = useMemo(
     () => currentList.slice(currentSongIndex + 1),
     [currentList, currentSongIndex],
   );
 
-  if (currentList.length === 0) {
+  if (currentList.length === 0 && playHistory.length === 0) {
     return (
       <div className="flex justify-center items-center h-full">
         <span className="text-foreground/70">No songs in queue</span>
@@ -141,33 +143,36 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
 
   return (
     <UnifiedQueueView
-      history={history}
+      playHistory={playHistory}
       upcoming={upcoming}
       currentSong={currentSong}
       currentSongIndex={currentSongIndex}
       currentList={currentList}
       hideModeButtons={hideModeButtons}
+      clearPlayHistory={clearPlayHistory}
     />
   );
 });
 
 function UnifiedQueueView({
-  history,
+  playHistory,
   upcoming,
   currentSong,
   currentSongIndex,
   currentList,
   hideModeButtons,
+  clearPlayHistory,
 }: {
-  history: ISong[];
+  playHistory: ISong[];
   upcoming: ISong[];
   currentSong: ISong;
   currentSongIndex: number;
   currentList: ISong[];
   hideModeButtons: boolean;
+  clearPlayHistory: () => void;
 }) {
   const { t } = useTranslation();
-  const { setSongList, clearHistory, reorderQueue } = usePlayerActions();
+  const { playSong, setSongList, reorderQueue } = usePlayerActions();
   const queueSource = useQueueSource();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
 
@@ -269,7 +274,7 @@ function UnifiedQueueView({
       data-vaul-no-drag
       ref={scrollContainerRef}
     >
-      {history.length > 0 && (
+      {playHistory.length > 0 && (
         <div className={`shrink-0 ${FULLSCREEN_QUEUE_BG_CLASS}`}>
           <div className="flex items-center justify-between px-2 py-1">
             <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
@@ -279,20 +284,19 @@ function UnifiedQueueView({
               variant="ghost"
               size="sm"
               className="h-6 px-2 text-xs text-foreground/50 hover:text-foreground"
-              onClick={clearHistory}
+              onClick={clearPlayHistory}
             >
               {t("generic.clear")}
             </Button>
           </div>
-          {history.map((song, idx) => {
-            const globalIndex = idx;
+          {playHistory.map((song, idx) => {
             const isActive = currentSong.id === song.id;
             return (
               <QueueListRow
-                key={song.id}
+                key={`${song.id}-${idx}`}
                 song={song}
                 isActive={isActive}
-                onClick={() => setSongList(currentList, globalIndex)}
+                onClick={() => playSong(song)}
               />
             );
           })}
