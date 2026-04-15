@@ -1,14 +1,13 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { OptionsButtons } from "@/app/components/options/buttons";
 import { ContextMenuSeparator } from "@/app/components/ui/context-menu";
 import { useOptions } from "@/app/hooks/use-options";
+import { useSongStarMutation } from "@/app/hooks/use-song-star-mutation";
 import { ROUTES } from "@/routes/routesList";
-import { subsonic } from "@/service/subsonic";
 import {
-  usePlayerActions,
-  usePlayerMediaType,
-  usePlayerSonglist,
+  usePlayerCurrentSong,
+  usePlayerSongStarred,
 } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { AddToPlaylistSubMenu } from "./add-to-playlist";
@@ -19,29 +18,20 @@ interface MenuLikeButtonProps {
 }
 
 function MenuLikeButton({ variant, song }: MenuLikeButtonProps) {
-  const [isStarred, setIsStarred] = useState(typeof song.starred === "string");
-  const { currentSong } = usePlayerSonglist();
-  const { isSong } = usePlayerMediaType();
-  const { starCurrentSong, starSongInQueue } = usePlayerActions();
+  const { isStarred, setIsStarred, toggleStar } = useSongStarMutation({
+    songId: song.id,
+    initialStarred: typeof song.starred === "string",
+    albumId: song.albumId,
+  });
 
-  async function handleToggleStar() {
-    const newState = !isStarred;
-    setIsStarred(newState);
+  const currentSong = usePlayerCurrentSong();
+  const isSongStarred = usePlayerSongStarred();
 
-    try {
-      await subsonic.star.handleStarItem({
-        id: song.id,
-        starred: isStarred,
-      });
-
-      if (isSong) {
-        const isSongPlaying = currentSong.id === song.id;
-        isSongPlaying ? starCurrentSong() : starSongInQueue(song.id);
-      }
-    } catch {
-      setIsStarred(!newState);
+  useEffect(() => {
+    if (currentSong.id === song.id) {
+      setIsStarred(isSongStarred);
     }
-  }
+  }, [currentSong, song.id, isSongStarred, setIsStarred]);
 
   return (
     <>
@@ -50,7 +40,7 @@ function MenuLikeButton({ variant, song }: MenuLikeButtonProps) {
         isStarred={isStarred}
         onClick={(e) => {
           e.stopPropagation();
-          handleToggleStar();
+          toggleStar();
         }}
       />
       <ContextMenuSeparator />
