@@ -18,7 +18,6 @@ export const usePlayHistoryStore = createWithEqualityFn<IPlayHistoryContext>()(
         actions: {
           addToHistory: (song: ISong) => {
             set((state) => {
-              if (state.history[0]?.id === song.id) return;
               state.history.unshift(song);
               if (state.history.length > state.maxSize) {
                 state.history.splice(state.maxSize);
