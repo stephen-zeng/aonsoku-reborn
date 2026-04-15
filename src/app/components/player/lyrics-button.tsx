@@ -5,11 +5,8 @@ import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useIsXl } from "@/app/hooks/use-is-xl";
-import {
-  useFullscreenPlayerState,
-  useLyricsState,
-  useMainDrawerState,
-} from "@/store/player.store";
+import { useLyricsState, useMainDrawerState } from "@/store/player.store";
+import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 
 interface PlayerLyricsButtonProps {
   disabled?: boolean;
@@ -19,7 +16,6 @@ export function PlayerLyricsButton({ disabled }: PlayerLyricsButtonProps) {
   const { t } = useTranslation();
   const { mainDrawerState } = useMainDrawerState();
   const { lyricsState, toggleLyricsAction } = useLyricsState();
-  const { openFullscreenPlayer } = useFullscreenPlayerState();
   const isXl = useIsXl();
   const { hasLyrics } = useHasLyrics();
 
@@ -31,7 +27,7 @@ export function PlayerLyricsButton({ disabled }: PlayerLyricsButtonProps) {
     if (isXl) {
       toggleLyricsAction();
     } else {
-      openFullscreenPlayer("lyrics");
+      openFullscreenPlayerWithHistory("lyrics");
     }
   }
 

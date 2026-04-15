@@ -5,6 +5,10 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { cn } from "@/lib/utils";
+import {
+  navigateFromFullscreen,
+  setFullscreenTabWithHistory,
+} from "@/routes/fullscreenRouter";
 import { useFullscreenPlayerState } from "@/store/player.store";
 import { ArtworkWithInfo } from "./artwork-with-info";
 import { CONTENT_MAX_WIDTH } from "./constants";
@@ -81,8 +85,7 @@ function MobileTabButton({
 
 const MobileBottomTabs = memo(function MobileBottomTabs() {
   const { t } = useTranslation();
-  const { fullscreenPlayerTab, setFullscreenPlayerTab } =
-    useFullscreenPlayerState();
+  const { fullscreenPlayerTab } = useFullscreenPlayerState();
   const { hasLyrics } = useHasLyrics();
 
   const lyricsDisabled = hasLyrics === false;
@@ -98,7 +101,7 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
         active={fullscreenPlayerTab === "lyrics"}
         disabled={lyricsDisabled}
         onClick={() =>
-          setFullscreenPlayerTab(
+          setFullscreenTabWithHistory(
             fullscreenPlayerTab === "lyrics" ? "playing" : "lyrics",
           )
         }
@@ -108,7 +111,7 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
         label={t("fullscreen.queue")}
         active={fullscreenPlayerTab === "queue"}
         onClick={() =>
-          setFullscreenPlayerTab(
+          setFullscreenTabWithHistory(
             fullscreenPlayerTab === "queue" ? "playing" : "queue",
           )
         }
@@ -118,12 +121,11 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
 });
 
 export const MobileLayout = memo(function MobileLayout() {
-  const { closeFullscreenPlayer, fullscreenPlayerTab } =
-    useFullscreenPlayerState();
+  const { fullscreenPlayerTab } = useFullscreenPlayerState();
 
   return (
     <div className="flex flex-col h-full w-full">
-      <MobileHeader onClose={() => closeFullscreenPlayer()} />
+      <MobileHeader onClose={navigateFromFullscreen} />
 
       <div className="flex-1 min-h-0 flex flex-col">
         <AnimatePresence mode="wait">

@@ -14,6 +14,7 @@ import { enterFullscreen, exitFullscreen } from "@/utils/browser";
 import { isDesktop } from "@/utils/desktop";
 import { setDesktopTitleBarColors } from "@/utils/theme";
 import { hexToRgba } from "@/utils/getAverageColor";
+import { navigateFromFullscreen } from "@/routes/fullscreenRouter";
 import { FullscreenBackdrop } from "./backdrop";
 import { FullscreenDragHandler } from "./drag-handler";
 import { FullscreenContent } from "./fullscreen-content";
@@ -58,6 +59,10 @@ export default function FullscreenMode({
 
   async function handleFullscreen(open: boolean) {
     onOpenChange?.(open);
+
+    if (!open) {
+      navigateFromFullscreen();
+    }
 
     if (isDesktop()) setDesktopTitleBarColors(open);
 

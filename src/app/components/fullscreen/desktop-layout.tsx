@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { cn } from "@/lib/utils";
+import { navigateFromFullscreen } from "@/routes/fullscreenRouter";
 import { useFullscreenPlayerState } from "@/store/player.store";
 import { ArtworkWithInfo } from "./artwork-with-info";
 import { FullscreenControlPanel } from "./control-panel";
@@ -17,7 +18,6 @@ const MemoLyricsTab = memo(LyricsTab);
 
 export const DesktopLayout = memo(function DesktopLayout() {
   const {
-    closeFullscreenPlayer,
     desktopFullscreenPanelView: rightPanelView,
     setDesktopFullscreenPanelView: setRightPanelView,
   } = useFullscreenPlayerState();
@@ -45,7 +45,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
             variant="ghost"
             size="icon"
             className="size-10 rounded-full hover:bg-foreground/20"
-            onClick={() => closeFullscreenPlayer()}
+            onClick={navigateFromFullscreen}
             aria-label="Close"
           >
             <ChevronDown className="size-5" />

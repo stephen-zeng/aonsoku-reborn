@@ -7,7 +7,6 @@ import { TrackInfo } from "@/app/components/player/track-info";
 import { Button } from "@/app/components/ui/button";
 import {
   getVolume,
-  useFullscreenPlayerState,
   useIsRemoteControlActive,
   usePlayerActions,
   usePlayerIsPlaying,
@@ -19,6 +18,7 @@ import {
   useReplayGainState,
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
+import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import { hasPiPSupport } from "@/utils/browser";
 import { isValidDuration } from "@/utils/duration";
 import { ReplayGainParams } from "@/utils/replayGain";
@@ -49,7 +49,6 @@ export function Player() {
   const radioRef = useRef<HTMLAudioElement>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
-  const { openFullscreenPlayer } = useFullscreenPlayerState();
   const {
     setAudioPlayerRef,
     setCurrentDuration,
@@ -179,10 +178,10 @@ export function Player() {
       const isInteractive = isControlButton || isSlider;
 
       if (!isInteractive) {
-        openFullscreenPlayer("playing");
+        openFullscreenPlayerWithHistory("playing");
       }
     },
-    [isMobile, openFullscreenPlayer],
+    [isMobile],
   );
 
   return (

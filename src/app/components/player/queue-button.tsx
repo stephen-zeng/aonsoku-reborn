@@ -14,11 +14,11 @@ import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { useIsXl } from "@/app/hooks/use-is-xl";
 import { cn } from "@/lib/utils";
 import {
-  useFullscreenPlayerState,
   useMainDrawerState,
   usePlayerActions,
   useQueueState,
 } from "@/store/player.store";
+import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 
 interface PlayerSongListButtonProps {
   disabled: boolean;
@@ -28,7 +28,6 @@ export function PlayerQueueButton({ disabled }: PlayerSongListButtonProps) {
   const { t } = useTranslation();
   const { mainDrawerState } = useMainDrawerState();
   const { queueState, toggleQueueAction } = useQueueState();
-  const { openFullscreenPlayer } = useFullscreenPlayerState();
   const isXl = useIsXl();
   const [openPopover, setOpenPopover] = useState(false);
 
@@ -38,7 +37,7 @@ export function PlayerQueueButton({ disabled }: PlayerSongListButtonProps) {
     if (isXl) {
       toggleQueueAction();
     } else {
-      openFullscreenPlayer("queue");
+      openFullscreenPlayerWithHistory("queue");
     }
   }
 

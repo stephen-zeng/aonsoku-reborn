@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
 import { useFullscreenPlayerState, useSongColor } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
+import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import { getAverageColor } from "@/utils/getAverageColor";
 import { logger } from "@/utils/logger";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
@@ -27,8 +28,7 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const { setCurrentSongColor } = useSongColor();
-  const { fullscreenPlayerOpen, openFullscreenPlayer, closeFullscreenPlayer } =
-    useFullscreenPlayerState();
+  const { fullscreenPlayerOpen } = useFullscreenPlayerState();
 
   const getImageColor = useCallback(
     async (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -95,8 +95,7 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
         <FullscreenMode
           open={fullscreenPlayerOpen}
           onOpenChange={(open) => {
-            if (open) openFullscreenPlayer("playing");
-            else closeFullscreenPlayer();
+            if (open) openFullscreenPlayerWithHistory("playing");
           }}
         >
           <Button
