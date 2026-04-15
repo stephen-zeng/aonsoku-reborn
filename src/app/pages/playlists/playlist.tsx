@@ -90,9 +90,15 @@ export default function Playlist() {
           columns={columns}
           data={playlist.entry ?? []}
           handlePlaySong={(row) =>
-            setSongList(playlist.entry, row.index, false, {
-              playlistId: playlist.id,
-            })
+            setSongList(
+              playlist.entry,
+              row.index,
+              false,
+              {
+                playlistId: playlist.id,
+              },
+              playlist.name,
+            )
           }
           columnFilter={columnsToShow}
           noRowsMessage={t("playlist.noSongList")}

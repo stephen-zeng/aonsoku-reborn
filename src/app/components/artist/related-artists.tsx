@@ -27,7 +27,7 @@ export default function RelatedArtistsList({
 
   async function handlePlayArtistRadio(artist: ISimilarArtist) {
     const songList = await getArtistAllSongs(artist.id);
-    if (songList) setSongList(songList, 0);
+    if (songList) setSongList(songList, 0, false, undefined, artist.name);
   }
 
   return (

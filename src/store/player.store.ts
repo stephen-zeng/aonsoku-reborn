@@ -24,6 +24,13 @@ import debounce from "lodash/debounce";
 import { addNextSongList, shuffleSongList } from "@/utils/songListFunctions";
 import { get as idbGet, set as idbSet } from "idb-keyval";
 
+function resolveQueueSource(
+  sourceName: string | undefined,
+  fallback: string | null,
+): string | null {
+  return sourceName !== undefined ? sourceName || null : fallback;
+}
+
 const miniStores = {
   songlist: "player_songlist",
 };
@@ -339,6 +346,10 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   set((state) => {
                     state.playerState.isPlaying = true;
                     state.playerState.isShuffleActive = Boolean(shuffle);
+                    state.songlist.queueSource = resolveQueueSource(
+                      sourceName,
+                      state.songlist.queueSource,
+                    );
                   });
                   return;
                 }
@@ -355,6 +366,10 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   set((state) => {
                     state.playerState.isPlaying = true;
                     state.songlist.currentSongIndex = index;
+                    state.songlist.queueSource = resolveQueueSource(
+                      sourceName,
+                      state.songlist.queueSource,
+                    );
                   });
                   return;
                 }
@@ -364,7 +379,10 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.songlist.originalSongIndex = index;
                   state.playerState.mediaType = "song";
                   state.songlist.radioList = [];
-                  state.songlist.queueSource = sourceName ?? null;
+                  state.songlist.queueSource = resolveQueueSource(
+                    sourceName,
+                    state.songlist.queueSource,
+                  );
                 });
 
                 if (shuffle) {
@@ -400,7 +418,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   });
                 }
               },
-              playSong: (song) => {
+              playSong: (song, sourceName) => {
                 if (
                   remoteSend(LanControlMessageType.PLAY_SONG, {
                     songId: song.id,
@@ -425,6 +443,10 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                     state.playerState.isShuffleActive = false;
                     state.playerState.isPlaying = true;
                     state.songlist.radioList = [];
+                    state.songlist.queueSource = resolveQueueSource(
+                      sourceName,
+                      song.album || null,
+                    );
                   });
                 }
               },

@@ -49,7 +49,7 @@ export default function ArtistsList() {
   async function handlePlayArtistRadio(artist: ISimilarArtist) {
     const songList = await getArtistAllSongs(artist.name);
 
-    if (songList) setSongList(songList, 0);
+    if (songList) setSongList(songList, 0, false, undefined, artist.name);
   }
 
   if (isLoading) return <ArtistsFallback />;

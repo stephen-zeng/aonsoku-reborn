@@ -24,9 +24,15 @@ export function HeaderItem({ song }: { song: ISong }) {
     if (album) {
       const songIndex = album.song.findIndex((item) => item.id === song.id);
 
-      setSongList(album.song, songIndex, false, {
-        albumId: album.id,
-      });
+      setSongList(
+        album.song,
+        songIndex,
+        false,
+        {
+          albumId: album.id,
+        },
+        album.name,
+      );
     }
   }
 

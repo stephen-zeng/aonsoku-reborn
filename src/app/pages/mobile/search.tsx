@@ -148,14 +148,14 @@ export default function MobileSearch() {
     setQuery(value);
   }, 500);
 
-  async function handlePlayAlbum(albumId: string) {
+  async function handlePlayAlbum(albumId: string, albumName: string) {
     const albumSongs = await getAlbumSongs(albumId);
-    if (albumSongs) setSongList(albumSongs, 0);
+    if (albumSongs) setSongList(albumSongs, 0, false, { albumId }, albumName);
   }
 
   async function handlePlayArtist(artist: ISimilarArtist) {
     const artistSongs = await getArtistAllSongs(artist.id);
-    if (artistSongs) setSongList(artistSongs, 0);
+    if (artistSongs) setSongList(artistSongs, 0, false, undefined, artist.name);
   }
 
   return (
@@ -198,7 +198,7 @@ export default function MobileSearch() {
                 title={album.name}
                 subtitle={album.artist}
                 onRowClick={() => navigate(ROUTES.ALBUM.PAGE(album.id))}
-                onPlayClick={() => handlePlayAlbum(album.id)}
+                onPlayClick={() => handlePlayAlbum(album.id, album.name)}
               />
             ))}
           </ResultSection>

@@ -33,11 +33,11 @@ import {
   usePlayerCurrentSong,
   usePlayerCurrentSongIndex,
   usePlayerCurrentList,
-  useQueueSource,
 } from "@/store/player.store";
 import type { ISong } from "@/types/responses/song";
 import { useBackdropBg } from "@/app/hooks/use-backdrop-bg";
 import { QueueCurrentSong, QueueModeButtons } from "./queue-current-song";
+import { QueueSourceLabel } from "@/app/components/queue/queue-source-label";
 import { FULLSCREEN_QUEUE_BG_CLASS } from "./constants";
 
 /**
@@ -180,7 +180,6 @@ function UnifiedQueueView({
 }) {
   const { t } = useTranslation();
   const { playSong, setSongList, reorderQueue } = usePlayerActions();
-  const queueSource = useQueueSource();
   const backdropBg = useBackdropBg();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
 
@@ -349,11 +348,7 @@ function UnifiedQueueView({
                   {t("fullscreen.queueContinue")}
                 </h3>
               </div>
-              {queueSource && (
-                <p className="text-xs text-foreground/50 px-2 pb-1 truncate">
-                  {t("fullscreen.queueFromSource", { source: queueSource })}
-                </p>
-              )}
+              <QueueSourceLabel />
             </div>
             {upcoming.map((song, idx) => {
               const globalIndex = currentSongIndex + 1 + idx;

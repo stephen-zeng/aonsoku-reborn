@@ -62,7 +62,9 @@ export default function ArtistTopSongs({ topSongs, artist }: TopSongsProps) {
       <DataTable
         columns={columns}
         data={topTenSongs}
-        handlePlaySong={(row) => setSongList(topTenSongs, row.index)}
+        handlePlaySong={(row) =>
+          setSongList(topTenSongs, row.index, false, undefined, name)
+        }
         columnFilter={columnsToShow}
         variant="modern"
       />

@@ -28,8 +28,9 @@ export function useOptions() {
   function play(
     list: ISong[],
     sourceId?: { albumId: string } | { playlistId: string },
+    sourceName?: string,
   ) {
-    setSongList(list, 0, false, sourceId);
+    setSongList(list, 0, false, sourceId, sourceName);
   }
 
   function playNext(

@@ -125,7 +125,7 @@ export interface IRemoteControlState {
 }
 
 export interface IPlayerActions {
-  playSong: (song: ISong) => void;
+  playSong: (song: ISong, sourceName?: string) => void;
   setSongList: (
     songlist: ISong[],
     index: number,

@@ -17,7 +17,7 @@ function AlbumCard({ album }: AlbumCardProps) {
     const response = await subsonic.albums.getOne(album.id);
 
     if (response) {
-      setSongList(response.song, 0);
+      setSongList(response.song, 0, false, { albumId: album.id }, album.name);
     }
   }
 

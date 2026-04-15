@@ -4,6 +4,7 @@ import {
   usePlayerCurrentSongIndex,
   usePlayerIsPlaying,
 } from "@/store/player.store";
+import { QueueSourceLabel } from "./queue-source-label";
 import { DraggableVirtualQueue } from "./draggable-virtual-queue";
 
 export function QueueSongList() {
@@ -22,6 +23,7 @@ export function QueueSongList() {
 
   return (
     <div className="flex flex-1 flex-col h-full min-w-0">
+      <QueueSourceLabel />
       <DraggableVirtualQueue
         currentList={currentList}
         currentSong={currentSong}

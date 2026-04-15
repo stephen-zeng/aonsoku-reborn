@@ -28,9 +28,9 @@ export function CommandAlbumResult({
   const { getAlbumSongs } = useSongList();
   const { setSongList } = usePlayerActions();
 
-  async function handlePlayAlbum(albumId: string) {
+  async function handlePlayAlbum(albumId: string, albumName: string) {
     const albumSongs = await getAlbumSongs(albumId);
-    if (albumSongs) setSongList(albumSongs, 0);
+    if (albumSongs) setSongList(albumSongs, 0, false, { albumId }, albumName);
   }
 
   return (
@@ -61,7 +61,7 @@ export function CommandAlbumResult({
                 coverArtType="album"
                 title={album.name}
                 artist={album.artist}
-                onClick={() => handlePlayAlbum(album.id)}
+                onClick={() => handlePlayAlbum(album.id, album.name)}
               />
             </CommandItem>
           ))}

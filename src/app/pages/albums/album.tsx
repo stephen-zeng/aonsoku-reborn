@@ -157,7 +157,13 @@ export default function Album() {
           columns={columns}
           data={album.song}
           handlePlaySong={(row) =>
-            setSongList(album.song, row.index, false, { albumId: album.id })
+            setSongList(
+              album.song,
+              row.index,
+              false,
+              { albumId: album.id },
+              album.name,
+            )
           }
           columnFilter={columnsToShow}
           showDiscNumber={true}
