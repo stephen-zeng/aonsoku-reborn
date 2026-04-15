@@ -1,6 +1,5 @@
 import { ClockIcon, HeartIcon } from "lucide-react";
 import { memo } from "react";
-import { isMobile } from "react-device-detect";
 import { Link } from "react-router-dom";
 
 import { ArtistLink, ArtistsLinks } from "@/app/components/song/artist-link";
@@ -29,10 +28,12 @@ const MemoDataTableColumnHeader = memo(
 
 type SongsColumnsOptions = {
   disableTextNavigation?: boolean;
+  hasHover?: boolean;
 };
 
 export function songsColumns({
   disableTextNavigation = false,
+  hasHover = true,
 }: SongsColumnsOptions = {}): ColumnDefType<ISong>[] {
   return [
     {
@@ -298,16 +299,16 @@ export function songsColumns({
     {
       id: "select",
       style: {
-        width: isMobile ? 48 : 120,
-        maxWidth: isMobile ? 48 : 120,
+        width: hasHover ? 120 : 48,
+        maxWidth: hasHover ? 120 : 48,
         justifyContent: "end",
       },
       header: () =>
-        isMobile ? null : (
+        hasHover ? (
           <MemoSimpleTooltip text={i18n.t("table.columns.favorite")}>
             <HeartIcon className="w-4 h-4 mr-2" />
           </MemoSimpleTooltip>
-        ),
+        ) : null,
       cell: ({ row }) => <MemoSongTableActions row={row} />,
     },
   ];

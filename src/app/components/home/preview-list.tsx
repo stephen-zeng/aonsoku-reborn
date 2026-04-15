@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { isMobile } from "react-device-detect";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { PreviewCard } from "@/app/components/preview-card/card";
@@ -29,6 +29,7 @@ export default function PreviewList({
     useScrollCarousel(title);
   const { setSongList } = usePlayerActions();
   const { t } = useTranslation();
+  const hasHover = useHasHover();
 
   moreTitle = moreTitle || t("generic.seeMore");
   const displayList = useMemo(() => list.slice(0, 16), [list]);
@@ -96,7 +97,7 @@ export default function PreviewList({
                   coverArtType="album"
                   alt={album.name}
                 />
-                {!isMobile && (
+                {hasHover && (
                   <PreviewCard.PlayButton
                     onClick={() => handlePlayAlbum(album)}
                   />

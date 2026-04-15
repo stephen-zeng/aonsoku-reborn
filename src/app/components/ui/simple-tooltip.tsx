@@ -1,6 +1,6 @@
 import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { ReactNode } from "react";
-import { isDesktop } from "react-device-detect";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import {
   Tooltip,
   TooltipContent,
@@ -27,8 +27,9 @@ export function SimpleTooltip({
   avoidCollisions = true,
   disabled = false,
 }: SimpleTooltipProps) {
-  // If is not desktop return only the children element
-  if (!isDesktop || disabled) {
+  const hasHover = useHasHover();
+
+  if (!hasHover || disabled) {
     return <>{children}</>;
   }
 

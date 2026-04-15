@@ -16,6 +16,7 @@ import {
   useGetArtistAlbums,
   useGetGenreAlbums,
 } from "@/app/hooks/use-album";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import { useIsMobile } from "@/app/hooks/use-mobile";
 import ErrorPage from "@/app/pages/error-page";
 import { songsColumns } from "@/app/tables/songs-columns";
@@ -31,12 +32,14 @@ export default function Album() {
   const { setSongList } = usePlayerActions();
   const { t } = useTranslation();
   const isMobile = useIsMobile();
+  const hasHover = useHasHover();
   const columns = useMemo(
     () =>
       songsColumns({
         disableTextNavigation: true,
+        hasHover,
       }),
-    [],
+    [hasHover],
   );
 
   const {

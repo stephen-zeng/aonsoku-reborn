@@ -4,6 +4,7 @@ import { ShadowHeader } from "@/app/components/album/shadow-header";
 import { InfinitySongListFallback } from "@/app/components/fallbacks/song-fallbacks";
 import { HeaderTitle } from "@/app/components/header-title";
 import { DataTableList } from "@/app/components/ui/data-table-list";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import { useIsMobile } from "@/app/hooks/use-mobile";
 import { songsColumns } from "@/app/tables/songs-columns";
 import { usePlayerActions } from "@/store/player.store";
@@ -52,6 +53,7 @@ export function SongListLayout({
 }: SongListLayoutProps) {
   const { setSongList } = usePlayerActions();
   const isMobile = useIsMobile();
+  const hasHover = useHasHover();
   const songlistRef = useRef(songlist);
   songlistRef.current = songlist;
   const sourceNameRef = useRef(sourceName);
@@ -60,8 +62,9 @@ export function SongListLayout({
     () =>
       songsColumns({
         disableTextNavigation: true,
+        hasHover,
       }),
-    [],
+    [hasHover],
   );
   const columnsToShow = isMobile ? COLUMNS_MOBILE : COLUMNS_DESKTOP;
 

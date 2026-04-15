@@ -10,6 +10,7 @@ import { PlaylistButtons } from "@/app/components/playlist/buttons";
 import { RemoveSongFromPlaylistDialog } from "@/app/components/playlist/remove-song-dialog";
 import { DataTable } from "@/app/components/ui/data-table";
 import { useIsMobile } from "@/app/hooks/use-mobile";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import ErrorPage from "@/app/pages/error-page";
 import { songsColumns } from "@/app/tables/songs-columns";
 import { subsonic } from "@/service/subsonic";
@@ -22,12 +23,14 @@ export default function Playlist() {
   const { playlistId } = useParams() as { playlistId: string };
   const { t } = useTranslation();
   const isMobile = useIsMobile();
+  const hasHover = useHasHover();
   const columns = useMemo(
     () =>
       songsColumns({
         disableTextNavigation: true,
+        hasHover,
       }),
-    [],
+    [hasHover],
   );
   const { setSongList } = usePlayerActions();
 

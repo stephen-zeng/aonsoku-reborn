@@ -11,6 +11,7 @@ import { BadgesData } from "@/app/components/header-info";
 import ListWrapper from "@/app/components/list-wrapper";
 import { DataTable } from "@/app/components/ui/data-table";
 import { useIsMobile } from "@/app/hooks/use-mobile";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import { songsColumns } from "@/app/tables/songs-columns";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
@@ -32,11 +33,12 @@ const COLUMNS_MOBILE: ColumnFilter[] = ["title", "select"];
 export default function SongList() {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
+  const hasHover = useHasHover();
   const { setSongList } = usePlayerActions();
 
   const columns = useMemo(
-    () => songsColumns({ disableTextNavigation: true }),
-    [],
+    () => songsColumns({ disableTextNavigation: true, hasHover }),
+    [hasHover],
   );
 
   const {

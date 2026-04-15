@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
-import { isMobile } from "react-device-detect";
 import { useTranslation } from "react-i18next";
 import { ShadowHeader } from "@/app/components/album/shadow-header";
 import { ArtistGridCard } from "@/app/components/artist/artist-grid-card";
@@ -10,6 +9,7 @@ import { HeaderTitle } from "@/app/components/header-title";
 import ListWrapper from "@/app/components/list-wrapper";
 import { MainViewTypeSelector } from "@/app/components/main-grid";
 import { DataTableList } from "@/app/components/ui/data-table-list";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import { useSongList } from "@/app/hooks/use-song-list";
 import { artistsColumns } from "@/app/tables/artists-columns";
 import { subsonic } from "@/service/subsonic";
@@ -29,6 +29,7 @@ export default function ArtistsList() {
   const { t } = useTranslation();
   const { getArtistAllSongs } = useSongList();
   const { setSongList } = usePlayerActions();
+  const isMobile = useIsMobile();
   const {
     artistsPageViewType,
     setArtistsPageViewType,

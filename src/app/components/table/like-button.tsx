@@ -2,7 +2,7 @@ import { clsx } from "clsx";
 import { Heart } from "lucide-react";
 import { useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { isMobile } from "react-device-detect";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import { Button } from "@/app/components/ui/button";
 import { useSongStarMutation } from "@/app/hooks/use-song-star-mutation";
 import { subsonic } from "@/service/subsonic";
@@ -74,6 +74,7 @@ export function TableLikeButton({
   }
 
   const isStarred = type === "song" ? songStar.isStarred : starred;
+  const hasHover = useHasHover();
 
   return (
     <Button
@@ -82,7 +83,7 @@ export function TableLikeButton({
       className={clsx(
         "w-8 h-8 p-1 rounded-full transition-opacity",
         !isStarred && "opacity-0 group-hover/tablerow:opacity-100",
-        isMobile && "opacity-100",
+        !hasHover && "opacity-100",
       )}
       onClick={(e) => {
         e.stopPropagation();

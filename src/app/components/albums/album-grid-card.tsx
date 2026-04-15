@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { isMobile } from "react-device-detect";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import { PreviewCard } from "@/app/components/preview-card/card";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
@@ -12,6 +12,7 @@ type AlbumCardProps = {
 
 function AlbumCard({ album }: AlbumCardProps) {
   const { setSongList } = usePlayerActions();
+  const hasHover = useHasHover();
 
   async function handlePlayAlbum() {
     const response = await subsonic.albums.getOne(album.id);
@@ -30,7 +31,7 @@ function AlbumCard({ album }: AlbumCardProps) {
           coverArtSize="300"
           alt={album.name}
         />
-        {!isMobile && <PreviewCard.PlayButton onClick={handlePlayAlbum} />}
+        {hasHover && <PreviewCard.PlayButton onClick={handlePlayAlbum} />}
       </PreviewCard.ImageWrapper>
       <PreviewCard.InfoWrapper>
         <PreviewCard.Title link={ROUTES.ALBUM.PAGE(album.id)}>

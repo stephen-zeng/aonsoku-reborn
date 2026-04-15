@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import { EllipsisVertical } from "lucide-react";
 import { ReactNode, useState } from "react";
-import { isMobile } from "react-device-detect";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import { Button } from "@/app/components/ui/button";
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ export function TableActionButton({
   optionsMenuItems,
 }: TableActionButtonProps) {
   const [open, setOpen] = useState(false);
+  const hasHover = useHasHover();
 
   return (
     <DropdownMenu open={open} onOpenChange={(state) => setOpen(state)}>
@@ -31,7 +32,7 @@ export function TableActionButton({
             "w-8 h-8 p-1 rounded-full",
             "data-[state=open]:bg-accent data-[state=open]:opacity-100",
             "opacity-0 group-hover/tablerow:opacity-100 transition-opacity",
-            isMobile && "opacity-100",
+            !hasHover && "opacity-100",
           )}
           onClick={(e) => {
             e.stopPropagation();

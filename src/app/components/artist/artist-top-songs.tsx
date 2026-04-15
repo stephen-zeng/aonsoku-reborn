@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { DataTable } from "@/app/components/ui/data-table";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import { songsColumns } from "@/app/tables/songs-columns";
 import { ROUTES } from "@/routes/routesList";
 import { usePlayerActions } from "@/store/player.store";
@@ -17,12 +18,14 @@ interface TopSongsProps {
 export default function ArtistTopSongs({ topSongs, artist }: TopSongsProps) {
   const { t } = useTranslation();
   const { setSongList } = usePlayerActions();
+  const hasHover = useHasHover();
   const columns = useMemo(
     () =>
       songsColumns({
         disableTextNavigation: true,
+        hasHover,
       }),
-    [],
+    [hasHover],
   );
   const topTenSongs = topSongs.length > 10 ? topSongs.slice(0, 10) : topSongs;
   const { id, name } = artist;
