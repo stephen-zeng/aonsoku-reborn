@@ -7,7 +7,7 @@ import {
 } from "standardized-audio-context";
 import {
   usePlayerMediaType,
-  useRemoteControlState,
+  useIsRemoteControlActive,
   useReplayGainState,
 } from "@/store/player.store";
 import { logger } from "@/utils/logger";
@@ -18,7 +18,7 @@ type IAudioSource = IMediaElementAudioSourceNode<IAudioContext>;
 export function useAudioContext(audio: HTMLAudioElement | null) {
   const { isSong } = usePlayerMediaType();
   const { replayGainError, replayGainEnabled } = useReplayGainState();
-  const { active: isRemoteControlActive } = useRemoteControlState();
+  const isRemoteControlActive = useIsRemoteControlActive();
 
   // Use native audio by default, only use AudioContext when acting as a remote controller
   const shouldUseNativeAudio = !isRemoteControlActive;
@@ -26,6 +26,21 @@ export function useAudioContext(audio: HTMLAudioElement | null) {
   const audioContextRef = useRef<IAudioContext | null>(null);
   const sourceNodeRef = useRef<IAudioSource | null>(null);
   const gainNodeRef = useRef<IGainNode<IAudioContext> | null>(null);
+
+  const resetRefs = useCallback(() => {
+    if (sourceNodeRef.current) {
+      sourceNodeRef.current.disconnect();
+      sourceNodeRef.current = null;
+    }
+    if (gainNodeRef.current) {
+      gainNodeRef.current.disconnect();
+      gainNodeRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+  }, []);
 
   const setupAudioContext = useCallback(() => {
     // Skip AudioContext setup when not in remote control mode - use native audio instead
@@ -41,6 +56,13 @@ export function useAudioContext(audio: HTMLAudioElement | null) {
     }
 
     const audioContext = audioContextRef.current;
+
+    // If the audio element changed, disconnect the old source node
+    // (createMediaElementSource can only be called once per element)
+    if (sourceNodeRef.current && sourceNodeRef.current.mediaElement !== audio) {
+      sourceNodeRef.current.disconnect();
+      sourceNodeRef.current = null;
+    }
 
     if (!sourceNodeRef.current) {
       sourceNodeRef.current = audioContext.createMediaElementSource(audio);
@@ -73,9 +95,10 @@ export function useAudioContext(audio: HTMLAudioElement | null) {
       }
     }
     if (audioContext.state === "closed") {
+      resetRefs();
       setupAudioContext();
     }
-  }, [isSong, setupAudioContext, shouldUseNativeAudio]);
+  }, [isSong, resetRefs, setupAudioContext, shouldUseNativeAudio]);
 
   const setupGain = useCallback(
     (gainValue: number, replayGain?: ReplayGainParams) => {
@@ -96,21 +119,6 @@ export function useAudioContext(audio: HTMLAudioElement | null) {
     },
     [replayGainEnabled, shouldUseNativeAudio],
   );
-
-  const resetRefs = useCallback(() => {
-    if (sourceNodeRef.current) {
-      sourceNodeRef.current.disconnect();
-      sourceNodeRef.current = null;
-    }
-    if (gainNodeRef.current) {
-      gainNodeRef.current.disconnect();
-      gainNodeRef.current = null;
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
-    }
-  }, []);
 
   useEffect(() => {
     if (replayGainError) resetRefs();

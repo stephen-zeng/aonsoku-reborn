@@ -7,14 +7,12 @@ import {
   useRef,
   useState,
 } from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
 import { useAudioContext } from "@/app/hooks/use-audio-context";
 import {
   usePlayerIsPlaying,
   usePlayerMediaType,
   usePlayerVolume,
-  useRemoteControlState,
+  useIsRemoteControlActive,
   useReplayGainActions,
   useReplayGainState,
   usePlayerActions,
@@ -27,26 +25,29 @@ import { perceptualToGain } from "@/utils/volume";
 type AudioPlayerProps = ComponentPropsWithoutRef<"audio"> & {
   audioRef: RefObject<HTMLAudioElement>;
   replayGain?: ReplayGainParams;
+  onPlaybackError?: () => void;
+  onReplayGainError?: () => void;
 };
 
 export function AudioPlayer({
   audioRef,
   replayGain,
+  onPlaybackError,
+  onReplayGainError,
   src,
   onLoadedMetadata,
   onTimeUpdate,
   onCanPlay,
   ...props
 }: AudioPlayerProps) {
-  const { t } = useTranslation();
-  const [previousGain, setPreviousGain] = useState(1);
+  const previousGainRef = useRef(1);
   const [audioSrc, setAudioSrc] = useState<string | undefined>(undefined);
   const { replayGainEnabled, replayGainError } = useReplayGainState();
   const { isSong, isRadio } = usePlayerMediaType();
   const { setReplayGainEnabled, setReplayGainError } = useReplayGainActions();
   const { volume } = usePlayerVolume();
   const isPlaying = usePlayerIsPlaying();
-  const { active: isRemoteControlActive } = useRemoteControlState();
+  const isRemoteControlActive = useIsRemoteControlActive();
 
   const shouldUseNativeAudio = !isRemoteControlActive;
 
@@ -80,12 +81,8 @@ export function AudioPlayer({
   const gainValue = useMemo(() => {
     const audioVolume = perceptualToGain(volume);
 
-    if (shouldUseNativeAudio) {
-      return audioVolume * 1;
-    }
-
-    if (!replayGain || !replayGainEnabled) {
-      return audioVolume * 1;
+    if (shouldUseNativeAudio || !replayGain || !replayGainEnabled) {
+      return audioVolume;
     }
     const gain = calculateReplayGain(replayGain);
 
@@ -106,15 +103,14 @@ export function AudioPlayer({
     }
 
     if (ignoreGain) return;
-    if (gainValue === previousGain) return;
+    if (gainValue === previousGainRef.current) return;
 
     setupGain(gainValue, replayGain);
-    setPreviousGain(gainValue);
+    previousGainRef.current = gainValue;
   }, [
     audioRef,
     ignoreGain,
     gainValue,
-    previousGain,
     replayGain,
     setupGain,
     shouldUseNativeAudio,
@@ -164,7 +160,7 @@ export function AudioPlayer({
   const scheduleRetry = useCallback(
     (audio: HTMLAudioElement) => {
       if (retryCountRef.current >= MAX_RETRIES) {
-        toast.error(t("warnings.songError"));
+        onPlaybackError?.();
         retryCountRef.current = 0;
         pendingResumePositionRef.current = null;
         resumeGuardActiveRef.current = false;
@@ -207,7 +203,7 @@ export function AudioPlayer({
         safePlay(currentAudio, "Retry");
       }, delay);
     },
-    [t, audioRef, safePlay],
+    [audioRef, safePlay, onPlaybackError],
   );
 
   const handleSongError = useCallback(() => {
@@ -232,10 +228,9 @@ export function AudioPlayer({
       audio.error?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED &&
       replayGainEnabled
     ) {
-      toast.error(t("warnings.songError"));
+      onReplayGainError?.();
       setReplayGainEnabled(false);
       setReplayGainError(true);
-      window.location.reload();
     } else if (audio.error?.code !== MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
       scheduleRetry(audio);
     }
@@ -245,7 +240,7 @@ export function AudioPlayer({
     scheduleRetry,
     setReplayGainEnabled,
     setReplayGainError,
-    t,
+    onReplayGainError,
   ]);
 
   const handleSongErrorRef = useRef(handleSongError);
@@ -280,19 +275,27 @@ export function AudioPlayer({
 
   const { setProgress: setStoreProgress } = usePlayerActions();
 
+  // Effect: handle source changes (pause and reset state)
   useEffect(() => {
-    async function handleSong() {
+    const audio = audioRef.current;
+    if (!audio || !isSong) return;
+
+    if (!audioSrc) {
+      pauseAudio(audio);
+    }
+  }, [audioRef, audioSrc, isSong, pauseAudio]);
+
+  // Effect: handle play/pause state changes
+  useEffect(() => {
+    async function handleSongPlayback() {
       const audio = audioRef.current;
-      if (!audio) return;
+      if (!audio || !isSong) return;
+
+      if (!audioSrc) return;
 
       try {
-        if (!audioSrc) {
-          pauseAudio(audio);
-          return;
-        }
-
         if (isPlaying) {
-          if (isSong && !shouldUseNativeAudio) {
+          if (!shouldUseNativeAudio) {
             await resumeContext();
           }
           safePlay(audio, "Song");
@@ -304,7 +307,7 @@ export function AudioPlayer({
         handleSongErrorRef.current();
       }
     }
-    if (isSong) handleSong();
+    handleSongPlayback();
   }, [
     audioRef,
     audioSrc,

@@ -1,17 +1,9 @@
 import clsx from "clsx";
-import {
-  RefObject,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { RefObject, useCallback, useEffect, useMemo, useRef } from "react";
 import { ProgressSlider } from "@/app/components/ui/slider";
+import { useAudioSeeking } from "@/app/hooks/use-audio-seeking";
 import { subsonic } from "@/service/subsonic";
 import {
-  useIsRemoteControlActive,
-  usePlayerActions,
   usePlayerDuration,
   usePlayerIsBuffering,
   usePlayerIsPlaying,
@@ -20,7 +12,6 @@ import {
   usePlayerSonglist,
 } from "@/store/player.store";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
-import { logger } from "@/utils/logger";
 
 interface PlayerProgressProps {
   audioRef: RefObject<HTMLAudioElement>;
@@ -28,80 +19,32 @@ interface PlayerProgressProps {
 
 export function PlayerProgress({ audioRef }: PlayerProgressProps) {
   const progress = usePlayerProgress();
-  const [localProgress, setLocalProgress] = useState(progress);
-  const [isLocalSeeking, setIsLocalSeeking] = useState(false);
   const currentDuration = usePlayerDuration();
   const isPlaying = usePlayerIsPlaying();
   const isBuffering = usePlayerIsBuffering();
   const { currentSong, currentList } = usePlayerSonglist();
   const { isSong } = usePlayerMediaType();
-  const { setProgress } = usePlayerActions();
-  const isRemoteControlActive = useIsRemoteControlActive();
-  const isScrobbleSentRef = useRef(false);
-  const isNowPlayingSentRef = useRef(false);
 
   const isEmpty = isSong && currentList.length === 0;
+
+  const {
+    localProgress,
+    isLocalSeeking,
+    setIsLocalSeeking,
+    handleSeeking,
+    handleSeeked,
+    handleSeekedFallback,
+  } = useAudioSeeking({ audioRef });
 
   // Sync local progress with global progress when not seeking
   useEffect(() => {
     if (!isLocalSeeking) {
-      setLocalProgress(progress);
-    }
-  }, [progress, isLocalSeeking]);
-
-  const updateAudioCurrentTime = useCallback(
-    (value: number) => {
-      if (isRemoteControlActive) return;
-      if (audioRef.current) {
-        logger.info("Seeking to:", value);
-        audioRef.current.currentTime = value;
-      }
-    },
-    [audioRef, isRemoteControlActive],
-  );
-
-  const handleSeeking = useCallback((amount: number) => {
-    setIsLocalSeeking(true);
-    setLocalProgress(amount);
-  }, []);
-
-  const handleSeeked = useCallback(
-    (amount: number) => {
-      logger.info("Seek completed:", amount);
       setIsLocalSeeking(false);
-      if (!isRemoteControlActive) {
-        updateAudioCurrentTime(amount);
-      }
-      setProgress(amount);
-      setLocalProgress(amount);
-    },
-    [isRemoteControlActive, setProgress, updateAudioCurrentTime],
-  );
-
-  const handleSeekedFallback = useCallback(() => {
-    if (isLocalSeeking) {
-      logger.info("Seek fallback triggered:", localProgress);
-      setIsLocalSeeking(false);
-      if (localProgress !== progress) {
-        if (!isRemoteControlActive) {
-          updateAudioCurrentTime(localProgress);
-        }
-        setProgress(localProgress);
-      }
     }
-  }, [
-    isLocalSeeking,
-    isRemoteControlActive,
-    localProgress,
-    progress,
-    setProgress,
-    updateAudioCurrentTime,
-  ]);
+  }, [isLocalSeeking, setIsLocalSeeking]);
 
-  const songDuration = useMemo(
-    () => convertSecondsToTime(currentDuration ?? 0),
-    [currentDuration],
-  );
+  const isScrobbleSentRef = useRef(false);
+  const isNowPlayingSentRef = useRef(false);
 
   const sendScrobble = useCallback(async (songId: string) => {
     await subsonic.scrobble.send(songId);
@@ -110,30 +53,11 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
   const progressTicks = useRef(0);
 
   useEffect(() => {
-    if (isRemoteControlActive || !isSong || !isPlaying || !currentSong?.id)
-      return;
-
-    // Send now playing notification when song starts
-    if (progress === 0 && !isNowPlayingSentRef.current) {
-      subsonic.scrobble.send(currentSong.id, false);
-      isNowPlayingSentRef.current = true;
-    }
-
-    // Reset flag when song changes or stops
-    if (progress === 0 && !isPlaying) {
-      isNowPlayingSentRef.current = false;
-    }
-  }, [isSong, isPlaying, currentSong?.id, progress, isRemoteControlActive]);
-
-  // Reset the flag when the song changes
-  useEffect(() => {
-    isNowPlayingSentRef.current = false;
-  }, []);
-
-  useEffect(() => {
     if (isLocalSeeking || !isPlaying) {
       return;
     }
+    const isRemoteControlActive = !audioRef.current;
+
     if (isRemoteControlActive || !isSong) return;
 
     const progressPercentage = (progress / currentDuration) * 100;
@@ -157,15 +81,40 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
     progress,
     currentDuration,
     isSong,
-    sendScrobble,
     currentSong.id,
     isPlaying,
-    isRemoteControlActive,
     isLocalSeeking,
+    audioRef,
+    sendScrobble,
   ]);
+
+  useEffect(() => {
+    if (!currentSong?.id) return;
+    const isRemoteControlActive = !audioRef.current;
+    if (isRemoteControlActive || !isSong || !isPlaying || !currentSong?.id)
+      return;
+
+    if (progress === 0 && !isNowPlayingSentRef.current) {
+      subsonic.scrobble.send(currentSong.id, false);
+      isNowPlayingSentRef.current = true;
+    }
+
+    if (progress === 0 && !isPlaying) {
+      isNowPlayingSentRef.current = false;
+    }
+  }, [isSong, isPlaying, currentSong?.id, progress, audioRef]);
+
+  useEffect(() => {
+    isNowPlayingSentRef.current = false;
+  }, []);
 
   const currentTime = convertSecondsToTime(
     isLocalSeeking ? localProgress : progress,
+  );
+
+  const songDuration = useMemo(
+    () => convertSecondsToTime(currentDuration ?? 0),
+    [currentDuration],
   );
 
   const isProgressLarge = useMemo(() => {

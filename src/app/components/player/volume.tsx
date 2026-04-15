@@ -1,11 +1,5 @@
 import clsx from "clsx";
-import {
-  ComponentPropsWithoutRef,
-  RefObject,
-  useEffect,
-  useRef,
-  WheelEvent,
-} from "react";
+import { ComponentPropsWithoutRef, RefObject, useRef, WheelEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { VolumeIcon } from "@/app/components/icons/volume-icon";
 import { Button } from "@/app/components/ui/button";
@@ -14,7 +8,6 @@ import { Slider } from "@/app/components/ui/slider";
 import { usePlayerHotkeys } from "@/app/hooks/use-audio-hotkeys";
 import { cn } from "@/lib/utils";
 import { usePlayerVolume, useVolumeSettings } from "@/store/player.store";
-import { perceptualToGain } from "@/utils/volume";
 import { PopoverVolume } from "./popover-volume";
 
 interface PlayerVolumeProps {
@@ -29,12 +22,6 @@ export function PlayerVolume({ disabled, audioRef }: PlayerVolumeProps) {
 
   useAudioHotkeys("mod+up", () => handleVolumeWheel(false));
   useAudioHotkeys("mod+down", () => handleVolumeWheel(true));
-
-  useEffect(() => {
-    if (!audioRef.current) return;
-
-    audioRef.current.volume = perceptualToGain(volume);
-  }, [audioRef, volume]);
 
   const tooltipText =
     volume === 0

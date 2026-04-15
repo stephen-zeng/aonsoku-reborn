@@ -1,5 +1,4 @@
 import { arrayMove } from "@dnd-kit/sortable";
-import { produce } from "immer";
 import clamp from "lodash/clamp";
 import merge from "lodash/merge";
 import omit from "lodash/omit";
@@ -603,8 +602,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               },
               toggleLoop: () => {
                 const { loopState } = get().playerState;
-                const newState =
-                  (loopState + 1) % (Object.keys(LoopState).length / 2);
+                const newState = (loopState + 1) % (LoopState.One + 1);
 
                 if (remoteSend(LanControlMessageType.TOGGLE_REPEAT)) {
                   set((state) => {
@@ -854,11 +852,9 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 });
               },
               setAudioPlayerRef: (audioPlayer) => {
-                set(
-                  produce((state: IPlayerContext) => {
-                    state.playerState.audioPlayerRef = audioPlayer;
-                  }),
-                );
+                set((state) => {
+                  state.playerState.audioPlayerRef = audioPlayer;
+                });
               },
               removeSongFromQueue: (id) => {
                 if (isRemoteActive()) return;
@@ -1459,17 +1455,15 @@ usePlayerStore.subscribe(
 export const usePlayerActions = () => usePlayerStore((state) => state.actions);
 
 export const usePlayerSonglist = () =>
-  usePlayerStore((state) => {
-    const { currentList, currentSong, currentSongIndex, radioList } =
-      state.songlist;
-
-    return {
-      currentList,
-      currentSong,
-      currentSongIndex,
-      radioList,
-    };
-  });
+  usePlayerStore(
+    (state) => ({
+      currentList: state.songlist.currentList,
+      currentSong: state.songlist.currentSong,
+      currentSongIndex: state.songlist.currentSongIndex,
+      radioList: state.songlist.radioList,
+    }),
+    shallow,
+  );
 
 export const usePlayerCurrentSong = () =>
   usePlayerStore((state) => state.songlist.currentSong);
@@ -1493,19 +1487,17 @@ export const usePlayerVolume = () =>
 export const useVolumeSettings = () =>
   usePlayerStore((state) => state.settings.volume);
 
-export const useReplayGainState = () => {
-  const { enabled, type, preAmp, error, defaultGain } = usePlayerStore(
-    (state) => state.settings.replayGain.values,
+export const useReplayGainState = () =>
+  usePlayerStore(
+    (state) => ({
+      replayGainEnabled: state.settings.replayGain.values.enabled,
+      replayGainType: state.settings.replayGain.values.type,
+      replayGainPreAmp: state.settings.replayGain.values.preAmp,
+      replayGainError: state.settings.replayGain.values.error,
+      replayGainDefaultGain: state.settings.replayGain.values.defaultGain,
+    }),
+    shallow,
   );
-
-  return {
-    replayGainEnabled: enabled,
-    replayGainType: type,
-    replayGainPreAmp: preAmp,
-    replayGainError: error,
-    replayGainDefaultGain: defaultGain,
-  };
-};
 
 export const useReplayGainActions = () =>
   usePlayerStore((state) => state.settings.replayGain.actions);
@@ -1563,26 +1555,35 @@ export const usePlayerRef = () =>
 export const getVolume = () => usePlayerStore.getState().playerState.volume;
 
 export const useMainDrawerState = () =>
-  usePlayerStore((state) => ({
-    mainDrawerState: state.playerState.mainDrawerState,
-    setMainDrawerState: state.actions.setMainDrawerState,
-    toggleQueueAndLyrics: state.actions.toggleQueueAndLyrics,
-    closeDrawer: state.actions.closeDrawer,
-  }));
+  usePlayerStore(
+    (state) => ({
+      mainDrawerState: state.playerState.mainDrawerState,
+      setMainDrawerState: state.actions.setMainDrawerState,
+      toggleQueueAndLyrics: state.actions.toggleQueueAndLyrics,
+      closeDrawer: state.actions.closeDrawer,
+    }),
+    shallow,
+  );
 
 export const useQueueState = () =>
-  usePlayerStore((state) => ({
-    queueState: state.playerState.queueState,
-    setQueueState: state.actions.setQueueState,
-    toggleQueueAction: state.actions.toggleQueueAction,
-  }));
+  usePlayerStore(
+    (state) => ({
+      queueState: state.playerState.queueState,
+      setQueueState: state.actions.setQueueState,
+      toggleQueueAction: state.actions.toggleQueueAction,
+    }),
+    shallow,
+  );
 
 export const useLyricsState = () =>
-  usePlayerStore((state) => ({
-    lyricsState: state.playerState.lyricsState,
-    setLyricsState: state.actions.setLyricsState,
-    toggleLyricsAction: state.actions.toggleLyricsAction,
-  }));
+  usePlayerStore(
+    (state) => ({
+      lyricsState: state.playerState.lyricsState,
+      setLyricsState: state.actions.setLyricsState,
+      toggleLyricsAction: state.actions.toggleLyricsAction,
+    }),
+    shallow,
+  );
 
 export const useFullscreenPlayerState = () =>
   usePlayerStore(
@@ -1600,24 +1601,18 @@ export const useFullscreenPlayerState = () =>
   );
 
 export const useSongColor = () =>
-  usePlayerStore((state) => {
-    const { currentSongColor, currentSongColorIntensity, queue } =
-      state.settings.colors;
-    const {
-      setCurrentSongColor,
-      setUseSongColorOnQueue,
-      setCurrentSongIntensity,
-    } = state.actions;
-
-    return {
-      currentSongColor,
-      setCurrentSongColor,
-      currentSongColorIntensity,
-      setCurrentSongIntensity,
-      useSongColorOnQueue: queue.useSongColor,
-      setUseSongColorOnQueue,
-    };
-  });
+  usePlayerStore(
+    (state) => ({
+      currentSongColor: state.settings.colors.currentSongColor,
+      setCurrentSongColor: state.actions.setCurrentSongColor,
+      currentSongColorIntensity:
+        state.settings.colors.currentSongColorIntensity,
+      setCurrentSongIntensity: state.actions.setCurrentSongIntensity,
+      useSongColorOnQueue: state.settings.colors.queue.useSongColor,
+      setUseSongColorOnQueue: state.actions.setUseSongColorOnQueue,
+    }),
+    shallow,
+  );
 
 export const usePlayerCurrentList = () =>
   usePlayerStore((state) => state.songlist.currentList);
