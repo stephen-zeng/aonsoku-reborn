@@ -35,7 +35,7 @@ import {
   usePlayerCurrentList,
 } from "@/store/player.store";
 import type { ISong } from "@/types/responses/song";
-import { useBackdropBg } from "@/app/hooks/use-backdrop-bg";
+import { useBackdropStyle } from "@/app/hooks/use-backdrop-bg";
 import { QueueCurrentSong, QueueModeButtons } from "./queue-current-song";
 import { QueueSourceLabel } from "@/app/components/queue/queue-source-label";
 import { FULLSCREEN_QUEUE_BG_CLASS } from "./constants";
@@ -181,7 +181,7 @@ function UnifiedQueueView({
 }) {
   const { t } = useTranslation();
   const { playSong, setSongList, reorderQueue } = usePlayerActions();
-  const backdropBg = useBackdropBg();
+  const backdropStyle = useBackdropStyle();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
 
   // Refs must be read inside the rAF callback, not captured at mount time,
@@ -282,11 +282,7 @@ function UnifiedQueueView({
       className="flex flex-col h-full overflow-y-auto no-scrollbar"
       data-vaul-no-drag
       ref={scrollContainerRef}
-      style={
-        {
-          "--queue-backdrop-bg": backdropBg ?? "transparent",
-        } as React.CSSProperties
-      }
+      style={backdropStyle}
     >
       {playHistory.length > 0 && (
         <div className={FULLSCREEN_QUEUE_BG_CLASS}>

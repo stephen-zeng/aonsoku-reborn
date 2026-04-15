@@ -3,7 +3,7 @@ import { ChevronDown, ListMusic, MicVocalIcon } from "lucide-react";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
-import { useBackdropBg } from "@/app/hooks/use-backdrop-bg";
+import { useBackdropStyle } from "@/app/hooks/use-backdrop-bg";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { cn } from "@/lib/utils";
 import { closeFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
@@ -23,12 +23,12 @@ export const DesktopLayout = memo(function DesktopLayout() {
   } = useFullscreenPlayerState();
   const { t } = useTranslation();
   const { hasLyrics } = useHasLyrics();
-  const backdropBg = useBackdropBg();
+  const backdropStyle = useBackdropStyle();
 
   const lyricsDisabled = hasLyrics === false;
 
   const tabStyle = (view: string) =>
-    rightPanelView === view ? { backgroundColor: backdropBg } : undefined;
+    rightPanelView === view ? backdropStyle : undefined;
 
   function handleQueueClick() {
     setRightPanelView(rightPanelView === "queue" ? null : "queue");
@@ -101,7 +101,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
               variant="ghost"
               size="sm"
               className={cn(
-                "gap-1.5 transition-[background-color] duration-1000",
+                "gap-1.5 fullscreen-backdrop-layer hover:bg-transparent",
                 rightPanelView === "queue" && "rounded-md",
               )}
               style={tabStyle("queue")}
@@ -114,7 +114,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
               variant="ghost"
               size="sm"
               className={cn(
-                "gap-1.5 transition-[background-color] duration-1000",
+                "gap-1.5 fullscreen-backdrop-layer hover:bg-transparent",
                 lyricsDisabled && "opacity-50 cursor-not-allowed",
                 rightPanelView === "lyrics" && "rounded-md",
               )}
