@@ -3,6 +3,7 @@ import { Slider } from "@/app/components/ui/slider";
 import {
   usePlayerActions,
   usePlayerDuration,
+  usePlayerIsBuffering,
   usePlayerProgress,
   usePlayerRef,
 } from "@/store/player.store";
@@ -15,6 +16,7 @@ export function MiniPlayerProgress() {
   const [localProgress, setLocalProgress] = useState(progress);
   const audioPlayerRef = usePlayerRef();
   const currentDuration = usePlayerDuration();
+  const isBuffering = usePlayerIsBuffering();
   const { setProgress } = usePlayerActions();
 
   const updateAudioCurrentTime = useCallback(
@@ -66,6 +68,7 @@ export function MiniPlayerProgress() {
 
       <Slider
         variant="secondary"
+        isBuffering={isBuffering}
         defaultValue={[0]}
         value={isSeeking ? [localProgress] : [progress]}
         max={currentDuration}

@@ -13,6 +13,7 @@ import {
   useIsRemoteControlActive,
   usePlayerActions,
   usePlayerDuration,
+  usePlayerIsBuffering,
   usePlayerIsPlaying,
   usePlayerMediaType,
   usePlayerProgress,
@@ -23,18 +24,15 @@ import { logger } from "@/utils/logger";
 
 interface PlayerProgressProps {
   audioRef: RefObject<HTMLAudioElement>;
-  isBuffering?: boolean;
 }
 
-export function PlayerProgress({
-  audioRef,
-  isBuffering = false,
-}: PlayerProgressProps) {
+export function PlayerProgress({ audioRef }: PlayerProgressProps) {
   const progress = usePlayerProgress();
   const [localProgress, setLocalProgress] = useState(progress);
   const [isLocalSeeking, setIsLocalSeeking] = useState(false);
   const currentDuration = usePlayerDuration();
   const isPlaying = usePlayerIsPlaying();
+  const isBuffering = usePlayerIsBuffering();
   const { currentSong, currentList } = usePlayerSonglist();
   const { isSong } = usePlayerMediaType();
   const { setProgress } = usePlayerActions();

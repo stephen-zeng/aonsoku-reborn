@@ -45,6 +45,7 @@ export interface IPlayerState {
   desktopFullscreenPanelView: DesktopFullscreenPanelView;
   hasPrev: boolean;
   hasNext: boolean;
+  isBuffering: boolean;
 }
 
 export interface IPlayerProgress {
@@ -152,6 +153,7 @@ export interface IPlayerActions {
   setVolume: (volume: number) => void;
   handleVolumeWheel: (isScrollingDown: boolean) => void;
   setCurrentDuration: (duration: number) => void;
+  setIsBuffering: (value: boolean) => void;
   setPlayRadio: (list: Radio[], index: number) => void;
   setAudioPlayerRef: (ref: HTMLAudioElement) => void;
   setNextOnQueue: (

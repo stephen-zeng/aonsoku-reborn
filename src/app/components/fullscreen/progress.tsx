@@ -3,6 +3,7 @@ import { ProgressSlider } from "@/app/components/ui/slider";
 import {
   usePlayerActions,
   usePlayerDuration,
+  usePlayerIsBuffering,
   usePlayerProgress,
   usePlayerRef,
 } from "@/store/player.store";
@@ -22,6 +23,7 @@ export function FullscreenProgress({
   const [isSeeking, setIsSeeking] = useState(false);
   const audioPlayerRef = usePlayerRef();
   const currentDuration = usePlayerDuration();
+  const isBuffering = usePlayerIsBuffering();
   const { setProgress } = usePlayerActions();
 
   useEffect(() => {
@@ -74,6 +76,7 @@ export function FullscreenProgress({
     value: (isSeeking ? [localProgress] : [progress]) as [number],
     max: currentDuration,
     step: 1,
+    isBuffering,
     className: "w-full h-2 sm:h-3",
     onValueChange: ([value]: [number]) => handleSeeking(value),
     onValueCommit: ([value]: [number]) => handleSeeked(value),

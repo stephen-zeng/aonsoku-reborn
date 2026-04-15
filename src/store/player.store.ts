@@ -197,6 +197,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               desktopFullscreenPanelView: "queue",
               hasPrev: false,
               hasNext: false,
+              isBuffering: false,
             },
             playerProgress: {
               progress: 0,
@@ -680,6 +681,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.playerState.lyricsState = false;
                   state.playerState.currentDuration = 0;
                   state.playerState.audioPlayerRef = null;
+                  state.playerState.isBuffering = false;
                   state.settings.colors.currentSongColor = null;
                 });
               },
@@ -727,6 +729,12 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 if (isRemoteActive()) return;
                 set((state) => {
                   state.playerState.currentDuration = duration;
+                });
+              },
+              setIsBuffering: (value: boolean) => {
+                if (get().playerState.isBuffering === value) return;
+                set((state) => {
+                  state.playerState.isBuffering = value;
                 });
               },
               hasNextSong: () => {
@@ -1180,6 +1188,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.remoteControl.active = true;
                   state.remoteControl.device = device ?? null;
                   state.playerState.isPlaying = false;
+                  state.playerState.isBuffering = false;
                   state.playerProgress.progress = 0;
                   state.playerState.currentDuration = 0;
                   state.playerState.isShuffleActive = false;
@@ -1201,6 +1210,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.remoteControl.device = null;
                   state.remoteControl.sendCommand = null;
                   state.playerState.isPlaying = false;
+                  state.playerState.isBuffering = false;
                   state.playerProgress.progress = 0;
                   state.playerState.currentDuration = 0;
                   state.playerState.isShuffleActive = false;
@@ -1274,6 +1284,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
             "songlist",
             "actions",
             "playerState.isPlaying",
+            "playerState.isBuffering",
             "playerState.audioPlayerRef",
             "playerState.mainDrawerState",
             "playerState.queueState",
@@ -1575,3 +1586,6 @@ export const useRemoteControlState = () =>
 
 export const useIsRemoteControlActive = () =>
   usePlayerStore((state) => state.remoteControl.active);
+
+export const usePlayerIsBuffering = () =>
+  usePlayerStore((state) => state.playerState.isBuffering);

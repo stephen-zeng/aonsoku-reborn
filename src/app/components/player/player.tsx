@@ -49,7 +49,6 @@ export function Player() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const radioRef = useRef<HTMLAudioElement>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [isBuffering, setIsBuffering] = useState(false);
   const playHistoryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -57,6 +56,7 @@ export function Player() {
   const {
     setAudioPlayerRef,
     setCurrentDuration,
+    setIsBuffering: setStoreIsBuffering,
     setProgress,
     setPlayingState,
     handleSongEnded,
@@ -236,12 +236,7 @@ export function Player() {
         <div className="hidden sm:col-span-2 sm:flex flex-col justify-center items-center px-4 gap-1">
           <MemoPlayerControls song={song} radio={radio} />
 
-          {isSong && (
-            <MemoPlayerProgress
-              audioRef={getAudioRef()}
-              isBuffering={isBuffering}
-            />
-          )}
+          {isSong && <MemoPlayerProgress audioRef={getAudioRef()} />}
         </div>
         {/* Mobile Controls - Only Play/Pause and Next */}
         <div className="flex sm:hidden items-center gap-1">
@@ -306,10 +301,10 @@ export function Player() {
           onTimeUpdate={setupProgress}
           onEnded={handleSongEnded}
           onLoadStart={setupInitialVolume}
-          onWaiting={() => setIsBuffering(true)}
-          onPlaying={() => setIsBuffering(false)}
+          onWaiting={() => setStoreIsBuffering(true)}
+          onPlaying={() => setStoreIsBuffering(false)}
           onCanPlay={() => {
-            setIsBuffering(false);
+            setStoreIsBuffering(false);
             updateAudioDuration();
           }}
           data-testid="player-song-audio"
@@ -324,6 +319,9 @@ export function Player() {
           onPlay={() => setPlayingState(true)}
           onPause={() => setPlayingState(false)}
           onLoadStart={setupInitialVolume}
+          onWaiting={() => setStoreIsBuffering(true)}
+          onPlaying={() => setStoreIsBuffering(false)}
+          onCanPlay={() => setStoreIsBuffering(false)}
           data-testid="player-radio-audio"
         />
       )}
