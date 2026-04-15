@@ -54,6 +54,8 @@ export function AudioPlayer({
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingResumePositionRef = useRef<number | null>(null);
   const resumeGuardActiveRef = useRef(false);
+  const playPromiseRef = useRef<Promise<void> | null>(null);
+  const effectPausingRef = useRef(false);
   const MAX_RETRIES = 5;
 
   useEffect(() => {
@@ -70,6 +72,7 @@ export function AudioPlayer({
       retryCountRef.current = 0;
       pendingResumePositionRef.current = null;
       resumeGuardActiveRef.current = false;
+      playPromiseRef.current = null;
       setAudioSrc(src || undefined);
     }
   }, [src, audioSrc, shouldUseNativeAudio, isRemoteControlActive]);
@@ -118,6 +121,46 @@ export function AudioPlayer({
     volume,
   ]);
 
+  const safePlay = useCallback(
+    (audio: HTMLAudioElement, contextLabel: string) => {
+      const playPromise = audio.play();
+      const promise = playPromise ?? undefined;
+      playPromiseRef.current = promise ?? null;
+      if (promise !== undefined) {
+        promise
+          .then(() => {
+            if (playPromiseRef.current === promise) {
+              playPromiseRef.current = null;
+            }
+          })
+          .catch((error) => {
+            if (playPromiseRef.current === promise) {
+              playPromiseRef.current = null;
+            }
+            if (error.name === "AbortError") {
+              logger.debug(`${contextLabel} play was aborted by pause`, error);
+            } else {
+              logger.error(`${contextLabel} play was prevented:`, error);
+            }
+          });
+      }
+    },
+    [],
+  );
+
+  const pauseAudio = useCallback((audio: HTMLAudioElement) => {
+    const pending = playPromiseRef.current;
+    if (pending) {
+      pending.catch(() => {});
+      playPromiseRef.current = null;
+    }
+    effectPausingRef.current = true;
+    audio.pause();
+    if (audio.paused) {
+      effectPausingRef.current = false;
+    }
+  }, []);
+
   const scheduleRetry = useCallback(
     (audio: HTMLAudioElement) => {
       if (retryCountRef.current >= MAX_RETRIES) {
@@ -161,12 +204,10 @@ export function AudioPlayer({
         }
 
         currentAudio.load();
-        currentAudio.play().catch((err) => {
-          logger.error("Retry play failed:", err);
-        });
+        safePlay(currentAudio, "Retry");
       }, delay);
     },
-    [t, audioRef],
+    [t, audioRef, safePlay],
   );
 
   const handleSongError = useCallback(() => {
@@ -246,7 +287,7 @@ export function AudioPlayer({
 
       try {
         if (!audioSrc) {
-          audio.pause();
+          pauseAudio(audio);
           return;
         }
 
@@ -254,18 +295,9 @@ export function AudioPlayer({
           if (isSong && !shouldUseNativeAudio) {
             await resumeContext();
           }
-          const playPromise = audio.play();
-          if (playPromise !== undefined) {
-            playPromise.catch((error) => {
-              logger.error("Play was prevented:", error);
-            });
-          }
+          safePlay(audio, "Song");
         } else {
-          audio.pause();
-          if (audio.currentTime > 0) {
-            const currentTime = audio.currentTime;
-            audio.currentTime = currentTime;
-          }
+          pauseAudio(audio);
         }
       } catch (error) {
         logger.error("Audio playback failed", error);
@@ -278,7 +310,9 @@ export function AudioPlayer({
     audioSrc,
     isPlaying,
     isSong,
+    pauseAudio,
     resumeContext,
+    safePlay,
     shouldUseNativeAudio,
   ]);
 
@@ -289,13 +323,13 @@ export function AudioPlayer({
 
       if (isPlaying) {
         audio.load();
-        await audio.play();
+        safePlay(audio, "Radio");
       } else {
-        audio.pause();
+        pauseAudio(audio);
       }
     }
     if (isRadio) handleRadio();
-  }, [audioRef, isPlaying, isRadio]);
+  }, [audioRef, isPlaying, isRadio, pauseAudio, safePlay]);
 
   const handleError = useMemo(() => {
     if (isSong) return handleSongError;
@@ -367,6 +401,13 @@ export function AudioPlayer({
       onPlay={(e) => {
         handlePlaySuccess();
         props.onPlay?.(e);
+      }}
+      onPause={(e) => {
+        if (effectPausingRef.current) {
+          effectPausingRef.current = false;
+          return;
+        }
+        props.onPause?.(e);
       }}
       onLoadedMetadata={handleLoadedMetadata}
       onDurationChange={(e) => props.onDurationChange?.(e)}

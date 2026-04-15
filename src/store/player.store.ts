@@ -1160,10 +1160,15 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   try {
                     audioRef.pause();
                   } catch (error) {
-                    console.error(
-                      "[RemoteControl] Failed to pause audio",
-                      error,
-                    );
+                    if (
+                      error instanceof DOMException &&
+                      error.name !== "AbortError"
+                    ) {
+                      console.error(
+                        "[RemoteControl] Failed to pause audio",
+                        error,
+                      );
+                    }
                   }
                 }
 
