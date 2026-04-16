@@ -101,7 +101,13 @@ export function Header() {
     : PanelLeftCloseIcon;
 
   return (
-    <header className="w-full flex justify-between items-center md:grid md:grid-cols-header h-[calc(var(--header-height)+env(safe-area-inset-top))] px-4 pt-[env(safe-area-inset-top)] fixed top-0 right-0 left-0 z-20 bg-background/95 supports-[backdrop-filter]:bg-background/60 backdrop-blur-md border-b electron-drag">
+    <header
+      className="w-full flex justify-between items-center md:grid md:grid-cols-header h-header pt-[var(--safe-area-top)] fixed top-0 right-0 left-0 z-20 bg-background/95 supports-[backdrop-filter]:bg-background/60 backdrop-blur-md border-b electron-drag"
+      style={{
+        paddingLeft: "max(1rem, var(--safe-area-left))",
+        paddingRight: "max(1rem, var(--safe-area-right))",
+      }}
+    >
       <div className="flex items-center">
         {/* Spacing for macOS window controls (traffic lights) on left side */}
         {leftSpacingWidth > 10 && (

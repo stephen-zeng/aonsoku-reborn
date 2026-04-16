@@ -44,14 +44,26 @@
   }
 
   :root {
-    --header-height: 44px;
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
+    --header-bar-height: 44px;
+    --header-height: calc(var(--header-bar-height) + var(--safe-area-top));
     --sidebar-width: 280px;
     --mini-sidebar-width: 48px;
     --player-height: 96px;
+    --bottom-nav-bar-height: 56px;
     --bottom-nav-height: 0px;
     --right-panel-width: 280px;
     --content-height: calc(
       100vh -
+      var(--header-height) -
+      var(--player-height) -
+      var(--bottom-nav-height)
+    );
+    --content-height: calc(
+      100dvh -
       var(--header-height) -
       var(--player-height) -
       var(--bottom-nav-height)
@@ -67,20 +79,27 @@
 
   @media (max-width: 767px) {
     :root {
-      --bottom-nav-height: 56px;
+      --bottom-nav-height: calc(
+        var(--bottom-nav-bar-height) +
+        var(--safe-area-bottom)
+      );
     }
   }
 
   /* Safe area handling for fullscreen player on notched/Dynamic Island phones */
   .fullscreen-safe-area {
-    padding-top: max(env(safe-area-inset-top), 1rem);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-top: max(var(--safe-area-top), 1rem);
+    padding-right: var(--safe-area-right);
+    padding-bottom: var(--safe-area-bottom);
+    padding-left: var(--safe-area-left);
   }
 
   @media (min-width: 640px) {
     .fullscreen-safe-area {
       padding-top: unset;
+      padding-right: unset;
       padding-bottom: unset;
+      padding-left: unset;
     }
   }
 

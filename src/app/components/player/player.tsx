@@ -200,6 +200,10 @@ export function Player() {
   return (
     <footer
       className="border-t h-[--player-height] w-full flex items-center fixed bottom-[--bottom-nav-height] left-0 right-0 z-40 bg-background"
+      style={{
+        paddingLeft: "var(--safe-area-left)",
+        paddingRight: "var(--safe-area-right)",
+      }}
       onClick={handleFooterClick}
     >
       <div className="w-full h-full grid grid-cols-[1fr_auto] gap-3 px-3 sm:grid-cols-player sm:gap-2 sm:px-4">
