@@ -8,9 +8,11 @@ import { AlbumName, SongInfo } from "./song-info";
 export const ArtworkWithInfo = memo(function ArtworkWithInfo({
   className,
   compact = false,
+  showTouchDragSurface = false,
 }: {
   className?: string;
   compact?: boolean;
+  showTouchDragSurface?: boolean;
 }) {
   return (
     <div
@@ -30,7 +32,10 @@ export const ArtworkWithInfo = memo(function ArtworkWithInfo({
         <AlbumName compact={compact} />
       </div>
 
-      <FullscreenSongArtwork compact={compact} />
+      <FullscreenSongArtwork
+        compact={compact}
+        showTouchDragSurface={showTouchDragSurface}
+      />
 
       <div
         className={clsx(

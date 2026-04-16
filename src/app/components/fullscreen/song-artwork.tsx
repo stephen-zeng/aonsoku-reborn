@@ -7,8 +7,10 @@ import { CONTENT_MAX_WIDTH } from "./constants";
 
 export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
   compact = false,
+  showTouchDragSurface = false,
 }: {
   compact?: boolean;
+  showTouchDragSurface?: boolean;
 }) {
   const { coverArt, artist, title, id } = usePlayerStore(
     ({ songlist }) => songlist.currentSong,
@@ -28,13 +30,20 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
           exit={{ opacity: 0, scale: 1.05 }}
           transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
           className={clsx(
-            "aspect-square",
+            "relative aspect-square",
             !compact && "fullscreen-desktop-artwork",
             compact
               ? "max-h-[42svh] max-w-[260px]"
               : `${CONTENT_MAX_WIDTH} max-h-full`,
           )}
         >
+          {showTouchDragSurface && (
+            <div
+              className="absolute inset-0 z-10 rounded-md touch-none"
+              data-testid="fullscreen-artwork-touch-drag-surface"
+              aria-hidden="true"
+            />
+          )}
           <CachedImage
             coverArtId={coverArt}
             coverArtType="song"

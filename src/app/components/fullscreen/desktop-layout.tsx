@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { useBackdropStyle } from "@/app/hooks/use-backdrop-bg";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
+import { useIsTouchPrimary } from "@/app/hooks/use-input-mode";
 import { cn } from "@/lib/utils";
 import { closeFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import { useFullscreenPlayerState } from "@/store/player.store";
@@ -23,6 +24,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
   } = useFullscreenPlayerState();
   const { t } = useTranslation();
   const { hasLyrics } = useHasLyrics();
+  const isTouchPrimary = useIsTouchPrimary();
   const backdropStyle = useBackdropStyle();
 
   const lyricsDisabled = hasLyrics === false;
@@ -86,7 +88,10 @@ export const DesktopLayout = memo(function DesktopLayout() {
 
         <div className="flex min-w-0 flex-1 flex-col items-center justify-center min-h-0">
           <div className="flex w-full min-w-0 flex-col items-center max-h-full overflow-y-hidden">
-            <ArtworkWithInfo className="flex-1 min-h-0" />
+            <ArtworkWithInfo
+              className="flex-1 min-h-0"
+              showTouchDragSurface={isTouchPrimary}
+            />
             <FullscreenControlPanel />
           </div>
         </div>
