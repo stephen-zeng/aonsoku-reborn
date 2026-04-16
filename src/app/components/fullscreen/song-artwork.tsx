@@ -31,7 +31,7 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
             "aspect-square w-full max-w-full",
             !compact && "fullscreen-desktop-artwork",
             compact
-              ? "max-h-[42vh] max-w-[260px]"
+              ? "max-h-[42svh] max-w-[260px]"
               : `${CONTENT_MAX_WIDTH} max-h-full`,
           )}
         >
