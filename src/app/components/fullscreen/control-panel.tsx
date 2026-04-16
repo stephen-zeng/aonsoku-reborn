@@ -15,7 +15,7 @@ export const FullscreenControlPanel = memo(function FullscreenControlPanel({
   return (
     <div
       className={clsx(
-        "mx-auto w-full flex flex-col",
+        "mx-auto self-center w-full flex flex-col",
         CONTENT_MAX_WIDTH,
         compact
           ? "shrink-0 gap-3 pb-2"

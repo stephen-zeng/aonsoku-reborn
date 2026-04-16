@@ -15,15 +15,14 @@ export const ArtworkWithInfo = memo(function ArtworkWithInfo({
   return (
     <div
       className={clsx(
-        compact
-          ? "flex w-full min-h-0 min-w-0 flex-col items-center justify-center"
-          : "grid h-full w-full min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)_auto] justify-items-center overflow-hidden",
+        "flex w-full min-h-0 min-w-0 flex-col items-center",
+        compact && "justify-center",
         className,
       )}
     >
       <div
         className={clsx(
-          "w-full min-w-0 shrink-0",
+          "mx-auto w-full min-w-0 shrink-0 justify-self-center",
           CONTENT_MAX_WIDTH,
           compact ? "pb-2" : "pb-3",
         )}
@@ -35,7 +34,7 @@ export const ArtworkWithInfo = memo(function ArtworkWithInfo({
 
       <div
         className={clsx(
-          "w-full min-w-0 shrink-0",
+          "mx-auto w-full min-w-0 shrink-0 justify-self-center",
           CONTENT_MAX_WIDTH,
           compact ? "pt-2" : "pt-3",
         )}

@@ -17,9 +17,7 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
   return (
     <div
       className={clsx(
-        "w-full min-h-0 max-h-full items-center justify-center",
-        compact ? "flex" : "flex flex-1",
-        !compact && "h-full",
+        "flex w-full min-h-0 max-h-full items-center justify-center",
       )}
     >
       <AnimatePresence mode="wait">
