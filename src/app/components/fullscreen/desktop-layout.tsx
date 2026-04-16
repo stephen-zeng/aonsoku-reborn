@@ -111,8 +111,10 @@ export const DesktopLayout = memo(function DesktopLayout() {
               variant="ghost"
               size="sm"
               className={cn(
-                "gap-1.5 fullscreen-backdrop-layer hover:bg-transparent",
-                rightPanelView === "queue" && "rounded-md",
+                "gap-1.5 transition-colors",
+                rightPanelView === "queue"
+                  ? "fullscreen-backdrop-layer rounded-md hover:bg-transparent"
+                  : "hover:bg-foreground/20",
               )}
               style={tabStyle("queue")}
               onClick={handleQueueClick}
@@ -124,9 +126,11 @@ export const DesktopLayout = memo(function DesktopLayout() {
               variant="ghost"
               size="sm"
               className={cn(
-                "gap-1.5 fullscreen-backdrop-layer hover:bg-transparent",
+                "gap-1.5 transition-colors",
                 lyricsDisabled && "opacity-50 cursor-not-allowed",
-                rightPanelView === "lyrics" && "rounded-md",
+                rightPanelView === "lyrics"
+                  ? "fullscreen-backdrop-layer rounded-md hover:bg-transparent"
+                  : "hover:bg-foreground/20",
               )}
               style={tabStyle("lyrics")}
               onClick={handleLyricsClick}
