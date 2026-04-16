@@ -19,9 +19,16 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
   return (
     <div
       className={clsx(
-        "flex w-full min-h-0 max-h-full items-center justify-center",
+        "relative flex w-full min-h-0 max-h-full items-center justify-center",
       )}
     >
+      {showTouchDragSurface && (
+        <div
+          className="absolute inset-0 z-10 touch-none"
+          data-testid="fullscreen-artwork-touch-drag-surface"
+          aria-hidden="true"
+        />
+      )}
       <AnimatePresence mode="wait">
         <motion.div
           key={id ?? "no-song"}
@@ -37,13 +44,6 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
               : `${CONTENT_MAX_WIDTH} max-h-full`,
           )}
         >
-          {showTouchDragSurface && (
-            <div
-              className="absolute inset-0 z-10 rounded-md touch-none"
-              data-testid="fullscreen-artwork-touch-drag-surface"
-              aria-hidden="true"
-            />
-          )}
           <CachedImage
             coverArtId={coverArt}
             coverArtType="song"
