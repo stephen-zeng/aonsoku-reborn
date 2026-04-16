@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { DrawerHandle } from "@/app/components/ui/drawer";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
-import { useIsShortViewport } from "@/app/hooks/use-mobile";
+import { useIsShortViewport, useIsWideViewport } from "@/app/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import {
   closeFullscreenPlayerWithHistory,
@@ -154,15 +154,26 @@ export const MobileLayout = memo(function MobileLayout({
 }) {
   const { fullscreenPlayerTab } = useFullscreenPlayerState();
   const isShortViewport = useIsShortViewport();
-  const useCompactPlayingLayout =
+  const isWideViewport = useIsWideViewport();
+  const useWideCenteredPlayingLayout =
+    fullscreenPlayerTab === "playing" && isWideViewport && !isShortViewport;
+  const useShortCompactPlayingLayout =
     fullscreenPlayerTab === "playing" && isShortViewport;
+  const playingViewLayout = useShortCompactPlayingLayout
+    ? "short-compact"
+    : useWideCenteredPlayingLayout
+      ? "wide-centered"
+      : "default";
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div
+      className="flex flex-col h-full w-full"
+      data-testid="fullscreen-mobile-layout"
+    >
       <MobileHeader
         onClose={closeFullscreenPlayerWithHistory}
         showDragHandle={showDragHandle}
-        compact={useCompactPlayingLayout}
+        compact={useShortCompactPlayingLayout}
       />
 
       <div className="flex-1 min-h-0 flex flex-col">
@@ -174,21 +185,26 @@ export const MobileLayout = memo(function MobileLayout({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={VIEW_TRANSITION}
+              data-testid="fullscreen-playing-view"
+              data-layout={playingViewLayout}
               className={cn(
                 "flex min-h-0 flex-1 flex-col items-center overflow-hidden",
-                useCompactPlayingLayout && "justify-between",
+                useWideCenteredPlayingLayout && "justify-center",
+                useShortCompactPlayingLayout && "justify-between",
               )}
             >
               <ArtworkWithInfo
-                compact={useCompactPlayingLayout}
+                compact={useShortCompactPlayingLayout}
                 className={cn(
                   "w-full",
-                  useCompactPlayingLayout ? "flex-1 px-4" : "min-h-0",
+                  useShortCompactPlayingLayout ? "flex-1 px-4" : "min-h-0",
                 )}
               />
               <FullscreenControlPanel
-                compact={useCompactPlayingLayout}
-                expanded={!useCompactPlayingLayout}
+                compact={useShortCompactPlayingLayout}
+                expanded={
+                  !useShortCompactPlayingLayout && !useWideCenteredPlayingLayout
+                }
               />
             </motion.div>
           )}

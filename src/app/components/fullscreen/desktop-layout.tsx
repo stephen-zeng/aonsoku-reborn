@@ -40,7 +40,10 @@ export const DesktopLayout = memo(function DesktopLayout() {
   }
 
   return (
-    <div className="flex h-full w-full overflow-hidden">
+    <div
+      className="flex h-full w-full overflow-hidden"
+      data-testid="fullscreen-desktop-layout"
+    >
       <div
         className={`fullscreen-desktop-playing flex h-full min-w-0 shrink-0 flex-col px-8 pt-6 pb-4 transition-[width] duration-300 sm:px-12 ${rightPanelView ? "w-1/2" : "w-full"}`}
       >
@@ -91,6 +94,8 @@ export const DesktopLayout = memo(function DesktopLayout() {
 
       <div
         className={`shrink-0 flex flex-col h-full bg-black/5 overflow-hidden transition-[width] duration-300 ${rightPanelView ? "w-1/2 border-l border-foreground/10" : "w-0"}`}
+        data-testid="fullscreen-desktop-side-panel"
+        data-view={rightPanelView ?? "closed"}
         style={
           { "--queue-bg-overlay": "rgba(0, 0, 0, 0.05)" } as React.CSSProperties
         }

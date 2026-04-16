@@ -11,7 +11,7 @@ import {
 import { memo } from "react";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { Button } from "@/app/components/ui/button";
-import { useIsMobile } from "@/app/hooks/use-mobile";
+import { useIsPortraitViewport } from "@/app/hooks/use-mobile";
 import { usePlaybackControls } from "@/app/hooks/use-playback-controls";
 import { LoopState } from "@/types/playerContext";
 
@@ -33,11 +33,11 @@ function FullscreenControls() {
     toggleLoop,
     hasNext,
   } = usePlaybackControls();
-  const isMobile = useIsMobile();
+  const isPortraitViewport = useIsPortraitViewport();
 
   return (
     <>
-      {!isMobile && (
+      {!isPortraitViewport && (
         <Button
           size="icon"
           variant="ghost"
@@ -112,7 +112,7 @@ function FullscreenControls() {
       >
         <SkipForward className={buttonsStyle.secondaryIconFilled} />
       </Button>
-      {!isMobile && (
+      {!isPortraitViewport && (
         <Button
           size="icon"
           variant="ghost"

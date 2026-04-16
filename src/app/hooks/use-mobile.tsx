@@ -2,6 +2,15 @@ import { useEffect, useState } from "react";
 
 const MOBILE_BREAKPOINT = 768;
 const SHORT_VIEWPORT_HEIGHT = 700;
+const WIDE_VIEWPORT_WIDTH = 768;
+
+function getIsPortraitViewport() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.innerHeight > window.innerWidth;
+}
 
 function useMediaQuery(query: string) {
   const [matches, setMatches] = useState(() => {
@@ -30,4 +39,27 @@ export function useIsMobile() {
 
 export function useIsShortViewport() {
   return useMediaQuery(`(max-height: ${SHORT_VIEWPORT_HEIGHT}px)`);
+}
+
+export function useIsWideViewport() {
+  return useMediaQuery(`(min-width: ${WIDE_VIEWPORT_WIDTH}px)`);
+}
+
+export function useIsPortraitViewport() {
+  const [isPortraitViewport, setIsPortraitViewport] = useState(
+    getIsPortraitViewport,
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsPortraitViewport(getIsPortraitViewport());
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return isPortraitViewport;
 }

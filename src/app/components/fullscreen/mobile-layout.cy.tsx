@@ -61,6 +61,32 @@ describe("MobileLayout", () => {
 
       mountMobileLayout();
 
+      cy.getByTestId("fullscreen-playing-view").should(
+        "have.attr",
+        "data-layout",
+        "short-compact",
+      );
+      cy.get('[data-testid="fullscreen-volume-bar"]').should("be.visible");
+      cy.get('[role="tablist"]').should("be.visible");
+    });
+  });
+
+  it("uses the centered compact playing layout on wide mobile screens", () => {
+    cy.viewport(768, 1024);
+
+    cy.fixture("songs/random").then((songs: ISong[]) => {
+      const { actions } = usePlayerStore.getState();
+
+      actions.setSongList(songs, 0);
+      actions.openFullscreenPlayer("playing");
+
+      mountMobileLayout();
+
+      cy.getByTestId("fullscreen-playing-view").should(
+        "have.attr",
+        "data-layout",
+        "wide-centered",
+      );
       cy.get('[data-testid="fullscreen-volume-bar"]').should("be.visible");
       cy.get('[role="tablist"]').should("be.visible");
     });
