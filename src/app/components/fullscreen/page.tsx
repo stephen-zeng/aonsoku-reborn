@@ -5,13 +5,13 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/app/components/ui/drawer";
+import { useBackdropStyle } from "@/app/hooks/use-backdrop-bg";
 import { useAppWindow } from "@/app/hooks/use-app-window";
 import { closeFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import { useFullscreenPlayerSettings } from "@/store/player.store";
 import { enterFullscreen, exitFullscreen } from "@/utils/browser";
 import { isDesktop } from "@/utils/desktop";
 import { setDesktopTitleBarColors } from "@/utils/theme";
-import { FullscreenBackdrop } from "./backdrop";
 import { FullscreenDragHandler } from "./drag-handler";
 import { FullscreenContent } from "./fullscreen-content";
 
@@ -21,7 +21,6 @@ interface FullscreenModeProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-const MemoFullscreenBackdrop = memo(FullscreenBackdrop);
 const MemoFullscreenContent = memo(FullscreenContent);
 
 export default function FullscreenMode({
@@ -31,6 +30,7 @@ export default function FullscreenMode({
 }: FullscreenModeProps) {
   const { enterFullscreenWindow, exitFullscreenWindow } = useAppWindow();
   const { autoFullscreenEnabled } = useFullscreenPlayerSettings();
+  const backdropStyle = useBackdropStyle();
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: initial useEffect
   useEffect(() => {
@@ -77,13 +77,13 @@ export default function FullscreenMode({
       <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerTitle className="sr-only">Big Player</DrawerTitle>
       <DrawerContent
-        className="mt-0 h-dvh max-h-dvh w-screen rounded-t-none border-none select-none cursor-default"
+        className="fullscreen-drawer-surface mt-0 h-dvh max-h-dvh w-screen rounded-t-none border-none select-none cursor-default"
         showHandle={false}
         aria-describedby={undefined}
+        style={backdropStyle}
       >
-        <MemoFullscreenBackdrop />
         <FullscreenDragHandler />
-        <div className="absolute inset-0 flex flex-col bg-black/0 z-10 fullscreen-safe-area">
+        <div className="absolute inset-0 z-10 flex flex-col fullscreen-safe-area">
           <MemoFullscreenContent />
         </div>
       </DrawerContent>

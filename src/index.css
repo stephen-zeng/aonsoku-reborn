@@ -201,6 +201,27 @@
   );
 }
 
+.fullscreen-drawer-surface {
+  transition:
+    --queue-backdrop-r 1000ms,
+    --queue-backdrop-g 1000ms,
+    --queue-backdrop-b 1000ms,
+    --queue-backdrop-alpha 1000ms;
+  background-color: hsl(var(--background));
+  background-image: linear-gradient(
+    rgb(
+      var(--queue-backdrop-r, 0) var(--queue-backdrop-g, 0)
+        var(--queue-backdrop-b, 0) /
+      var(--queue-backdrop-alpha, 0)
+    ),
+    rgb(
+      var(--queue-backdrop-r, 0) var(--queue-backdrop-g, 0)
+        var(--queue-backdrop-b, 0) /
+      var(--queue-backdrop-alpha, 0)
+    )
+  );
+}
+
 .electron-drag {
   app-region: drag;
 }
