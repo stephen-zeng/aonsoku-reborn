@@ -11,12 +11,13 @@ import {
   closeFullscreenPlayerWithHistory,
   setFullscreenTabWithHistory,
 } from "@/routes/fullscreenRouter";
-import { useFullscreenPlayerState } from "@/store/player.store";
+import { useFullscreenPlayerState, useLyricsAlignment } from "@/store/player.store";
 import { ArtworkWithInfo } from "./artwork-with-info";
 import { PANEL_MAX_WIDTH } from "./constants";
 import { FullscreenControlPanel } from "./control-panel";
 import { LyricsTab } from "./lyrics";
 import { FullscreenSongQueue } from "./queue";
+import { QueueCurrentSong } from "./queue-current-song";
 import { FullscreenSettings } from "./settings";
 
 const MemoLyricsTab = memo(LyricsTab);
@@ -153,6 +154,7 @@ export const MobileLayout = memo(function MobileLayout({
   showDragHandle?: boolean;
 }) {
   const { fullscreenPlayerTab } = useFullscreenPlayerState();
+  const areLyricsAligned = useLyricsAlignment();
   const isShortViewport = useIsShortViewport();
   const isWideViewport = useIsWideViewport();
   const useWideCenteredPlayingLayout =
@@ -216,11 +218,29 @@ export const MobileLayout = memo(function MobileLayout({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={VIEW_TRANSITION}
-              className={`flex-1 overflow-hidden min-h-0 mx-auto w-full ${PANEL_MAX_WIDTH}`}
+              className={`flex-1 overflow-hidden min-h-0 mx-auto w-full flex flex-col ${PANEL_MAX_WIDTH}`}
               data-vaul-no-drag
               onClick={(e) => e.stopPropagation()}
             >
-              <MemoLyricsTab />
+              <div className="shrink-0 px-2 pt-2 pb-1">
+                <QueueCurrentSong />
+              </div>
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <MemoLyricsTab />
+              </div>
+              <AnimatePresence>
+                {areLyricsAligned && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="overflow-hidden"
+                  >
+                    <FullscreenControlPanel compact />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           )}
 

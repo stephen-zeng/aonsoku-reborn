@@ -206,6 +206,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               hasPrev: false,
               hasNext: false,
               isBuffering: false,
+              areLyricsAligned: true,
             },
             playerProgress: {
               progress: 0,
@@ -1144,6 +1145,11 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.playerState.hasNext = hasNextSong();
                 });
               },
+              setAreLyricsAligned: (aligned) => {
+                set((state) => {
+                  state.playerState.areLyricsAligned = aligned;
+                });
+              },
               resetConfig: () => {
                 set((state) => {
                   state.settings.colors.queue.useSongColor = false;
@@ -1620,3 +1626,6 @@ export const useIsRemoteControlActive = () =>
 
 export const usePlayerIsBuffering = () =>
   usePlayerStore((state) => state.playerState.isBuffering);
+
+export const useLyricsAlignment = () =>
+  usePlayerStore((state) => state.playerState.areLyricsAligned);

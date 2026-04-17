@@ -20,6 +20,7 @@ import {
 import { subsonic } from "@/service/subsonic";
 import {
   useLyricsSettings,
+  usePlayerActions,
   usePlayerIsPlaying,
   usePlayerRef,
   usePlayerSonglist,
@@ -82,8 +83,7 @@ type TouchTapState = {
 const LYRIC_TAP_MAX_DISTANCE_PX = 10;
 const LYRIC_TAP_MAX_DURATION_MS = 250;
 const LYRIC_SEEK_DEDUP_MS = 400;
-const LYRIC_ALIGN_RESTORE_THRESHOLD_PX = 6;
-const LYRIC_TOUCH_SCROLL_BLUR_RESET_MS = 5000;
+const LYRIC_TOUCH_SCROLL_BLUR_RESET_MS = 500;
 
 function resolveLyricLineIndexFromTarget(
   player: InternalLyricPlayerHandle | undefined,
@@ -110,46 +110,6 @@ function resolveLyricLineIndexFromTarget(
   }
 
   return null;
-}
-
-function isLyricPlayerAligned(
-  player: InternalLyricPlayerHandle | undefined,
-): boolean {
-  if (!player) return false;
-
-  const playerElement = player.getElement();
-  const targetAlignIndex = player.targetAlignIndex;
-  const targetLine =
-    typeof targetAlignIndex === "number"
-      ? player.currentLyricLineObjects?.[targetAlignIndex]
-      : undefined;
-
-  if (!targetLine || !playerElement.isConnected) {
-    return false;
-  }
-
-  const lineElement = targetLine.getElement();
-  if (!lineElement.isConnected) {
-    return false;
-  }
-
-  const playerRect = playerElement.getBoundingClientRect();
-  const lineRect = lineElement.getBoundingClientRect();
-  const playerHeight = player.size?.[1] ?? playerElement.clientHeight;
-  const alignPosition = player.alignPosition ?? 0.35;
-
-  let offset = lineRect.top - playerRect.top - playerHeight * alignPosition;
-
-  switch (player.alignAnchor) {
-    case "bottom":
-      offset += lineElement.clientHeight;
-      break;
-    case "center":
-      offset += lineElement.clientHeight / 2;
-      break;
-  }
-
-  return Math.abs(offset) <= LYRIC_ALIGN_RESTORE_THRESHOLD_PX;
 }
 
 function getInternalLyricPlayer(
@@ -186,6 +146,13 @@ export function LyricsTab() {
   const { currentSong } = usePlayerSonglist();
   const { t } = useTranslation();
   const { showTranslation } = useLyricsSettings();
+  const { setAreLyricsAligned } = usePlayerActions();
+
+  useEffect(() => {
+    return () => {
+      setAreLyricsAligned(true);
+    };
+  }, [setAreLyricsAligned]);
 
   const { id: songId, artist, title, duration } = currentSong;
   const songDurationMs = duration ? duration * 1000 : undefined;
@@ -291,6 +258,7 @@ interface SyncedLyricsProps {
 function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
   const playerRef = usePlayerRef();
   const isPlaying = usePlayerIsPlaying();
+  const { setAreLyricsAligned } = usePlayerActions();
   const [currentTime, setCurrentTime] = useState(0);
   const currentTimeRef = useRef(0);
   const [isTouchScrolling, setIsTouchScrolling] = useState(false);
@@ -304,15 +272,20 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
     timestamp: number;
   } | null>(null);
   const touchTapStateRef = useRef<TouchTapState | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const clearTouchScrollBlurTimer = useCallback(() => {
     clearTimeout(touchScrollBlurTimerRef.current);
   }, []);
 
-  const setTouchScrolling = useCallback((next: boolean) => {
-    isTouchScrollingRef.current = next;
-    setIsTouchScrolling((prev) => (prev === next ? prev : next));
-  }, []);
+  const setTouchScrolling = useCallback(
+    (next: boolean) => {
+      isTouchScrollingRef.current = next;
+      setIsTouchScrolling((prev) => (prev === next ? prev : next));
+      setAreLyricsAligned(!next);
+    },
+    [setAreLyricsAligned],
+  );
 
   const scheduleTouchScrollBlurRestore = useCallback(() => {
     clearTouchScrollBlurTimer();
@@ -320,6 +293,13 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
       setTouchScrolling(false);
     }, LYRIC_TOUCH_SCROLL_BLUR_RESET_MS);
   }, [clearTouchScrollBlurTimer, setTouchScrolling]);
+
+  const handleWheel = useCallback(() => {
+    if (!isTouchScrollingRef.current) {
+      setTouchScrolling(true);
+    }
+    scheduleTouchScrollBlurRestore();
+  }, [setTouchScrolling, scheduleTouchScrollBlurRestore]);
 
   const seekToLyricLine = useCallback(
     (lineIndex: number) => {
@@ -460,16 +440,6 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
         setCurrentTime(timeMs);
       }
 
-      const player = getInternalLyricPlayer(lyricPlayerRef);
-      if (
-        isTouchScrollingRef.current &&
-        !touchTapStateRef.current &&
-        isLyricPlayerAligned(player)
-      ) {
-        clearTouchScrollBlurTimer();
-        setTouchScrolling(false);
-      }
-
       animationFrameRef.current = requestAnimationFrame(updateTime);
     };
 
@@ -482,13 +452,15 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
       clearTimeout(seekingTimerRef.current);
       clearTouchScrollBlurTimer();
     };
-  }, [clearTouchScrollBlurTimer, playerRef, setTouchScrolling]);
+  }, [clearTouchScrollBlurTimer, playerRef]);
 
   return (
     <div
+      ref={containerRef}
       className="w-full h-full text-left lrc-box"
       data-vaul-no-drag
       onClick={(e) => e.stopPropagation()}
+      onWheel={handleWheel}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -528,7 +500,12 @@ interface UnsyncedLyricsProps {
 
 function UnsyncedLyrics({ lines, translationLines }: UnsyncedLyricsProps) {
   const { currentSong } = usePlayerSonglist();
+  const { setAreLyricsAligned } = usePlayerActions();
   const lyricsBoxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setAreLyricsAligned(true);
+  }, [setAreLyricsAligned]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: recomputed when song changes
   useEffect(() => {
@@ -575,6 +552,12 @@ function UnsyncedLyrics({ lines, translationLines }: UnsyncedLyricsProps) {
 type CenteredMessageProps = ComponentPropsWithoutRef<"p">;
 
 function CenteredMessage({ children }: CenteredMessageProps) {
+  const { setAreLyricsAligned } = usePlayerActions();
+
+  useEffect(() => {
+    setAreLyricsAligned(true);
+  }, [setAreLyricsAligned]);
+
   return (
     <div className="w-full h-full flex justify-center items-center">
       <p className="leading-10 text-left font-semibold text-xl 2xl:text-2xl">

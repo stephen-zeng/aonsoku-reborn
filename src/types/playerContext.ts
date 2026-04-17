@@ -46,6 +46,7 @@ export interface IPlayerState {
   hasPrev: boolean;
   hasNext: boolean;
   isBuffering: boolean;
+  areLyricsAligned: boolean;
 }
 
 export interface IPlayerProgress {
@@ -185,6 +186,7 @@ export interface IPlayerActions {
   getCurrentProgress: () => number;
   resetConfig: () => void;
   updateQueueChecks: () => void;
+  setAreLyricsAligned: (aligned: boolean) => void;
   setCurrentSongColor: (value: string | null) => void;
   setCurrentSongIntensity: (value: number) => void;
   setUseSongColorOnQueue: (value: boolean) => void;
