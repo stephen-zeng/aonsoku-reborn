@@ -528,6 +528,7 @@ function UnsyncedLyrics({ lines, translationLines }: UnsyncedLyricsProps) {
       thumbClassName="secondary-thumb-bar"
       ref={lyricsBoxRef}
       data-vaul-no-drag
+      onClick={(e) => e.stopPropagation()}
     >
       {lines.map((line, index) => (
         <div
@@ -559,7 +560,10 @@ function CenteredMessage({ children }: CenteredMessageProps) {
   }, [setAreLyricsAligned]);
 
   return (
-    <div className="w-full h-full flex justify-center items-center">
+    <div
+      className="w-full h-full flex justify-center items-center"
+      onClick={(e) => e.stopPropagation()}
+    >
       <p className="leading-10 text-left font-semibold text-xl 2xl:text-2xl">
         {children}
       </p>

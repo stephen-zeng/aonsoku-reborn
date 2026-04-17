@@ -225,7 +225,9 @@ export const MobileLayout = memo(function MobileLayout({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="shrink-0 px-2 pt-2 pb-1">
-                <QueueCurrentSong />
+                <QueueCurrentSong
+                  onClick={() => setFullscreenTabWithHistory("playing")}
+                />
               </div>
               <div className="flex-1 min-h-0 overflow-hidden">
                 <MemoLyricsTab />
@@ -260,7 +262,9 @@ export const MobileLayout = memo(function MobileLayout({
                 { "--queue-bg-overlay": "transparent" } as React.CSSProperties
               }
             >
-              <FullscreenSongQueue />
+              <FullscreenSongQueue
+                onCurrentSongClick={() => setFullscreenTabWithHistory("playing")}
+              />
             </motion.div>
           )}
         </AnimatePresence>

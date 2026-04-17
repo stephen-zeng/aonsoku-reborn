@@ -123,8 +123,10 @@ function syncQueueCurrentSongPosition({
 
 export const FullscreenSongQueue = memo(function FullscreenSongQueue({
   hideModeButtons = false,
+  onCurrentSongClick,
 }: {
   hideModeButtons?: boolean;
+  onCurrentSongClick?: () => void;
 }) {
   const currentList = usePlayerCurrentList();
   const currentSongIndex = usePlayerCurrentSongIndex();
@@ -161,6 +163,7 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
       currentList={currentList}
       hideModeButtons={hideModeButtons}
       clearPlayHistory={clearPlayHistory}
+      onCurrentSongClick={onCurrentSongClick}
     />
   );
 });
@@ -173,6 +176,7 @@ function UnifiedQueueView({
   currentList,
   hideModeButtons,
   clearPlayHistory,
+  onCurrentSongClick,
 }: {
   playHistory: ISong[];
   upcoming: ISong[];
@@ -181,6 +185,7 @@ function UnifiedQueueView({
   currentList: ISong[];
   hideModeButtons: boolean;
   clearPlayHistory: () => void;
+  onCurrentSongClick?: () => void;
 }) {
   const { t } = useTranslation();
   const { playSong, setSongList, reorderQueue } = usePlayerActions();
@@ -324,7 +329,7 @@ function UnifiedQueueView({
         ref={currentSongRef}
         className={`shrink-0 px-2 pt-2 pb-1 ${FULLSCREEN_QUEUE_BG_CLASS}`}
       >
-        <QueueCurrentSong />
+        <QueueCurrentSong onClick={onCurrentSongClick} />
       </div>
 
       <DndContext

@@ -20,7 +20,11 @@ import {
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
 
-export const QueueCurrentSong = memo(function QueueCurrentSong() {
+export const QueueCurrentSong = memo(function QueueCurrentSong({
+  onClick,
+}: {
+  onClick?: () => void;
+}) {
   const currentSong = usePlayerStore(
     (state) => state.songlist.currentSong,
     (a, b) => a.id === b.id,
@@ -28,7 +32,11 @@ export const QueueCurrentSong = memo(function QueueCurrentSong() {
   const coverArtUrl = getCoverArtUrl(currentSong.coverArt, "song", "100");
 
   return (
-    <div className="pt-2 pb-0.5">
+    <div
+      className={clsx("pt-2 pb-0.5 px-2 rounded-lg transition-colors")}
+      onClick={onClick}
+    >
+
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded overflow-hidden shrink-0 bg-accent">
           <img
@@ -45,7 +53,10 @@ export const QueueCurrentSong = memo(function QueueCurrentSong() {
             {currentSong.artist}
           </span>
         </div>
-        <LikeButton className="shrink-0 size-8 rounded-full" />
+        <LikeButton
+          className="shrink-0 size-8 rounded-full"
+          onClick={(e) => e.stopPropagation()}
+        />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
