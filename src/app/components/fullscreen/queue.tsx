@@ -10,7 +10,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
+import { GripVertical, Repeat } from "lucide-react";
 import {
   memo,
   useEffect,
@@ -33,11 +33,14 @@ import {
   usePlayerCurrentSong,
   usePlayerCurrentSongIndex,
   usePlayerCurrentList,
+  usePlayerLoop,
 } from "@/store/player.store";
 import type { ISong } from "@/types/responses/song";
+import { LoopState } from "@/types/playerContext";
 import { useBackdropStyle } from "@/app/hooks/use-backdrop-bg";
 import { QueueCurrentSong, QueueModeButtons } from "./queue-current-song";
 import { QueueSourceLabel } from "@/app/components/queue/queue-source-label";
+import RepeatOne from "@/app/components/icons/repeat-one";
 import { FULLSCREEN_QUEUE_BG_CLASS } from "./constants";
 
 /**
@@ -181,6 +184,7 @@ function UnifiedQueueView({
 }) {
   const { t } = useTranslation();
   const { playSong, setSongList, reorderQueue } = usePlayerActions();
+  const loopState = usePlayerLoop();
   const backdropStyle = useBackdropStyle();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
 
@@ -348,6 +352,14 @@ function UnifiedQueueView({
               </div>
               <QueueSourceLabel />
             </div>
+            {loopState === LoopState.One && (
+              <div className="flex items-center justify-center gap-2 py-2 opacity-30 select-none">
+                <RepeatOne size={14} />
+                <span className="text-xs font-medium uppercase tracking-widest">
+                  Repeating
+                </span>
+              </div>
+            )}
             {upcoming.map((song, idx) => {
               const globalIndex = currentSongIndex + 1 + idx;
               const isActive = currentSong.id === song.id;
@@ -360,6 +372,14 @@ function UnifiedQueueView({
                 />
               );
             })}
+            {loopState === LoopState.All && (
+              <div className="flex items-center justify-center gap-2 py-2 opacity-30 select-none">
+                <Repeat size={14} />
+                <span className="text-xs font-medium uppercase tracking-widest">
+                  Repeating
+                </span>
+              </div>
+            )}
           </div>
         </SortableContext>
         {createPortal(
