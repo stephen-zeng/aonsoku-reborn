@@ -13,7 +13,7 @@ import {
 } from "@/routes/fullscreenRouter";
 import { useFullscreenPlayerState } from "@/store/player.store";
 import { ArtworkWithInfo } from "./artwork-with-info";
-import { CONTENT_MAX_WIDTH } from "./constants";
+import { PANEL_MAX_WIDTH } from "./constants";
 import { FullscreenControlPanel } from "./control-panel";
 import { LyricsTab } from "./lyrics";
 import { FullscreenSongQueue } from "./queue";
@@ -216,7 +216,7 @@ export const MobileLayout = memo(function MobileLayout({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={VIEW_TRANSITION}
-              className={`flex-1 overflow-hidden min-h-0 mx-auto w-full ${CONTENT_MAX_WIDTH}`}
+              className={`flex-1 overflow-hidden min-h-0 mx-auto w-full ${PANEL_MAX_WIDTH}`}
               data-vaul-no-drag
               onClick={(e) => e.stopPropagation()}
             >
@@ -231,7 +231,7 @@ export const MobileLayout = memo(function MobileLayout({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={VIEW_TRANSITION}
-              className={`flex-1 overflow-hidden min-h-0 mx-auto w-full ${CONTENT_MAX_WIDTH}`}
+              className={`flex-1 overflow-hidden min-h-0 mx-auto w-full ${PANEL_MAX_WIDTH}`}
               data-vaul-no-drag
               onClick={(e) => e.stopPropagation()}
               style={
