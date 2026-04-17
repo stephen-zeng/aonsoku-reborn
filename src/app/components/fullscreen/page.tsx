@@ -8,10 +8,12 @@ import {
 import { useBackdropStyle } from "@/app/hooks/use-backdrop-bg";
 import { useAppWindow } from "@/app/hooks/use-app-window";
 import { closeFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
-import { useFullscreenPlayerSettings } from "@/store/player.store";
+import { usePlayerStore, useFullscreenPlayerSettings } from "@/store/player.store";
+import { useTheme } from "@/store/theme.store";
 import { enterFullscreen, exitFullscreen } from "@/utils/browser";
 import { isDesktop } from "@/utils/desktop";
-import { setDesktopTitleBarColors } from "@/utils/theme";
+import { blendColors, hslToHex } from "@/utils/getAverageColor";
+import { setDesktopTitleBarColors, updatePwaThemeColor } from "@/utils/theme";
 import { FullscreenDragHandler } from "./drag-handler";
 import { FullscreenContent } from "./fullscreen-content";
 
@@ -32,6 +34,35 @@ export default function FullscreenMode({
   const { autoFullscreenEnabled } = useFullscreenPlayerSettings();
   const backdropStyle = useBackdropStyle();
 
+  const { theme } = useTheme();
+  const { currentSongColor, currentSongColorIntensity } = usePlayerStore(
+    (state) => ({
+      currentSongColor: state.settings.colors.currentSongColor,
+      currentSongColorIntensity: state.settings.colors.currentSongColorIntensity,
+    }),
+  );
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: theme is used to trigger update when base background changes
+  useEffect(() => {
+    const bgHsl = getComputedStyle(document.documentElement)
+      .getPropertyValue("--background")
+      .trim();
+    const baseHex = hslToHex(bgHsl);
+
+    const color =
+      open && currentSongColor
+        ? blendColors(baseHex, currentSongColor, currentSongColorIntensity)
+        : baseHex;
+
+    if (open) {
+      updatePwaThemeColor(color);
+      if (isDesktop()) setDesktopTitleBarColors(true, color);
+    } else {
+      updatePwaThemeColor();
+      if (isDesktop()) setDesktopTitleBarColors(false);
+    }
+  }, [open, currentSongColor, currentSongColorIntensity, theme]);
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: initial useEffect
   useEffect(() => {
     return () => {
@@ -51,8 +82,6 @@ export default function FullscreenMode({
     if (!open) {
       closeFullscreenPlayerWithHistory();
     }
-
-    if (isDesktop()) setDesktopTitleBarColors(open);
 
     if (!autoFullscreenEnabled) return;
 

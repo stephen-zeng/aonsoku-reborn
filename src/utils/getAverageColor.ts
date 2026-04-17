@@ -50,7 +50,7 @@ export function hexToRgba(hex: string, alpha: number = 1) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-export function hslToRbg(hsl: string) {
+export function hslToRgb(hsl: string) {
   const [h, s, l] = hsl.split(" ");
 
   const hue = parseInt(h);
@@ -107,19 +107,40 @@ function toHex(value: number) {
   return hex.length === 1 ? "0" + hex : hex;
 }
 
+export function blendColors(baseHex: string, overlayHex: string, alpha: number) {
+  const base = hexToRgb(baseHex);
+  const overlay = hexToRgb(overlayHex);
+  if (!base || !overlay) return baseHex;
+
+  const r = Math.round(base[0] * (1 - alpha) + overlay[0] * alpha);
+  const g = Math.round(base[1] * (1 - alpha) + overlay[1] * alpha);
+  const b = Math.round(base[2] * (1 - alpha) + overlay[2] * alpha);
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
 export function hslToHex(hsl: string) {
-  const [red, green, blue] = hslToRbg(hsl);
+  const [red, green, blue] = hslToRgb(hsl);
 
   return `#${toHex(red)}${toHex(green)}${toHex(blue)}`;
 }
 
 export function isDarkColor(hsl: string) {
-  const [r, g, b] = hslToRbg(hsl);
+  const [r, g, b] = hslToRgb(hsl);
 
   const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
   const isDark = luminance < 128;
 
   return isDark;
+}
+
+export function isDarkHex(hex: string) {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return false;
+
+  const [r, g, b] = rgb;
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+  return luminance < 128;
 }
 
 /**
