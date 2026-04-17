@@ -46,8 +46,8 @@
       "label": "Screenshot Displaying Albums"
     },
     {
-      "src": "/screenshots/mobile.png",
-      "type": "image/png",
+      "src": "/screenshots/mobile.jpg",
+      "type": "image/jpg",
       "sizes": "960x2142",
       "form_factor": "narrow",
       "label": "Screenshot Displaying Home on Mobile"
