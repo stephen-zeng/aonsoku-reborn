@@ -56,6 +56,7 @@ export function Sidebar({ className }: SidebarProps) {
           isCollapsed ? "xl:hidden" : "xl:flex",
           className,
         )}
+        style={{ paddingLeft: "var(--safe-area-left)" }}
       >
         <div className="space-y-4 py-4 pt-4">
           <SidebarSection>

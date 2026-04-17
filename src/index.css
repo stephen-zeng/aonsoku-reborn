@@ -94,15 +94,6 @@
     padding-left: var(--safe-area-left);
   }
 
-  @media (min-width: 640px) {
-    .fullscreen-safe-area {
-      padding-top: unset;
-      padding-right: unset;
-      padding-bottom: unset;
-      padding-left: unset;
-    }
-  }
-
   @media (min-width: 768px) and (max-height: 820px) {
     .fullscreen-desktop-playing {
       --fullscreen-artwork-max-size: min(
