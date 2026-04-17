@@ -72,19 +72,26 @@ function bootstrapServiceWorker(): void {
         const newWorker = reg.installing;
         if (!newWorker) return;
 
-        emitStatus("installing");
+        if (navigator.serviceWorker.controller) {
+          emitStatus("installing");
+        }
 
         newWorker.addEventListener("statechange", () => {
-          if (
-            newWorker.state === "installed" &&
-            navigator.serviceWorker.controller
-          ) {
-            waitingWorker = newWorker;
-            emitStatus("waiting");
+          if (newWorker.state === "installed") {
+            if (navigator.serviceWorker.controller) {
+              waitingWorker = newWorker;
+              emitStatus("waiting");
+            } else {
+              emitStatus("idle");
+            }
           }
 
           if (newWorker.state === "redundant") {
-            emitStatus("error");
+            if (navigator.serviceWorker.controller) {
+              emitStatus("error");
+            } else {
+              emitStatus("idle");
+            }
           }
         });
       });
