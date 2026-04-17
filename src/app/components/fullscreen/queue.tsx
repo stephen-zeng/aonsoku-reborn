@@ -343,14 +343,18 @@ function UnifiedQueueView({
           <div className={FULLSCREEN_QUEUE_BG_CLASS}>
             <div className="sticky top-0 z-10 px-2 pt-1 pb-1">
               {!hideModeButtons && <QueueModeButtons />}
-              <div
-                className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
-              >
-                <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
-                  {t("fullscreen.queueContinue")}
-                </h3>
-              </div>
-              <QueueSourceLabel />
+              {loopState !== LoopState.One && (
+                <>
+                  <div
+                    className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
+                  >
+                    <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
+                      {t("fullscreen.queueContinue")}
+                    </h3>
+                  </div>
+                  <QueueSourceLabel />
+                </>
+              )}
             </div>
             {loopState === LoopState.One && (
               <div className="flex items-center justify-center gap-2 py-2 opacity-30 select-none">
@@ -360,18 +364,19 @@ function UnifiedQueueView({
                 </span>
               </div>
             )}
-            {upcoming.map((song, idx) => {
-              const globalIndex = currentSongIndex + 1 + idx;
-              const isActive = currentSong.id === song.id;
-              return (
-                <SortableUpcomingRow
-                  key={song.id}
-                  song={song}
-                  isActive={isActive}
-                  onClick={() => setSongList(currentList, globalIndex)}
-                />
-              );
-            })}
+            {loopState !== LoopState.One &&
+              upcoming.map((song, idx) => {
+                const globalIndex = currentSongIndex + 1 + idx;
+                const isActive = currentSong.id === song.id;
+                return (
+                  <SortableUpcomingRow
+                    key={song.id}
+                    song={song}
+                    isActive={isActive}
+                    onClick={() => setSongList(currentList, globalIndex)}
+                  />
+                );
+              })}
             {loopState === LoopState.All && (
               <div className="flex items-center justify-center gap-2 py-2 opacity-30 select-none">
                 <Repeat size={14} />
