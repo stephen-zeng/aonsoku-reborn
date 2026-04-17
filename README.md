@@ -72,7 +72,7 @@
 
 <a href="https://raw.githubusercontent.com/realtvop/aonsoku-reborn/main/media/home.png"><img src="https://raw.githubusercontent.com/realtvop/aonsoku-reborn/main/media/home.png" width="49.5%"/></a> <a href="https://raw.githubusercontent.com/realtvop/aonsoku-reborn/main/media/player.png"><img src="https://raw.githubusercontent.com/realtvop/aonsoku-reborn/main/media/player.png" width="49.5%"/></a>
 
-<a href="https://raw.githubusercontent.com/realtvop/aonsoku-reborn/main/media/playlist.png"><img src="https://raw.githubusercontent.com/realtvop/aonsoku-reborn/main/media/playlist.png" width="40.5%"/></a> <a href="https://raw.githubusercontent.com/realtvop/aonsoku-reborn/main/media/mobile.png"><img src="https://raw.githubusercontent.com/realtvop/aonsoku-reborn/main/media/mobile.png" width="9.5%"/></a> <a href="https://raw.githubusercontent.com/realtvop/aonsoku-reborn/main/media/albums.png"><img src="https://raw.githubusercontent.com/realtvop/aonsoku-reborn/main/media/albums.png" width="40.5%"/></a>
+<a href="https://raw.githubusercontent.com/realtvop/aonsoku-reborn/main/media/playlist.png"><img src="https://raw.githubusercontent.com/realtvop/aonsoku-reborn/main/media/playlist.png" width="43.5%"/></a> <a href="https://raw.githubusercontent.com/realtvop/aonsoku-reborn/main/media/mobile.jpg"><img src="https://raw.githubusercontent.com/realtvop/aonsoku-reborn/main/media/mobile.jpg" width="12%"/></a> <a href="https://raw.githubusercontent.com/realtvop/aonsoku-reborn/main/media/albums.png"><img src="https://raw.githubusercontent.com/realtvop/aonsoku-reborn/main/media/albums.png" width="43.5%"/></a>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
