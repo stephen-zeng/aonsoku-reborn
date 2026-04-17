@@ -67,7 +67,11 @@ export function Sidebar({ className }: SidebarProps) {
           <SidebarSection>
             <SectionTitle>{t("sidebar.library")}</SectionTitle>
             <div>
-              <MemoSidebarGenerator list={libraryItems} />
+              <MemoSidebarGenerator
+                list={libraryItems.filter(
+                  (item) => item.id !== SidebarItems.Playlists,
+                )}
+              />
             </div>
           </SidebarSection>
         </div>
