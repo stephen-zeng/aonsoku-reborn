@@ -11,7 +11,11 @@ import {
   closeFullscreenPlayerWithHistory,
   setFullscreenTabWithHistory,
 } from "@/routes/fullscreenRouter";
-import { useFullscreenPlayerState, useLyricsAlignment } from "@/store/player.store";
+import {
+  useFullscreenPlayerState,
+  useLyricsAlignment,
+  useSongColor,
+} from "@/store/player.store";
 import { ArtworkWithInfo } from "./artwork-with-info";
 import { PANEL_MAX_WIDTH } from "./constants";
 import { FullscreenControlPanel } from "./control-panel";
@@ -35,40 +39,38 @@ const MobileHeader = memo(function MobileHeader({
   showDragHandle?: boolean;
   compact?: boolean;
 }) {
+  const { currentSongColor } = useSongColor();
+
   return (
-    <div className="shrink-0 z-20">
+    <div
+      className={cn(
+        "relative flex items-center justify-between px-3 shrink-0 min-h-[32px] z-20",
+        compact ? "pt-0 pb-1" : "pt-0.5 pb-1.5",
+      )}
+    >
+      <Button
+        variant="ghost"
+        size="icon"
+        className="size-10 rounded-full hover:bg-foreground/20"
+        onClick={onClose}
+        aria-label="Close"
+      >
+        {HEADER_ICON}
+      </Button>
+
       {showDragHandle && (
-        <div
-          className={cn(
-            "flex justify-center",
-            compact ? "pt-1 pb-0.5" : "pt-1.5 pb-1",
-          )}
-        >
+        <div className="absolute left-1/2 top-3 -translate-x-1/2 flex justify-center">
           <DrawerHandle
             preventCycle
             data-testid="fullscreen-drag-handle"
             aria-label="Drag to close"
+            className="opacity-100"
+            style={{ backgroundColor: currentSongColor ?? "hsl(var(--primary))" }}
           />
         </div>
       )}
-      <div
-        className={cn(
-          "flex items-center gap-2 px-3 shrink-0 min-h-[40px]",
-          compact ? "pt-1 pb-1.5" : "pt-2 pb-2",
-        )}
-      >
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-10 rounded-full hover:bg-foreground/20"
-          onClick={onClose}
-          aria-label="Close"
-        >
-          {HEADER_ICON}
-        </Button>
-        <div className="flex-1" />
-        <FullscreenSettings />
-      </div>
+
+      <FullscreenSettings />
     </div>
   );
 });

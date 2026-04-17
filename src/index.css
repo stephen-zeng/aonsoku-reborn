@@ -88,7 +88,7 @@
 
   /* Safe area handling for fullscreen player on notched/Dynamic Island phones */
   .fullscreen-safe-area {
-    padding-top: max(var(--safe-area-top), 1rem);
+    padding-top: max(var(--safe-area-top), 0.5rem);
     padding-right: var(--safe-area-right);
     padding-bottom: var(--safe-area-bottom);
     padding-left: var(--safe-area-left);
