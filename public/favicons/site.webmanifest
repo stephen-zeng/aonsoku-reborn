@@ -3,11 +3,16 @@
   "short_name": "Aonsoku",
   "description": "A modern desktop client for Navidrome/Subsonic servers.",
   "theme_color": "#060E23",
-  "categories": ["music", "entertainment"],
+  "categories": [
+    "music",
+    "entertainment"
+  ],
   "background_color": "#20b358",
   "start_url": "/",
   "display": "standalone",
-  "display_override": ["window-controls-overlay"],
+  "display_override": [
+    "window-controls-overlay"
+  ],
   "icons": [
     {
       "src": "/favicons/android-chrome-192x192.png",
@@ -36,35 +41,35 @@
     {
       "src": "/screenshots/albums.png",
       "type": "image/png",
-      "sizes": "1924x1059",
+      "sizes": "1705x1049",
       "form_factor": "wide",
       "label": "Screenshot Displaying Albums"
     },
     {
-      "src": "/screenshots/artist.png",
+      "src": "/screenshots/mobile.png",
       "type": "image/png",
-      "sizes": "1924x1059",
-      "form_factor": "wide",
-      "label": "Screenshot Displaying Artists"
+      "sizes": "960x2142",
+      "form_factor": "narrow",
+      "label": "Screenshot Displaying Home on Mobile"
     },
     {
       "src": "/screenshots/player.png",
       "type": "image/png",
-      "sizes": "1924x1059",
+      "sizes": "1705x1049",
       "form_factor": "wide",
       "label": "Screenshot of Playing"
     },
     {
       "src": "/screenshots/playlist.png",
       "type": "image/png",
-      "sizes": "1924x1059",
+      "sizes": "1705x1049",
       "form_factor": "wide",
       "label": "Screenshot Displaying Playlists"
     },
     {
       "src": "/screenshots/home.png",
       "type": "image/png",
-      "sizes": "1024x1024",
+      "sizes": "1705x1049",
       "form_factor": "wide",
       "label": "Screenshot Displaying Home"
     }
