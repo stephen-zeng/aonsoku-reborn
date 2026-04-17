@@ -341,7 +341,9 @@ function UnifiedQueueView({
               blends seamlessly with the content below it. Without this, a
               white/uncolored strip appears at the header edges on scroll. */}
           <div className={FULLSCREEN_QUEUE_BG_CLASS}>
-            <div className="sticky top-0 z-10 px-2 pt-1 pb-1">
+            <div
+              className={`${FULLSCREEN_QUEUE_BG_CLASS} sticky top-0 z-10 px-2 pt-1 pb-1`}
+            >
               {!hideModeButtons && <QueueModeButtons />}
               {loopState !== LoopState.One && (
                 <>
