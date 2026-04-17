@@ -22,6 +22,7 @@ export function ShadowHeader({
         "flex items-center justify-start px-4 md:px-8 h-[--shadow-header-height] border-b bg-background",
         fixed && "fixed top-header right-0 left-0 md:left-mini-sidebar z-30",
         fixed && (isCollapsed ? "xl:left-mini-sidebar" : "xl:left-sidebar"),
+        fixed && "transition-[left] duration-300",
         showGlassEffect &&
           "backdrop-blur-lg supports-[backdrop-filter]:bg-background/80",
         className,

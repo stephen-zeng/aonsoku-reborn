@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/app/components/ui/skeleton";
+import { useSidebar } from "@/store/ui.store";
 
 interface ShadowHeaderFallbackProps {
   actions?: ReactNode;
@@ -11,12 +12,16 @@ export function ShadowHeaderFallback({
   actions,
   hasCount = true,
 }: ShadowHeaderFallbackProps) {
+  const { isCollapsed } = useSidebar();
+
   return (
     <div
       className={cn(
         "flex items-center justify-start px-4 md:px-8 h-[--shadow-header-height] border-b bg-background",
         "fixed top-header right-0 left-0 md:left-mini-sidebar z-30",
+        isCollapsed ? "xl:left-mini-sidebar" : "xl:left-sidebar",
         "backdrop-blur-lg supports-[backdrop-filter]:bg-background/80",
+        "transition-[left] duration-300",
       )}
     >
       <div className="w-full flex justify-between">
