@@ -9,6 +9,7 @@ import { TrackInfo } from "@/app/components/player/track-info";
 import { Button } from "@/app/components/ui/button";
 import { usePlayHistory } from "@/app/hooks/use-play-history";
 import { useScrobble } from "@/app/hooks/use-scrobble";
+import { usePreloadAudio } from "@/app/hooks/use-preload-audio";
 import { usePlayerBreakpoint } from "@/app/hooks/use-player-breakpoint";
 import {
   useIsRemoteControlActive,
@@ -77,6 +78,7 @@ export function Player() {
 
   usePlayHistory();
   useScrobble();
+  usePreloadAudio();
 
   const song = currentList[currentSongIndex];
   const radio = radioList[currentSongIndex];
