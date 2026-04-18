@@ -7,11 +7,19 @@ export enum AuthType {
 
 export interface IServerConfig {
   url: string;
+  fallbackUrl?: string;
   username: string;
   password: string;
   protocolVersion?: string;
   serverType?: string;
 }
+
+export interface IServerUrlConfig {
+  primaryUrl: string;
+  fallbackUrl: string;
+}
+
+export type ActiveServerType = "primary" | "fallback" | null;
 
 export type PageViewType = "grid" | "table";
 
@@ -25,6 +33,9 @@ interface IAppPages {
 }
 
 export interface IAppData extends IServerConfig {
+  primaryUrl: string;
+  fallbackUrl: string;
+  activeServerType: ActiveServerType;
   authType: AuthType | null;
   isServerConfigured: boolean;
   osType: string;
@@ -41,6 +52,8 @@ export interface IAppActions {
   setUsername: (value: string) => void;
   setPassword: (value: string) => void;
   saveConfig: (data: IServerConfig) => Promise<boolean>;
+  saveServerUrls: (data: IServerUrlConfig) => Promise<boolean>;
+  selectConfiguredServer: () => Promise<boolean>;
   removeConfig: () => void;
   setLogoutDialogState: (value: boolean) => void;
 }

@@ -552,8 +552,46 @@
       "content": "Content",
       "accounts": "Accounts",
       "desktop": "Desktop Application",
+      "server": "Server",
       "privacy": "Privacy & Security",
       "storage": "Storage"
+    },
+    "server": {
+      "group": "Server",
+      "description": "Manage the primary server and optional fallback URL used at startup.",
+      "primaryUrl": {
+        "label": "Primary URL",
+        "info": "The server URL Aonsoku tries first when the app starts.",
+        "placeholder": "https://your-server.example.com"
+      },
+      "fallbackUrl": {
+        "label": "Fallback URL",
+        "info": "Optional server URL used when the primary URL cannot be reached at startup.",
+        "placeholder": "https://fallback-server.example.com"
+      },
+      "activeUrl": {
+        "label": "Current URL",
+        "info": "The server URL currently used by this app session.",
+        "empty": "No server selected"
+      },
+      "activeType": {
+        "label": "Current server",
+        "info": "Shows whether this session is using the primary or fallback URL.",
+        "primary": "Primary URL",
+        "fallback": "Fallback URL",
+        "none": "Not connected"
+      },
+      "validation": {
+        "primaryUrl": "Please enter a valid primary URL.",
+        "fallbackUrl": "Please enter a valid fallback URL."
+      },
+      "toast": {
+        "success": "Server URLs saved successfully.",
+        "error": "Unable to reach the primary or fallback server."
+      },
+      "save": "Save server URLs",
+      "saving": "Saving...",
+      "locked": "Server URL settings are locked by this deployment."
     },
     "appearance": {
       "general": {

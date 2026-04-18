@@ -550,8 +550,46 @@
       "audio": "播放器和音频",
       "content": "内容",
       "appearance": "外观",
+      "server": "服务器",
       "privacy": "隐私和安全",
       "storage": "存储"
+    },
+    "server": {
+      "group": "服务器",
+      "description": "管理启动时使用的主服务器和可选备用 URL。",
+      "primaryUrl": {
+        "label": "主 URL",
+        "info": "Aonsoku 启动时优先尝试连接的服务器 URL。",
+        "placeholder": "https://your-server.example.com"
+      },
+      "fallbackUrl": {
+        "label": "备用 URL",
+        "info": "当主 URL 在启动时无法访问时，会尝试使用这个可选备用 URL。",
+        "placeholder": "https://fallback-server.example.com"
+      },
+      "activeUrl": {
+        "label": "当前 URL",
+        "info": "当前会话正在使用的服务器 URL。",
+        "empty": "未选择服务器"
+      },
+      "activeType": {
+        "label": "当前服务器",
+        "info": "显示当前会话正在使用主 URL 还是备用 URL。",
+        "primary": "主 URL",
+        "fallback": "备用 URL",
+        "none": "未连接"
+      },
+      "validation": {
+        "primaryUrl": "请输入有效的主 URL。",
+        "fallbackUrl": "请输入有效的备用 URL。"
+      },
+      "toast": {
+        "success": "服务器 URL 已保存。",
+        "error": "无法连接主服务器或备用服务器。"
+      },
+      "save": "保存服务器 URL",
+      "saving": "保存中...",
+      "locked": "此部署已锁定服务器 URL 设置。"
     },
     "appearance": {
       "general": {

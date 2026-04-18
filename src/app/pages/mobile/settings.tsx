@@ -8,6 +8,7 @@ import {
   Headphones,
   LaptopIcon,
   Paintbrush,
+  Server,
 } from "lucide-react";
 import { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,6 +21,7 @@ import { Content } from "@/app/components/settings/pages/content";
 import { Desktop } from "@/app/components/settings/pages/desktop";
 import { Language } from "@/app/components/settings/pages/language";
 import { Privacy } from "@/app/components/settings/pages/privacy";
+import { ServerSettings } from "@/app/components/settings/pages/server";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { isDesktop } from "@/utils/desktop";
 
@@ -32,6 +34,7 @@ const accountsOption: CategoryItem = { id: "accounts", icon: CircleUserRound };
 const desktopOption: CategoryItem = { id: "desktop", icon: LaptopIcon };
 
 const categories: CategoryItem[] = [
+  { id: "server", icon: Server },
   { id: "appearance", icon: Paintbrush },
   { id: "language", icon: Globe },
   { id: "audio", icon: Headphones },
@@ -41,6 +44,7 @@ const categories: CategoryItem[] = [
 ];
 
 const pages: Record<SettingsOptions, () => JSX.Element> = {
+  server: () => <ServerSettings />,
   appearance: () => <Appearance />,
   audio: () => <Audio />,
   language: () => <Language />,

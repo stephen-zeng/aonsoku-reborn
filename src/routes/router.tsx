@@ -45,6 +45,7 @@ export const router = createHashRouter([
     path: ROUTES.LIBRARY.HOME,
     element: <BaseLayout />,
     loader: protectedLoader,
+    shouldRevalidate: () => false,
     children: [
       {
         id: "home",
