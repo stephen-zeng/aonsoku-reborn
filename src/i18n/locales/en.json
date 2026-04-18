@@ -562,6 +562,10 @@
         "fullscreen": {
           "label": "Enable automatic fullscreen",
           "info": "If enabled, when accessing the big player, the app will automatically enter fullscreen mode."
+        },
+        "albumCoverForSongs": {
+          "label": "Always use album covers",
+          "info": "When enabled, every song artwork request uses the album cover to reduce loading time."
         }
       },
       "colors": {

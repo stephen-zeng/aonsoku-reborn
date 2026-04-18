@@ -2,7 +2,6 @@ import { clsx } from "clsx";
 import { EllipsisVertical, Repeat, Shuffle } from "lucide-react";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
-import { getCoverArtUrl } from "@/api/httpClient";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { QueueMenuOptions } from "@/app/components/queue/queue-menu-options";
 import { Button } from "@/app/components/ui/button";
@@ -19,6 +18,7 @@ import {
   usePlayerStore,
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
+import { useSongCoverArtUrl } from "@/utils/coverArt";
 
 export const QueueCurrentSong = memo(function QueueCurrentSong({
   onClick,
@@ -29,7 +29,7 @@ export const QueueCurrentSong = memo(function QueueCurrentSong({
     (state) => state.songlist.currentSong,
     (a, b) => a.id === b.id,
   );
-  const coverArtUrl = getCoverArtUrl(currentSong.coverArt, "song", "100");
+  const coverArtUrl = useSongCoverArtUrl(currentSong, "100");
 
   return (
     <div

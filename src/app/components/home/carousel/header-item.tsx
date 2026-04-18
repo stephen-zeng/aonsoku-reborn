@@ -2,7 +2,6 @@ import clsx from "clsx";
 import { Play } from "lucide-react";
 import { isFirefox } from "react-device-detect";
 import { Link } from "react-router-dom";
-import { getCoverArtUrl } from "@/api/httpClient";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
@@ -12,11 +11,12 @@ import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
+import { useSongCoverArtUrl } from "@/utils/coverArt";
 
 export function HeaderItem({ song }: { song: ISong }) {
   const isMobile = useIsMobile();
   const { setSongList } = usePlayerActions();
-  const coverArtUrl = getCoverArtUrl(song.coverArt, "song", "300");
+  const coverArtUrl = useSongCoverArtUrl(song, "300");
 
   async function handlePlaySongAlbum(song: ISong) {
     const album = await subsonic.albums.getOne(song.albumId);
@@ -65,6 +65,7 @@ export function HeaderItem({ song }: { song: ISong }) {
             <CachedImage
               coverArtId={song.coverArt}
               coverArtType="song"
+              albumId={song.albumId}
               coverArtSize="300"
               alt={song.title}
               effect="opacity"

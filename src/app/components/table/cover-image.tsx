@@ -5,6 +5,7 @@ import { CoverArt } from "@/types/coverArtType";
 interface CoverImageProps {
   coverArt: string;
   coverArtType: CoverArt;
+  albumId?: string;
   coverArtSize?: number;
   size?: number;
   altText: string;
@@ -13,6 +14,7 @@ interface CoverImageProps {
 export function CoverImage({
   coverArt,
   coverArtType,
+  albumId,
   coverArtSize = 100,
   size = 40,
   altText,
@@ -35,6 +37,7 @@ export function CoverImage({
       <CachedImage
         coverArtId={coverArt}
         coverArtType={coverArtType}
+        albumId={albumId}
         coverArtSize={coverArtSize.toString()}
         alt={altText}
         effect="opacity"

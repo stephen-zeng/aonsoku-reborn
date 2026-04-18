@@ -164,6 +164,7 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
             id="track-song-image"
             coverArtId={song.coverArt}
             coverArtType="song"
+            albumId={song.albumId}
             coverArtSize="300"
             width="100%"
             height="100%"

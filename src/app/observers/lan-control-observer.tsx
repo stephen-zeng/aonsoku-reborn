@@ -110,6 +110,7 @@ export function LanControlObserver() {
       title: currentSong.title,
       artist: currentSong.artist,
       album: currentSong.album,
+      albumId: currentSong.albumId,
       coverArt: currentSong.coverArt,
       duration: currentSong.duration,
     };
@@ -123,6 +124,7 @@ export function LanControlObserver() {
         title: song.title,
         artist: song.artist,
         album: song.album,
+        albumId: song.albumId,
         coverArt: song.coverArt,
         duration: song.duration,
       })),

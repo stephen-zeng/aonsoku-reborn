@@ -4,7 +4,6 @@ import { type MouseEvent, type TouchEvent, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
-import { getCoverArtUrl } from "@/api/httpClient";
 import Image from "@/app/components/image";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
@@ -18,11 +17,13 @@ import { ISimilarArtist } from "@/types/responses/artist";
 import { ISong } from "@/types/responses/song";
 import { byteLength } from "@/utils/byteLength";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
+import { useCoverArtUrlFromSongPreference } from "@/utils/coverArt";
 import { queryKeys } from "@/utils/queryKeys";
 
 interface MobileResultItemProps {
   coverArt: string;
   coverArtType: CoverArt;
+  albumId?: string;
   title: string;
   subtitle: string;
   onRowClick: () => void;
@@ -33,13 +34,19 @@ interface MobileResultItemProps {
 function MobileResultItem({
   coverArt,
   coverArtType,
+  albumId,
   title,
   subtitle,
   onRowClick,
   onPlayClick,
   disableTextNavigation = false,
 }: MobileResultItemProps) {
-  const src = getCoverArtUrl(coverArt, coverArtType, "100");
+  const src = useCoverArtUrlFromSongPreference({
+    coverArt,
+    coverArtType,
+    albumId,
+    size: "100",
+  });
 
   function handleTextClick(
     e: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>,
@@ -214,6 +221,7 @@ export default function MobileSearch() {
                 key={song.id}
                 coverArt={song.coverArt}
                 coverArtType="song"
+                albumId={song.albumId}
                 title={song.title}
                 subtitle={song.artist}
                 disableTextNavigation={true}

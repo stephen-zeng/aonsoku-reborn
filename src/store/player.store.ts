@@ -77,7 +77,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
             playCount: 0,
             discNumber: 0,
             created: "remote",
-            albumId: "",
+            albumId: song.albumId ?? "",
             artistId: undefined,
             type: "remote",
             isVideo: false,
@@ -231,6 +231,14 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 setAutoFullscreenEnabled: (value) => {
                   set((state) => {
                     state.settings.fullscreen.autoFullscreenEnabled = value;
+                  });
+                },
+              },
+              coverArt: {
+                useAlbumCoverForSongs: false,
+                setUseAlbumCoverForSongs: (value) => {
+                  set((state) => {
+                    state.settings.coverArt.useAlbumCoverForSongs = value;
                   });
                 },
               },
@@ -1155,6 +1163,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.settings.colors.queue.useSongColor = false;
                   state.settings.colors.currentSongColorIntensity = 0.65;
                   state.settings.fullscreen.autoFullscreenEnabled = false;
+                  state.settings.coverArt.useAlbumCoverForSongs = false;
                   state.settings.lyrics.preferSyncedLyrics = false;
                   state.settings.replayGain.values = {
                     enabled: false,
@@ -1502,6 +1511,9 @@ export const useReplayGainActions = () =>
 
 export const useFullscreenPlayerSettings = () =>
   usePlayerStore((state) => state.settings.fullscreen);
+
+export const useCoverArtSettings = () =>
+  usePlayerStore((state) => state.settings.coverArt);
 
 export const usePrivacySettings = () =>
   usePlayerStore((state) => state.settings.privacy);

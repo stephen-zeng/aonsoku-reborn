@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getCoverArtUrl } from "@/api/httpClient";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
 import {
@@ -17,6 +16,7 @@ import { useLanControlServerInfo } from "@/store/lanControl.store";
 import { useLanControlClientStore } from "@/store/lanControlClient.store";
 import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
+import { useCoverArtUrlFromSongPreference } from "@/utils/coverArt";
 
 interface RemoteControlDialogProps {
   open: boolean;
@@ -114,7 +114,11 @@ export function RemoteControlDialog({
     currentSong?.artist ||
     t("lanControl.remote.emptyArtist");
   const displayAlbum = fullSongInfo?.album || currentSong?.album || "";
-  const coverArtUrl = getCoverArtUrl(fullSongInfo?.coverArt, "album");
+  const coverArtUrl = useCoverArtUrlFromSongPreference({
+    coverArt: fullSongInfo?.coverArt ?? currentSong?.coverArt,
+    coverArtType: "song",
+    albumId: fullSongInfo?.albumId ?? currentSong?.albumId,
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -254,7 +258,7 @@ export function RemoteControlDialog({
               )}
             </header>
             <div className="flex gap-3">
-              {fullSongInfo?.coverArt && (
+              {(fullSongInfo?.coverArt || currentSong?.coverArt) && (
                 <div className="shrink-0">
                   <img
                     src={coverArtUrl}

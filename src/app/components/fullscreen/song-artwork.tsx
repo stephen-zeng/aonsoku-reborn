@@ -12,7 +12,7 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
   compact?: boolean;
   showTouchDragSurface?: boolean;
 }) {
-  const { coverArt, artist, title, id } = usePlayerStore(
+  const { albumId, coverArt, artist, title, id } = usePlayerStore(
     ({ songlist }) => songlist.currentSong,
   );
 
@@ -47,6 +47,7 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
           <CachedImage
             coverArtId={coverArt}
             coverArtType="song"
+            albumId={albumId}
             coverArtSize="700"
             effect="opacity"
             alt={`${artist} - ${title}`}
@@ -62,7 +63,7 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
 });
 
 export const CompactSongArtwork = memo(function CompactSongArtwork() {
-  const { coverArt, artist, title } = usePlayerStore(
+  const { albumId, coverArt, artist, title } = usePlayerStore(
     ({ songlist }) => songlist.currentSong,
   );
 
@@ -70,6 +71,7 @@ export const CompactSongArtwork = memo(function CompactSongArtwork() {
     <CachedImage
       coverArtId={coverArt}
       coverArtType="song"
+      albumId={albumId}
       coverArtSize="100"
       effect="opacity"
       alt={`${artist} - ${title}`}

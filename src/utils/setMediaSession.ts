@@ -1,7 +1,7 @@
-import { getCoverArtUrl } from "@/api/httpClient";
 import { usePlayerStore } from "@/store/player.store";
 import { LanControlMessageType } from "@/types/lanControl";
 import { ISong } from "@/types/responses/song";
+import { getCoverArtUrlFromSongPreference } from "./coverArt";
 import { isValidDuration } from "./duration";
 
 const MEDIA_SESSION_COVER_SIZE = "300";
@@ -47,6 +47,7 @@ function setMediaSession(
         artist: string;
         album: string;
         coverArt?: string;
+        albumId?: string;
         duration?: number;
       },
 ) {
@@ -56,9 +57,14 @@ function setMediaSession(
   }
 
   function buildArtwork(): { artwork: MediaImage[] } {
-    if (!song.coverArt) return { artwork: [] };
+    if (!song.coverArt && !song.albumId) return { artwork: [] };
 
-    const src = getCoverArtUrl(song.coverArt, "song", MEDIA_SESSION_COVER_SIZE);
+    const src = getCoverArtUrlFromSongPreference({
+      coverArt: song.coverArt,
+      coverArtType: "song",
+      albumId: song.albumId,
+      size: MEDIA_SESSION_COVER_SIZE,
+    });
 
     return {
       artwork: [

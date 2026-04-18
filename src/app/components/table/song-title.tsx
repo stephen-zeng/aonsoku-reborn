@@ -24,6 +24,7 @@ export function TableSongTitle({
       <CoverImage
         coverArt={song.coverArt}
         coverArtType="song"
+        albumId={song.albumId}
         altText={song.title}
       />
       <div className="flex flex-col w-full justify-center truncate">

@@ -21,7 +21,6 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { getCoverArtUrl } from "@/api/httpClient";
 import { useQueueDndSensors } from "@/app/components/queue/dnd-sensors";
 import { Button } from "@/app/components/ui/button";
 import {
@@ -38,6 +37,7 @@ import {
 import type { ISong } from "@/types/responses/song";
 import { LoopState } from "@/types/playerContext";
 import { useBackdropStyle } from "@/app/hooks/use-backdrop-bg";
+import { useSongCoverArtUrl } from "@/utils/coverArt";
 import { QueueCurrentSong, QueueModeButtons } from "./queue-current-song";
 import { QueueSourceLabel } from "@/app/components/queue/queue-source-label";
 import RepeatOne from "@/app/components/icons/repeat-one";
@@ -436,7 +436,7 @@ const QueueListRow = memo(function QueueListRow({
   interactive = true,
   dragHandleProps,
 }: QueueListRowProps) {
-  const coverArtUrl = getCoverArtUrl(song.coverArt, "song", "100");
+  const coverArtUrl = useSongCoverArtUrl(song, "100");
 
   return (
     <div

@@ -88,6 +88,11 @@ interface IFullscreen {
   setAutoFullscreenEnabled: (value: boolean) => void;
 }
 
+interface ICoverArtSettings {
+  useAlbumCoverForSongs: boolean;
+  setUseAlbumCoverForSongs: (value: boolean) => void;
+}
+
 interface ILyrics {
   preferSyncedLyrics: boolean;
   setPreferSyncedLyrics: (value: boolean) => void;
@@ -113,6 +118,7 @@ interface IColorsSettings {
 export interface IPlayerSettings {
   volume: IVolumeSettings;
   fullscreen: IFullscreen;
+  coverArt: ICoverArtSettings;
   lyrics: ILyrics;
   replayGain: IReplayGain;
   privacy: IPrivacySettings;

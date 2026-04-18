@@ -44,6 +44,7 @@ export function MediaSessionObserver() {
           artist: remoteCurrentSong.artist,
           album: remoteCurrentSong.album,
           coverArt: remoteCurrentSong.coverArt,
+          albumId: remoteCurrentSong.albumId,
           duration: remoteCurrentSong.duration,
         }
       : (currentList[currentSongIndex] ?? null);

@@ -4,7 +4,6 @@ import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
 import { EllipsisVertical, GripVertical, PlayIcon } from "lucide-react";
 import { CSSProperties, forwardRef, useState } from "react";
-import { getCoverArtUrl } from "@/api/httpClient";
 import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { Button } from "@/app/components/ui/button";
@@ -15,6 +14,7 @@ import {
 } from "@/app/components/ui/dropdown-menu";
 import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
+import { useSongCoverArtUrl } from "@/utils/coverArt";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
 import { QueueMenuOptions } from "./queue-menu-options";
 
@@ -71,7 +71,7 @@ export const QueueItemRow = forwardRef<
   ref,
 ) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const coverArtUrl = getCoverArtUrl(song.coverArt, "song", "100");
+  const coverArtUrl = useSongCoverArtUrl(song, "100");
 
   return (
     <ContextMenuProvider
