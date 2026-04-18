@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { RefObject, useEffect, useMemo } from "react";
+import { RefObject, useMemo } from "react";
 import { ProgressSlider } from "@/app/components/ui/slider";
 import { useAudioSeeking } from "@/app/hooks/use-audio-seeking";
 import {
@@ -27,17 +27,10 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
   const {
     localProgress,
     isLocalSeeking,
-    setIsLocalSeeking,
     handleSeeking,
     handleSeeked,
     handleSeekedFallback,
   } = useAudioSeeking({ audioRef });
-
-  useEffect(() => {
-    if (!isLocalSeeking) {
-      setIsLocalSeeking(false);
-    }
-  }, [isLocalSeeking, setIsLocalSeeking]);
 
   const currentTime = convertSecondsToTime(
     isLocalSeeking ? localProgress : progress,

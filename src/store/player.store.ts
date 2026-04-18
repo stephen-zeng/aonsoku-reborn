@@ -3,6 +3,7 @@ import clamp from "lodash/clamp";
 import merge from "lodash/merge";
 import omit from "lodash/omit";
 import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
+import { type Draft } from "immer";
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
@@ -23,6 +24,25 @@ import { logger } from "@/utils/logger";
 import debounce from "lodash/debounce";
 import { addNextSongList, shuffleSongList } from "@/utils/songListFunctions";
 import { get as idbGet, set as idbSet } from "idb-keyval";
+
+function syncOriginalSongIndex(
+  state: Draft<IPlayerContext>,
+  isShuffleActive: boolean,
+) {
+  if (!isShuffleActive) {
+    state.songlist.originalSongIndex =
+      state.songlist.currentSongIndex;
+  } else {
+    const currentSong =
+      state.songlist.currentList[state.songlist.currentSongIndex];
+    if (currentSong) {
+      state.songlist.originalSongIndex =
+        state.songlist.originalList.findIndex(
+          (s) => s.id === currentSong.id,
+        );
+    }
+  }
+}
 
 function resolveQueueSource(
   sourceName: string | undefined,
@@ -691,21 +711,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   resetProgress();
                   set((state) => {
                     state.songlist.currentSongIndex += 1;
-                    if (!isShuffleActive) {
-                      state.songlist.originalSongIndex =
-                        state.songlist.currentSongIndex;
-                    } else {
-                      const currentSong =
-                        state.songlist.currentList[
-                          state.songlist.currentSongIndex
-                        ];
-                      if (currentSong) {
-                        state.songlist.originalSongIndex =
-                          state.songlist.originalList.findIndex(
-                            (s) => s.id === currentSong.id,
-                          );
-                      }
-                    }
+                    syncOriginalSongIndex(state, isShuffleActive);
                   });
                 } else if (loopState === LoopState.All) {
                   resetProgress();
@@ -719,21 +725,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   get().actions.resetProgress();
                   set((state) => {
                     state.songlist.currentSongIndex -= 1;
-                    if (!isShuffleActive) {
-                      state.songlist.originalSongIndex =
-                        state.songlist.currentSongIndex;
-                    } else {
-                      const currentSong =
-                        state.songlist.currentList[
-                          state.songlist.currentSongIndex
-                        ];
-                      if (currentSong) {
-                        state.songlist.originalSongIndex =
-                          state.songlist.originalList.findIndex(
-                            (s) => s.id === currentSong.id,
-                          );
-                      }
-                    }
+                    syncOriginalSongIndex(state, isShuffleActive);
                   });
                 }
               },
@@ -1217,10 +1209,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   logger.warn(
                     "handleSongEnded fired during LoopState.One (audio loop should prevent this)",
                   );
-                  set((state) => {
-                    state.playerProgress.progress = 0;
-                    state.playerState.isPlaying = true;
-                  });
                   return;
                 }
 
@@ -1230,21 +1218,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                       state.playerProgress.progress = 0;
                       state.songlist.currentSongIndex += 1;
                       state.playerState.isPlaying = true;
-                      if (!isShuffleActive) {
-                        state.songlist.originalSongIndex =
-                          state.songlist.currentSongIndex;
-                      } else {
-                        const currentSong =
-                          state.songlist.currentList[
-                            state.songlist.currentSongIndex
-                          ];
-                        if (currentSong) {
-                          state.songlist.originalSongIndex =
-                            state.songlist.originalList.findIndex(
-                              (s) => s.id === currentSong.id,
-                            );
-                        }
-                      }
+                      syncOriginalSongIndex(state, isShuffleActive);
                     });
                   } else {
                     playFirstSongInQueue();
