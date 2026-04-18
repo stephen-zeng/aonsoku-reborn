@@ -11,7 +11,7 @@ import {
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { Button } from "@/app/components/ui/button";
 import { usePlaybackControls } from "@/app/hooks/use-playback-controls";
-import { usePlayerSongStarred } from "@/store/player.store";
+import { usePlayerActions, usePlayerSongStarred } from "@/store/player.store";
 import { cn } from "@/lib/utils";
 
 export function MiniPlayerControls() {
@@ -123,7 +123,7 @@ export function MiniPlayerControls() {
 
 export function MiniPlayerLikeButton() {
   const isSongStarred = usePlayerSongStarred();
-  const { starCurrentSong } = usePlaybackControls();
+  const { starCurrentSong } = usePlayerActions();
 
   return (
     <Button

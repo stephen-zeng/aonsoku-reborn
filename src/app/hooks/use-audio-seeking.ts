@@ -49,12 +49,10 @@ export function useAudioSeeking({ audioRef }: UseAudioSeekingOptions) {
     if (isLocalSeeking) {
       logger.info("Seek fallback triggered:", localProgress);
       setIsLocalSeeking(false);
-      if (localProgress !== 0 || isLocalSeeking) {
-        if (!isRemoteControlActive) {
-          updateAudioCurrentTime(localProgress);
-        }
-        setProgress(localProgress);
+      if (!isRemoteControlActive) {
+        updateAudioCurrentTime(localProgress);
       }
+      setProgress(localProgress);
     }
   }, [
     isLocalSeeking,

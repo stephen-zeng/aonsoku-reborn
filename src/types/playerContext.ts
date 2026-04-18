@@ -174,7 +174,7 @@ export interface IPlayerActions {
     sourceName?: string,
   ) => void;
   removeSongFromQueue: (id: string) => void;
-  clearHistory: () => void;
+  clearPlayedQueue: () => void;
   reorderQueue: (fromIndex: number, toIndex: number) => void;
   setMainDrawerState: (state: boolean) => void;
   setQueueState: (state: boolean) => void;

@@ -417,7 +417,11 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 if (isRemoteActive()) return;
                 const { currentList, currentSongIndex } = get().songlist;
 
-                if (currentList.length > 0) {
+                if (
+                  currentList.length > 0 &&
+                  currentSongIndex >= 0 &&
+                  currentSongIndex < currentList.length
+                ) {
                   const song = currentList[currentSongIndex];
                   set((state) => {
                     state.songlist.currentSong = song;
@@ -985,7 +989,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.songlist.originalSongIndex = updatedOriginalIndex;
                 });
               },
-              clearHistory: () => {
+              clearPlayedQueue: () => {
                 if (isRemoteActive()) return;
                 const {
                   currentList,
@@ -1477,6 +1481,18 @@ const debouncedIdbSonglistWrite = debounce((songlist: ISongList) => {
   idbSet(miniStores.songlist, songlist);
 }, 300);
 
+function flushIdbSonglistWrite() {
+  debouncedIdbSonglistWrite.cancel();
+  const songlist = usePlayerStore.getState().songlist;
+  idbSet(miniStores.songlist, songlist);
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && songlistHydrated.value) {
+    flushIdbSonglistWrite();
+  }
+});
+
 usePlayerStore.subscribe(
   (state) => [state.songlist.currentList, state.songlist.currentSongIndex],
   () => {
@@ -1530,13 +1546,15 @@ usePlayerStore.subscribe(
 function desktopStateListener() {
   if (!isDesktop()) return;
 
-  const { togglePlayPause, playPrevSong, playNextSong } =
+  const { togglePlayPause, playPrevSong, playNextSong, toggleShuffle, toggleLoop } =
     usePlayerStore.getState().actions;
 
   window.api.playerStateListener((action) => {
     if (action === "togglePlayPause") togglePlayPause();
     if (action === "skipBackwards") playPrevSong();
     if (action === "skipForward") playNextSong();
+    if (action === "toggleShuffle") toggleShuffle();
+    if (action === "toggleRepeat") toggleLoop();
   });
 }
 
