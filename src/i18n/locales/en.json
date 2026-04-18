@@ -287,6 +287,7 @@
     "queue": "Queue",
     "queueHistory": "History",
     "queueContinue": "Continue Playing",
+    "queueRepeating": "Repeating",
     "queueFromSource": "From {{source}}",
     "playing": "Playing now",
     "lyrics": "Lyrics",

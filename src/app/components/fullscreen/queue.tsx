@@ -10,6 +10,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import type { LucideIcon } from "lucide-react";
 import { GripVertical, ListX, Repeat } from "lucide-react";
 import {
   memo,
@@ -285,6 +286,12 @@ function UnifiedQueueView({
     reorderQueue(fromGlobal, toGlobal);
   }
 
+  const showContinueHeader =
+    loopState !== LoopState.One || userQueueSongs.length > 0;
+
+  const isRepeatOne = loopState === LoopState.One;
+  const isRepeatAll = loopState === LoopState.All;
+
   return (
     <div
       className="flex flex-col h-full overflow-y-auto no-scrollbar"
@@ -336,7 +343,7 @@ function UnifiedQueueView({
           className={`${FULLSCREEN_QUEUE_BG_CLASS} sticky top-0 z-10 px-2 pt-1 pb-1`}
         >
           {!hideModeButtons && <QueueModeButtons />}
-          {loopState !== LoopState.One && (
+          {showContinueHeader && (
             <div
               className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
             >
@@ -348,78 +355,44 @@ function UnifiedQueueView({
           <QueueSourceLabel />
         </div>
 
-        {loopState === LoopState.One && (
-          <div className="flex items-center justify-center gap-2 py-2 opacity-30 select-none">
-            <RepeatOne size={14} />
-            <span className="text-xs font-medium uppercase tracking-widest">
-              Repeating
-            </span>
-          </div>
+        {isRepeatOne && userQueueSongs.length === 0 && (
+          <RepeatIndicator icon={RepeatOne} label={t("fullscreen.queueRepeating")} />
         )}
 
-        {loopState !== LoopState.One && (
+        {isRepeatOne && userQueueSongs.length > 0 && (
           <>
-            <DndContext
+            <UserQueueDnd
+              userQueueSongs={userQueueSongs}
+              userSortableItems={userSortableItems}
+              currentSong={currentSong}
               sensors={sensors}
-              collisionDetection={closestCenter}
               onDragStart={handleUserDragStart}
               onDragEnd={handleUserDragEnd}
-            >
-              <SortableContext
-                items={userSortableItems}
-                strategy={verticalListSortingStrategy}
-              >
-                {userQueueSongs.length > 0 && (
-                  <div className="px-2 pt-1">
-                    <div className="flex items-center justify-between px-2 py-1">
-                      <h3 className="text-[11px] font-semibold text-foreground/50 uppercase tracking-wider">
-                        Queue
-                      </h3>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-5 px-1.5 text-[11px] text-foreground/40 hover:text-foreground gap-1"
-                        onClick={clearUserQueue}
-                      >
-                        <ListX className="w-3 h-3" />
-                        {t("generic.clear")}
-                      </Button>
-                    </div>
-                    {userQueueSongs.map((song) => {
-                      const isActive = currentSong?.id === song.id;
-                      return (
-                        <SortableUpcomingRow
-                          key={song.id}
-                          song={song}
-                          isActive={isActive}
-                          onClick={() => {}}
-                          tier="user"
-                        />
-                      );
-                    })}
-                  </div>
-                )}
-              </SortableContext>
-              {createPortal(
-                <DragOverlay>
-                  {activeItem && (
-                    <div
-                      className="rounded-md shadow-lg"
-                      style={{ background: dragOverlayBg || undefined }}
-                    >
-                      <QueueListRow
-                        song={activeItem}
-                        isActive={currentSong?.id === activeItem.id}
-                        onClick={() => {}}
-                        interactive={false}
-                        showDragHandle={false}
-                      />
-                    </div>
-                  )}
-                </DragOverlay>,
-                document.body,
-              )}
-            </DndContext>
+              clearUserQueue={clearUserQueue}
+              activeItem={activeItem}
+              dragOverlayBg={dragOverlayBg}
+              t={t}
+            />
+            <RepeatIndicator icon={RepeatOne} label={t("fullscreen.queueRepeating")} />
+          </>
+        )}
+
+        {!isRepeatOne && (
+          <>
+            {userQueueSongs.length > 0 && (
+              <UserQueueDnd
+                userQueueSongs={userQueueSongs}
+                userSortableItems={userSortableItems}
+                currentSong={currentSong}
+                sensors={sensors}
+                onDragStart={handleUserDragStart}
+                onDragEnd={handleUserDragEnd}
+                clearUserQueue={clearUserQueue}
+                activeItem={activeItem}
+                dragOverlayBg={dragOverlayBg}
+                t={t}
+              />
+            )}
 
             <DndContext
               sensors={sensors}
@@ -476,19 +449,111 @@ function UnifiedQueueView({
               )}
             </DndContext>
 
-            {loopState === LoopState.All && (
-              <div className="flex items-center justify-center gap-2 py-2 opacity-30 select-none">
-                <Repeat size={14} />
-                <span className="text-xs font-medium uppercase tracking-widest">
-                  Repeating
-                </span>
-              </div>
+            {isRepeatAll && (
+              <RepeatIndicator icon={Repeat} label={t("fullscreen.queueRepeating")} />
             )}
           </>
         )}
       </div>
       <div ref={spacerRef} className="shrink-0" aria-hidden="true" />
     </div>
+  );
+}
+
+function RepeatIndicator({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
+  return (
+    <div className="flex items-center justify-center gap-2 py-2 opacity-30 select-none">
+      <Icon size={14} />
+      <span className="text-xs font-medium uppercase tracking-widest">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function UserQueueDnd({
+  userQueueSongs,
+  userSortableItems,
+  currentSong,
+  sensors,
+  onDragStart,
+  onDragEnd,
+  clearUserQueue,
+  activeItem,
+  dragOverlayBg,
+  t,
+}: {
+  userQueueSongs: ISong[];
+  userSortableItems: string[];
+  currentSong: ISong | null;
+  sensors: ReturnType<typeof useQueueDndSensors>;
+  onDragStart: (e: DragStartEvent) => void;
+  onDragEnd: (e: DragEndEvent) => void;
+  clearUserQueue: () => void;
+  activeItem: ISong | null;
+  dragOverlayBg: string;
+  t: (key: string) => string;
+}) {
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+    >
+      <SortableContext
+        items={userSortableItems}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="px-2 pt-1">
+          <div className="flex items-center justify-between px-2 py-1">
+            <h3 className="text-[11px] font-semibold text-foreground/50 uppercase tracking-wider">
+              Queue
+            </h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-5 px-1.5 text-[11px] text-foreground/40 hover:text-foreground gap-1"
+              onClick={clearUserQueue}
+            >
+              <ListX className="w-3 h-3" />
+              {t("generic.clear")}
+            </Button>
+          </div>
+          {userQueueSongs.map((song) => {
+            const isActive = currentSong?.id === song.id;
+            return (
+              <SortableUpcomingRow
+                key={song.id}
+                song={song}
+                isActive={isActive}
+                onClick={() => {}}
+                tier="user"
+              />
+            );
+          })}
+        </div>
+      </SortableContext>
+      {createPortal(
+        <DragOverlay>
+          {activeItem && (
+            <div
+              className="rounded-md shadow-lg"
+              style={{ background: dragOverlayBg || undefined }}
+            >
+              <QueueListRow
+                song={activeItem}
+                isActive={currentSong?.id === activeItem.id}
+                onClick={() => {}}
+                interactive={false}
+                showDragHandle={false}
+              />
+            </div>
+          )}
+        </DragOverlay>,
+        document.body,
+      )}
+    </DndContext>
   );
 }
 

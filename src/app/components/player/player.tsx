@@ -20,6 +20,7 @@ import {
   usePlayerPrevAndNext,
   usePlayerSonglist,
   usePlayerStore,
+  useHasRemainingUserQueue,
   useReplayGainState,
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
@@ -71,6 +72,7 @@ export function Player() {
   const isPlaying = usePlayerIsPlaying();
   const { isSong, isRadio } = usePlayerMediaType();
   const loopState = usePlayerLoop();
+  const hasUserQueue = useHasRemainingUserQueue();
   const isRemoteControlActive = useIsRemoteControlActive();
   const { replayGainType, replayGainPreAmp, replayGainDefaultGain } =
     useReplayGainState();
@@ -277,7 +279,7 @@ export function Player() {
           src={audioSrc}
           autoPlay={isPlaying}
           audioRef={audioRef}
-          loop={loopState === LoopState.One}
+          loop={loopState === LoopState.One && !hasUserQueue}
           onPlay={handleAudioPlay}
           onPause={handleAudioPause}
           onLoadedMetadata={setupDuration}

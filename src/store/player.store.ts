@@ -37,4 +37,5 @@ export {
   usePlayerIsBuffering,
   useLyricsAlignment,
   useHasQueueSongs,
+  useHasRemainingUserQueue,
 } from "./player/index";

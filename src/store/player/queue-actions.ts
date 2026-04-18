@@ -400,7 +400,10 @@ export function createQueueActions(shared: SharedDeps) {
       }
 
       if (userQueuePosition > 0 && userSongsAfterCurrent === 0) {
-        if (contextQueue.currentIndex < contextQueue.songs.length - 1) {
+        if (
+          contextQueue.currentIndex < contextQueue.songs.length - 1 &&
+          loopState !== LoopState.One
+        ) {
           set((state) => {
             state.songlist.userQueuePosition = 0;
             state.songlist.contextQueue.currentIndex += 1;
@@ -423,6 +426,8 @@ export function createQueueActions(shared: SharedDeps) {
         });
         return;
       }
+
+      if (loopState === LoopState.One) return;
 
       if (contextQueue.currentIndex < contextQueue.songs.length - 1) {
         set((state) => {
@@ -518,23 +523,22 @@ export function createQueueActions(shared: SharedDeps) {
     handleSongEnded: () => {
       if (isRemoteActive()) return;
       const { loopState } = get().playerState;
-
-      if (loopState === LoopState.One) {
-        return;
-      }
-
       const songlist = get().songlist;
-      if (hasNextEffectiveSong(songlist, loopState)) {
+
+      const hasNext =
+        loopState === LoopState.One
+          ? songlist.userQueue.songs.length - songlist.userQueuePosition > 0
+          : hasNextEffectiveSong(songlist, loopState);
+
+      if (hasNext) {
         get().actions.playNextSong();
         set((state) => {
           state.playerProgress.progress = 0;
           state.playerState.isPlaying = true;
         });
-      } else if (loopState === LoopState.All) {
+      } else if (loopState === LoopState.One) {
         set((state) => {
           state.playerProgress.progress = 0;
-          state.songlist.contextQueue.currentIndex = 0;
-          state.songlist.userQueuePosition = 0;
           state.playerState.isPlaying = true;
         });
       } else {

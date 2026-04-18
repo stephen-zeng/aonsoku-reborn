@@ -601,6 +601,14 @@ export const useHasQueueSongs = () =>
     (s) => s.songlist.contextQueue.songs.length > 0 || s.songlist.userQueue.songs.length > 0,
   );
 
+export const useHasRemainingUserQueue = () =>
+  usePlayerStore(
+    (state) =>
+      state.songlist.userQueue.songs.length -
+        state.songlist.userQueuePosition >
+      0,
+  );
+
 export const useQueueSource = () =>
   usePlayerStore((state) => state.songlist.contextQueue.sourceName);
 
