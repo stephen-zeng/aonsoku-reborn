@@ -463,7 +463,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 if (isRemoteActive()) {
                   if (list.length === 0) return;
 
-                  // Use optimized message types when source is known
                   if (sourceId && "albumId" in sourceId) {
                     remoteSend(LanControlMessageType.ADD_ALBUM_TO_QUEUE, {
                       albumId: sourceId.albumId,
@@ -484,7 +483,9 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   currentSongIndex,
                   currentSong,
                   originalList,
+                  shuffledList,
                 } = get().songlist;
+                const { isShuffleActive } = get().playerState;
 
                 const currentListIds = new Set(
                   currentList.map((song) => song.id),
@@ -508,16 +509,32 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   uniqueList,
                 );
 
+                let newShuffledList = shuffledList;
+                if (isShuffleActive && shuffledList.length > 0) {
+                  const shuffledCurrentIndex = shuffledList.findIndex(
+                    (song) => song.id === currentSong.id,
+                  );
+                  if (shuffledCurrentIndex >= 0) {
+                    newShuffledList = addNextSongList(
+                      shuffledCurrentIndex,
+                      shuffledList,
+                      uniqueList,
+                    );
+                  } else {
+                    newShuffledList = [...shuffledList, ...uniqueList];
+                  }
+                }
+
                 set((state) => {
                   state.songlist.currentList = newCurrentList;
                   state.songlist.originalList = newOriginalList;
+                  state.songlist.shuffledList = newShuffledList;
                 });
               },
               setLastOnQueue: (list, sourceId) => {
                 if (isRemoteActive()) {
                   if (list.length === 0) return;
 
-                  // Use optimized message types when source is known
                   if (sourceId && "albumId" in sourceId) {
                     remoteSend(LanControlMessageType.ADD_ALBUM_TO_QUEUE, {
                       albumId: sourceId.albumId,
@@ -533,7 +550,9 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   }
                   return;
                 }
-                const { currentList, originalList } = get().songlist;
+                const { currentList, originalList, shuffledList } =
+                  get().songlist;
+                const { isShuffleActive } = get().playerState;
 
                 const currentListIds = new Set(
                   currentList.map((song) => song.id),
@@ -545,9 +564,15 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 const newCurrentList = [...currentList, ...uniqueList];
                 const newOriginalList = [...originalList, ...uniqueList];
 
+                let newShuffledList = shuffledList;
+                if (isShuffleActive && shuffledList.length > 0) {
+                  newShuffledList = [...shuffledList, ...uniqueList];
+                }
+
                 set((state) => {
                   state.songlist.currentList = newCurrentList;
                   state.songlist.originalList = newOriginalList;
+                  state.songlist.shuffledList = newShuffledList;
                 });
               },
               setPlayRadio: (list, index) => {
@@ -588,12 +613,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               },
               togglePlayPause: () => {
                 const prev = get().playerState.isPlaying;
-                if (remoteSend(LanControlMessageType.PLAY_PAUSE)) {
-                  set((state) => {
-                    state.playerState.isPlaying = !prev;
-                  });
-                  return;
-                }
+                remoteSend(LanControlMessageType.PLAY_PAUSE);
                 set((state) => {
                   state.playerState.isPlaying = !prev;
                 });
@@ -626,10 +646,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 const { currentList, currentSongIndex } = get().songlist;
 
                 const listLength = currentList.length;
-                const isPlayingOneOrLess = listLength <= 1;
-                const isPlayingLastSong = currentSongIndex === listLength - 1;
-
-                if (isPlayingOneOrLess || isPlayingLastSong) return;
 
                 if (isShuffleActive) {
                   const currentSongId = get().songlist.currentSong.id;
@@ -640,10 +656,16 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   set((state) => {
                     state.songlist.currentList = state.songlist.originalList;
                     state.songlist.currentSongIndex = index;
+                    state.songlist.shuffledList = [];
                     state.playerState.isShuffleActive = false;
                   });
                 } else {
-                  const { currentList, currentSongIndex } = get().songlist;
+                  if (listLength <= 1) return;
+
+                  const isPlayingLastSong =
+                    currentSongIndex === listLength - 1;
+                  if (isPlayingLastSong) return;
+
                   const songListToShuffle = currentList.slice(currentSongIndex);
                   const shuffledList = shuffleSongList(songListToShuffle, 0);
 
@@ -657,7 +679,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               },
               playNextSong: () => {
                 if (remoteSend(LanControlMessageType.NEXT)) return;
-                const { loopState } = get().playerState;
+                const { loopState, isShuffleActive } = get().playerState;
                 const { hasNextSong, resetProgress, playFirstSongInQueue } =
                   get().actions;
 
@@ -665,6 +687,21 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   resetProgress();
                   set((state) => {
                     state.songlist.currentSongIndex += 1;
+                    if (!isShuffleActive) {
+                      state.songlist.originalSongIndex =
+                        state.songlist.currentSongIndex;
+                    } else {
+                      const currentSong =
+                        state.songlist.currentList[
+                          state.songlist.currentSongIndex
+                        ];
+                      if (currentSong) {
+                        state.songlist.originalSongIndex =
+                          state.songlist.originalList.findIndex(
+                            (s) => s.id === currentSong.id,
+                          );
+                      }
+                    }
                   });
                 } else if (loopState === LoopState.All) {
                   resetProgress();
@@ -673,10 +710,26 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               },
               playPrevSong: () => {
                 if (remoteSend(LanControlMessageType.PREVIOUS)) return;
+                const { isShuffleActive } = get().playerState;
                 if (get().actions.hasPrevSong()) {
                   get().actions.resetProgress();
                   set((state) => {
                     state.songlist.currentSongIndex -= 1;
+                    if (!isShuffleActive) {
+                      state.songlist.originalSongIndex =
+                        state.songlist.currentSongIndex;
+                    } else {
+                      const currentSong =
+                        state.songlist.currentList[
+                          state.songlist.currentSongIndex
+                        ];
+                      if (currentSong) {
+                        state.songlist.originalSongIndex =
+                          state.songlist.originalList.findIndex(
+                            (s) => s.id === currentSong.id,
+                          );
+                      }
+                    }
                   });
                 }
               },
@@ -718,6 +771,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                   state.playerProgress.progress = progress;
                 });
               },
+              // Optimistic update: remote + local both set for responsive slider UX
               setVolume: (volume) => {
                 remoteSend(LanControlMessageType.SET_VOLUME, {
                   volume,
@@ -832,22 +886,38 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
 
                 if (currentList.length === 0 && mediaType !== "song") return;
 
-                const { id, starred } = get().songlist.currentSong;
+                const currentSong = get().songlist.currentSong;
+                const { id, starred } = currentSong;
                 const isSongStarred = typeof starred === "string";
+                const songIndex = currentSongIndex;
+
                 await subsonic.star.handleStarItem({
                   id,
                   starred: isSongStarred,
                 });
 
+                const afterSong = get().songlist.currentSong;
+                if (afterSong.id !== id) return;
+
                 const songList = [...currentList];
-                songList[currentSongIndex] = {
-                  ...songList[currentSongIndex],
+                const targetIndex = songList.findIndex((s) => s.id === id);
+                if (targetIndex === -1) return;
+
+                songList[targetIndex] = {
+                  ...songList[targetIndex],
                   starred: isSongStarred ? undefined : new Date().toISOString(),
                 };
 
                 set((state) => {
                   state.songlist.currentList = songList;
                 });
+
+                if (targetIndex === songIndex) {
+                  set((state) => {
+                    state.songlist.currentSong = songList[targetIndex];
+                    state.playerState.isSongStarred = !isSongStarred;
+                  });
+                }
               },
               setAudioPlayerRef: (audioPlayer) => {
                 set((state) => {
@@ -982,10 +1052,23 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                     ? arrayMove(originalList, origFromIndex, origToIndex)
                     : originalList;
 
-                const newShuffledList =
-                  shuffledList.length > 0
-                    ? arrayMove(shuffledList, fromIndex, toIndex)
-                    : shuffledList;
+                const { isShuffleActive } = get().playerState;
+                let newShuffledList = shuffledList;
+                if (isShuffleActive && shuffledList.length > 0) {
+                  const shuffledFromIndex = shuffledList.findIndex(
+                    (s) => s.id === movedSong.id,
+                  );
+                  const shuffledToIndex = shuffledList.findIndex(
+                    (s) => s.id === currentList[toIndex].id,
+                  );
+                  if (shuffledFromIndex >= 0 && shuffledToIndex >= 0) {
+                    newShuffledList = arrayMove(
+                      shuffledList,
+                      shuffledFromIndex,
+                      shuffledToIndex,
+                    );
+                  }
+                }
 
                 let newSongIndex = currentSongIndex;
                 if (currentSongIndex === fromIndex) {
@@ -1120,26 +1203,60 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               },
               handleSongEnded: () => {
                 if (isRemoteActive()) return;
-                const { loopState } = get().playerState;
+                const { loopState, isShuffleActive } = get().playerState;
                 const {
                   hasNextSong,
-                  playNextSong,
-                  setPlayingState,
-                  resetProgress,
-                  setCurrentSong,
+                  playFirstSongInQueue,
                 } = get().actions;
 
-                if (hasNextSong() || loopState === LoopState.All) {
-                  playNextSong();
-                  setPlayingState(true);
-                } else {
-                  // Queue finished — preserve queue so user can restart from beginning
-                  resetProgress();
+                if (loopState === LoopState.One) {
+                  logger.warn(
+                    "handleSongEnded fired during LoopState.One (audio loop should prevent this)",
+                  );
                   set((state) => {
+                    state.playerProgress.progress = 0;
+                    state.playerState.isPlaying = true;
+                  });
+                  return;
+                }
+
+                if (hasNextSong() || loopState === LoopState.All) {
+                  if (hasNextSong()) {
+                    set((state) => {
+                      state.playerProgress.progress = 0;
+                      state.songlist.currentSongIndex += 1;
+                      state.playerState.isPlaying = true;
+                      if (!isShuffleActive) {
+                        state.songlist.originalSongIndex =
+                          state.songlist.currentSongIndex;
+                      } else {
+                        const currentSong =
+                          state.songlist.currentList[
+                            state.songlist.currentSongIndex
+                          ];
+                        if (currentSong) {
+                          state.songlist.originalSongIndex =
+                            state.songlist.originalList.findIndex(
+                              (s) => s.id === currentSong.id,
+                            );
+                        }
+                      }
+                    });
+                  } else {
+                    playFirstSongInQueue();
+                    set((state) => {
+                      state.playerProgress.progress = 0;
+                      state.playerState.isPlaying = true;
+                      state.songlist.originalSongIndex = 0;
+                    });
+                  }
+                } else {
+                  set((state) => {
+                    state.playerProgress.progress = 0;
                     state.playerState.isPlaying = false;
                     state.songlist.currentSongIndex = 0;
                   });
-                  setCurrentSong();
+                  get().actions.setCurrentSong();
                 }
               },
               getCurrentProgress: () => {
