@@ -80,7 +80,7 @@ export function Player() {
   useScrobble();
   usePreloadAudio();
 
-  const song = currentList[currentSongIndex];
+  const song = currentList[currentSongIndex] ?? null;
   const radio = radioList[currentSongIndex];
   const songId = song?.id;
   const audioSrc = song?.id ? getSongStreamUrl(song.id) : "";

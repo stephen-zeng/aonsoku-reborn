@@ -26,13 +26,13 @@ export function useScrobble() {
   const lastSongIdRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
-    if (currentSong.id !== lastSongIdRef.current) {
-      lastSongIdRef.current = currentSong.id;
+    if (currentSong?.id !== lastSongIdRef.current) {
+      lastSongIdRef.current = currentSong?.id;
       isScrobbleSentRef.current = false;
       isNowPlayingSentRef.current = false;
       progressTicks.current = 0;
     }
-  }, [currentSong.id]);
+  }, [currentSong?.id]);
 
   useEffect(() => {
     if (isRemoteControlActive || !isSong || !isPlaying) return;

@@ -7,7 +7,7 @@ import {
   usePlayerIsBuffering,
   usePlayerMediaType,
   usePlayerProgress,
-  usePlayerSonglist,
+  useHasQueueSongs,
 } from "@/store/player.store";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 
@@ -19,10 +19,10 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
   const progress = usePlayerProgress();
   const currentDuration = usePlayerDuration();
   const isBuffering = usePlayerIsBuffering();
-  const { currentList } = usePlayerSonglist();
+  const hasQueueSongs = useHasQueueSongs();
   const { isSong } = usePlayerMediaType();
 
-  const isEmpty = isSong && currentList.length === 0;
+  const isEmpty = isSong && !hasQueueSongs;
 
   const {
     localProgress,

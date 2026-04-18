@@ -1,0 +1,128 @@
+import type { Draft } from "immer";
+import type { IPlayerContext, IPlayerState } from "@/types/playerContext";
+import { LoopState } from "@/types/playerContext";
+import { initSonglistState } from "./queue-utils";
+
+export const initialPlayerState: IPlayerState = {
+  isPlaying: false,
+  loopState: LoopState.Off,
+  isSongStarred: false,
+  volume: 100,
+  currentDuration: 0,
+  mediaType: "song",
+  audioPlayerRef: null,
+  mainDrawerState: false,
+  queueState: false,
+  lyricsState: false,
+  fullscreenPlayerOpen: false,
+  fullscreenPlayerTab: "playing",
+  desktopFullscreenPanelView: "queue",
+  hasPrev: false,
+  hasNext: false,
+  isBuffering: false,
+  areLyricsAligned: true,
+};
+
+export const initialSonglist = initSonglistState();
+
+export const initialPlayerProgress = { progress: 0 };
+
+type SetFn = (fn: (state: Draft<IPlayerContext>) => void) => void;
+
+export function createInitialSettings(set: SetFn): IPlayerContext["settings"] {
+  return {
+    privacy: {
+      lrcLibEnabled: true,
+      setLrcLibEnabled(value: boolean) {
+        set((state) => {
+          state.settings.privacy.lrcLibEnabled = value;
+        });
+      },
+    },
+    volume: {
+      min: 0,
+      max: 100,
+      step: 1,
+      wheelStep: 5,
+    },
+    fullscreen: {
+      autoFullscreenEnabled: false,
+      setAutoFullscreenEnabled: (value: boolean) => {
+        set((state) => {
+          state.settings.fullscreen.autoFullscreenEnabled = value;
+        });
+      },
+    },
+    coverArt: {
+      useAlbumCoverForSongs: false,
+      setUseAlbumCoverForSongs: (value: boolean) => {
+        set((state) => {
+          state.settings.coverArt.useAlbumCoverForSongs = value;
+        });
+      },
+    },
+    lyrics: {
+      preferSyncedLyrics: false,
+      setPreferSyncedLyrics: (value: boolean) => {
+        set((state) => {
+          state.settings.lyrics.preferSyncedLyrics = value;
+        });
+      },
+      showTranslation: true,
+      setShowTranslation: (value: boolean) => {
+        set((state) => {
+          state.settings.lyrics.showTranslation = value;
+        });
+      },
+    },
+    replayGain: {
+      values: {
+        enabled: false,
+        type: "track",
+        preAmp: 0,
+        error: false,
+        defaultGain: -6,
+      },
+      actions: {
+        setReplayGainEnabled: (value: boolean) => {
+          set((state) => {
+            state.settings.replayGain.values.enabled = value;
+          });
+        },
+        setReplayGainType: (value: "track" | "album") => {
+          set((state) => {
+            state.settings.replayGain.values.type = value;
+          });
+        },
+        setReplayGainPreAmp: (value: number) => {
+          set((state) => {
+            state.settings.replayGain.values.preAmp = value;
+          });
+        },
+        setReplayGainError: (value: boolean) => {
+          set((state) => {
+            state.settings.replayGain.values.error = value;
+          });
+        },
+        setReplayGainDefaultGain: (value: number) => {
+          set((state) => {
+            state.settings.replayGain.values.defaultGain = value;
+          });
+        },
+      },
+    },
+    colors: {
+      currentSongColor: null,
+      currentSongColorIntensity: 0.65,
+      queue: {
+        useSongColor: false,
+      },
+    },
+  };
+}
+
+export const initialRemoteControl: IPlayerContext["remoteControl"] = {
+  active: false,
+  device: null,
+  sendCommand: null,
+};

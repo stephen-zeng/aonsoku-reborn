@@ -10,7 +10,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Repeat } from "lucide-react";
+import { GripVertical, ListX, Repeat } from "lucide-react";
 import {
   memo,
   useEffect,
@@ -31,8 +31,10 @@ import {
   usePlayerActions,
   usePlayerCurrentSong,
   usePlayerCurrentSongIndex,
-  usePlayerCurrentList,
   usePlayerLoop,
+  useUserQueue,
+  useContextQueue,
+  useHasQueueSongs,
 } from "@/store/player.store";
 import type { ISong } from "@/types/responses/song";
 import { LoopState } from "@/types/playerContext";
@@ -43,28 +45,6 @@ import { QueueSourceLabel } from "@/app/components/queue/queue-source-label";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { FULLSCREEN_QUEUE_BG_CLASS } from "./constants";
 
-/**
- * Scrolls the queue so that the current song element sits at the very top
- * of the visible area.  When the remaining content below the current song
- * is shorter than the container, a spacer div is inflated so the container
- * can still scroll far enough — this prevents the current song from being
- * stuck mid-view when near the end of the queue.
- *
- * CAVEATS for future maintainers:
- *  1. `distance` and `resolvedBehavior` are computed *before* any DOM writes
- *     because `getBoundingClientRect` values shift once we mutate the spacer.
- *  2. `spacer.style.height` is reset to "0px" first so that `offsetHeight`
- *     reads inside the loop reflect real content only (the spacer itself
- *     contributes 0).  If you remove this reset the spacer will inflate
- *     `contentBelowTop` and the calculation will be wrong.
- *  3. The loop skips children with `offsetParent === null` (display:none,
- *     e.g. DndKit's HiddenText) and `position:fixed` (e.g. DndKit's
- *     LiveRegion) because they don't contribute to in-flow scroll height.
- *  4. After setting the spacer to its final height we do NOT read layout
- *     again — `scrollTop` / `scrollTo` with the pre-calculated `currentTop`
- *     is sufficient because the spacer only extends content *below* the
- *     current song and cannot affect its offset from the container top.
- */
 function syncQueueCurrentSongPosition({
   container,
   el,
@@ -78,7 +58,6 @@ function syncQueueCurrentSongPosition({
 }) {
   if (container.clientHeight === 0) return;
 
-  // Determine scroll behavior BEFORE any DOM mutations, using current positions.
   const distance = Math.abs(
     el.getBoundingClientRect().top - container.getBoundingClientRect().top,
   );
@@ -86,18 +65,13 @@ function syncQueueCurrentSongPosition({
     behavior ??
     (distance > container.clientHeight * 0.5 ? "instant" : "smooth");
 
-  // Compute el's offset from the scroll container's content top.
   const currentTop =
     el.getBoundingClientRect().top -
     container.getBoundingClientRect().top +
     container.scrollTop;
 
-  // Reset spacer so it doesn't inflate measurements.
   spacer.style.height = "0px";
 
-  // To compute how much content sits below the top edge of el,
-  // we sum the offsetHeight of every direct container child from el onward,
-  // skipping fixed-position and hidden elements (e.g. DndKit accessibility nodes).
   let contentBelowTop = 0;
   let foundCurrent = false;
   for (const child of container.children) {
@@ -128,25 +102,28 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
   hideModeButtons?: boolean;
   onCurrentSongClick?: () => void;
 }) {
-  const currentList = usePlayerCurrentList();
+  const hasSongs = useHasQueueSongs();
   const currentSongIndex = usePlayerCurrentSongIndex();
   const currentSong = usePlayerCurrentSong();
+  const { contextSongs, contextIndex } = useContextQueue();
+  const { userQueueSongs, clearUserQueue } = useUserQueue();
   const { t } = useTranslation();
   const playHistory = usePlayHistory();
   const filteredHistory = useMemo(() => {
-    if (playHistory.length > 0 && playHistory[0].id === currentSong.id) {
+    if (playHistory.length > 0 && currentSong && playHistory[0].id === currentSong.id) {
       return playHistory.slice(1);
     }
     return playHistory;
-  }, [playHistory, currentSong.id]);
+  }, [playHistory, currentSong]);
+
   const { clearHistory: clearPlayHistory } = usePlayHistoryActions();
 
-  const upcoming = useMemo(
-    () => currentList.slice(currentSongIndex + 1),
-    [currentList, currentSongIndex],
+  const upcomingContext = useMemo(
+    () => contextSongs.slice(contextIndex + 1),
+    [contextSongs, contextIndex],
   );
 
-  if (currentList.length === 0 && filteredHistory.length === 0) {
+  if (!hasSongs && filteredHistory.length === 0 && userQueueSongs.length === 0) {
     return (
       <div className="flex justify-center items-center h-full">
         <span className="text-foreground/70">{t("fullscreen.emptyQueue")}</span>
@@ -157,12 +134,15 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
   return (
     <UnifiedQueueView
       playHistory={filteredHistory}
-      upcoming={upcoming}
+      userQueueSongs={userQueueSongs}
+      upcomingContext={upcomingContext}
       currentSong={currentSong}
       currentSongIndex={currentSongIndex}
-      currentList={currentList}
+      contextIndex={contextIndex}
+      contextSongs={contextSongs}
       hideModeButtons={hideModeButtons}
       clearPlayHistory={clearPlayHistory}
+      clearUserQueue={clearUserQueue}
       onCurrentSongClick={onCurrentSongClick}
     />
   );
@@ -170,21 +150,27 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
 
 function UnifiedQueueView({
   playHistory,
-  upcoming,
+  userQueueSongs,
+  upcomingContext,
   currentSong,
   currentSongIndex,
-  currentList,
+  contextIndex,
+  contextSongs,
   hideModeButtons,
   clearPlayHistory,
+  clearUserQueue,
   onCurrentSongClick,
 }: {
   playHistory: ISong[];
-  upcoming: ISong[];
-  currentSong: ISong;
+  userQueueSongs: ISong[];
+  upcomingContext: ISong[];
+  currentSong: ISong | null;
   currentSongIndex: number;
-  currentList: ISong[];
+  contextIndex: number;
+  contextSongs: ISong[];
   hideModeButtons: boolean;
   clearPlayHistory: () => void;
+  clearUserQueue: () => void;
   onCurrentSongClick?: () => void;
 }) {
   const { t } = useTranslation();
@@ -193,39 +179,33 @@ function UnifiedQueueView({
   const backdropStyle = useBackdropStyle();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
 
-  // Refs must be read inside the rAF callback, not captured at mount time,
-  // because React may replace the underlying DOM element between renders.
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentSongRef = useRef<HTMLDivElement>(null);
-  // Spacer div sits at the very bottom of the scroll container and is
-  // dynamically sized by syncQueueCurrentSongPosition so that the scroll
-  // container can always scroll the current song to the very top, even when
-  // there aren't enough upcoming tracks to fill the viewport.
-  // DO NOT remove `shrink-0` — without it the flex container would compress
-  // the spacer to 0 instead of honouring its inline height.
   const spacerRef = useRef<HTMLDivElement>(null);
   const [dragOverlayBg, setDragOverlayBg] = useState<string>("");
 
   const sensors = useQueueDndSensors();
-  const queueScrollKey = `${currentSong.id}:${currentSongIndex}:${currentList.length}`;
+  const queueScrollKey = `${currentSong?.id}:${currentSongIndex}:${contextSongs.length + userQueueSongs.length}`;
 
-  // Scroll the current song into view whenever the queue content changes
-  // (song change, index change, or list length change).  useLayoutEffect
-  // fires synchronously after DOM mutations so the user never sees the
-  // old scroll position.
+  const userSortableItems = useMemo(
+    () => userQueueSongs.map((song) => song.id),
+    [userQueueSongs],
+  );
+
+  const upcomingSortableItems = useMemo(
+    () => upcomingContext.map((song) => song.id),
+    [upcomingContext],
+  );
+
   useLayoutEffect(() => {
     if (!queueScrollKey) return;
-
     const el = currentSongRef.current;
     const container = scrollContainerRef.current;
     const spacer = spacerRef.current;
     if (!el || !container || !spacer) return;
-
     syncQueueCurrentSongPosition({ container, el, spacer });
   }, [queueScrollKey]);
 
-  // Re-scroll when the container resizes (e.g. panel open/close, orientation
-  // change).  Reads refs inside the rAF callback to avoid stale closures.
   useEffect(() => {
     let rafId = 0;
     const observer = new ResizeObserver(() => {
@@ -252,15 +232,12 @@ function UnifiedQueueView({
     };
   }, []);
 
-  const sortableItems = useMemo(
-    () => upcoming.map((song) => song.id),
-    [upcoming],
-  );
+  const contextPlayedCount = contextIndex + 1;
+  const userQueueStart = contextPlayedCount;
 
-  function handleDragStart(event: DragStartEvent) {
-    const song = upcoming.find((s) => s.id === event.active.id);
+  function handleUserDragStart(event: DragStartEvent) {
+    const song = userQueueSongs.find((s) => s.id === event.active.id);
     setActiveItem(song ?? null);
-
     const el = scrollContainerRef.current?.querySelector<HTMLDivElement>(
       `.${FULLSCREEN_QUEUE_BG_CLASS}`,
     );
@@ -270,20 +247,42 @@ function UnifiedQueueView({
     }
   }
 
-  function handleDragEnd(event: DragEndEvent) {
+  function handleUserDragEnd(event: DragEndEvent) {
     setActiveItem(null);
     setDragOverlayBg("");
     const { active, over } = event;
     if (!over || active.id === over.id) return;
+    const fromLocal = userQueueSongs.findIndex((s) => s.id === active.id);
+    const toLocal = userQueueSongs.findIndex((s) => s.id === over.id);
+    if (fromLocal === -1 || toLocal === -1) return;
+    const fromGlobal = userQueueStart + fromLocal;
+    const toGlobal = userQueueStart + toLocal;
+    reorderQueue(fromGlobal, toGlobal);
+  }
 
-    const fromLocalIndex = upcoming.findIndex((s) => s.id === active.id);
-    const toLocalIndex = upcoming.findIndex((s) => s.id === over.id);
-    if (fromLocalIndex === -1 || toLocalIndex === -1) return;
+  function handleUpcomingDragStart(event: DragStartEvent) {
+    const song = upcomingContext.find((s) => s.id === event.active.id);
+    setActiveItem(song ?? null);
+    const el = scrollContainerRef.current?.querySelector<HTMLDivElement>(
+      `.${FULLSCREEN_QUEUE_BG_CLASS}`,
+    );
+    if (el) {
+      const beforeBg = getComputedStyle(el, "::before").backgroundColor;
+      setDragOverlayBg(beforeBg !== "transparent" ? beforeBg : "");
+    }
+  }
 
-    const fromGlobalIndex = currentSongIndex + 1 + fromLocalIndex;
-    const toGlobalIndex = currentSongIndex + 1 + toLocalIndex;
-
-    reorderQueue(fromGlobalIndex, toGlobalIndex);
+  function handleUpcomingDragEnd(event: DragEndEvent) {
+    setActiveItem(null);
+    setDragOverlayBg("");
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const fromLocal = upcomingContext.findIndex((s) => s.id === active.id);
+    const toLocal = upcomingContext.findIndex((s) => s.id === over.id);
+    if (fromLocal === -1 || toLocal === -1) return;
+    const fromGlobal = contextPlayedCount + userQueueSongs.length + fromLocal;
+    const toGlobal = contextPlayedCount + userQueueSongs.length + toLocal;
+    reorderQueue(fromGlobal, toGlobal);
   }
 
   return (
@@ -332,58 +331,151 @@ function UnifiedQueueView({
         <QueueCurrentSong onClick={onCurrentSongClick} />
       </div>
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={sortableItems}
-          strategy={verticalListSortingStrategy}
+      <div className={FULLSCREEN_QUEUE_BG_CLASS}>
+        <div
+          className={`${FULLSCREEN_QUEUE_BG_CLASS} sticky top-0 z-10 px-2 pt-1 pb-1`}
         >
-          {/* Wrapper provides the composite background so the sticky header
-              blends seamlessly with the content below it. Without this, a
-              white/uncolored strip appears at the header edges on scroll. */}
-          <div className={FULLSCREEN_QUEUE_BG_CLASS}>
+          {!hideModeButtons && <QueueModeButtons />}
+          {loopState !== LoopState.One && (
             <div
-              className={`${FULLSCREEN_QUEUE_BG_CLASS} sticky top-0 z-10 px-2 pt-1 pb-1`}
+              className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
             >
-              {!hideModeButtons && <QueueModeButtons />}
-              {loopState !== LoopState.One && (
-                <>
-                  <div
-                    className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
-                  >
-                    <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
-                      {t("fullscreen.queueContinue")}
-                    </h3>
-                  </div>
-                  <QueueSourceLabel />
-                </>
-              )}
+              <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
+                {t("fullscreen.queueContinue")}
+              </h3>
             </div>
-            {loopState === LoopState.One && (
-              <div className="flex items-center justify-center gap-2 py-2 opacity-30 select-none">
-                <RepeatOne size={14} />
-                <span className="text-xs font-medium uppercase tracking-widest">
-                  Repeating
-                </span>
-              </div>
-            )}
-            {loopState !== LoopState.One &&
-              upcoming.map((song, idx) => {
-                const globalIndex = currentSongIndex + 1 + idx;
-                const isActive = currentSong.id === song.id;
-                return (
-                  <SortableUpcomingRow
-                    key={song.id}
-                    song={song}
-                    isActive={isActive}
-                    onClick={() => setSongList(currentList, globalIndex)}
-                  />
-                );
-              })}
+          )}
+          <QueueSourceLabel />
+        </div>
+
+        {loopState === LoopState.One && (
+          <div className="flex items-center justify-center gap-2 py-2 opacity-30 select-none">
+            <RepeatOne size={14} />
+            <span className="text-xs font-medium uppercase tracking-widest">
+              Repeating
+            </span>
+          </div>
+        )}
+
+        {loopState !== LoopState.One && (
+          <>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleUserDragStart}
+              onDragEnd={handleUserDragEnd}
+            >
+              <SortableContext
+                items={userSortableItems}
+                strategy={verticalListSortingStrategy}
+              >
+                {userQueueSongs.length > 0 && (
+                  <div className="px-2 pt-1">
+                    <div className="flex items-center justify-between px-2 py-1">
+                      <h3 className="text-[11px] font-semibold text-foreground/50 uppercase tracking-wider">
+                        Queue
+                      </h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 px-1.5 text-[11px] text-foreground/40 hover:text-foreground gap-1"
+                        onClick={clearUserQueue}
+                      >
+                        <ListX className="w-3 h-3" />
+                        {t("generic.clear")}
+                      </Button>
+                    </div>
+                    {userQueueSongs.map((song) => {
+                      const isActive = currentSong?.id === song.id;
+                      return (
+                        <SortableUpcomingRow
+                          key={song.id}
+                          song={song}
+                          isActive={isActive}
+                          onClick={() => {}}
+                          tier="user"
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </SortableContext>
+              {createPortal(
+                <DragOverlay>
+                  {activeItem && (
+                    <div
+                      className="rounded-md shadow-lg"
+                      style={{ background: dragOverlayBg || undefined }}
+                    >
+                      <QueueListRow
+                        song={activeItem}
+                        isActive={currentSong?.id === activeItem.id}
+                        onClick={() => {}}
+                        interactive={false}
+                        showDragHandle={false}
+                      />
+                    </div>
+                  )}
+                </DragOverlay>,
+                document.body,
+              )}
+            </DndContext>
+
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleUpcomingDragStart}
+              onDragEnd={handleUpcomingDragEnd}
+            >
+              <SortableContext
+                items={upcomingSortableItems}
+                strategy={verticalListSortingStrategy}
+              >
+                {upcomingContext.length > 0 && (
+                  <div className="px-2 pt-1">
+                    <div className="flex items-center px-2 py-1">
+                      <h3 className="text-[11px] font-semibold text-foreground/50 uppercase tracking-wider">
+                        Up Next
+                      </h3>
+                    </div>
+                    {upcomingContext.map((song, idx) => {
+                      const globalIndex =
+                        contextPlayedCount + userQueueSongs.length + idx;
+                      const isActive = currentSong?.id === song.id;
+                      return (
+                        <SortableUpcomingRow
+                          key={song.id}
+                          song={song}
+                          isActive={isActive}
+                          onClick={() => setSongList(contextSongs, globalIndex)}
+                          tier="context"
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </SortableContext>
+              {createPortal(
+                <DragOverlay>
+                  {activeItem && (
+                    <div
+                      className="rounded-md shadow-lg"
+                      style={{ background: dragOverlayBg || undefined }}
+                    >
+                      <QueueListRow
+                        song={activeItem}
+                        isActive={currentSong?.id === activeItem.id}
+                        onClick={() => {}}
+                        interactive={false}
+                        showDragHandle={false}
+                      />
+                    </div>
+                  )}
+                </DragOverlay>,
+                document.body,
+              )}
+            </DndContext>
+
             {loopState === LoopState.All && (
               <div className="flex items-center justify-center gap-2 py-2 opacity-30 select-none">
                 <Repeat size={14} />
@@ -392,28 +484,9 @@ function UnifiedQueueView({
                 </span>
               </div>
             )}
-          </div>
-        </SortableContext>
-        {createPortal(
-          <DragOverlay>
-            {activeItem && (
-              <div
-                className="rounded-md shadow-lg"
-                style={{ background: dragOverlayBg || undefined }}
-              >
-                <QueueListRow
-                  song={activeItem}
-                  isActive={currentSong.id === activeItem.id}
-                  onClick={() => {}}
-                  interactive={false}
-                  showDragHandle={false}
-                />
-              </div>
-            )}
-          </DragOverlay>,
-          document.body,
+          </>
         )}
-      </DndContext>
+      </div>
       <div ref={spacerRef} className="shrink-0" aria-hidden="true" />
     </div>
   );
@@ -426,6 +499,7 @@ interface QueueListRowProps {
   showDragHandle?: boolean;
   interactive?: boolean;
   dragHandleProps?: SyntheticListenerMap;
+  tier?: "context" | "user";
 }
 
 const QueueListRow = memo(function QueueListRow({

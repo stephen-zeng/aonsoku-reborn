@@ -39,7 +39,7 @@ function tryAddToHistory(tracked: TrackedSong, pauseStart: number | null) {
 
 function useCurrentSongId() {
   return usePlayerStore(
-    (state) => state.songlist.currentList[state.songlist.currentSongIndex]?.id,
+    (state) => state.songlist.currentSong?.id,
   );
 }
 

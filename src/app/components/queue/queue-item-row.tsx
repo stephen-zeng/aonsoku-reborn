@@ -24,6 +24,7 @@ interface QueueItemRowProps {
   isActive: boolean;
   onPlay: () => void;
   style?: CSSProperties;
+  tier?: "context" | "user";
 }
 
 export function SortableQueueItem({
@@ -67,7 +68,16 @@ export const QueueItemRow = forwardRef<
   HTMLDivElement,
   InternalQueueItemRowProps
 >(function QueueItemRow(
-  { song, isPlaying, isActive, onPlay, style, dragAttributes, dragListeners },
+  {
+    song,
+    isPlaying,
+    isActive,
+    onPlay,
+    style,
+    dragAttributes,
+    dragListeners,
+    tier,
+  },
   ref,
 ) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -75,7 +85,7 @@ export const QueueItemRow = forwardRef<
 
   return (
     <ContextMenuProvider
-      options={<QueueMenuOptions variant="context" song={song} />}
+      options={<QueueMenuOptions variant="context" song={song} tier={tier} />}
     >
       <div
         ref={ref}

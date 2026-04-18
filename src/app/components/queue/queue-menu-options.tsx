@@ -5,14 +5,20 @@ import { ContextMenuSeparator } from "@/app/components/ui/context-menu";
 import { useOptions } from "@/app/hooks/use-options";
 import { ROUTES } from "@/routes/routesList";
 import { usePlayerActions } from "@/store/player.store";
+import { type QueueTier } from "@/types/playerContext";
 import { ISong } from "@/types/responses/song";
 
 interface QueueMenuOptionsProps {
   variant: "context" | "dropdown";
   song: ISong;
+  tier?: QueueTier;
 }
 
-export function QueueMenuOptions({ variant, song }: QueueMenuOptionsProps) {
+export function QueueMenuOptions({
+  variant,
+  song,
+  tier,
+}: QueueMenuOptionsProps) {
   const navigate = useNavigate();
   const { removeSongFromQueue } = usePlayerActions();
   const {
@@ -30,24 +36,28 @@ export function QueueMenuOptions({ variant, song }: QueueMenuOptionsProps) {
         variant={variant}
         onClick={(e) => {
           e.stopPropagation();
-          removeSongFromQueue(song.id);
+          removeSongFromQueue(song.id, tier);
         }}
       />
-      <ContextMenuSeparator />
-      <OptionsButtons.PlayNext
-        variant={variant}
-        onClick={(e) => {
-          e.stopPropagation();
-          playNext([song]);
-        }}
-      />
-      <OptionsButtons.PlayLast
-        variant={variant}
-        onClick={(e) => {
-          e.stopPropagation();
-          playLast([song]);
-        }}
-      />
+      {(tier === "user" || tier === undefined) && (
+        <>
+          <ContextMenuSeparator />
+          <OptionsButtons.PlayNext
+            variant={variant}
+            onClick={(e) => {
+              e.stopPropagation();
+              playNext([song]);
+            }}
+          />
+          <OptionsButtons.PlayLast
+            variant={variant}
+            onClick={(e) => {
+              e.stopPropagation();
+              playLast([song]);
+            }}
+          />
+        </>
+      )}
       <ContextMenuSeparator />
       <OptionsButtons.AddToPlaylistOption variant={variant}>
         <AddToPlaylistSubMenu

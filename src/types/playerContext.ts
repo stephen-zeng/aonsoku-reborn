@@ -14,24 +14,35 @@ export enum LoopState {
   One = 2,
 }
 
+export interface IContextQueue {
+  songs: ISong[];
+  currentIndex: number;
+  sourceId: { albumId: string } | { playlistId: string } | null;
+  sourceName: string | null;
+}
+
+export interface IUserQueue {
+  songs: ISong[];
+}
+
 export interface ISongList {
-  shuffledList: ISong[];
-  currentList: ISong[];
-  currentSongIndex: number;
-  currentSong: ISong;
-  originalList: ISong[];
-  originalSongIndex: number;
+  contextQueue: IContextQueue;
+  userQueue: IUserQueue;
+  originalContextSongs: ISong[];
+  originalUserSongs?: ISong[];
+  currentSong: ISong | null;
   radioList: Radio[];
-  queueSource: string | null;
+  isShuffleActive: boolean;
+  userQueuePosition: number;
 }
 
 export type FullscreenPlayerTab = "queue" | "playing" | "lyrics";
 export type DesktopFullscreenPanelView = "queue" | "lyrics" | null;
+export type QueueTier = "context" | "user";
 
 export interface IPlayerState {
   isPlaying: boolean;
   loopState: LoopState;
-  isShuffleActive: boolean;
   isSongStarred: boolean;
   volume: number;
   currentDuration: number;
@@ -155,6 +166,7 @@ export interface IPlayerActions {
   hasPrevSong: () => boolean;
   isPlayingOneSong: () => boolean;
   clearPlayerState: () => void;
+  clearUserQueue: () => void;
   resetProgress: () => void;
   setProgress: (progress: number) => void;
   setVolume: (volume: number) => void;
@@ -173,8 +185,7 @@ export interface IPlayerActions {
     sourceId?: { albumId: string } | { playlistId: string },
     sourceName?: string,
   ) => void;
-  removeSongFromQueue: (id: string) => void;
-  clearPlayedQueue: () => void;
+  removeSongFromQueue: (id: string, tier?: QueueTier) => void;
   reorderQueue: (fromIndex: number, toIndex: number) => void;
   setMainDrawerState: (state: boolean) => void;
   setQueueState: (state: boolean) => void;
@@ -187,7 +198,6 @@ export interface IPlayerActions {
   closeFullscreenPlayer: () => void;
   setFullscreenPlayerTab: (tab: FullscreenPlayerTab) => void;
   setDesktopFullscreenPanelView: (view: DesktopFullscreenPanelView) => void;
-  playFirstSongInQueue: () => void;
   handleSongEnded: () => void;
   getCurrentProgress: () => number;
   resetConfig: () => void;

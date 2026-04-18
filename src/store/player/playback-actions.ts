@@ -1,0 +1,114 @@
+import type { Draft } from "immer";
+import clamp from "lodash/clamp";
+import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
+import { LanControlMessageType } from "@/types/lanControl";
+
+interface SharedDeps {
+  set: (
+    fn: (state: Draft<IPlayerContext>) => void,
+  ) => void;
+  get: () => IPlayerContext;
+  isRemoteActive: () => boolean;
+  remoteSend: (type: LanControlMessageType, data?: unknown) => boolean;
+}
+
+export function createPlaybackActions(shared: SharedDeps) {
+  const { set, get, isRemoteActive, remoteSend } = shared;
+
+  return {
+    setPlayingState: (status: boolean) => {
+      if (isRemoteActive()) {
+        remoteSend(
+          status ? LanControlMessageType.PLAY : LanControlMessageType.PAUSE,
+        );
+      }
+      set((state) => {
+        state.playerState.isPlaying = status;
+      });
+    },
+
+    togglePlayPause: () => {
+      const prev = get().playerState.isPlaying;
+      remoteSend(LanControlMessageType.PLAY_PAUSE);
+      set((state) => {
+        state.playerState.isPlaying = !prev;
+      });
+    },
+
+    toggleLoop: () => {
+      const { loopState } = get().playerState;
+      const newState = (loopState + 1) % (2 + 1);
+
+      remoteSend(LanControlMessageType.TOGGLE_REPEAT);
+      set((state) => {
+        state.playerState.loopState = newState as 0 | 1 | 2;
+      });
+    },
+
+    resetProgress: () => {
+      if (isRemoteActive()) return;
+      set((state) => {
+        state.playerProgress.progress = 0;
+      });
+    },
+
+    setProgress: (progress: number) => {
+      remoteSend(LanControlMessageType.SEEK, {
+        time: progress,
+      });
+      set((state) => {
+        state.playerProgress.progress = progress;
+      });
+    },
+
+    setVolume: (volume: number) => {
+      remoteSend(LanControlMessageType.SET_VOLUME, {
+        volume,
+      });
+      set((state) => {
+        state.playerState.volume = volume;
+      });
+    },
+
+    handleVolumeWheel: (isScrollingDown: boolean) => {
+      if (isRemoteActive()) return;
+      const { min, max, wheelStep } = get().settings.volume;
+      const { volume } = get().playerState;
+
+      if (isScrollingDown && volume === min) return;
+      if (!isScrollingDown && volume === max) return;
+
+      const volumeAdjustment = isScrollingDown ? -wheelStep : wheelStep;
+      const adjustedVolume = volume + volumeAdjustment;
+      const finalVolume = clamp(adjustedVolume, min, max);
+
+      set((state) => {
+        state.playerState.volume = finalVolume;
+      });
+    },
+
+    setCurrentDuration: (duration: number) => {
+      if (isRemoteActive()) return;
+      set((state) => {
+        state.playerState.currentDuration = duration;
+      });
+    },
+
+    setIsBuffering: (value: boolean) => {
+      if (get().playerState.isBuffering === value) return;
+      set((state) => {
+        state.playerState.isBuffering = value;
+      });
+    },
+
+    setAudioPlayerRef: (audioPlayer: HTMLAudioElement | null) => {
+      set((state) => {
+        state.playerState.audioPlayerRef = audioPlayer;
+      });
+    },
+
+    getCurrentProgress: () => {
+      return get().playerProgress.progress;
+    },
+  } satisfies Partial<IPlayerActions>;
+}

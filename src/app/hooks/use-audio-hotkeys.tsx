@@ -3,7 +3,7 @@ import { usePlayerStore } from "@/store/player.store";
 
 export function usePlayerHotkeys() {
   const hasSongs = usePlayerStore(
-    (state) => state.songlist.currentList.length > 0,
+    (state) => state.songlist.contextQueue.songs.length > 0 || state.songlist.userQueue.songs.length > 0,
   );
 
   const useAudioHotkeys = (keys: Keys, callback: HotkeyCallback) => {
