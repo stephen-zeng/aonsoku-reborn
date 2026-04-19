@@ -494,6 +494,12 @@ function UserQueueDnd({
   dragOverlayBg: string;
   t: (key: string) => string;
 }) {
+  const filteredUserQueueSongs = userQueueSongs.filter(
+    (song) => song.id !== currentSong?.id,
+  );
+
+  if (filteredUserQueueSongs.length === 0) return null;
+
   return (
     <DndContext
       sensors={sensors}
@@ -520,7 +526,7 @@ function UserQueueDnd({
               {t("generic.clear")}
             </Button>
           </div>
-          {userQueueSongs.map((song) => {
+          {filteredUserQueueSongs.map((song) => {
             const isActive = currentSong?.id === song.id;
             return (
               <SortableUpcomingRow
