@@ -66,7 +66,10 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
           settings: {
             downloadQuality: "stream" as DownloadQuality,
             maxCacheSize: DEFAULT_MAX_CACHE_SIZE,
-            syncLibrary: false,
+            // Default-on post-P1.3: the toggle now controls whether the
+            // long-running full-songs sync step runs. T1/T2 metadata
+            // (artists, albums, playlists, genres) always sync regardless.
+            syncLibrary: true,
             syncCoverArt: false,
           },
           status: {
@@ -171,9 +174,7 @@ export const useIsOnline = () =>
   useCacheStore((state) => state.status.isOnline);
 
 export const useIsOfflineMode = () =>
-  useCacheStore(
-    (state) => state.settings.syncLibrary && !state.status.isOnline,
-  );
+  useCacheStore((state) => !state.status.isOnline);
 
 export const useSyncState = () =>
   useCacheStore((state) => state.status.syncState);

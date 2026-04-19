@@ -67,7 +67,6 @@ export function UserDropdown() {
 
   const alignPosition = isMacOS ? "end" : "center";
   const isServerRunning = serverInfo.running;
-  const isOfflineCache = syncLibrary;
 
   return (
     <Fragment>
@@ -119,27 +118,24 @@ export function UserDropdown() {
               <span>{t("lanControl.remote.menu")}</span>
             </DropdownMenuItem>
           )}
-          {isOfflineCache && (
-            <>
-              <DropdownMenuSeparator />
-              {isSyncing ? (
-                <DropdownMenuItem onClick={() => metadataSyncService.cancel()}>
-                  <X className="mr-2 h-4 w-4" />
-                  <span>{t("settings.storage.sync.cancel")}</span>
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem
-                  onClick={() =>
-                    metadataSyncService.syncAll({
-                      includeCoverArt: syncCoverArt,
-                    })
-                  }
-                >
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  <span>{t("settings.storage.sync.syncNow")}</span>
-                </DropdownMenuItem>
-              )}
-            </>
+          <DropdownMenuSeparator />
+          {isSyncing ? (
+            <DropdownMenuItem onClick={() => metadataSyncService.cancel()}>
+              <X className="mr-2 h-4 w-4" />
+              <span>{t("settings.storage.sync.cancel")}</span>
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem
+              onClick={() =>
+                metadataSyncService.syncAll({
+                  includeCoverArt: syncCoverArt,
+                  includeFullSongs: syncLibrary,
+                })
+              }
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              <span>{t("settings.storage.sync.syncNow")}</span>
+            </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setAboutOpen(true)}>

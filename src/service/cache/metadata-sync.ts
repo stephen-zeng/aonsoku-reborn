@@ -39,7 +39,17 @@ class MetadataSyncService {
     });
   }
 
-  async syncAll(options?: { includeCoverArt?: boolean }): Promise<void> {
+  async syncAll(options?: {
+    includeCoverArt?: boolean;
+    /**
+     * Gate the full-songs sync step (the expensive one on large
+     * libraries). When false, artists / albums / playlists / genres
+     * still sync but the songs table stays as-is. Default: true.
+     */
+    includeFullSongs?: boolean;
+  }): Promise<void> {
+    const includeFullSongs = options?.includeFullSongs ?? true;
+
     if (this.abortController) {
       this.abortController.abort();
     }
@@ -119,18 +129,20 @@ class MetadataSyncService {
         await libraryDb.albums.bulkPut(allAlbums.map(withStarredAt));
       }
 
-      // 4. Songs
+      // 4. Songs (gated — expensive on large libraries)
       if (signal.aborted) throw new DOMException("Aborted", "AbortError");
-      this.updateSyncState("songs");
-      const knownSongCount = useAppStore.getState().data.songCount ?? 100_000;
-      const songs = await subsonic.songs.getAllSongs(knownSongCount);
-      if (songs?.length) {
-        await libraryDb.songs.clear();
-        await libraryDb.songs.bulkPut(
-          songs.map((s) => withPlayedAt(withStarredAt(s))),
-        );
+      if (includeFullSongs) {
+        this.updateSyncState("songs");
+        const knownSongCount = useAppStore.getState().data.songCount ?? 100_000;
+        const songs = await subsonic.songs.getAllSongs(knownSongCount);
+        if (songs?.length) {
+          await libraryDb.songs.clear();
+          await libraryDb.songs.bulkPut(
+            songs.map((s) => withPlayedAt(withStarredAt(s))),
+          );
+        }
+        this.updateSyncState("songs", songs.length, songs.length);
       }
-      this.updateSyncState("songs", songs.length, songs.length);
 
       // 5. Playlists
       if (signal.aborted) throw new DOMException("Aborted", "AbortError");

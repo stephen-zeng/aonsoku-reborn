@@ -20,11 +20,10 @@ export function useNetworkStatusObserver() {
 
 export function useNetworkStatus() {
   const isOnline = useCacheStore((state) => state.status.isOnline);
-  const syncLibrary = useCacheStore((state) => state.settings.syncLibrary);
 
   return {
     isOnline,
-    isOfflineMode: syncLibrary && !isOnline,
+    isOfflineMode: !isOnline,
   };
 }
 
@@ -32,6 +31,6 @@ export function getNetworkStatus() {
   const state = useCacheStore.getState();
   return {
     isOnline: state.status.isOnline,
-    isOfflineMode: state.settings.syncLibrary && !state.status.isOnline,
+    isOfflineMode: !state.status.isOnline,
   };
 }
