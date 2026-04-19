@@ -15,8 +15,10 @@ const FOCUS_THROTTLE_MS = 5 * 60 * 1000;
  *     so tabbing back and forth doesn't hammer the server. Each
  *     tier's own fresh window (P3.2) further dampens the work.
  *
- * Both paths skip when offline or while a sync is already running.
- * The full-songs T3 step is gated by the `syncLibrary` setting; the
+ * Both paths skip when offline, on a metered/slow connection
+ * (P6.1 — user-initiated sync via the settings refresh button is
+ * still allowed), or while a sync is already running. The
+ * full-songs T3 step is gated by the `syncLibrary` setting; the
  * toggle is now a "include all songs" switch rather than an on/off
  * for offline caching.
  */
@@ -24,12 +26,14 @@ export function MetadataSyncObserver() {
   const syncLibrary = useCacheStore((s) => s.settings.syncLibrary);
   const syncCoverArt = useCacheStore((s) => s.settings.syncCoverArt);
   const isOnline = useIsOnline();
+  const isMetered = useCacheStore((s) => s.status.isMetered);
   const hasRun = useRef(false);
   const lastFocusSyncAt = useRef(0);
 
   useEffect(() => {
     if (hasRun.current) return;
     if (!isOnline) return;
+    if (isMetered) return;
 
     hasRun.current = true;
     lastFocusSyncAt.current = Date.now();
@@ -37,22 +41,22 @@ export function MetadataSyncObserver() {
       includeCoverArt: syncCoverArt,
       includeFullSongs: syncLibrary,
     });
-  }, [syncLibrary, syncCoverArt, isOnline]);
+  }, [syncLibrary, syncCoverArt, isOnline, isMetered]);
 
   useEffect(() => {
     const handleFocus = () => {
       if (!navigator.onLine) return;
-      if (useCacheStore.getState().status.syncState.isSyncing) return;
+      const state = useCacheStore.getState();
+      if (state.status.isMetered) return;
+      if (state.status.syncState.isSyncing) return;
 
       const now = Date.now();
       if (now - lastFocusSyncAt.current < FOCUS_THROTTLE_MS) return;
       lastFocusSyncAt.current = now;
 
-      const { syncLibrary: sl, syncCoverArt: sca } =
-        useCacheStore.getState().settings;
       metadataSyncService.syncIncremental({
-        includeCoverArt: sca,
-        includeFullSongs: sl,
+        includeCoverArt: state.settings.syncCoverArt,
+        includeFullSongs: state.settings.syncLibrary,
       });
     };
 

@@ -24,6 +24,7 @@ interface CacheActions {
   setSyncLibrary: (enabled: boolean) => void;
   setSyncCoverArt: (enabled: boolean) => void;
   setIsOnline: (online: boolean) => void;
+  setIsMetered: (metered: boolean) => void;
   updateCacheStats: (stats: {
     audioSize: number;
     coverSize: number;
@@ -140,6 +141,7 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
           },
           status: {
             isOnline: navigator.onLine,
+            isMetered: false,
             currentAudioCacheSize: 0,
             currentCoverCacheSize: 0,
             audioCachedCount: 0,
@@ -191,6 +193,11 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             setIsOnline: (online) => {
               set((state) => {
                 state.status.isOnline = online;
+              });
+            },
+            setIsMetered: (metered) => {
+              set((state) => {
+                state.status.isMetered = metered;
               });
             },
             updateCacheStats: (stats) => {
@@ -261,6 +268,18 @@ export const useCacheStats = () =>
 
 export const useIsOnline = () =>
   useCacheStore((state) => state.status.isOnline);
+
+export const useIsMetered = () =>
+  useCacheStore((state) => state.status.isMetered);
+
+/** "unmetered" | "metered" | "offline" */
+export const useNetworkTier = () =>
+  useCacheStore((state) => {
+    if (!state.status.isOnline) return "offline" as const;
+    return state.status.isMetered
+      ? ("metered" as const)
+      : ("unmetered" as const);
+  });
 
 export const useIsOfflineMode = () =>
   useCacheStore((state) => !state.status.isOnline);

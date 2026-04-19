@@ -972,6 +972,8 @@
     "reconnectFailed": "Could not reconnect. Continuing in offline mode.",
     "songUnavailable": "This song is not available offline",
     "disconnected": "Server unreachable. Entering offline mode.",
-    "searchUnavailable": "Search requires an offline library sync."
+    "searchUnavailable": "Search requires an offline library sync.",
+    "metered": "Limited",
+    "meteredTooltip": "You're on a slow or metered connection. Background sync and smart downloads are paused — tap a download button to override."
   }
 }

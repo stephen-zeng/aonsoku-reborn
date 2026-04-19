@@ -97,6 +97,15 @@ export interface CacheSettings {
 
 export interface CacheStatus {
   isOnline: boolean;
+  /**
+   * True when the current connection looks expensive or slow
+   * (Network Information API: `saveData=true`, `type=cellular`, or
+   * `effectiveType` ∈ {slow-2g, 2g, 3g}). Background sync and the
+   * smart-download engine back off when this is true; user-initiated
+   * downloads are unaffected. Always false on browsers that don't
+   * expose the Network Information API.
+   */
+  isMetered: boolean;
   currentAudioCacheSize: number;
   currentCoverCacheSize: number;
   audioCachedCount: number;

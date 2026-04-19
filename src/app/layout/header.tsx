@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { NavigationButtons } from "@/app/components/header/navigation-buttons";
 import { SyncIndicator } from "@/app/components/header/sync-indicator";
+import { MeteredIndicator } from "@/app/components/metered-indicator";
 import { OfflineIndicator } from "@/app/components/offline-indicator";
 import { UserDropdown } from "@/app/components/header/user-dropdown";
 import { SettingsButton } from "@/app/components/settings/header-button";
@@ -157,6 +158,7 @@ export function Header() {
       </div>
       <div className="flex justify-end items-center gap-2">
         <OfflineIndicator />
+        <MeteredIndicator />
         <SyncIndicator />
         <div className="hidden md:block">
           <SettingsButton />
