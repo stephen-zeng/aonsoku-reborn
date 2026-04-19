@@ -3,7 +3,7 @@ import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { NavigationButtons } from "@/app/components/header/navigation-buttons";
-import { SyncIndicator } from "@/app/components/header/sync-indicator";
+import { SyncProgressBar } from "@/app/components/header/sync-progress-bar";
 import { MeteredIndicator } from "@/app/components/metered-indicator";
 import { OfflineIndicator } from "@/app/components/offline-indicator";
 import { UserDropdown } from "@/app/components/header/user-dropdown";
@@ -159,7 +159,7 @@ export function Header() {
       <div className="flex justify-end items-center gap-2">
         <OfflineIndicator />
         <MeteredIndicator />
-        <SyncIndicator />
+        <SyncProgressBar />
         <div className="hidden md:block">
           <SettingsButton />
         </div>

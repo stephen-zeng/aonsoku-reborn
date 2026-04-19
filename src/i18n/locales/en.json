@@ -729,6 +729,17 @@
           "error": "Sync failed",
           "cancelled": "Sync cancelled"
         },
+        "tier": {
+          "t1": {
+            "label": "Essentials (favorites · playlists · genres)"
+          },
+          "t2": {
+            "label": "Library skeleton (artists · albums)"
+          },
+          "t3": {
+            "label": "Full song details"
+          }
+        },
         "justNow": "Just now"
       },
       "downloadQuality": {
