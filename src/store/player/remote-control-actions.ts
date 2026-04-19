@@ -49,6 +49,8 @@ export function createRemoteControlActions(shared: SharedDeps) {
       state.songlist.userQueue = { songs: [] };
       state.songlist.originalContextSongs = mappedSongs;
       state.songlist.isShuffleActive = false;
+      state.songlist.isInUserQueue = false;
+      state.songlist.playedUserQueueHistory = [];
       state.songlist.shuffleHistory = [];
       const lastIndex = mappedSongs.length - 1;
       const currentIndex = queue.currentIndex ?? 0;

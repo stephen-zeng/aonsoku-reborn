@@ -36,9 +36,16 @@ interface SharedDeps {
   clearSonglistState: (state: Draft<ISongList>) => void;
 }
 
+const PREV_SEEK_THRESHOLD = 3;
+
+function resetUserQueue(state: Draft<ISongList>) {
+  state.userQueue = { songs: [] };
+  state.isInUserQueue = false;
+  state.playedUserQueueHistory = [];
+}
+
 export function createQueueActions(shared: SharedDeps) {
   const { set, get, isRemoteActive, remoteSend, clearSonglistState } = shared;
-  const PREV_SEEK_THRESHOLD = 3;
 
   return {
     setSongList: (
@@ -118,8 +125,7 @@ export function createQueueActions(shared: SharedDeps) {
         set((state) => {
           state.playerState.isPlaying = true;
           state.songlist.contextQueue.currentIndex = index;
-          state.songlist.userQueue = { songs: [] };
-          state.songlist.userQueuePosition = 0;
+          resetUserQueue(state.songlist);
           if (sourceName !== undefined) {
             state.songlist.contextQueue.sourceName = sourceName || null;
           }
@@ -144,10 +150,9 @@ export function createQueueActions(shared: SharedDeps) {
                 ? sourceName || null
                 : state.songlist.contextQueue.sourceName,
           };
-          state.songlist.userQueue = { songs: [] };
+          resetUserQueue(state.songlist);
           state.songlist.originalContextSongs = [...songlist];
           state.songlist.radioList = [];
-          state.songlist.userQueuePosition = 0;
           state.songlist.shuffleHistory = [];
           state.songlist.isShuffleActive = true;
           state.playerState.mediaType = "song";
@@ -165,10 +170,9 @@ export function createQueueActions(shared: SharedDeps) {
                 ? sourceName || null
                 : state.songlist.contextQueue.sourceName,
           };
-          state.songlist.userQueue = { songs: [] };
+          resetUserQueue(state.songlist);
           state.songlist.originalContextSongs = [...songlist];
           state.songlist.radioList = [];
-          state.songlist.userQueuePosition = 0;
           state.songlist.shuffleHistory = [];
           state.songlist.isShuffleActive = false;
           state.playerState.mediaType = "song";
@@ -202,10 +206,9 @@ export function createQueueActions(shared: SharedDeps) {
                 ? sourceName || null
                 : song.album || null,
           };
-          state.songlist.userQueue = { songs: [] };
+          resetUserQueue(state.songlist);
           state.songlist.originalContextSongs = [song];
           state.songlist.isShuffleActive = false;
-          state.songlist.userQueuePosition = 0;
           state.songlist.shuffleHistory = [];
           state.playerState.isPlaying = true;
           state.songlist.radioList = [];
@@ -267,25 +270,18 @@ export function createQueueActions(shared: SharedDeps) {
       if (!detectedTier) return;
 
       if (detectedTier === "user") {
-        const { userQueue, userQueuePosition } = get().songlist;
+        const { userQueue, isInUserQueue } = get().songlist;
         const removedIndex = userQueue.songs.findIndex((s) => s.id === id);
         if (removedIndex === -1) return;
 
         const newUserSongs = [...userQueue.songs];
         newUserSongs.splice(removedIndex, 1);
 
-        let newUserPos = userQueuePosition;
-        if (userQueuePosition > 0 && removedIndex === userQueuePosition - 1) {
-          newUserPos = newUserSongs.length > 0
-            ? Math.min(userQueuePosition, newUserSongs.length)
-            : 0;
-        } else if (removedIndex >= 0 && removedIndex < userQueuePosition - 1) {
-          newUserPos = userQueuePosition - 1;
-        }
-
         set((state) => {
           state.songlist.userQueue.songs = newUserSongs;
-          state.songlist.userQueuePosition = newUserPos;
+          if (isInUserQueue && removedIndex === 0 && newUserSongs.length === 0) {
+            state.songlist.isInUserQueue = false;
+          }
         });
         return;
       }
@@ -302,7 +298,7 @@ export function createQueueActions(shared: SharedDeps) {
         return;
       }
 
-      if (removedIndex === contextQueue.currentIndex && get().songlist.userQueuePosition === 0) {
+      if (removedIndex === contextQueue.currentIndex && !get().songlist.isInUserQueue) {
         get().actions.resetProgress();
       }
 
@@ -323,7 +319,10 @@ export function createQueueActions(shared: SharedDeps) {
     clearUserQueue: () => {
       set((state) => {
         state.songlist.userQueue.songs = [];
-        state.songlist.userQueuePosition = 0;
+        state.songlist.playedUserQueueHistory = [];
+        if (state.songlist.isInUserQueue) {
+          state.songlist.isInUserQueue = false;
+        }
       });
     },
 
@@ -398,42 +397,34 @@ export function createQueueActions(shared: SharedDeps) {
       if (!hasNextEffectiveSong(songlist, loopState)) return;
       get().actions.resetProgress();
 
-      const { userQueuePosition, userQueue, contextQueue } = songlist;
-      const userSongsAfterCurrent = userQueue.songs.length - userQueuePosition;
+      const { isInUserQueue, userQueue, contextQueue } = songlist;
 
-      if (userQueuePosition > 0 && userSongsAfterCurrent > 0) {
+      if (isInUserQueue) {
+        const consumed = userQueue.songs[0];
         set((state) => {
-          state.songlist.userQueuePosition += 1;
-          state.playerState.isPlaying = true;
+          state.songlist.userQueue.songs.splice(0, 1);
+          state.songlist.playedUserQueueHistory.push(consumed);
+
+          if (state.songlist.userQueue.songs.length > 0) {
+            state.playerState.isPlaying = true;
+          } else {
+            state.songlist.isInUserQueue = false;
+            if (state.songlist.contextQueue.currentIndex < state.songlist.contextQueue.songs.length - 1) {
+              state.songlist.contextQueue.currentIndex += 1;
+            } else if (loopState === LoopState.All) {
+              const lastPlayedSongId = songlist.contextQueue.songs[songlist.contextQueue.currentIndex]?.id;
+              state.songlist.contextQueue.currentIndex = 0;
+              reshuffleContextForWrap(state.songlist, lastPlayedSongId);
+            }
+            state.playerState.isPlaying = true;
+          }
         });
         return;
       }
 
-      if (userQueuePosition > 0 && userSongsAfterCurrent === 0) {
-        if (
-          contextQueue.currentIndex < contextQueue.songs.length - 1 &&
-          loopState !== LoopState.One
-        ) {
-          set((state) => {
-            state.songlist.userQueuePosition = 0;
-            state.songlist.contextQueue.currentIndex += 1;
-            state.playerState.isPlaying = true;
-          });
-        } else if (loopState === LoopState.All) {
-          const lastPlayedSongId = songlist.contextQueue.songs[songlist.contextQueue.currentIndex]?.id;
-          set((state) => {
-            state.songlist.userQueuePosition = 0;
-            state.songlist.contextQueue.currentIndex = 0;
-            reshuffleContextForWrap(state.songlist, lastPlayedSongId);
-            state.playerState.isPlaying = true;
-          });
-        }
-        return;
-      }
-
-      if (userQueuePosition === 0 && userQueue.songs.length > 0) {
+      if (userQueue.songs.length > 0) {
         set((state) => {
-          state.songlist.userQueuePosition = 1;
+          state.songlist.isInUserQueue = true;
           state.playerState.isPlaying = true;
         });
         return;
@@ -479,11 +470,31 @@ export function createQueueActions(shared: SharedDeps) {
       if (!hasPrevEffectiveSong(get().songlist)) return;
       get().actions.resetProgress();
 
-      const { userQueuePosition, contextQueue } = get().songlist;
+      const { isInUserQueue, playedUserQueueHistory, contextQueue } = get().songlist;
 
-      if (userQueuePosition > 0) {
+      if (playedUserQueueHistory.length > 0) {
+        const wasInUserQueue = isInUserQueue;
         set((state) => {
-          state.songlist.userQueuePosition -= 1;
+          const history = state.songlist.playedUserQueueHistory;
+          const restored = history.pop()!;
+          state.songlist.userQueue.songs.unshift(restored);
+          state.songlist.isInUserQueue = true;
+
+          if (!wasInUserQueue) {
+            state.songlist.contextQueue.currentIndex = Math.max(
+              0,
+              state.songlist.contextQueue.currentIndex - 1,
+            );
+          }
+
+          state.playerState.isPlaying = true;
+        });
+        return;
+      }
+
+      if (isInUserQueue) {
+        set((state) => {
+          state.songlist.isInUserQueue = false;
           state.playerState.isPlaying = true;
         });
         return;
@@ -539,9 +550,12 @@ export function createQueueActions(shared: SharedDeps) {
       const { loopState } = get().playerState;
       const songlist = get().songlist;
 
+      const userQueueRemaining = songlist.isInUserQueue
+        ? songlist.userQueue.songs.length - 1
+        : songlist.userQueue.songs.length;
       const hasNext =
         loopState === LoopState.One
-          ? songlist.userQueue.songs.length - songlist.userQueuePosition > 0
+          ? userQueueRemaining > 0
           : hasNextEffectiveSong(songlist, loopState);
 
       if (hasNext) {

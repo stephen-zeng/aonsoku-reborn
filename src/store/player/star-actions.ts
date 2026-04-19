@@ -15,7 +15,7 @@ export function createStarActions(shared: SharedDeps) {
 
   return {
     starSongInQueue: (id: string) => {
-      const { contextQueue, userQueue, originalContextSongs } =
+      const { contextQueue, userQueue, originalContextSongs, playedUserQueueHistory } =
         get().songlist;
       const { mediaType } = get().playerState;
 
@@ -32,6 +32,7 @@ export function createStarActions(shared: SharedDeps) {
       for (const list of [
         contextQueue.songs,
         userQueue.songs,
+        playedUserQueueHistory,
         originalContextSongs,
       ]) {
         const song = list.find((s) => s.id === id);

@@ -156,7 +156,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
       ),
       {
         name: "player_store",
-        version: 2,
+        version: 3,
         // biome-ignore lint/suspicious/noExplicitAny: zustand persist migrate API
         migrate: (persistedState: any, version) => {
           if (version === 1) {
@@ -177,7 +177,8 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 currentSong: oldSl.currentSong || null,
                 radioList: oldSl.radioList || [],
                 isShuffleActive: oldSl.isShuffleActive || false,
-                userQueuePosition: 0,
+                isInUserQueue: false,
+                playedUserQueueHistory: [],
                 shuffleHistory: [],
               };
               delete old.songlist.shuffledList;
@@ -189,6 +190,17 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
             }
             if (old.playerState) {
               delete old.playerState.isShuffleActive;
+            }
+          }
+          if (version <= 2) {
+            // biome-ignore lint/suspicious/noExplicitAny: migrate userQueuePosition to isInUserQueue
+            const old = persistedState as any;
+            if (old.songlist) {
+              if (old.songlist.userQueuePosition !== undefined) {
+                old.songlist.isInUserQueue = old.songlist.userQueuePosition > 0;
+                old.songlist.playedUserQueueHistory = [];
+                delete old.songlist.userQueuePosition;
+              }
             }
           }
           return persistedState;
@@ -241,11 +253,9 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                     current.contextQueue.songs.length === 0 &&
                     current.userQueue.songs.length === 0
                   ) {
+                    const migrated = migrateSonglistFromIdb(value);
                     usePlayerStore.setState({
-                      songlist: {
-                        ...value,
-                        shuffleHistory: value.shuffleHistory ?? [],
-                      },
+                      songlist: migrated,
                     });
                   }
                 }
@@ -284,9 +294,44 @@ function migrateLegacySonglist(value: any): ISongList | null {
     currentSong: value.currentSong || null,
     radioList: value.radioList || [],
     isShuffleActive: false,
-    userQueuePosition: 0,
+    isInUserQueue: false,
+    playedUserQueueHistory: [],
     shuffleHistory: [],
   };
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: IDB data may come from older schema versions
+function migrateSonglistFromIdb(value: any): ISongList {
+  const isInUserQueue = value.isInUserQueue ?? (value.userQueuePosition != null ? value.userQueuePosition > 0 : false);
+  const userQueue = value.userQueue && typeof value.userQueue === "object" && Array.isArray(value.userQueue.songs)
+    ? { songs: value.userQueue.songs }
+    : { songs: [] };
+
+  // When migrating from userQueuePosition model, the entire userQueue songs array
+  // represented queued songs. We can't reconstruct which ones were already played,
+  // so we default to isInUserQueue=false and treat all songs as pending.
+  // Songs already past the old position pointer are simply queued.
+  if (value.userQueuePosition != null && value.userQueuePosition > 0 && Array.isArray(userQueue.songs) && userQueue.songs.length > 0) {
+    // The old model had all songs in the array with a position pointer.
+    // We can't reconstruct which songs were consumed, so default to not in user queue.
+  }
+
+  const result: ISongList = {
+    ...value,
+    contextQueue: value.contextQueue ?? { songs: [], currentIndex: 0, sourceId: null, sourceName: null },
+    userQueue,
+    originalContextSongs: value.originalContextSongs ?? [],
+    currentSong: value.currentSong ?? null,
+    radioList: value.radioList ?? [],
+    isShuffleActive: value.isShuffleActive ?? false,
+    isInUserQueue,
+    playedUserQueueHistory: value.playedUserQueueHistory ?? [],
+    shuffleHistory: value.shuffleHistory ?? [],
+  };
+
+  delete result.userQueuePosition;
+
+  return result;
 }
 
 const songlistHydrated = { value: false };
@@ -323,7 +368,8 @@ usePlayerStore.subscribe(
     state.songlist.contextQueue.songs,
     state.songlist.contextQueue.currentIndex,
     state.songlist.userQueue.songs,
-    state.songlist.userQueuePosition,
+    state.songlist.isInUserQueue,
+    state.songlist.playedUserQueueHistory,
   ],
   () => {
     const playerStore = usePlayerStore.getState();
@@ -349,6 +395,8 @@ usePlayerStore.subscribe(
     songlist.contextQueue.songs,
     songlist.userQueue.songs,
     songlist.contextQueue.currentIndex,
+    songlist.isInUserQueue,
+    songlist.playedUserQueueHistory,
     songlist.radioList,
   ],
   () => {
@@ -611,9 +659,7 @@ export const useHasQueueSongs = () =>
 export const useHasRemainingUserQueue = () =>
   usePlayerStore(
     (state) =>
-      state.songlist.userQueue.songs.length -
-        state.songlist.userQueuePosition >
-      0,
+      state.songlist.userQueue.songs.length > 0,
   );
 
 export const useQueueSource = () =>

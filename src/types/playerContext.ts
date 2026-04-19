@@ -33,7 +33,8 @@ export interface ISongList {
   currentSong: ISong | null;
   radioList: Radio[];
   isShuffleActive: boolean;
-  userQueuePosition: number;
+  isInUserQueue: boolean;
+  playedUserQueueHistory: ISong[];
   shuffleHistory: string[];
 }
 

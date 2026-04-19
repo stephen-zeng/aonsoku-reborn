@@ -189,8 +189,8 @@ function UnifiedQueueView({
   const queueScrollKey = `${currentSong?.id}:${currentSongIndex}:${contextSongs.length + userQueueSongs.length}:${loopState}`;
 
   const userSortableItems = useMemo(
-    () => userQueueSongs.map((song) => song.id),
-    [userQueueSongs],
+    () => userQueueSongs.filter((song) => song.id !== currentSong?.id).map((song) => song.id),
+    [userQueueSongs, currentSong],
   );
 
   const upcomingSortableItems = useMemo(
