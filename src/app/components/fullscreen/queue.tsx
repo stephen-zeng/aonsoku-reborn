@@ -186,7 +186,7 @@ function UnifiedQueueView({
   const [dragOverlayBg, setDragOverlayBg] = useState<string>("");
 
   const sensors = useQueueDndSensors();
-  const queueScrollKey = `${currentSong?.id}:${currentSongIndex}:${contextSongs.length + userQueueSongs.length}`;
+  const queueScrollKey = `${currentSong?.id}:${currentSongIndex}:${contextSongs.length + userQueueSongs.length}:${loopState}`;
 
   const userSortableItems = useMemo(
     () => userQueueSongs.map((song) => song.id),
