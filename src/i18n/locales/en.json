@@ -373,11 +373,16 @@
       }
     }
   },
+  "error": {
+    "notFound": "Not found"
+  },
   "options": {
     "play": "Play",
     "playNext": "Play next",
     "addLast": "Add to queue",
     "download": "Download",
+    "like": "Like",
+    "unlike": "Unlike",
     "playlist": {
       "add": "Add to playlist",
       "edit": "Edit playlist",
@@ -763,6 +768,7 @@
           "info": "Manually check for available updates."
         },
         "checking": "Checking for updates...",
+        "checkingManually": "Checking for updates...",
         "upToDate": "You're up to date",
         "updateAvailable": "Update Available",
         "updateAvailableDesc": "Version {{version}} is available",
@@ -805,7 +811,10 @@
         "serverError": "Failed to start LAN control server.",
         "passwordRegenerated": "Password regenerated successfully.",
         "addressCopied": "Server address copied to clipboard.",
-        "passwordCopied": "Password copied to clipboard."
+        "passwordCopied": "Password copied to clipboard.",
+        "copyPassword": "Copy password",
+        "copyAddress": "Copy address",
+        "regeneratePassword": "Regenerate password"
       }
     }
   },
