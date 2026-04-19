@@ -36,17 +36,18 @@ import {
 import {
   CACHE_SIZE_OPTIONS,
   type CacheMetaSource,
+  DOWNLOAD_QUALITIES,
   DownloadQuality,
 } from "@/types/cache";
 import dateTime from "@/utils/dateTime";
 import { formatBytes } from "@/utils/formatBytes";
 
-const downloadQualities: DownloadQuality[] = ["stream", "original"];
+const downloadQualities: DownloadQuality[] = DOWNLOAD_QUALITIES;
 
 function DownloadQualitySection() {
   const { t } = useTranslation();
-  const { downloadQuality } = useCacheSettings();
-  const { setDownloadQuality } = useCacheActions();
+  const { downloadQuality, streamQuality } = useCacheSettings();
+  const { setDownloadQuality, setStreamQuality } = useCacheActions();
 
   return (
     <Root>
@@ -59,8 +60,45 @@ function DownloadQualitySection() {
 
       <Content>
         <ContentItem>
-          <ContentItemTitle>
-            {t("settings.storage.downloadQuality.label")}
+          <ContentItemTitle
+            info={t("settings.storage.downloadQuality.streamInfo")}
+          >
+            {t("settings.storage.downloadQuality.streamLabel")}
+          </ContentItemTitle>
+          <ContentItemForm>
+            <Select
+              value={streamQuality}
+              onValueChange={(value) =>
+                setStreamQuality(value as DownloadQuality)
+              }
+            >
+              <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left">
+                <SelectValue>
+                  <span className="text-sm text-foreground">
+                    {t(
+                      `settings.storage.downloadQuality.tier.${streamQuality}`,
+                    )}
+                  </span>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent align="end">
+                <SelectGroup>
+                  {downloadQualities.map((q) => (
+                    <SelectItem key={q} value={q}>
+                      {t(`settings.storage.downloadQuality.tier.${q}`)}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </ContentItemForm>
+        </ContentItem>
+
+        <ContentItem>
+          <ContentItemTitle
+            info={t("settings.storage.downloadQuality.downloadInfo")}
+          >
+            {t("settings.storage.downloadQuality.downloadLabel")}
           </ContentItemTitle>
           <ContentItemForm>
             <Select
@@ -73,7 +111,7 @@ function DownloadQualitySection() {
                 <SelectValue>
                   <span className="text-sm text-foreground">
                     {t(
-                      `settings.storage.downloadQuality.${downloadQuality}.label`,
+                      `settings.storage.downloadQuality.tier.${downloadQuality}`,
                     )}
                   </span>
                 </SelectValue>
@@ -82,16 +120,7 @@ function DownloadQualitySection() {
                 <SelectGroup>
                   {downloadQualities.map((q) => (
                     <SelectItem key={q} value={q}>
-                      <div className="flex flex-col">
-                        <span>
-                          {t(`settings.storage.downloadQuality.${q}.label`)}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {t(
-                            `settings.storage.downloadQuality.${q}.description`,
-                          )}
-                        </span>
-                      </div>
+                      {t(`settings.storage.downloadQuality.tier.${q}`)}
                     </SelectItem>
                   ))}
                 </SelectGroup>

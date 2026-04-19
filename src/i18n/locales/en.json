@@ -732,9 +732,19 @@
         "justNow": "Just now"
       },
       "downloadQuality": {
-        "group": "Download Quality",
-        "description": "Choose the audio quality for downloaded songs.",
+        "group": "Audio Quality",
+        "description": "Bitrate for streaming and cached audio. Lower values save bandwidth and storage; original keeps the source file untouched.",
         "label": "Download quality",
+        "streamLabel": "Streaming quality",
+        "streamInfo": "Used while playing songs that aren't cached locally. Lower bitrates save bandwidth.",
+        "downloadLabel": "Download quality",
+        "downloadInfo": "Used when caching songs for offline playback. Higher bitrates use more storage.",
+        "tier": {
+          "original": "Original (no transcode)",
+          "high": "High · 320 kbps",
+          "medium": "Medium · 192 kbps",
+          "low": "Low · 128 kbps"
+        },
         "stream": {
           "label": "Stream quality",
           "description": "Download at the server's transcode quality setting."

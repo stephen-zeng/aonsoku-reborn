@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getSongStreamUrl } from "@/api/httpClient";
-import { cacheManager } from "@/service/cache";
+import { buildAudioUrl, cacheManager } from "@/service/cache";
+import { useCacheStore } from "@/store/cache.store";
 import { isAudioCached } from "@/store/cache-index.store";
 
 interface CachedAudioState {
@@ -56,8 +56,9 @@ export function useCachedAudioUrl(songId?: string) {
 
       if (cancelled) return;
       revokePreviousBlobUrl();
+      const streamQuality = useCacheStore.getState().settings.streamQuality;
       setState({
-        url: getSongStreamUrl(songId),
+        url: buildAudioUrl(songId, streamQuality, "stream"),
         isCached: false,
         isLoading: false,
       });

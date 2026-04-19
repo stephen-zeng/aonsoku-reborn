@@ -16,6 +16,7 @@ import {
 
 interface CacheActions {
   setDownloadQuality: (quality: DownloadQuality) => void;
+  setStreamQuality: (quality: DownloadQuality) => void;
   setMaxCacheSize: (bytes: number) => void;
   setAssetsQuota: (bytes: number) => void;
   setLruQuota: (bytes: number) => void;
@@ -47,6 +48,23 @@ const defaultSyncState: SyncState = {
   processedItems: 0,
 };
 
+function normalizeQuality(value: unknown): DownloadQuality {
+  // Legacy users may have `downloadQuality: "stream"`, which in the old
+  // binary scheme meant "let the server transcode". Map to "medium" —
+  // the sensible middle bitrate in the four-tier scheme introduced
+  // in P6.2.
+  if (value === "stream") return "medium";
+  if (
+    value === "original" ||
+    value === "high" ||
+    value === "medium" ||
+    value === "low"
+  ) {
+    return value;
+  }
+  return "medium";
+}
+
 function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
   // Oldest format: the "mode" key was used before P2.3.
   if (persisted && typeof persisted === "object" && "mode" in persisted) {
@@ -56,7 +74,8 @@ function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
         ? old.maxCacheSize
         : DEFAULT_MAX_CACHE_SIZE;
     return {
-      downloadQuality: "stream" as DownloadQuality,
+      downloadQuality: normalizeQuality(old.downloadQuality),
+      streamQuality: "medium",
       maxCacheSize: legacyCap,
       // Legacy single cap most closely matched opportunistic caching
       // behavior, so route it to the LRU pool. Assets/smart use
@@ -71,20 +90,26 @@ function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
     };
   }
 
-  // Pre-P2.3 format (had maxCacheSize but not the per-pool quotas).
+  // Pre-P2.3 format (had maxCacheSize but not the per-pool quotas) or
+  // pre-P6.2 format (downloadQuality was the old two-value union).
   const raw = persisted as Partial<CacheSettings> | undefined;
   if (raw && typeof raw === "object") {
     const needsQuotaMigration =
       raw.assetsQuota === undefined ||
       raw.lruQuota === undefined ||
       raw.smartQuota === undefined;
-    if (needsQuotaMigration) {
+    const needsQualityMigration =
+      raw.streamQuality === undefined ||
+      (raw.downloadQuality as unknown) === "stream";
+    if (needsQuotaMigration || needsQualityMigration) {
       const legacyCap =
         typeof raw.maxCacheSize === "number"
           ? raw.maxCacheSize
           : DEFAULT_MAX_CACHE_SIZE;
       return {
         ...(raw as CacheSettings),
+        downloadQuality: normalizeQuality(raw.downloadQuality),
+        streamQuality: raw.streamQuality ?? "medium",
         assetsQuota: raw.assetsQuota ?? DEFAULT_ASSETS_QUOTA,
         lruQuota: raw.lruQuota ?? legacyCap,
         smartQuota: raw.smartQuota ?? DEFAULT_SMART_QUOTA,
@@ -101,7 +126,8 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
       devtools(
         immer((set) => ({
           settings: {
-            downloadQuality: "stream" as DownloadQuality,
+            downloadQuality: "original" as DownloadQuality,
+            streamQuality: "medium" as DownloadQuality,
             maxCacheSize: DEFAULT_MAX_CACHE_SIZE,
             assetsQuota: DEFAULT_ASSETS_QUOTA,
             lruQuota: DEFAULT_LRU_QUOTA,
@@ -125,6 +151,11 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             setDownloadQuality: (quality) => {
               set((state) => {
                 state.settings.downloadQuality = quality;
+              });
+            },
+            setStreamQuality: (quality) => {
+              set((state) => {
+                state.settings.streamQuality = quality;
               });
             },
             setMaxCacheSize: (bytes) => {
@@ -209,6 +240,9 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
 
 export const useDownloadQuality = () =>
   useCacheStore((state) => state.settings.downloadQuality);
+
+export const useStreamQuality = () =>
+  useCacheStore((state) => state.settings.streamQuality);
 
 export const useCacheSettings = () => useCacheStore((state) => state.settings);
 

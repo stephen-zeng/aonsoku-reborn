@@ -11,20 +11,45 @@ import {
   isAudioCached,
   isCoverCached,
 } from "@/store/cache-index.store";
-import { CachedItemMeta, CacheMetaSource } from "@/types/cache";
+import {
+  CachedItemMeta,
+  CacheMetaSource,
+  DownloadQuality,
+  QUALITY_MAX_BITRATE,
+} from "@/types/cache";
 import { audioKey, coverKey } from "./cache-keys";
 import { cacheStorage } from "./cache-storage";
 import { computeEvictionPlan } from "./eviction";
+
+/**
+ * Build a URL for fetching audio at the requested quality.
+ * - "original" → /download (raw file, no transcode)
+ * - "high" / "medium" / "low" → /stream with a maxBitRate cap
+ *
+ * `purpose: "cache"` adds a `_c=1` query param so the Service Worker's
+ * stale-while-revalidate API cache doesn't collide with a concurrent
+ * stream request for the same song.
+ */
+export function buildAudioUrl(
+  songId: string,
+  quality: DownloadQuality,
+  purpose: "cache" | "stream",
+): string {
+  if (quality === "original") {
+    const url = getDownloadUrl(songId);
+    return purpose === "cache" ? `${url}&_c=1` : url;
+  }
+  const bitRate = QUALITY_MAX_BITRATE[quality].toString();
+  const url = getSongStreamUrl(songId, bitRate);
+  return purpose === "cache" ? `${url}&_c=1` : url;
+}
 
 class CacheManager {
   private statsTimer: ReturnType<typeof setTimeout> | null = null;
 
   private resolveDownloadUrl(songId: string): string {
     const quality = useCacheStore.getState().settings.downloadQuality;
-    if (quality === "original") {
-      return getDownloadUrl(songId);
-    }
-    return getSongStreamUrl(songId) + "&_c=1";
+    return buildAudioUrl(songId, quality, "cache");
   }
 
   async cacheSong(songId: string): Promise<void> {

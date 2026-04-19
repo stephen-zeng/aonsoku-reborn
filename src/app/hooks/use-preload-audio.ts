@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef } from "react";
-import { getSongStreamUrl } from "@/api/httpClient";
+import { buildAudioUrl } from "@/service/cache";
+import { useCacheStore } from "@/store/cache.store";
 import {
   usePlayerCurrentList,
   usePlayerCurrentSongIndex,
-  usePlayerMediaType,
   usePlayerLoop,
+  usePlayerMediaType,
   usePlayerShuffle,
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
@@ -55,7 +56,11 @@ export function usePreloadAudio() {
       preloadRef.current.preload = "auto";
     }
 
-    preloadRef.current.src = getSongStreamUrl(nextSongId);
+    preloadRef.current.src = buildAudioUrl(
+      nextSongId,
+      useCacheStore.getState().settings.streamQuality,
+      "stream",
+    );
     preloadedSongIdRef.current = nextSongId;
   }, [nextSongId]);
 
