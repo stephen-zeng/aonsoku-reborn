@@ -5,7 +5,7 @@ import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
 import { audioKey, coverKey } from "@/service/cache/cache-keys";
 import { cacheIndexStore, idbSetWithRetry } from "@/store/idb";
-import { CachedItemMeta } from "@/types/cache";
+import { CachedItemMeta, CacheMetaSource } from "@/types/cache";
 
 const IDB_KEY = "cache-index-v1";
 
@@ -156,3 +156,64 @@ export const useCacheIndexLoaded = () =>
 
 export const useCacheIndexActions = () =>
   useCacheIndexStore((state) => state.actions);
+
+export interface CachePoolBreakdown {
+  sizeBytes: number;
+  count: number;
+}
+
+export interface CachePoolStats {
+  /** Audio tagged `source: "explicit"`. */
+  explicit: CachePoolBreakdown;
+  /** Audio tagged `source: "smart"`. */
+  smart: CachePoolBreakdown;
+  /** Audio tagged `source: "lru"`. */
+  lru: CachePoolBreakdown;
+  /** Every `type: "cover"` entry regardless of source. */
+  assets: CachePoolBreakdown;
+}
+
+function emptyBreakdown(): CachePoolBreakdown {
+  return { sizeBytes: 0, count: 0 };
+}
+
+function computePoolStats(
+  items: Record<string, CachedItemMeta>,
+): CachePoolStats {
+  const stats: CachePoolStats = {
+    explicit: emptyBreakdown(),
+    smart: emptyBreakdown(),
+    lru: emptyBreakdown(),
+    assets: emptyBreakdown(),
+  };
+  for (const meta of Object.values(items)) {
+    if (meta.type === "cover") {
+      stats.assets.sizeBytes += meta.sizeBytes;
+      stats.assets.count += 1;
+      continue;
+    }
+    const bucket = poolForAudioSource(meta.source);
+    stats[bucket].sizeBytes += meta.sizeBytes;
+    stats[bucket].count += 1;
+  }
+  return stats;
+}
+
+function poolForAudioSource(source: CacheMetaSource): keyof CachePoolStats {
+  switch (source) {
+    case "explicit":
+      return "explicit";
+    case "smart":
+      return "smart";
+    case "lru":
+      return "lru";
+  }
+}
+
+/**
+ * Aggregated cache stats grouped by pool for the storage settings UI.
+ * Computed on every change to the cache index — cheap because the
+ * index tracks O(hundreds) of entries even with a large library.
+ */
+export const useCachePoolStats = (): CachePoolStats =>
+  useCacheIndexStore((state) => computePoolStats(state.items), shallow);

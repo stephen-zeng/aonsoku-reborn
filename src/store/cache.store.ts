@@ -6,7 +6,10 @@ import { createWithEqualityFn } from "zustand/traditional";
 import {
   CacheSettings,
   CacheStatus,
+  DEFAULT_ASSETS_QUOTA,
+  DEFAULT_LRU_QUOTA,
   DEFAULT_MAX_CACHE_SIZE,
+  DEFAULT_SMART_QUOTA,
   DownloadQuality,
   SyncState,
 } from "@/types/cache";
@@ -14,6 +17,9 @@ import {
 interface CacheActions {
   setDownloadQuality: (quality: DownloadQuality) => void;
   setMaxCacheSize: (bytes: number) => void;
+  setAssetsQuota: (bytes: number) => void;
+  setLruQuota: (bytes: number) => void;
+  setSmartQuota: (bytes: number) => void;
   setSyncLibrary: (enabled: boolean) => void;
   setSyncCoverArt: (enabled: boolean) => void;
   setIsOnline: (online: boolean) => void;
@@ -42,19 +48,50 @@ const defaultSyncState: SyncState = {
 };
 
 function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
+  // Oldest format: the "mode" key was used before P2.3.
   if (persisted && typeof persisted === "object" && "mode" in persisted) {
     const old = persisted as Record<string, unknown>;
+    const legacyCap =
+      typeof old.maxCacheSize === "number"
+        ? old.maxCacheSize
+        : DEFAULT_MAX_CACHE_SIZE;
     return {
       downloadQuality: "stream" as DownloadQuality,
-      maxCacheSize:
-        typeof old.maxCacheSize === "number"
-          ? old.maxCacheSize
-          : DEFAULT_MAX_CACHE_SIZE,
+      maxCacheSize: legacyCap,
+      // Legacy single cap most closely matched opportunistic caching
+      // behavior, so route it to the LRU pool. Assets/smart use
+      // post-P2.3 defaults so users get the richer behavior out of the
+      // box without having to revisit settings.
+      assetsQuota: DEFAULT_ASSETS_QUOTA,
+      lruQuota: legacyCap,
+      smartQuota: DEFAULT_SMART_QUOTA,
       syncLibrary: old.mode === "offline",
       syncCoverArt:
         typeof old.syncCoverArt === "boolean" ? old.syncCoverArt : false,
     };
   }
+
+  // Pre-P2.3 format (had maxCacheSize but not the per-pool quotas).
+  const raw = persisted as Partial<CacheSettings> | undefined;
+  if (raw && typeof raw === "object") {
+    const needsQuotaMigration =
+      raw.assetsQuota === undefined ||
+      raw.lruQuota === undefined ||
+      raw.smartQuota === undefined;
+    if (needsQuotaMigration) {
+      const legacyCap =
+        typeof raw.maxCacheSize === "number"
+          ? raw.maxCacheSize
+          : DEFAULT_MAX_CACHE_SIZE;
+      return {
+        ...(raw as CacheSettings),
+        assetsQuota: raw.assetsQuota ?? DEFAULT_ASSETS_QUOTA,
+        lruQuota: raw.lruQuota ?? legacyCap,
+        smartQuota: raw.smartQuota ?? DEFAULT_SMART_QUOTA,
+      };
+    }
+  }
+
   return persisted as unknown as CacheSettings;
 }
 
@@ -66,6 +103,9 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
           settings: {
             downloadQuality: "stream" as DownloadQuality,
             maxCacheSize: DEFAULT_MAX_CACHE_SIZE,
+            assetsQuota: DEFAULT_ASSETS_QUOTA,
+            lruQuota: DEFAULT_LRU_QUOTA,
+            smartQuota: DEFAULT_SMART_QUOTA,
             // Default-on post-P1.3: the toggle now controls whether the
             // long-running full-songs sync step runs. T1/T2 metadata
             // (artists, albums, playlists, genres) always sync regardless.
@@ -90,6 +130,21 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             setMaxCacheSize: (bytes) => {
               set((state) => {
                 state.settings.maxCacheSize = bytes;
+              });
+            },
+            setAssetsQuota: (bytes) => {
+              set((state) => {
+                state.settings.assetsQuota = bytes;
+              });
+            },
+            setLruQuota: (bytes) => {
+              set((state) => {
+                state.settings.lruQuota = bytes;
+              });
+            },
+            setSmartQuota: (bytes) => {
+              set((state) => {
+                state.settings.smartQuota = bytes;
               });
             },
             setSyncLibrary: (enabled) => {

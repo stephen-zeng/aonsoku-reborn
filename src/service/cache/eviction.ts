@@ -1,57 +1,78 @@
 import { CachedItemMeta } from "@/types/cache";
 
 /**
- * Per-source quota settings consumed by eviction. Only the LRU pool
- * is managed here — explicit downloads are untouchable by auto-eviction
- * and the smart pool is gated upstream by the smart-download engine
- * (it refuses to enqueue new items when its quota is full).
+ * Per-pool quotas consumed by eviction.
+ *
+ *  - `assets`   — applies to every `type: "cover"` entry regardless of
+ *    source. Covers are cheap to re-fetch, so the L2 pool always
+ *    LRU-evicts under its own cap rather than riding on audio quotas.
+ *  - `audioLru` — applies to `type: "audio" && source: "lru"` entries
+ *    (playback auto-cache + queue prefetch).
+ *
+ * Explicit downloads are never evicted here; smart-pool items are gated
+ * upstream by the smart-download engine (it refuses to enqueue more
+ * when its quota is full). Both pools' sizes are reported from the
+ * cache index but not acted on by this module.
  *
  * A quota of `0` means unlimited for that pool.
  */
 export interface EvictionQuotas {
-  /** Byte cap on `source: "lru"` entries. */
-  lru: number;
+  assets: number;
+  audioLru: number;
+}
+
+interface EvictionPool {
+  name: string;
+  quota: number;
+  matches: (meta: CachedItemMeta) => boolean;
 }
 
 /**
- * Compute which cache items to evict to bring each pool under its
- * quota.
- *
- * Policy:
- *  - `explicit` — never evicted. User downloaded it on purpose and
- *    expects it to stay until they remove it.
- *  - `smart`    — not evicted here. The smart-download engine clears
- *    entries whose triggering rules no longer match and refuses to
- *    enqueue new items when its quota is full; runtime LRU pressure
- *    does not apply.
- *  - `lru`      — standard LRU by `lastAccessedAt` (oldest first).
- *    Cover-art entries break ties before audio because they're cheaper
- *    to re-fetch.
+ * Compute which cache keys to evict to bring each pool back under its
+ * quota. Pools are evaluated independently; a pool under quota
+ * contributes nothing.
  */
 export function computeEvictionPlan(
   items: Record<string, CachedItemMeta>,
   quotas: EvictionQuotas,
 ): string[] {
-  return computeLruPoolEviction(items, quotas.lru);
+  const pools: EvictionPool[] = [
+    {
+      name: "assets",
+      quota: quotas.assets,
+      matches: (m) => m.type === "cover",
+    },
+    {
+      name: "audioLru",
+      quota: quotas.audioLru,
+      matches: (m) => m.type === "audio" && m.source === "lru",
+    },
+  ];
+
+  const plan: string[] = [];
+  for (const pool of pools) {
+    plan.push(...lruEvict(items, pool));
+  }
+  return plan;
 }
 
-function computeLruPoolEviction(
+function lruEvict(
   items: Record<string, CachedItemMeta>,
-  quota: number,
+  pool: EvictionPool,
 ): string[] {
-  if (quota === 0) return [];
+  if (pool.quota === 0) return [];
 
-  const lruEntries: { key: string; meta: CachedItemMeta }[] = [];
+  const entries: { key: string; meta: CachedItemMeta }[] = [];
   let currentSize = 0;
   for (const [key, meta] of Object.entries(items)) {
-    if (meta.source !== "lru") continue;
-    lruEntries.push({ key, meta });
+    if (!pool.matches(meta)) continue;
+    entries.push({ key, meta });
     currentSize += meta.sizeBytes;
   }
 
-  if (currentSize <= quota) return [];
+  if (currentSize <= pool.quota) return [];
 
-  lruEntries.sort((a, b) => {
+  entries.sort((a, b) => {
     if (a.meta.lastAccessedAt === b.meta.lastAccessedAt) {
       if (a.meta.type === "cover" && b.meta.type !== "cover") return -1;
       if (a.meta.type !== "cover" && b.meta.type === "cover") return 1;
@@ -62,9 +83,9 @@ function computeLruPoolEviction(
 
   const toEvict: string[] = [];
   let freed = 0;
-  const target = currentSize - quota;
+  const target = currentSize - pool.quota;
 
-  for (const { key, meta } of lruEntries) {
+  for (const { key, meta } of entries) {
     if (freed >= target) break;
     toEvict.push(key);
     freed += meta.sizeBytes;

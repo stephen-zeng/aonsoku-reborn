@@ -56,7 +56,18 @@ export interface SyncState {
 
 export interface CacheSettings {
   downloadQuality: DownloadQuality;
+  /**
+   * @deprecated Replaced by `assetsQuota` + `lruQuota` + `smartQuota`
+   * in P2.3. Kept in the type so the cache-store migration can read
+   * the old value one time; new code must consume the per-pool quotas.
+   */
   maxCacheSize: number;
+  /** Cap for L2 resources: cover art (and lyrics once P7.2 lands). */
+  assetsQuota: number;
+  /** Cap for the LRU audio pool (implicit playback/queue prefetch). */
+  lruQuota: number;
+  /** Cap for the smart-download audio pool. */
+  smartQuota: number;
   syncLibrary: boolean;
   syncCoverArt: boolean;
 }
@@ -71,12 +82,22 @@ export interface CacheStatus {
   lastSyncedAt: number | null;
 }
 
+/**
+ * Quota options shared by every per-pool selector. `0` is rendered
+ * as "Unlimited".
+ */
 export const CACHE_SIZE_OPTIONS = [
+  { value: 268_435_456, label: "256 MB" },
   { value: 536_870_912, label: "512 MB" },
   { value: 1_073_741_824, label: "1 GB" },
   { value: 2_147_483_648, label: "2 GB" },
+  { value: 3_221_225_472, label: "3 GB" },
   { value: 5_368_709_120, label: "5 GB" },
   { value: 0, label: "Unlimited" },
 ] as const;
 
-export const DEFAULT_MAX_CACHE_SIZE = 2_147_483_648;
+/** Legacy single-cap default. Still exported for backwards compat. */
+export const DEFAULT_MAX_CACHE_SIZE = 2_147_483_648; // 2 GB
+export const DEFAULT_ASSETS_QUOTA = 536_870_912; // 512 MB
+export const DEFAULT_LRU_QUOTA = 1_073_741_824; // 1 GB
+export const DEFAULT_SMART_QUOTA = 3_221_225_472; // 3 GB

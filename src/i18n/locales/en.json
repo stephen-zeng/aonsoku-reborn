@@ -745,7 +745,7 @@
       },
       "limits": {
         "group": "Cache Storage",
-        "description": "Manage cached audio and cover art storage.",
+        "description": "Each download source has its own quota. Explicit downloads are never auto-evicted.",
         "maxSize": "Maximum audio cache size",
         "audioSize": "Audio cache",
         "audioEntries": "{{count}} songs cached",
@@ -753,7 +753,29 @@
         "coverEntries": "{{count}} images cached",
         "clearAudio": "Clear",
         "clearCovers": "Clear",
-        "clearAll": "Clear all caches"
+        "clearAll": "Clear all caches",
+        "quota": "Quota",
+        "unlimited": "Unlimited",
+        "songEntries": "{{count}} songs",
+        "imageEntries": "{{count}} images",
+        "pool": {
+          "explicit": {
+            "label": "Explicit downloads",
+            "description": "Songs, albums, and playlists you downloaded yourself. Never evicted automatically."
+          },
+          "smart": {
+            "label": "Smart downloads",
+            "description": "Auto-downloaded by matching smart rules. Cleared when the triggering rule stops matching."
+          },
+          "lru": {
+            "label": "Recently played",
+            "description": "Opportunistically cached while you listen. Oldest entries evicted first when over quota."
+          },
+          "assets": {
+            "label": "Cover art",
+            "description": "Album and artist images cached for fast library rendering."
+          }
+        }
       }
     },
     "content": {

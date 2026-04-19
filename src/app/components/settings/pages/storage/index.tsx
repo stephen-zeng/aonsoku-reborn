@@ -23,12 +23,19 @@ import {
 import { Switch } from "@/app/components/ui/switch";
 import { cacheManager } from "@/service/cache";
 import {
+  type CachePoolBreakdown,
+  useCachePoolStats,
+} from "@/store/cache-index.store";
+import {
   useCacheActions,
   useCacheSettings,
-  useCacheStats,
   useLastSyncedAt,
 } from "@/store/cache.store";
-import { CACHE_SIZE_OPTIONS, DownloadQuality } from "@/types/cache";
+import {
+  CACHE_SIZE_OPTIONS,
+  type CacheMetaSource,
+  DownloadQuality,
+} from "@/types/cache";
 import dateTime from "@/utils/dateTime";
 import { formatBytes } from "@/utils/formatBytes";
 
@@ -97,28 +104,116 @@ function DownloadQualitySection() {
   );
 }
 
+interface PoolRowProps {
+  labelKey: "explicit" | "smart" | "lru" | "assets";
+  stats: CachePoolBreakdown;
+  quota: number | null;
+  onQuotaChange?: (bytes: number) => void;
+  onClear: () => void;
+}
+
+function PoolRow({
+  labelKey,
+  stats,
+  quota,
+  onQuotaChange,
+  onClear,
+}: PoolRowProps) {
+  const { t } = useTranslation();
+  const sizeLabel = useMemo(() => {
+    if (quota === null || quota === 0) {
+      return t("settings.storage.limits.unlimited");
+    }
+    const option = CACHE_SIZE_OPTIONS.find((o) => o.value === quota);
+    return option?.label ?? formatBytes(quota);
+  }, [quota, t]);
+
+  const entriesLabel =
+    labelKey === "assets"
+      ? t("settings.storage.limits.imageEntries", { count: stats.count })
+      : t("settings.storage.limits.songEntries", { count: stats.count });
+
+  return (
+    <ContentItem className="flex-col items-start gap-2 sm:flex-row sm:items-center">
+      <div className="flex-1 min-w-0">
+        <ContentItemTitle>
+          {t(`settings.storage.limits.pool.${labelKey}.label`)}
+        </ContentItemTitle>
+        <p className="text-xs text-muted-foreground">
+          {t(`settings.storage.limits.pool.${labelKey}.description`)}
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          {formatBytes(stats.sizeBytes)} · {entriesLabel}
+        </p>
+      </div>
+
+      <div className="flex items-center gap-2 shrink-0">
+        {onQuotaChange && quota !== null ? (
+          <Select
+            value={quota.toString()}
+            onValueChange={(value) => onQuotaChange(Number(value))}
+          >
+            <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left w-[130px]">
+              <SelectValue>
+                <span className="text-sm text-foreground">{sizeLabel}</span>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectGroup>
+                {CACHE_SIZE_OPTIONS.map((option) => (
+                  <SelectItem
+                    key={option.value}
+                    value={option.value.toString()}
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        ) : (
+          <span className="text-xs text-muted-foreground">{sizeLabel}</span>
+        )}
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 text-xs"
+          onClick={onClear}
+          disabled={stats.count === 0}
+        >
+          {t("settings.storage.limits.clearAudio")}
+        </Button>
+      </div>
+    </ContentItem>
+  );
+}
+
 function CacheLimitsSection() {
   const { t } = useTranslation();
-  const { maxCacheSize } = useCacheSettings();
-  const { setMaxCacheSize } = useCacheActions();
-  const { audioSize, coverSize, audioCount, coverCount } = useCacheStats();
+  const { assetsQuota, lruQuota, smartQuota } = useCacheSettings();
+  const { setAssetsQuota, setLruQuota, setSmartQuota } = useCacheActions();
+  const stats = useCachePoolStats();
 
-  const handleClearAudio = useCallback(() => {
-    cacheManager.clearAudioCache();
-  }, []);
+  const totalCount =
+    stats.explicit.count +
+    stats.smart.count +
+    stats.lru.count +
+    stats.assets.count;
 
-  const handleClearCovers = useCallback(() => {
-    cacheManager.clearCoverCache();
+  const clearBySource = useCallback(
+    (source: CacheMetaSource) => () => {
+      cacheManager.clearAudioBySource(source);
+    },
+    [],
+  );
+
+  const handleClearAssets = useCallback(() => {
+    cacheManager.clearAssets();
   }, []);
 
   const handleClearAll = useCallback(() => {
     cacheManager.clearAllCaches();
   }, []);
-
-  const sizeLabel = useMemo(() => {
-    const option = CACHE_SIZE_OPTIONS.find((o) => o.value === maxCacheSize);
-    return option?.label ?? formatBytes(maxCacheSize);
-  }, [maxCacheSize]);
 
   return (
     <Root>
@@ -130,83 +225,33 @@ function CacheLimitsSection() {
       </Header>
 
       <Content>
-        <ContentItem>
-          <ContentItemTitle>
-            {t("settings.storage.limits.maxSize")}
-          </ContentItemTitle>
-          <ContentItemForm>
-            <Select
-              value={maxCacheSize.toString()}
-              onValueChange={(value) => setMaxCacheSize(Number(value))}
-            >
-              <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left">
-                <SelectValue>
-                  <span className="text-sm text-foreground">{sizeLabel}</span>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent align="end">
-                <SelectGroup>
-                  {CACHE_SIZE_OPTIONS.map((option) => (
-                    <SelectItem
-                      key={option.value}
-                      value={option.value.toString()}
-                    >
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </ContentItemForm>
-        </ContentItem>
-
-        <ContentItem>
-          <ContentItemTitle>
-            {t("settings.storage.limits.audioSize")}
-          </ContentItemTitle>
-          <ContentItemForm className="gap-2">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              {formatBytes(audioSize)} (
-              {t("settings.storage.limits.audioEntries", {
-                count: audioCount,
-              })}
-              )
-            </span>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs"
-              onClick={handleClearAudio}
-              disabled={audioCount === 0}
-            >
-              {t("settings.storage.limits.clearAudio")}
-            </Button>
-          </ContentItemForm>
-        </ContentItem>
-
-        <ContentItem>
-          <ContentItemTitle>
-            {t("settings.storage.limits.coverSize")}
-          </ContentItemTitle>
-          <ContentItemForm className="gap-2">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              {formatBytes(coverSize)} (
-              {t("settings.storage.limits.coverEntries", {
-                count: coverCount,
-              })}
-              )
-            </span>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs"
-              onClick={handleClearCovers}
-              disabled={coverCount === 0}
-            >
-              {t("settings.storage.limits.clearCovers")}
-            </Button>
-          </ContentItemForm>
-        </ContentItem>
+        <PoolRow
+          labelKey="explicit"
+          stats={stats.explicit}
+          quota={null}
+          onClear={clearBySource("explicit")}
+        />
+        <PoolRow
+          labelKey="smart"
+          stats={stats.smart}
+          quota={smartQuota}
+          onQuotaChange={setSmartQuota}
+          onClear={clearBySource("smart")}
+        />
+        <PoolRow
+          labelKey="lru"
+          stats={stats.lru}
+          quota={lruQuota}
+          onQuotaChange={setLruQuota}
+          onClear={clearBySource("lru")}
+        />
+        <PoolRow
+          labelKey="assets"
+          stats={stats.assets}
+          quota={assetsQuota}
+          onQuotaChange={setAssetsQuota}
+          onClear={handleClearAssets}
+        />
 
         <ContentItem>
           <div className="flex-1" />
@@ -216,7 +261,7 @@ function CacheLimitsSection() {
               variant="destructive"
               className="h-8"
               onClick={handleClearAll}
-              disabled={audioCount === 0 && coverCount === 0}
+              disabled={totalCount === 0}
             >
               {t("settings.storage.limits.clearAll")}
             </Button>

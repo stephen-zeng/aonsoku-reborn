@@ -11,7 +11,7 @@ import {
   isAudioCached,
   isCoverCached,
 } from "@/store/cache-index.store";
-import { CachedItemMeta } from "@/types/cache";
+import { CachedItemMeta, CacheMetaSource } from "@/types/cache";
 import { audioKey, coverKey } from "./cache-keys";
 import { cacheStorage } from "./cache-storage";
 import { computeEvictionPlan } from "./eviction";
@@ -170,12 +170,12 @@ class CacheManager {
   }
 
   async enforceStorageLimit(): Promise<void> {
-    const { maxCacheSize } = useCacheStore.getState().settings;
+    const { assetsQuota, lruQuota } = useCacheStore.getState().settings;
     const items = getCacheIndexItems();
-    // Until P2.3 splits the setting into per-pool quotas, the global
-    // cap applies to the LRU pool only — explicit downloads are
-    // exempt from auto-eviction entirely.
-    const toEvict = computeEvictionPlan(items, { lru: maxCacheSize });
+    const toEvict = computeEvictionPlan(items, {
+      assets: assetsQuota,
+      audioLru: lruQuota,
+    });
     for (const key of toEvict) {
       await this.evictItem(key);
     }
@@ -187,10 +187,14 @@ class CacheManager {
     this.scheduleStatsRefresh();
   }
 
-  async clearAudioCache(): Promise<void> {
+  /**
+   * Clear every `type: "audio"` entry whose `source` matches. Used by
+   * the per-pool clear buttons in the storage settings UI.
+   */
+  async clearAudioBySource(source: CacheMetaSource): Promise<void> {
     const items = getCacheIndexItems();
     const keysToDelete = Object.entries(items)
-      .filter(([, meta]) => meta.type === "audio")
+      .filter(([, meta]) => meta.type === "audio" && meta.source === source)
       .map(([key]) => key);
 
     await Promise.all(keysToDelete.map((key) => cacheStorage.delete(key)));
@@ -200,7 +204,8 @@ class CacheManager {
     this.refreshStats();
   }
 
-  async clearCoverCache(): Promise<void> {
+  /** Clear every `type: "cover"` entry regardless of source. */
+  async clearAssets(): Promise<void> {
     const items = getCacheIndexItems();
     const keysToDelete = Object.entries(items)
       .filter(([, meta]) => meta.type === "cover")
