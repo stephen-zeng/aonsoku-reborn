@@ -111,7 +111,11 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
   const { t } = useTranslation();
   const playHistory = usePlayHistory();
   const filteredHistory = useMemo(() => {
-    if (playHistory.length > 0 && currentSong && playHistory[0].id === currentSong.id) {
+    if (
+      playHistory.length > 0 &&
+      currentSong &&
+      playHistory[0].id === currentSong.id
+    ) {
       return playHistory.slice(1);
     }
     return playHistory;
@@ -124,7 +128,11 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
     [contextSongs, contextIndex],
   );
 
-  if (!hasSongs && filteredHistory.length === 0 && userQueueSongs.length === 0) {
+  if (
+    !hasSongs &&
+    filteredHistory.length === 0 &&
+    userQueueSongs.length === 0
+  ) {
     return (
       <div className="flex justify-center items-center h-full">
         <span className="text-foreground/70">{t("fullscreen.emptyQueue")}</span>
@@ -175,7 +183,7 @@ function UnifiedQueueView({
   onCurrentSongClick?: () => void;
 }) {
   const { t } = useTranslation();
-  const { playSong, setSongList, reorderQueue } = usePlayerActions();
+  const { playSong, playFromQueue, reorderQueue } = usePlayerActions();
   const loopState = usePlayerLoop();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
 
@@ -188,7 +196,10 @@ function UnifiedQueueView({
   const queueScrollKey = `${currentSong?.id}:${currentSongIndex}:${contextSongs.length + userQueueSongs.length}:${loopState}`;
 
   const userSortableItems = useMemo(
-    () => userQueueSongs.filter((song) => song.id !== currentSong?.id).map((song) => song.id),
+    () =>
+      userQueueSongs
+        .filter((song) => song.id !== currentSong?.id)
+        .map((song) => song.id),
     [userQueueSongs, currentSong],
   );
 
@@ -354,7 +365,10 @@ function UnifiedQueueView({
         </div>
 
         {isRepeatOne && userQueueSongs.length === 0 && (
-          <RepeatIndicator icon={RepeatOne} label={t("fullscreen.queueRepeating")} />
+          <RepeatIndicator
+            icon={RepeatOne}
+            label={t("fullscreen.queueRepeating")}
+          />
         )}
 
         {isRepeatOne && userQueueSongs.length > 0 && (
@@ -370,8 +384,12 @@ function UnifiedQueueView({
               activeItem={activeItem}
               dragOverlayBg={dragOverlayBg}
               t={t}
+              onPlaySong={(song) => playSong(song)}
             />
-            <RepeatIndicator icon={RepeatOne} label={t("fullscreen.queueRepeating")} />
+            <RepeatIndicator
+              icon={RepeatOne}
+              label={t("fullscreen.queueRepeating")}
+            />
           </>
         )}
 
@@ -389,6 +407,7 @@ function UnifiedQueueView({
                 activeItem={activeItem}
                 dragOverlayBg={dragOverlayBg}
                 t={t}
+                onPlaySong={(song) => playSong(song)}
               />
             )}
 
@@ -410,15 +429,16 @@ function UnifiedQueueView({
                       </h3>
                     </div>
                     {upcomingContext.map((song, idx) => {
-                      const globalIndex =
-                        contextPlayedCount + userQueueSongs.length + idx;
+                      const contextIdx = contextIndex + 1 + idx;
                       const isActive = currentSong?.id === song.id;
                       return (
                         <SortableUpcomingRow
                           key={song.id}
                           song={song}
                           isActive={isActive}
-                          onClick={() => setSongList(contextSongs, globalIndex)}
+                          onClick={() =>
+                            playFromQueue(contextSongs, contextIdx)
+                          }
                           tier="context"
                         />
                       );
@@ -448,7 +468,10 @@ function UnifiedQueueView({
             </DndContext>
 
             {isRepeatAll && (
-              <RepeatIndicator icon={Repeat} label={t("fullscreen.queueRepeating")} />
+              <RepeatIndicator
+                icon={Repeat}
+                label={t("fullscreen.queueRepeating")}
+              />
             )}
           </>
         )}
@@ -458,7 +481,13 @@ function UnifiedQueueView({
   );
 }
 
-function RepeatIndicator({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
+function RepeatIndicator({
+  icon: Icon,
+  label,
+}: {
+  icon: LucideIcon;
+  label: string;
+}) {
   return (
     <div className="flex items-center justify-center gap-2 py-2 opacity-30 select-none">
       <Icon size={14} />
@@ -480,6 +509,7 @@ function UserQueueDnd({
   activeItem,
   dragOverlayBg,
   t,
+  onPlaySong,
 }: {
   userQueueSongs: ISong[];
   userSortableItems: string[];
@@ -491,6 +521,7 @@ function UserQueueDnd({
   activeItem: ISong | null;
   dragOverlayBg: string;
   t: (key: string) => string;
+  onPlaySong: (song: ISong) => void;
 }) {
   const filteredUserQueueSongs = userQueueSongs.filter(
     (song) => song.id !== currentSong?.id,
@@ -531,7 +562,7 @@ function UserQueueDnd({
                 key={song.id}
                 song={song}
                 isActive={isActive}
-                onClick={() => {}}
+                onClick={() => onPlaySong(song)}
                 tier="user"
               />
             );

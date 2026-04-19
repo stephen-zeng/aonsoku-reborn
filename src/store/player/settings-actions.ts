@@ -2,9 +2,7 @@ import type { Draft } from "immer";
 import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
 
 interface SharedDeps {
-  set: (
-    fn: (state: Draft<IPlayerContext>) => void,
-  ) => void;
+  set: (fn: (state: Draft<IPlayerContext>) => void) => void;
   get: () => IPlayerContext;
 }
 

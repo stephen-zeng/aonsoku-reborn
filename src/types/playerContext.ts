@@ -14,10 +14,18 @@ export enum LoopState {
   One = 2,
 }
 
+export type QueueSourceId =
+  | { type: "album"; id: string }
+  | { type: "playlist"; id: string }
+  | { type: "radio"; id: string }
+  | { type: "artist"; id: string }
+  | { type: "genre"; id: string }
+  | null;
+
 export interface IContextQueue {
   songs: ISong[];
   currentIndex: number;
-  sourceId: { albumId: string } | { playlistId: string } | null;
+  sourceId: QueueSourceId;
   sourceName: string | null;
 }
 
@@ -150,9 +158,10 @@ export interface IPlayerActions {
     songlist: ISong[],
     index: number,
     shuffle?: boolean,
-    sourceId?: { albumId: string } | { playlistId: string },
+    sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     sourceName?: string,
   ) => void;
+  playFromQueue: (contextSongs: ISong[], contextIndex: number) => void;
   setCurrentSong: () => void;
   checkIsSongStarred: () => void;
   starSongInQueue: (id: string) => void;
@@ -179,12 +188,12 @@ export interface IPlayerActions {
   setAudioPlayerRef: (ref: HTMLAudioElement) => void;
   setNextOnQueue: (
     songlist: ISong[],
-    sourceId?: { albumId: string } | { playlistId: string },
+    sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     sourceName?: string,
   ) => void;
   setLastOnQueue: (
     songlist: ISong[],
-    sourceId?: { albumId: string } | { playlistId: string },
+    sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     sourceName?: string,
   ) => void;
   removeSongFromQueue: (id: string, tier?: QueueTier) => void;

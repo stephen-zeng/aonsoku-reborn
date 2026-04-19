@@ -97,9 +97,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
         className={`shrink-0 flex h-full flex-col overflow-hidden transition-[width] duration-300 ${rightPanelView ? "w-1/2" : "w-0"}`}
         data-testid="fullscreen-desktop-side-panel"
         data-view={rightPanelView ?? "closed"}
-        style={
-          { "--queue-bg-overlay": "transparent" } as React.CSSProperties
-        }
+        style={{ "--queue-bg-overlay": "transparent" } as React.CSSProperties}
       >
         <div className="flex items-center justify-between px-4 pt-6 pb-2">
           <div className="flex gap-1">

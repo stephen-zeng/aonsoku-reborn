@@ -2,9 +2,7 @@ import type { Draft } from "immer";
 import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
 
 interface SharedDeps {
-  set: (
-    fn: (state: Draft<IPlayerContext>) => void,
-  ) => void;
+  set: (fn: (state: Draft<IPlayerContext>) => void) => void;
   get: () => IPlayerContext;
 }
 
@@ -25,13 +23,9 @@ export function createUiActions(shared: SharedDeps) {
     },
 
     toggleQueueAction: () => {
-      const { mainDrawerState, lyricsState, queueState } =
-        get().playerState;
-      const {
-        toggleQueueAndLyrics,
-        setQueueState,
-        setMainDrawerState,
-      } = get().actions;
+      const { mainDrawerState, lyricsState, queueState } = get().playerState;
+      const { toggleQueueAndLyrics, setQueueState, setMainDrawerState } =
+        get().actions;
 
       if (mainDrawerState && lyricsState) {
         toggleQueueAndLyrics();
@@ -48,13 +42,9 @@ export function createUiActions(shared: SharedDeps) {
     },
 
     toggleLyricsAction: () => {
-      const { mainDrawerState, lyricsState, queueState } =
-        get().playerState;
-      const {
-        toggleQueueAndLyrics,
-        setLyricsState,
-        setMainDrawerState,
-      } = get().actions;
+      const { mainDrawerState, lyricsState, queueState } = get().playerState;
+      const { toggleQueueAndLyrics, setLyricsState, setMainDrawerState } =
+        get().actions;
 
       if (mainDrawerState && queueState) {
         toggleQueueAndLyrics();
@@ -103,9 +93,7 @@ export function createUiActions(shared: SharedDeps) {
       });
     },
 
-    setDesktopFullscreenPanelView: (
-      view: "queue" | "lyrics" | null,
-    ) => {
+    setDesktopFullscreenPanelView: (view: "queue" | "lyrics" | null) => {
       set((state) => {
         state.playerState.desktopFullscreenPanelView = view;
       });

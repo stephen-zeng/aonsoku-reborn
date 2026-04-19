@@ -4,9 +4,7 @@ import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
 import { LanControlMessageType } from "@/types/lanControl";
 
 interface SharedDeps {
-  set: (
-    fn: (state: Draft<IPlayerContext>) => void,
-  ) => void;
+  set: (fn: (state: Draft<IPlayerContext>) => void) => void;
   get: () => IPlayerContext;
   isRemoteActive: () => boolean;
   remoteSend: (type: LanControlMessageType, data?: unknown) => boolean;

@@ -107,7 +107,11 @@ function toHex(value: number) {
   return hex.length === 1 ? "0" + hex : hex;
 }
 
-export function blendColors(baseHex: string, overlayHex: string, alpha: number) {
+export function blendColors(
+  baseHex: string,
+  overlayHex: string,
+  alpha: number,
+) {
   const base = hexToRgb(baseHex);
   const overlay = hexToRgb(overlayHex);
   if (!base || !overlay) return baseHex;

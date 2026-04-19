@@ -49,7 +49,8 @@ export function useScrobble() {
       progressTicks.current += 1;
 
       if (
-        (progressTicks.current >= currentDuration / SCROBBLE_THRESHOLD_PERCENT ||
+        (progressTicks.current >=
+          currentDuration / SCROBBLE_THRESHOLD_PERCENT ||
           progressTicks.current >= SCROBBLE_THRESHOLD_SECONDS) &&
         !isScrobbleSentRef.current &&
         currentSong?.id
@@ -58,5 +59,12 @@ export function useScrobble() {
         isScrobbleSentRef.current = true;
       }
     }
-  }, [progress, currentDuration, isSong, isPlaying, currentSong?.id, isRemoteControlActive]);
+  }, [
+    progress,
+    currentDuration,
+    isSong,
+    isPlaying,
+    currentSong?.id,
+    isRemoteControlActive,
+  ]);
 }

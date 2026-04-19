@@ -1,4 +1,3 @@
-
 import merge from "lodash/merge";
 import omit from "lodash/omit";
 import debounce from "lodash/debounce";
@@ -11,11 +10,7 @@ import {
   LanControlMessageType,
   PlayerStateData,
 } from "@/types/lanControl";
-import {
-  IPlayerContext,
-  ISongList,
-  LoopState,
-} from "@/types/playerContext";
+import { IPlayerContext, ISongList, LoopState } from "@/types/playerContext";
 import { ISong } from "@/types/responses/song";
 import { isDesktop } from "@/utils/desktop";
 import { discordRpc } from "@/utils/discordRpc";
@@ -50,10 +45,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
         immer((set, get) => {
           const isRemoteActive = () => get().remoteControl.active;
 
-          const remoteSend = (
-            type: LanControlMessageType,
-            data?: unknown,
-          ) => {
+          const remoteSend = (type: LanControlMessageType, data?: unknown) => {
             const { active, sendCommand } = get().remoteControl;
             if (!active || !sendCommand) return false;
             sendCommand(type, data);
@@ -156,7 +148,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
       ),
       {
         name: "player_store",
-        version: 3,
+        version: 4,
         // biome-ignore lint/suspicious/noExplicitAny: zustand persist migrate API
         migrate: (persistedState: any, version) => {
           if (version === 1) {
@@ -200,6 +192,26 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 old.songlist.isInUserQueue = old.songlist.userQueuePosition > 0;
                 old.songlist.playedUserQueueHistory = [];
                 delete old.songlist.userQueuePosition;
+              }
+            }
+          }
+          if (version <= 3) {
+            // biome-ignore lint/suspicious/noExplicitAny: migrate sourceId from { albumId } | { playlistId } to QueueSourceId
+            const old = persistedState as any;
+            if (old.songlist?.contextQueue?.sourceId) {
+              const srcId = old.songlist.contextQueue.sourceId;
+              if (srcId && "albumId" in srcId) {
+                old.songlist.contextQueue.sourceId = {
+                  type: "album",
+                  id: srcId.albumId,
+                };
+              } else if (srcId && "playlistId" in srcId) {
+                old.songlist.contextQueue.sourceId = {
+                  type: "playlist",
+                  id: srcId.playlistId,
+                };
+              } else if (srcId && !("type" in srcId)) {
+                old.songlist.contextQueue.sourceId = null;
               }
             }
           }
@@ -302,23 +314,38 @@ function migrateLegacySonglist(value: any): ISongList | null {
 
 // biome-ignore lint/suspicious/noExplicitAny: IDB data may come from older schema versions
 function migrateSonglistFromIdb(value: any): ISongList {
-  const isInUserQueue = value.isInUserQueue ?? (value.userQueuePosition != null ? value.userQueuePosition > 0 : false);
-  const userQueue = value.userQueue && typeof value.userQueue === "object" && Array.isArray(value.userQueue.songs)
-    ? { songs: value.userQueue.songs }
-    : { songs: [] };
+  const isInUserQueue =
+    value.isInUserQueue ??
+    (value.userQueuePosition != null ? value.userQueuePosition > 0 : false);
+  const userQueue =
+    value.userQueue &&
+    typeof value.userQueue === "object" &&
+    Array.isArray(value.userQueue.songs)
+      ? { songs: value.userQueue.songs }
+      : { songs: [] };
 
   // When migrating from userQueuePosition model, the entire userQueue songs array
   // represented queued songs. We can't reconstruct which ones were already played,
   // so we default to isInUserQueue=false and treat all songs as pending.
   // Songs already past the old position pointer are simply queued.
-  if (value.userQueuePosition != null && value.userQueuePosition > 0 && Array.isArray(userQueue.songs) && userQueue.songs.length > 0) {
+  if (
+    value.userQueuePosition != null &&
+    value.userQueuePosition > 0 &&
+    Array.isArray(userQueue.songs) &&
+    userQueue.songs.length > 0
+  ) {
     // The old model had all songs in the array with a position pointer.
     // We can't reconstruct which songs were consumed, so default to not in user queue.
   }
 
   const result: ISongList = {
     ...value,
-    contextQueue: value.contextQueue ?? { songs: [], currentIndex: 0, sourceId: null, sourceName: null },
+    contextQueue: value.contextQueue ?? {
+      songs: [],
+      currentIndex: 0,
+      sourceId: null,
+      sourceName: null,
+    },
     userQueue,
     originalContextSongs: value.originalContextSongs ?? [],
     currentSong: value.currentSong ?? null,
@@ -328,6 +355,21 @@ function migrateSonglistFromIdb(value: any): ISongList {
     playedUserQueueHistory: value.playedUserQueueHistory ?? [],
     shuffleHistory: value.shuffleHistory ?? [],
   };
+
+  if (result.contextQueue.sourceId) {
+    const srcId = result.contextQueue.sourceId as Record<string, unknown>;
+    if ("albumId" in srcId) {
+      result.contextQueue.sourceId = {
+        type: "album",
+        id: String(srcId.albumId),
+      };
+    } else if ("playlistId" in srcId) {
+      result.contextQueue.sourceId = {
+        type: "playlist",
+        id: String(srcId.playlistId),
+      };
+    }
+  }
 
   delete result.userQueuePosition;
 
@@ -348,17 +390,27 @@ usePlayerStore.subscribe(
 );
 
 const debouncedIdbSonglistWrite = debounce((songlist: ISongList) => {
-  idbSet(IDB_SONGLIST_KEY, songlist);
+  idbSet(IDB_SONGLIST_KEY, songlist).catch((error: unknown) => {
+    logger.error("Failed to write songlist to IndexedDB", error);
+  });
 }, 300);
 
 function flushIdbSonglistWrite() {
   debouncedIdbSonglistWrite.cancel();
   const songlist = usePlayerStore.getState().songlist;
-  idbSet(IDB_SONGLIST_KEY, songlist);
+  idbSet(IDB_SONGLIST_KEY, songlist).catch((error: unknown) => {
+    logger.error("Failed to flush songlist to IndexedDB", error);
+  });
 }
 
 document.addEventListener("visibilitychange", () => {
   if (document.hidden && songlistHydrated.value) {
+    flushIdbSonglistWrite();
+  }
+});
+
+window.addEventListener("beforeunload", () => {
+  if (songlistHydrated.value) {
     flushIdbSonglistWrite();
   }
 });
@@ -446,11 +498,12 @@ desktopStateListener();
 function updateDesktopState() {
   if (!isDesktop()) return;
 
-  const { isPlaying, hasPrev, hasNext } =
-    usePlayerStore.getState().playerState;
-  const { radioList, contextQueue, userQueue } = usePlayerStore.getState().songlist;
+  const { isPlaying, hasPrev, hasNext } = usePlayerStore.getState().playerState;
+  const { radioList, contextQueue, userQueue } =
+    usePlayerStore.getState().songlist;
 
-  const hasSongs = contextQueue.songs.length >= 1 || userQueue.songs.length >= 1;
+  const hasSongs =
+    contextQueue.songs.length >= 1 || userQueue.songs.length >= 1;
   const hasRadios = radioList.length >= 1;
 
   window.api.updatePlayerState({
@@ -620,8 +673,7 @@ export const useFullscreenPlayerState = () =>
     (state) => ({
       fullscreenPlayerOpen: state.playerState.fullscreenPlayerOpen,
       fullscreenPlayerTab: state.playerState.fullscreenPlayerTab,
-      desktopFullscreenPanelView:
-        state.playerState.desktopFullscreenPanelView,
+      desktopFullscreenPanelView: state.playerState.desktopFullscreenPanelView,
       openFullscreenPlayer: state.actions.openFullscreenPlayer,
       closeFullscreenPlayer: state.actions.closeFullscreenPlayer,
       setFullscreenPlayerTab: state.actions.setFullscreenPlayerTab,
@@ -653,14 +705,13 @@ export const usePlayerCurrentList = () =>
 
 export const useHasQueueSongs = () =>
   usePlayerStore(
-    (s) => s.songlist.contextQueue.songs.length > 0 || s.songlist.userQueue.songs.length > 0,
+    (s) =>
+      s.songlist.contextQueue.songs.length > 0 ||
+      s.songlist.userQueue.songs.length > 0,
   );
 
 export const useHasRemainingUserQueue = () =>
-  usePlayerStore(
-    (state) =>
-      state.songlist.userQueue.songs.length > 0,
-  );
+  usePlayerStore((state) => state.songlist.userQueue.songs.length > 0);
 
 export const useQueueSource = () =>
   usePlayerStore((state) => state.songlist.contextQueue.sourceName);

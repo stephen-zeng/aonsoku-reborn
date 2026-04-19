@@ -16,10 +16,7 @@ import {
 import { isDesktop } from "@/utils/desktop";
 import { discordRpc } from "@/utils/discordRpc";
 import { logger } from "@/utils/logger";
-import {
-  isValidServerUrl,
-  normalizeServerUrl,
-} from "@/utils/serverUrl";
+import { isValidServerUrl, normalizeServerUrl } from "@/utils/serverUrl";
 import {
   genEncodedPassword,
   genPassword,
@@ -328,9 +325,8 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                 );
 
                 if (canConnect) {
-                  const serverInfo = await getServerInfoWithOverride(
-                    primaryUrl,
-                  );
+                  const serverInfo =
+                    await getServerInfoWithOverride(primaryUrl);
 
                   set((state) => {
                     state.data.url = primaryUrl;
@@ -402,7 +398,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                 serverType,
               } = get().data;
               const configuredPrimaryUrl = normalizeServerUrl(
-                hasValidConfig ? SERVER_URL ?? primaryUrl : primaryUrl,
+                hasValidConfig ? (SERVER_URL ?? primaryUrl) : primaryUrl,
               );
               const configuredFallbackUrl = normalizeServerUrl(
                 hasValidConfig ? "" : fallbackUrl,

@@ -3,6 +3,7 @@ import type {
   IPlayerActions,
   IPlayerContext,
   ISongList,
+  QueueSourceId,
   QueueTier,
 } from "@/types/playerContext";
 import { LoopState } from "@/types/playerContext";
@@ -10,7 +11,10 @@ import type { ISong } from "@/types/responses/song";
 import type { Radio } from "@/types/responses/radios";
 import { LanControlMessageType } from "@/types/lanControl";
 import { areSongListsEqual } from "@/utils/compareSongLists";
-import { MAX_SHUFFLE_HISTORY, shuffleWithGapAvoidance } from "@/utils/songListFunctions";
+import {
+  MAX_SHUFFLE_HISTORY,
+  shuffleWithGapAvoidance,
+} from "@/utils/songListFunctions";
 import {
   applyShuffleOff,
   applyShuffleOn,
@@ -22,6 +26,7 @@ import {
   hasNextEffectiveSong,
   hasPrevEffectiveSong,
   isPlayingOneSong,
+  normalizeSourceId,
   reshuffleContextForWrap,
   sendAddToQueueRemote,
   setLastOnUserQueue,
@@ -38,10 +43,80 @@ interface SharedDeps {
 
 const PREV_SEEK_THRESHOLD = 3;
 
+let lastNextSongTime = 0;
+const NEXT_SONG_DEBOUNCE_MS = 100;
+
 function resetUserQueue(state: Draft<ISongList>) {
   state.userQueue = { songs: [] };
   state.isInUserQueue = false;
   state.playedUserQueueHistory = [];
+}
+
+function sendSongListRemote(
+  remoteSend: (type: LanControlMessageType, data?: unknown) => boolean,
+  songlist: ISong[],
+  index: number,
+  shuffle: boolean,
+  sourceId?:
+    | QueueSourceId
+    | { albumId: string }
+    | { playlistId: string }
+    | null,
+  sourceName?: string,
+) {
+  if (songlist.length === 0) return;
+  const normalized = normalizeSourceId(sourceId);
+  if (normalized) {
+    if (normalized.type === "album") {
+      const messageType = shuffle
+        ? LanControlMessageType.PLAY_ALBUM_SHUFFLE
+        : LanControlMessageType.PLAY_ALBUM;
+      remoteSend(messageType, {
+        albumId: normalized.id,
+        songIndex: index,
+      });
+    } else if (normalized.type === "playlist") {
+      const messageType = shuffle
+        ? LanControlMessageType.PLAY_PLAYLIST_SHUFFLE
+        : LanControlMessageType.PLAY_PLAYLIST;
+      remoteSend(messageType, {
+        playlistId: normalized.id,
+        songIndex: index,
+      });
+    } else {
+      remoteSend(LanControlMessageType.CLEAR_QUEUE);
+      remoteSend(LanControlMessageType.ADD_TO_QUEUE, {
+        songIds: songlist.map((song) => song.id),
+      });
+      const targetSong = songlist[index];
+      if (targetSong) {
+        remoteSend(LanControlMessageType.PLAY_SONG, {
+          songId: targetSong.id,
+        });
+      }
+      if (shuffle) {
+        remoteSend(LanControlMessageType.SET_SHUFFLE, {
+          enabled: true,
+        });
+      }
+    }
+  } else {
+    remoteSend(LanControlMessageType.CLEAR_QUEUE);
+    remoteSend(LanControlMessageType.ADD_TO_QUEUE, {
+      songIds: songlist.map((song) => song.id),
+    });
+    const targetSong = songlist[index];
+    if (targetSong) {
+      remoteSend(LanControlMessageType.PLAY_SONG, {
+        songId: targetSong.id,
+      });
+    }
+    if (shuffle) {
+      remoteSend(LanControlMessageType.SET_SHUFFLE, {
+        enabled: true,
+      });
+    }
+  }
 }
 
 export function createQueueActions(shared: SharedDeps) {
@@ -52,46 +127,21 @@ export function createQueueActions(shared: SharedDeps) {
       songlist: ISong[],
       index: number,
       shuffle = false,
-      sourceId?:
-        | { albumId: string }
-        | { playlistId: string },
+      sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
       sourceName?: string,
     ) => {
+      if (!songlist || songlist.length === 0) return;
+      index = Math.max(0, Math.min(index, songlist.length - 1));
+
       if (isRemoteActive()) {
-        if (songlist.length === 0) return;
-        if (sourceId && "albumId" in sourceId) {
-          const messageType = shuffle
-            ? LanControlMessageType.PLAY_ALBUM_SHUFFLE
-            : LanControlMessageType.PLAY_ALBUM;
-          remoteSend(messageType, {
-            albumId: sourceId.albumId,
-            songIndex: index,
-          });
-        } else if (sourceId && "playlistId" in sourceId) {
-          const messageType = shuffle
-            ? LanControlMessageType.PLAY_PLAYLIST_SHUFFLE
-            : LanControlMessageType.PLAY_PLAYLIST;
-          remoteSend(messageType, {
-            playlistId: sourceId.playlistId,
-            songIndex: index,
-          });
-        } else {
-          remoteSend(LanControlMessageType.CLEAR_QUEUE);
-          remoteSend(LanControlMessageType.ADD_TO_QUEUE, {
-            songIds: songlist.map((song) => song.id),
-          });
-          const targetSong = songlist[index];
-          if (targetSong) {
-            remoteSend(LanControlMessageType.PLAY_SONG, {
-              songId: targetSong.id,
-            });
-          }
-          if (shuffle) {
-            remoteSend(LanControlMessageType.SET_SHUFFLE, {
-              enabled: true,
-            });
-          }
-        }
+        sendSongListRemote(
+          remoteSend,
+          songlist,
+          index,
+          shuffle,
+          sourceId,
+          sourceName,
+        );
         set((state) => {
           state.playerState.isPlaying = true;
           state.songlist.isShuffleActive = Boolean(shuffle);
@@ -103,15 +153,12 @@ export function createQueueActions(shared: SharedDeps) {
         return;
       }
 
+      const normalizedId = normalizeSourceId(sourceId);
       const { contextQueue } = get().songlist;
-      const listsAreEqual = areSongListsEqual(
-        contextQueue.songs,
-        songlist,
-      );
+      const listsAreEqual = areSongListsEqual(contextQueue.songs, songlist);
       const sameIndex = contextQueue.currentIndex === index;
       const sameSourceId =
-        JSON.stringify(contextQueue.sourceId) ===
-        JSON.stringify(sourceId ?? null);
+        JSON.stringify(contextQueue.sourceId) === JSON.stringify(normalizedId);
 
       if (listsAreEqual && sameIndex && !shuffle) {
         set((state) => {
@@ -121,8 +168,8 @@ export function createQueueActions(shared: SharedDeps) {
       }
 
       if (listsAreEqual && !sameIndex && !shuffle && sameSourceId) {
-        get().actions.resetProgress();
         set((state) => {
+          state.playerProgress.progress = 0;
           state.playerState.isPlaying = true;
           state.songlist.contextQueue.currentIndex = index;
           resetUserQueue(state.songlist);
@@ -133,18 +180,17 @@ export function createQueueActions(shared: SharedDeps) {
         return;
       }
 
-      get().actions.resetProgress();
-
       if (shuffle) {
         const upcoming = songlist.slice(index + 1);
         const shuffledUpcoming = shuffleWithGapAvoidance(upcoming, []);
 
         set((state) => {
+          state.playerProgress.progress = 0;
           state.songlist.contextQueue = {
             ...emptyContextQueue(),
             songs: [...songlist.slice(0, index + 1), ...shuffledUpcoming],
             currentIndex: index,
-            sourceId: sourceId ?? null,
+            sourceId: normalizedId,
             sourceName:
               sourceName !== undefined
                 ? sourceName || null
@@ -160,11 +206,12 @@ export function createQueueActions(shared: SharedDeps) {
         });
       } else {
         set((state) => {
+          state.playerProgress.progress = 0;
           state.songlist.contextQueue = {
             ...emptyContextQueue(),
             songs: [...songlist],
             currentIndex: index,
-            sourceId: sourceId ?? null,
+            sourceId: normalizedId,
             sourceName:
               sourceName !== undefined
                 ? sourceName || null
@@ -181,10 +228,55 @@ export function createQueueActions(shared: SharedDeps) {
       }
     },
 
+    playFromQueue: (contextSongs: ISong[], contextIndex: number) => {
+      if (!contextSongs || contextSongs.length === 0) return;
+      contextIndex = Math.max(
+        0,
+        Math.min(contextIndex, contextSongs.length - 1),
+      );
+
+      if (isRemoteActive()) {
+        const song = contextSongs[contextIndex];
+        if (song) {
+          remoteSend(LanControlMessageType.PLAY_SONG, { songId: song.id });
+        }
+        return;
+      }
+
+      const { contextQueue } = get().songlist;
+      const listsAreEqual = areSongListsEqual(contextQueue.songs, contextSongs);
+
+      if (listsAreEqual) {
+        set((state) => {
+          state.playerProgress.progress = 0;
+          state.playerState.isPlaying = true;
+          state.songlist.contextQueue.currentIndex = contextIndex;
+          state.songlist.isInUserQueue = false;
+        });
+        return;
+      }
+
+      set((state) => {
+        state.playerProgress.progress = 0;
+        state.songlist.contextQueue = {
+          ...emptyContextQueue(),
+          songs: [...contextSongs],
+          currentIndex: contextIndex,
+          sourceId: state.songlist.contextQueue.sourceId,
+          sourceName: state.songlist.contextQueue.sourceName,
+        };
+        resetUserQueue(state.songlist);
+        state.songlist.originalContextSongs = [...contextSongs];
+        state.songlist.isShuffleActive = false;
+        state.songlist.shuffleHistory = [];
+        state.playerState.mediaType = "song";
+        state.playerState.isPlaying = true;
+        state.songlist.radioList = [];
+      });
+    },
+
     playSong: (song: ISong, sourceName?: string) => {
-      if (
-        remoteSend(LanControlMessageType.PLAY_SONG, { songId: song.id })
-      ) {
+      if (remoteSend(LanControlMessageType.PLAY_SONG, { songId: song.id })) {
         return;
       }
       const { isPlaying } = get().playerState;
@@ -194,8 +286,8 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerState.isPlaying = true;
         });
       } else {
-        get().actions.resetProgress();
         set((state) => {
+          state.playerProgress.progress = 0;
           state.playerState.mediaType = "song";
           state.songlist.contextQueue = {
             ...emptyContextQueue(),
@@ -218,15 +310,14 @@ export function createQueueActions(shared: SharedDeps) {
 
     setNextOnQueue: (
       list: ISong[],
-      sourceId?:
-        | { albumId: string }
-        | { playlistId: string },
+      sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     ) => {
       if (isRemoteActive()) {
         if (list.length === 0) return;
         sendAddToQueueRemote(remoteSend, sourceId, list);
         return;
       }
+      if (!list || list.length === 0) return;
 
       const effective = getEffectiveQueue(get().songlist);
       const uniqueList = dedupAgainstExisting(list, effective);
@@ -242,15 +333,14 @@ export function createQueueActions(shared: SharedDeps) {
 
     setLastOnQueue: (
       list: ISong[],
-      sourceId?:
-        | { albumId: string }
-        | { playlistId: string },
+      sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     ) => {
       if (isRemoteActive()) {
         if (list.length === 0) return;
         sendAddToQueueRemote(remoteSend, sourceId, list);
         return;
       }
+      if (!list || list.length === 0) return;
 
       const effective = getEffectiveQueue(get().songlist);
       const uniqueList = dedupAgainstExisting(list, effective);
@@ -279,14 +369,18 @@ export function createQueueActions(shared: SharedDeps) {
 
         set((state) => {
           state.songlist.userQueue.songs = newUserSongs;
-          if (isInUserQueue && removedIndex === 0 && newUserSongs.length === 0) {
+          if (
+            isInUserQueue &&
+            removedIndex === 0 &&
+            newUserSongs.length === 0
+          ) {
             state.songlist.isInUserQueue = false;
           }
         });
         return;
       }
 
-      const { contextQueue } = get().songlist;
+      const { contextQueue, isInUserQueue } = get().songlist;
       const removedIndex = contextQueue.songs.findIndex((s) => s.id === id);
       if (removedIndex === -1) return;
 
@@ -298,21 +392,33 @@ export function createQueueActions(shared: SharedDeps) {
         return;
       }
 
-      if (removedIndex === contextQueue.currentIndex && !get().songlist.isInUserQueue) {
-        get().actions.resetProgress();
-      }
-
-      const newIndex = Math.min(
-        contextQueue.currentIndex -
-          (removedIndex < contextQueue.currentIndex ? 1 : 0),
-        newSongs.length - 1,
-      );
+      const shouldResetProgress =
+        removedIndex === contextQueue.currentIndex && !isInUserQueue;
 
       set((state) => {
+        let newIndex: number;
+        if (isInUserQueue) {
+          newIndex =
+            contextQueue.currentIndex -
+            (removedIndex <= contextQueue.currentIndex ? 1 : 0);
+        } else {
+          if (removedIndex < contextQueue.currentIndex) {
+            newIndex = contextQueue.currentIndex - 1;
+          } else if (removedIndex === contextQueue.currentIndex) {
+            newIndex = Math.min(contextQueue.currentIndex, newSongs.length - 1);
+          } else {
+            newIndex = contextQueue.currentIndex;
+          }
+        }
+        newIndex = Math.max(newIndex, 0);
+
         state.songlist.contextQueue.songs = newSongs;
-        state.songlist.contextQueue.currentIndex = Math.max(newIndex, 0);
+        state.songlist.contextQueue.currentIndex = newIndex;
         state.songlist.originalContextSongs =
           state.songlist.originalContextSongs.filter((s) => s.id !== id);
+        if (shouldResetProgress) {
+          state.playerProgress.progress = 0;
+        }
       });
     },
 
@@ -340,8 +446,10 @@ export function createQueueActions(shared: SharedDeps) {
         toIndex >= contextPlayedCount &&
         toIndex < contextPlayedCount + userQueue.songs.length;
 
-      const fromInUpcoming = fromIndex >= contextPlayedCount + userQueue.songs.length;
-      const toInUpcoming = toIndex >= contextPlayedCount + userQueue.songs.length;
+      const fromInUpcoming =
+        fromIndex >= contextPlayedCount + userQueue.songs.length;
+      const toInUpcoming =
+        toIndex >= contextPlayedCount + userQueue.songs.length;
 
       if (fromInUser && toInUser) {
         const localFrom = fromIndex - contextPlayedCount;
@@ -363,6 +471,38 @@ export function createQueueActions(shared: SharedDeps) {
         newContextSongs.splice(localTo, 0, moved);
         set((state) => {
           state.songlist.contextQueue.songs = newContextSongs;
+        });
+        return;
+      }
+
+      if (fromInUser && toInUpcoming) {
+        const localFrom = fromIndex - contextPlayedCount;
+        const song = userQueue.songs[localFrom];
+        if (!song) return;
+        const newUserSongs = [...userQueue.songs];
+        newUserSongs.splice(localFrom, 1);
+        const contextInsertAt = toIndex - userQueue.songs.length;
+        const newContextSongs = [...contextQueue.songs];
+        newContextSongs.splice(contextInsertAt, 0, song);
+        set((state) => {
+          state.songlist.userQueue.songs = newUserSongs;
+          state.songlist.contextQueue.songs = newContextSongs;
+        });
+        return;
+      }
+
+      if (fromInUpcoming && toInUser) {
+        const localFrom = fromIndex - userQueue.songs.length;
+        const song = contextQueue.songs[localFrom];
+        if (!song) return;
+        const newContextSongs = [...contextQueue.songs];
+        newContextSongs.splice(localFrom, 1);
+        const localTo = toIndex - contextPlayedCount;
+        const newUserSongs = [...userQueue.songs];
+        newUserSongs.splice(localTo, 0, song);
+        set((state) => {
+          state.songlist.contextQueue.songs = newContextSongs;
+          state.songlist.userQueue.songs = newUserSongs;
         });
         return;
       }
@@ -390,12 +530,17 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     playNextSong: () => {
-      if (remoteSend(LanControlMessageType.NEXT)) return;
+      if (isRemoteActive()) {
+        if (remoteSend(LanControlMessageType.NEXT)) return;
+      }
+      const now = Date.now();
+      if (now - lastNextSongTime < NEXT_SONG_DEBOUNCE_MS) return;
+      lastNextSongTime = now;
+
       const { loopState } = get().playerState;
       const songlist = get().songlist;
 
       if (!hasNextEffectiveSong(songlist, loopState)) return;
-      get().actions.resetProgress();
 
       const { isInUserQueue, userQueue, contextQueue } = songlist;
 
@@ -404,15 +549,21 @@ export function createQueueActions(shared: SharedDeps) {
         set((state) => {
           state.songlist.userQueue.songs.splice(0, 1);
           state.songlist.playedUserQueueHistory.push(consumed);
+          state.playerProgress.progress = 0;
 
           if (state.songlist.userQueue.songs.length > 0) {
             state.playerState.isPlaying = true;
           } else {
             state.songlist.isInUserQueue = false;
-            if (state.songlist.contextQueue.currentIndex < state.songlist.contextQueue.songs.length - 1) {
+            if (
+              state.songlist.contextQueue.currentIndex <
+              state.songlist.contextQueue.songs.length - 1
+            ) {
               state.songlist.contextQueue.currentIndex += 1;
             } else if (loopState === LoopState.All) {
-              const lastPlayedSongId = songlist.contextQueue.songs[songlist.contextQueue.currentIndex]?.id;
+              const lastPlayedSongId =
+                songlist.contextQueue.songs[songlist.contextQueue.currentIndex]
+                  ?.id;
               state.songlist.contextQueue.currentIndex = 0;
               reshuffleContextForWrap(state.songlist, lastPlayedSongId);
             }
@@ -425,35 +576,47 @@ export function createQueueActions(shared: SharedDeps) {
       if (userQueue.songs.length > 0) {
         set((state) => {
           state.songlist.isInUserQueue = true;
+          state.playerProgress.progress = 0;
           state.playerState.isPlaying = true;
         });
         return;
       }
 
-      if (loopState === LoopState.One) return;
+      if (loopState === LoopState.One) {
+        set((state) => {
+          state.playerProgress.progress = 0;
+          state.playerState.isPlaying = true;
+        });
+        return;
+      }
 
       if (contextQueue.currentIndex < contextQueue.songs.length - 1) {
         set((state) => {
           state.songlist.contextQueue.currentIndex += 1;
+          state.playerProgress.progress = 0;
           state.playerState.isPlaying = true;
         });
         return;
       }
 
       if (loopState === LoopState.All) {
-        const lastPlayedSongId = songlist.contextQueue.songs[songlist.contextQueue.currentIndex]?.id;
+        const lastPlayedSongId =
+          songlist.contextQueue.songs[songlist.contextQueue.currentIndex]?.id;
         set((state) => {
           state.songlist.contextQueue.currentIndex = 0;
           reshuffleContextForWrap(state.songlist, lastPlayedSongId);
+          state.playerProgress.progress = 0;
           state.playerState.isPlaying = true;
         });
       }
     },
 
     playPrevSong: () => {
-      if (remoteSend(LanControlMessageType.PREVIOUS)) return;
+      if (isRemoteActive()) {
+        if (remoteSend(LanControlMessageType.PREVIOUS)) return;
+      }
 
-      const currentSong = get().songlist.currentSong;
+      const currentSong = getCurrentSong(get().songlist);
       const progress = get().playerProgress.progress;
 
       if (currentSong && progress > PREV_SEEK_THRESHOLD) {
@@ -468,9 +631,9 @@ export function createQueueActions(shared: SharedDeps) {
       }
 
       if (!hasPrevEffectiveSong(get().songlist)) return;
-      get().actions.resetProgress();
 
-      const { isInUserQueue, playedUserQueueHistory, contextQueue } = get().songlist;
+      const { isInUserQueue, playedUserQueueHistory, contextQueue } =
+        get().songlist;
 
       if (playedUserQueueHistory.length > 0) {
         const wasInUserQueue = isInUserQueue;
@@ -479,6 +642,7 @@ export function createQueueActions(shared: SharedDeps) {
           const restored = history.pop()!;
           state.songlist.userQueue.songs.unshift(restored);
           state.songlist.isInUserQueue = true;
+          state.playerProgress.progress = 0;
 
           if (!wasInUserQueue) {
             state.songlist.contextQueue.currentIndex = Math.max(
@@ -495,6 +659,7 @@ export function createQueueActions(shared: SharedDeps) {
       if (isInUserQueue) {
         set((state) => {
           state.songlist.isInUserQueue = false;
+          state.playerProgress.progress = 0;
           state.playerState.isPlaying = true;
         });
         return;
@@ -503,6 +668,7 @@ export function createQueueActions(shared: SharedDeps) {
       if (contextQueue.currentIndex > 0) {
         set((state) => {
           state.songlist.contextQueue.currentIndex -= 1;
+          state.playerProgress.progress = 0;
           state.playerState.isPlaying = true;
         });
       }
@@ -522,6 +688,9 @@ export function createQueueActions(shared: SharedDeps) {
 
     setPlayRadio: (list: Radio[], index: number) => {
       if (isRemoteActive()) return;
+      if (!list || list.length === 0) return;
+      index = Math.max(0, Math.min(index, list.length - 1));
+
       const { mediaType } = get().playerState;
       const { radioList, contextQueue } = get().songlist;
 
@@ -560,10 +729,6 @@ export function createQueueActions(shared: SharedDeps) {
 
       if (hasNext) {
         get().actions.playNextSong();
-        set((state) => {
-          state.playerProgress.progress = 0;
-          state.playerState.isPlaying = true;
-        });
       } else if (loopState === LoopState.One) {
         set((state) => {
           state.playerProgress.progress = 0;
@@ -595,7 +760,7 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     checkActiveSong: (id: string) => {
-      const currentSong = get().songlist.currentSong;
+      const currentSong = getCurrentSong(get().songlist);
       return currentSong ? id === currentSong.id : false;
     },
 

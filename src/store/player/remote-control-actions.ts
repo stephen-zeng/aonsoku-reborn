@@ -1,5 +1,9 @@
 import type { Draft } from "immer";
-import type { IPlayerActions, IPlayerContext, ISongList } from "@/types/playerContext";
+import type {
+  IPlayerActions,
+  IPlayerContext,
+  ISongList,
+} from "@/types/playerContext";
 import type { ISong } from "@/types/responses/song";
 import {
   CurrentSongData,
@@ -10,25 +14,23 @@ import {
 } from "@/types/lanControl";
 import { LoopState } from "@/types/playerContext";
 import clamp from "lodash/clamp";
-import {
-  emptyContextQueue,
-  resetPlaybackState,
-} from "./queue-utils";
+import { emptyContextQueue, resetPlaybackState } from "./queue-utils";
 
 interface SharedDeps {
-  set: (
-    fn: (state: Draft<IPlayerContext>) => void,
-  ) => void;
+  set: (fn: (state: Draft<IPlayerContext>) => void) => void;
   get: () => IPlayerContext;
   isRemoteActive: () => boolean;
   remoteSend: (type: LanControlMessageType, data?: unknown) => boolean;
-  mapRepeatMode: (repeatMode: PlayerStateData["repeatMode"] | undefined) => LoopState;
+  mapRepeatMode: (
+    repeatMode: PlayerStateData["repeatMode"] | undefined,
+  ) => LoopState;
   remoteSongToISong: (song: CurrentSongData) => ISong;
   clearSonglistState: (state: Draft<ISongList>) => void;
 }
 
 export function createRemoteControlActions(shared: SharedDeps) {
-  const { set, get, mapRepeatMode, remoteSongToISong, clearSonglistState } = shared;
+  const { set, get, mapRepeatMode, remoteSongToISong, clearSonglistState } =
+    shared;
 
   const setRemoteQueueState = (queue: QueueData | null) => {
     set((state) => {
@@ -66,9 +68,7 @@ export function createRemoteControlActions(shared: SharedDeps) {
     });
   };
 
-  const setRemotePlayerStateInternal = (
-    stateData: PlayerStateData | null,
-  ) => {
+  const setRemotePlayerStateInternal = (stateData: PlayerStateData | null) => {
     if (!stateData) {
       set((state) => {
         resetPlaybackState(state);
@@ -80,11 +80,7 @@ export function createRemoteControlActions(shared: SharedDeps) {
       state.playerState.isPlaying = stateData.isPlaying;
       state.playerProgress.progress = stateData.currentTime ?? 0;
       state.playerState.currentDuration = stateData.duration ?? 0;
-      state.playerState.volume = clamp(
-        Number(stateData.volume ?? 0),
-        0,
-        100,
-      );
+      state.playerState.volume = clamp(Number(stateData.volume ?? 0), 0, 100);
       state.songlist.isShuffleActive = Boolean(stateData.isShuffle);
       state.playerState.loopState = mapRepeatMode(stateData.repeatMode);
       state.playerState.hasPrev = Boolean(stateData.hasPrevious);
@@ -100,14 +96,8 @@ export function createRemoteControlActions(shared: SharedDeps) {
         try {
           audioRef.pause();
         } catch (error) {
-          if (
-            error instanceof DOMException &&
-            error.name !== "AbortError"
-          ) {
-            console.error(
-              "[RemoteControl] Failed to pause audio",
-              error,
-            );
+          if (error instanceof DOMException && error.name !== "AbortError") {
+            console.error("[RemoteControl] Failed to pause audio", error);
           }
         }
       }

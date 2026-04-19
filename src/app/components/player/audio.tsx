@@ -50,10 +50,7 @@ export function AudioPlayer({
   const isRemoteControlActive = useIsRemoteControlActive();
 
   const shouldUseWebAudioReplayGain =
-    isSong &&
-    replayGainEnabled &&
-    !replayGainError &&
-    !isRemoteControlActive;
+    isSong && replayGainEnabled && !replayGainError && !isRemoteControlActive;
   const shouldUseNativeAudio = !shouldUseWebAudioReplayGain;
 
   const retryCountRef = useRef(0);
@@ -91,13 +88,7 @@ export function AudioPlayer({
       playPromiseRef.current = null;
       setAudioSrc(src || undefined);
     }
-  }, [
-    audioSrc,
-    cancelRetry,
-    isRemoteControlActive,
-    shouldUseNativeAudio,
-    src,
-  ]);
+  }, [audioSrc, cancelRetry, isRemoteControlActive, shouldUseNativeAudio, src]);
 
   const audioVolume = useMemo(() => perceptualToGain(volume), [volume]);
 
@@ -215,7 +206,8 @@ export function AudioPlayer({
 
       retryTimeoutRef.current = setTimeout(() => {
         const currentAudio = audioRef.current;
-        const { isPlaying: shouldResume } = usePlayerStore.getState().playerState;
+        const { isPlaying: shouldResume } =
+          usePlayerStore.getState().playerState;
 
         if (
           retryGenerationRef.current !== retryGeneration ||

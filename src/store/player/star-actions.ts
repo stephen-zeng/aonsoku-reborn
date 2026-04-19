@@ -4,9 +4,7 @@ import { subsonic } from "@/service/subsonic";
 import { applyStarToAllLists, hasAnySongs } from "./queue-utils";
 
 interface SharedDeps {
-  set: (
-    fn: (state: Draft<IPlayerContext>) => void,
-  ) => void;
+  set: (fn: (state: Draft<IPlayerContext>) => void) => void;
   get: () => IPlayerContext;
 }
 
@@ -15,8 +13,12 @@ export function createStarActions(shared: SharedDeps) {
 
   return {
     starSongInQueue: (id: string) => {
-      const { contextQueue, userQueue, originalContextSongs, playedUserQueueHistory } =
-        get().songlist;
+      const {
+        contextQueue,
+        userQueue,
+        originalContextSongs,
+        playedUserQueueHistory,
+      } = get().songlist;
       const { mediaType } = get().playerState;
 
       if (
@@ -72,9 +74,7 @@ export function createStarActions(shared: SharedDeps) {
       const afterSong = get().songlist.currentSong;
       if (!afterSong || afterSong.id !== id) return;
 
-      const newStarred = isSongStarred
-        ? undefined
-        : new Date().toISOString();
+      const newStarred = isSongStarred ? undefined : new Date().toISOString();
 
       set((state) => {
         applyStarToAllLists(state.songlist, id, newStarred);

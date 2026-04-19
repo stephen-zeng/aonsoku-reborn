@@ -33,16 +33,17 @@ export function DraggableVirtualQueue({
   scrollAreaClassName = "w-full h-full overflow-auto",
   thumbClassName,
 }: DraggableVirtualQueueProps) {
-  const { setSongList, reorderQueue } = usePlayerActions();
+  const { playFromQueue, playSong, reorderQueue } = usePlayerActions();
   const currentList = usePlayerCurrentList();
   const currentSong = usePlayerCurrentSong();
   const currentSongIndex = usePlayerCurrentSongIndex();
   const isPlaying = usePlayerIsPlaying();
-  const { contextIndex } = useContextQueue();
+  const { contextSongs, contextIndex } = useContextQueue();
   const { userQueueSongs } = useUserQueue();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
 
   const parentRef = useRef<HTMLDivElement>(null);
+  const prevSongIdRef = useRef<string | null>(null);
 
   const getScrollElement = useCallback(() => {
     if (!parentRef.current) return null;
@@ -57,10 +58,13 @@ export function DraggableVirtualQueue({
   });
 
   useEffect(() => {
-    if (currentSongIndex >= 0) {
-      virtualizer.scrollToIndex(currentSongIndex, { align: "start" });
+    if (currentSong?.id && currentSong?.id !== prevSongIdRef.current) {
+      prevSongIdRef.current = currentSong.id;
+      if (currentSongIndex >= 0) {
+        virtualizer.scrollToIndex(currentSongIndex, { align: "center" });
+      }
     }
-  }, [currentSongIndex, virtualizer]);
+  }, [currentSong?.id, currentSongIndex, virtualizer]);
 
   const sensors = useQueueDndSensors();
 
@@ -123,8 +127,7 @@ export function DraggableVirtualQueue({
           >
             {virtualizer.getVirtualItems().map((virtualRow) => {
               const song = currentList[virtualRow.index];
-              const isCurrent =
-                currentSong?.id === song.id;
+              const isCurrent = currentSong?.id === song.id;
               const isInUserQueue =
                 virtualRow.index >= userQueueStart &&
                 virtualRow.index < userQueueEnd;
@@ -159,7 +162,15 @@ export function DraggableVirtualQueue({
                     tier={isInUserQueue ? "user" : "context"}
                     onPlay={() => {
                       if (!isCurrent) {
-                        setSongList(currentList, virtualRow.index);
+                        if (isInUserQueue) {
+                          playSong(song);
+                        } else {
+                          const ctxIdx =
+                            virtualRow.index >= userQueueEnd
+                              ? virtualRow.index - userQueueSongs.length
+                              : virtualRow.index;
+                          playFromQueue(contextSongs, ctxIdx);
+                        }
                       }
                     }}
                   />

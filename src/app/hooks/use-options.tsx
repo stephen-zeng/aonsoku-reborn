@@ -6,6 +6,7 @@ import { usePlayerActions } from "@/store/player.store";
 import { usePlaylistRemoveSong } from "@/store/playlists.store";
 import { useSongInfo } from "@/store/ui.store";
 import { UpdateParams } from "@/types/responses/playlist";
+import type { QueueSourceId } from "@/types/playerContext";
 import { ISong } from "@/types/responses/song";
 import { isDesktop } from "@/utils/desktop";
 import { queryKeys } from "@/utils/queryKeys";
@@ -27,7 +28,7 @@ export function useOptions() {
 
   function play(
     list: ISong[],
-    sourceId?: { albumId: string } | { playlistId: string },
+    sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     sourceName?: string,
   ) {
     setSongList(list, 0, false, sourceId, sourceName);
@@ -35,14 +36,14 @@ export function useOptions() {
 
   function playNext(
     list: ISong[],
-    sourceId?: { albumId: string } | { playlistId: string },
+    sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
   ) {
     setNextOnQueue(list, sourceId);
   }
 
   function playLast(
     list: ISong[],
-    sourceId?: { albumId: string } | { playlistId: string },
+    sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
   ) {
     setLastOnQueue(list, sourceId);
   }

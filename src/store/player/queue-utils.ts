@@ -3,6 +3,7 @@ import type {
   IContextQueue,
   IPlayerContext,
   ISongList,
+  QueueSourceId,
 } from "@/types/playerContext";
 import { LoopState } from "@/types/playerContext";
 import { LanControlMessageType } from "@/types/lanControl";
@@ -13,21 +14,20 @@ export function getCurrentSong(songlist: ISongList): ISong | null {
   if (songlist.isInUserQueue && songlist.userQueue.songs.length > 0) {
     return songlist.userQueue.songs[0] ?? null;
   }
-  return songlist.contextQueue.songs[songlist.contextQueue.currentIndex] ?? null;
+  return (
+    songlist.contextQueue.songs[songlist.contextQueue.currentIndex] ?? null
+  );
 }
 
 export function getEffectiveQueue(songlist: ISongList): ISong[] {
-  const { contextQueue, userQueue, isInUserQueue } = songlist;
+  const { contextQueue, userQueue } = songlist;
   const played = contextQueue.songs.slice(0, contextQueue.currentIndex + 1);
   const upcoming = contextQueue.songs.slice(contextQueue.currentIndex + 1);
-  if (isInUserQueue) {
-    return [...played, ...userQueue.songs, ...upcoming];
-  }
-  return [...played, ...upcoming];
+  return [...played, ...userQueue.songs, ...upcoming];
 }
 
 export function getEffectiveIndex(songlist: ISongList): number {
-  if (songlist.isInUserQueue) {
+  if (songlist.isInUserQueue && songlist.userQueue.songs.length > 0) {
     return songlist.contextQueue.currentIndex + 1;
   }
   return songlist.contextQueue.currentIndex;
@@ -42,11 +42,19 @@ export function hasNextEffectiveSong(
     const remainingUserSongs = userQueue.songs.length - 1;
     const remainingContextSongs =
       contextQueue.songs.length - contextQueue.currentIndex - 1;
-    return remainingUserSongs > 0 || remainingContextSongs > 0 || loopState === LoopState.All;
+    return (
+      remainingUserSongs > 0 ||
+      remainingContextSongs > 0 ||
+      loopState === LoopState.All
+    );
   }
   const remainingContextSongs =
     contextQueue.songs.length - contextQueue.currentIndex - 1;
-  return userQueue.songs.length > 0 || remainingContextSongs > 0 || loopState === LoopState.All;
+  return (
+    userQueue.songs.length > 0 ||
+    remainingContextSongs > 0 ||
+    loopState === LoopState.All
+  );
 }
 
 export function hasPrevEffectiveSong(songlist: ISongList): boolean {
@@ -56,7 +64,8 @@ export function hasPrevEffectiveSong(songlist: ISongList): boolean {
 }
 
 export function isPlayingOneSong(songlist: ISongList): boolean {
-  const total = songlist.contextQueue.songs.length + songlist.userQueue.songs.length;
+  const total =
+    songlist.contextQueue.songs.length + songlist.userQueue.songs.length;
   return total <= 1;
 }
 
@@ -131,7 +140,10 @@ export function applyShuffleOff(state: Draft<ISongList>): void {
       } else {
         const contextIdx = state.contextQueue.currentIndex;
         state.contextQueue.songs = [...original];
-        state.contextQueue.currentIndex = Math.min(contextIdx, original.length - 1);
+        state.contextQueue.currentIndex = Math.min(
+          contextIdx,
+          original.length - 1,
+        );
       }
     } else {
       const newIdx = currentSongId
@@ -222,12 +234,15 @@ export function applyStarToAllLists(
   id: string,
   newStarred: string | undefined,
 ): void {
-  for (const list of [
+  const allLists = [
     state.contextQueue.songs,
     state.userQueue.songs,
     state.playedUserQueueHistory,
     state.originalContextSongs,
-  ]) {
+    state.originalUserSongs,
+  ];
+  for (const list of allLists) {
+    if (!list) continue;
     const song = list.find((s) => s.id === id);
     if (song) {
       song.starred = newStarred;
@@ -239,22 +254,62 @@ export function applyStarToAllLists(
 }
 
 export function hasAnySongs(songlist: ISongList): boolean {
-  return songlist.contextQueue.songs.length > 0 || songlist.userQueue.songs.length > 0;
+  return (
+    songlist.contextQueue.songs.length > 0 ||
+    songlist.userQueue.songs.length > 0
+  );
+}
+
+export function normalizeSourceId(
+  sourceId?:
+    | QueueSourceId
+    | { albumId: string }
+    | { playlistId: string }
+    | null,
+): QueueSourceId {
+  if (!sourceId) return null;
+  if ("type" in sourceId) {
+    if (
+      sourceId.type === "album" ||
+      sourceId.type === "playlist" ||
+      sourceId.type === "radio" ||
+      sourceId.type === "artist" ||
+      sourceId.type === "genre"
+    ) {
+      return sourceId;
+    }
+    return null;
+  }
+  if ("albumId" in sourceId) return { type: "album", id: sourceId.albumId };
+  if ("playlistId" in sourceId)
+    return { type: "playlist", id: sourceId.playlistId };
+  return null;
 }
 
 export function sendAddToQueueRemote(
   remoteSend: (type: unknown, data?: unknown) => boolean,
-  sourceId: { albumId: string } | { playlistId: string } | undefined,
+  sourceId:
+    | QueueSourceId
+    | { albumId: string }
+    | { playlistId: string }
+    | undefined,
   list: ISong[],
 ): void {
-  if (sourceId && "albumId" in sourceId) {
-    remoteSend(LanControlMessageType.ADD_ALBUM_TO_QUEUE, {
-      albumId: sourceId.albumId,
-    });
-  } else if (sourceId && "playlistId" in sourceId) {
-    remoteSend(LanControlMessageType.ADD_PLAYLIST_TO_QUEUE, {
-      playlistId: sourceId.playlistId,
-    });
+  const normalized = normalizeSourceId(sourceId);
+  if (normalized) {
+    if (normalized.type === "album") {
+      remoteSend(LanControlMessageType.ADD_ALBUM_TO_QUEUE, {
+        albumId: normalized.id,
+      });
+    } else if (normalized.type === "playlist") {
+      remoteSend(LanControlMessageType.ADD_PLAYLIST_TO_QUEUE, {
+        playlistId: normalized.id,
+      });
+    } else {
+      remoteSend(LanControlMessageType.ADD_TO_QUEUE, {
+        songIds: list.map((song) => song.id),
+      });
+    }
   } else {
     remoteSend(LanControlMessageType.ADD_TO_QUEUE, {
       songIds: list.map((song) => song.id),
@@ -279,8 +334,5 @@ export function reshuffleContextForWrap(
     }
   }
 
-  state.contextQueue.songs = [
-    state.contextQueue.songs[0],
-    ...reshuffled,
-  ];
+  state.contextQueue.songs = [state.contextQueue.songs[0], ...reshuffled];
 }
