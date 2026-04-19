@@ -5,6 +5,7 @@ import type { ISimilarArtist } from "@/types/responses/artist";
 import type { Genre } from "@/types/responses/genre";
 import type { Playlist } from "@/types/responses/playlist";
 import type { ISong } from "@/types/responses/song";
+import type { CacheMetaSource } from "@/types/cache";
 import { cacheIndexStore, offlineLibraryStore } from "@/store/idb";
 
 // ─── Row types ────────────────────────────────────────────────────────
@@ -33,8 +34,6 @@ export interface PlaylistRow extends Playlist {
 }
 
 export type GenreRow = Genre;
-
-export type CacheMetaSource = "explicit" | "smart" | "lru";
 
 export interface CacheMetaRow {
   /** Composite key: "audio/<songId>" or "cover/<coverArtId>/<size>". */

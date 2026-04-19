@@ -46,6 +46,7 @@ class CacheManager {
     const meta: CachedItemMeta = {
       id: songId,
       type: "audio",
+      source: "explicit",
       quality,
       sizeBytes: blob.size,
       cachedAt: Date.now(),
@@ -85,6 +86,7 @@ class CacheManager {
     const meta: CachedItemMeta = {
       id: coverArtId,
       type: "cover",
+      source: "explicit",
       sizeBytes: blob.size,
       cachedAt: Date.now(),
       lastAccessedAt: Date.now(),

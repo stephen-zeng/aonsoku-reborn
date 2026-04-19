@@ -67,12 +67,24 @@ export const useCacheIndexStore = createWithEqualityFn<CacheIndexState>()(
         actions: {
           loadFromIDB: async () => {
             try {
-              const stored = await get<Record<string, CachedItemMeta>>(
-                IDB_KEY,
-                cacheIndexStore,
-              );
+              const stored = await get<
+                Record<string, Partial<CachedItemMeta> | undefined>
+              >(IDB_KEY, cacheIndexStore);
               setState((state) => {
-                if (stored) state.items = stored;
+                if (stored) {
+                  // Pre-P2.1 entries lack the `source` field. Default
+                  // them to "explicit" so they are treated as protected
+                  // downloads, never silently evicted by LRU.
+                  const migrated: Record<string, CachedItemMeta> = {};
+                  for (const [key, meta] of Object.entries(stored)) {
+                    if (!meta) continue;
+                    migrated[key] = {
+                      ...(meta as CachedItemMeta),
+                      source: meta.source ?? "explicit",
+                    };
+                  }
+                  state.items = migrated;
+                }
                 state.loaded = true;
               });
             } catch (err) {

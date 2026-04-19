@@ -1,12 +1,37 @@
 export type DownloadQuality = "stream" | "original";
 
+/**
+ * Why a cached item exists. Determines eviction eligibility:
+ *
+ *  - "explicit" — user pressed "Download" on a song / album / playlist.
+ *    Never auto-evicted; only removed by explicit user action.
+ *  - "smart"    — a smart-download rule (P5) matched the item. Evicted
+ *    the moment no rule still matches it.
+ *  - "lru"      — opportunistically cached by playback or queue
+ *    prefetch. Evicted oldest-first when the LRU pool is over quota.
+ */
+export type CacheMetaSource = "explicit" | "smart" | "lru";
+
 export interface CachedItemMeta {
   id: string;
   type: "audio" | "cover";
+  source: CacheMetaSource;
+  /**
+   * Rule names (smart-download only) that currently keep this item
+   * cached. Cleared when the last rule stops matching, at which point
+   * the entry is evicted.
+   */
+  triggers?: string[];
   quality?: DownloadQuality;
   sizeBytes: number;
   cachedAt: number;
   lastAccessedAt: number;
+  /**
+   * True when a synced explicit download no longer exists on the
+   * server (P7.3). The local blob is kept so offline playback stays
+   * working, but the UI labels it as "removed from server".
+   */
+  removedFromServer?: boolean;
 }
 
 export type SyncPhase =
