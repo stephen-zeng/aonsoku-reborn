@@ -65,7 +65,9 @@ const MobileHeader = memo(function MobileHeader({
             data-testid="fullscreen-drag-handle"
             aria-label="Drag to close"
             className="opacity-100"
-            style={{ backgroundColor: currentSongColor ?? "hsl(var(--primary))" }}
+            style={{
+              backgroundColor: currentSongColor ?? "hsl(var(--primary))",
+            }}
           />
         </div>
       )}
@@ -263,7 +265,9 @@ export const MobileLayout = memo(function MobileLayout({
               }
             >
               <FullscreenSongQueue
-                onCurrentSongClick={() => setFullscreenTabWithHistory("playing")}
+                onCurrentSongClick={() =>
+                  setFullscreenTabWithHistory("playing")
+                }
               />
             </motion.div>
           )}

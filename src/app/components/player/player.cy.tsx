@@ -159,7 +159,7 @@ describe('Player Component', () => {
         .should('have.class', 'player-button-active')
         .then(() => {
           const songListAfterShuffle =
-            usePlayerStore.getState().songlist.currentList
+            usePlayerStore.getState().songlist.contextQueue.songs
 
           cy.wrap(songListAfterShuffle).should('not.deep.equal', songs)
           cy.wrap(songListAfterShuffle).should('have.members', songs)

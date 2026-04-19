@@ -277,6 +277,7 @@
     "queue": "队列",
     "queueHistory": "历史记录",
     "queueContinue": "继续播放",
+    "queueRepeating": "单曲循环",
     "queueFromSource": "来自 {{source}}",
     "emptyQueue": "队列中没有歌曲"
   },

@@ -21,13 +21,8 @@ import {
 
 export function ServerSettings() {
   const { t } = useTranslation();
-  const {
-    url,
-    primaryUrl,
-    fallbackUrl,
-    activeServerType,
-    lockUser,
-  } = useAppData();
+  const { url, primaryUrl, fallbackUrl, activeServerType, lockUser } =
+    useAppData();
   const { saveServerUrls } = useAppActions();
   const [primaryValue, setPrimaryValue] = useState(primaryUrl || url);
   const [fallbackValue, setFallbackValue] = useState(fallbackUrl);

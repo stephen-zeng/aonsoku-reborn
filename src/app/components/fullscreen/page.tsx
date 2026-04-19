@@ -8,7 +8,10 @@ import {
 import { useBackdropStyle } from "@/app/hooks/use-backdrop-bg";
 import { useAppWindow } from "@/app/hooks/use-app-window";
 import { closeFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
-import { usePlayerStore, useFullscreenPlayerSettings } from "@/store/player.store";
+import {
+  usePlayerStore,
+  useFullscreenPlayerSettings,
+} from "@/store/player.store";
 import { useTheme } from "@/store/theme.store";
 import { enterFullscreen, exitFullscreen } from "@/utils/browser";
 import { isDesktop } from "@/utils/desktop";
@@ -38,7 +41,8 @@ export default function FullscreenMode({
   const { currentSongColor, currentSongColorIntensity } = usePlayerStore(
     (state) => ({
       currentSongColor: state.settings.colors.currentSongColor,
-      currentSongColorIntensity: state.settings.colors.currentSongColorIntensity,
+      currentSongColorIntensity:
+        state.settings.colors.currentSongColorIntensity,
     }),
   );
 

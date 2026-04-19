@@ -19,7 +19,6 @@ export function useAudioContext(
   audio: HTMLAudioElement | null,
   { enabled, onSetupError }: UseAudioContextOptions,
 ) {
-
   const audioContextRef = useRef<IAudioContext | null>(null);
   const sourceNodeRef = useRef<IAudioSource | null>(null);
   const gainNodeRef = useRef<IGainNode<IAudioContext> | null>(null);
@@ -41,7 +40,10 @@ export function useAudioContext(
 
   const handleSetupError = useCallback(
     (error: unknown, contextLabel: string) => {
-      logger.error(`Failed to setup AudioContext during ${contextLabel}`, error);
+      logger.error(
+        `Failed to setup AudioContext during ${contextLabel}`,
+        error,
+      );
       resetRefs();
       onSetupError?.();
     },
@@ -123,7 +125,15 @@ export function useAudioContext(
           ...replayGain,
         });
 
-        gainNodeRef.current.gain.setValueAtTime(gainValue, currentTime);
+        gainNodeRef.current.gain.cancelScheduledValues(currentTime);
+        gainNodeRef.current.gain.setValueAtTime(
+          gainNodeRef.current.gain.value,
+          currentTime,
+        );
+        gainNodeRef.current.gain.linearRampToValueAtTime(
+          gainValue,
+          currentTime + 0.05,
+        );
       }
     },
     [enabled],

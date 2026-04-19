@@ -36,7 +36,6 @@ export const QueueCurrentSong = memo(function QueueCurrentSong({
       className={clsx("pt-2 pb-0.5 px-2 rounded-lg transition-colors")}
       onClick={onClick}
     >
-
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded overflow-hidden shrink-0 bg-accent">
           <img

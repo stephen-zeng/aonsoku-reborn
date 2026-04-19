@@ -3,7 +3,7 @@ import { ChevronDown, ListMusic, MicVocalIcon } from "lucide-react";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
-import { useBackdropStyle } from "@/app/hooks/use-backdrop-bg";
+
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useIsTouchPrimary } from "@/app/hooks/use-input-mode";
 import { cn } from "@/lib/utils";
@@ -25,12 +25,8 @@ export const DesktopLayout = memo(function DesktopLayout() {
   const { t } = useTranslation();
   const { hasLyrics } = useHasLyrics();
   const isTouchPrimary = useIsTouchPrimary();
-  const backdropStyle = useBackdropStyle();
 
   const lyricsDisabled = hasLyrics === false;
-
-  const tabStyle = (view: string) =>
-    rightPanelView === view ? backdropStyle : undefined;
 
   function handleQueueClick() {
     setRightPanelView(rightPanelView === "queue" ? null : "queue");
@@ -101,9 +97,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
         className={`shrink-0 flex h-full flex-col overflow-hidden transition-[width] duration-300 ${rightPanelView ? "w-1/2" : "w-0"}`}
         data-testid="fullscreen-desktop-side-panel"
         data-view={rightPanelView ?? "closed"}
-        style={
-          { "--queue-bg-overlay": "transparent" } as React.CSSProperties
-        }
+        style={{ "--queue-bg-overlay": "transparent" } as React.CSSProperties}
       >
         <div className="flex items-center justify-between px-4 pt-6 pb-2">
           <div className="flex gap-1">
@@ -116,7 +110,6 @@ export const DesktopLayout = memo(function DesktopLayout() {
                   ? "fullscreen-backdrop-layer rounded-md hover:bg-transparent"
                   : "hover:bg-foreground/20",
               )}
-              style={tabStyle("queue")}
               onClick={handleQueueClick}
             >
               <ListMusic className="size-4" />
@@ -132,7 +125,6 @@ export const DesktopLayout = memo(function DesktopLayout() {
                   ? "fullscreen-backdrop-layer rounded-md hover:bg-transparent"
                   : "hover:bg-foreground/20",
               )}
-              style={tabStyle("lyrics")}
               onClick={handleLyricsClick}
               disabled={lyricsDisabled}
             >

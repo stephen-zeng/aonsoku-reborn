@@ -12,31 +12,38 @@ import {
   ScrollArea,
   scrollAreaViewportSelector,
 } from "@/app/components/ui/scroll-area";
-import { usePlayerActions } from "@/store/player.store";
+import {
+  usePlayerActions,
+  usePlayerCurrentList,
+  usePlayerCurrentSong,
+  usePlayerCurrentSongIndex,
+  usePlayerIsPlaying,
+  useContextQueue,
+  useUserQueue,
+} from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { QueueItemRow, SortableQueueItem } from "./queue-item-row";
 
 interface DraggableVirtualQueueProps {
-  currentList: ISong[];
-  currentSong: ISong;
-  currentSongIndex: number;
-  isPlaying: boolean;
   scrollAreaClassName?: string;
   thumbClassName?: string;
 }
 
 export function DraggableVirtualQueue({
-  currentList,
-  currentSong,
-  currentSongIndex,
-  isPlaying,
   scrollAreaClassName = "w-full h-full overflow-auto",
   thumbClassName,
 }: DraggableVirtualQueueProps) {
-  const { setSongList, reorderQueue } = usePlayerActions();
+  const { playFromQueue, playFromUserQueue, reorderQueue } = usePlayerActions();
+  const currentList = usePlayerCurrentList();
+  const currentSong = usePlayerCurrentSong();
+  const currentSongIndex = usePlayerCurrentSongIndex();
+  const isPlaying = usePlayerIsPlaying();
+  const { contextSongs, contextIndex } = useContextQueue();
+  const { userQueueSongs } = useUserQueue();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
 
   const parentRef = useRef<HTMLDivElement>(null);
+  const prevSongIdRef = useRef<string | null>(null);
 
   const getScrollElement = useCallback(() => {
     if (!parentRef.current) return null;
@@ -51,10 +58,13 @@ export function DraggableVirtualQueue({
   });
 
   useEffect(() => {
-    if (currentSongIndex >= 0) {
-      virtualizer.scrollToIndex(currentSongIndex, { align: "start" });
+    if (currentSong?.id && currentSong?.id !== prevSongIdRef.current) {
+      prevSongIdRef.current = currentSong.id;
+      if (currentSongIndex >= 0) {
+        virtualizer.scrollToIndex(currentSongIndex, { align: "center" });
+      }
     }
-  }, [currentSongIndex, virtualizer]);
+  }, [currentSong?.id, currentSongIndex, virtualizer]);
 
   const sensors = useQueueDndSensors();
 
@@ -78,6 +88,18 @@ export function DraggableVirtualQueue({
     if (fromIndex === -1 || toIndex === -1) return;
 
     reorderQueue(fromIndex, toIndex);
+  }
+
+  const contextPlayedCount = contextIndex + 1;
+  const userQueueStart = contextPlayedCount;
+  const userQueueEnd = userQueueStart + userQueueSongs.length;
+
+  if (currentList.length === 0) {
+    return (
+      <div className="flex flex-1 flex-col h-full min-w-0 items-center justify-center">
+        <span>No songs in queue</span>
+      </div>
+    );
   }
 
   return (
@@ -105,7 +127,11 @@ export function DraggableVirtualQueue({
           >
             {virtualizer.getVirtualItems().map((virtualRow) => {
               const song = currentList[virtualRow.index];
-              const isCurrent = currentSong.id === song.id;
+              const isCurrent = currentSong?.id === song.id;
+              const isInUserQueue =
+                virtualRow.index >= userQueueStart &&
+                virtualRow.index < userQueueEnd;
+
               return (
                 <div
                   key={song.id}
@@ -118,14 +144,35 @@ export function DraggableVirtualQueue({
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
                 >
+                  {virtualRow.index === userQueueStart &&
+                    userQueueSongs.length > 0 && (
+                      <div className="flex items-center gap-2 px-1 py-0.5 mb-0.5">
+                        <div className="h-px flex-1 bg-foreground/10" />
+                        <span className="text-[10px] font-medium text-foreground/40 uppercase tracking-wider whitespace-nowrap">
+                          Queue
+                        </span>
+                        <div className="h-px flex-1 bg-foreground/10" />
+                      </div>
+                    )}
                   <SortableQueueItem
                     id={song.id}
                     song={song}
                     isPlaying={isCurrent && isPlaying}
                     isActive={isCurrent}
+                    tier={isInUserQueue ? "user" : "context"}
                     onPlay={() => {
                       if (!isCurrent) {
-                        setSongList(currentList, virtualRow.index);
+                        if (isInUserQueue) {
+                          const userQueueIndex =
+                            virtualRow.index - userQueueStart;
+                          playFromUserQueue(userQueueIndex);
+                        } else {
+                          const ctxIdx =
+                            virtualRow.index >= userQueueEnd
+                              ? virtualRow.index - userQueueSongs.length
+                              : virtualRow.index;
+                          playFromQueue(contextSongs, ctxIdx);
+                        }
                       }
                     }}
                   />
@@ -135,14 +182,13 @@ export function DraggableVirtualQueue({
           </div>
         </ScrollArea>
       </SortableContext>
-      {/* Portal escapes Vaul drawer's transform that breaks position:fixed */}
       {createPortal(
         <DragOverlay>
           {activeItem && (
             <QueueItemRow
               song={activeItem}
-              isPlaying={currentSong.id === activeItem.id && isPlaying}
-              isActive={currentSong.id === activeItem.id}
+              isPlaying={currentSong?.id === activeItem.id && isPlaying}
+              isActive={currentSong?.id === activeItem.id}
               onPlay={() => {}}
             />
           )}

@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
 import { usePlayerStore } from "@/store/player.store";
 import { hexToRgb } from "@/utils/getAverageColor";
 
@@ -14,20 +14,21 @@ const selectBackdropState = (state: {
   currentSongColorIntensity: state.settings.colors.currentSongColorIntensity,
 });
 
+let lastRgb: [number, number, number] = [0, 0, 0];
+
 export function useBackdropStyle() {
   const { currentSongColor, currentSongColorIntensity } =
     usePlayerStore(selectBackdropState);
-  const lastRgbRef = useRef<[number, number, number]>([0, 0, 0]);
 
   return useMemo(() => {
     if (currentSongColor) {
       const rgb = hexToRgb(currentSongColor);
       if (rgb) {
-        lastRgbRef.current = rgb as [number, number, number];
+        lastRgb = rgb as [number, number, number];
       }
     }
 
-    const [r, g, b] = lastRgbRef.current;
+    const [r, g, b] = lastRgb;
     const alpha = currentSongColor ? currentSongColorIntensity : 0;
 
     return {

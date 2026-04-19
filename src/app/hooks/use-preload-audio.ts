@@ -1,10 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { getSongStreamUrl } from "@/api/httpClient";
 import {
+  usePlayerCurrentList,
+  usePlayerCurrentSongIndex,
   usePlayerMediaType,
-  usePlayerShuffle,
   usePlayerLoop,
-  usePlayerSonglist,
+  usePlayerShuffle,
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
 
@@ -14,9 +15,10 @@ export function usePreloadAudio() {
   const { isSong } = usePlayerMediaType();
   const isShuffleActive = usePlayerShuffle();
   const loopState = usePlayerLoop();
-  const { currentList, currentSongIndex } = usePlayerSonglist();
+  const currentList = usePlayerCurrentList();
+  const currentSongIndex = usePlayerCurrentSongIndex();
 
-  const nextSongId = (() => {
+  const nextSongId = useMemo(() => {
     if (!isSong) return null;
     if (isShuffleActive) return null;
     if (loopState === LoopState.One) return null;
@@ -28,7 +30,7 @@ export function usePreloadAudio() {
       return currentList[0].id;
     }
     return null;
-  })();
+  }, [isSong, isShuffleActive, loopState, currentSongIndex, currentList]);
 
   useEffect(() => {
     if (!nextSongId) {
@@ -42,6 +44,11 @@ export function usePreloadAudio() {
     }
 
     if (preloadedSongIdRef.current === nextSongId) return;
+
+    if (preloadRef.current) {
+      preloadRef.current.removeAttribute("src");
+      preloadRef.current.load();
+    }
 
     if (!preloadRef.current) {
       preloadRef.current = new Audio();

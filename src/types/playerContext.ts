@@ -14,24 +14,45 @@ export enum LoopState {
   One = 2,
 }
 
+export type QueueSourceId =
+  | { type: "album"; id: string }
+  | { type: "playlist"; id: string }
+  | { type: "radio"; id: string }
+  | { type: "artist"; id: string }
+  | { type: "genre"; id: string }
+  | null;
+
+export interface IContextQueue {
+  songs: ISong[];
+  currentIndex: number;
+  sourceId: QueueSourceId;
+  sourceName: string | null;
+}
+
+export interface IUserQueue {
+  songs: ISong[];
+}
+
 export interface ISongList {
-  shuffledList: ISong[];
-  currentList: ISong[];
-  currentSongIndex: number;
-  currentSong: ISong;
-  originalList: ISong[];
-  originalSongIndex: number;
+  contextQueue: IContextQueue;
+  userQueue: IUserQueue;
+  originalContextSongs: ISong[];
+  originalUserSongs?: ISong[];
+  currentSong: ISong | null;
   radioList: Radio[];
-  queueSource: string | null;
+  isShuffleActive: boolean;
+  isInUserQueue: boolean;
+  playedUserQueueHistory: ISong[];
+  shuffleHistory: string[];
 }
 
 export type FullscreenPlayerTab = "queue" | "playing" | "lyrics";
 export type DesktopFullscreenPanelView = "queue" | "lyrics" | null;
+export type QueueTier = "context" | "user";
 
 export interface IPlayerState {
   isPlaying: boolean;
   loopState: LoopState;
-  isShuffleActive: boolean;
   isSongStarred: boolean;
   volume: number;
   currentDuration: number;
@@ -137,9 +158,11 @@ export interface IPlayerActions {
     songlist: ISong[],
     index: number,
     shuffle?: boolean,
-    sourceId?: { albumId: string } | { playlistId: string },
+    sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     sourceName?: string,
   ) => void;
+  playFromQueue: (contextSongs: ISong[], contextIndex: number) => void;
+  playFromUserQueue: (userQueueIndex: number) => void;
   setCurrentSong: () => void;
   checkIsSongStarred: () => void;
   starSongInQueue: (id: string) => void;
@@ -155,6 +178,7 @@ export interface IPlayerActions {
   hasPrevSong: () => boolean;
   isPlayingOneSong: () => boolean;
   clearPlayerState: () => void;
+  clearUserQueue: () => void;
   resetProgress: () => void;
   setProgress: (progress: number) => void;
   setVolume: (volume: number) => void;
@@ -165,16 +189,15 @@ export interface IPlayerActions {
   setAudioPlayerRef: (ref: HTMLAudioElement) => void;
   setNextOnQueue: (
     songlist: ISong[],
-    sourceId?: { albumId: string } | { playlistId: string },
+    sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     sourceName?: string,
   ) => void;
   setLastOnQueue: (
     songlist: ISong[],
-    sourceId?: { albumId: string } | { playlistId: string },
+    sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     sourceName?: string,
   ) => void;
-  removeSongFromQueue: (id: string) => void;
-  clearPlayedQueue: () => void;
+  removeSongFromQueue: (id: string, tier?: QueueTier) => void;
   reorderQueue: (fromIndex: number, toIndex: number) => void;
   setMainDrawerState: (state: boolean) => void;
   setQueueState: (state: boolean) => void;
@@ -187,7 +210,6 @@ export interface IPlayerActions {
   closeFullscreenPlayer: () => void;
   setFullscreenPlayerTab: (tab: FullscreenPlayerTab) => void;
   setDesktopFullscreenPanelView: (view: DesktopFullscreenPanelView) => void;
-  playFirstSongInQueue: () => void;
   handleSongEnded: () => void;
   getCurrentProgress: () => number;
   resetConfig: () => void;

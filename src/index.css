@@ -125,11 +125,6 @@
     position: absolute;
     inset: 0;
     z-index: -2;
-    transition:
-      --queue-backdrop-r 1000ms,
-      --queue-backdrop-g 1000ms,
-      --queue-backdrop-b 1000ms,
-      --queue-backdrop-alpha 1000ms;
     background-color: rgb(
       var(--queue-backdrop-r, 0) var(--queue-backdrop-g, 0)
         var(--queue-backdrop-b, 0) /
@@ -176,15 +171,10 @@
   }
 }
 
-/* Fullscreen backdrop layer — uses the same @property-registered R/G/B/alpha
-   components as the queue for smooth transitions on intensity changes.
+/* Fullscreen backdrop layer — inherits the @property-registered R/G/B/alpha
+   components from .fullscreen-drawer-surface which transitions them smoothly.
    Placed outside @layer base to win over utility-layer transition-colors. */
 .fullscreen-backdrop-layer {
-  transition:
-    --queue-backdrop-r 1000ms,
-    --queue-backdrop-g 1000ms,
-    --queue-backdrop-b 1000ms,
-    --queue-backdrop-alpha 1000ms;
   background-color: rgb(
     var(--queue-backdrop-r, 0) var(--queue-backdrop-g, 0)
       var(--queue-backdrop-b, 0) /
