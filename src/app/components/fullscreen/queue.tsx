@@ -39,7 +39,7 @@ import {
 } from "@/store/player.store";
 import type { ISong } from "@/types/responses/song";
 import { LoopState } from "@/types/playerContext";
-import { useBackdropStyle } from "@/app/hooks/use-backdrop-bg";
+
 import { useSongCoverArtUrl } from "@/utils/coverArt";
 import { QueueCurrentSong, QueueModeButtons } from "./queue-current-song";
 import { QueueSourceLabel } from "@/app/components/queue/queue-source-label";
@@ -177,7 +177,6 @@ function UnifiedQueueView({
   const { t } = useTranslation();
   const { playSong, setSongList, reorderQueue } = usePlayerActions();
   const loopState = usePlayerLoop();
-  const backdropStyle = useBackdropStyle();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -297,7 +296,6 @@ function UnifiedQueueView({
       className="flex flex-col h-full overflow-y-auto no-scrollbar"
       data-vaul-no-drag
       ref={scrollContainerRef}
-      style={backdropStyle}
     >
       {playHistory.length > 0 && (
         <div className={FULLSCREEN_QUEUE_BG_CLASS}>

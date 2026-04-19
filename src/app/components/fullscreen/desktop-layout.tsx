@@ -3,7 +3,7 @@ import { ChevronDown, ListMusic, MicVocalIcon } from "lucide-react";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
-import { useBackdropStyle } from "@/app/hooks/use-backdrop-bg";
+
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useIsTouchPrimary } from "@/app/hooks/use-input-mode";
 import { cn } from "@/lib/utils";
@@ -25,12 +25,8 @@ export const DesktopLayout = memo(function DesktopLayout() {
   const { t } = useTranslation();
   const { hasLyrics } = useHasLyrics();
   const isTouchPrimary = useIsTouchPrimary();
-  const backdropStyle = useBackdropStyle();
 
   const lyricsDisabled = hasLyrics === false;
-
-  const tabStyle = (view: string) =>
-    rightPanelView === view ? backdropStyle : undefined;
 
   function handleQueueClick() {
     setRightPanelView(rightPanelView === "queue" ? null : "queue");
@@ -116,7 +112,6 @@ export const DesktopLayout = memo(function DesktopLayout() {
                   ? "fullscreen-backdrop-layer rounded-md hover:bg-transparent"
                   : "hover:bg-foreground/20",
               )}
-              style={tabStyle("queue")}
               onClick={handleQueueClick}
             >
               <ListMusic className="size-4" />
@@ -132,7 +127,6 @@ export const DesktopLayout = memo(function DesktopLayout() {
                   ? "fullscreen-backdrop-layer rounded-md hover:bg-transparent"
                   : "hover:bg-foreground/20",
               )}
-              style={tabStyle("lyrics")}
               onClick={handleLyricsClick}
               disabled={lyricsDisabled}
             >
