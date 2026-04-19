@@ -25,16 +25,9 @@ export function TableSongTitle({
         altText={song.title}
       />
       <div className="flex flex-col w-full justify-center truncate">
-        <span
-          className="font-medium truncate"
-        >
-          {song.title}
-        </span>
+        <span className="font-medium truncate">{song.title}</span>
         <div className="flex items-center truncate">
-          <TableArtists
-            song={song}
-            onClickLink={handleArtistLinkClick}
-          />
+          <TableArtists song={song} onClickLink={handleArtistLinkClick} />
         </div>
       </div>
     </div>
@@ -46,10 +39,7 @@ type ArtistsLinksProps = {
   onClickLink?: () => void;
 };
 
-export function TableArtists({
-  song,
-  onClickLink,
-}: ArtistsLinksProps) {
+export function TableArtists({ song, onClickLink }: ArtistsLinksProps) {
   const { artists, artistId, artist } = song;
 
   if (artists && artists.length > 1) {

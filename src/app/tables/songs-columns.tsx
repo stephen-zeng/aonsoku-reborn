@@ -108,21 +108,13 @@ export function songsColumns({
         const { artist, artistId, artists } = row.original;
 
         if (artists && artists.length > 1) {
-          return (
-            <ArtistsLinks
-              artists={artists}
-              disableNavigation={true}
-            />
-          );
+          return <ArtistsLinks artists={artists} disableNavigation={true} />;
         }
 
         if (!artistId) return artist;
 
         return (
-          <ArtistLink
-            artistId={artistId}
-            disableNavigation={true}
-          >
+          <ArtistLink artistId={artistId} disableNavigation={true}>
             {artist}
           </ArtistLink>
         );
@@ -145,11 +137,7 @@ export function songsColumns({
         </MemoDataTableColumnHeader>
       ),
       cell: ({ row }) => {
-        return (
-          <span className="truncate">
-            {row.original.album}
-          </span>
-        );
+        return <span className="truncate">{row.original.album}</span>;
       },
     },
     {

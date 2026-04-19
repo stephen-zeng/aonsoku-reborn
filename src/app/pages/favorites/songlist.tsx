@@ -38,10 +38,7 @@ export default function SongList() {
   const { setSongList } = usePlayerActions();
   const isOnline = useIsOnline();
 
-  const columns = useMemo(
-    () => songsColumns({ hasHover }),
-    [hasHover],
-  );
+  const columns = useMemo(() => songsColumns({ hasHover }), [hasHover]);
 
   const {
     data: songs,
