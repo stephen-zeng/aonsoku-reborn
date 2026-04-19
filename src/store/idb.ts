@@ -1,4 +1,5 @@
 import { createStore, del, get, set } from "idb-keyval";
+import type { PersistStorage } from "zustand/middleware";
 
 export const cacheIndexStore = createStore("aonsoku-cache", "cache-index");
 export const offlineLibraryStore = createStore(
@@ -6,24 +7,21 @@ export const offlineLibraryStore = createStore(
   "offline-library",
 );
 
-export const idbStorage = {
-  getItem: <T>(name: string, callback: (value: T | null) => void): void => {
-    get<T>(name)
-      .then((value) => {
-        callback(value ?? null);
-      })
-      .catch(() => {
-        callback(null);
-      });
+export const createIdbStorage = <S>(): PersistStorage<S> => ({
+  getItem: (name: string) => {
+    return get(name).catch((err) => {
+      console.error(`[idbStorage] getItem("${name}") failed:`, err);
+      return null;
+    });
   },
-  setItem: (name: string, value: unknown, callback?: () => void): void => {
-    set(name, value)
-      .then(() => callback?.())
-      .catch(() => callback?.());
+  setItem: (name: string, value) => {
+    set(name, value).catch((err) => {
+      console.error(`[idbStorage] setItem("${name}") failed:`, err);
+    });
   },
-  removeItem: (name: string, callback?: () => void): void => {
-    del(name)
-      .then(() => callback?.())
-      .catch(() => callback?.());
+  removeItem: (name: string) => {
+    del(name).catch((err) => {
+      console.error(`[idbStorage] removeItem("${name}") failed:`, err);
+    });
   },
-};
+});

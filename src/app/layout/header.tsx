@@ -14,8 +14,8 @@ import { ROUTES } from "@/routes/routesList";
 import { useSidebar } from "@/store/ui.store";
 import { isDesktop, isLinux, isMacOS, isWindows } from "@/utils/desktop";
 import { isWindowControlsOverlayAvailable } from "@/utils/pwa";
-import { SwUpdateChip } from "../components/header/sw-update-chip";
 import CommandMenu from "../components/command/command-menu";
+import { SwUpdateChip } from "../components/header/sw-update-chip";
 import { Button } from "../components/ui/button";
 
 const mobileRootRoutes = [
@@ -103,7 +103,13 @@ export function Header() {
     : PanelLeftCloseIcon;
 
   return (
-    <header className="w-full flex justify-between items-center md:grid md:grid-cols-header h-[calc(var(--header-height)+env(safe-area-inset-top))] px-4 pt-[env(safe-area-inset-top)] fixed top-0 right-0 left-0 z-20 bg-background/95 supports-[backdrop-filter]:bg-background/60 backdrop-blur-md border-b electron-drag">
+    <header
+      className="w-full flex justify-between items-center md:grid md:grid-cols-header h-header pt-[var(--safe-area-top)] fixed top-0 right-0 left-0 z-20 bg-background/95 supports-[backdrop-filter]:bg-background/60 backdrop-blur-md border-b electron-drag"
+      style={{
+        paddingLeft: "max(1rem, var(--safe-area-left))",
+        paddingRight: "max(1rem, var(--safe-area-right))",
+      }}
+    >
       <div className="flex items-center">
         {/* Spacing for macOS window controls (traffic lights) on left side */}
         {leftSpacingWidth > 10 && (

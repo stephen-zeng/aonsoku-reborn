@@ -4,10 +4,10 @@ import { ROUTES } from "@/routes/routesList";
 import { useAppStore } from "@/store/app.store";
 
 export async function loginLoader() {
-  const { url, username, password, isServerConfigured } =
+  const { primaryUrl, url, username, password, isServerConfigured } =
     useAppStore.getState().data;
 
-  const hasUrl = Boolean(url && url !== "");
+  const hasUrl = Boolean((primaryUrl || url) && (primaryUrl || url) !== "");
   const hasPassword = Boolean(password && password !== "");
   const hasUser = Boolean(username && username !== "");
 

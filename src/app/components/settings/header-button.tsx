@@ -2,9 +2,9 @@ import { Settings } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { useIsMobile } from "@/app/hooks/use-mobile";
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import { ROUTES } from "@/routes/routesList";
 import { useAppSettings } from "@/store/app.store";
 

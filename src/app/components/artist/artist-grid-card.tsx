@@ -19,9 +19,9 @@ function ArtistCard({ artist }: ArtistCardProps) {
     const songList = await getArtistAllSongs(artist.id);
 
     if (songList) {
-      setSongList(songList, 0);
+      setSongList(songList, 0, false, undefined, artist.name);
     }
-  }, [artist.id, getArtistAllSongs, setSongList]);
+  }, [artist.id, artist.name, getArtistAllSongs, setSongList]);
 
   return (
     <PreviewCard.Root className="flex flex-col w-full h-full">

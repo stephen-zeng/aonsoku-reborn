@@ -1,5 +1,5 @@
-import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
+import { createWithEqualityFn } from "zustand/traditional";
 import {
   AuthResponseData,
   CurrentSongData,

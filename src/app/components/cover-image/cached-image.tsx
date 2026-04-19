@@ -1,7 +1,7 @@
 import { ComponentPropsWithoutRef } from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import { getCoverArtUrl } from "@/api/httpClient";
 import { CoverArt } from "@/types/coverArtType";
+import { useCoverArtUrlFromSongPreference } from "@/utils/coverArt";
 
 type LazyLoadImageProps = ComponentPropsWithoutRef<typeof LazyLoadImage>;
 
@@ -9,6 +9,7 @@ interface CachedImageProps extends Omit<LazyLoadImageProps, "src"> {
   coverArtId?: string;
   coverArtType?: CoverArt;
   coverArtSize?: string;
+  albumId?: string;
   src?: string;
 }
 
@@ -22,11 +23,17 @@ export function CachedImage({
   coverArtId,
   coverArtType = "album",
   coverArtSize = "300",
+  albumId,
   src: directSrc,
   ...props
 }: CachedImageProps) {
-  const resolvedSrc =
-    directSrc ?? getCoverArtUrl(coverArtId, coverArtType, coverArtSize);
+  const generatedSrc = useCoverArtUrlFromSongPreference({
+    coverArt: coverArtId,
+    coverArtType,
+    albumId,
+    size: coverArtSize,
+  });
+  const resolvedSrc = directSrc ?? generatedSrc;
 
   return <LazyLoadImage {...props} src={resolvedSrc} />;
 }

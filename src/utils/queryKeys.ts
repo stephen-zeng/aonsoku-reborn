@@ -24,6 +24,7 @@ const artist = {
 
 const favorites = {
   count: "get-favorite-count",
+  list: "get-favorite-songs",
 };
 
 const song = {

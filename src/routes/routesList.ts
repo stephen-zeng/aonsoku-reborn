@@ -61,6 +61,8 @@ const MOBILE = {
   SETTINGS: "/mobile/settings",
 };
 
+export const PLAYER_SEARCH_PARAM = "player";
+
 export const ROUTES = {
   LIBRARY,
   MOBILE,

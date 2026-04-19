@@ -1,26 +1,31 @@
-import { usePlayerSonglist } from "@/store/player.store";
+import {
+  usePlayerCurrentSong,
+  usePlayerCurrentSongIndex,
+  useHasQueueSongs,
+} from "@/store/player.store";
 import { AppTitle } from "./header/app-title";
 
 export function HeaderSongInfo() {
-  const { currentList, currentSongIndex, currentSong } = usePlayerSonglist();
-
-  const isPlaylistEmpty = currentList.length === 0;
+  const currentSong = usePlayerCurrentSong();
+  const currentSongIndex = usePlayerCurrentSongIndex();
+  const hasQueue = useHasQueueSongs();
 
   function formatSongCount() {
     const currentPosition = currentSongIndex + 1;
-    const listLength = currentList.length;
+    const listLength = currentPosition;
 
     return `[${currentPosition}/${listLength}]`;
   }
 
   function getCurrentSongInfo() {
+    if (!currentSong) return "";
     return `${currentSong.artist} - ${currentSong.title}`;
   }
 
   return (
     <div className="col-span-2 flex justify-center items-center">
-      {isPlaylistEmpty && <AppTitle />}
-      {!isPlaylistEmpty && (
+      {!hasQueue && <AppTitle />}
+      {hasQueue && (
         <div className="flex w-full justify-center subpixel-antialiased font-medium text-sm text-muted-foreground">
           <p className="leading-7 mr-1">{formatSongCount()}</p>
           <p className="leading-7 truncate">{getCurrentSongInfo()}</p>

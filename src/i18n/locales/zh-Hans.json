@@ -1,152 +1,25 @@
 {
-  "home": {
-    "mostPlayed": "最常播放",
-    "explore": "发现",
-    "recentlyPlayed": "最近播放",
-    "recentlyAdded": "最近添加"
-  },
-  "sidebar": {
-    "home": "首页",
-    "library": "资料库",
-    "artists": "艺术家",
-    "songs": "歌曲",
-    "playlists": "播放列表",
-    "radios": "电台",
-    "emptyPlaylist": "还没有创建播放列表",
-    "albums": "专辑",
-    "favorites": "收藏夹",
-    "search": "搜索…",
-    "miniSearch": "搜索",
-    "collapse": "收起侧边栏",
-    "expand": "展开侧边栏"
-  },
-  "menu": {
-    "about": "关于",
-    "serverLogout": "登出",
-    "language": "语言",
-    "server": "服务器"
-  },
-  "generic": {
-    "seeMore": "查看更多",
-    "viewAll": "查看所有",
-    "loading": "加载中…",
-    "showDetails": "显示详情",
-    "hideDetails": "隐藏详情",
-    "viewMode": {
-      "modes": {
-        "poster": "海报",
-        "list": "列表"
-      },
-      "label": "视图模式"
+  "about": {
+    "apiVersion": "API 版本",
+    "buildTime": "构建时间",
+    "client": "客户端",
+    "server": "服务器",
+    "toasts": {
+      "copy": "链接已经复制到剪贴板！"
     },
-    "beta": "Beta"
-  },
-  "theme": {
-    "label": "主题",
-    "light": "浅色",
-    "dark": "深色",
-    "system": "系统",
-    "black": "黑白",
-    "bearded-solarized": "Bearded Solarized",
-    "material-theme": "Material Theme",
-    "one-dark": "One Dark",
-    "night-owl-light": "Night Owl Light",
-    "monokai-pro": "Monokai Pro",
-    "shades-of-purple": "Shades Of Purple",
-    "marmalade-beaver": "Marmalade Beaver",
-    "noctis-lilac": "Noctis Lilac",
-    "github-dark": "GitHub Dark",
-    "catppuccin-mocha": "Catppuccin Mocha",
-    "nuclear-dark": "Nuclear Dark",
-    "achiever": "Achiever",
-    "discord": "Discord",
-    "vue-dark": "Vue Dark",
-    "vim-dark-soft": "Vim Dark Soft",
-    "dracula": "Dracula",
-    "tinacious-design": "Tinacious Design"
-  },
-  "playlist": {
-    "headline": "播放列表",
-    "duration": "约 {{duration}}",
-    "refresh": "刷新播放列表",
-    "buttons": {
-      "play": "播放 {{name}}",
-      "shuffle": "随机播放 {{name}}",
-      "options": "{{name}} 的更多选项"
-    },
-    "songCount_other": "{{count}} 首歌曲",
-    "noSongList": "这个播放列表没有任何歌曲！",
-    "form": {
-      "labels": {
-        "name": "名称",
-        "comment": "注解",
-        "isPublicDescription": "选择这个选项使得这个播放列表变成公开状态，这将会允许其他用户查看以及访问你的播放列表。",
-        "commentDescription": "为这个播放列表写一个简短的描述",
-        "isPublic": "公开"
-      },
-      "create": {
-        "title": "创建播放列表",
-        "button": "创建",
-        "toast": {
-          "error": "播放列表创建失败！",
-          "success": "播放列表创建成功！"
-        }
-      },
-      "edit": {
-        "title": "编辑播放列表",
-        "button": "更新",
-        "toast": {
-          "error": "播放列表更新失败！",
-          "success": "播放列表更新成功！"
-        }
-      },
-      "delete": {
-        "title": "你确定要删除这个播放列表吗？",
-        "description": "这个操作不能被撤销。",
-        "toast": {
-          "success": "播放列表删除成功！",
-          "error": "播放列表删除失败！"
-        }
-      },
-      "removeSong": {
-        "title_other": "你确定要删除选择的歌曲吗？",
-        "toast": {
-          "success_other": "歌曲删除成功！",
-          "error_other": "歌曲删除失败！"
-        },
-        "description": "这个操作不能被撤销。"
-      },
-      "validations": {
-        "nameLength": "播放列表名称必须至少有 2 个字符。"
-      }
-    }
-  },
-  "songs": {
-    "list": {
-      "byArtist": "{{artist}} 的歌曲",
-      "filter": {
-        "clear": "清空过滤条件"
-      },
-      "search": {
-        "placeholder": "搜索歌曲…"
-      }
-    }
+    "type": "类型",
+    "version": "版本"
   },
   "album": {
-    "headline": "专辑",
     "buttons": {
-      "like": "喜欢 {{name}}",
-      "dislike": "取消对 {{name}} 的喜欢"
+      "dislike": "取消对 {{name}} 的喜欢",
+      "like": "喜欢 {{name}}"
     },
+    "headline": "专辑",
     "info": {
+      "about": "关于 {{name}}",
       "lastfm": "在 Last.fm 中打开",
-      "musicbrainz": "在 MusicBrainz 中打开",
-      "about": "关于 {{name}}"
-    },
-    "more": {
-      "listTitle": "更多来自这个艺术家",
-      "discography": "艺术家作品目录",
-      "genreTitle": "更多来自 {{genre}}"
+      "musicbrainz": "在 MusicBrainz 中打开"
     },
     "list": {
       "empty": {
@@ -154,468 +27,717 @@
         "info": "看起来在当前过滤条件下没有任何专辑。",
         "title": "哎呀，这里没有专辑！"
       },
-      "genre": {
-        "search": "查找一个流派…",
-        "notFound": "没有找到流派。",
-        "label": "选择一个流派…",
-        "loading": "加载流派中…"
-      },
       "filter": {
+        "artist": "艺术家",
+        "discography": "作品目录",
+        "favorites": "收藏",
+        "genre": "流派",
         "mostPlayed": "最常播放",
         "name": "名称",
         "random": "随机",
-        "releaseYear": "发行年份",
-        "discography": "作品目录",
-        "search": "搜索",
-        "favorites": "收藏",
-        "artist": "艺术家",
-        "genre": "流派",
+        "recentlyAdded": "最近添加",
         "recentlyPlayed": "最近播放",
-        "recentlyAdded": "最近添加"
+        "releaseYear": "发行年份",
+        "search": "搜索"
       },
-      "search": {
-        "placeholder": "搜索专辑…"
+      "genre": {
+        "label": "选择一个流派…",
+        "loading": "加载流派中…",
+        "notFound": "没有找到流派。",
+        "search": "查找一个流派…"
       },
       "header": {
         "albumsByArtist": "{{artist}} 的专辑"
+      },
+      "search": {
+        "placeholder": "搜索专辑…"
       }
+    },
+    "more": {
+      "discography": "艺术家作品目录",
+      "genreTitle": "更多来自 {{genre}}",
+      "listTitle": "更多来自这个艺术家"
     },
     "table": {
       "discNumber": "碟片 {{number}}"
     }
   },
   "artist": {
-    "headline": "艺术家",
     "buttons": {
-      "shuffle": "随机播放 {{artist}} 的电台",
       "options": "{{artist}} 的更多选项",
-      "play": "播放 {{artist}} 的电台"
+      "play": "播放 {{artist}} 的电台",
+      "shuffle": "随机播放 {{artist}} 的电台"
+    },
+    "headline": "艺术家",
+    "info": {
+      "albumsCount_one": "{{count}} album",
+      "albumsCount_other": "{{count}} 张专辑"
     },
     "recentAlbums": "最新专辑",
     "relatedArtists": "相关艺术家",
-    "info": {
-      "albumsCount_other": "{{count}} 张专辑"
-    },
     "topSongs": "热门"
   },
-  "table": {
-    "columns": {
-      "title": "标题",
-      "year": "年份",
-      "lastPlayed": "上次播放",
-      "bpm": "BPM",
-      "bitrate": "比特率",
-      "quality": "质量",
-      "name": "名称",
-      "albumCount": "专辑数量",
-      "songCount": "歌曲数量",
-      "genres": "流派",
-      "size": "大小",
-      "codec": "编码",
-      "path": "路径",
-      "track": "音轨",
-      "discNumber": "碟片编号",
-      "trackPeak": "音轨峰值",
-      "trackGain": "音轨增益",
-      "albumPeak": "专辑峰值",
-      "artist": "艺术家",
-      "album": "专辑",
-      "duration": "时长",
-      "plays": "播放次数",
-      "comment": "注解",
-      "public": "公开",
-      "favorite": "收藏",
-      "albumGain": "专辑增益",
-      "recordLabel": "唱片厂牌",
-      "contributors": "贡献者",
-      "albumArtist": "专辑艺术家",
-      "channelCount": "声道数",
-      "samplingRate": "采样率",
-      "bitDepth": "位深度"
-    },
-    "buttons": {
-      "play": "播放 {{artist}} 的 {{title}}",
-      "pause": "暂停 {{artist}} 的 {{title}}"
-    },
-    "pagination": {
-      "rowsPerPage": "每页的行数",
-      "currentPage": "{{currentPage}}/{{totalPages}}",
-      "screenReader": {
-        "nextPage": "前往下一页",
-        "firstPage": "前往第一页",
-        "lastPage": "前往最后一页",
-        "previousPage": "前往上一页"
-      }
-    },
-    "sort": {
-      "asc": "升序",
-      "desc": "降序",
-      "reset": "重置"
-    },
-    "menu": {
-      "selectedCount_other": "{{count}} 个被选中"
-    },
-    "lastPlayed": "{{date}}前"
-  },
-  "fullscreen": {
-    "playing": "正在播放",
-    "lyrics": "歌词",
-    "switchButton": "切换到大播放器",
-    "noLyrics": "没有找到歌词",
-    "loadingLyrics": "搜索歌词…",
-    "queue": "队列"
-  },
-  "logout": {
-    "dialog": {
-      "description": "确认登出。",
-      "title": "准备好说再见了吗？",
-      "cancel": "取消",
-      "confirm": "继续"
-    }
-  },
-  "login": {
-    "form": {
-      "server": "服务器",
-      "description": "连接你的 Subsonic 服务器。",
-      "password": "密码",
-      "validations": {
-        "url": "请输入一个有效的 URL。",
-        "protocol": "URL 必须以 http:// 或 https:// 开头",
-        "usernameLength": "用户名必须至少有 2 个字符。",
-        "password": "请提供一个密码",
-        "passwordLength": "密码必须至少有 2 个字符。",
-        "username": "请提供一个用户名"
-      },
-      "url": "URL",
-      "urlDescription": "这是你的服务器 URL",
-      "username": "用户名",
-      "usernamePlaceholder": "你的用户名",
-      "connect": "连接",
-      "connecting": "连接中…"
-    }
-  },
   "command": {
-    "noResults": "没有任何结果。",
     "commands": {
       "heading": "命令",
       "pages": "前往页面",
       "theme": "修改主题"
     },
-    "pages": "页面",
-    "inputPlaceholder": "搜索专辑、艺术家或者歌曲"
+    "inputPlaceholder": "搜索专辑、艺术家或者歌曲",
+    "noResults": "没有任何结果。",
+    "pages": "页面"
   },
-  "player": {
-    "noRadioPlaying": "没有正在播放的电台",
-    "tooltips": {
-      "shuffle": {
-        "enable": "开启随机播放",
-        "disable": "关闭随机播放"
-      },
-      "repeat": {
-        "enable": "开启循环播放",
-        "enableOne": "开启单曲循环",
-        "disable": "关闭循环播放"
-      },
-      "like": "喜欢 {{artist}} 的 {{song}}",
-      "play": "播放",
-      "pause": "暂停",
-      "next": "下一曲",
-      "previous": "上一曲",
-      "dislike": "取消喜欢 {{artist}} 的 {{song}}",
-      "volume": {
-        "mute": "静音",
-        "unmute": "取消静音"
-      },
-      "forward": "前进 {{amount}} 秒",
-      "rewind": "倒退 {{amount}} 秒",
-      "miniPlayer": {
-        "open": "打开 Mini 播放器",
-        "close": "关闭 Mini 播放器"
-      }
+  "dayjs": {
+    "relativeTime": {
+      "M": "1 个月",
+      "MM": "%d 个月",
+      "d": "1 天",
+      "dd": "%d 天",
+      "future": "在%s",
+      "h": "1 小时",
+      "hh": "%d 小时",
+      "m": "1 分钟",
+      "mm": "%d 分钟",
+      "past": "%s前",
+      "s": "几秒",
+      "y": "1 年",
+      "yy": "%d 年"
+    }
+  },
+  "downloads": {
+    "completed": "你的文件已经被成功下载。",
+    "failed": "下载你的文件时出现了一个错误。",
+    "started": "下载已经开始。"
+  },
+  "error": {
+    "notFound": "Not found"
+  },
+  "favorites": {
+    "buttons": {
+      "play": "播放{{name}}",
+      "shuffle": "随机播放{{name}}"
     },
-    "noSongPlaying": "没有正在播放的歌曲"
+    "duration": "约 {{duration}}",
+    "headline": "收藏夹",
+    "noSongs": "还没有收藏的歌曲！",
+    "songCount_one": "{{count}} song",
+    "songCount_other": "{{count}} songs"
+  },
+  "fullscreen": {
+    "emptyQueue": "队列中没有歌曲",
+    "loadingLyrics": "搜索歌词…",
+    "lyrics": "歌词",
+    "noLyrics": "没有找到歌词",
+    "playing": "正在播放",
+    "queue": "队列",
+    "queueContinue": "继续播放",
+    "queueFromSource": "来自 {{source}}",
+    "queueHistory": "历史记录",
+    "queueRepeating": "单曲循环",
+    "switchButton": "切换到大播放器"
+  },
+  "generic": {
+    "beta": "Beta",
+    "clear": "清除",
+    "hideDetails": "隐藏详情",
+    "loading": "加载中…",
+    "seeMore": "查看更多",
+    "showDetails": "显示详情",
+    "viewAll": "查看所有",
+    "viewMode": {
+      "label": "视图模式",
+      "modes": {
+        "list": "列表",
+        "poster": "海报"
+      }
+    }
+  },
+  "home": {
+    "explore": "发现",
+    "mostPlayed": "最常播放",
+    "recentlyAdded": "最近添加",
+    "recentlyPlayed": "最近播放"
+  },
+  "lanControl": {
+    "remote": {
+      "actions": {
+        "connect": "连接",
+        "connecting": "正在连接…",
+        "disconnect": "断开连接",
+        "refresh": "刷新状态"
+      },
+      "address": "服务器地址",
+      "autoConnectFailed": "无法连接到远程设备，进入本地播放模式",
+      "clickToPlay": "点击播放",
+      "controls": {
+        "next": "下一首",
+        "pause": "暂停",
+        "play": "播放",
+        "previous": "上一首",
+        "repeat": "切换循环",
+        "shuffle": "切换随机播放"
+      },
+      "currentlyPlaying": "当前播放",
+      "description": "连接到 LAN 控制服务器并远程管理播放。",
+      "emptyArtist": "未知艺术家",
+      "emptyTitle": "暂无播放内容",
+      "ip": "IP 地址",
+      "items": "项",
+      "library": {
+        "albums": "专辑",
+        "back": "返回",
+        "loading": "加载中...",
+        "noAlbums": "没有可用的专辑",
+        "noPlaylists": "没有可用的播放列表",
+        "noResults": "未找到结果",
+        "playlists": "播放列表",
+        "search": "搜索",
+        "searchButton": "搜索",
+        "searchPlaceholder": "搜索歌曲、专辑...",
+        "searching": "搜索中...",
+        "songs": "歌曲"
+      },
+      "loadingSong": "加载中...",
+      "menu": "控制其他设备",
+      "nowPlaying": "正在播放",
+      "password": "访问验证码",
+      "playing": "播放中",
+      "port": "端口",
+      "queue": "播放队列",
+      "queueEmpty": "队列为空",
+      "serverRunning": "此设备当前正作为 LAN 控制服务器运行。当此设备处于服务器模式时，无法控制其他设备。",
+      "status": {
+        "authenticating": "验证中",
+        "connected": "已连接",
+        "connecting": "连接中",
+        "disconnected": "未连接",
+        "error": "错误",
+        "label": "状态"
+      },
+      "tabs": {
+        "control": "控制",
+        "library": "音乐库"
+      },
+      "title": "控制其他设备",
+      "unknownDevice": "未知设备",
+      "version": "版本 {{version}}",
+      "volume": "音量：{{volume}}%"
+    }
+  },
+  "login": {
+    "form": {
+      "connect": "连接",
+      "connecting": "连接中…",
+      "description": "连接你的 Subsonic 服务器。",
+      "password": "密码",
+      "server": "服务器",
+      "url": "URL",
+      "urlDescription": "这是你的服务器 URL",
+      "username": "用户名",
+      "usernamePlaceholder": "你的用户名",
+      "validations": {
+        "password": "请提供一个密码",
+        "passwordLength": "密码必须至少有 2 个字符。",
+        "protocol": "URL 必须以 http:// 或 https:// 开头",
+        "url": "请输入一个有效的 URL。",
+        "username": "请提供一个用户名",
+        "usernameLength": "用户名必须至少有 2 个字符。"
+      }
+    }
+  },
+  "logout": {
+    "dialog": {
+      "cancel": "取消",
+      "confirm": "继续",
+      "description": "确认登出。",
+      "title": "准备好说再见了吗？"
+    }
+  },
+  "menu": {
+    "about": "关于",
+    "language": "语言",
+    "server": "服务器",
+    "serverLogout": "登出"
+  },
+  "mobile": {
+    "access_recommendation": "请通过电脑或平板访问。",
+    "unsupported_message": "{{app_name}} 不支持手机。"
+  },
+  "offline": {
+    "disconnected": "无法连接服务器，进入离线模式",
+    "mode": "离线",
+    "reconnectFailed": "无法重新连接，继续使用离线模式",
+    "reconnected": "已重新连接到服务器",
+    "reconnecting": "重新连接中…",
+    "searchUnavailable": "搜索需要先完成离线资料库同步。",
+    "songUnavailable": "此歌曲不可离线播放"
   },
   "options": {
-    "playNext": "从下一首开始播放",
+    "addLast": "添加到队列末尾",
     "download": "下载",
+    "goto": {
+      "album": "前往专辑",
+      "artist": "前往艺人"
+    },
+    "info": "获取信息",
+    "like": "Like",
+    "play": "播放",
+    "playNext": "从下一首开始播放",
     "playlist": {
       "add": "添加到播放列表",
-      "delete": "删除播放列表",
-      "search": "查找一个播放列表",
       "create": "创建播放列表",
+      "delete": "删除播放列表",
+      "edit": "编辑播放列表",
       "notFound": "没有找到播放列表",
       "removeSong": "从播放列表中删除",
-      "edit": "编辑播放列表"
+      "search": "查找一个播放列表"
     },
-    "play": "播放",
-    "addLast": "添加到队列末尾",
     "removeFromQueue": "从队列中移除",
-    "info": "获取信息",
-    "goto": {
-      "artist": "前往艺人",
-      "album": "前往专辑"
-    },
+    "unlike": "Unlike",
     "saveFile": "保存文件",
     "downloadAlbum": "下载专辑",
     "downloadPlaylist": "下载播放列表",
     "downloadArtist": "下载艺术家",
     "removeDownload": "移除下载"
   },
-  "radios": {
-    "label": "电台",
-    "addRadio": "添加电台",
-    "table": {
-      "name": "名称",
-      "homepage": "主页 URL",
-      "stream": "电台流 URL",
-      "pauseTooltip": "暂停 {{name}} 电台",
-      "actions": {
-        "edit": "编辑电台",
-        "delete": "删除电台"
+  "player": {
+    "noRadioPlaying": "没有正在播放的电台",
+    "noSongPlaying": "没有正在播放的歌曲",
+    "tooltips": {
+      "dislike": "取消喜欢 {{artist}} 的 {{song}}",
+      "forward": "前进 {{amount}} 秒",
+      "like": "喜欢 {{artist}} 的 {{song}}",
+      "miniPlayer": {
+        "close": "关闭 Mini 播放器",
+        "open": "打开 Mini 播放器"
       },
-      "playTooltip": "播放 {{name}} 电台"
+      "next": "下一曲",
+      "pause": "暂停",
+      "play": "播放",
+      "previous": "上一曲",
+      "progress": "跳转",
+      "repeat": {
+        "disable": "关闭循环播放",
+        "enable": "开启循环播放",
+        "enableOne": "开启单曲循环"
+      },
+      "rewind": "倒退 {{amount}} 秒",
+      "shuffle": {
+        "disable": "关闭随机播放",
+        "enable": "开启随机播放"
+      },
+      "star": "收藏当前歌曲",
+      "unstar": "取消收藏当前歌曲",
+      "volume": {
+        "mute": "静音",
+        "unmute": "取消静音"
+      }
+    }
+  },
+  "playlist": {
+    "buttons": {
+      "options": "{{name}} 的更多选项",
+      "play": "播放 {{name}}",
+      "shuffle": "随机播放 {{name}}"
     },
+    "duration": "约 {{duration}}",
     "form": {
       "create": {
-        "title": "添加电台",
+        "button": "创建",
+        "title": "创建播放列表",
         "toast": {
-          "success": "电台创建成功！",
-          "error": "电台创建失败！"
-        },
-        "button": "保存"
+          "error": "播放列表创建失败！",
+          "success": "播放列表创建成功！"
+        }
+      },
+      "delete": {
+        "description": "这个操作不能被撤销。",
+        "title": "你确定要删除这个播放列表吗？",
+        "toast": {
+          "error": "播放列表删除失败！",
+          "success": "播放列表删除成功！"
+        }
       },
       "edit": {
-        "title": "编辑电台",
         "button": "更新",
+        "title": "编辑播放列表",
+        "toast": {
+          "error": "播放列表更新失败！",
+          "success": "播放列表更新成功！"
+        }
+      },
+      "labels": {
+        "comment": "注解",
+        "commentDescription": "为这个播放列表写一个简短的描述",
+        "isPublic": "公开",
+        "isPublicDescription": "选择这个选项使得这个播放列表变成公开状态，这将会允许其他用户查看以及访问你的播放列表。",
+        "name": "名称"
+      },
+      "removeSong": {
+        "description": "这个操作不能被撤销。",
+        "title_one": "Are you sure you want to remove the selected song?",
+        "title_other": "你确定要删除选择的歌曲吗？",
+        "toast": {
+          "error_one": "Failed to remove the song!",
+          "error_other": "歌曲删除失败！",
+          "success_one": "Song removed successfully!",
+          "success_other": "歌曲删除成功！"
+        }
+      },
+      "validations": {
+        "nameLength": "播放列表名称必须至少有 2 个字符。"
+      }
+    },
+    "headline": "播放列表",
+    "noSongList": "这个播放列表没有任何歌曲！",
+    "refresh": "刷新播放列表",
+    "songCount_one": "{{count}} song",
+    "songCount_other": "{{count}} 首歌曲"
+  },
+  "queue": {
+    "clear": "清空队列",
+    "close": "关闭队列",
+    "open": "打开队列",
+    "title": "队列"
+  },
+  "radios": {
+    "addRadio": "添加电台",
+    "empty": {
+      "info": "点击添加你的第一个电台。",
+      "title": "你还没有任何电台！"
+    },
+    "error": "无法播放电台，请检查电台流 URL！",
+    "form": {
+      "create": {
+        "button": "保存",
+        "title": "添加电台",
+        "toast": {
+          "error": "电台创建失败！",
+          "success": "电台创建成功！"
+        }
+      },
+      "delete": {
+        "description": "这个操作不能被撤销。",
+        "title": "你确定你要删除这个电台吗？",
+        "toast": {
+          "error": "电台删除失败！",
+          "success": "电台删除成功！"
+        }
+      },
+      "edit": {
+        "button": "更新",
+        "title": "编辑电台",
         "toast": {
           "error": "电台更新失败！",
           "success": "电台更新成功！"
         }
       },
-      "delete": {
-        "title": "你确定你要删除这个电台吗？",
-        "description": "这个操作不能被撤销。",
-        "toast": {
-          "success": "电台删除成功！",
-          "error": "电台删除失败！"
-        }
-      },
       "validations": {
-        "url": "请提供一个有效的 URL。",
         "homepageUrlLength": "主页 URL 必须至少有 10 个字符",
+        "name": "电台名称必须至少有 3 个字符。",
         "streamUrlLength": "电台流 URL 必须至少有 10 个字符",
-        "name": "电台名称必须至少有 3 个字符。"
+        "url": "请提供一个有效的 URL。"
       }
     },
-    "empty": {
-      "title": "你还没有任何电台！",
-      "info": "点击添加你的第一个电台。"
-    },
-    "error": "无法播放电台，请检查电台流 URL！"
-  },
-  "time": {
-    "seconds": "{{seconds}} 秒",
-    "minutes": "{{minutes}} 分钟",
-    "days_other": "{{days}} 天",
-    "hour": "{{hour}} 小时"
+    "label": "电台",
+    "table": {
+      "actions": {
+        "delete": "删除电台",
+        "edit": "编辑电台"
+      },
+      "homepage": "主页 URL",
+      "name": "名称",
+      "pauseTooltip": "暂停 {{name}} 电台",
+      "playTooltip": "播放 {{name}} 电台",
+      "stream": "电台流 URL"
+    }
   },
   "server": {
-    "folderCount_other": "{{count}} 个文件夹",
-    "lastScan": "上次扫描：{{date}}",
-    "status": "状态",
-    "songCount_other": "{{count}} 首歌曲",
-    "management": "服务器管理",
     "buttons": {
       "refresh": "刷新状态",
       "startScan": "快速刷新"
     },
+    "folderCount_one": "{{count}} folder",
+    "folderCount_other": "{{count}} 个文件夹",
     "incompatible": {
-      "title": "不兼容的服务器",
       "description": "此服务器使用的是较旧的 Subsonic 协议版本，该版本不被完全支持。请在操作时谨慎行事，您可能会遇到问题。",
-      "skip": "仍然继续"
-    }
-  },
-  "downloads": {
-    "started": "下载已经开始。",
-    "failed": "下载你的文件时出现了一个错误。",
-    "completed": "你的文件已经被成功下载。"
-  },
-  "shortcuts": {
-    "modal": {
-      "title": "键盘快捷键",
-      "description": {
-        "first": "按",
-        "last": "来切换这个窗口。"
-      }
+      "skip": "仍然继续",
+      "title": "不兼容的服务器"
     },
-    "playback": {
-      "label": "播放",
-      "play": "播放／暂停",
-      "shuffle": "随机播放",
-      "repeat": "循环播放",
-      "previous": "跳到上一曲",
-      "next": "跳到下一曲",
-      "lowerVolume": "降低音量",
-      "raiseVolume": "提高音量"
-    },
-    "navigation": {
-      "label": "导航"
-    }
-  },
-  "songInfo": {
-    "error": "不能获取歌曲信息，请稍候重试。",
-    "title": "歌曲详情"
-  },
-  "update": {
-    "toasts": {
-      "error": "更新安装失败，请尝试直接从 GitHub 上下载。",
-      "started": "更新已经开始。",
-      "success": "更新已经被成功安装！这个 app 即将重启。"
-    },
-    "dialog": {
-      "title": "发现了一个新版本！",
-      "remindLater": "稍候提醒我",
-      "install": "安装并重启"
-    },
-    "sw": {
-      "updating": "更新中...",
-      "refresh": "刷新以更新",
-      "error": "更新失败 - 重试"
-    }
-  },
-  "about": {
-    "version": "版本",
-    "type": "类型",
-    "toasts": {
-      "copy": "链接已经复制到剪贴板！"
-    },
-    "client": "客户端",
-    "server": "服务器",
-    "apiVersion": "API 版本",
-    "buildTime": "构建时间"
-  },
-  "dayjs": {
-    "relativeTime": {
-      "mm": "%d 分钟",
-      "y": "1 年",
-      "yy": "%d 年",
-      "s": "几秒",
-      "MM": "%d 个月",
-      "future": "在%s",
-      "past": "%s前",
-      "m": "1 分钟",
-      "h": "1 小时",
-      "hh": "%d 小时",
-      "d": "1 天",
-      "dd": "%d 天",
-      "M": "1 个月"
-    }
-  },
-  "toast": {
-    "server": {
-      "success": "服务器保存成功！",
-      "error": "服务器通信失败！"
-    }
-  },
-  "queue": {
-    "title": "队列",
-    "clear": "清空队列",
-    "open": "打开队列",
-    "close": "关闭队列"
-  },
-  "warnings": {
-    "reload": "有一首歌曲正在播放！\n你确定要重新加载页面吗？",
-    "songError": "无法播放歌曲，请检查服务器！"
-  },
-  "mobile": {
-    "unsupported_message": "{{app_name}} 不支持手机。",
-    "access_recommendation": "请通过电脑或平板访问。"
+    "lastScan": "上次扫描：{{date}}",
+    "management": "服务器管理",
+    "songCount_one": "{{count}} song",
+    "songCount_other": "{{count}} 首歌曲",
+    "status": "状态"
   },
   "settings": {
-    "options": {
-      "language": "语言和地区",
-      "audio": "播放器和音频",
-      "content": "内容",
-      "appearance": "外观",
-      "privacy": "隐私和安全",
-      "storage": "存储"
+    "accounts": {
+      "discord": {
+        "description": "Share your currently playing song with friends on Discord.",
+        "enabled": {
+          "label": "Enable Integration"
+        },
+        "group": "Discord Rich Presence"
+      }
     },
     "appearance": {
-      "general": {
-        "fullscreen": {
-          "label": "开启自动全屏",
-          "info": "如果启用，在访问大播放器时，app 将自动进入全屏模式。"
-        },
-        "group": "通用",
-        "description": "自定义 app 的外观和显示行为。"
-      },
       "colors": {
+        "bigPlayer": {
+          "blurSize": "图片模糊大小",
+          "label": "大播放器"
+        },
+        "description": "选择是否将当前播放专辑封面中的主色调作为背景。",
         "group": "动态颜色",
         "queue": {
           "intensity": "颜色强度等级",
           "label": "队列和歌词"
+        }
+      },
+      "general": {
+        "albumCoverForSongs": {
+          "info": "启用后，所有曲目的封面请求都会使用专辑封面，以减少加载时间。",
+          "label": "统一使用专辑封面"
         },
-        "bigPlayer": {
-          "label": "大播放器",
-          "blurSize": "图片模糊大小"
+        "description": "自定义 app 的外观和显示行为。",
+        "fullscreen": {
+          "info": "如果启用，在访问大播放器时，app 将自动进入全屏模式。",
+          "label": "开启自动全屏"
         },
-        "description": "选择是否将当前播放专辑封面中的主色调作为背景。"
+        "group": "通用"
       }
     },
     "audio": {
-      "replayGain": {
-        "group": "回放增益",
-        "description": "自动调整音频播放音量，以获得一致的聆听体验。",
-        "enabled": "已开启",
-        "mode": {
-          "label": "模式",
-          "track": "音轨增益",
-          "album": "专辑增益"
+      "history": {
+        "description": "播放超过10秒的歌曲会被记录到播放历史中。",
+        "group": "播放历史",
+        "maxSize": {
+          "info": "播放历史中保留的最大歌曲数量。超出限制时，较早的记录将被移除。",
+          "label": "历史记录上限"
+        }
+      },
+      "lyrics": {
+        "description": "自定义歌词设置。",
+        "group": "歌词",
+        "preferSynced": {
+          "info": "启用后，同步的歌词将优先于未同步的歌词。",
+          "label": "偏好同步的歌词"
         },
-        "preAmp": "前置放大器（dB）",
+        "showTranslation": {
+          "info": "当翻译歌词可用时，在原文歌词下方显示翻译。",
+          "label": "显示翻译歌词"
+        }
+      },
+      "replayGain": {
         "defaultGain": {
           "info": "该增益设置会应用于未包含回放增益元数据的歌曲，以确保音频响度统一。增益推荐范围介于-10 dB至-1 dB之间。",
           "label": "默认增益（dB）"
         },
+        "description": "自动调整音频播放音量，以获得一致的聆听体验。",
+        "enabled": "已开启",
         "error": {
-          "message": "使用回放增益播放曲目时出现错误。",
-          "button": "重试"
-        }
-      },
-      "lyrics": {
-        "group": "歌词",
-        "description": "自定义歌词设置。",
-        "preferSynced": {
-          "label": "偏好同步的歌词",
-          "info": "启用后，同步的歌词将优先于未同步的歌词。"
+          "button": "重试",
+          "message": "使用回放增益播放曲目时出现错误。"
         },
-        "showTranslation": {
-          "label": "显示翻译歌词",
-          "info": "当翻译歌词可用时，在原文歌词下方显示翻译。"
-        }
+        "group": "回放增益",
+        "mode": {
+          "album": "专辑增益",
+          "label": "模式",
+          "track": "音轨增益"
+        },
+        "preAmp": "前置放大器（dB）"
       }
     },
     "content": {
       "sidebar": {
-        "group": "侧边栏",
         "description": "管理侧边栏中显示的区域的可见性和组织方式。",
+        "group": "侧边栏",
         "radios": {
           "section": "隐藏电台区域"
         }
       }
     },
+    "desktop": {
+      "general": {
+        "description": "自定义桌面应用的设置。",
+        "group": "通用",
+        "tray": {
+          "info": "启用后，点击关闭按钮时，应用将最小化到系统托盘而不是关闭。",
+          "label": "最小化到系统托盘"
+        }
+      },
+      "lanControl": {
+        "address": {
+          "info": "可用的 LAN 控制访问服务器地址。",
+          "label": "服务器地址"
+        },
+        "addressCopied": "服务器地址已复制到剪贴板。",
+        "allowNavidromeAuth": {
+          "info": "启用使用 Navidrome 凭据进行身份验证。",
+          "label": "允许 Navidrome 身份验证"
+        },
+        "copyAddress": "Copy address",
+        "copyPassword": "Copy password",
+        "description": "管理 LAN 控制设置以进行远程访问。",
+        "enable": {
+          "info": "启用 LAN 控制以允许对此应用的远程访问。",
+          "label": "启用 LAN 控制"
+        },
+        "group": "LAN 控制",
+        "password": {
+          "info": "设置密码以安全访问 LAN 控制服务器。",
+          "label": "密码"
+        },
+        "passwordCopied": "密码已复制到剪贴板。",
+        "passwordRegenerated": "密码已成功重新生成。",
+        "port": {
+          "info": "指定 LAN 控制服务器的端口号。",
+          "label": "端口"
+        },
+        "regeneratePassword": "Regenerate password",
+        "serverError": "启动 LAN 控制服务器失败。",
+        "serverStarted": "LAN 控制服务器启动成功。"
+      },
+      "updates": {
+        "availableVersion": "版本 {{version}} 可用",
+        "checkNow": {
+          "info": "手动检查可用更新。",
+          "label": "检查更新"
+        },
+        "checking": "正在检查更新...",
+        "checkingManually": "Checking for updates...",
+        "currentVersion": {
+          "info": "您当前运行的 Aonsoku 版本。",
+          "label": "当前版本"
+        },
+        "description": "检查和安装应用程序更新。",
+        "download": "下载更新",
+        "downloadError": "下载失败",
+        "downloadStarted": "开始下载",
+        "downloadStartedDesc": "更新下载已开始",
+        "downloading": "下载中... {{percent}}%",
+        "group": "应用更新",
+        "installNow": "安装并重启",
+        "readyToInstall": "准备安装（需要重启）",
+        "status": {
+          "info": "应用程序更新的当前状态。",
+          "label": "更新状态"
+        },
+        "upToDate": "已是最新版本",
+        "updateAvailable": "发现新版本",
+        "updateAvailableDesc": "版本 {{version}} 可供下载",
+        "updateError": "更新检查失败",
+        "updateReady": "更新就绪",
+        "updateReadyDesc": "更新将在您重启应用时安装"
+      }
+    },
     "label": "设置",
+    "options": {
+      "accounts": "Accounts",
+      "appearance": "外观",
+      "audio": "播放器和音频",
+      "content": "内容",
+      "desktop": "Desktop Application",
+      "language": "语言和地区",
+      "privacy": "隐私和安全",
+      "server": "服务器",
+      "storage": "存储"
+    },
     "privacy": {
       "services": {
+        "description": "管理 Aonsoku 可以访问的外部服务。",
         "group": "外部服务",
         "lrclib": {
-          "label": "LRCLIB",
-          "info": "LRCLIB 用于查找歌词。"
-        },
-        "description": "管理 Aonsoku 可以访问的外部服务。"
+          "info": "LRCLIB 用于查找歌词。",
+          "label": "LRCLIB"
+        }
+      }
+    },
+    "server": {
+      "activeType": {
+        "fallback": "备用 URL",
+        "info": "显示当前会话正在使用主 URL 还是备用 URL。",
+        "label": "当前服务器",
+        "none": "未连接",
+        "primary": "主 URL"
+      },
+      "activeUrl": {
+        "empty": "未选择服务器",
+        "info": "当前会话正在使用的服务器 URL。",
+        "label": "当前 URL"
+      },
+      "description": "管理启动时使用的主服务器和可选备用 URL。",
+      "fallbackUrl": {
+        "info": "当主 URL 在启动时无法访问时，会尝试使用这个可选备用 URL。",
+        "label": "备用 URL",
+        "placeholder": "https://fallback-server.example.com"
+      },
+      "group": "服务器",
+      "locked": "此部署已锁定服务器 URL 设置。",
+      "primaryUrl": {
+        "info": "Aonsoku 启动时优先尝试连接的服务器 URL。",
+        "label": "主 URL",
+        "placeholder": "https://your-server.example.com"
+      },
+      "save": "保存服务器 URL",
+      "saving": "保存中...",
+      "toast": {
+        "error": "无法连接主服务器或备用服务器。",
+        "success": "服务器 URL 已保存。"
+      },
+      "validation": {
+        "fallbackUrl": "请输入有效的备用 URL。",
+        "primaryUrl": "请输入有效的主 URL。"
       }
     },
     "storage": {
+      "audio": {
+        "clear": "清除音频缓存",
+        "description": "缓存音频文件，重复收听时即时播放。",
+        "enabled": "启用音频缓存",
+        "entries": "已缓存 {{count}} 首歌曲",
+        "group": "音频缓存",
+        "maxSize": "最大缓存大小",
+        "size": "缓存大小"
+      },
+      "coverArt": {
+        "clear": "清除封面图缓存",
+        "description": "缓存专辑封面图以加快加载速度。",
+        "enabled": "启用封面图缓存",
+        "entries": "已缓存 {{count}} 张图片",
+        "group": "封面图缓存",
+        "size": "缓存大小"
+      },
+      "metadata": {
+        "clear": "清除所有缓存",
+        "description": "清除所有缓存数据，包括元数据、封面图和音频文件。",
+        "group": "所有缓存"
+      },
+      "sync": {
+        "cancel": "取消",
+        "clear": "清除同步数据",
+        "coverArt": "包含封面图",
+        "coverArtInfo": "同步时下载所有专辑和艺术家图片。这可能占用大量存储空间和带宽。",
+        "description": "同步音乐库元数据以供离线浏览。下载的歌曲始终可离线使用。",
+        "enabled": "同步音乐库",
+        "entries": "已同步 {{count}} 项",
+        "group": "音乐库同步",
+        "lastSynced": "上次同步",
+        "never": "从未同步",
+        "phases": {
+          "albums": "正在同步专辑…",
+          "artists": "正在同步艺术家…",
+          "cancelled": "同步已取消",
+          "coverArt": "正在同步封面图…",
+          "done": "同步完成",
+          "error": "同步失败",
+          "genres": "正在同步流派…",
+          "idle": "准备中…",
+          "playlists": "正在同步播放列表…",
+          "songs": "正在同步歌曲…"
+        },
+        "syncNow": "立即同步",
+        "justNow": "刚刚"
+      },
       "downloadQuality": {
         "group": "下载质量",
         "description": "选择下载歌曲的音频质量。",
@@ -640,178 +762,183 @@
         "clearAudio": "清除",
         "clearCovers": "清除",
         "clearAll": "清除所有缓存"
+      }
+    }
+  },
+  "shortcuts": {
+    "modal": {
+      "description": {
+        "first": "按",
+        "last": "来切换这个窗口。"
       },
-      "sync": {
-        "group": "音乐库同步",
-        "description": "同步音乐库元数据以供离线浏览。下载的歌曲始终可离线使用。",
-        "enabled": "同步音乐库",
-        "coverArt": "包含封面图",
-        "coverArtInfo": "同步时下载所有专辑和艺术家图片。这可能占用大量存储空间和带宽。",
-        "lastSynced": "上次同步",
-        "never": "从未同步",
-        "justNow": "刚刚",
-        "syncNow": "立即同步",
-        "cancel": "取消",
-        "clear": "清除同步数据",
-        "entries": "已同步 {{count}} 项",
-        "phases": {
-          "idle": "准备中…",
-          "genres": "正在同步流派…",
-          "artists": "正在同步艺术家…",
-          "playlists": "正在同步播放列表…",
-          "albums": "正在同步专辑…",
-          "songs": "正在同步歌曲…",
-          "coverArt": "正在同步封面图…",
-          "done": "同步完成",
-          "error": "同步失败",
-          "cancelled": "同步已取消"
-        }
+      "title": "键盘快捷键"
+    },
+    "navigation": {
+      "label": "导航"
+    },
+    "playback": {
+      "label": "播放",
+      "lowerVolume": "降低音量",
+      "next": "跳到下一曲",
+      "play": "播放／暂停",
+      "previous": "跳到上一曲",
+      "raiseVolume": "提高音量",
+      "repeat": "循环播放",
+      "shuffle": "随机播放"
+    }
+  },
+  "sidebar": {
+    "albums": "专辑",
+    "artists": "艺术家",
+    "collapse": "收起侧边栏",
+    "emptyPlaylist": "还没有创建播放列表",
+    "expand": "展开侧边栏",
+    "favorites": "收藏夹",
+    "home": "首页",
+    "library": "资料库",
+    "miniSearch": "搜索",
+    "playlists": "播放列表",
+    "radios": "电台",
+    "search": "搜索…",
+    "songs": "歌曲"
+  },
+  "songInfo": {
+    "error": "不能获取歌曲信息，请稍候重试。",
+    "title": "歌曲详情"
+  },
+  "songs": {
+    "list": {
+      "byArtist": "{{artist}} 的歌曲",
+      "filter": {
+        "clear": "清空过滤条件"
+      },
+      "search": {
+        "placeholder": "搜索歌曲…"
       }
     },
-    "desktop": {
-      "general": {
-        "group": "通用",
-        "description": "自定义桌面应用的设置。",
-        "tray": {
-          "label": "最小化到系统托盘",
-          "info": "启用后，点击关闭按钮时，应用将最小化到系统托盘而不是关闭。"
-        }
-      },
-      "updates": {
-        "group": "应用更新",
-        "description": "检查和安装应用程序更新。",
-        "currentVersion": {
-          "label": "当前版本",
-          "info": "您当前运行的 Aonsoku 版本。"
-        },
-        "status": {
-          "label": "更新状态",
-          "info": "应用程序更新的当前状态。"
-        },
-        "checkNow": {
-          "label": "检查更新",
-          "info": "手动检查可用更新。"
-        },
-        "checking": "正在检查更新...",
-        "upToDate": "已是最新版本",
-        "updateAvailable": "发现新版本",
-        "updateAvailableDesc": "版本 {{version}} 可供下载",
-        "availableVersion": "版本 {{version}} 可用",
-        "download": "下载更新",
-        "downloading": "下载中... {{percent}}%",
-        "downloadStarted": "开始下载",
-        "downloadStartedDesc": "更新下载已开始",
-        "downloadError": "下载失败",
-        "updateReady": "更新就绪",
-        "updateReadyDesc": "更新将在您重启应用时安装",
-        "readyToInstall": "准备安装（需要重启）",
-        "installNow": "安装并重启",
-        "updateError": "更新检查失败"
-      },
-      "lanControl": {
-        "group": "LAN 控制",
-        "description": "管理 LAN 控制设置以进行远程访问。",
-        "enable": {
-          "label": "启用 LAN 控制",
-          "info": "启用 LAN 控制以允许对此应用的远程访问。"
-        },
-        "port": {
-          "label": "端口",
-          "info": "指定 LAN 控制服务器的端口号。"
-        },
-        "password": {
-          "label": "密码",
-          "info": "设置密码以安全访问 LAN 控制服务器。"
-        },
-        "address": {
-          "label": "服务器地址",
-          "info": "可用的 LAN 控制访问服务器地址。"
-        },
-        "allowNavidromeAuth": {
-          "label": "允许 Navidrome 身份验证",
-          "info": "启用使用 Navidrome 凭据进行身份验证。"
-        },
-        "serverStarted": "LAN 控制服务器启动成功。",
-        "serverError": "启动 LAN 控制服务器失败。",
-        "passwordRegenerated": "密码已成功重新生成。",
-        "addressCopied": "服务器地址已复制到剪贴板。",
-        "passwordCopied": "密码已复制到剪贴板。"
+    "sort": {
+      "album": "Album A-Z",
+      "artist": "Artist A-Z",
+      "lastAdded": "Last Added",
+      "title": "Song A-Z"
+    }
+  },
+  "table": {
+    "buttons": {
+      "pause": "暂停 {{artist}} 的 {{title}}",
+      "play": "播放 {{artist}} 的 {{title}}"
+    },
+    "columns": {
+      "album": "专辑",
+      "albumArtist": "专辑艺术家",
+      "albumCount": "专辑数量",
+      "albumGain": "专辑增益",
+      "albumPeak": "专辑峰值",
+      "artist": "艺术家",
+      "bitDepth": "位深度",
+      "bitrate": "比特率",
+      "bpm": "BPM",
+      "channelCount": "声道数",
+      "codec": "编码",
+      "comment": "注解",
+      "contributors": "贡献者",
+      "discNumber": "碟片编号",
+      "duration": "时长",
+      "favorite": "收藏",
+      "genres": "流派",
+      "lastPlayed": "上次播放",
+      "name": "名称",
+      "path": "路径",
+      "plays": "播放次数",
+      "public": "公开",
+      "quality": "质量",
+      "recordLabel": "唱片厂牌",
+      "samplingRate": "采样率",
+      "size": "大小",
+      "songCount": "歌曲数量",
+      "title": "标题",
+      "track": "音轨",
+      "trackGain": "音轨增益",
+      "trackPeak": "音轨峰值",
+      "year": "年份"
+    },
+    "lastPlayed": "{{date}}前",
+    "menu": {
+      "selectedCount_one": "{{count}} selected",
+      "selectedCount_other": "{{count}} 个被选中"
+    },
+    "pagination": {
+      "currentPage": "{{currentPage}}/{{totalPages}}",
+      "rowsPerPage": "每页的行数",
+      "screenReader": {
+        "firstPage": "前往第一页",
+        "lastPage": "前往最后一页",
+        "nextPage": "前往下一页",
+        "previousPage": "前往上一页"
       }
+    },
+    "sort": {
+      "asc": "升序",
+      "desc": "降序",
+      "reset": "重置"
     }
   },
-  "lanControl": {
-    "remote": {
-      "menu": "控制其他设备",
-      "title": "控制其他设备",
-      "description": "连接到 LAN 控制服务器并远程管理播放。",
-      "serverRunning": "此设备当前正作为 LAN 控制服务器运行。当此设备处于服务器模式时，无法控制其他设备。",
-      "address": "服务器地址",
-      "ip": "IP 地址",
-      "port": "端口",
-      "password": "访问验证码",
-      "status": {
-        "label": "状态",
-        "connected": "已连接",
-        "connecting": "连接中",
-        "authenticating": "验证中",
-        "error": "错误",
-        "disconnected": "未连接"
-      },
-      "actions": {
-        "connect": "连接",
-        "connecting": "正在连接…",
-        "disconnect": "断开连接",
-        "refresh": "刷新状态"
-      },
-      "nowPlaying": "正在播放",
-      "volume": "音量：{{volume}}%",
-      "emptyTitle": "暂无播放内容",
-      "emptyArtist": "未知艺术家",
-      "loadingSong": "加载中...",
-      "queue": "播放队列",
-      "playing": "播放中",
-      "currentlyPlaying": "当前播放",
-      "clickToPlay": "点击播放",
-      "tabs": {
-        "control": "控制",
-        "library": "音乐库"
-      },
-      "library": {
-        "search": "搜索",
-        "albums": "专辑",
-        "playlists": "播放列表",
-        "songs": "歌曲",
-        "searchPlaceholder": "搜索歌曲、专辑...",
-        "searchButton": "搜索",
-        "searching": "搜索中...",
-        "noResults": "未找到结果",
-        "loading": "加载中...",
-        "noAlbums": "没有可用的专辑",
-        "noPlaylists": "没有可用的播放列表",
-        "back": "返回"
-      },
-      "controls": {
-        "previous": "上一首",
-        "play": "播放",
-        "pause": "暂停",
-        "next": "下一首",
-        "shuffle": "切换随机播放",
-        "repeat": "切换循环"
-      },
-      "items": "项",
-      "queueEmpty": "队列为空",
-      "unknownDevice": "未知设备",
-      "version": "版本 {{version}}",
-      "autoConnectFailed": "无法连接到远程设备，进入本地播放模式"
+  "theme": {
+    "achiever": "Achiever",
+    "bearded-solarized": "Bearded Solarized",
+    "black": "黑白",
+    "catppuccin-mocha": "Catppuccin Mocha",
+    "dark": "深色",
+    "discord": "Discord",
+    "dracula": "Dracula",
+    "github-dark": "GitHub Dark",
+    "label": "主题",
+    "light": "浅色",
+    "marmalade-beaver": "Marmalade Beaver",
+    "material-theme": "Material Theme",
+    "monokai-pro": "Monokai Pro",
+    "night-owl-light": "Night Owl Light",
+    "noctis-lilac": "Noctis Lilac",
+    "nuclear-dark": "Nuclear Dark",
+    "one-dark": "One Dark",
+    "shades-of-purple": "Shades Of Purple",
+    "system": "系统",
+    "tinacious-design": "Tinacious Design",
+    "vim-dark-soft": "Vim Dark Soft",
+    "vue-dark": "Vue Dark"
+  },
+  "time": {
+    "days_one": "{{days}} day",
+    "days_other": "{{days}} 天",
+    "hour": "{{hour}} 小时",
+    "minutes": "{{minutes}} 分钟",
+    "seconds": "{{seconds}} 秒"
+  },
+  "toast": {
+    "server": {
+      "error": "服务器通信失败！",
+      "success": "服务器保存成功！"
     }
   },
-  "offline": {
-    "mode": "离线",
-    "reconnecting": "重新连接中…",
-    "reconnected": "已重新连接到服务器",
-    "reconnectFailed": "无法重新连接，继续使用离线模式",
-    "songUnavailable": "此歌曲不可离线播放",
-    "disconnected": "无法连接服务器，进入离线模式",
-    "searchUnavailable": "搜索需要先完成离线资料库同步。"
+  "update": {
+    "dialog": {
+      "install": "安装并重启",
+      "remindLater": "稍候提醒我",
+      "title": "发现了一个新版本！"
+    },
+    "sw": {
+      "error": "更新失败 - 重试",
+      "refresh": "刷新以更新",
+      "updating": "更新中..."
+    },
+    "toasts": {
+      "error": "更新安装失败，请尝试直接从 GitHub 上下载。",
+      "started": "更新已经开始。",
+      "success": "更新已经被成功安装！这个 app 即将重启。"
+    }
+  },
+  "warnings": {
+    "reload": "有一首歌曲正在播放！\n你确定要重新加载页面吗？",
+    "songError": "无法播放歌曲，请检查服务器！"
   }
 }

@@ -1,4 +1,5 @@
 import { Row } from "@tanstack/react-table";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import { SongMenuOptions } from "@/app/components/song/menu-options";
 import { CachedIndicator } from "@/app/components/table/cached-indicator";
 import { TableActionButton } from "@/app/components/table/action-button";
@@ -10,6 +11,8 @@ interface SongTableActionsProps {
 }
 
 export function SongTableActions({ row }: SongTableActionsProps) {
+  const hasHover = useHasHover();
+
   return (
     <div className="flex gap-1 items-center">
       <TableActionButton
@@ -18,15 +21,19 @@ export function SongTableActions({ row }: SongTableActionsProps) {
             variant="dropdown"
             song={row.original}
             index={row.index}
+            showLikeOption={!hasHover}
           />
         }
       />
       <CachedIndicator songId={row.original.id} />
-      <TableLikeButton
-        type="song"
-        entityId={row.original.id}
-        starred={typeof row.original.starred === "string"}
-      />
+      {hasHover && (
+        <TableLikeButton
+          type="song"
+          entityId={row.original.id}
+          starred={typeof row.original.starred === "string"}
+          albumId={row.original.albumId}
+        />
+      )}
     </div>
   );
 }

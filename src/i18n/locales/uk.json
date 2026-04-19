@@ -1,92 +1,744 @@
 {
-  "home": {
-    "recentlyAdded": "Нещодавно додані",
-    "mostPlayed": "Найчастіше відтворювані",
-    "explore": "Відкрити для себе",
-    "recentlyPlayed": "Нещодавно відтворені"
+  "about": {
+    "apiVersion": "API Version",
+    "buildTime": "Build Time",
+    "client": "Client",
+    "server": "Server",
+    "toasts": {
+      "copy": "Link copied to clipboard!"
+    },
+    "type": "Type",
+    "version": "Version"
+  },
+  "album": {
+    "buttons": {
+      "dislike": "Remove like from {{name}}",
+      "like": "Like {{name}}"
+    },
+    "headline": "Album",
+    "info": {
+      "about": "About {{name}}",
+      "lastfm": "Open in Last.fm",
+      "musicbrainz": "Open in MusicBrainz"
+    },
+    "list": {
+      "empty": {
+        "action": "Maybe try tweaking the filters?",
+        "info": "Looks like there are no albums with the current filter.",
+        "title": "Oops, no albums here!"
+      },
+      "filter": {
+        "artist": "Artist",
+        "discography": "Discography",
+        "favorites": "Favorites",
+        "genre": "Genre",
+        "mostPlayed": "Most played",
+        "name": "Name",
+        "random": "Random",
+        "recentlyAdded": "Recently added",
+        "recentlyPlayed": "Recently played",
+        "releaseYear": "Release Year",
+        "search": "Search"
+      },
+      "genre": {
+        "label": "Select a genre…",
+        "loading": "Loading genres…",
+        "notFound": "No genre found.",
+        "search": "Find a genre…"
+      },
+      "header": {
+        "albumsByArtist": "Albums by {{artist}}"
+      },
+      "search": {
+        "placeholder": "Search albums…"
+      }
+    },
+    "more": {
+      "discography": "Artist Discography",
+      "genreTitle": "More from {{genre}}",
+      "listTitle": "More from this artist"
+    },
+    "table": {
+      "discNumber": "Disc {{number}}"
+    }
+  },
+  "artist": {
+    "buttons": {
+      "options": "More options for {{artist}}",
+      "play": "Play {{artist}} radio",
+      "shuffle": "Play {{artist}} radio in shuffle mode"
+    },
+    "headline": "Artist",
+    "info": {
+      "albumsCount_one": "{{count}} album",
+      "albumsCount_other": "{{count}} albums"
+    },
+    "recentAlbums": "Recent albums",
+    "relatedArtists": "Related artists",
+    "topSongs": "Popular"
+  },
+  "command": {
+    "commands": {
+      "heading": "Commands",
+      "pages": "Go to page",
+      "theme": "Change theme"
+    },
+    "inputPlaceholder": "Search for an album, artist or song",
+    "noResults": "No results found.",
+    "pages": "Pages"
+  },
+  "dayjs": {
+    "relativeTime": {
+      "M": "1 month",
+      "MM": "%d months",
+      "d": "1 day",
+      "dd": "%d days",
+      "future": "in %s",
+      "h": "1 hour",
+      "hh": "%d hours",
+      "m": "1 minute",
+      "mm": "%d minutes",
+      "past": "%s ago",
+      "s": "a few seconds",
+      "y": "1 year",
+      "yy": "%d years"
+    }
+  },
+  "downloads": {
+    "completed": "Your file has been downloaded.",
+    "failed": "There was an error downloading your file.",
+    "started": "Download started."
+  },
+  "error": {
+    "notFound": "Not found"
+  },
+  "favorites": {
+    "buttons": {
+      "play": "Відтворити {{name}}",
+      "shuffle": "Відтворити {{name}} в випадковому порядку"
+    },
+    "duration": "~ {{duration}}",
+    "headline": "Улюблене",
+    "noSongs": "Поки немає улюблених пісень!",
+    "songCount_one": "{{count}} пісня",
+    "songCount_other": "{{count}} пісень"
+  },
+  "fullscreen": {
+    "emptyQueue": "No songs in queue",
+    "loadingLyrics": "Searching for lyrics…",
+    "lyrics": "Lyrics",
+    "noLyrics": "No lyrics found",
+    "playing": "Playing now",
+    "queue": "Queue",
+    "queueContinue": "Continue Playing",
+    "queueFromSource": "From {{source}}",
+    "queueHistory": "History",
+    "queueRepeating": "Repeating",
+    "switchButton": "Switch to Big Player"
   },
   "generic": {
-    "viewAll": "Показати все",
-    "viewMode": {
-      "modes": {
-        "poster": "Постер",
-        "list": "Список"
-      },
-      "label": "Режим перегляду"
-    },
+    "beta": "Beta",
+    "clear": "Clear",
+    "hideDetails": "Приховати деталі",
+    "loading": "Завантаження…",
     "seeMore": "Показати більше",
     "showDetails": "Показати деталі",
-    "loading": "Завантаження…",
-    "beta": "Beta",
-    "hideDetails": "Приховати деталі"
+    "viewAll": "Показати все",
+    "viewMode": {
+      "label": "Режим перегляду",
+      "modes": {
+        "list": "Список",
+        "poster": "Постер"
+      }
+    }
   },
-  "playlist": {
-    "headline": "Список відтворення",
-    "refresh": "Оновити список відтворення",
-    "buttons": {
-      "play": "Відтворити {{name}}"
-    },
-    "duration": "приблизно {{duration}}",
-    "songCount_one": "{{count}} пісня",
-    "songCount_few": "{{count}} пісні",
-    "songCount_many": "{{count}} пісень"
+  "home": {
+    "explore": "Відкрити для себе",
+    "mostPlayed": "Найчастіше відтворювані",
+    "recentlyAdded": "Нещодавно додані",
+    "recentlyPlayed": "Нещодавно відтворені"
   },
-  "sidebar": {
-    "home": "Головна",
-    "search": "Пошук…",
-    "miniSearch": "Пошук",
-    "library": "Бібліотека",
-    "artists": "Виконавці",
-    "songs": "Пісні",
-    "albums": "Альбоми",
-    "playlists": "Списки відтворення",
-    "radios": "Радіо",
-    "emptyPlaylist": "Ще не було створено жодного списку відтворення"
+  "lanControl": {
+    "remote": {
+      "actions": {
+        "connect": "Connect",
+        "connecting": "Connecting...",
+        "disconnect": "Disconnect",
+        "refresh": "Refresh state"
+      },
+      "address": "Server address",
+      "autoConnectFailed": "Failed to connect to remote device, entering local playback mode",
+      "clickToPlay": "Click to play",
+      "controls": {
+        "next": "Next",
+        "pause": "Pause",
+        "play": "Play",
+        "previous": "Previous",
+        "repeat": "Toggle repeat",
+        "shuffle": "Toggle shuffle"
+      },
+      "currentlyPlaying": "Currently playing",
+      "description": "Connect to a LAN control server and manage playback remotely.",
+      "emptyArtist": "Unknown artist",
+      "emptyTitle": "No track playing",
+      "ip": "IP Address",
+      "items": "items",
+      "library": {
+        "albums": "Albums",
+        "back": "Back",
+        "loading": "Loading...",
+        "noAlbums": "No albums available",
+        "noPlaylists": "No playlists available",
+        "noResults": "No results found",
+        "playlists": "Playlists",
+        "search": "Search",
+        "searchButton": "Search",
+        "searchPlaceholder": "Search songs, albums...",
+        "searching": "Searching...",
+        "songs": "Songs"
+      },
+      "loadingSong": "Loading...",
+      "menu": "Control other devices",
+      "nowPlaying": "Now playing",
+      "password": "Access code",
+      "playing": "Playing",
+      "port": "Port",
+      "queue": "Playback queue",
+      "queueEmpty": "Queue is empty",
+      "serverRunning": "This device is currently running as a LAN Control server. You cannot control other devices while this device is in server mode.",
+      "status": {
+        "authenticating": "Authenticating",
+        "connected": "Connected",
+        "connecting": "Connecting",
+        "disconnected": "Disconnected",
+        "error": "Error",
+        "label": "Status"
+      },
+      "tabs": {
+        "control": "Control",
+        "library": "Library"
+      },
+      "title": "Control other devices",
+      "unknownDevice": "Unknown device",
+      "version": "v{{version}}",
+      "volume": "Volume: {{volume}}%"
+    }
+  },
+  "login": {
+    "form": {
+      "connect": "Connect",
+      "connecting": "Connecting…",
+      "description": "Connect to your Subsonic server.",
+      "password": "Password",
+      "server": "Server",
+      "url": "URL",
+      "urlDescription": "This is your server URL",
+      "username": "Username",
+      "usernamePlaceholder": "Your username",
+      "validations": {
+        "password": "Please provide a password",
+        "passwordLength": "Password must be at least 2 characters.",
+        "protocol": "URL must start with http:// or https://",
+        "url": "Please enter a valid URL.",
+        "username": "Please provide a username",
+        "usernameLength": "Username must be at least 2 characters."
+      }
+    }
+  },
+  "logout": {
+    "dialog": {
+      "cancel": "Cancel",
+      "confirm": "Continue",
+      "description": "Confirm to logout.",
+      "title": "Ready to say goodbye for now?"
+    }
   },
   "menu": {
-    "server": "Сервер",
     "about": "Про додаток",
-    "serverLogout": "Вийти",
-    "language": "Мова"
+    "language": "Мова",
+    "server": "Сервер",
+    "serverLogout": "Вийти"
   },
-  "theme": {
-    "label": "Тема",
-    "system": "Системна",
-    "black": "Чорно-біла",
-    "dark": "Темна",
-    "one-dark": "One Dark",
-    "light": "Світла",
-    "vue-dark": "Vue Dark",
-    "vim-dark-soft": "Vim Dark Soft"
+  "mobile": {
+    "access_recommendation": "Please access it from a computer or tablet.",
+    "unsupported_message": "{{app_name}} isn't compatible with mobile phones."
+  },
+  "offline": {
+    "disconnected": "Server unreachable. Entering offline mode.",
+    "mode": "Offline",
+    "reconnectFailed": "Could not reconnect. Continuing in offline mode.",
+    "reconnected": "Reconnected to server",
+    "reconnecting": "Reconnecting…",
+    "searchUnavailable": "Search requires an offline library sync.",
+    "songUnavailable": "This song is not available offline"
   },
   "options": {
-    "play": "Відтворити",
-    "playNext": "Відтворити наступним",
     "addLast": "Додати останнім",
     "download": "Завантажити",
+    "goto": {
+      "album": "Перейти до альбому",
+      "artist": "Перейти до виконавця"
+    },
+    "info": "Інформація",
+    "like": "Like",
+    "play": "Відтворити",
+    "playNext": "Відтворити наступним",
+    "playlist": {
+      "add": "Додати до плейлиста",
+      "create": "Новий плейлист",
+      "delete": "Видалити плейлист",
+      "edit": "Редагувати плейлист",
+      "notFound": "Плейлисти не знайдені",
+      "removeSong": "Видалити з плейлиста",
+      "search": "Знайти плейлист"
+    },
+    "removeFromQueue": "Видалити з черги",
+    "unlike": "Unlike",
     "saveFile": "Зберегти файл",
     "downloadAlbum": "Завантажити альбом",
     "downloadPlaylist": "Завантажити плейлист",
     "downloadArtist": "Завантажити виконавця",
-    "removeDownload": "Видалити завантаження",
-    "playlist": {
-      "add": "Додати до плейлиста",
-      "edit": "Редагувати плейлист",
-      "delete": "Видалити плейлист",
-      "search": "Знайти плейлист",
-      "create": "Новий плейлист",
-      "removeSong": "Видалити з плейлиста",
-      "notFound": "Плейлисти не знайдені"
-    },
-    "removeFromQueue": "Видалити з черги",
-    "info": "Інформація",
-    "goto": {
-      "artist": "Перейти до виконавця",
-      "album": "Перейти до альбому"
+    "removeDownload": "Видалити завантаження"
+  },
+  "player": {
+    "noRadioPlaying": "No radio playing",
+    "noSongPlaying": "No song playing",
+    "tooltips": {
+      "dislike": "Remove like from {{song}} by {{artist}}",
+      "forward": "Forward {{amount}} seconds",
+      "like": "Like {{song}} by {{artist}}",
+      "miniPlayer": {
+        "close": "Close Miniplayer",
+        "open": "Open Miniplayer"
+      },
+      "next": "Next",
+      "pause": "Pause",
+      "play": "Play",
+      "previous": "Previous",
+      "progress": "Seek",
+      "repeat": {
+        "disable": "Disable repeat",
+        "enable": "Enable repeat",
+        "enableOne": "Enable repeat one"
+      },
+      "rewind": "Rewind {{amount}} seconds",
+      "shuffle": {
+        "disable": "Disable shuffle",
+        "enable": "Enable shuffle"
+      },
+      "star": "Star current song",
+      "unstar": "Unstar current song",
+      "volume": {
+        "mute": "Mute",
+        "unmute": "Unmute"
+      }
     }
   },
+  "playlist": {
+    "buttons": {
+      "options": "More options for {{name}}",
+      "play": "Відтворити {{name}}",
+      "shuffle": "Play {{name}} in shuffle mode"
+    },
+    "duration": "приблизно {{duration}}",
+    "form": {
+      "create": {
+        "button": "Create",
+        "title": "Create Playlist",
+        "toast": {
+          "error": "Failed to create playlist!",
+          "success": "Playlist created successfully!"
+        }
+      },
+      "delete": {
+        "description": "This action cannot be undone.",
+        "title": "Are you sure you want to delete this playlist?",
+        "toast": {
+          "error": "Failed to remove playlist!",
+          "success": "Playlist removed successfully!"
+        }
+      },
+      "edit": {
+        "button": "Update",
+        "title": "Edit Playlist",
+        "toast": {
+          "error": "Failed to update playlist!",
+          "success": "Playlist updated successfully!"
+        }
+      },
+      "labels": {
+        "comment": "Comment",
+        "commentDescription": "Write a short description of this playlist",
+        "isPublic": "Public",
+        "isPublicDescription": "Select this option to make the playlist public. This will allow other users to view and access your playlist.",
+        "name": "Name"
+      },
+      "removeSong": {
+        "description": "This action cannot be undone.",
+        "title_one": "Are you sure you want to remove the selected song?",
+        "title_other": "Are you sure you want to remove the selected songs?",
+        "toast": {
+          "error_one": "Failed to remove the song!",
+          "error_other": "Failed to remove the songs!",
+          "success_one": "Song removed successfully!",
+          "success_other": "Songs removed successfully!"
+        }
+      },
+      "validations": {
+        "nameLength": "Playlist name must be at least 2 characters."
+      }
+    },
+    "headline": "Список відтворення",
+    "noSongList": "This playlist does not have any songs!",
+    "refresh": "Оновити список відтворення",
+    "songCount_one": "{{count}} пісня",
+    "songCount_other": "{{count}} songs",
+    "songCount_few": "{{count}} пісні",
+    "songCount_many": "{{count}} пісень"
+  },
+  "queue": {
+    "clear": "Clear queue",
+    "close": "Close queue",
+    "open": "Open queue",
+    "title": "Queue"
+  },
+  "radios": {
+    "addRadio": "Add Radio",
+    "empty": {
+      "info": "Click to add your first radio station.",
+      "title": "You have no radios!"
+    },
+    "error": "Unable to play the Radio, check the Stream URL!",
+    "form": {
+      "create": {
+        "button": "Save",
+        "title": "Add Radio",
+        "toast": {
+          "error": "Failed to create radio!",
+          "success": "Radio created successfully!"
+        }
+      },
+      "delete": {
+        "description": "This action cannot be undone.",
+        "title": "Are you sure you want to delete this radio station?",
+        "toast": {
+          "error": "Failed to remove radio!",
+          "success": "Radio removed successfully!"
+        }
+      },
+      "edit": {
+        "button": "Update",
+        "title": "Edit Radio",
+        "toast": {
+          "error": "Failed to update radio!",
+          "success": "Radio updated successfully!"
+        }
+      },
+      "validations": {
+        "homepageUrlLength": "Homepage URL must be at least 10 characters",
+        "name": "Radio name must be at least 3 characters.",
+        "streamUrlLength": "Stream URL must be at least 10 characters",
+        "url": "Please provide a valid URL."
+      }
+    },
+    "label": "Radio",
+    "table": {
+      "actions": {
+        "delete": "Delete radio",
+        "edit": "Edit radio"
+      },
+      "homepage": "Homepage URL",
+      "name": "Name",
+      "pauseTooltip": "Pause {{name}} radio",
+      "playTooltip": "Play {{name}} radio",
+      "stream": "Stream URL"
+    }
+  },
+  "server": {
+    "buttons": {
+      "refresh": "Refresh status",
+      "startScan": "Quick Scan"
+    },
+    "folderCount_one": "{{count}} folder",
+    "folderCount_other": "{{count}} folders",
+    "incompatible": {
+      "description": "This server uses an older version of the Subsonic protocol that is not fully supported. Please proceed with caution as you may have issues.",
+      "skip": "Continue anyway",
+      "title": "Incompatible server"
+    },
+    "lastScan": "Last scan: {{date}}",
+    "management": "Server management",
+    "songCount_one": "{{count}} song",
+    "songCount_other": "{{count}} songs",
+    "status": "Status"
+  },
   "settings": {
+    "accounts": {
+      "discord": {
+        "description": "Share your currently playing song with friends on Discord.",
+        "enabled": {
+          "label": "Enable Integration"
+        },
+        "group": "Discord Rich Presence"
+      }
+    },
+    "appearance": {
+      "colors": {
+        "bigPlayer": {
+          "blurSize": "Image Blur Size",
+          "label": "Big Player"
+        },
+        "description": "Select whether the app should use the dominant color from the currently playing album art as the background.",
+        "group": "Dynamic Colors",
+        "queue": {
+          "intensity": "Color Intensity Level",
+          "label": "Queue and Lyrics"
+        }
+      },
+      "general": {
+        "albumCoverForSongs": {
+          "info": "When enabled, every song artwork request uses the album cover to reduce loading time.",
+          "label": "Always use album covers"
+        },
+        "description": "Customize the app's look and display behaviors.",
+        "fullscreen": {
+          "info": "If enabled, when accessing the big player, the app will automatically enter fullscreen mode.",
+          "label": "Enable automatic fullscreen"
+        },
+        "group": "General"
+      }
+    },
+    "audio": {
+      "history": {
+        "description": "Songs that play for more than 10 seconds are recorded in your play history.",
+        "group": "Play History",
+        "maxSize": {
+          "info": "The maximum number of songs to keep in play history. Older entries are removed when the limit is exceeded.",
+          "label": "Maximum history size"
+        }
+      },
+      "lyrics": {
+        "description": "Customize lyrics settings.",
+        "group": "Lyrics",
+        "preferSynced": {
+          "info": "When enabled, synced lyrics will be prioritized over unsynced lyrics.",
+          "label": "Prefer synced lyrics"
+        },
+        "showTranslation": {
+          "info": "When available, show translated lyrics below the original lyrics.",
+          "label": "Show translation"
+        }
+      },
+      "replayGain": {
+        "defaultGain": {
+          "info": "This gain level is applied to songs that do not include ReplayGain metadata, ensuring consistent audio volume. The recommended range for gain is between -10 dB and -1 dB.",
+          "label": "Default Gain (dB)"
+        },
+        "description": "Automatically normalize audio playback levels for a consistent listening experience.",
+        "enabled": "Enabled",
+        "error": {
+          "button": "Try again",
+          "message": "There was an error playing the track using Replay Gain."
+        },
+        "group": "ReplayGain",
+        "mode": {
+          "album": "Album gain",
+          "label": "Mode",
+          "track": "Track gain"
+        },
+        "preAmp": "PreAmp (dB)"
+      }
+    },
+    "content": {
+      "sidebar": {
+        "description": "Manage the visibility and organization of sections displayed in the sidebar.",
+        "group": "Sidebar",
+        "radios": {
+          "section": "Hide radios section"
+        }
+      }
+    },
+    "desktop": {
+      "general": {
+        "description": "Customize preferences for the desktop application.",
+        "group": "General",
+        "tray": {
+          "info": "When enabled, the app will minimize to the system tray instead of closing when you click the close button.",
+          "label": "Minimize to Tray"
+        }
+      },
+      "lanControl": {
+        "address": {
+          "info": "Available server addresses for LAN control access.",
+          "label": "Server Addresses"
+        },
+        "addressCopied": "Server address copied to clipboard.",
+        "allowNavidromeAuth": {
+          "info": "Enable authentication using Navidrome credentials.",
+          "label": "Allow Navidrome Authentication"
+        },
+        "copyAddress": "Copy address",
+        "copyPassword": "Copy password",
+        "description": "Manage LAN control settings for remote access.",
+        "enable": {
+          "info": "Turn on LAN control to allow remote access to this application.",
+          "label": "Enable LAN Control"
+        },
+        "group": "LAN Control",
+        "password": {
+          "info": "Set a password for secure access to the LAN control server.",
+          "label": "Password"
+        },
+        "passwordCopied": "Password copied to clipboard.",
+        "passwordRegenerated": "Password regenerated successfully.",
+        "port": {
+          "info": "Specify the port number for the LAN control server.",
+          "label": "Port"
+        },
+        "regeneratePassword": "Regenerate password",
+        "serverError": "Failed to start LAN control server.",
+        "serverStarted": "LAN control server started successfully."
+      },
+      "updates": {
+        "availableVersion": "Version {{version}} available",
+        "checkNow": {
+          "info": "Manually check for available updates.",
+          "label": "Check for Updates"
+        },
+        "checking": "Checking for updates...",
+        "checkingManually": "Checking for updates...",
+        "currentVersion": {
+          "info": "The version of Aonsoku you are currently running.",
+          "label": "Current Version"
+        },
+        "description": "Check for and install application updates.",
+        "download": "Download Update",
+        "downloadError": "Download Failed",
+        "downloadStarted": "Download Started",
+        "downloadStartedDesc": "Update download has begun",
+        "downloading": "Downloading... {{percent}}%",
+        "group": "App Updates",
+        "installNow": "Install and Restart",
+        "readyToInstall": "Ready to install (restart required)",
+        "status": {
+          "info": "The current status of application updates.",
+          "label": "Update Status"
+        },
+        "upToDate": "You're up to date",
+        "updateAvailable": "Update Available",
+        "updateAvailableDesc": "Version {{version}} is available",
+        "updateError": "Update Check Failed",
+        "updateReady": "Update Ready",
+        "updateReadyDesc": "Update will be installed when you restart the app"
+      }
+    },
+    "label": "Settings",
+    "options": {
+      "accounts": "Accounts",
+      "appearance": "Appearance",
+      "audio": "Player & Audio",
+      "content": "Content",
+      "desktop": "Desktop Application",
+      "language": "Language & Region",
+      "privacy": "Privacy & Security",
+      "server": "Server",
+      "storage": "Storage"
+    },
+    "privacy": {
+      "services": {
+        "description": "Manage the external services that Aonsoku can access.",
+        "group": "External Services",
+        "lrclib": {
+          "info": "LRCLIB is used to find song lyrics.",
+          "label": "LRCLIB"
+        }
+      }
+    },
+    "server": {
+      "activeType": {
+        "fallback": "Fallback URL",
+        "info": "Shows whether this session is using the primary or fallback URL.",
+        "label": "Current server",
+        "none": "Not connected",
+        "primary": "Primary URL"
+      },
+      "activeUrl": {
+        "empty": "No server selected",
+        "info": "The server URL currently used by this app session.",
+        "label": "Current URL"
+      },
+      "description": "Manage the primary server and optional fallback URL used at startup.",
+      "fallbackUrl": {
+        "info": "Optional server URL used when the primary URL cannot be reached at startup.",
+        "label": "Fallback URL",
+        "placeholder": "https://fallback-server.example.com"
+      },
+      "group": "Server",
+      "locked": "Server URL settings are locked by this deployment.",
+      "primaryUrl": {
+        "info": "The server URL Aonsoku tries first when the app starts.",
+        "label": "Primary URL",
+        "placeholder": "https://your-server.example.com"
+      },
+      "save": "Save server URLs",
+      "saving": "Saving...",
+      "toast": {
+        "error": "Unable to reach the primary or fallback server.",
+        "success": "Server URLs saved successfully."
+      },
+      "validation": {
+        "fallbackUrl": "Please enter a valid fallback URL.",
+        "primaryUrl": "Please enter a valid primary URL."
+      }
+    },
     "storage": {
+      "audio": {
+        "clear": "Clear audio cache",
+        "description": "Cache audio files for instant playback on repeated listens.",
+        "enabled": "Enable audio cache",
+        "entries": "{{count}} songs cached",
+        "group": "Audio Cache",
+        "maxSize": "Maximum cache size",
+        "size": "Cache size"
+      },
+      "coverArt": {
+        "clear": "Clear cover art cache",
+        "description": "Cache album cover images for faster loading.",
+        "enabled": "Enable cover art cache",
+        "entries": "{{count}} images cached",
+        "group": "Cover Art Cache",
+        "size": "Cache size"
+      },
+      "metadata": {
+        "clear": "Clear all caches",
+        "description": "Clear all cached data including metadata, cover art, and audio files.",
+        "group": "All Caches"
+      },
+      "sync": {
+        "cancel": "Cancel",
+        "clear": "Clear",
+        "coverArt": "Include cover art",
+        "coverArtInfo": "Download all album and artist images during sync. This may use significant storage and bandwidth.",
+        "description": "Синхронізувати метадані бібліотеки для перегляду офлайн. Завантажені пісні завжди доступні офлайн.",
+        "enabled": "Синхронізувати бібліотеку",
+        "entries": "{{count}} items synced",
+        "group": "Синхронізація бібліотеки",
+        "lastSynced": "Last synced",
+        "never": "Never",
+        "phases": {
+          "albums": "Syncing albums…",
+          "artists": "Syncing artists…",
+          "cancelled": "Sync cancelled",
+          "coverArt": "Syncing cover art…",
+          "done": "Sync complete",
+          "error": "Sync failed",
+          "genres": "Syncing genres…",
+          "idle": "Preparing…",
+          "playlists": "Syncing playlists…",
+          "songs": "Syncing songs…"
+        },
+        "syncNow": "Sync Now"
+      },
       "downloadQuality": {
         "group": "Якість завантаження",
         "description": "Оберіть якість аудіо для завантажених пісень.",
@@ -99,12 +751,183 @@
           "label": "Оригінальна якість",
           "description": "Завантажити оригінальний файл без перекодування."
         }
-      },
-      "sync": {
-        "group": "Синхронізація бібліотеки",
-        "description": "Синхронізувати метадані бібліотеки для перегляду офлайн. Завантажені пісні завжди доступні офлайн.",
-        "enabled": "Синхронізувати бібліотеку"
       }
     }
+  },
+  "shortcuts": {
+    "modal": {
+      "description": {
+        "first": "Press",
+        "last": "to toggle this modal."
+      },
+      "title": "Keyboard Shortcuts"
+    },
+    "navigation": {
+      "label": "Navigation"
+    },
+    "playback": {
+      "label": "Playback",
+      "lowerVolume": "Lower volume",
+      "next": "Skip to next",
+      "play": "Play / Pause",
+      "previous": "Skip to previous",
+      "raiseVolume": "Raise volume",
+      "repeat": "Repeat",
+      "shuffle": "Shuffle"
+    }
+  },
+  "sidebar": {
+    "albums": "Альбоми",
+    "artists": "Виконавці",
+    "collapse": "Collapse sidebar",
+    "emptyPlaylist": "Ще не було створено жодного списку відтворення",
+    "expand": "Expand sidebar",
+    "favorites": "Favorites",
+    "home": "Головна",
+    "library": "Бібліотека",
+    "miniSearch": "Пошук",
+    "playlists": "Списки відтворення",
+    "radios": "Радіо",
+    "search": "Пошук…",
+    "songs": "Пісні"
+  },
+  "songInfo": {
+    "error": "Unable to retrieve song information. Please try again later.",
+    "title": "Song Details"
+  },
+  "songs": {
+    "list": {
+      "byArtist": "Songs by {{artist}}",
+      "filter": {
+        "clear": "Clear filter"
+      },
+      "search": {
+        "placeholder": "Search songs…"
+      }
+    },
+    "sort": {
+      "album": "Album A-Z",
+      "artist": "Artist A-Z",
+      "lastAdded": "Last Added",
+      "title": "Song A-Z"
+    }
+  },
+  "table": {
+    "buttons": {
+      "pause": "Pause {{title}} by {{artist}}",
+      "play": "Play {{title}} by {{artist}}"
+    },
+    "columns": {
+      "album": "Album",
+      "albumArtist": "Album artist",
+      "albumCount": "Album count",
+      "albumGain": "Album gain",
+      "albumPeak": "Album peak",
+      "artist": "Artist",
+      "bitDepth": "Bit depth",
+      "bitrate": "Bitrate",
+      "bpm": "BPM",
+      "channelCount": "Channel count",
+      "codec": "Codec",
+      "comment": "Comment",
+      "contributors": "Contributors",
+      "discNumber": "Disc number",
+      "duration": "Duration",
+      "favorite": "Favorite",
+      "genres": "Genres",
+      "lastPlayed": "Last played",
+      "name": "Name",
+      "path": "Path",
+      "plays": "Plays",
+      "public": "Public",
+      "quality": "Quality",
+      "recordLabel": "Record label",
+      "samplingRate": "Sampling rate",
+      "size": "Size",
+      "songCount": "Song count",
+      "title": "Title",
+      "track": "Track",
+      "trackGain": "Track gain",
+      "trackPeak": "Track peak",
+      "year": "Year"
+    },
+    "lastPlayed": "{{date}} ago",
+    "menu": {
+      "selectedCount_one": "{{count}} selected",
+      "selectedCount_other": "{{count}} selected"
+    },
+    "pagination": {
+      "currentPage": "Page {{currentPage}} of {{totalPages}}",
+      "rowsPerPage": "Rows per page",
+      "screenReader": {
+        "firstPage": "Go to first page",
+        "lastPage": "Go to last page",
+        "nextPage": "Go to next page",
+        "previousPage": "Go to previous page"
+      }
+    },
+    "sort": {
+      "asc": "Ascending",
+      "desc": "Descending",
+      "reset": "Reset"
+    }
+  },
+  "theme": {
+    "achiever": "Achiever",
+    "bearded-solarized": "Bearded Solarized",
+    "black": "Чорно-біла",
+    "catppuccin-mocha": "Catppuccin Mocha",
+    "dark": "Темна",
+    "discord": "Discord",
+    "dracula": "Dracula",
+    "github-dark": "Github Dark",
+    "label": "Тема",
+    "light": "Світла",
+    "marmalade-beaver": "Marmalade Beaver",
+    "material-theme": "Material Theme",
+    "monokai-pro": "Monokai Pro",
+    "night-owl-light": "Night Owl Light",
+    "noctis-lilac": "Noctis Lilac",
+    "nuclear-dark": "Nuclear Dark",
+    "one-dark": "One Dark",
+    "shades-of-purple": "Shades Of Purple",
+    "system": "Системна",
+    "tinacious-design": "Tinacious Design",
+    "vim-dark-soft": "Vim Dark Soft",
+    "vue-dark": "Vue Dark"
+  },
+  "time": {
+    "days_one": "{{days}} day",
+    "days_other": "{{days}} days",
+    "hour": "{{hour}} hr",
+    "minutes": "{{minutes}} min",
+    "seconds": "{{seconds}} s"
+  },
+  "toast": {
+    "server": {
+      "error": "Server communication failed!",
+      "success": "Server was saved successfully!"
+    }
+  },
+  "update": {
+    "dialog": {
+      "install": "Install and Restart",
+      "remindLater": "Remind Me Later",
+      "title": "New Version Available!"
+    },
+    "sw": {
+      "error": "Update failed – Retry",
+      "refresh": "Refresh to update",
+      "updating": "Updating..."
+    },
+    "toasts": {
+      "error": "Failed to install the update. Please try downloading it directly from GitHub.",
+      "started": "The update process has started.",
+      "success": "The update has been installed! The app will now restart."
+    }
+  },
+  "warnings": {
+    "reload": "There is a song playing!\nAre you sure you want to reload the page?",
+    "songError": "Unable to play the song, check the Server!"
   }
 }

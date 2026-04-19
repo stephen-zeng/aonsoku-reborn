@@ -1,4 +1,6 @@
 import {
+  ChevronLeft,
+  ChevronRight,
   CircleUserRound,
   EarthLock,
   FileText,
@@ -7,13 +9,11 @@ import {
   Headphones,
   LaptopIcon,
   Paintbrush,
-  ChevronRight,
-  ChevronLeft,
+  Server,
 } from "lucide-react";
 import { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
-import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { Accounts } from "@/app/components/settings/pages/accounts";
 import { Appearance } from "@/app/components/settings/pages/appearance";
 import { Audio } from "@/app/components/settings/pages/audio";
@@ -21,8 +21,10 @@ import { Content } from "@/app/components/settings/pages/content";
 import { Desktop } from "@/app/components/settings/pages/desktop";
 import { Language } from "@/app/components/settings/pages/language";
 import { Privacy } from "@/app/components/settings/pages/privacy";
-import { Storage } from "@/app/components/settings/pages/storage";
 import { SettingsOptions } from "@/app/components/settings/options";
+import { Storage } from "@/app/components/settings/pages/storage";
+import { ServerSettings } from "@/app/components/settings/pages/server";
+import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { isDesktop } from "@/utils/desktop";
 
 interface CategoryItem {
@@ -34,6 +36,7 @@ const accountsOption: CategoryItem = { id: "accounts", icon: CircleUserRound };
 const desktopOption: CategoryItem = { id: "desktop", icon: LaptopIcon };
 
 const categories: CategoryItem[] = [
+  { id: "server", icon: Server },
   { id: "appearance", icon: Paintbrush },
   { id: "language", icon: Globe },
   { id: "audio", icon: Headphones },
@@ -44,6 +47,7 @@ const categories: CategoryItem[] = [
 ];
 
 const pages: Record<SettingsOptions, () => JSX.Element> = {
+  server: () => <ServerSettings />,
   appearance: () => <Appearance />,
   audio: () => <Audio />,
   language: () => <Language />,

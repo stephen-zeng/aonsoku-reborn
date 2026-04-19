@@ -32,6 +32,7 @@
     "hideDetails": "Hide details",
     "viewAll": "View all",
     "loading": "Loading…",
+    "clear": "Clear",
     "viewMode": {
       "label": "View Mode",
       "modes": {
@@ -64,6 +65,17 @@
     "tinacious-design": "Tinacious Design",
     "vue-dark": "Vue Dark",
     "vim-dark-soft": "Vim Dark Soft"
+  },
+  "favorites": {
+    "headline": "Favorites",
+    "songCount_one": "{{count}} song",
+    "songCount_other": "{{count}} songs",
+    "duration": "~ {{duration}}",
+    "noSongs": "No favorite songs yet!",
+    "buttons": {
+      "play": "Play {{name}}",
+      "shuffle": "Play {{name}} in shuffle mode"
+    }
   },
   "playlist": {
     "headline": "Playlist",
@@ -273,9 +285,14 @@
     "noLyrics": "No lyrics found",
     "loadingLyrics": "Searching for lyrics…",
     "queue": "Queue",
+    "queueHistory": "History",
+    "queueContinue": "Continue Playing",
+    "queueRepeating": "Repeating",
+    "queueFromSource": "From {{source}}",
     "playing": "Playing now",
     "lyrics": "Lyrics",
-    "switchButton": "Switch to Big Player"
+    "switchButton": "Switch to Big Player",
+    "emptyQueue": "No songs in queue"
   },
   "logout": {
     "dialog": {
@@ -343,6 +360,9 @@
       },
       "like": "Like {{song}} by {{artist}}",
       "dislike": "Remove like from {{song}} by {{artist}}",
+      "star": "Star current song",
+      "unstar": "Unstar current song",
+      "progress": "Seek",
       "miniPlayer": {
         "open": "Open Miniplayer",
         "close": "Close Miniplayer"
@@ -353,16 +373,16 @@
       }
     }
   },
+  "error": {
+    "notFound": "Not found"
+  },
   "options": {
     "play": "Play",
     "playNext": "Play next",
     "addLast": "Add last",
     "download": "Download",
-    "saveFile": "Save file",
-    "downloadAlbum": "Download album",
-    "downloadPlaylist": "Download playlist",
-    "downloadArtist": "Download artist",
-    "removeDownload": "Remove download",
+    "like": "Like",
+    "unlike": "Unlike",
     "playlist": {
       "add": "Add to playlist",
       "edit": "Edit playlist",
@@ -377,7 +397,12 @@
     "goto": {
       "artist": "Go to artist",
       "album": "Go to album"
-    }
+    },
+    "saveFile": "Save file",
+    "downloadAlbum": "Download album",
+    "downloadPlaylist": "Download playlist",
+    "downloadArtist": "Download artist",
+    "removeDownload": "Remove download"
   },
   "radios": {
     "label": "Radio",
@@ -538,8 +563,46 @@
       "content": "Content",
       "accounts": "Accounts",
       "desktop": "Desktop Application",
+      "server": "Server",
       "privacy": "Privacy & Security",
       "storage": "Storage"
+    },
+    "server": {
+      "group": "Server",
+      "description": "Manage the primary server and optional fallback URL used at startup.",
+      "primaryUrl": {
+        "label": "Primary URL",
+        "info": "The server URL Aonsoku tries first when the app starts.",
+        "placeholder": "https://your-server.example.com"
+      },
+      "fallbackUrl": {
+        "label": "Fallback URL",
+        "info": "Optional server URL used when the primary URL cannot be reached at startup.",
+        "placeholder": "https://fallback-server.example.com"
+      },
+      "activeUrl": {
+        "label": "Current URL",
+        "info": "The server URL currently used by this app session.",
+        "empty": "No server selected"
+      },
+      "activeType": {
+        "label": "Current server",
+        "info": "Shows whether this session is using the primary or fallback URL.",
+        "primary": "Primary URL",
+        "fallback": "Fallback URL",
+        "none": "Not connected"
+      },
+      "validation": {
+        "primaryUrl": "Please enter a valid primary URL.",
+        "fallbackUrl": "Please enter a valid fallback URL."
+      },
+      "toast": {
+        "success": "Server URLs saved successfully.",
+        "error": "Unable to reach the primary or fallback server."
+      },
+      "save": "Save server URLs",
+      "saving": "Saving...",
+      "locked": "Server URL settings are locked by this deployment."
     },
     "appearance": {
       "general": {
@@ -548,6 +611,10 @@
         "fullscreen": {
           "label": "Enable automatic fullscreen",
           "info": "If enabled, when accessing the big player, the app will automatically enter fullscreen mode."
+        },
+        "albumCoverForSongs": {
+          "label": "Always use album covers",
+          "info": "When enabled, every song artwork request uses the album cover to reduce loading time."
         }
       },
       "colors": {
@@ -594,6 +661,14 @@
           "label": "Show translation",
           "info": "When available, show translated lyrics below the original lyrics."
         }
+      },
+      "history": {
+        "group": "Play History",
+        "description": "Songs that play for more than 10 seconds are recorded in your play history.",
+        "maxSize": {
+          "label": "Maximum history size",
+          "info": "The maximum number of songs to keep in play history. Older entries are removed when the limit is exceeded."
+        }
       }
     },
     "privacy": {
@@ -607,6 +682,54 @@
       }
     },
     "storage": {
+      "coverArt": {
+        "group": "Cover Art Cache",
+        "description": "Cache album cover images for faster loading.",
+        "enabled": "Enable cover art cache",
+        "size": "Cache size",
+        "entries": "{{count}} images cached",
+        "clear": "Clear cover art cache"
+      },
+      "audio": {
+        "group": "Audio Cache",
+        "description": "Cache audio files for instant playback on repeated listens.",
+        "enabled": "Enable audio cache",
+        "maxSize": "Maximum cache size",
+        "size": "Cache size",
+        "entries": "{{count}} songs cached",
+        "clear": "Clear audio cache"
+      },
+      "metadata": {
+        "group": "All Caches",
+        "description": "Clear all cached data including metadata, cover art, and audio files.",
+        "clear": "Clear all caches"
+      },
+      "sync": {
+        "group": "Library Sync",
+        "description": "Sync library metadata for offline browsing. Downloaded songs are always available offline.",
+        "enabled": "Sync library",
+        "coverArt": "Include cover art",
+        "coverArtInfo": "Download all album and artist images during sync. This may use significant storage and bandwidth.",
+        "lastSynced": "Last synced",
+        "never": "Never",
+        "syncNow": "Sync Now",
+        "cancel": "Cancel",
+        "clear": "Clear synced data",
+        "entries": "{{count}} items synced",
+        "phases": {
+          "idle": "Preparing…",
+          "genres": "Syncing genres…",
+          "artists": "Syncing artists…",
+          "playlists": "Syncing playlists…",
+          "albums": "Syncing albums…",
+          "songs": "Syncing songs…",
+          "coverArt": "Syncing cover art…",
+          "done": "Sync complete",
+          "error": "Sync failed",
+          "cancelled": "Sync cancelled"
+        },
+        "justNow": "Just now"
+      },
       "downloadQuality": {
         "group": "Download Quality",
         "description": "Choose the audio quality for downloaded songs.",
@@ -631,32 +754,6 @@
         "clearAudio": "Clear",
         "clearCovers": "Clear",
         "clearAll": "Clear all caches"
-      },
-      "sync": {
-        "group": "Library Sync",
-        "description": "Sync library metadata for offline browsing. Downloaded songs are always available offline.",
-        "enabled": "Sync library",
-        "coverArt": "Include cover art",
-        "coverArtInfo": "Download all album and artist images during sync. This may use significant storage and bandwidth.",
-        "lastSynced": "Last synced",
-        "never": "Never",
-        "justNow": "Just now",
-        "syncNow": "Sync Now",
-        "cancel": "Cancel",
-        "clear": "Clear synced data",
-        "entries": "{{count}} items synced",
-        "phases": {
-          "idle": "Preparing…",
-          "genres": "Syncing genres…",
-          "artists": "Syncing artists…",
-          "playlists": "Syncing playlists…",
-          "albums": "Syncing albums…",
-          "songs": "Syncing songs…",
-          "coverArt": "Syncing cover art…",
-          "done": "Sync complete",
-          "error": "Sync failed",
-          "cancelled": "Sync cancelled"
-        }
       }
     },
     "content": {
@@ -702,6 +799,7 @@
           "info": "Manually check for available updates."
         },
         "checking": "Checking for updates...",
+        "checkingManually": "Checking for updates...",
         "upToDate": "You're up to date",
         "updateAvailable": "Update Available",
         "updateAvailableDesc": "Version {{version}} is available",
@@ -744,7 +842,10 @@
         "serverError": "Failed to start LAN control server.",
         "passwordRegenerated": "Password regenerated successfully.",
         "addressCopied": "Server address copied to clipboard.",
-        "passwordCopied": "Password copied to clipboard."
+        "passwordCopied": "Password copied to clipboard.",
+        "copyPassword": "Copy password",
+        "copyAddress": "Copy address",
+        "regeneratePassword": "Regenerate password"
       }
     }
   },

@@ -1,16 +1,26 @@
 import randomCSSHexColor from "@chriscodesthings/random-css-hex-color";
 import { AudioLines, Maximize2 } from "lucide-react";
-import { useCallback } from "react";
+import {
+  type MouseEvent,
+  type PointerEvent,
+  type ReactNode,
+  type TouchEvent,
+  useCallback,
+  useRef,
+} from "react";
 import { Fragment } from "react/jsx-runtime";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, type LinkProps } from "react-router-dom";
 
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { MarqueeTitle } from "@/app/components/fullscreen/marquee-title";
 import FullscreenMode from "@/app/components/fullscreen/page";
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
+import { useHasHover } from "@/app/hooks/use-input-mode";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import { ROUTES } from "@/routes/routesList";
 import { useFullscreenPlayerState, useSongColor } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
@@ -22,11 +32,86 @@ function handleError(e: React.SyntheticEvent<HTMLImageElement>) {
   e.currentTarget.crossOrigin = null;
 }
 
+type TouchGuardedLinkProps = LinkProps & {
+  children: ReactNode;
+};
+
+function TouchGuardedLink({
+  children,
+  onClick,
+  onPointerCancel,
+  onPointerDownCapture,
+  onTouchCancel,
+  onTouchStartCapture,
+  ...props
+}: TouchGuardedLinkProps) {
+  const wasTouchActivatedRef = useRef(false);
+
+  const handlePointerDownCapture = useCallback(
+    (event: PointerEvent<HTMLAnchorElement>) => {
+      wasTouchActivatedRef.current = event.pointerType === "touch";
+      onPointerDownCapture?.(event);
+    },
+    [onPointerDownCapture],
+  );
+
+  const handleTouchStartCapture = useCallback(
+    (event: TouchEvent<HTMLAnchorElement>) => {
+      wasTouchActivatedRef.current = true;
+      onTouchStartCapture?.(event);
+    },
+    [onTouchStartCapture],
+  );
+
+  const handlePointerCancel = useCallback(
+    (event: PointerEvent<HTMLAnchorElement>) => {
+      wasTouchActivatedRef.current = false;
+      onPointerCancel?.(event);
+    },
+    [onPointerCancel],
+  );
+
+  const handleTouchCancel = useCallback(
+    (event: TouchEvent<HTMLAnchorElement>) => {
+      wasTouchActivatedRef.current = false;
+      onTouchCancel?.(event);
+    },
+    [onTouchCancel],
+  );
+
+  const handleClick = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>) => {
+      if (wasTouchActivatedRef.current) {
+        wasTouchActivatedRef.current = false;
+        event.preventDefault();
+        return;
+      }
+
+      onClick?.(event);
+    },
+    [onClick],
+  );
+
+  return (
+    <Link
+      {...props}
+      onClick={handleClick}
+      onPointerCancel={handlePointerCancel}
+      onPointerDownCapture={handlePointerDownCapture}
+      onTouchCancel={handleTouchCancel}
+      onTouchStartCapture={handleTouchStartCapture}
+    >
+      {children}
+    </Link>
+  );
+}
+
 export function TrackInfo({ song }: { song: ISong | undefined }) {
   const { t } = useTranslation();
+  const hasHover = useHasHover();
+  const isMobile = useIsMobile();
   const { setCurrentSongColor } = useSongColor();
-  const { fullscreenPlayerOpen, openFullscreenPlayer, closeFullscreenPlayer } =
-    useFullscreenPlayerState();
+  const { fullscreenPlayerOpen } = useFullscreenPlayerState();
 
   const getImageColor = useCallback(
     async (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -79,6 +164,7 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
             id="track-song-image"
             coverArtId={song.coverArt}
             coverArtType="song"
+            albumId={song.albumId}
             coverArtSize="300"
             width="100%"
             height="100%"
@@ -93,8 +179,7 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
         <FullscreenMode
           open={fullscreenPlayerOpen}
           onOpenChange={(open) => {
-            if (open) openFullscreenPlayer("playing");
-            else closeFullscreenPlayer();
+            if (open) openFullscreenPlayerWithHistory("playing");
           }}
         >
           <Button
@@ -113,20 +198,35 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
       </div>
       <div className="flex flex-col justify-center w-full overflow-hidden ml-1">
         <MarqueeTitle gap="mr-2">
-          <Link
-            to={ROUTES.ALBUM.PAGE(song.albumId)}
-            tabIndex={-1}
-            className="pointer-events-none sm:pointer-events-auto"
-          >
+          {isMobile ? (
             <span
-              className="text-xs sm:text-sm font-medium sm:hover:underline sm:cursor-pointer"
+              className="text-xs sm:text-sm font-medium"
               data-testid="track-title"
             >
               {song.title}
             </span>
-          </Link>
+          ) : (
+            <TouchGuardedLink
+              to={ROUTES.ALBUM.PAGE(song.albumId)}
+              tabIndex={-1}
+            >
+              <span
+                className={cn(
+                  "text-xs sm:text-sm font-medium",
+                  hasHover && "hover:underline cursor-pointer",
+                )}
+                data-testid="track-title"
+              >
+                {song.title}
+              </span>
+            </TouchGuardedLink>
+          )}
         </MarqueeTitle>
-        <TrackInfoArtistsLinks song={song} />
+        <TrackInfoArtistsLinks
+          disableNavigation={isMobile}
+          enableInteractiveStyle={hasHover}
+          song={song}
+        />
       </div>
     </Fragment>
   );
@@ -134,9 +234,15 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
 
 type TrackInfoArtistsLinksProps = {
   song: ISong;
+  disableNavigation?: boolean;
+  enableInteractiveStyle?: boolean;
 };
 
-function TrackInfoArtistsLinks({ song }: TrackInfoArtistsLinksProps) {
+function TrackInfoArtistsLinks({
+  song,
+  disableNavigation = false,
+  enableInteractiveStyle = false,
+}: TrackInfoArtistsLinksProps) {
   const { artists, artistId, artist } = song;
 
   if (artists && artists.length > 1) {
@@ -146,7 +252,12 @@ function TrackInfoArtistsLinks({ song }: TrackInfoArtistsLinksProps) {
       <div className="flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground w-full maskImage-marquee-fade-finished">
         {reducedArtists.map(({ id, name }, index) => (
           <div key={id} className="flex items-center">
-            <ArtistLink id={id} name={name} />
+            <ArtistLink
+              disableNavigation={disableNavigation}
+              enableInteractiveStyle={enableInteractiveStyle}
+              id={id}
+              name={name}
+            />
             {index < reducedArtists.length - 1 && ","}
           </div>
         ))}
@@ -154,32 +265,55 @@ function TrackInfoArtistsLinks({ song }: TrackInfoArtistsLinksProps) {
     );
   }
 
-  return <ArtistLink id={artistId} name={artist} />;
+  return (
+    <ArtistLink
+      disableNavigation={disableNavigation}
+      enableInteractiveStyle={enableInteractiveStyle}
+      id={artistId}
+      name={artist}
+    />
+  );
 }
 
 type ArtistLinkProps = {
   id?: string;
   name: string;
+  disableNavigation?: boolean;
+  enableInteractiveStyle?: boolean;
 };
 
-function ArtistLink({ id, name }: ArtistLinkProps) {
+function ArtistLink({
+  id,
+  name,
+  disableNavigation = false,
+  enableInteractiveStyle = false,
+}: ArtistLinkProps) {
+  if (disableNavigation || !id) {
+    return (
+      <span
+        className="w-fit inline-flex text-[10px] sm:text-xs text-muted-foreground text-nowrap"
+        data-testid="track-artist-url"
+      >
+        {name}
+      </span>
+    );
+  }
+
   return (
-    <Link
-      to={ROUTES.ARTIST.PAGE(id ?? "")}
-      className={cn(
-        "w-fit inline-flex pointer-events-none",
-        id && "sm:pointer-events-auto",
-      )}
+    <TouchGuardedLink
+      to={ROUTES.ARTIST.PAGE(id)}
+      className="w-fit inline-flex"
       data-testid="track-artist-url"
     >
       <span
         className={cn(
           "text-[10px] sm:text-xs text-muted-foreground text-nowrap",
-          id && "sm:hover:underline sm:hover:text-foreground",
+          enableInteractiveStyle &&
+            "hover:underline hover:text-foreground cursor-pointer",
         )}
       >
         {name}
       </span>
-    </Link>
+    </TouchGuardedLink>
   );
 }

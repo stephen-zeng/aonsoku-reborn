@@ -36,35 +36,35 @@
     {
       "src": "/screenshots/albums.png",
       "type": "image/png",
-      "sizes": "1924x1059",
+      "sizes": "1705x1049",
       "form_factor": "wide",
       "label": "Screenshot Displaying Albums"
     },
     {
-      "src": "/screenshots/artist.png",
-      "type": "image/png",
-      "sizes": "1924x1059",
-      "form_factor": "wide",
-      "label": "Screenshot Displaying Artists"
+      "src": "/screenshots/mobile.jpg",
+      "type": "image/jpg",
+      "sizes": "960x2142",
+      "form_factor": "narrow",
+      "label": "Screenshot Displaying Home on Mobile"
     },
     {
       "src": "/screenshots/player.png",
       "type": "image/png",
-      "sizes": "1924x1059",
+      "sizes": "1705x1049",
       "form_factor": "wide",
       "label": "Screenshot of Playing"
     },
     {
       "src": "/screenshots/playlist.png",
       "type": "image/png",
-      "sizes": "1924x1059",
+      "sizes": "1705x1049",
       "form_factor": "wide",
       "label": "Screenshot Displaying Playlists"
     },
     {
       "src": "/screenshots/home.png",
       "type": "image/png",
-      "sizes": "1024x1024",
+      "sizes": "1705x1049",
       "form_factor": "wide",
       "label": "Screenshot Displaying Home"
     }

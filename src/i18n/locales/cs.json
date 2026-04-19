@@ -1,396 +1,749 @@
 {
-  "home": {
-    "mostPlayed": "Nejčastěji přehrávané",
-    "recentlyAdded": "Nedávno přidané",
-    "recentlyPlayed": "Nedávno přehrané",
-    "explore": "Objevujte"
-  },
-  "sidebar": {
-    "home": "Domů",
-    "search": "Hledat…",
-    "library": "Knihovna",
-    "songs": "Skladby",
-    "albums": "Alba",
-    "favorites": "Oblíbené",
-    "playlists": "Playlisty",
-    "emptyPlaylist": "Zatím nebyly vytvořeny žádné playlisty",
-    "miniSearch": "Hledat",
-    "radios": "Rádiové stanice",
-    "artists": "Umělci",
-    "collapse": "Sbalit postranní panel",
-    "expand": "Rozbalit postranní panel"
-  },
-  "menu": {
-    "language": "Jazyk",
-    "about": "O aplikaci",
+  "about": {
+    "apiVersion": "API Version",
+    "buildTime": "Build Time",
+    "client": "Client",
     "server": "Server",
-    "serverLogout": "Odhlásit se"
+    "toasts": {
+      "copy": "Link copied to clipboard!"
+    },
+    "type": "Type",
+    "version": "Version"
+  },
+  "album": {
+    "buttons": {
+      "dislike": "Remove like from {{name}}",
+      "like": "Like {{name}}"
+    },
+    "headline": "Album",
+    "info": {
+      "about": "About {{name}}",
+      "lastfm": "Open in Last.fm",
+      "musicbrainz": "Open in MusicBrainz"
+    },
+    "list": {
+      "empty": {
+        "action": "Maybe try tweaking the filters?",
+        "info": "Looks like there are no albums with the current filter.",
+        "title": "Oops, no albums here!"
+      },
+      "filter": {
+        "artist": "Artist",
+        "discography": "Discography",
+        "favorites": "Favorites",
+        "genre": "Genre",
+        "mostPlayed": "Most played",
+        "name": "Name",
+        "random": "Random",
+        "recentlyAdded": "Recently added",
+        "recentlyPlayed": "Recently played",
+        "releaseYear": "Release Year",
+        "search": "Search"
+      },
+      "genre": {
+        "label": "Select a genre…",
+        "loading": "Loading genres…",
+        "notFound": "No genre found.",
+        "search": "Find a genre…"
+      },
+      "header": {
+        "albumsByArtist": "Albums by {{artist}}"
+      },
+      "search": {
+        "placeholder": "Search albums…"
+      }
+    },
+    "more": {
+      "discography": "Artist Discography",
+      "genreTitle": "More from {{genre}}",
+      "listTitle": "More from this artist"
+    },
+    "table": {
+      "discNumber": "Disc {{number}}"
+    }
+  },
+  "artist": {
+    "buttons": {
+      "options": "More options for {{artist}}",
+      "play": "Play {{artist}} radio",
+      "shuffle": "Play {{artist}} radio in shuffle mode"
+    },
+    "headline": "Artist",
+    "info": {
+      "albumsCount_one": "{{count}} album",
+      "albumsCount_other": "{{count}} albums"
+    },
+    "recentAlbums": "Recent albums",
+    "relatedArtists": "Related artists",
+    "topSongs": "Popular"
+  },
+  "command": {
+    "commands": {
+      "heading": "Příkazy",
+      "pages": "Jít na stránku",
+      "theme": "Změna motivu"
+    },
+    "inputPlaceholder": "Vyhledej album, umělce nebo skladbu",
+    "noResults": "Žádné výsledky.",
+    "pages": "Stránky"
+  },
+  "dayjs": {
+    "relativeTime": {
+      "M": "1 month",
+      "MM": "%d months",
+      "d": "1 day",
+      "dd": "%d days",
+      "future": "in %s",
+      "h": "1 hour",
+      "hh": "%d hours",
+      "m": "1 minute",
+      "mm": "%d minutes",
+      "past": "%s ago",
+      "s": "a few seconds",
+      "y": "1 year",
+      "yy": "%d years"
+    }
+  },
+  "downloads": {
+    "completed": "Soubor byl stažen.",
+    "failed": "Nastala chyba při stahování souboru.",
+    "started": "Stahování začalo."
+  },
+  "error": {
+    "notFound": "Not found"
+  },
+  "favorites": {
+    "buttons": {
+      "play": "Přehrát {{name}}",
+      "shuffle": "Přehrát {{name}} náhodně"
+    },
+    "duration": "~ {{duration}}",
+    "headline": "Oblíbené",
+    "noSongs": "Zatím žádné oblíbené skladby!",
+    "songCount_one": "{{count}} skladba",
+    "songCount_other": "{{count}} skladeb"
+  },
+  "fullscreen": {
+    "emptyQueue": "No songs in queue",
+    "loadingLyrics": "Hledám texty…",
+    "lyrics": "Texty",
+    "noLyrics": "Nebyly nalezeny žádné texty",
+    "playing": "Nyní hraje",
+    "queue": "Fronta",
+    "queueContinue": "Continue Playing",
+    "queueFromSource": "From {{source}}",
+    "queueHistory": "History",
+    "queueRepeating": "Repeating",
+    "switchButton": "Přepnout na velký přehrávač"
   },
   "generic": {
+    "beta": "Beta",
+    "clear": "Clear",
+    "hideDetails": "Skrýt detaily",
+    "loading": "Načítání…",
     "seeMore": "Ukázat více",
     "showDetails": "Ukázat detaily",
-    "hideDetails": "Skrýt detaily",
     "viewAll": "Zobrazit vše",
-    "loading": "Načítání…",
     "viewMode": {
       "label": "Režim zobrazení",
       "modes": {
         "list": "Seznam",
         "poster": "Plakát"
       }
-    },
-    "beta": "Beta"
-  },
-  "theme": {
-    "label": "Motiv",
-    "dark": "Tmavý",
-    "system": "Systémový",
-    "light": "Světlý",
-    "black": "Černo-bílý",
-    "one-dark": "One Dark",
-    "night-owl-light": "Night Owl Světlý",
-    "marmalade-beaver": "Marmalade Beaver",
-    "material-theme": "Material Theme",
-    "monokai-pro": "Monokai Pro",
-    "github-dark": "Github Dark",
-    "shades-of-purple": "Odstíny Fialové",
-    "catppuccin-mocha": "Catppuccin Mocha",
-    "dracula": "Dracula",
-    "discord": "Discord",
-    "tinacious-design": "Tinacious Design",
-    "vim-dark-soft": "Vim Dark Soft",
-    "nuclear-dark": "Nuclear Dark",
-    "bearded-solarized": "Bearded Solarized",
-    "vue-dark": "Vue Dark",
-    "noctis-lilac": "Noctis Lilac",
-    "achiever": "Achiever"
-  },
-  "playlist": {
-    "headline": "Playlist",
-    "songCount_one": "{{count}} skladba",
-    "songCount_few": "{{count}} skladby",
-    "songCount_other": "{{count}} skladeb",
-    "refresh": "Obnovit playlisty",
-    "buttons": {
-      "play": "Přehrát {{name}}",
-      "shuffle": "Přehrát {{name}} v náhodném pořadí",
-      "options": "Více možností pro {{name}}"
-    },
-    "noSongList": "Tento playlist neobsahuje žádné písně!",
-    "form": {
-      "labels": {
-        "name": "Název",
-        "comment": "Komentář",
-        "commentDescription": "Napište krátký popis tohoto playlistu",
-        "isPublic": "Veřejné",
-        "isPublicDescription": "Vyberte tuto možnost pro zveřejnění playlistu. Umožníte tím ostatním uživatelům zobrazení a přístup k vašemu playlistu."
-      },
-      "create": {
-        "title": "Vytvořit Playlist",
-        "button": "Vytvořit",
-        "toast": {
-          "success": "Playlist byl úspěšně vytvořen!",
-          "error": "Nepodařilo se vytvořit playlist!"
-        }
-      },
-      "edit": {
-        "title": "Upravit Playlist",
-        "button": "Aktualizovat",
-        "toast": {
-          "success": "Playlist by úspěšně aktualizován!",
-          "error": "Nepodařilo se aktualizovat playlist!"
-        }
-      },
-      "delete": {
-        "title": "Opravdu chcete smazat tento playlist?",
-        "description": "Tato akce je nevratná.",
-        "toast": {
-          "success": "Playlist byl úspěšně smazán!",
-          "error": "Nepodařilo se smazat playlist!"
-        }
-      },
-      "validations": {
-        "nameLength": "Playlist musí obsahovat alespoň 2 znaky."
-      },
-      "removeSong": {
-        "title_one": "Opravdu chcete smazat vybranou skladbu?",
-        "title_few": "Opravdu chcete smazat vybrané skladby?",
-        "title_other": "Opravdu chcete smazat vybrané skladby?",
-        "description": "Tato akce je nevratná.",
-        "toast": {
-          "success_one": "Skladba byla úspěšně smazána.",
-          "success_few": "Skladby byly úspěšně smazány.",
-          "success_other": "Skladby byly úspěšně smazány.",
-          "error_one": "Nepodařilo se smazat skladbu!",
-          "error_few": "Nepodařilo se smazat skladby!",
-          "error_other": "Nepodařilo se smazat skladby!"
-        }
-      }
     }
   },
-  "table": {
-    "sort": {
-      "asc": "Vzestupně",
-      "desc": "Sestupně",
-      "reset": "Resetovat"
-    },
-    "pagination": {
-      "screenReader": {
-        "lastPage": "Přejít na poslední stránku",
-        "previousPage": "Přejít na předchozí stránku",
-        "nextPage": "Přejít na další stránku",
-        "firstPage": "Přejít na první stránku"
+  "home": {
+    "explore": "Objevujte",
+    "mostPlayed": "Nejčastěji přehrávané",
+    "recentlyAdded": "Nedávno přidané",
+    "recentlyPlayed": "Nedávno přehrané"
+  },
+  "lanControl": {
+    "remote": {
+      "actions": {
+        "connect": "Connect",
+        "connecting": "Connecting...",
+        "disconnect": "Disconnect",
+        "refresh": "Refresh state"
       },
-      "rowsPerPage": "Řádky na stránce",
-      "currentPage": "Stránka {{currentPage}} z {{totalPages}}"
-    },
-    "menu": {
-      "selectedCount_one": "{{count}} vybrán",
-      "selectedCount_few": "{{count}} vybrány",
-      "selectedCount_other": "{{count}} vybráno"
+      "address": "Server address",
+      "autoConnectFailed": "Failed to connect to remote device, entering local playback mode",
+      "clickToPlay": "Click to play",
+      "controls": {
+        "next": "Next",
+        "pause": "Pause",
+        "play": "Play",
+        "previous": "Previous",
+        "repeat": "Toggle repeat",
+        "shuffle": "Toggle shuffle"
+      },
+      "currentlyPlaying": "Currently playing",
+      "description": "Connect to a LAN control server and manage playback remotely.",
+      "emptyArtist": "Unknown artist",
+      "emptyTitle": "No track playing",
+      "ip": "IP Address",
+      "items": "items",
+      "library": {
+        "albums": "Albums",
+        "back": "Back",
+        "loading": "Loading...",
+        "noAlbums": "No albums available",
+        "noPlaylists": "No playlists available",
+        "noResults": "No results found",
+        "playlists": "Playlists",
+        "search": "Search",
+        "searchButton": "Search",
+        "searchPlaceholder": "Search songs, albums...",
+        "searching": "Searching...",
+        "songs": "Songs"
+      },
+      "loadingSong": "Loading...",
+      "menu": "Control other devices",
+      "nowPlaying": "Now playing",
+      "password": "Access code",
+      "playing": "Playing",
+      "port": "Port",
+      "queue": "Playback queue",
+      "queueEmpty": "Queue is empty",
+      "serverRunning": "This device is currently running as a LAN Control server. You cannot control other devices while this device is in server mode.",
+      "status": {
+        "authenticating": "Authenticating",
+        "connected": "Connected",
+        "connecting": "Connecting",
+        "disconnected": "Disconnected",
+        "error": "Error",
+        "label": "Status"
+      },
+      "tabs": {
+        "control": "Control",
+        "library": "Library"
+      },
+      "title": "Control other devices",
+      "unknownDevice": "Unknown device",
+      "version": "v{{version}}",
+      "volume": "Volume: {{volume}}%"
     }
   },
   "login": {
     "form": {
-      "validations": {
-        "protocol": "URL musí začínat http:// nebo https://",
-        "url": "Prosím zadej platnou URL.",
-        "usernameLength": "Uživatelské jméno musí obsahovat alespoň 2 znaky.",
-        "password": "Prosím zadej heslo",
-        "passwordLength": "Heslo musí mít alespoň 2 znaky.",
-        "username": "Prosím zadej uživatelské jméno"
-      },
       "connect": "Připojit",
       "connecting": "Připojuji…",
-      "usernamePlaceholder": "Tvé uživatelské jméno",
+      "description": "Připoj se ke svému Subsonic serveru.",
       "password": "Heslo",
       "server": "Server",
-      "username": "Uživatelské jméno",
-      "description": "Připoj se ke svému Subsonic serveru.",
       "url": "URL",
-      "urlDescription": "Toto je URL tvého serveru"
+      "urlDescription": "Toto je URL tvého serveru",
+      "username": "Uživatelské jméno",
+      "usernamePlaceholder": "Tvé uživatelské jméno",
+      "validations": {
+        "password": "Prosím zadej heslo",
+        "passwordLength": "Heslo musí mít alespoň 2 znaky.",
+        "protocol": "URL musí začínat http:// nebo https://",
+        "url": "Prosím zadej platnou URL.",
+        "username": "Prosím zadej uživatelské jméno",
+        "usernameLength": "Uživatelské jméno musí obsahovat alespoň 2 znaky."
+      }
     }
   },
-  "command": {
-    "commands": {
-      "pages": "Jít na stránku",
-      "theme": "Změna motivu",
-      "heading": "Příkazy"
-    },
-    "noResults": "Žádné výsledky.",
-    "inputPlaceholder": "Vyhledej album, umělce nebo skladbu",
-    "pages": "Stránky"
+  "logout": {
+    "dialog": {
+      "cancel": "Zrušit",
+      "confirm": "Pokračovat",
+      "description": "Potvrď pro odhlášení.",
+      "title": "Jsi připraven se na teď rozloučit?"
+    }
   },
-  "player": {
-    "tooltips": {
-      "play": "Přehrát",
-      "pause": "Pozastavit",
-      "forward": "Přetočit dopředu o {{amount}} seconds",
-      "repeat": {
-        "disable": "Vypnout opakování",
-        "enableOne": "Zapnout opakování jednou",
-        "enable": "Zapnout opakování"
-      },
-      "like": "Přidat {{song}} od {{artist}} do oblíbených",
-      "dislike": "Odebrat {{song}} od {{artist}} z oblíbených",
-      "shuffle": {
-        "enable": "Zapnout náhodné přehrávání",
-        "disable": "Vypnout náhodné přehrávání"
-      },
-      "miniPlayer": {
-        "close": "Zavřít minipřehrávač",
-        "open": "Otevřít minipřehrávač"
-      },
-      "volume": {
-        "unmute": "Odztlumit",
-        "mute": "Ztlumit"
-      },
-      "rewind": "Přetočit o {{amount}} sekund",
-      "previous": "Předchozí",
-      "next": "Další"
-    },
-    "noSongPlaying": "Nepřehrává se žádná skladba",
-    "noRadioPlaying": "Nepřehrává se žádné rádio"
+  "menu": {
+    "about": "O aplikaci",
+    "language": "Jazyk",
+    "server": "Server",
+    "serverLogout": "Odhlásit se"
+  },
+  "mobile": {
+    "access_recommendation": "Please access it from a computer or tablet.",
+    "unsupported_message": "{{app_name}} isn't compatible with mobile phones."
+  },
+  "offline": {
+    "disconnected": "Server unreachable. Entering offline mode.",
+    "mode": "Offline",
+    "reconnectFailed": "Could not reconnect. Continuing in offline mode.",
+    "reconnected": "Reconnected to server",
+    "reconnecting": "Reconnecting…",
+    "searchUnavailable": "Search requires an offline library sync.",
+    "songUnavailable": "This song is not available offline"
   },
   "options": {
-    "play": "Přehrát",
-    "info": "Informace",
-    "playNext": "Přehrát jako další",
     "addLast": "Přidat na konec",
+    "download": "Stáhnout",
+    "goto": {
+      "album": "Přejít na album",
+      "artist": "Přejít na umělce"
+    },
+    "info": "Informace",
+    "like": "Like",
+    "play": "Přehrát",
+    "playNext": "Přehrát jako další",
     "playlist": {
       "add": "Přidat do playlistu",
-      "edit": "Upravit playlist",
-      "delete": "Smazat playlist",
-      "search": "Vyhledat playlist",
       "create": "Nový playlist",
+      "delete": "Smazat playlist",
+      "edit": "Upravit playlist",
+      "notFound": "Nebyl nalezen žádný playlist",
       "removeSong": "Odebrat z playlistu",
-      "notFound": "Nebyl nalezen žádný playlist"
+      "search": "Vyhledat playlist"
     },
-    "goto": {
-      "artist": "Přejít na umělce",
-      "album": "Přejít na album"
-    },
-    "download": "Stáhnout",
+    "removeFromQueue": "Remove from queue",
+    "unlike": "Unlike",
     "saveFile": "Uložit soubor",
     "downloadAlbum": "Stáhnout album",
     "downloadPlaylist": "Stáhnout playlist",
     "downloadArtist": "Stáhnout umělce",
     "removeDownload": "Odebrat stažení"
   },
-  "radios": {
-    "addRadio": "Přidat rádio",
-    "table": {
-      "stream": "URL streamu",
-      "actions": {
-        "delete": "Smazat rádio",
-        "edit": "Upravit rádio"
+  "player": {
+    "noRadioPlaying": "Nepřehrává se žádné rádio",
+    "noSongPlaying": "Nepřehrává se žádná skladba",
+    "tooltips": {
+      "dislike": "Odebrat {{song}} od {{artist}} z oblíbených",
+      "forward": "Přetočit dopředu o {{amount}} seconds",
+      "like": "Přidat {{song}} od {{artist}} do oblíbených",
+      "miniPlayer": {
+        "close": "Zavřít minipřehrávač",
+        "open": "Otevřít minipřehrávač"
       },
-      "playTooltip": "Přehrát rádio {{name}}",
-      "pauseTooltip": "Pozastavit rádio {{name}}",
-      "name": "Název",
-      "homepage": "URL domovské stránky"
+      "next": "Další",
+      "pause": "Pozastavit",
+      "play": "Přehrát",
+      "previous": "Předchozí",
+      "progress": "Seek",
+      "repeat": {
+        "disable": "Vypnout opakování",
+        "enable": "Zapnout opakování",
+        "enableOne": "Zapnout opakování jednou"
+      },
+      "rewind": "Přetočit o {{amount}} sekund",
+      "shuffle": {
+        "disable": "Vypnout náhodné přehrávání",
+        "enable": "Zapnout náhodné přehrávání"
+      },
+      "star": "Star current song",
+      "unstar": "Unstar current song",
+      "volume": {
+        "mute": "Ztlumit",
+        "unmute": "Odztlumit"
+      }
+    }
+  },
+  "playlist": {
+    "buttons": {
+      "options": "Více možností pro {{name}}",
+      "play": "Přehrát {{name}}",
+      "shuffle": "Přehrát {{name}} v náhodném pořadí"
     },
-    "empty": {
-      "title": "Nemáš tu žádné rádiové stanice!",
-      "info": "Klikni pro přidání tvé první rádiové stanice."
-    },
-    "label": "Rádio",
+    "duration": "~ {{duration}}",
     "form": {
       "create": {
+        "button": "Vytvořit",
+        "title": "Vytvořit Playlist",
+        "toast": {
+          "error": "Nepodařilo se vytvořit playlist!",
+          "success": "Playlist byl úspěšně vytvořen!"
+        }
+      },
+      "delete": {
+        "description": "Tato akce je nevratná.",
+        "title": "Opravdu chcete smazat tento playlist?",
+        "toast": {
+          "error": "Nepodařilo se smazat playlist!",
+          "success": "Playlist byl úspěšně smazán!"
+        }
+      },
+      "edit": {
+        "button": "Aktualizovat",
+        "title": "Upravit Playlist",
+        "toast": {
+          "error": "Nepodařilo se aktualizovat playlist!",
+          "success": "Playlist by úspěšně aktualizován!"
+        }
+      },
+      "labels": {
+        "comment": "Komentář",
+        "commentDescription": "Napište krátký popis tohoto playlistu",
+        "isPublic": "Veřejné",
+        "isPublicDescription": "Vyberte tuto možnost pro zveřejnění playlistu. Umožníte tím ostatním uživatelům zobrazení a přístup k vašemu playlistu.",
+        "name": "Název"
+      },
+      "removeSong": {
+        "description": "Tato akce je nevratná.",
+        "title_one": "Opravdu chcete smazat vybranou skladbu?",
+        "title_other": "Opravdu chcete smazat vybrané skladby?",
+        "toast": {
+          "error_one": "Nepodařilo se smazat skladbu!",
+          "error_other": "Nepodařilo se smazat skladby!",
+          "success_one": "Skladba byla úspěšně smazána.",
+          "success_other": "Skladby byly úspěšně smazány.",
+          "success_few": "Skladby byly úspěšně smazány.",
+          "error_few": "Nepodařilo se smazat skladby!"
+        },
+        "title_few": "Opravdu chcete smazat vybrané skladby?"
+      },
+      "validations": {
+        "nameLength": "Playlist musí obsahovat alespoň 2 znaky."
+      }
+    },
+    "headline": "Playlist",
+    "noSongList": "Tento playlist neobsahuje žádné písně!",
+    "refresh": "Obnovit playlisty",
+    "songCount_one": "{{count}} skladba",
+    "songCount_other": "{{count}} skladeb",
+    "songCount_few": "{{count}} skladby"
+  },
+  "queue": {
+    "clear": "Vyprázdnit frontu",
+    "close": "Uzavřít frontu",
+    "open": "Otevřít frontu",
+    "title": "Fronta"
+  },
+  "radios": {
+    "addRadio": "Přidat rádio",
+    "empty": {
+      "info": "Klikni pro přidání tvé první rádiové stanice.",
+      "title": "Nemáš tu žádné rádiové stanice!"
+    },
+    "error": "Rádio nelze přehrát, zkontroluj si URL streamu!",
+    "form": {
+      "create": {
+        "button": "Uložit",
         "title": "Přidat rádio",
         "toast": {
           "error": "Vytváření rádia selhalo!",
           "success": "Rádio bylo úspěšně vytvořeno!"
-        },
-        "button": "Uložit"
-      },
-      "edit": {
-        "title": "Upravit Rádio",
-        "button": "Aktualizovat",
-        "toast": {
-          "success": "Rádio bylo úspěšně aktualizováno!",
-          "error": "Aktualizace rádia selhala!"
         }
       },
       "delete": {
         "description": "Tuto akci nelze vrátit zpět.",
+        "title": "Jsi si jistý, že chceš tuto rádiovou stanici smazat?",
         "toast": {
-          "success": "Rádio bylo úspěšně odstraněno!",
-          "error": "Odstranění rádia selhalo!"
-        },
-        "title": "Jsi si jistý, že chceš tuto rádiovou stanici smazat?"
+          "error": "Odstranění rádia selhalo!",
+          "success": "Rádio bylo úspěšně odstraněno!"
+        }
+      },
+      "edit": {
+        "button": "Aktualizovat",
+        "title": "Upravit Rádio",
+        "toast": {
+          "error": "Aktualizace rádia selhala!",
+          "success": "Rádio bylo úspěšně aktualizováno!"
+        }
       },
       "validations": {
-        "name": "Název rádia musí obsahovat alespoň 3 znaky.",
-        "url": "Zadej prosím platnou URL.",
         "homepageUrlLength": "URL domovské stránky musí obsahovat alespoň 10 znaků",
-        "streamUrlLength": "URL streamu musí obsahovat alespoň 10 znaků"
+        "name": "Název rádia musí obsahovat alespoň 3 znaky.",
+        "streamUrlLength": "URL streamu musí obsahovat alespoň 10 znaků",
+        "url": "Zadej prosím platnou URL."
       }
     },
-    "error": "Rádio nelze přehrát, zkontroluj si URL streamu!"
-  },
-  "fullscreen": {
-    "noLyrics": "Nebyly nalezeny žádné texty",
-    "loadingLyrics": "Hledám texty…",
-    "queue": "Fronta",
-    "playing": "Nyní hraje",
-    "lyrics": "Texty",
-    "switchButton": "Přepnout na velký přehrávač"
-  },
-  "logout": {
-    "dialog": {
-      "title": "Jsi připraven se na teď rozloučit?",
-      "description": "Potvrď pro odhlášení.",
-      "cancel": "Zrušit",
-      "confirm": "Pokračovat"
+    "label": "Rádio",
+    "table": {
+      "actions": {
+        "delete": "Smazat rádio",
+        "edit": "Upravit rádio"
+      },
+      "homepage": "URL domovské stránky",
+      "name": "Název",
+      "pauseTooltip": "Pozastavit rádio {{name}}",
+      "playTooltip": "Přehrát rádio {{name}}",
+      "stream": "URL streamu"
     }
-  },
-  "toast": {
-    "server": {
-      "success": "Server byl úspěšně uložen!",
-      "error": "Komunikace se serverem selhala!"
-    }
-  },
-  "time": {
-    "days_one": "{{days}} den",
-    "days_few": "{{days}} dny",
-    "days_other": "{{days}} dní",
-    "hour": "{{hour}} h",
-    "minutes": "{{minutes}} min",
-    "seconds": "{{seconds}} s"
   },
   "server": {
-    "songCount_one": "{{count}} skladba",
-    "songCount_few": "{{count}} skladby",
-    "songCount_other": "{{count}} skladeb",
-    "status": "Stav",
-    "incompatible": {
-      "title": "Nekompatibilní server",
-      "description": "Tento server používá starší verzi Subsonic protokolu, která není plně podporovaná. Buď prosím opatrný, protože mohou nastat problémy.",
-      "skip": "Přesto pokračovat"
-    },
     "buttons": {
       "refresh": "Obnovit stav",
       "startScan": "Rychlý sken"
     },
     "folderCount_one": "{{count}} složka",
-    "folderCount_few": "{{count}} složky",
     "folderCount_other": "{{count}} složek",
+    "incompatible": {
+      "description": "Tento server používá starší verzi Subsonic protokolu, která není plně podporovaná. Buď prosím opatrný, protože mohou nastat problémy.",
+      "skip": "Přesto pokračovat",
+      "title": "Nekompatibilní server"
+    },
     "lastScan": "Poslední sken: {{date}}",
-    "management": "Správa serveru"
-  },
-  "downloads": {
-    "started": "Stahování začalo.",
-    "failed": "Nastala chyba při stahování souboru.",
-    "completed": "Soubor byl stažen."
-  },
-  "shortcuts": {
-    "playback": {
-      "lowerVolume": "Snížit hlasitost",
-      "raiseVolume": "Zvýšit hlasitost",
-      "label": "Přehrávání",
-      "play": "Přehrát / Pozastavit",
-      "shuffle": "Náhodné přehrávání",
-      "repeat": "Opakovat",
-      "previous": "Přeskočit na předchozí",
-      "next": "Přeskočit na další"
-    },
-    "modal": {
-      "title": "Klávesové zkratky",
-      "description": {
-        "first": "Stiskni",
-        "last": "pro přepnutí tohoto dialogového okna."
-      }
-    },
-    "navigation": {
-      "label": "Navigace"
-    }
-  },
-  "queue": {
-    "title": "Fronta",
-    "clear": "Vyprázdnit frontu",
-    "close": "Uzavřít frontu",
-    "open": "Otevřít frontu"
-  },
-  "songInfo": {
-    "title": "Detaily skladby"
-  },
-  "songs": {
-    "list": {
-      "search": {
-        "placeholder": "Vyhledat skladby…"
-      },
-      "byArtist": "Skladby od {{artist}}",
-      "filter": {
-        "clear": "Vymazat filtr"
-      }
-    }
-  },
-  "album": {
-    "headline": "Album"
+    "management": "Správa serveru",
+    "songCount_one": "{{count}} skladba",
+    "songCount_other": "{{count}} skladeb",
+    "status": "Stav",
+    "songCount_few": "{{count}} skladby",
+    "folderCount_few": "{{count}} složky"
   },
   "settings": {
+    "accounts": {
+      "discord": {
+        "description": "Share your currently playing song with friends on Discord.",
+        "enabled": {
+          "label": "Enable Integration"
+        },
+        "group": "Discord Rich Presence"
+      }
+    },
+    "appearance": {
+      "colors": {
+        "bigPlayer": {
+          "blurSize": "Image Blur Size",
+          "label": "Big Player"
+        },
+        "description": "Select whether the app should use the dominant color from the currently playing album art as the background.",
+        "group": "Dynamic Colors",
+        "queue": {
+          "intensity": "Color Intensity Level",
+          "label": "Queue and Lyrics"
+        }
+      },
+      "general": {
+        "albumCoverForSongs": {
+          "info": "When enabled, every song artwork request uses the album cover to reduce loading time.",
+          "label": "Always use album covers"
+        },
+        "description": "Customize the app's look and display behaviors.",
+        "fullscreen": {
+          "info": "If enabled, when accessing the big player, the app will automatically enter fullscreen mode.",
+          "label": "Enable automatic fullscreen"
+        },
+        "group": "General"
+      }
+    },
+    "audio": {
+      "history": {
+        "description": "Songs that play for more than 10 seconds are recorded in your play history.",
+        "group": "Play History",
+        "maxSize": {
+          "info": "The maximum number of songs to keep in play history. Older entries are removed when the limit is exceeded.",
+          "label": "Maximum history size"
+        }
+      },
+      "lyrics": {
+        "description": "Customize lyrics settings.",
+        "group": "Lyrics",
+        "preferSynced": {
+          "info": "When enabled, synced lyrics will be prioritized over unsynced lyrics.",
+          "label": "Prefer synced lyrics"
+        },
+        "showTranslation": {
+          "info": "When available, show translated lyrics below the original lyrics.",
+          "label": "Show translation"
+        }
+      },
+      "replayGain": {
+        "defaultGain": {
+          "info": "This gain level is applied to songs that do not include ReplayGain metadata, ensuring consistent audio volume. The recommended range for gain is between -10 dB and -1 dB.",
+          "label": "Default Gain (dB)"
+        },
+        "description": "Automatically normalize audio playback levels for a consistent listening experience.",
+        "enabled": "Enabled",
+        "error": {
+          "button": "Try again",
+          "message": "There was an error playing the track using Replay Gain."
+        },
+        "group": "ReplayGain",
+        "mode": {
+          "album": "Album gain",
+          "label": "Mode",
+          "track": "Track gain"
+        },
+        "preAmp": "PreAmp (dB)"
+      }
+    },
+    "content": {
+      "sidebar": {
+        "description": "Manage the visibility and organization of sections displayed in the sidebar.",
+        "group": "Sidebar",
+        "radios": {
+          "section": "Hide radios section"
+        }
+      }
+    },
+    "desktop": {
+      "general": {
+        "description": "Customize preferences for the desktop application.",
+        "group": "General",
+        "tray": {
+          "info": "When enabled, the app will minimize to the system tray instead of closing when you click the close button.",
+          "label": "Minimize to Tray"
+        }
+      },
+      "lanControl": {
+        "address": {
+          "info": "Available server addresses for LAN control access.",
+          "label": "Server Addresses"
+        },
+        "addressCopied": "Server address copied to clipboard.",
+        "allowNavidromeAuth": {
+          "info": "Enable authentication using Navidrome credentials.",
+          "label": "Allow Navidrome Authentication"
+        },
+        "copyAddress": "Copy address",
+        "copyPassword": "Copy password",
+        "description": "Manage LAN control settings for remote access.",
+        "enable": {
+          "info": "Turn on LAN control to allow remote access to this application.",
+          "label": "Enable LAN Control"
+        },
+        "group": "LAN Control",
+        "password": {
+          "info": "Set a password for secure access to the LAN control server.",
+          "label": "Password"
+        },
+        "passwordCopied": "Password copied to clipboard.",
+        "passwordRegenerated": "Password regenerated successfully.",
+        "port": {
+          "info": "Specify the port number for the LAN control server.",
+          "label": "Port"
+        },
+        "regeneratePassword": "Regenerate password",
+        "serverError": "Failed to start LAN control server.",
+        "serverStarted": "LAN control server started successfully."
+      },
+      "updates": {
+        "availableVersion": "Version {{version}} available",
+        "checkNow": {
+          "info": "Manually check for available updates.",
+          "label": "Check for Updates"
+        },
+        "checking": "Checking for updates...",
+        "checkingManually": "Checking for updates...",
+        "currentVersion": {
+          "info": "The version of Aonsoku you are currently running.",
+          "label": "Current Version"
+        },
+        "description": "Check for and install application updates.",
+        "download": "Download Update",
+        "downloadError": "Download Failed",
+        "downloadStarted": "Download Started",
+        "downloadStartedDesc": "Update download has begun",
+        "downloading": "Downloading... {{percent}}%",
+        "group": "App Updates",
+        "installNow": "Install and Restart",
+        "readyToInstall": "Ready to install (restart required)",
+        "status": {
+          "info": "The current status of application updates.",
+          "label": "Update Status"
+        },
+        "upToDate": "You're up to date",
+        "updateAvailable": "Update Available",
+        "updateAvailableDesc": "Version {{version}} is available",
+        "updateError": "Update Check Failed",
+        "updateReady": "Update Ready",
+        "updateReadyDesc": "Update will be installed when you restart the app"
+      }
+    },
+    "label": "Settings",
+    "options": {
+      "accounts": "Accounts",
+      "appearance": "Appearance",
+      "audio": "Player & Audio",
+      "content": "Content",
+      "desktop": "Desktop Application",
+      "language": "Language & Region",
+      "privacy": "Privacy & Security",
+      "server": "Server",
+      "storage": "Storage"
+    },
+    "privacy": {
+      "services": {
+        "description": "Manage the external services that Aonsoku can access.",
+        "group": "External Services",
+        "lrclib": {
+          "info": "LRCLIB is used to find song lyrics.",
+          "label": "LRCLIB"
+        }
+      }
+    },
+    "server": {
+      "activeType": {
+        "fallback": "Fallback URL",
+        "info": "Shows whether this session is using the primary or fallback URL.",
+        "label": "Current server",
+        "none": "Not connected",
+        "primary": "Primary URL"
+      },
+      "activeUrl": {
+        "empty": "No server selected",
+        "info": "The server URL currently used by this app session.",
+        "label": "Current URL"
+      },
+      "description": "Manage the primary server and optional fallback URL used at startup.",
+      "fallbackUrl": {
+        "info": "Optional server URL used when the primary URL cannot be reached at startup.",
+        "label": "Fallback URL",
+        "placeholder": "https://fallback-server.example.com"
+      },
+      "group": "Server",
+      "locked": "Server URL settings are locked by this deployment.",
+      "primaryUrl": {
+        "info": "The server URL Aonsoku tries first when the app starts.",
+        "label": "Primary URL",
+        "placeholder": "https://your-server.example.com"
+      },
+      "save": "Save server URLs",
+      "saving": "Saving...",
+      "toast": {
+        "error": "Unable to reach the primary or fallback server.",
+        "success": "Server URLs saved successfully."
+      },
+      "validation": {
+        "fallbackUrl": "Please enter a valid fallback URL.",
+        "primaryUrl": "Please enter a valid primary URL."
+      }
+    },
     "storage": {
+      "audio": {
+        "clear": "Clear audio cache",
+        "description": "Cache audio files for instant playback on repeated listens.",
+        "enabled": "Enable audio cache",
+        "entries": "{{count}} songs cached",
+        "group": "Audio Cache",
+        "maxSize": "Maximum cache size",
+        "size": "Cache size"
+      },
+      "coverArt": {
+        "clear": "Clear cover art cache",
+        "description": "Cache album cover images for faster loading.",
+        "enabled": "Enable cover art cache",
+        "entries": "{{count}} images cached",
+        "group": "Cover Art Cache",
+        "size": "Cache size"
+      },
+      "metadata": {
+        "clear": "Clear all caches",
+        "description": "Clear all cached data including metadata, cover art, and audio files.",
+        "group": "All Caches"
+      },
+      "sync": {
+        "cancel": "Zrušit",
+        "clear": "Vymazat synchronizovaná data",
+        "coverArt": "Zahrnout obaly",
+        "coverArtInfo": "Stáhnout všechny obrázky alb a umělců během synchronizace. To může vyžadovat značné úložiště a šířku pásma.",
+        "description": "Synchronizovat metadata knihovny pro offline prohlížení. Stažené skladby jsou vždy dostupné offline.",
+        "enabled": "Synchronizovat knihovnu",
+        "entries": "{{count}} položek synchronizováno",
+        "group": "Synchronizace knihovny",
+        "lastSynced": "Poslední synchronizace",
+        "never": "Nikdy",
+        "phases": {
+          "albums": "Synchronizace alb…",
+          "artists": "Synchronizace umělců…",
+          "cancelled": "Synchronizace zrušena",
+          "coverArt": "Synchronizace obalů…",
+          "done": "Synchronizace dokončena",
+          "error": "Synchronizace selhala",
+          "genres": "Synchronizace žánrů…",
+          "idle": "Příprava…",
+          "playlists": "Synchronizace playlistů…",
+          "songs": "Synchronizace skladeb…"
+        },
+        "syncNow": "Synchronizovat nyní",
+        "justNow": "Právě teď"
+      },
       "downloadQuality": {
         "group": "Kvalita stahování",
         "description": "Vyberte zvukovou kvalitu pro stažené skladby.",
@@ -415,33 +768,185 @@
         "clearAudio": "Vymazat",
         "clearCovers": "Vymazat",
         "clearAll": "Vymazat všechny mezipaměti"
-      },
-      "sync": {
-        "group": "Synchronizace knihovny",
-        "description": "Synchronizovat metadata knihovny pro offline prohlížení. Stažené skladby jsou vždy dostupné offline.",
-        "enabled": "Synchronizovat knihovnu",
-        "coverArt": "Zahrnout obaly",
-        "coverArtInfo": "Stáhnout všechny obrázky alb a umělců během synchronizace. To může vyžadovat značné úložiště a šířku pásma.",
-        "lastSynced": "Poslední synchronizace",
-        "never": "Nikdy",
-        "justNow": "Právě teď",
-        "syncNow": "Synchronizovat nyní",
-        "cancel": "Zrušit",
-        "clear": "Vymazat synchronizovaná data",
-        "entries": "{{count}} položek synchronizováno",
-        "phases": {
-          "idle": "Příprava…",
-          "genres": "Synchronizace žánrů…",
-          "artists": "Synchronizace umělců…",
-          "playlists": "Synchronizace playlistů…",
-          "albums": "Synchronizace alb…",
-          "songs": "Synchronizace skladeb…",
-          "coverArt": "Synchronizace obalů…",
-          "done": "Synchronizace dokončena",
-          "error": "Synchronizace selhala",
-          "cancelled": "Synchronizace zrušena"
-        }
       }
     }
+  },
+  "shortcuts": {
+    "modal": {
+      "description": {
+        "first": "Stiskni",
+        "last": "pro přepnutí tohoto dialogového okna."
+      },
+      "title": "Klávesové zkratky"
+    },
+    "navigation": {
+      "label": "Navigace"
+    },
+    "playback": {
+      "label": "Přehrávání",
+      "lowerVolume": "Snížit hlasitost",
+      "next": "Přeskočit na další",
+      "play": "Přehrát / Pozastavit",
+      "previous": "Přeskočit na předchozí",
+      "raiseVolume": "Zvýšit hlasitost",
+      "repeat": "Opakovat",
+      "shuffle": "Náhodné přehrávání"
+    }
+  },
+  "sidebar": {
+    "albums": "Alba",
+    "artists": "Umělci",
+    "collapse": "Sbalit postranní panel",
+    "emptyPlaylist": "Zatím nebyly vytvořeny žádné playlisty",
+    "expand": "Rozbalit postranní panel",
+    "favorites": "Oblíbené",
+    "home": "Domů",
+    "library": "Knihovna",
+    "miniSearch": "Hledat",
+    "playlists": "Playlisty",
+    "radios": "Rádiové stanice",
+    "search": "Hledat…",
+    "songs": "Skladby"
+  },
+  "songInfo": {
+    "error": "Unable to retrieve song information. Please try again later.",
+    "title": "Detaily skladby"
+  },
+  "songs": {
+    "list": {
+      "byArtist": "Skladby od {{artist}}",
+      "filter": {
+        "clear": "Vymazat filtr"
+      },
+      "search": {
+        "placeholder": "Vyhledat skladby…"
+      }
+    },
+    "sort": {
+      "album": "Album A-Z",
+      "artist": "Artist A-Z",
+      "lastAdded": "Last Added",
+      "title": "Song A-Z"
+    }
+  },
+  "table": {
+    "buttons": {
+      "pause": "Pause {{title}} by {{artist}}",
+      "play": "Play {{title}} by {{artist}}"
+    },
+    "columns": {
+      "album": "Album",
+      "albumArtist": "Album artist",
+      "albumCount": "Album count",
+      "albumGain": "Album gain",
+      "albumPeak": "Album peak",
+      "artist": "Artist",
+      "bitDepth": "Bit depth",
+      "bitrate": "Bitrate",
+      "bpm": "BPM",
+      "channelCount": "Channel count",
+      "codec": "Codec",
+      "comment": "Comment",
+      "contributors": "Contributors",
+      "discNumber": "Disc number",
+      "duration": "Duration",
+      "favorite": "Favorite",
+      "genres": "Genres",
+      "lastPlayed": "Last played",
+      "name": "Name",
+      "path": "Path",
+      "plays": "Plays",
+      "public": "Public",
+      "quality": "Quality",
+      "recordLabel": "Record label",
+      "samplingRate": "Sampling rate",
+      "size": "Size",
+      "songCount": "Song count",
+      "title": "Title",
+      "track": "Track",
+      "trackGain": "Track gain",
+      "trackPeak": "Track peak",
+      "year": "Year"
+    },
+    "lastPlayed": "{{date}} ago",
+    "menu": {
+      "selectedCount_one": "{{count}} vybrán",
+      "selectedCount_other": "{{count}} vybráno",
+      "selectedCount_few": "{{count}} vybrány"
+    },
+    "pagination": {
+      "currentPage": "Stránka {{currentPage}} z {{totalPages}}",
+      "rowsPerPage": "Řádky na stránce",
+      "screenReader": {
+        "firstPage": "Přejít na první stránku",
+        "lastPage": "Přejít na poslední stránku",
+        "nextPage": "Přejít na další stránku",
+        "previousPage": "Přejít na předchozí stránku"
+      }
+    },
+    "sort": {
+      "asc": "Vzestupně",
+      "desc": "Sestupně",
+      "reset": "Resetovat"
+    }
+  },
+  "theme": {
+    "achiever": "Achiever",
+    "bearded-solarized": "Bearded Solarized",
+    "black": "Černo-bílý",
+    "catppuccin-mocha": "Catppuccin Mocha",
+    "dark": "Tmavý",
+    "discord": "Discord",
+    "dracula": "Dracula",
+    "github-dark": "Github Dark",
+    "label": "Motiv",
+    "light": "Světlý",
+    "marmalade-beaver": "Marmalade Beaver",
+    "material-theme": "Material Theme",
+    "monokai-pro": "Monokai Pro",
+    "night-owl-light": "Night Owl Světlý",
+    "noctis-lilac": "Noctis Lilac",
+    "nuclear-dark": "Nuclear Dark",
+    "one-dark": "One Dark",
+    "shades-of-purple": "Odstíny Fialové",
+    "system": "Systémový",
+    "tinacious-design": "Tinacious Design",
+    "vim-dark-soft": "Vim Dark Soft",
+    "vue-dark": "Vue Dark"
+  },
+  "time": {
+    "days_one": "{{days}} den",
+    "days_other": "{{days}} dní",
+    "hour": "{{hour}} h",
+    "minutes": "{{minutes}} min",
+    "seconds": "{{seconds}} s",
+    "days_few": "{{days}} dny"
+  },
+  "toast": {
+    "server": {
+      "error": "Komunikace se serverem selhala!",
+      "success": "Server byl úspěšně uložen!"
+    }
+  },
+  "update": {
+    "dialog": {
+      "install": "Install and Restart",
+      "remindLater": "Remind Me Later",
+      "title": "New Version Available!"
+    },
+    "sw": {
+      "error": "Update failed – Retry",
+      "refresh": "Refresh to update",
+      "updating": "Updating..."
+    },
+    "toasts": {
+      "error": "Failed to install the update. Please try downloading it directly from GitHub.",
+      "started": "The update process has started.",
+      "success": "The update has been installed! The app will now restart."
+    }
+  },
+  "warnings": {
+    "reload": "There is a song playing!\nAre you sure you want to reload the page?",
+    "songError": "Unable to play the song, check the Server!"
   }
 }

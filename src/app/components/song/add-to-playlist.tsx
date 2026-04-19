@@ -55,7 +55,10 @@ export function AddToPlaylistSubMenu({
           {type === "dropdown" ? (
             <DropdownMenuItem
               className="flex p-1 items-center h-10"
-              onClick={newPlaylistFn}
+              onClick={(e) => {
+                e.stopPropagation();
+                newPlaylistFn();
+              }}
               autoFocus={false}
             >
               <PlusIcon className="w-4 h-4 mr-2 ml-1" />
@@ -64,7 +67,10 @@ export function AddToPlaylistSubMenu({
           ) : (
             <ContextMenuItem
               className="flex p-1 items-center h-10"
-              onClick={newPlaylistFn}
+              onClick={(e) => {
+                e.stopPropagation();
+                newPlaylistFn();
+              }}
               autoFocus={false}
             >
               <PlusIcon className="w-4 h-4 mr-2 ml-1" />
@@ -88,14 +94,20 @@ export function AddToPlaylistSubMenu({
                     {type === "dropdown" ? (
                       <DropdownMenuItem
                         className="truncate h-10"
-                        onClick={() => addToPlaylistFn(playlist.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToPlaylistFn(playlist.id);
+                        }}
                       >
                         <span className="truncate pl-1">{playlist.name}</span>
                       </DropdownMenuItem>
                     ) : (
                       <ContextMenuItem
                         className="truncate h-10"
-                        onClick={() => addToPlaylistFn(playlist.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToPlaylistFn(playlist.id);
+                        }}
                       >
                         <span className="truncate pl-1">{playlist.name}</span>
                       </ContextMenuItem>

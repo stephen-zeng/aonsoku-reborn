@@ -1,22 +1,24 @@
 import { memo, ReactNode, useEffect } from "react";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerTitle,
   DrawerTrigger,
 } from "@/app/components/ui/drawer";
+import { useBackdropStyle } from "@/app/hooks/use-backdrop-bg";
 import { useAppWindow } from "@/app/hooks/use-app-window";
-import { useFullscreenPlayerSettings } from "@/store/player.store";
+import { closeFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
+import {
+  usePlayerStore,
+  useFullscreenPlayerSettings,
+} from "@/store/player.store";
+import { useTheme } from "@/store/theme.store";
 import { enterFullscreen, exitFullscreen } from "@/utils/browser";
 import { isDesktop } from "@/utils/desktop";
-import { setDesktopTitleBarColors } from "@/utils/theme";
-import { FullscreenBackdrop } from "./backdrop";
-import { CloseFullscreenButton } from "./buttons";
+import { blendColors, hslToHex } from "@/utils/getAverageColor";
+import { setDesktopTitleBarColors, updatePwaThemeColor } from "@/utils/theme";
 import { FullscreenDragHandler } from "./drag-handler";
-import { FullscreenPlayer } from "./player";
-import { FullscreenSettings } from "./settings";
-import { FullscreenTabs } from "./tabs";
+import { FullscreenContent } from "./fullscreen-content";
 
 interface FullscreenModeProps {
   children: ReactNode;
@@ -24,7 +26,7 @@ interface FullscreenModeProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-const MemoFullscreenBackdrop = memo(FullscreenBackdrop);
+const MemoFullscreenContent = memo(FullscreenContent);
 
 export default function FullscreenMode({
   children,
@@ -33,6 +35,37 @@ export default function FullscreenMode({
 }: FullscreenModeProps) {
   const { enterFullscreenWindow, exitFullscreenWindow } = useAppWindow();
   const { autoFullscreenEnabled } = useFullscreenPlayerSettings();
+  const backdropStyle = useBackdropStyle();
+
+  const { theme } = useTheme();
+  const { currentSongColor, currentSongColorIntensity } = usePlayerStore(
+    (state) => ({
+      currentSongColor: state.settings.colors.currentSongColor,
+      currentSongColorIntensity:
+        state.settings.colors.currentSongColorIntensity,
+    }),
+  );
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: theme is used to trigger update when base background changes
+  useEffect(() => {
+    const bgHsl = getComputedStyle(document.documentElement)
+      .getPropertyValue("--background")
+      .trim();
+    const baseHex = hslToHex(bgHsl);
+
+    const color =
+      open && currentSongColor
+        ? blendColors(baseHex, currentSongColor, currentSongColorIntensity)
+        : baseHex;
+
+    if (open) {
+      updatePwaThemeColor(color);
+      if (isDesktop()) setDesktopTitleBarColors(true, color);
+    } else {
+      updatePwaThemeColor();
+      if (isDesktop()) setDesktopTitleBarColors(false);
+    }
+  }, [open, currentSongColor, currentSongColorIntensity, theme]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: initial useEffect
   useEffect(() => {
@@ -48,12 +81,11 @@ export default function FullscreenMode({
   }, []);
 
   async function handleFullscreen(open: boolean) {
-    // Call external onOpenChange if provided (always call this for controlled mode)
     onOpenChange?.(open);
 
-    // We set title bar colors to transparent,
-    // to not "unstyle" the big player appearance
-    if (isDesktop()) setDesktopTitleBarColors(open);
+    if (!open) {
+      closeFullscreenPlayerWithHistory();
+    }
 
     if (!autoFullscreenEnabled) return;
 
@@ -78,34 +110,14 @@ export default function FullscreenMode({
       <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerTitle className="sr-only">Big Player</DrawerTitle>
       <DrawerContent
-        className="h-screen w-screen rounded-t-none border-none select-none cursor-default mt-0"
+        className="fullscreen-drawer-surface mt-0 h-dvh max-h-dvh w-screen rounded-t-none border-none select-none cursor-default"
         showHandle={false}
         aria-describedby={undefined}
+        style={backdropStyle}
       >
-        <MemoFullscreenBackdrop />
         <FullscreenDragHandler />
-        <div className="absolute inset-0 flex flex-col p-0 sm:p-0 2xl:p-8 sm:pt-10 2xl:pt-12 w-full h-full gap-4 bg-black/0 z-10 fullscreen-safe-area">
-          {/* First Row - Header */}
-          <div className="flex gap-2 items-center w-full h-[40px] px-4 sm:px-16 z-20 justify-end">
-            <FullscreenSettings />
-            <DrawerClose>
-              <CloseFullscreenButton />
-            </DrawerClose>
-          </div>
-
-          {/* Second Row - Content Area (Tabs/Queue for desktop, Song info for mobile) */}
-          <div className="w-full flex-1 overflow-hidden px-4 sm:px-16">
-            <div className="h-full">
-              <FullscreenTabs />
-            </div>
-          </div>
-
-          {/* Third Row - Controls (hidden on mobile, shows in Playing tab) */}
-          <div className="hidden sm:block h-[150px] min-h-[150px] px-16 py-2">
-            <div className="flex items-center">
-              <FullscreenPlayer />
-            </div>
-          </div>
+        <div className="absolute inset-0 z-10 flex flex-col fullscreen-safe-area">
+          <MemoFullscreenContent />
         </div>
       </DrawerContent>
     </Drawer>

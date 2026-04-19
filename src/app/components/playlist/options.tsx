@@ -53,9 +53,11 @@ export function PlaylistOptions({
 
   async function handlePlay() {
     if ("entry" in playlist) {
-      play(playlist.entry, { playlistId: playlist.id });
+      play(playlist.entry, { playlistId: playlist.id }, playlist.name);
     } else {
-      await getSongsToQueue(play);
+      await getSongsToQueue((songs, sourceId) =>
+        play(songs, sourceId, playlist.name),
+      );
     }
   }
 

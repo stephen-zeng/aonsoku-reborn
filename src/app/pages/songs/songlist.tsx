@@ -85,6 +85,7 @@ export default function SongList() {
       isFetchingNextPage={isFetchingNextPage}
       fetchNextPage={fetchNextPage}
       hasNextPage={hasNextPage ?? false}
+      sourceName={filterByArtist ? artistName : title}
       headerActions={
         <>
           {filterByArtist && <ClearFilterButton />}

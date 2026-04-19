@@ -32,6 +32,8 @@ const HEAVY_VENDOR_PATTERNS = [
   "remark",
   // JSS (CSS-in-JS for lyrics)
   "jss",
+  // Animation library (loaded with fullscreen player)
+  "framer-motion",
 ];
 
 export function createManualChunks(id: string) {

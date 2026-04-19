@@ -11,12 +11,17 @@ import {
   Root,
 } from "@/app/components/settings/section";
 import { Switch } from "@/app/components/ui/switch";
-import { useFullscreenPlayerSettings } from "@/store/player.store";
+import {
+  useCoverArtSettings,
+  useFullscreenPlayerSettings,
+} from "@/store/player.store";
 
 export function FullscreenSettings() {
   const { t } = useTranslation();
   const { autoFullscreenEnabled, setAutoFullscreenEnabled } =
     useFullscreenPlayerSettings();
+  const { useAlbumCoverForSongs, setUseAlbumCoverForSongs } =
+    useCoverArtSettings();
 
   return (
     <Root>
@@ -37,6 +42,19 @@ export function FullscreenSettings() {
             <Switch
               checked={autoFullscreenEnabled}
               onCheckedChange={setAutoFullscreenEnabled}
+            />
+          </ContentItemForm>
+        </ContentItem>
+        <ContentItem>
+          <ContentItemTitle
+            info={t("settings.appearance.general.albumCoverForSongs.info")}
+          >
+            {t("settings.appearance.general.albumCoverForSongs.label")}
+          </ContentItemTitle>
+          <ContentItemForm>
+            <Switch
+              checked={useAlbumCoverForSongs}
+              onCheckedChange={setUseAlbumCoverForSongs}
             />
           </ContentItemForm>
         </ContentItem>

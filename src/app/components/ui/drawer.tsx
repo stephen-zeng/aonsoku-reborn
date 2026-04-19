@@ -18,6 +18,21 @@ const DrawerTrigger = DrawerPrimitive.Trigger;
 
 const DrawerPortal = DrawerPrimitive.Portal;
 
+const DrawerHandle = React.forwardRef<
+  React.ElementRef<typeof DrawerPrimitive.Handle>,
+  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Handle>
+>(({ className, ...props }, ref) => (
+  <DrawerPrimitive.Handle
+    ref={ref}
+    className={cn(
+      "h-1.5 w-12 rounded-full bg-foreground/30 transition-opacity",
+      className,
+    )}
+    {...props}
+  />
+));
+DrawerHandle.displayName = DrawerPrimitive.Handle.displayName;
+
 const DrawerClose = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Close>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Close>
@@ -59,7 +74,7 @@ const DrawerContent = React.forwardRef<
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background",
+        "fixed inset-x-0 bottom-0 z-40 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent",
         className,
       )}
       {...props}
@@ -127,6 +142,7 @@ export {
   DrawerPortal,
   DrawerOverlay,
   DrawerTrigger,
+  DrawerHandle,
   DrawerClose,
   DrawerContent,
   DrawerHeader,

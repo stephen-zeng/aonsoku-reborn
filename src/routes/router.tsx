@@ -5,12 +5,18 @@ import {
   AlbumFallback,
   AlbumsFallback,
 } from "@/app/components/fallbacks/album-fallbacks";
-import { ArtistsFallback } from "@/app/components/fallbacks/artists.tsx";
+import {
+  ArtistFallback,
+  ArtistsFallback,
+} from "@/app/components/fallbacks/artists";
 import { HomeFallback } from "@/app/components/fallbacks/home-fallbacks";
 import { PlaylistFallback } from "@/app/components/fallbacks/playlist-fallbacks";
 import {
+  FavoritesFallback,
   InfinitySongListFallback,
-  SongListFallback,
+  MobileLibraryFallback,
+  PlaylistsListFallback,
+  RadiosListFallback,
 } from "@/app/components/fallbacks/song-fallbacks";
 import { albumsLoader } from "@/routes/loaders/albumsLoader";
 import { loginLoader } from "@/routes/loginLoader";
@@ -39,6 +45,7 @@ export const router = createHashRouter([
     path: ROUTES.LIBRARY.HOME,
     element: <BaseLayout />,
     loader: protectedLoader,
+    shouldRevalidate: () => false,
     children: [
       {
         id: "home",
@@ -86,7 +93,7 @@ export const router = createHashRouter([
         path: ROUTES.LIBRARY.FAVORITES,
         errorElement: <ErrorPage />,
         element: (
-          <Suspense fallback={<InfinitySongListFallback />}>
+          <Suspense fallback={<FavoritesFallback />}>
             <Favorites />
           </Suspense>
         ),
@@ -96,7 +103,7 @@ export const router = createHashRouter([
         path: ROUTES.LIBRARY.PLAYLISTS,
         errorElement: <ErrorPage />,
         element: (
-          <Suspense fallback={<SongListFallback />}>
+          <Suspense fallback={<PlaylistsListFallback />}>
             <PlaylistsPage />
           </Suspense>
         ),
@@ -106,7 +113,7 @@ export const router = createHashRouter([
         path: ROUTES.LIBRARY.RADIOS,
         errorElement: <ErrorPage />,
         element: (
-          <Suspense fallback={<SongListFallback />}>
+          <Suspense fallback={<RadiosListFallback />}>
             <Radios />
           </Suspense>
         ),
@@ -116,7 +123,7 @@ export const router = createHashRouter([
         path: ROUTES.ARTIST.PATH,
         errorElement: <ErrorPage />,
         element: (
-          <Suspense fallback={<AlbumFallback />}>
+          <Suspense fallback={<ArtistFallback />}>
             <Artist />
           </Suspense>
         ),
@@ -146,7 +153,7 @@ export const router = createHashRouter([
         path: ROUTES.MOBILE.LIBRARY,
         errorElement: <ErrorPage />,
         element: (
-          <Suspense fallback={<SongListFallback />}>
+          <Suspense fallback={<MobileLibraryFallback />}>
             <MobileLibrary />
           </Suspense>
         ),

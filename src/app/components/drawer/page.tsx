@@ -6,6 +6,7 @@ import { QueueSettings } from "@/app/components/fullscreen/settings";
 import { QueueSongList } from "@/app/components/queue/song-list";
 import { Button } from "@/app/components/ui/button";
 import { ResizeHandle } from "@/app/components/ui/resize-handle";
+import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useResizePanel } from "@/app/hooks/use-resize-panel";
 import { cn } from "@/lib/utils";
 import {
@@ -22,6 +23,9 @@ export function MainDrawerPage() {
   const { lyricsState } = useLyricsState();
   const { t } = useTranslation();
   const { setWidth } = useRightPanel();
+  const { hasLyrics } = useHasLyrics();
+
+  const lyricsDisabled = hasLyrics === false;
 
   const { handleMouseDown, handleDoubleClick } = useResizePanel({
     cssVar: "--right-panel-width",
@@ -72,12 +76,17 @@ export function MainDrawerPage() {
               size="sm"
               className={cn(
                 "h-8 px-3 rounded-full gap-1.5 text-xs font-medium",
-                lyricsState && "bg-foreground/10 text-foreground",
-                !lyricsState && "text-muted-foreground hover:text-foreground",
+                lyricsDisabled && "opacity-50 cursor-not-allowed",
+                !lyricsDisabled &&
+                  (lyricsState
+                    ? "bg-foreground/10 text-foreground"
+                    : "text-muted-foreground hover:text-foreground"),
               )}
               onClick={() => {
+                if (lyricsDisabled) return;
                 if (queueState) toggleQueueAndLyrics();
               }}
+              disabled={lyricsDisabled}
             >
               <MicVocalIcon className="w-3.5 h-3.5" />
               {t("fullscreen.lyrics")}

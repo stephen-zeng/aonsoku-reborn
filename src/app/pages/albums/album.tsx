@@ -1,4 +1,4 @@
-import { isMobile } from "react-device-detect";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { AlbumComment } from "@/app/components/album/comment";
@@ -16,6 +16,8 @@ import {
   useGetArtistAlbums,
   useGetGenreAlbums,
 } from "@/app/hooks/use-album";
+import { useHasHover } from "@/app/hooks/use-input-mode";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import ErrorPage from "@/app/pages/error-page";
 import { songsColumns } from "@/app/tables/songs-columns";
 import { ROUTES } from "@/routes/routesList";
@@ -29,6 +31,16 @@ export default function Album() {
   const { albumId } = useParams() as { albumId: string };
   const { setSongList } = usePlayerActions();
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
+  const hasHover = useHasHover();
+  const columns = useMemo(
+    () =>
+      songsColumns({
+        disableTextNavigation: true,
+        hasHover,
+      }),
+    [hasHover],
+  );
 
   const {
     data: album,
@@ -48,8 +60,6 @@ export default function Album() {
     return <ErrorPage status={404} statusText={t("error.notFound")} />;
   }
   if (!album) return <AlbumFallback />;
-
-  const columns = songsColumns();
 
   const albumDuration = album.duration
     ? convertSecondsToHumanRead(album.duration)
@@ -150,7 +160,13 @@ export default function Album() {
           columns={columns}
           data={album.song}
           handlePlaySong={(row) =>
-            setSongList(album.song, row.index, false, { albumId: album.id })
+            setSongList(
+              album.song,
+              row.index,
+              false,
+              { albumId: album.id },
+              album.name,
+            )
           }
           columnFilter={columnsToShow}
           showDiscNumber={true}

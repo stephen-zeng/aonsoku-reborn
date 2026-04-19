@@ -4,6 +4,8 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
 } from "@/app/components/ui/carousel";
 import { ISong } from "@/types/responses/song";
 
@@ -16,7 +18,7 @@ export default function HomeHeader({ songs }: HomeHeaderProps) {
 
   return (
     <Carousel
-      className="w-full border rounded-lg overflow-hidden z-10"
+      className="w-full border rounded-lg overflow-hidden z-10 group"
       opts={{
         loop: true,
       }}
@@ -41,16 +43,16 @@ export default function HomeHeader({ songs }: HomeHeaderProps) {
           </CarouselItem>
         ))}
       </CarouselContent>
-      {/* <div className="absolute right-[4.5rem] bottom-10">
+      <div className="absolute right-4 bottom-1 flex gap-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         <CarouselPrevious
+          className="static shadow-sm"
           data-testid="header-carousel-previous"
-          className="-left-6 shadow-sm"
         />
         <CarouselNext
+          className="static shadow-sm"
           data-testid="header-carousel-next"
-          className="shadow-sm"
         />
-      </div> */}
+      </div>
     </Carousel>
   );
 }

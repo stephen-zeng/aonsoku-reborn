@@ -1,9 +1,9 @@
 import { useSortable } from "@dnd-kit/sortable";
+import type { DraggableAttributes, SyntheticListenerMap } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
-import { EllipsisVertical, PlayIcon } from "lucide-react";
+import { EllipsisVertical, GripVertical, PlayIcon } from "lucide-react";
 import { CSSProperties, forwardRef, useState } from "react";
-import { getCoverArtUrl } from "@/api/httpClient";
 import { CachedIndicator } from "@/app/components/table/cached-indicator";
 import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
@@ -15,6 +15,7 @@ import {
 } from "@/app/components/ui/dropdown-menu";
 import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
+import { useSongCoverArtUrl } from "@/utils/coverArt";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
 import { QueueMenuOptions } from "./queue-menu-options";
 
@@ -24,6 +25,7 @@ interface QueueItemRowProps {
   isActive: boolean;
   onPlay: () => void;
   style?: CSSProperties;
+  tier?: "context" | "user";
 }
 
 export function SortableQueueItem({
@@ -59,35 +61,49 @@ export function SortableQueueItem({
 }
 
 interface InternalQueueItemRowProps extends QueueItemRowProps {
-  dragAttributes?: Record<string, unknown>;
-  dragListeners?: Record<string, unknown>;
+  dragAttributes?: DraggableAttributes;
+  dragListeners?: SyntheticListenerMap;
 }
 
 export const QueueItemRow = forwardRef<
   HTMLDivElement,
   InternalQueueItemRowProps
 >(function QueueItemRow(
-  { song, isPlaying, isActive, onPlay, style, dragAttributes, dragListeners },
+  {
+    song,
+    isPlaying,
+    isActive,
+    onPlay,
+    style,
+    dragAttributes,
+    dragListeners,
+    tier,
+  },
   ref,
 ) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const coverArtUrl = getCoverArtUrl(song.coverArt, "song", "100");
+  const coverArtUrl = useSongCoverArtUrl(song, "100");
 
   return (
     <ContextMenuProvider
-      options={<QueueMenuOptions variant="context" song={song} />}
+      options={<QueueMenuOptions variant="context" song={song} tier={tier} />}
     >
       <div
         ref={ref}
         className={clsx([
-          "group/queuerow flex items-center w-full h-16 text-sm rounded-md cursor-grab px-3 gap-2",
+          "group/queuerow flex items-center w-full h-16 text-sm rounded-md px-3 gap-2",
           "hover:bg-muted",
           isActive && "bg-accent",
         ])}
         style={style}
         {...dragAttributes}
-        {...dragListeners}
       >
+        <span
+          className="text-foreground/30 shrink-0 cursor-grab select-none py-2 -my-2 touch-none"
+          {...dragListeners}
+        >
+          <GripVertical className="w-4 h-4" />
+        </span>
         <div
           className="group/cover relative w-10 h-10 flex-shrink-0 cursor-pointer"
           onClick={(e) => {

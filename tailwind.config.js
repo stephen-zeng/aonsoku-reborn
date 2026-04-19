@@ -113,6 +113,9 @@ module.exports = {
           "minmax(250px, 1fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(250px, 1fr)",
         "table-fallback":
           "minmax(40px, 50px) minmax(0px, 3fr) minmax(0px, 2fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(60px, 70px) minmax(100px, 120px)",
+        "playlist-fallback": "48px 1fr 25% 190px 100px 100px 48px",
+        "radio-fallback": "48px 1fr 25% 25% 48px",
+        "artist-fallback": "48px 1fr 15% 48px",
         header:
           "minmax(180px, 1fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(180px, 1fr)",
         "mid-player-info": "minmax(40px, 70px) minmax(168px, 1fr)",
@@ -122,6 +125,9 @@ module.exports = {
         "floating-player": "minmax(0, 1fr) 40px",
       },
       flexBasis: {
+        "1/8": "12.5%",
+      },
+      width: {
         "1/8": "12.5%",
       },
       maskImage: {
@@ -138,7 +144,7 @@ module.exports = {
       boxShadow: {
         "custom-3": "0 0 3px rgba(255, 255, 255, 0.03)",
         "custom-5": "0 0 5px rgba(255, 255, 255, 0.05)",
-        "header-image": "0 4px 35px rgba(0, 0, 0, 0.6)",
+        "header-image": "0 3px 20px rgba(0, 0, 0, 0.45)",
       },
       screens: {
         "mid-player": { raw: "(min-height: 133px) and (max-height: 170px)" },

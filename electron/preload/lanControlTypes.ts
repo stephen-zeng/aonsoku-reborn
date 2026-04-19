@@ -93,6 +93,7 @@ export interface CurrentSongData {
   title: string;
   artist: string;
   album: string;
+  albumId?: string;
   coverArt?: string;
   duration: number;
 }

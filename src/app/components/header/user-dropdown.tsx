@@ -15,7 +15,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import { AboutDialog } from "@/app/components/about/dialog";
-import { useIsMobile } from "@/app/hooks/use-mobile";
+import { RemoteControlDialog } from "@/app/components/remote-control/dialog";
 import { ShortcutsDialog } from "@/app/components/shortcuts/dialog";
 import { Avatar, AvatarFallback } from "@/app/components/ui/avatar";
 import {
@@ -27,11 +27,11 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import { LogoutObserver } from "@/app/observers/logout-observer";
-import { RemoteControlDialog } from "@/app/components/remote-control/dialog";
 import { metadataSyncService } from "@/service/cache";
-import { logoutKeys, shortcutDialogKeys, stringifyShortcut } from "@/shortcuts";
 import { ROUTES } from "@/routes/routesList";
+import { logoutKeys, shortcutDialogKeys, stringifyShortcut } from "@/shortcuts";
 import { useAppData, useAppStore, useAppSettings } from "@/store/app.store";
 import { useCacheStore } from "@/store/cache.store";
 import { useLanControlServerInfo } from "@/store/lanControl.store";

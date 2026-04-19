@@ -1,20 +1,20 @@
-import { app, type BrowserWindow } from "electron";
 import type { IncomingMessage } from "node:http";
 import { createServer, type Server as HttpServer } from "node:http";
 import path from "node:path";
+import { app, type BrowserWindow } from "electron";
 import type { Express, Request, Response } from "express";
 import { WebSocket, WebSocketServer } from "ws";
+import { i18n } from "./i18n";
 import {
+  AuthRequestData,
+  AuthResponseData,
+  CurrentSongData,
   LanControlConfig,
   LanControlMessage,
   LanControlMessageType,
-  AuthRequestData,
-  AuthResponseData,
   PlayerStateData,
-  CurrentSongData,
   QueueData,
 } from "./lanControlTypes";
-import { i18n } from "./i18n";
 
 // These will be dynamically imported when server starts
 // type Express = any

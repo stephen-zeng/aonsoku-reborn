@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import {
-  type SwStatus,
   applySwUpdate,
   registerServiceWorker,
   retrySwUpdate,
+  type SwStatus,
 } from "@/utils/sw-register";
 
 export function useSwUpdate() {

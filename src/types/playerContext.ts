@@ -1,7 +1,7 @@
 import {
+  CurrentSongData,
   LanControlMessageType,
   PlayerStateData,
-  CurrentSongData,
   QueueData,
   RemoteDeviceInfo,
 } from "./lanControl";
@@ -14,22 +14,45 @@ export enum LoopState {
   One = 2,
 }
 
+export type QueueSourceId =
+  | { type: "album"; id: string }
+  | { type: "playlist"; id: string }
+  | { type: "radio"; id: string }
+  | { type: "artist"; id: string }
+  | { type: "genre"; id: string }
+  | null;
+
+export interface IContextQueue {
+  songs: ISong[];
+  currentIndex: number;
+  sourceId: QueueSourceId;
+  sourceName: string | null;
+}
+
+export interface IUserQueue {
+  songs: ISong[];
+}
+
 export interface ISongList {
-  shuffledList: ISong[];
-  currentList: ISong[];
-  currentSongIndex: number;
-  currentSong: ISong;
-  originalList: ISong[];
-  originalSongIndex: number;
+  contextQueue: IContextQueue;
+  userQueue: IUserQueue;
+  originalContextSongs: ISong[];
+  originalUserSongs?: ISong[];
+  currentSong: ISong | null;
   radioList: Radio[];
+  isShuffleActive: boolean;
+  isInUserQueue: boolean;
+  playedUserQueueHistory: ISong[];
+  shuffleHistory: string[];
 }
 
 export type FullscreenPlayerTab = "queue" | "playing" | "lyrics";
+export type DesktopFullscreenPanelView = "queue" | "lyrics" | null;
+export type QueueTier = "context" | "user";
 
 export interface IPlayerState {
   isPlaying: boolean;
   loopState: LoopState;
-  isShuffleActive: boolean;
   isSongStarred: boolean;
   volume: number;
   currentDuration: number;
@@ -40,8 +63,11 @@ export interface IPlayerState {
   lyricsState: boolean;
   fullscreenPlayerOpen: boolean;
   fullscreenPlayerTab: FullscreenPlayerTab;
+  desktopFullscreenPanelView: DesktopFullscreenPanelView;
   hasPrev: boolean;
   hasNext: boolean;
+  isBuffering: boolean;
+  areLyricsAligned: boolean;
 }
 
 export interface IPlayerProgress {
@@ -83,6 +109,11 @@ interface IFullscreen {
   setAutoFullscreenEnabled: (value: boolean) => void;
 }
 
+interface ICoverArtSettings {
+  useAlbumCoverForSongs: boolean;
+  setUseAlbumCoverForSongs: (value: boolean) => void;
+}
+
 interface ILyrics {
   preferSyncedLyrics: boolean;
   setPreferSyncedLyrics: (value: boolean) => void;
@@ -95,20 +126,6 @@ export interface IPrivacySettings {
   setLrcLibEnabled: (value: boolean) => void;
 }
 
-interface IBlurSettings {
-  value: number;
-  settings: {
-    min: number;
-    max: number;
-    step: number;
-  };
-}
-
-interface IBigPlayerSettings {
-  useSongColor: boolean;
-  blur: IBlurSettings;
-}
-
 interface IQueueSettings {
   useSongColor: boolean;
 }
@@ -116,13 +133,13 @@ interface IQueueSettings {
 interface IColorsSettings {
   currentSongColor: string | null;
   currentSongColorIntensity: number;
-  bigPlayer: IBigPlayerSettings;
   queue: IQueueSettings;
 }
 
 export interface IPlayerSettings {
   volume: IVolumeSettings;
   fullscreen: IFullscreen;
+  coverArt: ICoverArtSettings;
   lyrics: ILyrics;
   replayGain: IReplayGain;
   privacy: IPrivacySettings;
@@ -136,13 +153,16 @@ export interface IRemoteControlState {
 }
 
 export interface IPlayerActions {
-  playSong: (song: ISong) => void;
+  playSong: (song: ISong, sourceName?: string) => void;
   setSongList: (
     songlist: ISong[],
     index: number,
     shuffle?: boolean,
-    sourceId?: { albumId: string } | { playlistId: string },
+    sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
+    sourceName?: string,
   ) => void;
+  playFromQueue: (contextSongs: ISong[], contextIndex: number) => void;
+  playFromUserQueue: (userQueueIndex: number) => void;
   setCurrentSong: () => void;
   checkIsSongStarred: () => void;
   starSongInQueue: (id: string) => void;
@@ -158,22 +178,26 @@ export interface IPlayerActions {
   hasPrevSong: () => boolean;
   isPlayingOneSong: () => boolean;
   clearPlayerState: () => void;
+  clearUserQueue: () => void;
   resetProgress: () => void;
   setProgress: (progress: number) => void;
   setVolume: (volume: number) => void;
   handleVolumeWheel: (isScrollingDown: boolean) => void;
   setCurrentDuration: (duration: number) => void;
+  setIsBuffering: (value: boolean) => void;
   setPlayRadio: (list: Radio[], index: number) => void;
   setAudioPlayerRef: (ref: HTMLAudioElement) => void;
   setNextOnQueue: (
     songlist: ISong[],
-    sourceId?: { albumId: string } | { playlistId: string },
+    sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
+    sourceName?: string,
   ) => void;
   setLastOnQueue: (
     songlist: ISong[],
-    sourceId?: { albumId: string } | { playlistId: string },
+    sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
+    sourceName?: string,
   ) => void;
-  removeSongFromQueue: (id: string) => void;
+  removeSongFromQueue: (id: string, tier?: QueueTier) => void;
   reorderQueue: (fromIndex: number, toIndex: number) => void;
   setMainDrawerState: (state: boolean) => void;
   setQueueState: (state: boolean) => void;
@@ -185,16 +209,15 @@ export interface IPlayerActions {
   openFullscreenPlayer: (tab?: FullscreenPlayerTab) => void;
   closeFullscreenPlayer: () => void;
   setFullscreenPlayerTab: (tab: FullscreenPlayerTab) => void;
-  playFirstSongInQueue: () => void;
+  setDesktopFullscreenPanelView: (view: DesktopFullscreenPanelView) => void;
   handleSongEnded: () => void;
   getCurrentProgress: () => number;
   resetConfig: () => void;
   updateQueueChecks: () => void;
+  setAreLyricsAligned: (aligned: boolean) => void;
   setCurrentSongColor: (value: string | null) => void;
   setCurrentSongIntensity: (value: number) => void;
   setUseSongColorOnQueue: (value: boolean) => void;
-  setUseSongColorOnBigPlayer: (value: boolean) => void;
-  setBigPlayerBlurValue: (value: number) => void;
   enterRemoteControl: (device: RemoteDeviceInfo | null) => void;
   exitRemoteControl: () => void;
   registerRemoteSender: (

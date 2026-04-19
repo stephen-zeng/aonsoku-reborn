@@ -1,15 +1,10 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { isMobile } from "react-device-detect";
 import { PreviewCard } from "@/app/components/preview-card/card";
-import {
-  Carousel,
-  type CarouselApi,
-  CarouselContent,
-  CarouselItem,
-} from "@/app/components/ui/carousel";
 import { CarouselButton } from "@/app/components/ui/carousel-button";
+import { useScrollCarousel } from "@/app/hooks/use-scroll-carousel";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
@@ -30,39 +25,22 @@ export default function PreviewList({
   moreTitle,
   moreRoute,
 }: PreviewListProps) {
-  const [api, setApi] = useState<CarouselApi>();
-  const [canScrollPrev, setCanScrollPrev] = useState<boolean>();
-  const [canScrollNext, setCanScrollNext] = useState<boolean>();
+  const { canScrollPrev, canScrollNext, handleScroll, scrollCarouselProps } =
+    useScrollCarousel(title);
   const { setSongList } = usePlayerActions();
   const { t } = useTranslation();
+  const hasHover = useHasHover();
 
   moreTitle = moreTitle || t("generic.seeMore");
-
-  if (list.length > 16) {
-    list = list.slice(0, 16);
-  }
+  const displayList = useMemo(() => list.slice(0, 16), [list]);
 
   async function handlePlayAlbum(album: Albums) {
     const response = await subsonic.albums.getOne(album.id);
 
     if (response) {
-      setSongList(response.song, 0);
+      setSongList(response.song, 0, false, { albumId: album.id }, album.name);
     }
   }
-
-  useEffect(() => {
-    if (!api) {
-      return;
-    }
-
-    setCanScrollPrev(api.canScrollPrev());
-    setCanScrollNext(api.canScrollNext());
-
-    api.on("select", () => {
-      setCanScrollPrev(api.canScrollPrev());
-      setCanScrollNext(api.canScrollNext());
-    });
-  }, [api]);
 
   return (
     <div className="w-full flex flex-col mt-4">
@@ -85,64 +63,60 @@ export default function PreviewList({
             <CarouselButton
               direction="prev"
               disabled={!canScrollPrev}
-              onClick={() => api?.scrollPrev()}
+              onClick={() => handleScroll("prev")}
               data-testid="preview-list-prev-button"
             />
             <CarouselButton
               direction="next"
               disabled={!canScrollNext}
-              onClick={() => api?.scrollNext()}
+              onClick={() => handleScroll("next")}
               data-testid="preview-list-next-button"
             />
           </div>
         </div>
       </div>
 
-      <div className="transform-gpu">
-        <Carousel
-          opts={{
-            align: "start",
-            slidesToScroll: "auto",
-          }}
-          setApi={setApi}
-          data-testid="preview-list-carousel"
-        >
-          <CarouselContent>
-            {list.map((album, index) => (
-              <CarouselItem
-                key={album.id}
-                className="basis-1/3 sm:basis-1/6 2xl:basis-1/8"
-                data-testid={`preview-list-carousel-item-${index}`}
-              >
-                <PreviewCard.Root>
-                  <PreviewCard.ImageWrapper link={ROUTES.ALBUM.PAGE(album.id)}>
-                    <PreviewCard.Image
-                      coverArtId={album.coverArt}
-                      coverArtType="album"
-                      alt={album.name}
-                    />
-                    {!isMobile && (
-                      <PreviewCard.PlayButton
-                        onClick={() => handlePlayAlbum(album)}
-                      />
-                    )}
-                  </PreviewCard.ImageWrapper>
-                  <PreviewCard.InfoWrapper>
-                    <PreviewCard.Title link={ROUTES.ALBUM.PAGE(album.id)}>
-                      {album.name}
-                    </PreviewCard.Title>
-                    <PreviewCard.Subtitle
-                      enableLink={album.artistId !== undefined}
-                      link={ROUTES.ARTIST.PAGE(album.artistId ?? "")}
-                    >
-                      {album.artist}
-                    </PreviewCard.Subtitle>
-                  </PreviewCard.InfoWrapper>
-                </PreviewCard.Root>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
+      <div
+        {...scrollCarouselProps}
+        className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pl-4 scroll-pl-4 pr-4 scroll-pr-4 no-scrollbar"
+        data-testid="preview-list-carousel"
+      >
+        {displayList.map((album, index) => (
+          <div
+            key={album.id}
+            role="group"
+            aria-roledescription="slide"
+            aria-label={`${index + 1} of ${displayList.length}`}
+            className="shrink-0 snap-start w-1/3 sm:w-1/6 2xl:w-1/8"
+            data-testid={`preview-list-carousel-item-${index}`}
+          >
+            <PreviewCard.Root>
+              <PreviewCard.ImageWrapper link={ROUTES.ALBUM.PAGE(album.id)}>
+                <PreviewCard.Image
+                  coverArtId={album.coverArt}
+                  coverArtType="album"
+                  alt={album.name}
+                />
+                {hasHover && (
+                  <PreviewCard.PlayButton
+                    onClick={() => handlePlayAlbum(album)}
+                  />
+                )}
+              </PreviewCard.ImageWrapper>
+              <PreviewCard.InfoWrapper>
+                <PreviewCard.Title link={ROUTES.ALBUM.PAGE(album.id)}>
+                  {album.name}
+                </PreviewCard.Title>
+                <PreviewCard.Subtitle
+                  enableLink={album.artistId !== undefined}
+                  link={ROUTES.ARTIST.PAGE(album.artistId ?? "")}
+                >
+                  {album.artist}
+                </PreviewCard.Subtitle>
+              </PreviewCard.InfoWrapper>
+            </PreviewCard.Root>
+          </div>
+        ))}
       </div>
     </div>
   );

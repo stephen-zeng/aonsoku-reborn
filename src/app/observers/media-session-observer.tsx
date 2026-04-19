@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useLanControlClientStore } from "@/store/lanControlClient.store";
 import {
+  useIsRemoteControlActive,
+  usePlayerDuration,
   usePlayerIsPlaying,
   usePlayerMediaType,
-  usePlayerSonglist,
-  useIsRemoteControlActive,
   usePlayerProgress,
+  usePlayerSonglist,
 } from "@/store/player.store";
-import { useLanControlClientStore } from "@/store/lanControlClient.store";
 import { appName } from "@/utils/appName";
+import { clampProgress, isValidDuration } from "@/utils/duration";
+import { logger } from "@/utils/logger";
 import { manageMediaSession } from "@/utils/setMediaSession";
 
 export function MediaSessionObserver() {
@@ -17,10 +20,10 @@ export function MediaSessionObserver() {
   const { isRadio, isSong } = usePlayerMediaType();
   const { currentList, currentSongIndex, radioList } = usePlayerSonglist();
   const progress = usePlayerProgress();
+  const currentDuration = usePlayerDuration();
   const radioLabel = t("radios.label");
   const isRemoteActive = useIsRemoteControlActive();
 
-  // Get remote player state directly for more accurate status
   const remotePlayerState = useLanControlClientStore(
     (state) => state.playerState,
   );
@@ -28,11 +31,8 @@ export function MediaSessionObserver() {
     (state) => state.currentSong,
   );
 
-  // Use ref to track last update to avoid unnecessary re-renders
   const lastMetadataRef = useRef<string>("");
 
-  // In remote mode, prefer currentSong over currentList[index]
-  // because currentSong is set directly from remote updates
   const song =
     isRemoteActive && remoteCurrentSong?.id
       ? {
@@ -41,12 +41,12 @@ export function MediaSessionObserver() {
           artist: remoteCurrentSong.artist,
           album: remoteCurrentSong.album,
           coverArt: remoteCurrentSong.coverArt,
+          albumId: remoteCurrentSong.albumId,
           duration: remoteCurrentSong.duration,
         }
       : (currentList[currentSongIndex] ?? null);
   const radio = radioList[currentSongIndex] ?? null;
 
-  // In remote mode, check if we have currentSong data
   const hasNothingPlaying = isRemoteActive
     ? !remoteCurrentSong || !remoteCurrentSong.id
     : currentList.length === 0 && radioList.length === 0;
@@ -55,25 +55,21 @@ export function MediaSessionObserver() {
     document.title = appName;
   }, []);
 
-  // Update media session handlers when remote control state changes
   useEffect(() => {
-    console.log("[MediaSession] Remote control state changed:", isRemoteActive);
+    logger.info("[MediaSession] Remote control state changed:", isRemoteActive);
     manageMediaSession.setHandlers();
   }, [isRemoteActive]);
 
-  // Update metadata and playback state whenever they change
   useEffect(() => {
-    console.log("[MediaSession] State update:", {
+    logger.info("[MediaSession] State update:", {
       isRemoteActive,
       isPlaying: isRemoteActive ? remotePlayerState?.isPlaying : isPlaying,
       hasNothingPlaying,
       hasSong: !!song,
       songTitle: song?.title,
       songArtist: song?.artist,
-      remotePlayerState: isRemoteActive ? remotePlayerState : undefined,
     });
 
-    // Use remote player state when in remote mode
     const effectiveIsPlaying = isRemoteActive
       ? (remotePlayerState?.isPlaying ?? false)
       : isPlaying;
@@ -81,7 +77,7 @@ export function MediaSessionObserver() {
     manageMediaSession.setPlaybackState(effectiveIsPlaying);
 
     if (hasNothingPlaying) {
-      console.log("[MediaSession] Nothing playing, removing session");
+      logger.info("[MediaSession] Nothing playing, removing session");
       manageMediaSession.removeMediaSession();
       resetAppTitle();
       lastMetadataRef.current = "";
@@ -90,7 +86,6 @@ export function MediaSessionObserver() {
 
     if (!effectiveIsPlaying) {
       resetAppTitle();
-      // Don't clear metadata when paused, just update playback state
       return;
     }
 
@@ -101,9 +96,8 @@ export function MediaSessionObserver() {
       title = `${radioLabel} - ${radio.name} | Aonsoku`;
       metadataKey = `radio:${radio.name}`;
 
-      // Only update if changed
       if (lastMetadataRef.current !== metadataKey) {
-        console.log("[MediaSession] Setting radio session:", title);
+        logger.info("[MediaSession] Setting radio session:", title);
         manageMediaSession.setRadioMediaSession(radioLabel, radio.name);
         lastMetadataRef.current = metadataKey;
       }
@@ -111,9 +105,8 @@ export function MediaSessionObserver() {
       title = `${song.title} - ${song.artist} | Aonsoku`;
       metadataKey = `song:${song.id || song.title}`;
 
-      // Only update if changed
       if (lastMetadataRef.current !== metadataKey) {
-        console.log("[MediaSession] Setting song session:", title);
+        logger.info("[MediaSession] Setting song session:", title);
         manageMediaSession.setMediaSession(song);
         lastMetadataRef.current = metadataKey;
       }
@@ -133,9 +126,9 @@ export function MediaSessionObserver() {
     remotePlayerState,
   ]);
 
-  // Update position state for progress tracking
+  const lastPositionUpdateRef = useRef(0);
+
   useEffect(() => {
-    // Use remote player state when in remote mode
     const effectiveIsPlaying = isRemoteActive
       ? (remotePlayerState?.isPlaying ?? false)
       : isPlaying;
@@ -144,15 +137,25 @@ export function MediaSessionObserver() {
       return;
     }
 
-    const duration = song.duration ?? 0;
+    const duration = isRemoteActive ? (song.duration ?? 0) : currentDuration;
 
-    // In remote mode, use remote progress if available
+    if (!isValidDuration(duration)) {
+      return;
+    }
+
+    const now = Date.now();
+    if (now - lastPositionUpdateRef.current < 1000) {
+      return;
+    }
+    lastPositionUpdateRef.current = now;
+
     const effectiveProgress =
       isRemoteActive && remotePlayerState?.currentTime !== undefined
         ? remotePlayerState.currentTime
         : progress;
 
-    manageMediaSession.setPositionState(duration, effectiveProgress);
+    const clampedProgress = clampProgress(effectiveProgress, duration);
+    manageMediaSession.setPositionState(duration, clampedProgress);
   }, [
     progress,
     isPlaying,
@@ -160,6 +163,7 @@ export function MediaSessionObserver() {
     song,
     isRemoteActive,
     remotePlayerState,
+    currentDuration,
   ]);
 
   return null;

@@ -5,97 +5,23 @@ import {
   type IGainNode,
   type IMediaElementAudioSourceNode,
 } from "standardized-audio-context";
-import {
-  usePlayerMediaType,
-  useReplayGainState,
-  useRemoteControlState,
-} from "@/store/player.store";
 import { logger } from "@/utils/logger";
 import { ReplayGainParams } from "@/utils/replayGain";
 
 type IAudioSource = IMediaElementAudioSourceNode<IAudioContext>;
 
-export function useAudioContext(audio: HTMLAudioElement | null) {
-  const { isSong } = usePlayerMediaType();
-  const { replayGainError, replayGainEnabled } = useReplayGainState();
-  const { active: isRemoteControlActive } = useRemoteControlState();
+interface UseAudioContextOptions {
+  enabled: boolean;
+  onSetupError?: () => void;
+}
 
-  // Use native audio by default, only use AudioContext when acting as a remote controller
-  const shouldUseNativeAudio = !isRemoteControlActive;
-
+export function useAudioContext(
+  audio: HTMLAudioElement | null,
+  { enabled, onSetupError }: UseAudioContextOptions,
+) {
   const audioContextRef = useRef<IAudioContext | null>(null);
   const sourceNodeRef = useRef<IAudioSource | null>(null);
   const gainNodeRef = useRef<IGainNode<IAudioContext> | null>(null);
-
-  const setupAudioContext = useCallback(() => {
-    // Skip AudioContext setup when not in remote control mode - use native audio instead
-    if (shouldUseNativeAudio) {
-      logger.info("Using native HTML5 audio (no AudioContext)");
-      return;
-    }
-
-    if (!audio || !isSong || replayGainError) return;
-
-    if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContext();
-    }
-
-    const audioContext = audioContextRef.current;
-
-    if (!sourceNodeRef.current) {
-      sourceNodeRef.current = audioContext.createMediaElementSource(audio);
-    }
-
-    if (!gainNodeRef.current) {
-      gainNodeRef.current = audioContext.createGain();
-      // First we need to connect the sourceNode to the gainNode
-      sourceNodeRef.current.connect(gainNodeRef.current);
-      // And then we can connect the gainNode to the destination
-      gainNodeRef.current.connect(audioContext.destination);
-    }
-  }, [audio, isSong, replayGainError, shouldUseNativeAudio]);
-
-  const resumeContext = useCallback(async () => {
-    // Skip AudioContext operations when not in remote control mode
-    if (shouldUseNativeAudio) return;
-
-    const audioContext = audioContextRef.current;
-    if (!audioContext || !isSong) return;
-
-    logger.info("AudioContext State", { state: audioContext.state });
-
-    if (audioContext.state === "suspended") {
-      try {
-        await audioContext.resume();
-        logger.info("AudioContext resumed successfully");
-      } catch (error) {
-        logger.error("Failed to resume AudioContext", error);
-      }
-    }
-    if (audioContext.state === "closed") {
-      setupAudioContext();
-    }
-  }, [isSong, setupAudioContext, shouldUseNativeAudio]);
-
-  const setupGain = useCallback(
-    (gainValue: number, replayGain?: ReplayGainParams) => {
-      // Skip gain setup when not in remote control mode (native audio, no replay gain)
-      if (shouldUseNativeAudio) return;
-
-      if (audioContextRef.current && gainNodeRef.current) {
-        const currentTime = audioContextRef.current.currentTime;
-
-        logger.info("Replay Gain Status", {
-          enabled: replayGainEnabled,
-          gainValue,
-          ...replayGain,
-        });
-
-        gainNodeRef.current.gain.setValueAtTime(gainValue, currentTime);
-      }
-    },
-    [replayGainEnabled, shouldUseNativeAudio],
-  );
 
   const resetRefs = useCallback(() => {
     if (sourceNodeRef.current) {
@@ -112,24 +38,121 @@ export function useAudioContext(audio: HTMLAudioElement | null) {
     }
   }, []);
 
-  useEffect(() => {
-    if (replayGainError) resetRefs();
-  }, [replayGainError, resetRefs]);
+  const handleSetupError = useCallback(
+    (error: unknown, contextLabel: string) => {
+      logger.error(
+        `Failed to setup AudioContext during ${contextLabel}`,
+        error,
+      );
+      resetRefs();
+      onSetupError?.();
+    },
+    [onSetupError, resetRefs],
+  );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: clear state after unmount
-  useEffect(() => {
-    return () => resetRefs();
-  }, []);
+  const setupAudioContext = useCallback(() => {
+    if (!enabled) {
+      return;
+    }
+
+    if (!audio) return;
+
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContext();
+      }
+
+      const audioContext = audioContextRef.current;
+
+      // If the audio element changed, disconnect the old source node
+      // (createMediaElementSource can only be called once per element)
+      if (
+        sourceNodeRef.current &&
+        sourceNodeRef.current.mediaElement !== audio
+      ) {
+        sourceNodeRef.current.disconnect();
+        sourceNodeRef.current = null;
+      }
+
+      if (!sourceNodeRef.current) {
+        sourceNodeRef.current = audioContext.createMediaElementSource(audio);
+      }
+
+      if (!gainNodeRef.current) {
+        gainNodeRef.current = audioContext.createGain();
+        // First we need to connect the sourceNode to the gainNode
+        sourceNodeRef.current.connect(gainNodeRef.current);
+        // And then we can connect the gainNode to the destination
+        gainNodeRef.current.connect(audioContext.destination);
+      }
+    } catch (error) {
+      handleSetupError(error, "setupAudioContext");
+    }
+  }, [audio, enabled, handleSetupError]);
+
+  const resumeContext = useCallback(async () => {
+    if (!enabled) return;
+
+    const audioContext = audioContextRef.current;
+    if (!audioContext) return;
+
+    logger.info("AudioContext State", { state: audioContext.state });
+
+    if (audioContext.state === "suspended") {
+      try {
+        await audioContext.resume();
+        logger.info("AudioContext resumed successfully");
+      } catch (error) {
+        logger.error("Failed to resume AudioContext", error);
+      }
+    }
+    if (audioContext.state === "closed") {
+      resetRefs();
+      setupAudioContext();
+    }
+  }, [enabled, resetRefs, setupAudioContext]);
+
+  const setupGain = useCallback(
+    (gainValue: number, replayGain?: ReplayGainParams) => {
+      if (!enabled) return;
+
+      if (audioContextRef.current && gainNodeRef.current) {
+        const currentTime = audioContextRef.current.currentTime;
+
+        logger.info("Replay Gain Status", {
+          enabled,
+          gainValue,
+          ...replayGain,
+        });
+
+        gainNodeRef.current.gain.cancelScheduledValues(currentTime);
+        gainNodeRef.current.gain.setValueAtTime(
+          gainNodeRef.current.gain.value,
+          currentTime,
+        );
+        gainNodeRef.current.gain.linearRampToValueAtTime(
+          gainValue,
+          currentTime + 0.05,
+        );
+      }
+    },
+    [enabled],
+  );
 
   useEffect(() => {
+    if (!enabled) {
+      resetRefs();
+      return;
+    }
+
     if (audio) setupAudioContext();
-  }, [audio, setupAudioContext]);
+  }, [audio, enabled, resetRefs, setupAudioContext]);
 
   // Handle visibility changes to keep AudioContext alive
   useEffect(() => {
     const handleVisibilityChange = async () => {
       const audioContext = audioContextRef.current;
-      if (!audioContext || !isSong) return;
+      if (!audioContext) return;
 
       // When page becomes visible again, resume the context if suspended
       if (!document.hidden && audioContext.state === "suspended") {
@@ -145,11 +168,18 @@ export function useAudioContext(audio: HTMLAudioElement | null) {
       }
     };
 
+    if (!enabled) return;
+
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [isSong]);
+  }, [enabled]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: clear state after unmount
+  useEffect(() => {
+    return () => resetRefs();
+  }, []);
 
   return {
     audioContextRef,

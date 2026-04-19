@@ -56,6 +56,7 @@ export function Sidebar({ className }: SidebarProps) {
           isCollapsed ? "xl:hidden" : "xl:flex",
           className,
         )}
+        style={{ paddingLeft: "var(--safe-area-left)" }}
       >
         <div className="space-y-4 py-4 pt-4">
           <SidebarSection>
@@ -66,7 +67,11 @@ export function Sidebar({ className }: SidebarProps) {
           <SidebarSection>
             <SectionTitle>{t("sidebar.library")}</SectionTitle>
             <div>
-              <MemoSidebarGenerator list={libraryItems} />
+              <MemoSidebarGenerator
+                list={libraryItems.filter(
+                  (item) => item.id !== SidebarItems.Playlists,
+                )}
+              />
             </div>
           </SidebarSection>
         </div>
