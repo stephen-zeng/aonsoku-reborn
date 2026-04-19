@@ -55,6 +55,40 @@ const TIER_FRESH_WINDOW_MS: Record<SyncTier, number> = {
 };
 
 /**
+ * Rough upper bound on items per bulk write + per JS-thread turn.
+ * Splitting the 100k+ songs payload into chunks keeps the main thread
+ * responsive across the long-running T3 step (the sync service still
+ * runs on the main thread today; a full Web Worker migration is
+ * planned but deferred — see docs/offline-architecture.md P3.3 notes).
+ */
+const BULK_CHUNK_SIZE = 2000;
+
+/** Yield control to the event loop between chunks of work. */
+function yieldToMain(): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(() => resolve(), { timeout: 50 });
+    } else {
+      setTimeout(resolve, 0);
+    }
+  });
+}
+
+async function bulkPutInChunks<T, K>(
+  table: { bulkPut: (rows: T[]) => Promise<K> },
+  rows: T[],
+  signal: AbortSignal,
+): Promise<void> {
+  for (let offset = 0; offset < rows.length; offset += BULK_CHUNK_SIZE) {
+    if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+    await table.bulkPut(rows.slice(offset, offset + BULK_CHUNK_SIZE));
+    if (offset + BULK_CHUNK_SIZE < rows.length) {
+      await yieldToMain();
+    }
+  }
+}
+
+/**
  * Progressive, tiered metadata sync.
  *
  *  - T1 (seconds)       : user-visible essentials — favorites,
@@ -230,7 +264,11 @@ class MetadataSyncService {
     this.checkAborted(signal);
     if (artists?.length) {
       await libraryDb.artists.clear();
-      await libraryDb.artists.bulkPut(artists.map(withStarredAt));
+      await bulkPutInChunks(
+        libraryDb.artists,
+        artists.map(withStarredAt),
+        signal,
+      );
     }
 
     this.checkAborted(signal);
@@ -282,7 +320,11 @@ class MetadataSyncService {
 
     if (allAlbums.length) {
       await libraryDb.albums.clear();
-      await libraryDb.albums.bulkPut(allAlbums.map(withStarredAt));
+      await bulkPutInChunks(
+        libraryDb.albums,
+        allAlbums.map(withStarredAt),
+        signal,
+      );
     }
 
     await this.recordTierCheckpoint("t2");
@@ -305,9 +347,8 @@ class MetadataSyncService {
     this.checkAborted(signal);
     if (songs?.length) {
       await libraryDb.songs.clear();
-      await libraryDb.songs.bulkPut(
-        songs.map((s) => withPlayedAt(withStarredAt(s))),
-      );
+      const rows = songs.map((s) => withPlayedAt(withStarredAt(s)));
+      await bulkPutInChunks(libraryDb.songs, rows, signal);
     }
     this.updateSyncState("songs", "t3", songs.length, songs.length);
 
