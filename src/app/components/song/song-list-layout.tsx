@@ -61,7 +61,6 @@ export function SongListLayout({
   const columns = useMemo(
     () =>
       songsColumns({
-        disableTextNavigation: true,
         hasHover,
       }),
     [hasHover],

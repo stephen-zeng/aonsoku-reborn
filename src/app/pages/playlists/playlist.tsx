@@ -27,7 +27,6 @@ export default function Playlist() {
   const columns = useMemo(
     () =>
       songsColumns({
-        disableTextNavigation: true,
         hasHover,
       }),
     [hasHover],

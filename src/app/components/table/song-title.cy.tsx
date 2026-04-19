@@ -21,7 +21,6 @@ describe("TableSongTitle", () => {
       cy.mount(
         <div className="w-80">
           <TableSongTitle
-            disableTextNavigation={true}
             song={song}
             onPlay={onPlay}
           />

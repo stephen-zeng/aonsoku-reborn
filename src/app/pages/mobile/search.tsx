@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Play, SearchIcon } from "lucide-react";
-import { type MouseEvent, type TouchEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
@@ -29,7 +29,6 @@ interface MobileResultItemProps {
   subtitle: string;
   onRowClick: () => void;
   onPlayClick: () => void;
-  disableTextNavigation?: boolean;
 }
 
 function MobileResultItem({
@@ -40,7 +39,6 @@ function MobileResultItem({
   subtitle,
   onRowClick,
   onPlayClick,
-  disableTextNavigation = false,
 }: MobileResultItemProps) {
   const src = useCoverArtUrlFromSongPreference({
     coverArt,
@@ -48,12 +46,6 @@ function MobileResultItem({
     albumId,
     size: "100",
   });
-
-  function handleTextClick(
-    e: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>,
-  ) {
-    e.stopPropagation();
-  }
 
   return (
     <button
@@ -68,11 +60,7 @@ function MobileResultItem({
         className="aspect-square object-cover rounded shadow flex-shrink-0"
         alt={`${subtitle} - ${title}`}
       />
-      <div
-        className="flex flex-col justify-center flex-1 min-w-0"
-        onClick={disableTextNavigation ? handleTextClick : undefined}
-        onTouchEnd={disableTextNavigation ? handleTextClick : undefined}
-      >
+      <div className="flex flex-col justify-center flex-1 min-w-0">
         <span className="font-medium text-sm truncate">{title}</span>
         <span className="text-xs text-muted-foreground truncate">
           {subtitle}
@@ -226,7 +214,6 @@ export default function MobileSearch() {
                 albumId={song.albumId}
                 title={song.title}
                 subtitle={song.artist}
-                disableTextNavigation={true}
                 onRowClick={() => navigate(ROUTES.ALBUM.PAGE(song.albumId))}
                 onPlayClick={() => playSong(song)}
               />

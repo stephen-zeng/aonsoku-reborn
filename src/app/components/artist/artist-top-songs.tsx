@@ -22,7 +22,6 @@ export default function ArtistTopSongs({ topSongs, artist }: TopSongsProps) {
   const columns = useMemo(
     () =>
       songsColumns({
-        disableTextNavigation: true,
         hasHover,
       }),
     [hasHover],

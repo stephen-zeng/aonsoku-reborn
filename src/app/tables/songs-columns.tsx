@@ -1,6 +1,5 @@
 import { ClockIcon, HeartIcon } from "lucide-react";
 import { memo } from "react";
-import { Link } from "react-router-dom";
 
 import { ArtistLink, ArtistsLinks } from "@/app/components/song/artist-link";
 import PlaySongButton from "@/app/components/table/play-button";
@@ -10,7 +9,6 @@ import { Badge } from "@/app/components/ui/badge";
 import { DataTableColumnHeader } from "@/app/components/ui/data-table-column-header";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import i18n from "@/i18n";
-import { ROUTES } from "@/routes/routesList";
 import { ColumnDefType } from "@/types/react-table/columnDef";
 import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
@@ -20,19 +18,16 @@ const MemoSimpleTooltip = memo(SimpleTooltip);
 const MemoBadge = memo(Badge);
 const MemoPlaySongButton = memo(PlaySongButton);
 const MemoTableSongTitle = memo(TableSongTitle);
-const MemoLink = memo(Link);
 const MemoSongTableActions = memo(SongTableActions);
 const MemoDataTableColumnHeader = memo(
   DataTableColumnHeader,
 ) as typeof DataTableColumnHeader;
 
 type SongsColumnsOptions = {
-  disableTextNavigation?: boolean;
   hasHover?: boolean;
 };
 
 export function songsColumns({
-  disableTextNavigation = false,
   hasHover = true,
 }: SongsColumnsOptions = {}): ColumnDefType<ISong>[] {
   return [
@@ -90,7 +85,6 @@ export function songsColumns({
       ),
       cell: ({ row, table }) => (
         <MemoTableSongTitle
-          disableTextNavigation={disableTextNavigation}
           song={row.original}
           onPlay={() => table.options.meta?.handlePlaySong?.(row)}
         />
@@ -117,7 +111,7 @@ export function songsColumns({
           return (
             <ArtistsLinks
               artists={artists}
-              disableNavigation={disableTextNavigation}
+              disableNavigation={true}
             />
           );
         }
@@ -127,7 +121,7 @@ export function songsColumns({
         return (
           <ArtistLink
             artistId={artistId}
-            disableNavigation={disableTextNavigation}
+            disableNavigation={true}
           >
             {artist}
           </ArtistLink>
@@ -151,24 +145,10 @@ export function songsColumns({
         </MemoDataTableColumnHeader>
       ),
       cell: ({ row }) => {
-        if (disableTextNavigation) {
-          return (
-            <span className="truncate text-foreground/70">
-              {row.original.album}
-            </span>
-          );
-        }
         return (
-          <MemoLink
-            to={ROUTES.ALBUM.PAGE(row.original.albumId)}
-            className="hover:underline truncate text-foreground/70 hover:text-foreground"
-            onContextMenu={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-            }}
-          >
+          <span className="truncate">
             {row.original.album}
-          </MemoLink>
+          </span>
         );
       },
     },

@@ -39,7 +39,7 @@ export default function SongList() {
   const isOnline = useIsOnline();
 
   const columns = useMemo(
-    () => songsColumns({ disableTextNavigation: true, hasHover }),
+    () => songsColumns({ hasHover }),
     [hasHover],
   );
 

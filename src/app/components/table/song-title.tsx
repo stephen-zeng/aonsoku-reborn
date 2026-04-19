@@ -1,17 +1,14 @@
 import { ArtistLink, ArtistsLinks } from "@/app/components/song/artist-link";
 import { CoverImage } from "@/app/components/table/cover-image";
-import { cn } from "@/lib/utils";
 import { useMainDrawerState } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 
 export function TableSongTitle({
   song,
   onPlay,
-  disableTextNavigation = false,
 }: {
   song: ISong;
   onPlay?: () => void;
-  disableTextNavigation?: boolean;
 }) {
   const { mainDrawerState, closeDrawer } = useMainDrawerState();
 
@@ -20,12 +17,7 @@ export function TableSongTitle({
   }
 
   return (
-    <div
-      className={cn(
-        "flex w-full gap-2 items-center",
-        disableTextNavigation && "opacity-50",
-      )}
-    >
+    <div className="flex w-full gap-2 items-center">
       <CoverImage
         coverArt={song.coverArt}
         coverArtType="song"
@@ -34,29 +26,13 @@ export function TableSongTitle({
       />
       <div className="flex flex-col w-full justify-center truncate">
         <span
-          className={cn(
-            "font-medium truncate",
-            onPlay &&
-              !disableTextNavigation &&
-              "cursor-pointer hover:underline",
-            disableTextNavigation && "text-muted-foreground",
-          )}
-          onClick={
-            onPlay && !disableTextNavigation
-              ? (e) => {
-                  e.stopPropagation();
-                  onPlay();
-                }
-              : undefined
-          }
-          onTouchEnd={undefined}
+          className="font-medium truncate"
         >
           {song.title}
         </span>
         <div className="flex items-center truncate">
           <TableArtists
             song={song}
-            disableTextNavigation={disableTextNavigation}
             onClickLink={handleArtistLinkClick}
           />
         </div>
@@ -67,13 +43,11 @@ export function TableSongTitle({
 
 type ArtistsLinksProps = {
   song: ISong;
-  disableTextNavigation?: boolean;
   onClickLink?: () => void;
 };
 
 export function TableArtists({
   song,
-  disableTextNavigation = false,
   onClickLink,
 }: ArtistsLinksProps) {
   const { artists, artistId, artist } = song;
@@ -82,7 +56,7 @@ export function TableArtists({
     return (
       <ArtistsLinks
         artists={artists}
-        disableNavigation={disableTextNavigation}
+        disableNavigation={true}
         onClickLink={onClickLink}
         className="w-full gap-1 text-xs text-foreground/70 maskImage-marquee-fade-finished"
         linkClassName="text-xs text-foreground/70 text-nowrap"
@@ -100,7 +74,7 @@ export function TableArtists({
   return (
     <ArtistLink
       artistId={artistId}
-      disableNavigation={disableTextNavigation}
+      disableNavigation={true}
       className="text-xs text-foreground/70 text-nowrap"
       data-testid="track-artist-url"
       onClick={onClickLink}
