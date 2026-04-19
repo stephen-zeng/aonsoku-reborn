@@ -171,15 +171,11 @@ class CacheManager {
 
   async enforceStorageLimit(): Promise<void> {
     const { maxCacheSize } = useCacheStore.getState().settings;
-    if (maxCacheSize === 0) return;
-
     const items = getCacheIndexItems();
-    const totalSize = Object.values(items).reduce(
-      (sum, item) => sum + item.sizeBytes,
-      0,
-    );
-
-    const toEvict = computeEvictionPlan(items, totalSize, maxCacheSize);
+    // Until P2.3 splits the setting into per-pool quotas, the global
+    // cap applies to the LRU pool only — explicit downloads are
+    // exempt from auto-eviction entirely.
+    const toEvict = computeEvictionPlan(items, { lru: maxCacheSize });
     for (const key of toEvict) {
       await this.evictItem(key);
     }
