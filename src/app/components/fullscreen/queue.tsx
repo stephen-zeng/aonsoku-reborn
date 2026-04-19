@@ -11,7 +11,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { LucideIcon } from "lucide-react";
-import { GripVertical, ListX, Repeat } from "lucide-react";
+import { GripVertical, Repeat } from "lucide-react";
 import {
   memo,
   useEffect,
@@ -347,55 +347,63 @@ function UnifiedQueueView({
         <QueueCurrentSong onClick={onCurrentSongClick} />
       </div>
 
-      <div className={FULLSCREEN_QUEUE_BG_CLASS}>
-        <div
-          className={`${FULLSCREEN_QUEUE_BG_CLASS} sticky top-0 z-10 px-2 pt-1 pb-1`}
-        >
-          {!hideModeButtons && <QueueModeButtons />}
-          {showContinueHeader && (
-            <div
-              className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
-            >
-              <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
-                {t("fullscreen.queueContinue")}
-              </h3>
-            </div>
-          )}
-          <QueueSourceLabel />
-        </div>
-
-        {isRepeatOne && userQueueSongs.length === 0 && (
+      {isRepeatOne && userQueueSongs.length === 0 && (
+        <div className={FULLSCREEN_QUEUE_BG_CLASS}>
+          <div
+            className={`${FULLSCREEN_QUEUE_BG_CLASS} sticky top-0 z-10 px-2 pt-1 pb-1`}
+          >
+            {!hideModeButtons && <QueueModeButtons />}
+            {showContinueHeader && (
+              <div
+                className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
+              >
+                <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
+                  {t("fullscreen.queueContinue")}
+                </h3>
+              </div>
+            )}
+            <QueueSourceLabel />
+          </div>
           <RepeatIndicator
             icon={RepeatOne}
             label={t("fullscreen.queueRepeating")}
           />
-        )}
+        </div>
+      )}
 
-        {isRepeatOne && userQueueSongs.length > 0 && (
-          <>
-            <UserQueueDnd
-              userQueueSongs={userQueueSongs}
-              userSortableItems={userSortableItems}
-              currentSong={currentSong}
-              sensors={sensors}
-              onDragStart={handleUserDragStart}
-              onDragEnd={handleUserDragEnd}
-              clearUserQueue={clearUserQueue}
-              activeItem={activeItem}
-              dragOverlayBg={dragOverlayBg}
-              t={t}
-              onPlaySong={(song) => playSong(song)}
-            />
-            <RepeatIndicator
-              icon={RepeatOne}
-              label={t("fullscreen.queueRepeating")}
-            />
-          </>
-        )}
+      {isRepeatOne && userQueueSongs.length > 0 && (
+        <div className={FULLSCREEN_QUEUE_BG_CLASS}>
+          <UserQueueDnd
+            userQueueSongs={userQueueSongs}
+            userSortableItems={userSortableItems}
+            currentSong={currentSong}
+            sensors={sensors}
+            onDragStart={handleUserDragStart}
+            onDragEnd={handleUserDragEnd}
+            clearUserQueue={clearUserQueue}
+            activeItem={activeItem}
+            dragOverlayBg={dragOverlayBg}
+            t={t}
+            onPlaySong={(song) => playSong(song)}
+            sticky
+          />
+          <div
+            className={`${FULLSCREEN_QUEUE_BG_CLASS} sticky top-0 z-10 px-2 pt-1 pb-1`}
+          >
+            {!hideModeButtons && <QueueModeButtons />}
+            <QueueSourceLabel />
+          </div>
+          <RepeatIndicator
+            icon={RepeatOne}
+            label={t("fullscreen.queueRepeating")}
+          />
+        </div>
+      )}
 
-        {!isRepeatOne && (
-          <>
-            {userQueueSongs.length > 0 && (
+      {!isRepeatOne && (
+        <>
+          {userQueueSongs.length > 0 && (
+            <div className={FULLSCREEN_QUEUE_BG_CLASS}>
               <UserQueueDnd
                 userQueueSongs={userQueueSongs}
                 userSortableItems={userSortableItems}
@@ -408,8 +416,27 @@ function UnifiedQueueView({
                 dragOverlayBg={dragOverlayBg}
                 t={t}
                 onPlaySong={(song) => playSong(song)}
+                sticky
               />
-            )}
+            </div>
+          )}
+
+          <div className={FULLSCREEN_QUEUE_BG_CLASS}>
+            <div
+              className={`${FULLSCREEN_QUEUE_BG_CLASS} sticky top-0 z-10 px-2 pt-1 pb-1`}
+            >
+              {!hideModeButtons && <QueueModeButtons />}
+              {showContinueHeader && (
+                <div
+                  className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
+                >
+                  <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
+                    {t("fullscreen.queueContinue")}
+                  </h3>
+                </div>
+              )}
+              <QueueSourceLabel />
+            </div>
 
             <DndContext
               sensors={sensors}
@@ -421,30 +448,22 @@ function UnifiedQueueView({
                 items={upcomingSortableItems}
                 strategy={verticalListSortingStrategy}
               >
-                {upcomingContext.length > 0 && (
-                  <div className="px-2 pt-1">
-                    <div className="flex items-center px-2 py-1">
-                      <h3 className="text-[11px] font-semibold text-foreground/50 uppercase tracking-wider">
-                        Up Next
-                      </h3>
-                    </div>
-                    {upcomingContext.map((song, idx) => {
-                      const contextIdx = contextIndex + 1 + idx;
-                      const isActive = currentSong?.id === song.id;
-                      return (
-                        <SortableUpcomingRow
-                          key={song.id}
-                          song={song}
-                          isActive={isActive}
-                          onClick={() =>
-                            playFromQueue(contextSongs, contextIdx)
-                          }
-                          tier="context"
-                        />
-                      );
-                    })}
-                  </div>
-                )}
+                {upcomingContext.length > 0 &&
+                  upcomingContext.map((song, idx) => {
+                    const contextIdx = contextIndex + 1 + idx;
+                    const isActive = currentSong?.id === song.id;
+                    return (
+                      <SortableUpcomingRow
+                        key={song.id}
+                        song={song}
+                        isActive={isActive}
+                        onClick={() =>
+                          playFromQueue(contextSongs, contextIdx)
+                        }
+                        tier="context"
+                      />
+                    );
+                  })}
               </SortableContext>
               {createPortal(
                 <DragOverlay>
@@ -473,9 +492,9 @@ function UnifiedQueueView({
                 label={t("fullscreen.queueRepeating")}
               />
             )}
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      )}
       <div ref={spacerRef} className="shrink-0" aria-hidden="true" />
     </div>
   );
@@ -510,6 +529,7 @@ function UserQueueDnd({
   dragOverlayBg,
   t,
   onPlaySong,
+  sticky = false,
 }: {
   userQueueSongs: ISong[];
   userSortableItems: string[];
@@ -522,6 +542,7 @@ function UserQueueDnd({
   dragOverlayBg: string;
   t: (key: string) => string;
   onPlaySong: (song: ISong) => void;
+  sticky?: boolean;
 }) {
   const filteredUserQueueSongs = userQueueSongs.filter(
     (song) => song.id !== currentSong?.id,
@@ -541,17 +562,18 @@ function UserQueueDnd({
         strategy={verticalListSortingStrategy}
       >
         <div className="px-2 pt-1">
-          <div className="flex items-center justify-between px-2 py-1">
-            <h3 className="text-[11px] font-semibold text-foreground/50 uppercase tracking-wider">
+          <div
+            className={`${sticky ? `${FULLSCREEN_QUEUE_BG_CLASS} sticky top-0 z-10 ` : ""}flex items-center justify-between px-2 py-1`}
+          >
+            <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
               Queue
             </h3>
             <Button
               variant="ghost"
               size="sm"
-              className="h-5 px-1.5 text-[11px] text-foreground/40 hover:text-foreground gap-1"
+              className="h-6 px-2 text-xs text-foreground/50 hover:text-foreground"
               onClick={clearUserQueue}
             >
-              <ListX className="w-3 h-3" />
               {t("generic.clear")}
             </Button>
           </div>
