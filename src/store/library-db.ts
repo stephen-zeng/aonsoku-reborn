@@ -112,13 +112,13 @@ function toEpoch(iso: string | undefined | null): number | undefined {
   return Number.isNaN(ms) ? undefined : ms;
 }
 
-function withStarredAt<T extends { starred?: string }>(
+export function withStarredAt<T extends { starred?: string }>(
   row: T,
 ): T & { starredAt?: number } {
   return { ...row, starredAt: toEpoch(row.starred) };
 }
 
-function withPlayedAt<T extends { played?: string }>(
+export function withPlayedAt<T extends { played?: string }>(
   row: T,
 ): T & { playedAt?: number } {
   return { ...row, playedAt: toEpoch(row.played) };

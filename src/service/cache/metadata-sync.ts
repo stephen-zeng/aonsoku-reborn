@@ -1,15 +1,10 @@
-import { get, set } from "idb-keyval";
-import { offlineLibraryStore } from "@/store/idb";
+import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
 import { useCacheStore } from "@/store/cache.store";
-import { subsonic } from "@/service/subsonic";
+import { libraryDb, withPlayedAt, withStarredAt } from "@/store/library-db";
 import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/utils/queryKeys";
 import { SyncPhase } from "@/types/cache";
-import type { ISong } from "@/types/responses/song";
-import type { ISimilarArtist } from "@/types/responses/artist";
-import type { Genre } from "@/types/responses/genre";
-import type { Playlist } from "@/types/responses/playlist";
 
 interface AlbumSummary {
   id: string;
@@ -22,16 +17,8 @@ interface AlbumSummary {
   year?: number;
   genre?: string;
   created: string;
+  starred?: string;
 }
-
-const IDB_KEYS = {
-  genres: "offline-genres",
-  artists: "offline-artists",
-  albums: "offline-albums",
-  songs: "offline-songs",
-  playlists: "offline-playlists",
-  timestamp: "offline-sync-timestamp",
-};
 
 class MetadataSyncService {
   private abortController: AbortController | null = null;
@@ -67,13 +54,19 @@ class MetadataSyncService {
       if (signal.aborted) throw new DOMException("Aborted", "AbortError");
       this.updateSyncState("genres");
       const genres = await subsonic.genres.get();
-      await set(IDB_KEYS.genres, genres, offlineLibraryStore);
+      if (genres?.length) {
+        await libraryDb.genres.clear();
+        await libraryDb.genres.bulkPut(genres);
+      }
 
       // 2. Artists
       if (signal.aborted) throw new DOMException("Aborted", "AbortError");
       this.updateSyncState("artists");
       const artists = await subsonic.artists.getAll();
-      await set(IDB_KEYS.artists, artists, offlineLibraryStore);
+      if (artists?.length) {
+        await libraryDb.artists.clear();
+        await libraryDb.artists.bulkPut(artists.map(withStarredAt));
+      }
 
       // 3. Albums (paginated)
       if (signal.aborted) throw new DOMException("Aborted", "AbortError");
@@ -107,6 +100,7 @@ class MetadataSyncService {
               year: album.year,
               genre: album.genre,
               created: album.created,
+              starred: album.starred,
             });
           }
           this.updateSyncState(
@@ -120,21 +114,32 @@ class MetadataSyncService {
           }
         }
       }
-      await set(IDB_KEYS.albums, allAlbums, offlineLibraryStore);
+      if (allAlbums.length) {
+        await libraryDb.albums.clear();
+        await libraryDb.albums.bulkPut(allAlbums.map(withStarredAt));
+      }
 
       // 4. Songs
       if (signal.aborted) throw new DOMException("Aborted", "AbortError");
       this.updateSyncState("songs");
       const knownSongCount = useAppStore.getState().data.songCount ?? 100_000;
       const songs = await subsonic.songs.getAllSongs(knownSongCount);
-      await set(IDB_KEYS.songs, songs, offlineLibraryStore);
+      if (songs?.length) {
+        await libraryDb.songs.clear();
+        await libraryDb.songs.bulkPut(
+          songs.map((s) => withPlayedAt(withStarredAt(s))),
+        );
+      }
       this.updateSyncState("songs", songs.length, songs.length);
 
       // 5. Playlists
       if (signal.aborted) throw new DOMException("Aborted", "AbortError");
       this.updateSyncState("playlists");
       const playlists = await subsonic.playlists.getAll();
-      await set(IDB_KEYS.playlists, playlists, offlineLibraryStore);
+      if (playlists?.length) {
+        await libraryDb.playlists.clear();
+        await libraryDb.playlists.bulkPut(playlists.map(withStarredAt));
+      }
 
       // 6. Cover art (optional, handled by cache manager separately)
       if (options?.includeCoverArt) {
@@ -145,7 +150,10 @@ class MetadataSyncService {
 
       // Done
       const timestamp = Date.now();
-      await set(IDB_KEYS.timestamp, timestamp, offlineLibraryStore);
+      await libraryDb.syncState.put({
+        key: "full-sync",
+        lastSyncedAt: timestamp,
+      });
       useCacheStore.getState().actions.setLastSyncedAt(timestamp);
       this.updateSyncState("done");
 
@@ -172,50 +180,6 @@ class MetadataSyncService {
       this.abortController.abort();
       this.abortController = null;
     }
-  }
-
-  // ── Retrieval ──
-
-  async getGenres(): Promise<Genre[]> {
-    return (await get<Genre[]>(IDB_KEYS.genres, offlineLibraryStore)) ?? [];
-  }
-
-  async getArtists(): Promise<ISimilarArtist[]> {
-    return (
-      (await get<ISimilarArtist[]>(IDB_KEYS.artists, offlineLibraryStore)) ?? []
-    );
-  }
-
-  async getAlbums(): Promise<AlbumSummary[]> {
-    return (
-      (await get<AlbumSummary[]>(IDB_KEYS.albums, offlineLibraryStore)) ?? []
-    );
-  }
-
-  async getSongs(): Promise<ISong[]> {
-    return (await get<ISong[]>(IDB_KEYS.songs, offlineLibraryStore)) ?? [];
-  }
-
-  async getPlaylists(): Promise<Playlist[]> {
-    return (
-      (await get<Playlist[]>(IDB_KEYS.playlists, offlineLibraryStore)) ?? []
-    );
-  }
-
-  async getLastSyncTime(): Promise<number | null> {
-    return (await get<number>(IDB_KEYS.timestamp, offlineLibraryStore)) ?? null;
-  }
-
-  async hasSyncedData(): Promise<boolean> {
-    const timestamp = await this.getLastSyncTime();
-    return timestamp !== null;
-  }
-
-  async clearSyncedData(): Promise<void> {
-    for (const key of Object.values(IDB_KEYS)) {
-      await set(key, undefined, offlineLibraryStore);
-    }
-    useCacheStore.getState().actions.setLastSyncedAt(null);
   }
 }
 
