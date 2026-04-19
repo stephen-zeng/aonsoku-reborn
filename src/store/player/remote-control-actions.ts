@@ -33,9 +33,7 @@ export function createRemoteControlActions(shared: SharedDeps) {
   const setRemoteQueueState = (queue: QueueData | null) => {
     set((state) => {
       if (!queue) {
-        state.songlist.contextQueue = emptyContextQueue();
-        state.songlist.userQueue = { songs: [] };
-        state.songlist.originalContextSongs = [];
+        clearSonglistState(state.songlist);
         state.playerState.hasPrev = false;
         state.playerState.hasNext = false;
         return;
@@ -51,6 +49,7 @@ export function createRemoteControlActions(shared: SharedDeps) {
       state.songlist.userQueue = { songs: [] };
       state.songlist.originalContextSongs = mappedSongs;
       state.songlist.isShuffleActive = false;
+      state.songlist.shuffleHistory = [];
       const lastIndex = mappedSongs.length - 1;
       const currentIndex = queue.currentIndex ?? 0;
       state.playerState.hasPrev = currentIndex > 0;

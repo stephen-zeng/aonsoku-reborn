@@ -10,7 +10,7 @@ import type { ISong } from "@/types/responses/song";
 import type { Radio } from "@/types/responses/radios";
 import { LanControlMessageType } from "@/types/lanControl";
 import { areSongListsEqual } from "@/utils/compareSongLists";
-import { shuffleSongList } from "@/utils/songListFunctions";
+import { MAX_SHUFFLE_HISTORY, shuffleWithGapAvoidance } from "@/utils/songListFunctions";
 import {
   applyShuffleOff,
   applyShuffleOn,
@@ -22,6 +22,7 @@ import {
   hasNextEffectiveSong,
   hasPrevEffectiveSong,
   isPlayingOneSong,
+  reshuffleContextForWrap,
   sendAddToQueueRemote,
   setLastOnUserQueue,
   setNextOnUserQueue,
@@ -128,41 +129,49 @@ export function createQueueActions(shared: SharedDeps) {
 
       get().actions.resetProgress();
 
-      set((state) => {
-        state.songlist.contextQueue = {
-          ...emptyContextQueue(),
-          songs: [...songlist],
-          currentIndex: index,
-          sourceId: sourceId ?? null,
-          sourceName:
-            sourceName !== undefined
-              ? sourceName || null
-              : state.songlist.contextQueue.sourceName,
-        };
-        state.songlist.userQueue = { songs: [] };
-        state.songlist.originalContextSongs = [...songlist];
-        state.songlist.radioList = [];
-        state.songlist.userQueuePosition = 0;
-        state.playerState.mediaType = "song";
-      });
-
       if (shuffle) {
-        const { contextQueue } = get().songlist;
-        const upcoming = contextQueue.songs.slice(index + 1);
-        const shuffledUpcoming = shuffleSongList(upcoming, 0);
+        const upcoming = songlist.slice(index + 1);
+        const shuffledUpcoming = shuffleWithGapAvoidance(upcoming, []);
 
         set((state) => {
-          state.songlist.contextQueue.songs = [
-            ...state.songlist.contextQueue.songs.slice(0, index + 1),
-            ...shuffledUpcoming,
-          ];
-          state.songlist.isShuffleActive = true;
+          state.songlist.contextQueue = {
+            ...emptyContextQueue(),
+            songs: [...songlist.slice(0, index + 1), ...shuffledUpcoming],
+            currentIndex: index,
+            sourceId: sourceId ?? null,
+            sourceName:
+              sourceName !== undefined
+                ? sourceName || null
+                : state.songlist.contextQueue.sourceName,
+          };
+          state.songlist.userQueue = { songs: [] };
           state.songlist.originalContextSongs = [...songlist];
+          state.songlist.radioList = [];
+          state.songlist.userQueuePosition = 0;
+          state.songlist.shuffleHistory = [];
+          state.songlist.isShuffleActive = true;
+          state.playerState.mediaType = "song";
           state.playerState.isPlaying = true;
         });
       } else {
         set((state) => {
+          state.songlist.contextQueue = {
+            ...emptyContextQueue(),
+            songs: [...songlist],
+            currentIndex: index,
+            sourceId: sourceId ?? null,
+            sourceName:
+              sourceName !== undefined
+                ? sourceName || null
+                : state.songlist.contextQueue.sourceName,
+          };
+          state.songlist.userQueue = { songs: [] };
+          state.songlist.originalContextSongs = [...songlist];
+          state.songlist.radioList = [];
+          state.songlist.userQueuePosition = 0;
+          state.songlist.shuffleHistory = [];
           state.songlist.isShuffleActive = false;
+          state.playerState.mediaType = "song";
           state.playerState.isPlaying = true;
         });
       }
@@ -197,6 +206,7 @@ export function createQueueActions(shared: SharedDeps) {
           state.songlist.originalContextSongs = [song];
           state.songlist.isShuffleActive = false;
           state.songlist.userQueuePosition = 0;
+          state.songlist.shuffleHistory = [];
           state.playerState.isPlaying = true;
           state.songlist.radioList = [];
         });
@@ -410,9 +420,11 @@ export function createQueueActions(shared: SharedDeps) {
             state.playerState.isPlaying = true;
           });
         } else if (loopState === LoopState.All) {
+          const lastPlayedSongId = songlist.contextQueue.songs[songlist.contextQueue.currentIndex]?.id;
           set((state) => {
             state.songlist.userQueuePosition = 0;
             state.songlist.contextQueue.currentIndex = 0;
+            reshuffleContextForWrap(state.songlist, lastPlayedSongId);
             state.playerState.isPlaying = true;
           });
         }
@@ -438,8 +450,10 @@ export function createQueueActions(shared: SharedDeps) {
       }
 
       if (loopState === LoopState.All) {
+        const lastPlayedSongId = songlist.contextQueue.songs[songlist.contextQueue.currentIndex]?.id;
         set((state) => {
           state.songlist.contextQueue.currentIndex = 0;
+          reshuffleContextForWrap(state.songlist, lastPlayedSongId);
           state.playerState.isPlaying = true;
         });
       }
@@ -579,6 +593,17 @@ export function createQueueActions(shared: SharedDeps) {
         state.playerState.currentDuration = song?.duration
           ? Math.round(song.duration)
           : 0;
+        if (state.songlist.isShuffleActive && song?.id) {
+          const history = state.songlist.shuffleHistory;
+          const idx = history.indexOf(song.id);
+          if (idx !== -1) {
+            history.splice(idx, 1);
+          }
+          history.push(song.id);
+          if (history.length > MAX_SHUFFLE_HISTORY) {
+            history.splice(0, history.length - MAX_SHUFFLE_HISTORY);
+          }
+        }
       });
     },
 

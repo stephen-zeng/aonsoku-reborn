@@ -34,6 +34,7 @@ export interface ISongList {
   radioList: Radio[];
   isShuffleActive: boolean;
   userQueuePosition: number;
+  shuffleHistory: string[];
 }
 
 export type FullscreenPlayerTab = "queue" | "playing" | "lyrics";

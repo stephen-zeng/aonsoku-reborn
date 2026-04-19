@@ -178,6 +178,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 radioList: oldSl.radioList || [],
                 isShuffleActive: oldSl.isShuffleActive || false,
                 userQueuePosition: 0,
+                shuffleHistory: [],
               };
               delete old.songlist.shuffledList;
               delete old.songlist.currentList;
@@ -240,7 +241,12 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                     current.contextQueue.songs.length === 0 &&
                     current.userQueue.songs.length === 0
                   ) {
-                    usePlayerStore.setState({ songlist: value });
+                    usePlayerStore.setState({
+                      songlist: {
+                        ...value,
+                        shuffleHistory: value.shuffleHistory ?? [],
+                      },
+                    });
                   }
                 }
               })
@@ -279,6 +285,7 @@ function migrateLegacySonglist(value: any): ISongList | null {
     radioList: value.radioList || [],
     isShuffleActive: false,
     userQueuePosition: 0,
+    shuffleHistory: [],
   };
 }
 
