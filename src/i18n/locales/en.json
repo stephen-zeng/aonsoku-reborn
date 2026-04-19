@@ -985,6 +985,12 @@
     "disconnected": "Server unreachable. Entering offline mode.",
     "searchUnavailable": "Search requires an offline library sync.",
     "metered": "Limited",
-    "meteredTooltip": "You're on a slow or metered connection. Background sync and smart downloads are paused — tap a download button to override."
+    "meteredTooltip": "You're on a slow or metered connection. Background sync and smart downloads are paused — tap a download button to override.",
+    "badge": {
+      "downloaded": "Downloaded",
+      "smart": "Saved by a smart-download rule",
+      "downloading": "Downloading…",
+      "cloud": "Needs network"
+    }
   }
 }
