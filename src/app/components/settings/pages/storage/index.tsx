@@ -21,7 +21,8 @@ import {
   SelectValue,
 } from "@/app/components/ui/select";
 import { Switch } from "@/app/components/ui/switch";
-import { cacheManager } from "@/service/cache";
+import { useIsOnline } from "@/store/cache.store";
+import { cacheManager, metadataSyncService } from "@/service/cache";
 import {
   type CachePoolBreakdown,
   useCachePoolStats,
@@ -29,6 +30,7 @@ import {
 import {
   useCacheActions,
   useCacheSettings,
+  useCacheStatus,
   useLastSyncedAt,
 } from "@/store/cache.store";
 import {
@@ -279,6 +281,19 @@ function SyncLibrarySection() {
   const { syncLibrary, syncCoverArt } = useCacheSettings();
   const { setSyncLibrary, setSyncCoverArt } = useCacheActions();
   const lastSyncedAt = useLastSyncedAt();
+  const { isSyncing } = useCacheStatus().syncState;
+  const isOnline = useIsOnline();
+
+  const handleRefresh = useCallback(() => {
+    metadataSyncService.syncIncremental({
+      includeCoverArt: syncCoverArt,
+      includeFullSongs: syncLibrary,
+    });
+  }, [syncCoverArt, syncLibrary]);
+
+  const handleCancel = useCallback(() => {
+    metadataSyncService.cancel();
+  }, []);
 
   return (
     <Root>
@@ -300,33 +315,51 @@ function SyncLibrarySection() {
         </ContentItem>
 
         {syncLibrary && (
-          <>
-            <ContentItem>
-              <ContentItemTitle info={t("settings.storage.sync.coverArtInfo")}>
-                {t("settings.storage.sync.coverArt")}
-              </ContentItemTitle>
-              <ContentItemForm>
-                <Switch
-                  checked={syncCoverArt}
-                  onCheckedChange={setSyncCoverArt}
-                />
-              </ContentItemForm>
-            </ContentItem>
-
-            <ContentItem>
-              <ContentItemTitle>
-                {t("settings.storage.sync.lastSynced")}
-              </ContentItemTitle>
-              <ContentItemForm>
-                <span className="text-xs text-muted-foreground">
-                  {lastSyncedAt
-                    ? dateTime(lastSyncedAt).fromNow()
-                    : t("settings.storage.sync.never")}
-                </span>
-              </ContentItemForm>
-            </ContentItem>
-          </>
+          <ContentItem>
+            <ContentItemTitle info={t("settings.storage.sync.coverArtInfo")}>
+              {t("settings.storage.sync.coverArt")}
+            </ContentItemTitle>
+            <ContentItemForm>
+              <Switch
+                checked={syncCoverArt}
+                onCheckedChange={setSyncCoverArt}
+              />
+            </ContentItemForm>
+          </ContentItem>
         )}
+
+        <ContentItem>
+          <ContentItemTitle>
+            {t("settings.storage.sync.lastSynced")}
+          </ContentItemTitle>
+          <ContentItemForm className="gap-2">
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              {lastSyncedAt
+                ? dateTime(lastSyncedAt).fromNow()
+                : t("settings.storage.sync.never")}
+            </span>
+            {isSyncing ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                onClick={handleCancel}
+              >
+                {t("settings.storage.sync.cancel")}
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                onClick={handleRefresh}
+                disabled={!isOnline}
+              >
+                {t("settings.storage.sync.syncNow")}
+              </Button>
+            )}
+          </ContentItemForm>
+        </ContentItem>
       </Content>
     </Root>
   );
