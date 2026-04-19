@@ -11,6 +11,7 @@ import {
   isAudioCached,
   isCoverCached,
 } from "@/store/cache-index.store";
+import { libraryDb } from "@/store/library-db";
 import {
   CachedItemMeta,
   CacheMetaSource,
@@ -79,6 +80,44 @@ class CacheManager {
     };
     getCacheIndexActions().addItem(key, meta);
     this.scheduleStatsRefresh();
+
+    // Bundle structured lyrics with the audio so offline playback shows
+    // them without another network trip. Fire-and-forget: lyrics are a
+    // nice-to-have, never worth failing the cache operation over.
+    this.cacheLyrics(songId).catch((err) => {
+      console.warn(`[cacheManager] lyrics prefetch failed for ${songId}:`, err);
+    });
+  }
+
+  /**
+   * Fetch and store structured lyrics for a song in `libraryDb.lyrics`.
+   * Called after `cacheSong` so explicit/smart downloads bring their
+   * lyrics along for offline playback. Silently returns when the
+   * server doesn't have lyrics for this song or when they are already
+   * cached.
+   */
+  async cacheLyrics(songId: string): Promise<void> {
+    const existing = await libraryDb.lyrics.get(songId);
+    if (existing) return;
+
+    const structured = await subsonic.lyrics.getStructuredLyrics(songId);
+    if (!structured || structured.length === 0) return;
+
+    // Pick the first (usually the source-language) entry and store its
+    // lines as a JSON blob for simplicity. `synced` is true iff at
+    // least one line carries a `start` timestamp.
+    const primary = structured[0];
+    const synced = primary.line.some((l) => typeof l.start === "number");
+    const content = JSON.stringify(structured);
+    const now = Date.now();
+
+    await libraryDb.lyrics.put({
+      songId,
+      content,
+      synced,
+      cachedAt: now,
+      lastAccessedAt: now,
+    });
   }
 
   async getCachedAudioUrl(songId: string): Promise<string | null> {
