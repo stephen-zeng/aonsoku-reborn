@@ -34,6 +34,9 @@ import {
   getEffectiveIndex,
   getEffectiveQueue,
   hasAnySongs,
+  MAX_QUEUE_SIZE,
+  MAX_USER_QUEUE_IDB_SIZE,
+  trimQueueToWindow,
 } from "./queue-utils";
 
 const IDB_SONGLIST_KEY = "player_songlist";
@@ -377,11 +380,41 @@ function migrateSonglistFromIdb(value: any): ISongList {
 }
 
 const songlistHydrated = { value: false };
+let idbFlushed = false;
+
+function trimSonglistForIdb(songlist: ISongList): ISongList {
+  const { contextQueue, userQueue, ...rest } = songlist;
+  const trimmed = trimQueueToWindow(
+    contextQueue.songs,
+    contextQueue.currentIndex,
+  );
+
+  return {
+    ...rest,
+    contextQueue: {
+      ...contextQueue,
+      songs: trimmed.songs,
+      currentIndex: trimmed.currentIndex,
+    },
+    userQueue: {
+      songs: userQueue.songs.slice(0, MAX_USER_QUEUE_IDB_SIZE),
+    },
+    originalContextSongs:
+      rest.originalContextSongs.length > MAX_QUEUE_SIZE
+        ? []
+        : rest.originalContextSongs,
+    playedUserQueueHistory: rest.playedUserQueueHistory.slice(
+      -MAX_USER_QUEUE_IDB_SIZE,
+    ),
+    originalUserSongs: rest.originalUserSongs?.slice(-MAX_USER_QUEUE_IDB_SIZE),
+  };
+}
 
 usePlayerStore.subscribe(
   (state) => [state.songlist],
   ([songlist]) => {
     if (!songlistHydrated.value) return;
+    idbFlushed = false;
     debouncedIdbSonglistWrite(songlist);
   },
   {
@@ -390,30 +423,47 @@ usePlayerStore.subscribe(
 );
 
 const debouncedIdbSonglistWrite = debounce((songlist: ISongList) => {
-  idbSet(IDB_SONGLIST_KEY, songlist).catch((error: unknown) => {
+  const trimmed = trimSonglistForIdb(songlist);
+  idbSet(IDB_SONGLIST_KEY, trimmed).catch((error: unknown) => {
     logger.error("Failed to write songlist to IndexedDB", error);
   });
 }, 300);
 
 function flushIdbSonglistWrite() {
+  if (idbFlushed) return;
+  idbFlushed = true;
   debouncedIdbSonglistWrite.cancel();
   const songlist = usePlayerStore.getState().songlist;
-  idbSet(IDB_SONGLIST_KEY, songlist).catch((error: unknown) => {
+  const trimmed = trimSonglistForIdb(songlist);
+  idbSet(IDB_SONGLIST_KEY, trimmed).catch((error: unknown) => {
     logger.error("Failed to flush songlist to IndexedDB", error);
   });
 }
 
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden && songlistHydrated.value) {
-    flushIdbSonglistWrite();
-  }
-});
+const playerCleanupCallbacks: (() => void)[] = [];
 
-window.addEventListener("beforeunload", () => {
-  if (songlistHydrated.value) {
-    flushIdbSonglistWrite();
-  }
-});
+export function cleanupPlayerStore() {
+  for (const cb of playerCleanupCallbacks) cb();
+  playerCleanupCallbacks.length = 0;
+}
+
+function registerIdbEventListeners() {
+  const handleVisibilityChange = () => {
+    if (document.hidden && songlistHydrated.value) flushIdbSonglistWrite();
+  };
+  const handleBeforeUnload = () => {
+    if (songlistHydrated.value) flushIdbSonglistWrite();
+  };
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+  window.addEventListener("beforeunload", handleBeforeUnload);
+
+  playerCleanupCallbacks.push(() => {
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+  });
+}
+
+registerIdbEventListeners();
 
 usePlayerStore.subscribe(
   (state) => [

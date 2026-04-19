@@ -125,7 +125,15 @@ export function useAudioContext(
           ...replayGain,
         });
 
-        gainNodeRef.current.gain.setValueAtTime(gainValue, currentTime);
+        gainNodeRef.current.gain.cancelScheduledValues(currentTime);
+        gainNodeRef.current.gain.setValueAtTime(
+          gainNodeRef.current.gain.value,
+          currentTime,
+        );
+        gainNodeRef.current.gain.linearRampToValueAtTime(
+          gainValue,
+          currentTime + 0.05,
+        );
       }
     },
     [enabled],

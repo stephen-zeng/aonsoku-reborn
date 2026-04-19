@@ -162,6 +162,7 @@ export interface IPlayerActions {
     sourceName?: string,
   ) => void;
   playFromQueue: (contextSongs: ISong[], contextIndex: number) => void;
+  playFromUserQueue: (userQueueIndex: number) => void;
   setCurrentSong: () => void;
   checkIsSongStarred: () => void;
   starSongInQueue: (id: string) => void;

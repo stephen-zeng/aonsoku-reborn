@@ -7,6 +7,9 @@ import {
   useRef,
   useState,
 } from "react";
+// TODO: Song transitions go through onEnded → change src → browser buffers → canPlay → resume,
+// creating an audible gap. Consider implementing gapless playback or crossfade by pre-connecting
+// a preload audio element to the Web Audio pipeline and swapping sources seamlessly.
 import { useAudioContext } from "@/app/hooks/use-audio-context";
 import {
   usePlayerIsPlaying,

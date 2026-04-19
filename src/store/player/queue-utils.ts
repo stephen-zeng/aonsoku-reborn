@@ -10,6 +10,9 @@ import { LanControlMessageType } from "@/types/lanControl";
 import type { ISong } from "@/types/responses/song";
 import { shuffleWithGapAvoidance } from "@/utils/songListFunctions";
 
+export const MAX_QUEUE_SIZE = 500;
+export const MAX_USER_QUEUE_IDB_SIZE = 100;
+
 export function getCurrentSong(songlist: ISongList): ISong | null {
   if (songlist.isInUserQueue && songlist.userQueue.songs.length > 0) {
     return songlist.userQueue.songs[0] ?? null;
@@ -158,6 +161,7 @@ export function applyShuffleOff(state: Draft<ISongList>): void {
     state.userQueue.songs = [...state.originalUserSongs];
   }
   state.originalUserSongs = undefined;
+  state.originalContextSongs = [];
   state.playedUserQueueHistory = [];
 
   state.isShuffleActive = false;
@@ -335,4 +339,27 @@ export function reshuffleContextForWrap(
   }
 
   state.contextQueue.songs = [state.contextQueue.songs[0], ...reshuffled];
+}
+
+export function trimQueueToWindow(
+  songs: ISong[],
+  currentIndex: number,
+): { songs: ISong[]; currentIndex: number } {
+  if (songs.length === 0) {
+    return { songs, currentIndex: 0 };
+  }
+  if (songs.length <= MAX_QUEUE_SIZE) {
+    return { songs, currentIndex };
+  }
+
+  currentIndex = Math.max(0, Math.min(currentIndex, songs.length - 1));
+  const halfWindow = Math.floor(MAX_QUEUE_SIZE / 2);
+  let start = Math.max(0, currentIndex - halfWindow);
+  const end = Math.min(songs.length, start + MAX_QUEUE_SIZE);
+  start = Math.max(0, end - MAX_QUEUE_SIZE);
+
+  return {
+    songs: songs.slice(start, end),
+    currentIndex: currentIndex - start,
+  };
 }

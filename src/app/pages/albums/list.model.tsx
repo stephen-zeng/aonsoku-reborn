@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import debounce from "lodash/debounce";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   albumSearch,
@@ -90,26 +90,30 @@ export function useAlbumsListModel() {
     enabled: enableMainQuery(),
   });
 
+  const handleScroll = useCallback(() => {
+    const scrollElement = scrollDivRef.current;
+    if (!scrollElement) return;
+
+    const { scrollTop, clientHeight, scrollHeight } = scrollElement;
+    const isNearBottom =
+      scrollTop + clientHeight >= scrollHeight - scrollHeight / 4;
+
+    if (isNearBottom && hasNextPage) {
+      fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage]);
+
   useEffect(() => {
     const scrollElement = scrollDivRef.current;
     if (!scrollElement) return;
 
-    const handleScroll = debounce(() => {
-      const { scrollTop, clientHeight, scrollHeight } = scrollElement;
-
-      const isNearBottom =
-        scrollTop + clientHeight >= scrollHeight - scrollHeight / 4;
-
-      if (isNearBottom) {
-        if (hasNextPage) fetchNextPage();
-      }
-    }, 200);
-
-    scrollElement.addEventListener("scroll", handleScroll);
+    const handler = debounce(handleScroll, 200);
+    scrollElement.addEventListener("scroll", handler);
     return () => {
-      scrollElement.removeEventListener("scroll", handleScroll);
+      handler.cancel();
+      scrollElement.removeEventListener("scroll", handler);
     };
-  }, [fetchNextPage, hasNextPage]);
+  }, [handleScroll]);
 
   function getAlbums() {
     if (!data) return { albums: [], albumsCount: 0 };

@@ -33,7 +33,7 @@ export function DraggableVirtualQueue({
   scrollAreaClassName = "w-full h-full overflow-auto",
   thumbClassName,
 }: DraggableVirtualQueueProps) {
-  const { playFromQueue, playSong, reorderQueue } = usePlayerActions();
+  const { playFromQueue, playFromUserQueue, reorderQueue } = usePlayerActions();
   const currentList = usePlayerCurrentList();
   const currentSong = usePlayerCurrentSong();
   const currentSongIndex = usePlayerCurrentSongIndex();
@@ -163,7 +163,9 @@ export function DraggableVirtualQueue({
                     onPlay={() => {
                       if (!isCurrent) {
                         if (isInUserQueue) {
-                          playSong(song);
+                          const userQueueIndex =
+                            virtualRow.index - userQueueStart;
+                          playFromUserQueue(userQueueIndex);
                         } else {
                           const ctxIdx =
                             virtualRow.index >= userQueueEnd
