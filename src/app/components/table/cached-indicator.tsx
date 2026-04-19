@@ -1,8 +1,14 @@
-import { CircleArrowDown, Cloud, Loader2, Sparkles } from "lucide-react";
+import {
+  AlertCircle,
+  CircleArrowDown,
+  Cloud,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { useCacheIndexStore } from "@/store/cache-index.store";
 import { audioKey } from "@/service/cache";
+import { useCacheIndexStore } from "@/store/cache-index.store";
 import type { CacheMetaSource } from "@/types/cache";
 
 type IndicatorVariant = "compact" | "full";
@@ -45,6 +51,17 @@ export function CachedIndicator({
           className,
         )}
         aria-label={t("offline.badge.cloud")}
+      />
+    );
+  }
+
+  // Orphan: cached locally but the server no longer lists this song.
+  // Playable, but the UI should tell the user the library moved on.
+  if (meta?.removedFromServer) {
+    return (
+      <AlertCircle
+        className={cn("w-3.5 h-3.5 text-amber-500/80 flex-shrink-0", className)}
+        aria-label={t("offline.badge.orphan")}
       />
     );
   }

@@ -312,6 +312,15 @@ class MetadataSyncService {
     this.updateSyncState("songs", "t3", songs.length, songs.length);
 
     await this.recordTierCheckpoint("t3");
+
+    // P7.3: after a fresh songs table, any cached audio whose songId
+    // disappeared from the server is an "orphan". Flag them so the
+    // UI can show a "Removed from server" label without deleting the
+    // local blob. Runs inline here rather than at `syncAll` tail so
+    // we only reconcile after the songs table is actually current.
+    const { cacheManager } = await import("./cache-manager");
+    await cacheManager.reconcileRemovedFromServer();
+
     queryClient.invalidateQueries({ queryKey: queryKeys.song.all });
     queryClient.invalidateQueries({ queryKey: queryKeys.favorites.count });
   }

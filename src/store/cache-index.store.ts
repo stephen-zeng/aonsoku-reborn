@@ -17,6 +17,7 @@ interface CacheIndexState {
     addItem: (key: string, meta: CachedItemMeta) => void;
     removeItem: (key: string) => void;
     touchItem: (key: string) => void;
+    setRemovedFromServer: (key: string, removed: boolean) => void;
     clear: () => void;
   };
 }
@@ -115,6 +116,18 @@ export const useCacheIndexStore = createWithEqualityFn<CacheIndexState>()(
             });
             schedulePersist(getState().items);
           },
+          setRemovedFromServer: (key, removed) => {
+            setState((state) => {
+              const item = state.items[key];
+              if (!item) return;
+              if (removed) {
+                item.removedFromServer = true;
+              } else {
+                delete item.removedFromServer;
+              }
+            });
+            schedulePersist(getState().items);
+          },
           clear: () => {
             setState((state) => {
               state.items = {};
@@ -208,6 +221,17 @@ function poolForAudioSource(source: CacheMetaSource): keyof CachePoolStats {
     case "lru":
       return "lru";
   }
+}
+
+/** Count of cached songs no longer present in the synced library. */
+export function useOrphanCount(): number {
+  return useCacheIndexStore((state) => {
+    let n = 0;
+    for (const meta of Object.values(state.items)) {
+      if (meta.type === "audio" && meta.removedFromServer) n += 1;
+    }
+    return n;
+  });
 }
 
 /**

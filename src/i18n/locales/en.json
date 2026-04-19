@@ -990,7 +990,8 @@
       "downloaded": "Downloaded",
       "smart": "Saved by a smart-download rule",
       "downloading": "Downloading…",
-      "cloud": "Needs network"
+      "cloud": "Needs network",
+      "orphan": "Removed from server (still playable offline)"
     }
   }
 }

@@ -288,6 +288,37 @@ class CacheManager {
     this.refreshStats();
   }
 
+  /**
+   * Walk every cached explicit/smart audio entry and sync its
+   * `removedFromServer` flag against the current `libraryDb.songs`
+   * table. Entries whose songId no longer exists on the server keep
+   * their local blob (so offline playback stays working) but are
+   * flagged so the UI can label them. If a flagged song reappears
+   * on the server (folder rescan, rename undo, …), the flag is
+   * cleared automatically.
+   *
+   * Safe to call after any sync that refreshed the songs table. If
+   * the songs table is empty (e.g. `syncLibrary` off, fresh install)
+   * this is a no-op — we'd otherwise mark every download as an
+   * orphan, which would confuse users.
+   */
+  async reconcileRemovedFromServer(): Promise<void> {
+    const songCount = await libraryDb.songs.count();
+    if (songCount === 0) return;
+
+    const items = getCacheIndexItems();
+    const { setRemovedFromServer } = getCacheIndexActions();
+
+    for (const [key, meta] of Object.entries(items)) {
+      if (meta.type !== "audio") continue;
+      const existsOnServer = (await libraryDb.songs.get(meta.id)) !== undefined;
+      const shouldMarkRemoved = !existsOnServer;
+      if (shouldMarkRemoved !== Boolean(meta.removedFromServer)) {
+        setRemovedFromServer(key, shouldMarkRemoved);
+      }
+    }
+  }
+
   private scheduleStatsRefresh(): void {
     if (this.statsTimer) return;
     this.statsTimer = setTimeout(() => {
