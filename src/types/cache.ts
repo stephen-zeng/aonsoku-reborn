@@ -34,6 +34,8 @@ export interface CachedItemMeta {
   removedFromServer?: boolean;
 }
 
+export type SyncTier = "t1" | "t2" | "t3";
+
 export type SyncPhase =
   | "idle"
   | "genres"
@@ -41,6 +43,7 @@ export type SyncPhase =
   | "playlists"
   | "albums"
   | "songs"
+  | "favorites"
   | "coverArt"
   | "done"
   | "error"
@@ -48,6 +51,8 @@ export type SyncPhase =
 
 export interface SyncState {
   phase: SyncPhase;
+  /** Which tier is currently running, if any. */
+  tier?: SyncTier;
   progress: number;
   isSyncing: boolean;
   totalItems: number;

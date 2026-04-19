@@ -723,6 +723,7 @@
           "playlists": "Syncing playlists…",
           "albums": "Syncing albums…",
           "songs": "Syncing songs…",
+          "favorites": "Syncing favorites…",
           "coverArt": "Syncing cover art…",
           "done": "Sync complete",
           "error": "Sync failed",
