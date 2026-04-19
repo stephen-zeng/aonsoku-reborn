@@ -27,7 +27,32 @@ interface SyncOptions {
    * libraries). T1 + T2 always run regardless. Default: true.
    */
   includeFullSongs?: boolean;
+  /**
+   * `"full"` (default) — rebuild every tier unconditionally. Use when
+   * the library identity changes (account switch, explicit user reset)
+   * or when we need to be certain deletions propagate.
+   *
+   * `"incremental"` — skip any tier whose last checkpoint is still
+   * inside its fresh window (see TIER_FRESH_WINDOW_MS). Suitable for
+   * the startup / focus / manual-refresh triggers where "sync if it's
+   * been a while" is the intended behavior and it's fine to trust the
+   * current IDB for a few more minutes.
+   *
+   * Subsonic does not expose true per-item delta APIs on the
+   * endpoints we need (only `getArtists` returns a `lastModified`
+   * timestamp, and even there changes are at whole-table granularity),
+   * so "incremental" is currently implemented as tier-level skipping
+   * rather than row-level upsert. True delta can be layered on later
+   * without changing the caller contract.
+   */
+  mode?: "full" | "incremental";
 }
+
+const TIER_FRESH_WINDOW_MS: Record<SyncTier, number> = {
+  t1: 5 * 60 * 1000, // 5 minutes — favorites/playlists/genres move fast
+  t2: 30 * 60 * 1000, // 30 minutes — artists/albums change rarely
+  t3: 2 * 60 * 60 * 1000, // 2 hours — full songs table; very expensive
+};
 
 /**
  * Progressive, tiered metadata sync.
@@ -78,8 +103,23 @@ class MetadataSyncService {
     });
   }
 
+  /**
+   * True when the tier completed inside its fresh window and we're in
+   * incremental mode. In "full" mode every tier always runs.
+   */
+  private async shouldSkipTier(
+    tier: SyncTier,
+    mode: "full" | "incremental",
+  ): Promise<boolean> {
+    if (mode === "full") return false;
+    const entry = await libraryDb.syncState.get(`tier:${tier}`);
+    if (!entry?.lastSyncedAt) return false;
+    return Date.now() - entry.lastSyncedAt < TIER_FRESH_WINDOW_MS[tier];
+  }
+
   async syncAll(options?: SyncOptions): Promise<void> {
     const includeFullSongs = options?.includeFullSongs ?? true;
+    const mode = options?.mode ?? "full";
 
     if (this.abortController) {
       this.abortController.abort();
@@ -91,9 +131,13 @@ class MetadataSyncService {
     try {
       this.updateSyncState("idle", undefined);
 
-      await this.runT1(signal);
-      await this.runT2(signal);
-      if (includeFullSongs) {
+      if (!(await this.shouldSkipTier("t1", mode))) {
+        await this.runT1(signal);
+      }
+      if (!(await this.shouldSkipTier("t2", mode))) {
+        await this.runT2(signal);
+      }
+      if (includeFullSongs && !(await this.shouldSkipTier("t3", mode))) {
         await this.runT3(signal);
       }
 
@@ -119,6 +163,14 @@ class MetadataSyncService {
     } finally {
       this.abortController = null;
     }
+  }
+
+  /**
+   * Shorthand for the startup / focus / manual-refresh triggers.
+   * Equivalent to `syncAll({ mode: "incremental", ...overrides })`.
+   */
+  async syncIncremental(options?: Omit<SyncOptions, "mode">): Promise<void> {
+    await this.syncAll({ ...options, mode: "incremental" });
   }
 
   /**
