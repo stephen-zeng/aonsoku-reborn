@@ -48,7 +48,7 @@ export default function SongList() {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: [queryKeys.favorites.list],
+    queryKey: [...queryKeys.favorites.list],
     queryFn: async () => {
       const response = await subsonic.songs.getFavoriteSongs();
       return response?.song ?? [];

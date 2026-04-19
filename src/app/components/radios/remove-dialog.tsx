@@ -19,7 +19,7 @@ export function RemoveRadioDialog() {
     mutationFn: subsonic.radios.remove,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.radio.all],
+        queryKey: queryKeys.radio.all,
       });
       toast.success(t("radios.form.delete.toast.success"));
       setConfirmDeleteState(false);

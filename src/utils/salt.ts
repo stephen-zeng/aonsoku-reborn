@@ -48,6 +48,22 @@ export function genEncodedPassword(password: string) {
 export function toHex(s: string) {
   return s
     .split("")
-    .map((c) => c.charCodeAt(0).toString(16))
+    .map((c) => c.charCodeAt(0).toString(16).padStart(2, "0"))
     .join("");
+}
+
+export function fromHex(hex: string) {
+  const result = new Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    result[i >> 1] = String.fromCharCode(parseInt(hex.substring(i, i + 2), 16));
+  }
+  return result.join("");
+}
+
+function isHexString(value: string): boolean {
+  return value.length % 2 === 0 && /^[0-9a-fA-F]+$/.test(value);
+}
+
+export function decodeStoredPassword(raw: string): string {
+  return isHexString(raw) ? fromHex(raw) : raw;
 }

@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerSonglist } from "@/store/player.store";
 import { areLyricsSynced } from "@/utils/lrc-converter";
+import { queryKeys } from "@/utils/queryKeys";
 
 const STALE_TIME = 5 * 60 * 1000;
 
@@ -11,13 +12,13 @@ export function useHasLyrics() {
   const { id: songId, artist, title, duration } = currentSong;
 
   const { data: lyrics, isLoading: isLoadingLyrics } = useQuery({
-    queryKey: ["get-lyrics", artist, title, duration],
+    queryKey: [...queryKeys.lyrics.plain, artist, title, duration],
     queryFn: () => subsonic.lyrics.getLyrics({ artist, title, duration }),
     staleTime: STALE_TIME,
   });
 
   const { data: structuredLyrics, isLoading: isLoadingStructured } = useQuery({
-    queryKey: ["get-structured-lyrics", songId],
+    queryKey: [...queryKeys.lyrics.structured, songId],
     queryFn: () => subsonic.lyrics.getStructuredLyrics(songId),
     enabled: !!songId,
     staleTime: STALE_TIME,

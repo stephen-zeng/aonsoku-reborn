@@ -27,6 +27,7 @@ import {
 } from "@/store/player.store";
 import { useIsOnline } from "@/store/cache.store";
 import type { IStructuredLyric } from "@/types/responses/song";
+import { queryKeys } from "@/utils/queryKeys";
 import {
   areLyricsSynced,
   convertLrcToAMLL,
@@ -160,14 +161,14 @@ export function LyricsTab() {
   const isOnline = useIsOnline();
 
   const { data: lyrics, isLoading: isLoadingLyrics } = useQuery({
-    queryKey: ["get-lyrics", artist, title, duration],
+    queryKey: [...queryKeys.lyrics.plain, artist, title, duration],
     queryFn: () => subsonic.lyrics.getLyrics({ artist, title, duration }),
     enabled: isOnline,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: structuredLyrics, isLoading: isLoadingStructured } = useQuery({
-    queryKey: ["get-structured-lyrics", songId],
+    queryKey: [...queryKeys.lyrics.structured, songId],
     queryFn: () => subsonic.lyrics.getStructuredLyrics(songId),
     enabled: !!songId && isOnline,
     staleTime: 5 * 60 * 1000,

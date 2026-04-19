@@ -53,21 +53,21 @@ export default function CommandMenu() {
   );
 
   const { data: albumData } = useQuery({
-    queryKey: [queryKeys.album.single, params.albumId],
+    queryKey: [...queryKeys.album.single, params.albumId],
     queryFn: () => subsonic.albums.getOne(params.albumId!),
     enabled: Boolean(params.albumId) && isOnline,
     staleTime: convertMinutesToMs(5),
   });
 
   const { data: artistData } = useQuery({
-    queryKey: [queryKeys.artist.single, params.artistId],
+    queryKey: [...queryKeys.artist.single, params.artistId],
     queryFn: () => subsonic.artists.getOne(params.artistId!),
     enabled: Boolean(params.artistId) && isOnline,
     staleTime: convertMinutesToMs(5),
   });
 
   const { data: playlistData } = useQuery({
-    queryKey: [queryKeys.playlist.single, params.playlistId],
+    queryKey: [...queryKeys.playlist.single, params.playlistId],
     queryFn: () => subsonic.playlists.getOne(params.playlistId!),
     enabled: Boolean(params.playlistId) && isOnline,
     staleTime: convertMinutesToMs(5),
@@ -125,7 +125,7 @@ export default function CommandMenu() {
   }, [location.pathname, albumData, artistData, playlistData, t]);
 
   const { data: searchResult } = useQuery({
-    queryKey: [queryKeys.search, query],
+    queryKey: [...queryKeys.search, query],
     queryFn: () =>
       subsonic.search.get({
         query,

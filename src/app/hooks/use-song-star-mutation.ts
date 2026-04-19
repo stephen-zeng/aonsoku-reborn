@@ -26,13 +26,13 @@ export function useSongStarMutation({
   const starMutation = useMutation({
     mutationFn: subsonic.star.handleStarItem,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKeys.song.all] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.song.all });
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.favorites.count],
+        queryKey: queryKeys.favorites.count,
       });
       if (albumId) {
         queryClient.invalidateQueries({
-          queryKey: [queryKeys.album.single, albumId],
+          queryKey: [...queryKeys.album.single, albumId],
         });
       }
     },

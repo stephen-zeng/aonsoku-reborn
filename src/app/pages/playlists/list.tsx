@@ -19,7 +19,7 @@ export default function PlaylistsPage() {
   const { t } = useTranslation();
 
   const { data: playlists, isLoading } = useOfflineQuery(
-    [queryKeys.playlist.all],
+    [...queryKeys.playlist.all],
     subsonic.playlists.getAll,
     { offlineFn: offlineData.playlists },
   );

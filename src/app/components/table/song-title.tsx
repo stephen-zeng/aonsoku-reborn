@@ -21,7 +21,10 @@ export function TableSongTitle({
 
   return (
     <div
-      className={cn("flex w-full gap-2 items-center", disableTextNavigation && "opacity-50")}
+      className={cn(
+        "flex w-full gap-2 items-center",
+        disableTextNavigation && "opacity-50",
+      )}
     >
       <CoverImage
         coverArt={song.coverArt}

@@ -86,7 +86,7 @@ export function useAlbumsListModel() {
   }
 
   const { data, fetchNextPage, hasNextPage, isLoading } = useInfiniteQuery({
-    queryKey: [queryKeys.album.all, currentFilter, yearFilter, genre, query],
+    queryKey: [...queryKeys.album.all, currentFilter, yearFilter, genre, query],
     queryFn: fetchAlbums,
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextOffset,

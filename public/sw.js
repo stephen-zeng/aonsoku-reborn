@@ -31,8 +31,11 @@ const CACHEABLE_API_PREFIXES = [
   "/rest/search",
   "/rest/search2",
   "/rest/search3",
-  "/rest/getCoverArt",
 ];
+
+// Maximum age (ms) for stale-while-revalidate API responses.
+// Entries older than this are served from network instead of cache.
+const MAX_STALE_AGE_MS = 30 * 60 * 1000; // 30 minutes
 
 function isApiGetRequest(request) {
   return (
@@ -132,14 +135,15 @@ function cacheResponse(key, response) {
     .catch((err) => console.warn("[SW] Cache write failed:", err));
 }
 
-// Stale-while-revalidate for API responses
+// Stale-while-revalidate for API responses, with a max-stale age.
+// If the cached response is older than MAX_STALE_AGE_MS, skip the cache
+// and go network-first. Falls back to stale cache if network is offline.
 function staleWhileRevalidate(event) {
   const { request } = event;
 
   event.respondWith(
     caches.open(API_CACHE_NAME).then((cache) =>
       cache.match(request).then((cached) => {
-        // Kick off network fetch in background to update cache
         const fetchPromise = fetch(request)
           .then((response) => {
             if (response.ok) {
@@ -150,14 +154,24 @@ function staleWhileRevalidate(event) {
           .catch(() => undefined);
 
         if (cached) {
-          // Return stale cache immediately, revalidate in background
-          return cached;
+          const dateHeader = cached.headers.get("date");
+          const cachedAge = dateHeader
+            ? Date.now() - new Date(dateHeader).getTime()
+            : Infinity;
+
+          if (Number.isFinite(cachedAge) && cachedAge < MAX_STALE_AGE_MS) {
+            // Fresh enough — serve stale, revalidate in background
+            return cached;
+          }
+          // Stale entry is too old or Date header missing — try network first
         }
 
-        // No cache — must wait for network
+        // No cache or stale entry too old — must wait for network
         return fetchPromise.then(
           (response) =>
             response ||
+            // Network failed — serve stale cache as last resort, or 503
+            cached ||
             new Response("", {
               status: 503,
               statusText: "Service Unavailable",

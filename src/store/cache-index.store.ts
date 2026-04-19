@@ -1,10 +1,10 @@
-import { get, set } from "idb-keyval";
+import { get } from "idb-keyval";
 import { devtools, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
 import { audioKey, coverKey } from "@/service/cache/cache-keys";
-import { cacheIndexStore } from "@/store/idb";
+import { cacheIndexStore, idbSetWithRetry } from "@/store/idb";
 import { CachedItemMeta } from "@/types/cache";
 
 const IDB_KEY = "cache-index-v1";
@@ -22,16 +22,41 @@ interface CacheIndexState {
 }
 
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
+let indexFlushed = false;
 
 function schedulePersist(items: Record<string, CachedItemMeta>) {
   if (persistTimer) clearTimeout(persistTimer);
+  indexFlushed = false;
   persistTimer = setTimeout(() => {
     persistTimer = null;
-    set(IDB_KEY, items, cacheIndexStore).catch((err) => {
-      console.error("Failed to persist cache index to IDB", err);
-    });
+    indexFlushed = true;
+    idbSetWithRetry(IDB_KEY, items, cacheIndexStore);
   }, 500);
 }
+
+function flushIndexPersist() {
+  if (indexFlushed) return;
+  if (persistTimer) {
+    clearTimeout(persistTimer);
+    persistTimer = null;
+  }
+  indexFlushed = true;
+  const items = useCacheIndexStore.getState().items;
+  idbSetWithRetry(IDB_KEY, items, cacheIndexStore);
+}
+
+function registerFlushListeners() {
+  if (typeof document === "undefined" || typeof window === "undefined") return;
+  const handleVisibilityChange = () => {
+    if (document.hidden) flushIndexPersist();
+  };
+  const handleBeforeUnload = () => {
+    flushIndexPersist();
+  };
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+  window.addEventListener("beforeunload", handleBeforeUnload);
+}
+registerFlushListeners();
 
 export const useCacheIndexStore = createWithEqualityFn<CacheIndexState>()(
   subscribeWithSelector(
@@ -92,7 +117,6 @@ export const useCacheIndexStore = createWithEqualityFn<CacheIndexState>()(
   shallow,
 );
 
-// Helper functions (non-hook, for use in services)
 export function isAudioCached(songId: string): boolean {
   return audioKey(songId) in useCacheIndexStore.getState().items;
 }
@@ -109,7 +133,6 @@ export function getCacheIndexActions() {
   return useCacheIndexStore.getState().actions;
 }
 
-// Selective hooks
 export const useIsAudioCached = (songId: string) =>
   useCacheIndexStore((state) => audioKey(songId) in state.items);
 

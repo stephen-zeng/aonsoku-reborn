@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
@@ -57,21 +58,29 @@ async function fetchTotalSongs(): Promise<number> {
     totalSongs += songs.length;
   }
 
-  useAppStore.setState((state) => {
-    state.data.songCount = totalSongs;
-  });
-
   return totalSongs;
 }
 
 export function useTotalSongs() {
   const isOnline = useIsOnline();
 
-  return useQuery({
-    queryKey: [queryKeys.song.count],
+  const { data: totalSongs } = useQuery({
+    queryKey: [...queryKeys.song.count],
     queryFn: fetchTotalSongs,
     staleTime: convertMinutesToMs(5),
-    gcTime: convertMinutesToMs(5),
     enabled: isOnline,
   });
+
+  useEffect(() => {
+    if (totalSongs !== undefined && totalSongs > 0) {
+      const current = useAppStore.getState().data.songCount;
+      if (current !== totalSongs) {
+        useAppStore.setState((state) => {
+          state.data.songCount = totalSongs;
+        });
+      }
+    }
+  }, [totalSongs]);
+
+  return { data: totalSongs };
 }

@@ -29,7 +29,7 @@ export function SongInfoDialog() {
   const isOnline = useIsOnline();
 
   const { data: song, isLoading } = useQuery({
-    queryKey: [queryKeys.song.info, songId],
+    queryKey: [...queryKeys.song.info, songId],
     queryFn: () => subsonic.songs.getSong(songId),
     enabled: modalOpen && isOnline,
   });
@@ -37,7 +37,7 @@ export function SongInfoDialog() {
   const loadedAlbumId = song ? typeof song.albumId === "string" : false;
 
   const { data: album, isLoading: albumLoading } = useQuery({
-    queryKey: [queryKeys.album.single, song?.albumId],
+    queryKey: [...queryKeys.album.single, song?.albumId],
     queryFn: () => subsonic.albums.getOne(song?.albumId ?? ""),
     enabled: loadedAlbumId,
   });

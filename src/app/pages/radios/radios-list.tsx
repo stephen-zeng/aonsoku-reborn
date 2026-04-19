@@ -27,7 +27,7 @@ export default function Radios() {
   const isOnline = useIsOnline();
 
   const { data: radios, isLoading } = useQuery({
-    queryKey: [queryKeys.radio.all],
+    queryKey: [...queryKeys.radio.all],
     queryFn: subsonic.radios.getAll,
     enabled: isOnline,
   });

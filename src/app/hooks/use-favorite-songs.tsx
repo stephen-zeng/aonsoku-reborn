@@ -19,9 +19,8 @@ async function fetchTotalFavorites(): Promise<number> {
 }
 
 export function useTotalFavorites() {
-  return useOfflineQuery([queryKeys.favorites.count], fetchTotalFavorites, {
+  return useOfflineQuery([...queryKeys.favorites.count], fetchTotalFavorites, {
     staleTime: convertMinutesToMs(5),
-    gcTime: convertMinutesToMs(5),
     offlineFn: async () => {
       const songs = await offlineData.songs();
       return songs.filter((s) => s.starred != null).length;

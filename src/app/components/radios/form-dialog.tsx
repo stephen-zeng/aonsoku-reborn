@@ -84,7 +84,7 @@ export function RadioFormDialog() {
     mutationFn: subsonic.radios.create,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.radio.all],
+        queryKey: queryKeys.radio.all,
       });
       toast.success(t("radios.form.create.toast.success"));
     },
@@ -97,7 +97,7 @@ export function RadioFormDialog() {
     mutationFn: subsonic.radios.update,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.radio.all],
+        queryKey: queryKeys.radio.all,
       });
       toast.success(t("radios.form.edit.toast.success"));
     },

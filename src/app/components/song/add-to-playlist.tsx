@@ -31,7 +31,7 @@ export function AddToPlaylistSubMenu({
   const { t } = useTranslation();
 
   const { data: playlists } = useOfflineQuery(
-    [queryKeys.playlist.all],
+    [...queryKeys.playlist.all],
     subsonic.playlists.getAll,
     { offlineFn: offlineData.playlists },
   );

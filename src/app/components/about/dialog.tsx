@@ -24,7 +24,7 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
   const isOnline = useIsOnline();
 
   const { data: server, isLoading } = useQuery({
-    queryKey: [queryKeys.update.serverInfo],
+    queryKey: [...queryKeys.update.serverInfo],
     queryFn: subsonic.ping.pingInfo,
     enabled: isOnline,
   });

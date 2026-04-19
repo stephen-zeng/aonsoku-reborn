@@ -133,7 +133,7 @@ export default function MobileSearch() {
   const isOnline = useIsOnline();
 
   const { data: searchResult } = useQuery({
-    queryKey: [queryKeys.search, query],
+    queryKey: [...queryKeys.search, query],
     queryFn: () =>
       subsonic.search.get({
         query,

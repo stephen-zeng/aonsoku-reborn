@@ -9,7 +9,7 @@ export const useGetRandomSongs = () => {
   const isOnline = useIsOnline();
 
   return useQuery({
-    queryKey: [queryKeys.song.random],
+    queryKey: [...queryKeys.song.random],
     queryFn: () => subsonic.songs.getRandomSongs({ size: 10 }),
     enabled: isOnline,
   });
@@ -17,14 +17,14 @@ export const useGetRandomSongs = () => {
 
 export const useGetRecentlyAdded = () =>
   useOfflineQuery(
-    [queryKeys.album.recentlyAdded],
+    [...queryKeys.album.recentlyAdded],
     () => subsonic.albums.getAlbumList({ size: 16, type: "newest" }),
     { offlineFn: offlineData.albums },
   );
 
 export const useGetMostPlayed = () =>
   useOfflineQuery(
-    [queryKeys.album.mostPlayed],
+    [...queryKeys.album.mostPlayed],
     () => subsonic.albums.getAlbumList({ size: 16, type: "frequent" }),
     { offlineFn: offlineData.albums },
   );
@@ -33,7 +33,7 @@ export const useGetRecentlyPlayed = () => {
   const isOnline = useIsOnline();
 
   return useOfflineQuery(
-    [queryKeys.album.recentlyPlayed],
+    [...queryKeys.album.recentlyPlayed],
     () => subsonic.albums.getAlbumList({ size: 16, type: "recent" }),
     {
       offlineFn: offlineData.albums,
@@ -44,7 +44,7 @@ export const useGetRecentlyPlayed = () => {
 
 export const useGetRandomAlbums = () =>
   useOfflineQuery(
-    [queryKeys.album.random],
+    [...queryKeys.album.random],
     () => subsonic.albums.getAlbumList({ size: 16, type: "random" }),
     { offlineFn: offlineData.albums },
   );

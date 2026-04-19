@@ -29,7 +29,7 @@ export function RemoveSongFromPlaylistDialog() {
     mutationFn: subsonic.playlists.update,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.playlist.single, actionData.playlistId],
+        queryKey: [...queryKeys.playlist.single, actionData.playlistId],
       });
       toast.success(t("playlist.form.removeSong.toast.success", { count }));
     },

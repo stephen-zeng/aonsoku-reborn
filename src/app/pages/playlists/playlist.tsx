@@ -39,7 +39,7 @@ export default function Playlist() {
     isLoading,
     isFetching,
   } = useOfflineQuery(
-    [queryKeys.playlist.single, playlistId],
+    [...queryKeys.playlist.single, playlistId],
     () => subsonic.playlists.getOne(playlistId),
     {
       enabled: !!playlistId,

@@ -3,6 +3,8 @@ import { offlineLibraryStore } from "@/store/idb";
 import { useAppStore } from "@/store/app.store";
 import { useCacheStore } from "@/store/cache.store";
 import { subsonic } from "@/service/subsonic";
+import { queryClient } from "@/lib/queryClient";
+import { queryKeys } from "@/utils/queryKeys";
 import { SyncPhase } from "@/types/cache";
 import type { ISong } from "@/types/responses/song";
 import type { ISimilarArtist } from "@/types/responses/artist";
@@ -146,6 +148,13 @@ class MetadataSyncService {
       await set(IDB_KEYS.timestamp, timestamp, offlineLibraryStore);
       useCacheStore.getState().actions.setLastSyncedAt(timestamp);
       this.updateSyncState("done");
+
+      queryClient.invalidateQueries({ queryKey: queryKeys.album.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.artist.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.song.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.playlist.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.genre });
+      queryClient.invalidateQueries({ queryKey: queryKeys.favorites.count });
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
         this.updateSyncState("cancelled");

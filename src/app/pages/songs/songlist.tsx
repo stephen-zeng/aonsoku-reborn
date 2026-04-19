@@ -58,7 +58,7 @@ export default function SongList() {
 
   const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } =
     useInfiniteQuery({
-      queryKey: [queryKeys.song.all, filter, query, artistId, orderBy, sort],
+      queryKey: [...queryKeys.song.all, filter, query, artistId, orderBy, sort],
       initialPageParam: 0,
       queryFn: fetchSongs,
       getNextPageParam: (lastPage) => lastPage.nextOffset,

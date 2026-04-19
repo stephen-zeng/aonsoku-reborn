@@ -25,7 +25,7 @@ export function UpdateObserver() {
   const [updateHasStarted, setUpdateHasStarted] = useState(false);
 
   const { data: updateInfo } = useQuery({
-    queryKey: [queryKeys.update.check],
+    queryKey: [...queryKeys.update.check],
     queryFn: async () => await window.api.checkForUpdates(),
     enabled: !remindOnNextBoot && isProd,
     refetchOnWindowFocus: false,

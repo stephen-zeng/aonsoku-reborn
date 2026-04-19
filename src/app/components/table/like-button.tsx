@@ -47,10 +47,10 @@ export function TableLikeButton({
     mutationFn: subsonic.star.handleStarItem,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.artist.single, entityId],
+        queryKey: [...queryKeys.artist.single, entityId],
       });
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.favorites.count],
+        queryKey: queryKeys.favorites.count,
       });
     },
   });
@@ -66,7 +66,7 @@ export function TableLikeButton({
       {
         onError: () => {
           queryClient.invalidateQueries({
-            queryKey: [queryKeys.artist.single, entityId],
+            queryKey: [...queryKeys.artist.single, entityId],
           });
         },
       },

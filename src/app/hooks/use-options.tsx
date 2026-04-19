@@ -63,7 +63,7 @@ export function useOptions() {
     onSuccess: () => {
       if (isOnPlaylistPage) {
         queryClient.invalidateQueries({
-          queryKey: [queryKeys.playlist.single, playlistId],
+          queryKey: [...queryKeys.playlist.single, playlistId],
         });
       }
     },
@@ -80,7 +80,7 @@ export function useOptions() {
     mutationFn: subsonic.playlists.createWithDetails,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.playlist.all],
+        queryKey: queryKeys.playlist.all,
       });
     },
   });

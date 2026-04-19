@@ -16,7 +16,7 @@ export function CommandPlaylists({ runCommand }: CommandItemProps) {
   const navigate = useNavigate();
 
   const { data: playlists } = useOfflineQuery(
-    [queryKeys.playlist.all],
+    [...queryKeys.playlist.all],
     subsonic.playlists.getAll,
     { offlineFn: offlineData.playlists },
   );

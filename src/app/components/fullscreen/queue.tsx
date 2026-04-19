@@ -457,9 +457,7 @@ function UnifiedQueueView({
                         key={song.id}
                         song={song}
                         isActive={isActive}
-                        onClick={() =>
-                          playFromQueue(contextSongs, contextIdx)
-                        }
+                        onClick={() => playFromQueue(contextSongs, contextIdx)}
                         tier="context"
                       />
                     );

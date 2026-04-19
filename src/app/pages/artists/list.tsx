@@ -43,7 +43,7 @@ export default function ArtistsList() {
     : undefined;
 
   const { data: artists, isLoading } = useOfflineQuery(
-    [queryKeys.artist.all],
+    [...queryKeys.artist.all],
     subsonic.artists.getAll,
     { offlineFn: offlineData.artists },
   );

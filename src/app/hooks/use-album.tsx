@@ -6,7 +6,7 @@ import { queryKeys } from "@/utils/queryKeys";
 
 export const useGetAlbum = (albumId: string) =>
   useOfflineQuery(
-    [queryKeys.album.single, albumId],
+    [...queryKeys.album.single, albumId],
     () => subsonic.albums.getOne(albumId),
     {
       enabled: !!albumId,
@@ -23,7 +23,7 @@ export const useGetAlbumInfo = (albumId: string) => {
   const isOnline = useIsOnline();
 
   return useQuery({
-    queryKey: [queryKeys.album.info, albumId],
+    queryKey: [...queryKeys.album.info, albumId],
     queryFn: () => subsonic.albums.getInfo(albumId),
     enabled: !!albumId && isOnline,
   });
@@ -31,7 +31,7 @@ export const useGetAlbumInfo = (albumId: string) => {
 
 export const useGetArtistAlbums = (artistId: string) =>
   useOfflineQuery(
-    [queryKeys.album.moreAlbums, artistId],
+    [...queryKeys.album.moreAlbums, artistId],
     () => subsonic.artists.getOne(artistId),
     {
       enabled: !!artistId,
@@ -46,7 +46,7 @@ export const useGetArtistAlbums = (artistId: string) =>
 
 export const useGetGenreAlbums = (genre: string) =>
   useOfflineQuery(
-    [queryKeys.album.genreAlbums, genre],
+    [...queryKeys.album.genreAlbums, genre],
     () => subsonic.albums.getAlbumList({ type: "byGenre", genre, size: 16 }),
     {
       enabled: !!genre,

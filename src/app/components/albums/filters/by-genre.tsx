@@ -32,7 +32,7 @@ export function AlbumsFilterByGenre() {
   const { getSearchParam } = new SearchParamsHandler(searchParams);
 
   const { data: genres, isLoading } = useOfflineQuery(
-    [queryKeys.genre],
+    [...queryKeys.genre],
     subsonic.genres.get,
     { offlineFn: offlineData.genres },
   );
