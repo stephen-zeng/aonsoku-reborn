@@ -49,7 +49,9 @@ function bootstrapServiceWorker(): void {
   if (!("serviceWorker" in navigator)) return;
   // Allow SW registration on all deployment targets including localhost and Electron
   const isLocalhost =
-    location.hostname === "localhost" || location.hostname === "127.0.0.1";
+    location.hostname === "localhost" ||
+    location.hostname === "127.0.0.1" ||
+    location.hostname.endsWith(".localhost");
   const isFileProtocol = location.protocol === "file:";
   // Skip registration for file:// protocol (Electron without dev server)
   if (isFileProtocol) return;
