@@ -523,7 +523,13 @@ interface CachedItemMeta {
 
 **G10. Electron 有独立下载路径**(`electron/main/core/downloads.ts`)
 
-`electron-dl` → 用户 Downloads 目录,与 `cacheManager` 平行。目标是统一 Cache API,这条路径要么**只保留为"导出原始文件"**(与缓存语义无关),要么下线。
+`electron-dl` → 用户 Downloads 目录,与 `cacheManager` 平行。
+
+**决策(P7.4):保留为"导出原始文件"独立操作**。理由:"Save file" 语义与"缓存以便离线播放"是两件事(前者供 iPod 同步、外部播放器、备份工作流使用),不应混入 Cache API 层。两条路径已经通过菜单标签区分("Save file" vs "Download Album/Song/Playlist"),不会互相干扰:
+- `electron-dl` 路径:不参与离线缓存,不进存储设置统计,不被淘汰
+- Cache API 路径:供 Aonsoku 内部离线播放使用
+
+Web 目标同理:`downloadBrowser` 发起浏览器原生下载,与缓存正交。
 
 **G11. 服务器删除时保留本地副本:未明示**
 
@@ -648,5 +654,6 @@ interface CachedItemMeta {
 | 首次同步 UI | 顶栏 + 可展开 | 阻塞启动页 / 全静默 | 不打扰但可查 |
 | 歌词策略 | 随音频下载一并拉 | 前台预取 | 性价比 |
 | Electron 存储 | 统一 Cache API | 原生 FS 分叉 | 砍实现复杂度 |
+| Electron-dl 路径 | 保留为"导出原始文件"独立操作(P7.4) | 整体下线 | "Save file" 服务 iPod 同步/外部播放器/备份等正当需求,语义与缓存不同 |
 | 多设备 | 各设备独立 | 显式下载清单同步 | 简单且符合用户直觉 |
 | 性能基准时机 | 延迟到 P1.2 实际使用验证 | 合成基准(vitest + fake-indexeddb)/ 一次性手动压测 | fake-indexeddb 是纯 JS 实现,比真 IDB 慢 10–100 倍,合成基准证不了真浏览器能达标;Dexie + 真 IDB 索引性能已是业界验证;真实渲染场景比合成更贴近用户体验。若 P1.2 切 readers 后出现可感卡顿,现场诊断是索引缺失还是查询不当更精准。 |
