@@ -20,6 +20,8 @@
     "lint:format": "biome format --write",
     "cy:open": "cypress open",
     "test": "cypress run --component",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
     "electron:start": "electron-forge start",
     "electron:dev": "electron-vite dev",
     "electron:build": "electron-vite build",
@@ -83,6 +85,7 @@
     "cors": "^2.8.5",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.13",
+    "dexie": "^4.4.2",
     "discord-rpc": "^4.0.1",
     "electron-dl": "^4.0.0",
     "electron-store": "^10.0.1",
@@ -151,17 +154,20 @@
     "@types/react-dom": "^18.3.6",
     "@types/react-lazy-load-image-component": "^1.6.4",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/ui": "^4.1.4",
     "autoprefixer": "^10.4.21",
     "cypress": "^13.17.0",
     "cypress-real-events": "^1.14.0",
     "electron": "^39.1.1",
     "electron-vite": "^3.1.0",
+    "fake-indexeddb": "^6.2.5",
     "husky": "^9.1.7",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
     "terser": "^5.39.0",
     "typescript": "^5.8.2",
-    "vite": "^6.2.3"
+    "vite": "^6.2.3",
+    "vitest": "^4.1.4"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

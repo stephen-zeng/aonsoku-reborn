@@ -7,6 +7,7 @@ import { SettingsDialog } from "@/app/components/settings/dialog";
 import { useNetworkStatusObserver } from "@/app/hooks/use-network-status";
 import { LanControlObserver } from "@/app/observers/lan-control-observer";
 import { LangObserver } from "@/app/observers/lang-observer";
+import { LibraryMigrationObserver } from "@/app/observers/library-migration-observer";
 import { MediaSessionObserver } from "@/app/observers/media-session-observer";
 import { ThemeObserver } from "@/app/observers/theme-observer";
 import { ToastContainer } from "@/app/observers/toast-container";
@@ -56,6 +57,7 @@ function App() {
       <LangObserver />
       <ThemeObserver />
       <LanControlObserver />
+      <LibraryMigrationObserver />
       <MetadataSyncObserver />
       <SettingsDialog />
       <RouterProvider router={router} />
