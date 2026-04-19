@@ -10,7 +10,9 @@ import {
   DEFAULT_LRU_QUOTA,
   DEFAULT_MAX_CACHE_SIZE,
   DEFAULT_SMART_QUOTA,
+  DEFAULT_SMART_RULES,
   DownloadQuality,
+  SmartRuleSettings,
   SyncState,
 } from "@/types/cache";
 
@@ -21,6 +23,7 @@ interface CacheActions {
   setAssetsQuota: (bytes: number) => void;
   setLruQuota: (bytes: number) => void;
   setSmartQuota: (bytes: number) => void;
+  setSmartRules: (rules: Partial<SmartRuleSettings>) => void;
   setSyncLibrary: (enabled: boolean) => void;
   setSyncCoverArt: (enabled: boolean) => void;
   setIsOnline: (online: boolean) => void;
@@ -85,6 +88,7 @@ function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
       assetsQuota: DEFAULT_ASSETS_QUOTA,
       lruQuota: legacyCap,
       smartQuota: DEFAULT_SMART_QUOTA,
+      smartRules: { ...DEFAULT_SMART_RULES },
       syncLibrary: old.mode === "offline",
       syncCoverArt:
         typeof old.syncCoverArt === "boolean" ? old.syncCoverArt : false,
@@ -114,8 +118,19 @@ function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
         assetsQuota: raw.assetsQuota ?? DEFAULT_ASSETS_QUOTA,
         lruQuota: raw.lruQuota ?? legacyCap,
         smartQuota: raw.smartQuota ?? DEFAULT_SMART_QUOTA,
+        smartRules: { ...DEFAULT_SMART_RULES, ...(raw.smartRules ?? {}) },
       };
     }
+  }
+
+  // Ensure smartRules is always present post-merge even when no other
+  // field needed migration.
+  const final = persisted as Record<string, unknown>;
+  if (final && typeof final === "object" && !final.smartRules) {
+    return {
+      ...(final as unknown as CacheSettings),
+      smartRules: { ...DEFAULT_SMART_RULES },
+    };
   }
 
   return persisted as unknown as CacheSettings;
@@ -133,6 +148,7 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             assetsQuota: DEFAULT_ASSETS_QUOTA,
             lruQuota: DEFAULT_LRU_QUOTA,
             smartQuota: DEFAULT_SMART_QUOTA,
+            smartRules: { ...DEFAULT_SMART_RULES },
             // Default-on post-P1.3: the toggle now controls whether the
             // long-running full-songs sync step runs. T1/T2 metadata
             // (artists, albums, playlists, genres) always sync regardless.
@@ -178,6 +194,11 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             setSmartQuota: (bytes) => {
               set((state) => {
                 state.settings.smartQuota = bytes;
+              });
+            },
+            setSmartRules: (rules) => {
+              set((state) => {
+                Object.assign(state.settings.smartRules, rules);
               });
             },
             setSyncLibrary: (enabled) => {
@@ -252,6 +273,9 @@ export const useStreamQuality = () =>
   useCacheStore((state) => state.settings.streamQuality);
 
 export const useCacheSettings = () => useCacheStore((state) => state.settings);
+
+export const useSmartRules = () =>
+  useCacheStore((state) => state.settings.smartRules);
 
 export const useCacheStatus = () => useCacheStore((state) => state.status);
 

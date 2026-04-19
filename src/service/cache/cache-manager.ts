@@ -90,6 +90,69 @@ class CacheManager {
   }
 
   /**
+   * Download `songId` and tag it as a smart-download, carrying the
+   * rule names that triggered the decision. Used by the
+   * SmartDownloadEngine (P5). If the song is already cached as
+   * `"explicit"` we leave it alone — the user decided manually, we
+   * don't demote them. If it's `"lru"` we upgrade the entry to
+   * `"smart"` so future LRU pressure doesn't evict it.
+   */
+  async cacheSmartSong(songId: string, triggers: string[]): Promise<void> {
+    const key = audioKey(songId);
+    const existing = getCacheIndexItems()[key];
+
+    if (existing) {
+      if (existing.source === "explicit") return; // user already owns it
+      if (existing.source === "smart") {
+        // Refresh triggers so "why is this cached?" stays accurate.
+        getCacheIndexActions().addItem(key, {
+          ...existing,
+          triggers,
+          lastAccessedAt: Date.now(),
+        });
+        return;
+      }
+      if (existing.source === "lru") {
+        getCacheIndexActions().addItem(key, {
+          ...existing,
+          source: "smart",
+          triggers,
+          lastAccessedAt: Date.now(),
+        });
+        return;
+      }
+    }
+
+    const quality = useCacheStore.getState().settings.downloadQuality;
+    const url = this.resolveDownloadUrl(songId);
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(
+        `Smart-download failed for ${songId}: ${response.status}`,
+      );
+    }
+
+    const blob = await response.blob();
+    await cacheStorage.put(key, blob, blob.type || "audio/mpeg");
+
+    const meta: CachedItemMeta = {
+      id: songId,
+      type: "audio",
+      source: "smart",
+      triggers,
+      quality,
+      sizeBytes: blob.size,
+      cachedAt: Date.now(),
+      lastAccessedAt: Date.now(),
+    };
+    getCacheIndexActions().addItem(key, meta);
+    this.scheduleStatsRefresh();
+
+    // Same rationale as cacheSong: bring lyrics along.
+    this.cacheLyrics(songId).catch(() => {});
+  }
+
+  /**
    * Fetch and store structured lyrics for a song in `libraryDb.lyrics`.
    * Called after `cacheSong` so explicit/smart downloads bring their
    * lyrics along for offline playback. Silently returns when the

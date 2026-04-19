@@ -798,6 +798,17 @@
             "description": "Album and artist images cached for fast library rendering."
           }
         }
+      },
+      "smart": {
+        "group": "Smart Downloads",
+        "description": "Automatically cache songs matching any enabled rule. They're evicted the moment every triggering rule stops matching, and never take priority over manual downloads.",
+        "enabled": "Enable smart downloads",
+        "rule": {
+          "favoriteSongs": "Favorite songs",
+          "favoritePlaylists": "Favorite playlists",
+          "frequentPlays": "Frequently played (≥ N plays)",
+          "recentPlays": "Recently played (last N days)"
+        }
       }
     },
     "content": {

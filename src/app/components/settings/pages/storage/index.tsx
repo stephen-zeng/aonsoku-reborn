@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/app/components/ui/select";
 import { Switch } from "@/app/components/ui/switch";
+import { Input } from "@/app/components/ui/input";
 import { useIsOnline } from "@/store/cache.store";
 import { cacheManager, metadataSyncService } from "@/service/cache";
 import {
@@ -32,6 +33,7 @@ import {
   useCacheSettings,
   useCacheStatus,
   useLastSyncedAt,
+  useSmartRules,
 } from "@/store/cache.store";
 import {
   CACHE_SIZE_OPTIONS,
@@ -394,11 +396,113 @@ function SyncLibrarySection() {
   );
 }
 
+function SmartDownloadSection() {
+  const { t } = useTranslation();
+  const rules = useSmartRules();
+  const { setSmartRules } = useCacheActions();
+
+  const setEnabled = (enabled: boolean) => setSmartRules({ enabled });
+  const setRule = (key: keyof typeof rules, value: boolean) =>
+    setSmartRules({ [key]: value } as Partial<typeof rules>);
+  const setThreshold = (
+    key: "frequentPlaysThreshold" | "recentPlaysDays",
+    value: number,
+  ) => setSmartRules({ [key]: Math.max(1, value) });
+
+  const rows: Array<{
+    key: keyof typeof rules;
+    labelKey: string;
+    extra?: JSX.Element;
+  }> = [
+    {
+      key: "favoriteSongs",
+      labelKey: "settings.storage.smart.rule.favoriteSongs",
+    },
+    {
+      key: "favoritePlaylists",
+      labelKey: "settings.storage.smart.rule.favoritePlaylists",
+    },
+    {
+      key: "frequentPlays",
+      labelKey: "settings.storage.smart.rule.frequentPlays",
+      extra: (
+        <Input
+          type="number"
+          min={1}
+          max={999}
+          value={rules.frequentPlaysThreshold}
+          onChange={(e) =>
+            setThreshold("frequentPlaysThreshold", Number(e.target.value))
+          }
+          disabled={!rules.enabled || !rules.frequentPlays}
+          className="h-7 w-16 text-xs"
+        />
+      ),
+    },
+    {
+      key: "recentPlays",
+      labelKey: "settings.storage.smart.rule.recentPlays",
+      extra: (
+        <Input
+          type="number"
+          min={1}
+          max={365}
+          value={rules.recentPlaysDays}
+          onChange={(e) =>
+            setThreshold("recentPlaysDays", Number(e.target.value))
+          }
+          disabled={!rules.enabled || !rules.recentPlays}
+          className="h-7 w-16 text-xs"
+        />
+      ),
+    },
+  ];
+
+  return (
+    <Root>
+      <Header>
+        <HeaderTitle>{t("settings.storage.smart.group")}</HeaderTitle>
+        <HeaderDescription>
+          {t("settings.storage.smart.description")}
+        </HeaderDescription>
+      </Header>
+
+      <Content>
+        <ContentItem>
+          <ContentItemTitle>
+            {t("settings.storage.smart.enabled")}
+          </ContentItemTitle>
+          <ContentItemForm>
+            <Switch checked={rules.enabled} onCheckedChange={setEnabled} />
+          </ContentItemForm>
+        </ContentItem>
+
+        {rows.map(({ key, labelKey, extra }) => (
+          <ContentItem key={key}>
+            <ContentItemTitle>{t(labelKey)}</ContentItemTitle>
+            <ContentItemForm className="gap-2">
+              {extra}
+              <Switch
+                checked={rules.enabled && Boolean(rules[key])}
+                disabled={!rules.enabled}
+                onCheckedChange={(v) => setRule(key, v)}
+              />
+            </ContentItemForm>
+          </ContentItem>
+        ))}
+      </Content>
+
+      <ContentSeparator />
+    </Root>
+  );
+}
+
 export function Storage() {
   return (
     <div className="space-y-4">
       <DownloadQualitySection />
       <CacheLimitsSection />
+      <SmartDownloadSection />
       <SyncLibrarySection />
     </div>
   );

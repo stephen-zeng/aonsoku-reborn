@@ -27,6 +27,29 @@ export const DOWNLOAD_QUALITIES: DownloadQuality[] = [
  */
 export type CacheMetaSource = "explicit" | "smart" | "lru";
 
+export interface SmartRuleSettings {
+  /** Master switch — when false the engine does nothing. */
+  enabled: boolean;
+  favoriteSongs: boolean;
+  favoritePlaylists: boolean;
+  frequentPlays: boolean;
+  /** Min playCount to qualify for the "frequently played" rule. */
+  frequentPlaysThreshold: number;
+  recentPlays: boolean;
+  /** Trailing days for the "recently played" rule. */
+  recentPlaysDays: number;
+}
+
+export const DEFAULT_SMART_RULES: SmartRuleSettings = {
+  enabled: false,
+  favoriteSongs: true,
+  favoritePlaylists: true,
+  frequentPlays: true,
+  frequentPlaysThreshold: 5,
+  recentPlays: true,
+  recentPlaysDays: 14,
+};
+
 export interface CachedItemMeta {
   id: string;
   type: "audio" | "cover";
@@ -91,6 +114,8 @@ export interface CacheSettings {
   lruQuota: number;
   /** Cap for the smart-download audio pool. */
   smartQuota: number;
+  /** P5: automatic-download rules. */
+  smartRules: SmartRuleSettings;
   syncLibrary: boolean;
   syncCoverArt: boolean;
 }
