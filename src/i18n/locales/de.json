@@ -430,7 +430,7 @@
   "options": {
     "play": "Abspielen",
     "playNext": "Als nächstes abspielen",
-    "addLast": "Als letztes spielen",
+    "addLast": "Zur Warteschlange",
     "download": "Herunterladen",
     "playlist": {
       "add": "Zur Playlist hinzufügen",

@@ -336,7 +336,7 @@
   },
   "options": {
     "play": "Spela",
-    "addLast": "Sätt in sist",
+    "addLast": "Lägg till i kön",
     "playNext": "Spela nästa",
     "download": "Ladda ner",
     "playlist": {

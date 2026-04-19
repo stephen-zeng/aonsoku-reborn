@@ -368,7 +368,7 @@
   },
   "options": {
     "play": "Reproducir",
-    "addLast": "Añadir al final",
+    "addLast": "Añadir a la cola",
     "download": "Descargar",
     "playlist": {
       "add": "Añadir a lista de reproducción",

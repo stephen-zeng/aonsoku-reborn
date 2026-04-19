@@ -367,7 +367,7 @@
       "edit": "编辑播放列表"
     },
     "play": "播放",
-    "addLast": "添加到队列末尾",
+    "addLast": "添加到队列",
     "removeFromQueue": "从队列中移除",
     "info": "获取信息",
     "goto": {

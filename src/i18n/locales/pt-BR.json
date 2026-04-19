@@ -369,7 +369,7 @@
   "options": {
     "play": "Reproduzir",
     "playNext": "Tocar a seguir",
-    "addLast": "Adicionar ao final",
+    "addLast": "Adicionar à fila",
     "download": "Download",
     "playlist": {
       "add": "Adicionar à playlist",
