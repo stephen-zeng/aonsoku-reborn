@@ -1,7 +1,10 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
 import debounce from "lodash/debounce";
 import { useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
+import {
+  getOfflineAlbumsList,
+  useOfflineInfiniteQuery,
+} from "@/lib/offlineQueryClient";
 import {
   albumSearch,
   getAlbumList,
@@ -79,19 +82,43 @@ export function useAlbumsListModel() {
   };
 
   function enableMainQuery() {
-    if (!isOnline) return false;
     if (currentFilter === AlbumsFilters.ByGenre && genre === "") return false;
 
     return true;
   }
 
-  const { data, fetchNextPage, hasNextPage, isLoading } = useInfiniteQuery({
-    queryKey: [...queryKeys.album.all, currentFilter, yearFilter, genre, query],
-    queryFn: fetchAlbums,
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => lastPage.nextOffset,
-    enabled: enableMainQuery(),
-  });
+  const { data, fetchNextPage, hasNextPage, isLoading } =
+    useOfflineInfiniteQuery(
+      [
+        ...queryKeys.album.all,
+        currentFilter,
+        yearFilter,
+        genre,
+        artistId,
+        query,
+      ],
+      ({ pageParam }) => fetchAlbums({ pageParam }),
+      {
+        initialPageParam: 0,
+        getNextPageParam: (lastPage) => lastPage.nextOffset,
+        enabled: enableMainQuery(),
+        offlineFn: async () => {
+          const albums = await getOfflineAlbumsList({
+            currentFilter,
+            yearFilter,
+            genre,
+            artistId,
+            query,
+          });
+
+          return {
+            albums,
+            nextOffset: null,
+            albumsCount: albums.length,
+          };
+        },
+      },
+    );
 
   const handleScroll = useCallback(() => {
     const scrollElement = scrollDivRef.current;
@@ -101,10 +128,10 @@ export function useAlbumsListModel() {
     const isNearBottom =
       scrollTop + clientHeight >= scrollHeight - scrollHeight / 4;
 
-    if (isNearBottom && hasNextPage) {
+    if (isNearBottom && hasNextPage && isOnline) {
       fetchNextPage();
     }
-  }, [fetchNextPage, hasNextPage]);
+  }, [fetchNextPage, hasNextPage, isOnline]);
 
   useEffect(() => {
     const scrollElement = scrollDivRef.current;

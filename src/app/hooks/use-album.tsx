@@ -1,7 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
+import {
+  getOfflineAlbumDetail,
+  getOfflineArtistDetail,
+  offlineData,
+  useOfflineQuery,
+} from "@/lib/offlineQueryClient";
 import { subsonic } from "@/service/subsonic";
 import { useIsOnline } from "@/store/cache.store";
-import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 import { type AlbumsListData } from "@/types/responses/album";
 import { queryKeys } from "@/utils/queryKeys";
 
@@ -13,12 +18,7 @@ export const useGetAlbum = (albumId: string) =>
     () => subsonic.albums.getOne(albumId),
     {
       enabled: !!albumId,
-      offlineFn: async () => {
-        const albums = await offlineData.albums();
-        const album = albums.find((a) => a.id === albumId);
-        if (!album) throw new Error(`Album ${albumId} not found offline`);
-        return album;
-      },
+      offlineFn: () => getOfflineAlbumDetail(albumId),
     },
   );
 
@@ -38,12 +38,7 @@ export const useGetArtistAlbums = (artistId: string) =>
     () => subsonic.artists.getOne(artistId),
     {
       enabled: !!artistId,
-      offlineFn: async () => {
-        const artists = await offlineData.artists();
-        const artist = artists.find((a) => a.id === artistId);
-        if (!artist) throw new Error(`Artist ${artistId} not found offline`);
-        return artist;
-      },
+      offlineFn: () => getOfflineArtistDetail(artistId),
     },
   );
 

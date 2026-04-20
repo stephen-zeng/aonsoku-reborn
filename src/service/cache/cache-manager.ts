@@ -226,17 +226,75 @@ class CacheManager {
     coverArtId: string,
     size = "300",
   ): Promise<string | null> {
-    const key = coverKey(coverArtId, size);
-    if (!isCoverCached(coverArtId, size)) return null;
+    const requestedKey = coverKey(coverArtId, size);
+    const fallbackSizes = [size, "700", "300", "100"];
 
-    const blob = await cacheStorage.get(key);
-    if (!blob) {
-      getCacheIndexActions().removeItem(key);
-      return null;
+    for (const currentSize of fallbackSizes) {
+      const key = coverKey(coverArtId, currentSize);
+      if (!isCoverCached(coverArtId, currentSize)) continue;
+
+      const blob = await cacheStorage.get(key);
+      if (!blob) {
+        getCacheIndexActions().removeItem(key);
+        continue;
+      }
+
+      getCacheIndexActions().touchItem(key);
+
+      if (key !== requestedKey && !isCoverCached(coverArtId, size)) {
+        Promise.resolve(
+          cacheStorage.put(requestedKey, blob, blob.type || "image/jpeg"),
+        )
+          .then(() => {
+            getCacheIndexActions().addItem(requestedKey, {
+              ...getCacheIndexItems()[key],
+              id: coverArtId,
+              type: "cover",
+              source: getCacheIndexItems()[key]?.source ?? "explicit",
+              sizeBytes: blob.size,
+              cachedAt: Date.now(),
+              lastAccessedAt: Date.now(),
+            });
+          })
+          .catch(() => {});
+      }
+
+      return URL.createObjectURL(blob);
     }
 
-    getCacheIndexActions().touchItem(key);
-    return URL.createObjectURL(blob);
+    return null;
+  }
+
+  async syncCoverArt(onProgress?: (current: number, total: number) => void) {
+    const [artists, albums] = await Promise.all([
+      libraryDb.artists.toArray(),
+      libraryDb.albums.toArray(),
+    ]);
+
+    const queue = Array.from(
+      new Set(
+        [
+          ...artists.map((artist) => artist.coverArt),
+          ...albums.map((album) => album.coverArt),
+        ].filter((value): value is string => Boolean(value)),
+      ),
+    );
+
+    let completed = 0;
+    for (const coverArtId of queue) {
+      try {
+        await this.cacheCover(coverArtId, "700");
+      } catch (err) {
+        console.warn(
+          `[cacheManager] failed to cache cover ${coverArtId}:`,
+          err,
+        );
+      }
+      completed += 1;
+      onProgress?.(completed, queue.length);
+    }
+
+    await this.enforceStorageLimit();
   }
 
   private async cacheBulk(
@@ -348,6 +406,7 @@ class CacheManager {
   async clearAllCaches(): Promise<void> {
     await cacheStorage.clear();
     getCacheIndexActions().clear();
+    await libraryDb.lyrics.clear();
     this.refreshStats();
   }
 

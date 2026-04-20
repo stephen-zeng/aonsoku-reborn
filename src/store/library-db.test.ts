@@ -25,6 +25,7 @@ describe("schema", () => {
         "albums",
         "songs",
         "playlists",
+        "playlistDetails",
         "genres",
         "cacheMeta",
         "lyrics",

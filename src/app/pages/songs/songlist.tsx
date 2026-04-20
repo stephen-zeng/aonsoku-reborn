@@ -1,4 +1,3 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { ClearFilterButton } from "@/app/components/search/clear-filter-button";
@@ -9,6 +8,10 @@ import {
   SongsSortFilter,
 } from "@/app/components/songs/songs-filters";
 import { useTotalSongs } from "@/app/hooks/use-total-songs";
+import {
+  getOfflineSongsList,
+  useOfflineInfiniteQuery,
+} from "@/lib/offlineQueryClient";
 import { getArtistAllSongs, songsSearch } from "@/queries/songs";
 import { useIsOnline } from "@/store/cache.store";
 import {
@@ -57,13 +60,24 @@ export default function SongList() {
   }
 
   const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } =
-    useInfiniteQuery({
-      queryKey: [...queryKeys.song.all, filter, query, artistId, orderBy, sort],
-      initialPageParam: 0,
-      queryFn: fetchSongs,
-      getNextPageParam: (lastPage) => lastPage.nextOffset,
-      enabled: isOnline,
-    });
+    useOfflineInfiniteQuery(
+      [...queryKeys.song.all, filter, query, artistId, orderBy, sort],
+      ({ pageParam }) => fetchSongs({ pageParam }),
+      {
+        initialPageParam: 0,
+        getNextPageParam: (lastPage) => lastPage.nextOffset,
+        offlineFn: async () => ({
+          songs: await getOfflineSongsList({
+            filter,
+            query,
+            artistId,
+            orderBy,
+            sort,
+          }),
+          nextOffset: null,
+        }),
+      },
+    );
 
   const { data: songCountData, isLoading: songCountIsLoading } =
     useTotalSongs();
@@ -83,7 +97,9 @@ export default function SongList() {
       songlist={songlist}
       isLoading={isLoading}
       isFetchingNextPage={isFetchingNextPage}
-      fetchNextPage={fetchNextPage}
+      fetchNextPage={() => {
+        if (isOnline) fetchNextPage();
+      }}
       hasNextPage={hasNextPage ?? false}
       sourceName={filterByArtist ? artistName : title}
       headerActions={

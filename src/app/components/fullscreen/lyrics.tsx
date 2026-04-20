@@ -13,11 +13,13 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ScrollArea,
   scrollAreaViewportSelector,
 } from "@/app/components/ui/scroll-area";
 import { subsonic } from "@/service/subsonic";
+import { useIsOnline } from "@/store/cache.store";
 import {
   useLyricsSettings,
   usePlayerActions,
@@ -25,9 +27,8 @@ import {
   usePlayerRef,
   usePlayerSonglist,
 } from "@/store/player.store";
-import { useIsOnline } from "@/store/cache.store";
 import type { IStructuredLyric } from "@/types/responses/song";
-import { queryKeys } from "@/utils/queryKeys";
+import { logger } from "@/utils/logger";
 import {
   areLyricsSynced,
   convertLrcToAMLL,
@@ -35,8 +36,7 @@ import {
   LRC_METADATA_REGEX,
   LRC_TIMESTAMP_REGEX,
 } from "@/utils/lrc-converter";
-import { logger } from "@/utils/logger";
-import { useTranslation } from "react-i18next";
+import { queryKeys } from "@/utils/queryKeys";
 
 const LyricPlayer = lazy(() =>
   import("@applemusic-like-lyrics/react").then((m) => ({
@@ -170,7 +170,7 @@ export function LyricsTab() {
   const { data: structuredLyrics, isLoading: isLoadingStructured } = useQuery({
     queryKey: [...queryKeys.lyrics.structured, songId],
     queryFn: () => subsonic.lyrics.getStructuredLyrics(songId),
-    enabled: !!songId && isOnline,
+    enabled: !!songId,
     staleTime: 5 * 60 * 1000,
   });
 

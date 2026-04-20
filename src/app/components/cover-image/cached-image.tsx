@@ -1,5 +1,6 @@
-import { ComponentPropsWithoutRef } from "react";
+import { ComponentPropsWithoutRef, useEffect, useState } from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
+import { cacheManager } from "@/service/cache";
 import { CoverArt } from "@/types/coverArtType";
 import { useCoverArtUrlFromSongPreference } from "@/utils/coverArt";
 
@@ -33,7 +34,40 @@ export function CachedImage({
     albumId,
     size: coverArtSize,
   });
-  const resolvedSrc = directSrc ?? generatedSrc;
+  const [cachedSrc, setCachedSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!coverArtId) {
+      setCachedSrc(null);
+      return;
+    }
+
+    let cancelled = false;
+    let objectUrl: string | null = null;
+
+    cacheManager
+      .getCachedCoverUrl(coverArtId, coverArtSize)
+      .then((url) => {
+        if (cancelled) {
+          if (url) URL.revokeObjectURL(url);
+          return;
+        }
+        objectUrl = url;
+        setCachedSrc(url);
+      })
+      .catch(() => {
+        if (!cancelled) setCachedSrc(null);
+      });
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [coverArtId, coverArtSize]);
+
+  const resolvedSrc = cachedSrc ?? directSrc ?? generatedSrc;
 
   return <LazyLoadImage {...props} src={resolvedSrc} />;
 }

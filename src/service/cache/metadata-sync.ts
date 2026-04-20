@@ -1,10 +1,15 @@
+import { queryClient } from "@/lib/queryClient";
 import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
 import { useCacheStore } from "@/store/cache.store";
-import { libraryDb, withPlayedAt, withStarredAt } from "@/store/library-db";
-import { queryClient } from "@/lib/queryClient";
-import { queryKeys } from "@/utils/queryKeys";
+import {
+  libraryDb,
+  type PlaylistRow,
+  withPlayedAt,
+  withStarredAt,
+} from "@/store/library-db";
 import type { SyncPhase, SyncTier } from "@/types/cache";
+import { queryKeys } from "@/utils/queryKeys";
 
 interface AlbumSummary {
   id: string;
@@ -64,6 +69,7 @@ const TIER_FRESH_WINDOW_MS: Record<SyncTier, number> = {
  * planned but deferred — see docs/offline-architecture.md P3.3 notes).
  */
 const BULK_CHUNK_SIZE = 2000;
+const PLAYLIST_DETAIL_BATCH_SIZE = 10;
 
 /** Yield control to the event loop between chunks of work. */
 function yieldToMain(): Promise<void> {
@@ -151,6 +157,57 @@ class MetadataSyncService {
     });
   }
 
+  private async syncPlaylistDetails(
+    playlists: PlaylistRow[],
+    signal: AbortSignal,
+  ) {
+    const playlistIds = new Set(playlists.map((playlist) => playlist.id));
+    const existingIds = await libraryDb.playlistDetails
+      .toCollection()
+      .primaryKeys();
+    const removedIds = existingIds.filter((id) => !playlistIds.has(id));
+
+    if (removedIds.length > 0) {
+      await libraryDb.playlistDetails.bulkDelete(removedIds);
+    }
+
+    for (
+      let offset = 0;
+      offset < playlists.length;
+      offset += PLAYLIST_DETAIL_BATCH_SIZE
+    ) {
+      this.checkAborted(signal);
+
+      const batch = playlists.slice(
+        offset,
+        offset + PLAYLIST_DETAIL_BATCH_SIZE,
+      );
+      const results = await Promise.allSettled(
+        batch.map((playlist) => subsonic.playlists.getOne(playlist.id)),
+      );
+
+      results.forEach((result, index) => {
+        if (result.status === "rejected") {
+          console.warn(
+            `[metadataSync] failed to load playlist detail ${batch[index].id}:`,
+            result.reason,
+          );
+        }
+      });
+
+      this.updateSyncState(
+        "playlists",
+        "t1",
+        Math.min(offset + batch.length, playlists.length),
+        playlists.length,
+      );
+
+      if (offset + PLAYLIST_DETAIL_BATCH_SIZE < playlists.length) {
+        await yieldToMain();
+      }
+    }
+  }
+
   /**
    * True when the tier completed inside its fresh window and we're in
    * incremental mode. In "full" mode every tier always runs.
@@ -191,8 +248,10 @@ class MetadataSyncService {
 
       if (options?.includeCoverArt) {
         this.updateSyncState("coverArt", undefined);
-        // Cover art caching is delegated to the cache manager to avoid
-        // duplicating caching logic here.
+        const { cacheManager } = await import("./cache-manager");
+        await cacheManager.syncCoverArt((processed, total) => {
+          this.updateSyncState("coverArt", undefined, processed, total);
+        });
       }
 
       await libraryDb.syncState.put({
@@ -238,11 +297,9 @@ class MetadataSyncService {
     this.updateSyncState("playlists", "t1");
     const playlists = await subsonic.playlists.getAll();
     this.checkAborted(signal);
-    await clearAndBulkPutInChunks(
-      libraryDb.playlists,
-      (playlists ?? []).map(withStarredAt),
-      signal,
-    );
+    const playlistRows = (playlists ?? []).map(withStarredAt);
+    await clearAndBulkPutInChunks(libraryDb.playlists, playlistRows, signal);
+    await this.syncPlaylistDetails(playlistRows, signal);
 
     this.checkAborted(signal);
     this.updateSyncState("favorites", "t1");
@@ -282,6 +339,7 @@ class MetadataSyncService {
 
     await this.recordTierCheckpoint("t1");
     queryClient.invalidateQueries({ queryKey: queryKeys.playlist.all });
+    queryClient.invalidateQueries({ queryKey: queryKeys.playlist.single });
     queryClient.invalidateQueries({ queryKey: queryKeys.genre });
     queryClient.invalidateQueries({ queryKey: queryKeys.favorites.count });
     queryClient.invalidateQueries({ queryKey: queryKeys.favorites.list });

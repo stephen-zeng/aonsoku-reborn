@@ -1,12 +1,12 @@
 import Dexie, { type Table } from "dexie";
 import { get as idbGet } from "idb-keyval";
+import { cacheIndexStore, offlineLibraryStore } from "@/store/idb";
+import type { CacheMetaSource } from "@/types/cache";
 import type { Albums } from "@/types/responses/album";
 import type { ISimilarArtist } from "@/types/responses/artist";
 import type { Genre } from "@/types/responses/genre";
-import type { Playlist } from "@/types/responses/playlist";
+import type { Playlist, PlaylistWithEntries } from "@/types/responses/playlist";
 import type { ISong } from "@/types/responses/song";
-import type { CacheMetaSource } from "@/types/cache";
-import { cacheIndexStore, offlineLibraryStore } from "@/store/idb";
 
 // ─── Row types ────────────────────────────────────────────────────────
 // Row types extend Subsonic response types and add indexable numeric
@@ -29,6 +29,11 @@ export interface SongRow extends ISong {
 export interface PlaylistRow extends Playlist {
   // Navidrome supports starring playlists; base Subsonic schema does not
   // declare it, so keep optional here.
+  starred?: string;
+  starredAt?: number;
+}
+
+export interface PlaylistDetailRow extends PlaylistWithEntries {
   starred?: string;
   starredAt?: number;
 }
@@ -81,6 +86,7 @@ export class LibraryDB extends Dexie {
   albums!: Table<AlbumRow, string>;
   songs!: Table<SongRow, string>;
   playlists!: Table<PlaylistRow, string>;
+  playlistDetails!: Table<PlaylistDetailRow, string>;
   genres!: Table<GenreRow, string>;
   cacheMeta!: Table<CacheMetaRow, string>;
   lyrics!: Table<LyricsRow, string>;
@@ -93,6 +99,17 @@ export class LibraryDB extends Dexie {
       albums: "id, artistId, name, year, genre, starredAt, created",
       songs: "id, albumId, artistId, title, starredAt, playCount, playedAt",
       playlists: "id, name, starredAt",
+      genres: "value",
+      cacheMeta: "key, id, type, source, lastAccessedAt, cachedAt",
+      lyrics: "songId, lastAccessedAt",
+      syncState: "key",
+    });
+    this.version(2).stores({
+      artists: "id, name, starredAt",
+      albums: "id, artistId, name, year, genre, starredAt, created",
+      songs: "id, albumId, artistId, title, starredAt, playCount, playedAt",
+      playlists: "id, name, starredAt",
+      playlistDetails: "id, name, starredAt",
       genres: "value",
       cacheMeta: "key, id, type, source, lastAccessedAt, cachedAt",
       lyrics: "songId, lastAccessedAt",
@@ -255,6 +272,7 @@ export async function _resetLibraryDbForTests(): Promise<void> {
       libraryDb.albums,
       libraryDb.songs,
       libraryDb.playlists,
+      libraryDb.playlistDetails,
       libraryDb.genres,
       libraryDb.cacheMeta,
       libraryDb.lyrics,
@@ -266,6 +284,7 @@ export async function _resetLibraryDbForTests(): Promise<void> {
         libraryDb.albums.clear(),
         libraryDb.songs.clear(),
         libraryDb.playlists.clear(),
+        libraryDb.playlistDetails.clear(),
         libraryDb.genres.clear(),
         libraryDb.cacheMeta.clear(),
         libraryDb.lyrics.clear(),

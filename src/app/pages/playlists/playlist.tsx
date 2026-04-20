@@ -8,11 +8,14 @@ import ListWrapper from "@/app/components/list-wrapper";
 import { PlaylistButtons } from "@/app/components/playlist/buttons";
 import { RemoveSongFromPlaylistDialog } from "@/app/components/playlist/remove-song-dialog";
 import { DataTable } from "@/app/components/ui/data-table";
-import { useIsMobile } from "@/app/hooks/use-mobile";
 import { useHasHover } from "@/app/hooks/use-input-mode";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import ErrorPage from "@/app/pages/error-page";
 import { songsColumns } from "@/app/tables/songs-columns";
-import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
+import {
+  getOfflinePlaylistDetail,
+  useOfflineQuery,
+} from "@/lib/offlineQueryClient";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
 import { ColumnFilter } from "@/types/columnFilter";
@@ -42,12 +45,7 @@ export default function Playlist() {
     () => subsonic.playlists.getOne(playlistId),
     {
       enabled: !!playlistId,
-      offlineFn: async () => {
-        const playlists = await offlineData.playlists();
-        const found = playlists.find((p) => p.id === playlistId);
-        if (!found) throw new Error(`Playlist ${playlistId} not found offline`);
-        return found;
-      },
+      offlineFn: () => getOfflinePlaylistDetail(playlistId),
     },
   );
 

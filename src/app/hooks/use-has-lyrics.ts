@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { subsonic } from "@/service/subsonic";
+import { useIsOnline } from "@/store/cache.store";
 import { usePlayerSonglist } from "@/store/player.store";
 import { areLyricsSynced } from "@/utils/lrc-converter";
 import { queryKeys } from "@/utils/queryKeys";
@@ -10,10 +11,12 @@ const STALE_TIME = 5 * 60 * 1000;
 export function useHasLyrics() {
   const { currentSong } = usePlayerSonglist();
   const { id: songId, artist, title, duration } = currentSong;
+  const isOnline = useIsOnline();
 
   const { data: lyrics, isLoading: isLoadingLyrics } = useQuery({
     queryKey: [...queryKeys.lyrics.plain, artist, title, duration],
     queryFn: () => subsonic.lyrics.getLyrics({ artist, title, duration }),
+    enabled: isOnline,
     staleTime: STALE_TIME,
   });
 

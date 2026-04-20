@@ -1,8 +1,9 @@
-import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
 import { useIsOnline } from "@/store/cache.store";
+import { libraryDb } from "@/store/library-db";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
 
@@ -66,9 +67,14 @@ export function useTotalSongs() {
 
   const { data: totalSongs } = useQuery({
     queryKey: [...queryKeys.song.count],
-    queryFn: fetchTotalSongs,
+    queryFn: async () => {
+      if (!isOnline) {
+        return libraryDb.songs.count();
+      }
+      return fetchTotalSongs();
+    },
     staleTime: convertMinutesToMs(5),
-    enabled: isOnline,
+    enabled: true,
   });
 
   useEffect(() => {
