@@ -17,7 +17,7 @@ interface CachedImageProps extends Omit<LazyLoadImageProps, "src"> {
   src?: string;
 }
 
-function resolveCacheKey(
+export function resolveCacheKey(
   coverArtId: string | undefined,
   coverArtType: CoverArt | undefined,
   albumId: string | undefined,
@@ -27,6 +27,55 @@ function resolveCacheKey(
     return getSongCoverArtId({ albumId, coverArt: coverArtId });
   }
   return coverArtId;
+}
+
+export function useCachedCoverUrl(
+  coverArtId: string | undefined,
+  coverArtType: CoverArt | undefined,
+  albumId: string | undefined,
+  fallbackUrl: string,
+): string {
+  const [cachedUrl, setCachedUrl] = useState<string | null>(null);
+  const cacheKey = resolveCacheKey(coverArtId, coverArtType, albumId);
+  const isOffline = useIsOfflineMode();
+
+  useEffect(() => {
+    if (!cacheKey) {
+      setCachedUrl(null);
+      return;
+    }
+
+    let cancelled = false;
+    let objectUrl: string | null = null;
+
+    cacheManager
+      .getCachedCoverUrl(cacheKey)
+      .then((url) => {
+        if (cancelled) {
+          if (url) URL.revokeObjectURL(url);
+          return;
+        }
+        objectUrl = url;
+        setCachedUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setCachedUrl(null);
+      });
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [cacheKey]);
+
+  if (cachedUrl) return cachedUrl;
+  if (isOffline) {
+    const type = coverArtType === "artist" ? "artist" : "album";
+    return `/default_${type}_art.png`;
+  }
+  return fallbackUrl;
 }
 
 function getDefaultArtUrl(coverArtType: CoverArt): string {

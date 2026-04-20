@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
-import Image from "@/app/components/image";
+import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { useSongList } from "@/app/hooks/use-song-list";
@@ -18,7 +18,6 @@ import { ISimilarArtist } from "@/types/responses/artist";
 import { ISong } from "@/types/responses/song";
 import { byteLength } from "@/utils/byteLength";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
-import { useCoverArtUrlFromSongPreference } from "@/utils/coverArt";
 import { queryKeys } from "@/utils/queryKeys";
 
 interface MobileResultItemProps {
@@ -40,25 +39,20 @@ function MobileResultItem({
   onRowClick,
   onPlayClick,
 }: MobileResultItemProps) {
-  const src = useCoverArtUrlFromSongPreference({
-    coverArt,
-    coverArtType,
-    albumId,
-    size: "100",
-  });
-
   return (
     <button
       type="button"
       className="flex w-full items-center gap-3 px-4 py-2 active:bg-accent/50 transition-colors text-left"
       onClick={onRowClick}
     >
-      <Image
-        src={src}
+      <CachedImage
+        coverArtId={coverArt}
+        coverArtType={coverArtType}
+        albumId={albumId}
+        alt={`${subtitle} - ${title}`}
         width={44}
         height={44}
         className="aspect-square object-cover rounded shadow flex-shrink-0"
-        alt={`${subtitle} - ${title}`}
       />
       <div className="flex flex-col justify-center flex-1 min-w-0">
         <span className="font-medium text-sm truncate">{title}</span>

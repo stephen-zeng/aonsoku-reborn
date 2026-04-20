@@ -40,9 +40,9 @@ import {
 import type { ISong } from "@/types/responses/song";
 import { LoopState } from "@/types/playerContext";
 
-import { useSongCoverArtUrl } from "@/utils/coverArt";
 import { QueueCurrentSong, QueueModeButtons } from "./queue-current-song";
 import { QueueSourceLabel } from "@/app/components/queue/queue-source-label";
+import { CachedImage } from "@/app/components/cover-image/cached-image";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { FULLSCREEN_QUEUE_BG_CLASS } from "./constants";
 
@@ -630,8 +630,6 @@ const QueueListRow = memo(function QueueListRow({
   interactive = true,
   dragHandleProps,
 }: QueueListRowProps) {
-  const coverArtUrl = useSongCoverArtUrl(song, "100");
-
   return (
     <div
       className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted/50 transition-colors ${
@@ -652,11 +650,12 @@ const QueueListRow = memo(function QueueListRow({
       tabIndex={interactive ? 0 : undefined}
     >
       <div className="w-9 h-9 rounded shrink-0 overflow-hidden bg-accent">
-        <img
-          src={coverArtUrl}
+        <CachedImage
+          coverArtId={song.coverArt}
+          coverArtType="song"
+          albumId={song.albumId}
           className="w-9 h-9 object-cover"
           alt={`${song.title} - ${song.artist}`}
-          loading="lazy"
         />
       </div>
       <div className="flex flex-col min-w-0 flex-1">

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
 import {
@@ -16,7 +17,6 @@ import { useLanControlServerInfo } from "@/store/lanControl.store";
 import { useLanControlClientStore } from "@/store/lanControlClient.store";
 import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
-import { useCoverArtUrlFromSongPreference } from "@/utils/coverArt";
 
 interface RemoteControlDialogProps {
   open: boolean;
@@ -114,11 +114,8 @@ export function RemoteControlDialog({
     currentSong?.artist ||
     t("lanControl.remote.emptyArtist");
   const displayAlbum = fullSongInfo?.album || currentSong?.album || "";
-  const coverArtUrl = useCoverArtUrlFromSongPreference({
-    coverArt: fullSongInfo?.coverArt ?? currentSong?.coverArt,
-    coverArtType: "song",
-    albumId: fullSongInfo?.albumId ?? currentSong?.albumId,
-  });
+  const coverArtId = fullSongInfo?.coverArt ?? currentSong?.coverArt;
+  const coverAlbumId = fullSongInfo?.albumId ?? currentSong?.albumId;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -260,8 +257,10 @@ export function RemoteControlDialog({
             <div className="flex gap-3">
               {(fullSongInfo?.coverArt || currentSong?.coverArt) && (
                 <div className="shrink-0">
-                  <img
-                    src={coverArtUrl}
+                  <CachedImage
+                    coverArtId={coverArtId}
+                    coverArtType="song"
+                    albumId={coverAlbumId}
                     alt={displayTitle}
                     className="h-20 w-20 rounded object-cover"
                   />

@@ -4,6 +4,7 @@ import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
 import { EllipsisVertical, GripVertical, PlayIcon } from "lucide-react";
 import { CSSProperties, forwardRef, useState } from "react";
+import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { CachedIndicator } from "@/app/components/table/cached-indicator";
 import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
@@ -15,7 +16,6 @@ import {
 } from "@/app/components/ui/dropdown-menu";
 import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
-import { useSongCoverArtUrl } from "@/utils/coverArt";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
 import { QueueMenuOptions } from "./queue-menu-options";
 
@@ -82,7 +82,6 @@ export const QueueItemRow = forwardRef<
   ref,
 ) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const coverArtUrl = useSongCoverArtUrl(song, "100");
 
   return (
     <ContextMenuProvider
@@ -112,8 +111,10 @@ export const QueueItemRow = forwardRef<
           }}
         >
           <div className="w-10 h-10 bg-accent rounded overflow-hidden">
-            <img
-              src={coverArtUrl}
+            <CachedImage
+              coverArtId={song.coverArt}
+              coverArtType="song"
+              albumId={song.albumId}
               className="w-10 h-10 rounded text-transparent object-cover"
               alt={`${song.title} - ${song.artist}`}
             />

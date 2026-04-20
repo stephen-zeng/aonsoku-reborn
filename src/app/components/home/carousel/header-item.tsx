@@ -2,7 +2,7 @@ import clsx from "clsx";
 import { Play } from "lucide-react";
 import { isFirefox } from "react-device-detect";
 import { Link } from "react-router-dom";
-import { CachedImage } from "@/app/components/cover-image/cached-image";
+import { CachedImage, useCachedCoverUrl } from "@/app/components/cover-image/cached-image";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
 import { useIsMobile } from "@/app/hooks/use-mobile";
@@ -16,7 +16,13 @@ import { useSongCoverArtUrl } from "@/utils/coverArt";
 export function HeaderItem({ song }: { song: ISong }) {
   const isMobile = useIsMobile();
   const { setSongList } = usePlayerActions();
-  const coverArtUrl = useSongCoverArtUrl(song, "300");
+  const coverArtFallback = useSongCoverArtUrl(song, "300");
+  const coverArtUrl = useCachedCoverUrl(
+    song.coverArt,
+    "song",
+    song.albumId,
+    coverArtFallback,
+  );
 
   async function handlePlaySongAlbum(song: ISong) {
     const album = await subsonic.albums.getOne(song.albumId);

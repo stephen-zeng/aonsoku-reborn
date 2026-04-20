@@ -2,6 +2,7 @@ import { clsx } from "clsx";
 import { EllipsisVertical, Repeat, Shuffle } from "lucide-react";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
+import { CachedImage } from "@/app/components/cover-image/cached-image";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { QueueMenuOptions } from "@/app/components/queue/queue-menu-options";
 import { Button } from "@/app/components/ui/button";
@@ -18,7 +19,6 @@ import {
   usePlayerStore,
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
-import { useSongCoverArtUrl } from "@/utils/coverArt";
 
 export const QueueCurrentSong = memo(function QueueCurrentSong({
   onClick,
@@ -30,8 +30,6 @@ export const QueueCurrentSong = memo(function QueueCurrentSong({
     (a, b) => a?.id === b?.id,
   );
 
-  const coverArtUrl = useSongCoverArtUrl(currentSong, "100");
-
   if (!currentSong) return null;
 
   return (
@@ -41,8 +39,10 @@ export const QueueCurrentSong = memo(function QueueCurrentSong({
     >
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded overflow-hidden shrink-0 bg-accent">
-          <img
-            src={coverArtUrl}
+          <CachedImage
+            coverArtId={currentSong.coverArt}
+            coverArtType="song"
+            albumId={currentSong.albumId}
             className="w-12 h-12 object-cover"
             alt={`${currentSong.title} - ${currentSong.artist}`}
           />

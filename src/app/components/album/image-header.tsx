@@ -2,7 +2,7 @@ import randomCSSHexColor from "@chriscodesthings/random-css-hex-color";
 import clsx from "clsx";
 import { type ReactNode, useState } from "react";
 import { getCoverArtUrl } from "@/api/httpClient";
-import { CachedImage } from "@/app/components/cover-image/cached-image";
+import { CachedImage, useCachedCoverUrl } from "@/app/components/cover-image/cached-image";
 import { AlbumHeaderFallback } from "@/app/components/fallbacks/album-fallbacks";
 import { BadgesData, HeaderInfoGenerator } from "@/app/components/header-info";
 import { CustomLightBox } from "@/app/components/lightbox";
@@ -113,9 +113,16 @@ export default function ImageHeader({
   const [open, setOpen] = useState(false);
   const [bgColor, setBgColor] = useState(customIcon ? "var(--background)" : "");
 
-  const lightboxSrc = !customIcon
+  const lightboxFallback = !customIcon
     ? getCoverArtUrl(coverArtId, coverArtType, "700")
     : "";
+  const cachedLightboxUrl = useCachedCoverUrl(
+    customIcon ? undefined : coverArtId,
+    coverArtType,
+    undefined,
+    lightboxFallback,
+  );
+  const lightboxSrc = !customIcon ? cachedLightboxUrl : "";
 
   function getImage() {
     return document.getElementById("cover-art-image") as HTMLImageElement;
