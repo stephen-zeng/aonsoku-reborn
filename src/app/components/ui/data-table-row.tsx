@@ -39,8 +39,8 @@ export function TableRow<TData>({
   const isRowSongActive = useMemo(() => {
     if (dataType !== "song") return false;
 
-    return songId === currentSong.id;
-  }, [currentSong.id, dataType, songId]);
+    return songId === currentSong?.id;
+  }, [currentSong?.id, dataType, songId]);
 
   return (
     <MemoContextMenuProvider options={contextMenuOptions}>

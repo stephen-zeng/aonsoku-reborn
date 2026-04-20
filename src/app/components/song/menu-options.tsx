@@ -31,10 +31,10 @@ function MenuLikeButton({ variant, song }: MenuLikeButtonProps) {
   const isSongStarred = usePlayerSongStarred();
 
   useEffect(() => {
-    if (currentSong.id === song.id) {
+    if (currentSong?.id === song.id) {
       setIsStarred(isSongStarred);
     }
-  }, [currentSong, song.id, isSongStarred, setIsStarred]);
+  }, [currentSong?.id, song.id, isSongStarred, setIsStarred]);
 
   return (
     <>

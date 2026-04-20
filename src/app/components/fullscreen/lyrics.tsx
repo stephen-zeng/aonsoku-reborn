@@ -156,20 +156,24 @@ export function LyricsTab() {
     };
   }, [setAreLyricsAligned]);
 
-  const { id: songId, artist, title, duration } = currentSong;
+  const { id: songId, artist, title, duration } = currentSong || {};
   const songDurationMs = duration ? duration * 1000 : undefined;
   const isOnline = useIsOnline();
 
   const { data: lyrics, isLoading: isLoadingLyrics } = useQuery({
     queryKey: [...queryKeys.lyrics.plain, artist, title, duration],
-    queryFn: () => subsonic.lyrics.getLyrics({ artist, title, duration }),
-    enabled: isOnline,
+    queryFn: () =>
+      artist && title
+        ? subsonic.lyrics.getLyrics({ artist, title, duration })
+        : Promise.resolve(null),
+    enabled: isOnline && !!artist && !!title,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: structuredLyrics, isLoading: isLoadingStructured } = useQuery({
     queryKey: [...queryKeys.lyrics.structured, songId],
-    queryFn: () => subsonic.lyrics.getStructuredLyrics(songId),
+    queryFn: () =>
+      songId ? subsonic.lyrics.getStructuredLyrics(songId) : Promise.resolve([]),
     enabled: !!songId,
     staleTime: 5 * 60 * 1000,
   });
@@ -178,6 +182,7 @@ export function LyricsTab() {
   // Priority: structured (synced) > structured (unsynced)
   //           > /getLyrics (LRC) > /getLyrics (plain)
   const resolved: ResolvedLyrics | null = useMemo(() => {
+    if (!currentSong) return null;
     // Priority 1 & 2: Structured lyrics
     if (structuredLyrics && structuredLyrics.length > 0) {
       const { primary, translation } = pickStructuredTracks(structuredLyrics);
@@ -230,10 +235,21 @@ export function LyricsTab() {
     }
 
     return null;
-  }, [structuredLyrics, lyrics, showTranslation, songDurationMs]);
+  }, [
+    structuredLyrics,
+    lyrics,
+    showTranslation,
+    songDurationMs,
+    currentSong,
+  ]);
 
   const noLyricsFound = t("fullscreen.noLyrics");
   const loadingLyrics = t("fullscreen.loadingLyrics");
+  const noSongPlaying = t("player.noSongPlaying");
+
+  if (!currentSong) {
+    return <CenteredMessage>{noSongPlaying}</CenteredMessage>;
+  }
 
   if (isLoadingLyrics && isLoadingStructured) {
     return <CenteredMessage>{loadingLyrics}</CenteredMessage>;

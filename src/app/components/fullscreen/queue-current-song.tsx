@@ -27,9 +27,12 @@ export const QueueCurrentSong = memo(function QueueCurrentSong({
 }) {
   const currentSong = usePlayerStore(
     (state) => state.songlist.currentSong,
-    (a, b) => a.id === b.id,
+    (a, b) => a?.id === b?.id,
   );
+
   const coverArtUrl = useSongCoverArtUrl(currentSong, "100");
+
+  if (!currentSong) return null;
 
   return (
     <div

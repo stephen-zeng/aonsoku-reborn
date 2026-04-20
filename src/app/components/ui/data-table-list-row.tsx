@@ -72,8 +72,8 @@ export function TableListRow<TData>({
   const isRowSongActive = useMemo(() => {
     if (dataType !== "song") return false;
 
-    return songId === currentSong.id;
-  }, [currentSong.id, dataType, songId]);
+    return songId === currentSong?.id;
+  }, [currentSong?.id, dataType, songId]);
 
   const isQueue = pageType === "queue";
 

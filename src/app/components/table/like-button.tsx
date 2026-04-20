@@ -40,10 +40,10 @@ export function TableLikeButton({
 
   useEffect(() => {
     if (type === "artist") return;
-    if (currentSong.id === entityId) {
+    if (currentSong?.id === entityId) {
       songStar.setIsStarred(isSongStarred);
     }
-  }, [currentSong, entityId, isSongStarred, type, songStar.setIsStarred]);
+  }, [currentSong?.id, entityId, isSongStarred, type, songStar.setIsStarred]);
 
   const queryClient = useQueryClient();
 
