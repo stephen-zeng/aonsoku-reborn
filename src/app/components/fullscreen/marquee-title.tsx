@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import Marquee from "react-fast-marquee";
 import { useTextOverflow } from "@/app/hooks/use-text-overflow";
 
@@ -14,10 +14,18 @@ export function MarqueeTitle({ children, gap }: MarqueeTitleProps) {
   const [isFinished, setIsFinished] = useState(false);
   const [marqueeKey, setMarqueeKey] = useState("");
   const isOverflowing = overflow.isOverflowing;
+  const prevOverflowingRef = useRef(isOverflowing);
 
   useEffect(() => {
-    if (isOverflowing) return;
-    setMarqueeKey((prev) => (prev === "" ? "init" : prev));
+    if (isOverflowing) {
+      prevOverflowingRef.current = true;
+      return;
+    }
+    if (prevOverflowingRef.current) {
+      setIsFinished(false);
+      setMarqueeKey(`reset-${Date.now()}`);
+    }
+    prevOverflowingRef.current = false;
   }, [isOverflowing]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: needed to reset on content change

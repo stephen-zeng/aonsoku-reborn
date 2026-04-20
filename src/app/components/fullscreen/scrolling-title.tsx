@@ -98,6 +98,7 @@ export function ScrollingTitle({ children }: ScrollingTitleProps) {
       isCancelled = true;
       timeoutIds.forEach(clearTimeout);
       controls.stop();
+      controls.set({ x: 0 });
     };
   }, [overflow.isOverflowing, overflow.width, controls]);
 

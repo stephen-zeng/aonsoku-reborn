@@ -44,16 +44,19 @@ export function useTextOverflow(): UseTextOverflowReturn {
   }, []);
 
   useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
     let rafId: number;
-    const handleResize = () => {
+    const observer = new ResizeObserver(() => {
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(calculateOverflow);
-    };
+    });
 
     calculateOverflow();
-    window.addEventListener("resize", handleResize);
+    observer.observe(container);
     return () => {
-      window.removeEventListener("resize", handleResize);
+      observer.disconnect();
       cancelAnimationFrame(rafId);
     };
   }, [calculateOverflow]);
