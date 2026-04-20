@@ -21,7 +21,7 @@ export const SongInfo = memo(function SongInfo({
 }) {
   const currentSong = usePlayerStore(
     (state) => state.songlist.currentSong,
-    (a, b) => a.id === b.id,
+    (a, b) => a?.id === b?.id,
   );
 
   if (!currentSong?.id) return null;
@@ -86,7 +86,7 @@ export const AlbumName = memo(function AlbumName({
 }) {
   const currentSong = usePlayerStore(
     (state) => state.songlist.currentSong,
-    (a, b) => a.id === b.id,
+    (a, b) => a?.id === b?.id,
   );
 
   if (!currentSong?.id) return null;
@@ -119,7 +119,7 @@ export const AlbumName = memo(function AlbumName({
 export const CompactSongInfo = memo(function CompactSongInfo() {
   const currentSong = usePlayerStore(
     (state) => state.songlist.currentSong,
-    (a, b) => a.id === b.id,
+    (a, b) => a?.id === b?.id,
   );
 
   if (!currentSong?.id) return null;

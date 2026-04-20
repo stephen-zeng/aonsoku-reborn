@@ -42,6 +42,11 @@ const search = "search-key";
 
 const genre = "get-all-genres";
 
+const lyrics = {
+  plain: "get-lyrics",
+  structured: "get-structured-lyrics",
+};
+
 const update = {
   serverInfo: "get-server-info",
   check: "check-for-updates",
@@ -56,5 +61,6 @@ export const queryKeys = {
   radio,
   search,
   genre,
+  lyrics,
   update,
 };

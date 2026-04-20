@@ -12,6 +12,9 @@ export function MiniPlayerSongTitle() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const song = usePlayerCurrentSong();
+
+  if (!song) return null;
+
   const enableTitleNavigation = !isMobile && Boolean(song.albumId);
 
   function handleTitleClick() {

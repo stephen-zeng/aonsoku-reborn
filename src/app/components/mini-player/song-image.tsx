@@ -4,6 +4,8 @@ import { usePlayerCurrentSong } from "@/store/player.store";
 export function MiniPlayerSongImage() {
   const song = usePlayerCurrentSong();
 
+  if (!song) return null;
+
   return (
     <div className="min-w-[20%] h-full max-w-full aspect-square flex items-center justify-center rounded">
       <CachedImage
