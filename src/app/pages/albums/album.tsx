@@ -18,6 +18,7 @@ import {
 } from "@/app/hooks/use-album";
 import { useHasHover } from "@/app/hooks/use-input-mode";
 import { useIsMobile } from "@/app/hooks/use-mobile";
+import { useIsOnline } from "@/store/cache.store";
 import ErrorPage from "@/app/pages/error-page";
 import { songsColumns } from "@/app/tables/songs-columns";
 import { ROUTES } from "@/routes/routesList";
@@ -33,6 +34,7 @@ export default function Album() {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const hasHover = useHasHover();
+  const isOnline = useIsOnline();
   const columns = useMemo(
     () =>
       songsColumns({
@@ -154,22 +156,33 @@ export default function Album() {
       <ListWrapper>
         <AlbumInfo album={album} />
 
-        <DataTable
-          columns={columns}
-          data={album.song}
-          handlePlaySong={(row) =>
-            setSongList(
-              album.song,
-              row.index,
-              false,
-              { albumId: album.id },
-              album.name,
-            )
-          }
-          columnFilter={columnsToShow}
-          showDiscNumber={true}
-          variant="modern"
-        />
+        {album.songsUnavailable && !isOnline ? (
+          <div className="rounded-md border border-border bg-muted/50 p-4 my-2">
+            <h4 className="text-sm font-semibold">
+              {t("album.detail.songsUnavailableTitle")}
+            </h4>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t("album.detail.songsUnavailable")}
+            </p>
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={album.song}
+            handlePlaySong={(row) =>
+              setSongList(
+                album.song,
+                row.index,
+                false,
+                { albumId: album.id },
+                album.name,
+              )
+            }
+            columnFilter={columnsToShow}
+            showDiscNumber={true}
+            variant="modern"
+          />
+        )}
 
         {albumComment && <AlbumComment comment={albumComment} />}
 

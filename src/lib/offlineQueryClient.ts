@@ -219,12 +219,12 @@ export async function getOfflineAlbumDetail(
   if (!album) {
     throw new Error(`Album ${albumId} not found offline`);
   }
-  if (songs.length === 0 && album.songCount > 0) {
-    throw new Error(`Album ${albumId} tracks not available offline`);
-  }
+
+  const songsUnavailable = songs.length === 0 && album.songCount > 0;
 
   return {
     ...album,
+    songsUnavailable: songsUnavailable || undefined,
     song: songs.map(withAlbumSongDefaults).sort((a, b) => {
       if ((a.discNumber ?? 0) !== (b.discNumber ?? 0)) {
         return (a.discNumber ?? 0) - (b.discNumber ?? 0);

@@ -45,6 +45,7 @@ export interface SingleAlbum {
   displayArtist?: string;
   explicitStatus?: string;
   version?: string;
+  songsUnavailable?: boolean;
   song: ISong[];
 }
 

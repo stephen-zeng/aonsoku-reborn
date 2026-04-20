@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
+import { getOfflineArtistDetail, useOfflineQuery } from "@/lib/offlineQueryClient";
 import { subsonic } from "@/service/subsonic";
 import { useIsOnline } from "@/store/cache.store";
-import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 import { queryKeys } from "@/utils/queryKeys";
 
 export const useGetArtist = (artistId: string) =>
@@ -10,12 +10,7 @@ export const useGetArtist = (artistId: string) =>
     () => subsonic.artists.getOne(artistId),
     {
       enabled: !!artistId,
-      offlineFn: async () => {
-        const artists = await offlineData.artists();
-        const artist = artists.find((a) => a.id === artistId);
-        if (!artist) throw new Error(`Artist ${artistId} not found offline`);
-        return artist;
-      },
+      offlineFn: () => getOfflineArtistDetail(artistId),
     },
   );
 

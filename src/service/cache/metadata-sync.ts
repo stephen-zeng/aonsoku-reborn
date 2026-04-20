@@ -186,14 +186,30 @@ class MetadataSyncService {
         batch.map((playlist) => subsonic.playlists.getOne(playlist.id)),
       );
 
+      const failedIds: string[] = [];
       results.forEach((result, index) => {
         if (result.status === "rejected") {
           console.warn(
             `[metadataSync] failed to load playlist detail ${batch[index].id}:`,
             result.reason,
           );
+          failedIds.push(batch[index].id);
         }
       });
+
+      if (failedIds.length > 0) {
+        const retryResults = await Promise.allSettled(
+          failedIds.map((id) => subsonic.playlists.getOne(id)),
+        );
+        retryResults.forEach((result, index) => {
+          if (result.status === "rejected") {
+            console.warn(
+              `[metadataSync] retry failed for playlist detail ${failedIds[index]}:`,
+              result.reason,
+            );
+          }
+        });
+      }
 
       this.updateSyncState(
         "playlists",

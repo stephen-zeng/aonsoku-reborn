@@ -204,6 +204,10 @@
     },
     "table": {
       "discNumber": "Disc {{number}}"
+    },
+    "detail": {
+      "songsUnavailable": "Track list unavailable offline. Sync your library to make tracks available.",
+      "songsUnavailableTitle": "Tracks Unavailable"
     }
   },
   "artist": {
