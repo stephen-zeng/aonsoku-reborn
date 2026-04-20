@@ -448,6 +448,8 @@ export function cleanupPlayerStore() {
 }
 
 function registerIdbEventListeners() {
+  if (typeof document === "undefined" || typeof window === "undefined") return;
+
   const handleVisibilityChange = () => {
     if (document.hidden && songlistHydrated.value) flushIdbSonglistWrite();
   };
