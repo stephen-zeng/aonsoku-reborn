@@ -11,6 +11,7 @@ import {
 import { LoopState } from "@/types/playerContext";
 
 export function usePreloadAudio() {
+  const streamQuality = useCacheStore((state) => state.settings.streamQuality);
   const preloadRef = useRef<HTMLAudioElement | null>(null);
   const preloadedSongIdRef = useRef<string | null>(null);
   const { isSong } = usePlayerMediaType();
@@ -56,13 +57,9 @@ export function usePreloadAudio() {
       preloadRef.current.preload = "auto";
     }
 
-    preloadRef.current.src = buildAudioUrl(
-      nextSongId,
-      useCacheStore.getState().settings.streamQuality,
-      "stream",
-    );
+    preloadRef.current.src = buildAudioUrl(nextSongId, streamQuality, "stream");
     preloadedSongIdRef.current = nextSongId;
-  }, [nextSongId]);
+  }, [nextSongId, streamQuality]);
 
   useEffect(() => {
     return () => {

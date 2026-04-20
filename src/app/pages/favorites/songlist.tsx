@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
 import type { Row } from "@tanstack/react-table";
 import ImageHeader from "@/app/components/album/image-header";
 import {
@@ -13,9 +12,9 @@ import { DataTable } from "@/app/components/ui/data-table";
 import { useIsMobile } from "@/app/hooks/use-mobile";
 import { useHasHover } from "@/app/hooks/use-input-mode";
 import { songsColumns } from "@/app/tables/songs-columns";
+import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
-import { useIsOnline } from "@/store/cache.store";
 import { ColumnFilter } from "@/types/columnFilter";
 import { ISong } from "@/types/responses/song";
 import { convertSecondsToHumanRead } from "@/utils/convertSecondsToTime";
@@ -31,12 +30,21 @@ const COLUMNS_DESKTOP: ColumnFilter[] = [
 ];
 const COLUMNS_MOBILE: ColumnFilter[] = ["title", "select"];
 
+async function fetchFavoriteSongs() {
+  const response = await subsonic.songs.getFavoriteSongs();
+  return response?.song ?? [];
+}
+
+async function fetchOfflineFavoriteSongs() {
+  const songs = await offlineData.songs();
+  return songs.filter((song) => song.starred != null);
+}
+
 export default function SongList() {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const hasHover = useHasHover();
   const { setSongList } = usePlayerActions();
-  const isOnline = useIsOnline();
 
   const columns = useMemo(() => songsColumns({ hasHover }), [hasHover]);
 
@@ -44,13 +52,8 @@ export default function SongList() {
     data: songs,
     isLoading,
     isError,
-  } = useQuery({
-    queryKey: [...queryKeys.favorites.list],
-    queryFn: async () => {
-      const response = await subsonic.songs.getFavoriteSongs();
-      return response?.song ?? [];
-    },
-    enabled: isOnline,
+  } = useOfflineQuery([...queryKeys.favorites.list], fetchFavoriteSongs, {
+    offlineFn: fetchOfflineFavoriteSongs,
     staleTime: 5 * 60 * 1000,
   });
 

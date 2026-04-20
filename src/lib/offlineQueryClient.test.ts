@@ -31,6 +31,18 @@ describe("idbFirstQueryFn", () => {
     expect(network).toHaveBeenCalledTimes(1);
   });
 
+  it("can treat an empty IDB result as authoritative when requested", async () => {
+    const network = vi.fn(async () => ["from-network"]);
+    const idb = vi.fn(async () => [] as string[]);
+    const fn = idbFirstQueryFn(network, idb, { acceptEmpty: true });
+
+    const result = await fn();
+
+    expect(result).toEqual([]);
+    expect(idb).toHaveBeenCalledTimes(1);
+    expect(network).not.toHaveBeenCalled();
+  });
+
   it("falls back to the network when IDB returns null / undefined", async () => {
     const network = vi.fn(async () => ({ id: "net" }));
     const idb = vi.fn(async () => null as unknown as { id: string });

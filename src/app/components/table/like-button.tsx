@@ -10,6 +10,7 @@ import {
   usePlayerCurrentSong,
   usePlayerSongStarred,
 } from "@/store/player.store";
+import type { ISong } from "@/types/responses/song";
 import { queryKeys } from "@/utils/queryKeys";
 
 interface TableLikeButtonProps {
@@ -17,6 +18,7 @@ interface TableLikeButtonProps {
   starred: boolean;
   entityId: string;
   albumId?: string;
+  song?: ISong;
 }
 
 export function TableLikeButton({
@@ -24,11 +26,13 @@ export function TableLikeButton({
   starred,
   type,
   albumId,
+  song,
 }: TableLikeButtonProps) {
   const songStar = useSongStarMutation({
     songId: entityId,
     initialStarred: starred,
     albumId,
+    song,
   });
 
   const currentSong = usePlayerCurrentSong();

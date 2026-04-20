@@ -88,6 +88,18 @@ async function bulkPutInChunks<T, K>(
   }
 }
 
+async function clearAndBulkPutInChunks<T, K>(
+  table: { clear: () => Promise<void>; bulkPut: (rows: T[]) => Promise<K> },
+  rows: T[],
+  signal: AbortSignal,
+): Promise<void> {
+  if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+  await table.clear();
+  if (rows.length > 0) {
+    await bulkPutInChunks(table, rows, signal);
+  }
+}
+
 /**
  * Progressive, tiered metadata sync.
  *
@@ -218,30 +230,51 @@ class MetadataSyncService {
     this.updateSyncState("genres", "t1");
     const genres = await subsonic.genres.get();
     this.checkAborted(signal);
-    if (genres?.length) {
-      await libraryDb.genres.clear();
-      await libraryDb.genres.bulkPut(genres);
-    }
+    await clearAndBulkPutInChunks(libraryDb.genres, genres ?? [], signal);
 
     this.checkAborted(signal);
     this.updateSyncState("playlists", "t1");
     const playlists = await subsonic.playlists.getAll();
     this.checkAborted(signal);
-    if (playlists?.length) {
-      await libraryDb.playlists.clear();
-      await libraryDb.playlists.bulkPut(playlists.map(withStarredAt));
-    }
+    await clearAndBulkPutInChunks(
+      libraryDb.playlists,
+      (playlists ?? []).map(withStarredAt),
+      signal,
+    );
 
     this.checkAborted(signal);
     this.updateSyncState("favorites", "t1");
     const starred = await subsonic.songs.getFavoriteSongs();
     this.checkAborted(signal);
     const starredSongs = starred?.song ?? [];
-    if (starredSongs.length) {
-      // Upsert (no clear) — T3 will rebuild the full table later but
-      // until then favorites should be visible from T1 onward.
-      await libraryDb.songs.bulkPut(
+    const starredIds = new Set(starredSongs.map((song) => song.id));
+
+    // Reconcile starred state instead of pure upsert: otherwise songs
+    // unstarred on the server remain falsely marked as favorites in
+    // Dexie until a later full T3 rebuild happens.
+    const previouslyStarred = await libraryDb.songs
+      .where("starredAt")
+      .above(0)
+      .primaryKeys();
+    if (previouslyStarred.length > 0) {
+      await Promise.all(
+        previouslyStarred
+          .filter((songId) => !starredIds.has(songId))
+          .map((songId) =>
+            libraryDb.songs.update(songId, {
+              starred: undefined,
+              starredAt: undefined,
+            }),
+          ),
+      );
+    }
+    if (starredSongs.length > 0) {
+      // Upsert only the currently starred songs so favorites are
+      // visible from T1 onward even before the full songs table lands.
+      await bulkPutInChunks(
+        libraryDb.songs,
         starredSongs.map((s) => withPlayedAt(withStarredAt(s))),
+        signal,
       );
     }
 
@@ -249,6 +282,7 @@ class MetadataSyncService {
     queryClient.invalidateQueries({ queryKey: queryKeys.playlist.all });
     queryClient.invalidateQueries({ queryKey: queryKeys.genre });
     queryClient.invalidateQueries({ queryKey: queryKeys.favorites.count });
+    queryClient.invalidateQueries({ queryKey: queryKeys.favorites.list });
     queryClient.invalidateQueries({ queryKey: queryKeys.song.all });
   }
 
@@ -262,14 +296,11 @@ class MetadataSyncService {
     this.updateSyncState("artists", "t2");
     const artists = await subsonic.artists.getAll();
     this.checkAborted(signal);
-    if (artists?.length) {
-      await libraryDb.artists.clear();
-      await bulkPutInChunks(
-        libraryDb.artists,
-        artists.map(withStarredAt),
-        signal,
-      );
-    }
+    await clearAndBulkPutInChunks(
+      libraryDb.artists,
+      (artists ?? []).map(withStarredAt),
+      signal,
+    );
 
     this.checkAborted(signal);
     this.updateSyncState("albums", "t2");
@@ -318,14 +349,11 @@ class MetadataSyncService {
       }
     }
 
-    if (allAlbums.length) {
-      await libraryDb.albums.clear();
-      await bulkPutInChunks(
-        libraryDb.albums,
-        allAlbums.map(withStarredAt),
-        signal,
-      );
-    }
+    await clearAndBulkPutInChunks(
+      libraryDb.albums,
+      allAlbums.map(withStarredAt),
+      signal,
+    );
 
     await this.recordTierCheckpoint("t2");
     queryClient.invalidateQueries({ queryKey: queryKeys.artist.all });
@@ -345,11 +373,8 @@ class MetadataSyncService {
     const knownSongCount = useAppStore.getState().data.songCount ?? 100_000;
     const songs = await subsonic.songs.getAllSongs(knownSongCount);
     this.checkAborted(signal);
-    if (songs?.length) {
-      await libraryDb.songs.clear();
-      const rows = songs.map((s) => withPlayedAt(withStarredAt(s)));
-      await bulkPutInChunks(libraryDb.songs, rows, signal);
-    }
+    const rows = (songs ?? []).map((s) => withPlayedAt(withStarredAt(s)));
+    await clearAndBulkPutInChunks(libraryDb.songs, rows, signal);
     this.updateSyncState("songs", "t3", songs.length, songs.length);
 
     await this.recordTierCheckpoint("t3");
@@ -364,6 +389,7 @@ class MetadataSyncService {
 
     queryClient.invalidateQueries({ queryKey: queryKeys.song.all });
     queryClient.invalidateQueries({ queryKey: queryKeys.favorites.count });
+    queryClient.invalidateQueries({ queryKey: queryKeys.favorites.list });
   }
 
   cancel(): void {

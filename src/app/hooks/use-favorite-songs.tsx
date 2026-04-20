@@ -1,4 +1,5 @@
 import { subsonic } from "@/service/subsonic";
+import { useIsOnline } from "@/store/cache.store";
 import { useAppStore } from "@/store/app.store";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
@@ -19,6 +20,8 @@ async function fetchTotalFavorites(): Promise<number> {
 }
 
 export function useTotalFavorites() {
+  const isOnline = useIsOnline();
+
   return useOfflineQuery([...queryKeys.favorites.count], fetchTotalFavorites, {
     staleTime: convertMinutesToMs(5),
     offlineFn: async () => {
@@ -26,7 +29,10 @@ export function useTotalFavorites() {
       // Empty songs table means the full-songs sync hasn't populated
       // yet (syncLibrary off, fresh install, or mid-sync). Fall back
       // to the network so the count isn't incorrectly reported as 0.
-      if (songs.length === 0) return undefined as unknown as number;
+      // When offline, there is no better source, so surface 0.
+      if (songs.length === 0) {
+        return isOnline ? (undefined as unknown as number) : 0;
+      }
       return songs.filter((s) => s.starred != null).length;
     },
   });

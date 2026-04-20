@@ -31,12 +31,15 @@ function isEmptyResult(v: unknown): boolean {
 export function idbFirstQueryFn<T>(
   onlineFn: () => Promise<T>,
   offlineFn?: () => Promise<T>,
+  options?: { acceptEmpty?: boolean },
 ): () => Promise<T> {
   if (!offlineFn) return onlineFn;
   return async () => {
     try {
       const cached = await offlineFn();
-      if (!isEmptyResult(cached)) return cached;
+      if (options?.acceptEmpty ? cached != null : !isEmptyResult(cached)) {
+        return cached;
+      }
     } catch (err) {
       console.warn(
         "[offlineQueryClient] IDB read failed, falling back to network:",
@@ -93,7 +96,12 @@ export function useOfflineQuery<T>(
 
   return useQuery<T>({
     queryKey,
-    queryFn: idbFirstQueryFn(onlineFn, offlineFn),
+    queryFn: idbFirstQueryFn(onlineFn, offlineFn, {
+      // When the user is offline we should surface an authoritative
+      // empty cache result instead of attempting a guaranteed-failing
+      // network fallback.
+      acceptEmpty: !isOnline,
+    }),
     enabled: resolvedEnabled,
     ...queryOptions,
   });

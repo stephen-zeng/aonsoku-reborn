@@ -32,6 +32,7 @@ export function SongTableActions({ row }: SongTableActionsProps) {
           entityId={row.original.id}
           starred={typeof row.original.starred === "string"}
           albumId={row.original.albumId}
+          song={row.original}
         />
       )}
     </div>

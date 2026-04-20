@@ -24,6 +24,7 @@ function MenuLikeButton({ variant, song }: MenuLikeButtonProps) {
     songId: song.id,
     initialStarred: typeof song.starred === "string",
     albumId: song.albumId,
+    song,
   });
 
   const currentSong = usePlayerCurrentSong();

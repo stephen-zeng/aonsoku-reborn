@@ -10,6 +10,7 @@ interface CachedAudioState {
 }
 
 export function useCachedAudioUrl(songId?: string) {
+  const streamQuality = useCacheStore((state) => state.settings.streamQuality);
   const [state, setState] = useState<CachedAudioState>({
     url: "",
     isCached: false,
@@ -56,7 +57,6 @@ export function useCachedAudioUrl(songId?: string) {
 
       if (cancelled) return;
       revokePreviousBlobUrl();
-      const streamQuality = useCacheStore.getState().settings.streamQuality;
       setState({
         url: buildAudioUrl(songId, streamQuality, "stream"),
         isCached: false,
@@ -67,7 +67,7 @@ export function useCachedAudioUrl(songId?: string) {
     return () => {
       cancelled = true;
     };
-  }, [songId, revokePreviousBlobUrl]);
+  }, [songId, revokePreviousBlobUrl, streamQuality]);
 
   useEffect(() => {
     return () => {
