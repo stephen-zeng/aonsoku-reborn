@@ -47,6 +47,7 @@ export default function Album() {
     data: album,
     isLoading: albumIsLoading,
     isFetched,
+    error: albumError,
   } = useGetAlbum(albumId);
   const { data: artist, isLoading: moreAlbumsIsLoading } = useGetArtistAlbums(
     album?.artistId || "",
@@ -58,7 +59,12 @@ export default function Album() {
 
   if (albumIsLoading) return <AlbumFallback />;
   if (isFetched && !album) {
-    return <ErrorPage status={404} statusText={t("error.notFound")} />;
+    return (
+      <ErrorPage
+        status={albumError ? 500 : 404}
+        statusText={t("error.notFound")}
+      />
+    );
   }
   if (!album) return <AlbumFallback />;
 

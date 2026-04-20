@@ -53,7 +53,7 @@ export default function CommandMenu() {
   );
 
   const { data: albumData } = useQuery({
-    queryKey: [...queryKeys.album.single, params.albumId],
+    queryKey: [...queryKeys.album.single, "preview", params.albumId],
     queryFn: () => subsonic.albums.getOne(params.albumId!),
     enabled: Boolean(params.albumId) && isOnline,
     staleTime: convertMinutesToMs(5),
