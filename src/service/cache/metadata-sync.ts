@@ -17,6 +17,8 @@ interface AlbumSummary {
   year?: number;
   genre?: string;
   created: string;
+  played?: string;
+  playCount?: number;
   starred?: string;
 }
 
@@ -333,6 +335,8 @@ class MetadataSyncService {
             year: album.year,
             genre: album.genre,
             created: album.created,
+            played: album.played,
+            playCount: album.playCount,
             starred: album.starred,
           });
         }

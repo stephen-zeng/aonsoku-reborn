@@ -2,7 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { subsonic } from "@/service/subsonic";
 import { useIsOnline } from "@/store/cache.store";
 import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
+import { type AlbumsListData } from "@/types/responses/album";
 import { queryKeys } from "@/utils/queryKeys";
+
+const GENRE_PREVIEW_LIMIT = 16;
 
 export const useGetAlbum = (albumId: string) =>
   useOfflineQuery(
@@ -50,13 +53,15 @@ export const useGetGenreAlbums = (genre: string) =>
     () => subsonic.albums.getAlbumList({ type: "byGenre", genre, size: 16 }),
     {
       enabled: !!genre,
-      offlineFn: async () => {
+      offlineFn: async (): Promise<AlbumsListData> => {
         const albums = await offlineData.albums();
-        const filtered = albums.filter((a) => a.genre === genre);
+        const filtered = albums
+          .filter((album) => album.genre === genre)
+          .slice(0, GENRE_PREVIEW_LIMIT);
+
         return {
-          albums: filtered,
+          list: filtered,
           albumsCount: filtered.length,
-          nextOffset: undefined,
         };
       },
     },

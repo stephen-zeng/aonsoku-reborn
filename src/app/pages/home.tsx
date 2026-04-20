@@ -64,7 +64,7 @@ export default function Home() {
           return <PreviewListFallback key={section.title} />;
         }
 
-        if (!section.data || !section.data?.list) return null;
+        if (!section.data?.list?.length) return null;
 
         return (
           <PreviewList
