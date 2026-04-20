@@ -86,7 +86,6 @@ export default function Playlist() {
         subtitle={playlist.comment}
         coverArtId={coverArt}
         coverArtType="album"
-        coverArtSize="700"
         coverArtAlt={playlist.name}
         badges={badges}
         isPlaylist={true}

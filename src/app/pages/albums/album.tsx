@@ -146,7 +146,6 @@ export default function Album() {
         artists={album.artists}
         coverArtId={album.coverArt}
         coverArtType="album"
-        coverArtSize="700"
         coverArtAlt={album.name}
         badges={badges}
         secondaryBadges={secondaryBadges}

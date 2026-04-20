@@ -146,8 +146,8 @@ export function isAudioCached(songId: string): boolean {
   return audioKey(songId) in useCacheIndexStore.getState().items;
 }
 
-export function isCoverCached(coverArtId: string, size = "300"): boolean {
-  return coverKey(coverArtId, size) in useCacheIndexStore.getState().items;
+export function isCoverCached(coverArtId: string): boolean {
+  return coverKey(coverArtId) in useCacheIndexStore.getState().items;
 }
 
 export function getCacheIndexItems(): Record<string, CachedItemMeta> {
@@ -161,8 +161,8 @@ export function getCacheIndexActions() {
 export const useIsAudioCached = (songId: string) =>
   useCacheIndexStore((state) => audioKey(songId) in state.items);
 
-export const useIsCoverCached = (coverArtId: string, size = "300") =>
-  useCacheIndexStore((state) => coverKey(coverArtId, size) in state.items);
+export const useIsCoverCached = (coverArtId: string) =>
+  useCacheIndexStore((state) => coverKey(coverArtId) in state.items);
 
 export const useCacheIndexLoaded = () =>
   useCacheIndexStore((state) => state.loaded);

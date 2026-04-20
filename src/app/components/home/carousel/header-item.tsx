@@ -66,7 +66,6 @@ export function HeaderItem({ song }: { song: ISong }) {
               coverArtId={song.coverArt}
               coverArtType="song"
               albumId={song.albumId}
-              coverArtSize="300"
               alt={song.title}
               effect="opacity"
               width="100%"

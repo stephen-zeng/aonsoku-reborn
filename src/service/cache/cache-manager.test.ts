@@ -55,19 +55,20 @@ describe("cacheManager", () => {
     useCacheIndexStore.setState({ items: {}, loaded: true });
   });
 
-  it("falls back to another cached cover size when the requested size is missing", async () => {
+  it("returns cached cover URL when cover is cached", async () => {
     const blob = new Blob(["cover"], { type: "image/jpeg" });
     cacheStorageMock.get.mockImplementation(async (key: string) => {
-      if (key === "cover:cover-1:700") return blob;
+      if (key === "cover:cover-1") return blob;
       return null;
     });
 
     useCacheIndexStore.setState({
       items: {
-        "cover:cover-1:700": {
+        "cover:cover-1": {
           id: "cover-1",
           type: "cover",
           source: "explicit",
+          coverSize: "700",
           sizeBytes: blob.size,
           cachedAt: 1,
           lastAccessedAt: 1,
@@ -77,14 +78,47 @@ describe("cacheManager", () => {
     });
 
     const { cacheManager } = await import("./cache-manager");
-    const url = await cacheManager.getCachedCoverUrl("cover-1", "300");
+    const url = await cacheManager.getCachedCoverUrl("cover-1");
 
     expect(url).toBeTruthy();
+  });
+
+  it("replaces smaller cover with larger size", async () => {
+    const bigBlob = new Blob(["big-cover"], { type: "image/jpeg" });
+
+    cacheStorageMock.get.mockResolvedValue(null);
+
+    useCacheIndexStore.setState({
+      items: {
+        "cover:cover-1": {
+          id: "cover-1",
+          type: "cover",
+          source: "explicit",
+          coverSize: "300",
+          sizeBytes: 5,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+      },
+      loaded: true,
+    });
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      blob: () => Promise.resolve(bigBlob),
+    } as Response);
+
+    const { cacheManager } = await import("./cache-manager");
+    await cacheManager.cacheCover("cover-1", "700");
+
+    expect(cacheStorageMock.delete).toHaveBeenCalledWith("cover:cover-1");
     expect(cacheStorageMock.put).toHaveBeenCalledWith(
-      "cover:cover-1:300",
-      blob,
+      "cover:cover-1",
+      bigBlob,
       "image/jpeg",
     );
+
+    vi.restoreAllMocks();
   });
 
   it("clearAllCaches also clears prefetched lyrics rows", async () => {
@@ -112,7 +146,7 @@ describe("cacheManager", () => {
 
     useCacheIndexStore.setState({
       items: {
-        "cover:cover-1:300": {
+        "cover:cover-1": {
           id: "cover-1",
           type: "cover",
           source: "explicit",

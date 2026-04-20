@@ -10,7 +10,6 @@ export function MiniPlayerSongImage() {
         coverArtId={song.coverArt}
         coverArtType="song"
         albumId={song.albumId}
-        coverArtSize="300"
         width="100%"
         height="100%"
         loading="eager"

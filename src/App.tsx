@@ -16,6 +16,7 @@ import { ThemeObserver } from "@/app/observers/theme-observer";
 import { ToastContainer } from "@/app/observers/toast-container";
 import { router } from "@/routes/router";
 import { useCacheIndexActions } from "@/store/cache-index.store";
+import { cacheManager } from "@/service/cache";
 import {
   tryAutoConnect,
   useLanControlClientStore,
@@ -28,7 +29,11 @@ function App() {
   const { loadFromIDB } = useCacheIndexActions();
 
   useEffect(() => {
-    loadFromIDB();
+    loadFromIDB().then(() => {
+      cacheManager.migrateCoverCacheKeys().catch((err) => {
+        console.error("[migration] migrateCoverCacheKeys failed:", err);
+      });
+    });
   }, [loadFromIDB]);
 
   useNetworkStatusObserver();

@@ -119,7 +119,6 @@ export default function SongList() {
         title={t("sidebar.favorites")}
         badges={badges}
         coverArtType="album"
-        coverArtSize="700"
         coverArtAlt={t("sidebar.favorites")}
         customIcon={customIcon}
         showSimpleSubtitle

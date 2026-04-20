@@ -61,6 +61,8 @@ export interface CachedItemMeta {
    */
   triggers?: string[];
   quality?: DownloadQuality;
+  /** For cover entries: the resolution (e.g. "700") that was requested. */
+  coverSize?: string;
   sizeBytes: number;
   cachedAt: number;
   lastAccessedAt: number;

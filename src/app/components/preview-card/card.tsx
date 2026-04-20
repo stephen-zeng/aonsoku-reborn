@@ -42,7 +42,6 @@ interface ImageProps {
   src?: string;
   coverArtId?: string;
   coverArtType?: CoverArt;
-  coverArtSize?: string;
   alt: string;
 }
 
@@ -50,7 +49,6 @@ function Image({
   src,
   coverArtId,
   coverArtType,
-  coverArtSize = "300",
   alt,
 }: ImageProps) {
   return (
@@ -58,7 +56,6 @@ function Image({
       src={src}
       coverArtId={coverArtId}
       coverArtType={coverArtType}
-      coverArtSize={coverArtSize}
       alt={alt}
       effect="opacity"
       width="100%"

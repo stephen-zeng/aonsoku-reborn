@@ -19,7 +19,7 @@ import {
   DownloadQuality,
   QUALITY_MAX_BITRATE,
 } from "@/types/cache";
-import { audioKey, coverKey } from "./cache-keys";
+import { COVER_PREFIX, audioKey, coverKey, isOldCoverKey } from "./cache-keys";
 import { cacheStorage } from "./cache-storage";
 import { computeEvictionPlan } from "./eviction";
 
@@ -198,8 +198,16 @@ class CacheManager {
     return URL.createObjectURL(blob);
   }
 
-  async cacheCover(coverArtId: string, size = "300"): Promise<void> {
-    if (isCoverCached(coverArtId, size)) return;
+  async cacheCover(coverArtId: string, size = "700"): Promise<void> {
+    const key = coverKey(coverArtId);
+    const items = getCacheIndexItems();
+    const existing = items[key];
+
+    if (existing) {
+      const existingSize = Number(existing.coverSize ?? "0");
+      const requestedSize = Number(size);
+      if (existingSize >= requestedSize) return;
+    }
 
     const url = getCoverArtUrl(coverArtId, "album", size);
     if (url.startsWith("/default_")) return;
@@ -208,62 +216,34 @@ class CacheManager {
     if (!response.ok) return;
 
     const blob = await response.blob();
-    const key = coverKey(coverArtId, size);
+
     await cacheStorage.put(key, blob, blob.type || "image/jpeg");
 
     const meta: CachedItemMeta = {
       id: coverArtId,
       type: "cover",
-      source: "explicit",
+      source: existing?.source ?? "explicit",
+      coverSize: size,
       sizeBytes: blob.size,
-      cachedAt: Date.now(),
+      cachedAt: existing?.cachedAt ?? Date.now(),
       lastAccessedAt: Date.now(),
     };
     getCacheIndexActions().addItem(key, meta);
     this.scheduleStatsRefresh();
   }
 
-  async getCachedCoverUrl(
-    coverArtId: string,
-    size = "300",
-  ): Promise<string | null> {
-    const requestedKey = coverKey(coverArtId, size);
-    const fallbackSizes = [size, "700", "300", "100"];
+  async getCachedCoverUrl(coverArtId: string): Promise<string | null> {
+    const key = coverKey(coverArtId);
+    if (!isCoverCached(coverArtId)) return null;
 
-    for (const currentSize of fallbackSizes) {
-      const key = coverKey(coverArtId, currentSize);
-      if (!isCoverCached(coverArtId, currentSize)) continue;
-
-      const blob = await cacheStorage.get(key);
-      if (!blob) {
-        getCacheIndexActions().removeItem(key);
-        continue;
-      }
-
-      getCacheIndexActions().touchItem(key);
-
-      if (key !== requestedKey && !isCoverCached(coverArtId, size)) {
-        Promise.resolve(
-          cacheStorage.put(requestedKey, blob, blob.type || "image/jpeg"),
-        )
-          .then(() => {
-            getCacheIndexActions().addItem(requestedKey, {
-              ...getCacheIndexItems()[key],
-              id: coverArtId,
-              type: "cover",
-              source: getCacheIndexItems()[key]?.source ?? "explicit",
-              sizeBytes: blob.size,
-              cachedAt: Date.now(),
-              lastAccessedAt: Date.now(),
-            });
-          })
-          .catch(() => {});
-      }
-
-      return URL.createObjectURL(blob);
+    const blob = await cacheStorage.get(key);
+    if (!blob) {
+      getCacheIndexActions().removeItem(key);
+      return null;
     }
 
-    return null;
+    getCacheIndexActions().touchItem(key);
+    return URL.createObjectURL(blob);
   }
 
   async syncCoverArt(onProgress?: (current: number, total: number) => void) {
@@ -482,6 +462,64 @@ class CacheManager {
       audioCount,
       coverCount,
     });
+  }
+
+  /**
+   * One-time migration: old cache keys included the size suffix
+   * (e.g. `cover:al-123:300`). New keys are just `cover:<id>`.
+   * For each coverArtId that has multiple old entries, keep the
+   * largest size and delete the rest.
+   */
+  async migrateCoverCacheKeys(): Promise<void> {
+    const items = getCacheIndexItems();
+    const actions = getCacheIndexActions();
+
+    const coverEntries = Object.entries(items).filter(
+      ([key]) => isOldCoverKey(key),
+    );
+
+    if (coverEntries.length === 0) return;
+
+    const byId = new Map<
+      string,
+      { key: string; size: string; meta: CachedItemMeta }[]
+    >();
+    for (const [key, meta] of coverEntries) {
+      const suffix = key.slice(COVER_PREFIX.length);
+      const lastColon = suffix.lastIndexOf(":");
+      const id = suffix.slice(0, lastColon);
+      const size = suffix.slice(lastColon + 1);
+      let list = byId.get(id);
+      if (!list) {
+        list = [];
+        byId.set(id, list);
+      }
+      list.push({ key, size, meta });
+    }
+
+    for (const [id, entries] of byId) {
+      entries.sort((a, b) => Number(b.size) - Number(a.size));
+      const best = entries[0];
+      const newKey = coverKey(id);
+
+      const blob = await cacheStorage.get(best.key);
+      if (blob) {
+        await cacheStorage.put(newKey, blob, blob.type || "image/jpeg");
+        actions.addItem(newKey, {
+          ...best.meta,
+          id,
+          type: "cover",
+          coverSize: best.size,
+        });
+      }
+
+      for (const entry of entries) {
+        await cacheStorage.delete(entry.key);
+        actions.removeItem(entry.key);
+      }
+    }
+
+    this.refreshStats();
   }
 }
 

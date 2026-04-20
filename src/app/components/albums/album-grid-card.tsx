@@ -28,7 +28,6 @@ function AlbumCard({ album }: AlbumCardProps) {
         <PreviewCard.Image
           coverArtId={album.coverArt}
           coverArtType="album"
-          coverArtSize="300"
           alt={album.name}
         />
         {hasHover && <PreviewCard.PlayButton onClick={handlePlayAlbum} />}

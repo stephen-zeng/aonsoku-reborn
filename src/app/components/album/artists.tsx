@@ -64,7 +64,6 @@ function ArtistImage({ id, name }: AlbumArtistProps) {
         effect="opacity"
         coverArtId={id}
         coverArtType="artist"
-        coverArtSize="100"
         alt={name}
         className="w-full h-full rounded-full aspect-square object-cover shadow-custom-5"
       />
