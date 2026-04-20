@@ -5,6 +5,7 @@ import {
 } from "@/api/httpClient";
 import { subsonic } from "@/service/subsonic";
 import { useCacheStore } from "@/store/cache.store";
+import { usePlayerStore } from "@/store/player.store";
 import {
   getCacheIndexActions,
   getCacheIndexItems,
@@ -266,9 +267,15 @@ class CacheManager {
   }
 
   async syncCoverArt(onProgress?: (current: number, total: number) => void) {
-    const [artists, albums] = await Promise.all([
+    const useAlbumCoverForSongs =
+      usePlayerStore.getState().settings.coverArt.useAlbumCoverForSongs;
+
+    const [artists, albums, songs] = await Promise.all([
       libraryDb.artists.toArray(),
       libraryDb.albums.toArray(),
+      useAlbumCoverForSongs
+        ? Promise.resolve([])
+        : libraryDb.songs.toArray(),
     ]);
 
     const queue = Array.from(
@@ -276,6 +283,9 @@ class CacheManager {
         [
           ...artists.map((artist) => artist.coverArt),
           ...albums.map((album) => album.coverArt),
+          ...(useAlbumCoverForSongs
+            ? []
+            : songs.map((song) => song.coverArt)),
         ].filter((value): value is string => Boolean(value)),
       ),
     );

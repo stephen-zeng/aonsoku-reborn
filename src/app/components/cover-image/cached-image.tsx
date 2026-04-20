@@ -2,7 +2,10 @@ import { ComponentPropsWithoutRef, useEffect, useState } from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { cacheManager } from "@/service/cache";
 import { CoverArt } from "@/types/coverArtType";
-import { useCoverArtUrlFromSongPreference } from "@/utils/coverArt";
+import {
+  getSongCoverArtId,
+  useCoverArtUrlFromSongPreference,
+} from "@/utils/coverArt";
 
 type LazyLoadImageProps = ComponentPropsWithoutRef<typeof LazyLoadImage>;
 
@@ -12,6 +15,18 @@ interface CachedImageProps extends Omit<LazyLoadImageProps, "src"> {
   coverArtSize?: string;
   albumId?: string;
   src?: string;
+}
+
+function resolveCacheKey(
+  coverArtId: string | undefined,
+  coverArtType: CoverArt | undefined,
+  albumId: string | undefined,
+): string | undefined {
+  if (!coverArtId) return undefined;
+  if (coverArtType === "song" && albumId) {
+    return getSongCoverArtId({ albumId, coverArt: coverArtId });
+  }
+  return coverArtId;
 }
 
 /**
@@ -36,8 +51,10 @@ export function CachedImage({
   });
   const [cachedSrc, setCachedSrc] = useState<string | null>(null);
 
+  const cacheKey = resolveCacheKey(coverArtId, coverArtType, albumId);
+
   useEffect(() => {
-    if (!coverArtId) {
+    if (!cacheKey) {
       setCachedSrc(null);
       return;
     }
@@ -46,7 +63,7 @@ export function CachedImage({
     let objectUrl: string | null = null;
 
     cacheManager
-      .getCachedCoverUrl(coverArtId, coverArtSize)
+      .getCachedCoverUrl(cacheKey, coverArtSize)
       .then((url) => {
         if (cancelled) {
           if (url) URL.revokeObjectURL(url);
@@ -65,7 +82,7 @@ export function CachedImage({
         URL.revokeObjectURL(objectUrl);
       }
     };
-  }, [coverArtId, coverArtSize]);
+  }, [cacheKey, coverArtSize]);
 
   const resolvedSrc = cachedSrc ?? directSrc ?? generatedSrc;
 
