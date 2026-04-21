@@ -169,7 +169,7 @@ describe("offline detail readers", () => {
     expect(album.name).toBe("Offline Album");
   });
 
-  it("does not return an album summary when track detail is missing", async () => {
+  it("marks album as songsUnavailable when track detail is missing", async () => {
     await libraryDb.albums.put({
       id: "album-1",
       name: "Offline Album",
@@ -190,9 +190,9 @@ describe("offline detail readers", () => {
       discTitles: [],
     });
 
-    await expect(getOfflineAlbumDetail("album-1")).rejects.toThrow(
-      "tracks not available offline",
-    );
+    const result = await getOfflineAlbumDetail("album-1");
+    expect(result.songsUnavailable).toBe(true);
+    expect(result.song).toEqual([]);
   });
 
   it("reconstructs artist detail with sorted offline albums", async () => {
