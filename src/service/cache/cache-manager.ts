@@ -203,10 +203,11 @@ class CacheManager {
     const key = coverKey(coverArtId);
     const items = getCacheIndexItems();
     const existing = items[key];
+    const existingSize = Number(existing?.coverSize ?? "0");
+    const requestedSize = Number(size);
+    const shouldReplaceExisting = existingSize < requestedSize && !!existing;
 
     if (existing) {
-      const existingSize = Number(existing.coverSize ?? "0");
-      const requestedSize = Number(size);
       if (existingSize >= requestedSize) return;
       await cacheStorage.delete(key);
     }
@@ -218,6 +219,10 @@ class CacheManager {
     if (!response.ok) return;
 
     const blob = await response.blob();
+
+    if (shouldReplaceExisting) {
+      await cacheStorage.delete(key);
+    }
 
     await cacheStorage.put(key, blob, blob.type || "image/jpeg");
 

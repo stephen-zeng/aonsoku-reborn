@@ -17,6 +17,16 @@ function detectOS(): { isMac: boolean; isWin: boolean; isLinux: boolean } {
     };
   }
 
+  // When running in Node (SSR, tests), rely on process.platform
+  if (typeof window === "undefined" || !window.navigator) {
+    const platform = typeof process !== "undefined" ? process.platform : "";
+    return {
+      isMac: platform === "darwin",
+      isWin: platform === "win32",
+      isLinux: platform === "linux",
+    };
+  }
+
   // In browser/PWA, use userAgent and platform
   const userAgent = window.navigator.userAgent.toLowerCase();
   const platform = window.navigator.platform.toLowerCase();

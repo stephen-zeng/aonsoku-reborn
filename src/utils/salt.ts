@@ -3,8 +3,16 @@ import { AuthType } from "@/types/serverConfig";
 
 export const saltWord = "40n50kuPl4y3r";
 
-const { SERVER_URL, HIDE_SERVER, APP_USER, APP_PASSWORD, APP_AUTH_TYPE } =
-  window;
+const configSource =
+  typeof window !== "undefined"
+    ? (window as Record<string, unknown>)
+    : ({} as Record<string, unknown>);
+
+const SERVER_URL = configSource.SERVER_URL as string | undefined;
+const HIDE_SERVER = configSource.HIDE_SERVER as string | boolean | undefined;
+const APP_USER = configSource.APP_USER as string | undefined;
+const APP_PASSWORD = configSource.APP_PASSWORD as string | undefined;
+const APP_AUTH_TYPE = configSource.APP_AUTH_TYPE as string | undefined;
 
 export const hasValidConfig = Boolean(
   SERVER_URL && HIDE_SERVER && APP_USER && APP_PASSWORD && APP_AUTH_TYPE,

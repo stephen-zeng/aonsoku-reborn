@@ -26,7 +26,18 @@ import {
   hasValidConfig,
 } from "@/utils/salt";
 
-const { SERVER_URL, HIDE_SERVER, HIDE_RADIOS_SECTION, SERVER_TYPE } = window;
+const configSource =
+  typeof window !== "undefined"
+    ? (window as Record<string, unknown>)
+    : ({} as Record<string, unknown>);
+
+const SERVER_URL = configSource.SERVER_URL as string | undefined;
+const HIDE_SERVER = configSource.HIDE_SERVER as string | boolean | undefined;
+const HIDE_RADIOS_SECTION = configSource.HIDE_RADIOS_SECTION as
+  | string
+  | boolean
+  | undefined;
+const SERVER_TYPE = configSource.SERVER_TYPE as string | undefined;
 
 async function getServerInfoWithOverride(
   url: string,
