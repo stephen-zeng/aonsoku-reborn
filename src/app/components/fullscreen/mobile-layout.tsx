@@ -201,6 +201,7 @@ export const MobileLayout = memo(function MobileLayout({
             >
               <ArtworkWithInfo
                 compact={useShortCompactPlayingLayout}
+                showTouchDragSurface
                 className={cn(
                   "w-full",
                   useShortCompactPlayingLayout ? "flex-1 px-4" : "min-h-0",
