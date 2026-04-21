@@ -27,6 +27,7 @@ type AudioPlayerProps = ComponentPropsWithoutRef<"audio"> & {
   replayGain?: ReplayGainParams;
   onPlaybackError?: () => void;
   onReplayGainError?: () => void;
+  songId?: string;
 };
 
 export function AudioPlayer({
@@ -35,6 +36,7 @@ export function AudioPlayer({
   onPlaybackError,
   onReplayGainError,
   src,
+  songId,
   onLoadedMetadata,
   onTimeUpdate,
   onCanPlay,
@@ -62,6 +64,7 @@ export function AudioPlayer({
   const playPromiseRef = useRef<Promise<void> | null>(null);
   const effectPausingRef = useRef(false);
   const srcChangingRef = useRef(false);
+  const loadedSongIdRef = useRef<string | undefined>(undefined);
   const MAX_RETRIES = 5;
 
   const clearRetryTimer = useCallback(() => {
@@ -89,10 +92,11 @@ export function AudioPlayer({
       retryCountRef.current = 0;
       playPromiseRef.current = null;
       srcChangingRef.current = true;
+      loadedSongIdRef.current = songId;
 
       setAudioSrc(src || undefined);
     }
-  }, [audioSrc, cancelRetry, isRemoteControlActive, shouldUseNativeAudio, src]);
+  }, [audioSrc, cancelRetry, isRemoteControlActive, shouldUseNativeAudio, src, songId]);
 
   const audioVolume = useMemo(() => perceptualToGain(volume), [volume]);
 
@@ -379,6 +383,9 @@ export function AudioPlayer({
 
       try {
         if (isPlaying) {
+          if (songId !== loadedSongIdRef.current) {
+            return;
+          }
           if (shouldUseWebAudioReplayGain) {
             await resumeContext();
           }
@@ -401,6 +408,7 @@ export function AudioPlayer({
     resumeContext,
     safePlay,
     shouldUseWebAudioReplayGain,
+    songId,
   ]);
 
   useEffect(() => {

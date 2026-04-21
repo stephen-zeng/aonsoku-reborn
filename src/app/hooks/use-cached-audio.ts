@@ -32,7 +32,7 @@ export function useCachedAudioUrl(songId?: string) {
     }
 
     let cancelled = false;
-    setState((prev) => ({ ...prev, isLoading: true }));
+    setState({ url: "", isCached: false, isLoading: true });
 
     (async () => {
       const cachedUrl = await cacheManager.getCachedAudioUrl(songId);

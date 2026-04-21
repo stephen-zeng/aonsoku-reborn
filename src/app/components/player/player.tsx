@@ -277,6 +277,7 @@ export function Player() {
         <MemoAudioPlayer
           replayGain={trackReplayGain}
           src={audioSrc}
+          songId={songId}
           autoPlay={isPlaying}
           audioRef={audioRef}
           loop={loopState === LoopState.One && !hasUserQueue}
