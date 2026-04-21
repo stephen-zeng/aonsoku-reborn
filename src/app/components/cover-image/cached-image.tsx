@@ -4,7 +4,7 @@ import { cacheManager } from "@/service/cache";
 import { useIsOfflineMode } from "@/store/cache.store";
 import { CoverArt } from "@/types/coverArtType";
 import {
-  getSongCoverArtId,
+  resolveCacheKeys,
   useCoverArtUrlFromSongPreference,
 } from "@/utils/coverArt";
 
@@ -15,26 +15,6 @@ interface CachedImageProps extends Omit<LazyLoadImageProps, "src"> {
   coverArtType?: CoverArt;
   albumId?: string;
   src?: string;
-}
-
-export function resolveCacheKeys(
-  coverArtId: string | undefined,
-  coverArtType: CoverArt | undefined,
-  albumId: string | undefined,
-): string[] {
-  // For songs, try both the preferred ID (honouring useAlbumCoverForSongs)
-  // and the alternate ID. This ensures offline mode can fall back to the
-  // song's embedded cover if the album cover wasn't cached, or vice-versa.
-  if (coverArtType === "song" && albumId) {
-    const preferredId = getSongCoverArtId({ albumId, coverArt: coverArtId ?? "" });
-    const alternateId = preferredId === albumId ? (coverArtId || undefined) : albumId;
-    if (alternateId && alternateId !== preferredId) {
-      return [preferredId, alternateId];
-    }
-    return [preferredId];
-  }
-  if (!coverArtId) return [];
-  return [coverArtId];
 }
 
 export function useCachedCoverUrl(

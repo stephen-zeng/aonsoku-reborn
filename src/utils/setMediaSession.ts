@@ -1,7 +1,8 @@
 import { usePlayerStore } from "@/store/player.store";
 import { LanControlMessageType } from "@/types/lanControl";
 import { ISong } from "@/types/responses/song";
-import { getCoverArtUrlFromSongPreference } from "./coverArt";
+import { cacheManager } from "@/service/cache";
+import { getCoverArtUrlFromSongPreference, resolveCacheKeys } from "./coverArt";
 import { isValidDuration } from "./duration";
 import { logger } from "./logger";
 
@@ -15,18 +16,25 @@ function isMediaSessionSupported(): boolean {
   );
 }
 
+let lastArtworkUrl: string | null = null;
+let currentSessionId = 0;
+
 function removeMediaSession() {
   if (!isMediaSessionSupported()) return;
 
   try {
     navigator.mediaSession.metadata = null;
+    if (lastArtworkUrl) {
+      URL.revokeObjectURL(lastArtworkUrl);
+      lastArtworkUrl = null;
+    }
     logger.info("[MediaSession] Removed metadata");
   } catch (error) {
     logger.error("[MediaSession] Failed to remove metadata:", error);
   }
 }
 
-function setMediaSession(
+async function setMediaSession(
   song:
     | ISong
     | {
@@ -43,15 +51,37 @@ function setMediaSession(
     return;
   }
 
-  function buildArtwork(): { artwork: MediaImage[] } {
+  currentSessionId++;
+  const sessionId = currentSessionId;
+
+  async function buildArtwork(): Promise<{ artwork: MediaImage[] }> {
     if (!song.coverArt && !song.albumId) return { artwork: [] };
 
-    const src = getCoverArtUrlFromSongPreference({
+    if (lastArtworkUrl) {
+      URL.revokeObjectURL(lastArtworkUrl);
+      lastArtworkUrl = null;
+    }
+
+    let src = getCoverArtUrlFromSongPreference({
       coverArt: song.coverArt,
       coverArtType: "song",
       albumId: song.albumId,
       size: MEDIA_SESSION_COVER_SIZE,
     });
+
+    const cacheKeys = resolveCacheKeys(song.coverArt, "song", song.albumId);
+    for (const key of cacheKeys) {
+      try {
+        const cachedUrl = await cacheManager.getCachedCoverUrl(key);
+        if (cachedUrl) {
+          src = cachedUrl;
+          lastArtworkUrl = cachedUrl;
+          break;
+        }
+      } catch {
+        // ignore and try next key
+      }
+    }
 
     return {
       artwork: [
@@ -65,7 +95,13 @@ function setMediaSession(
   }
 
   try {
-    const { artwork } = buildArtwork();
+    const { artwork } = await buildArtwork();
+
+    if (sessionId !== currentSessionId) {
+      logger.info("[MediaSession] Aborting outdated metadata update");
+      return;
+    }
+
     const metadata = {
       title: song.title || "Unknown Title",
       artist: song.artist || "Unknown Artist",
