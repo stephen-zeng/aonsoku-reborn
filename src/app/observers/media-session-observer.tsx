@@ -84,11 +84,6 @@ export function MediaSessionObserver() {
       return;
     }
 
-    if (!effectiveIsPlaying) {
-      resetAppTitle();
-      return;
-    }
-
     let title = "";
     let metadataKey = "";
 
@@ -112,7 +107,11 @@ export function MediaSessionObserver() {
       }
     }
 
-    document.title = title;
+    if (!effectiveIsPlaying) {
+      resetAppTitle();
+    } else if (title) {
+      document.title = title;
+    }
   }, [
     hasNothingPlaying,
     isPlaying,
@@ -133,7 +132,7 @@ export function MediaSessionObserver() {
       ? (remotePlayerState?.isPlaying ?? false)
       : isPlaying;
 
-    if (!effectiveIsPlaying || hasNothingPlaying || !song) {
+    if (hasNothingPlaying || !song) {
       return;
     }
 
@@ -144,7 +143,7 @@ export function MediaSessionObserver() {
     }
 
     const now = Date.now();
-    if (now - lastPositionUpdateRef.current < 1000) {
+    if (effectiveIsPlaying && now - lastPositionUpdateRef.current < 1000) {
       return;
     }
     lastPositionUpdateRef.current = now;
