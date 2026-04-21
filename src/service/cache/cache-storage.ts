@@ -6,6 +6,10 @@ class CacheStorageService {
   }
 
   private buildUrl(key: string): string {
+    return `/_cache/${encodeURIComponent(key)}`;
+  }
+
+  private buildUrlLegacy(key: string): string {
     return `/_cache/${key}`;
   }
 
@@ -22,20 +26,29 @@ class CacheStorageService {
 
   async get(key: string): Promise<Blob | null> {
     const cache = await this.getCache();
-    const response = await cache.match(this.buildUrl(key));
+    // Try the new encoded URL first, then fall back to the legacy unencoded
+    // URL for backwards compatibility with existing cached entries.
+    let response = await cache.match(this.buildUrl(key));
+    if (!response) {
+      response = await cache.match(this.buildUrlLegacy(key));
+    }
     if (!response) return null;
     return response.blob();
   }
 
   async delete(key: string): Promise<boolean> {
     const cache = await this.getCache();
-    return cache.delete(this.buildUrl(key));
+    const deleted = await cache.delete(this.buildUrl(key));
+    if (deleted) return true;
+    return cache.delete(this.buildUrlLegacy(key));
   }
 
   async has(key: string): Promise<boolean> {
     const cache = await this.getCache();
     const response = await cache.match(this.buildUrl(key));
-    return response !== undefined;
+    if (response) return true;
+    const legacy = await cache.match(this.buildUrlLegacy(key));
+    return legacy !== undefined;
   }
 
   async clear(): Promise<void> {
@@ -46,14 +59,18 @@ class CacheStorageService {
     const cache = await this.getCache();
     const requests = await cache.keys();
     const prefix = "/_cache/";
-    return requests
-      .map((req) => {
-        const url = new URL(req.url);
-        return url.pathname.startsWith(prefix)
-          ? url.pathname.slice(prefix.length)
-          : url.pathname;
-      })
-      .filter(Boolean);
+    return Array.from(
+      new Set(
+        requests
+          .map((req) => {
+            const url = new URL(req.url);
+            return url.pathname.startsWith(prefix)
+              ? decodeURIComponent(url.pathname.slice(prefix.length))
+              : url.pathname;
+          })
+          .filter(Boolean),
+      ),
+    );
   }
 }
 

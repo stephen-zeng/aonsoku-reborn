@@ -3,6 +3,7 @@ import {
   getDownloadUrl,
   getSongStreamUrl,
 } from "@/api/httpClient";
+import { getSongCoverArtId } from "@/utils/coverArt";
 import { subsonic } from "@/service/subsonic";
 import { useCacheStore } from "@/store/cache.store";
 import { usePlayerStore } from "@/store/player.store";
@@ -207,6 +208,7 @@ class CacheManager {
       const existingSize = Number(existing.coverSize ?? "0");
       const requestedSize = Number(size);
       if (existingSize >= requestedSize) return;
+      await cacheStorage.delete(key);
     }
 
     const url = getCoverArtUrl(coverArtId, "album", size);
@@ -234,11 +236,15 @@ class CacheManager {
 
   async getCachedCoverUrl(coverArtId: string): Promise<string | null> {
     const key = coverKey(coverArtId);
-    if (!isCoverCached(coverArtId)) return null;
 
+    // Read Cache API directly — do not gate on the in-memory index,
+    // which may not have finished loading from IDB yet.  This ensures
+    // offline images are visible immediately on app startup.
     const blob = await cacheStorage.get(key);
     if (!blob) {
-      getCacheIndexActions().removeItem(key);
+      if (isCoverCached(coverArtId)) {
+        getCacheIndexActions().removeItem(key);
+      }
       return null;
     }
 
@@ -253,19 +259,20 @@ class CacheManager {
     const [artists, albums, songs] = await Promise.all([
       libraryDb.artists.toArray(),
       libraryDb.albums.toArray(),
-      useAlbumCoverForSongs
-        ? Promise.resolve([])
-        : libraryDb.songs.toArray(),
+      libraryDb.songs.toArray(),
     ]);
 
+    // Always cache every distinct coverArt we encounter, regardless of
+    // useAlbumCoverForSongs.  When the setting is on, resolveCacheKey
+    // resolves song covers to albumId, so we must also ensure album.id
+    // is present in the cache (copying the album.coverArt blob when the
+    // two IDs differ).  This guarantees offline lookups never miss.
     const queue = Array.from(
       new Set(
         [
           ...artists.map((artist) => artist.coverArt),
           ...albums.map((album) => album.coverArt),
-          ...(useAlbumCoverForSongs
-            ? []
-            : songs.map((song) => song.coverArt)),
+          ...songs.map((song) => song.coverArt),
         ].filter((value): value is string => Boolean(value)),
       ),
     );
@@ -284,19 +291,56 @@ class CacheManager {
       onProgress?.(completed, queue.length);
     }
 
+    // When songs resolve to albumId, make sure album.id is also cached.
+    if (useAlbumCoverForSongs) {
+      for (const album of albums) {
+        if (!album.id || album.id === album.coverArt) continue;
+
+        const key = coverKey(album.id);
+        if (isCoverCached(album.id)) continue;
+
+        try {
+          const blob = await cacheStorage.get(coverKey(album.coverArt));
+          if (blob) {
+            await cacheStorage.put(key, blob, blob.type || "image/jpeg");
+            getCacheIndexActions().addItem(key, {
+              id: album.id,
+              type: "cover",
+              source: "explicit",
+              coverSize: "700",
+              sizeBytes: blob.size,
+              cachedAt: Date.now(),
+              lastAccessedAt: Date.now(),
+            });
+          } else {
+            await this.cacheCover(album.id, "700");
+          }
+        } catch (err) {
+          console.warn(
+            `[cacheManager] failed to alias cover ${album.id}:`,
+            err,
+          );
+        }
+      }
+    }
+
     await this.enforceStorageLimit();
   }
 
   private async cacheBulk(
-    songs: { id: string; coverArt?: string }[],
+    songs: { id: string; coverArt?: string; albumId?: string }[],
     onProgress?: (current: number, total: number) => void,
   ): Promise<void> {
     let completed = 0;
     for (const song of songs) {
       try {
         await this.cacheSong(song.id);
-        if (song.coverArt) {
-          await this.cacheCover(song.coverArt);
+        const coverArtId = getSongCoverArtId({
+          albumId: song.albumId,
+          coverArt: song.coverArt ?? "",
+        });
+        if (coverArtId) {
+          await this.cacheCover(coverArtId);
         }
       } catch (err) {
         console.error(`Failed to cache song ${song.id}:`, err);

@@ -83,6 +83,22 @@ describe("cacheManager", () => {
     expect(url).toBeTruthy();
   });
 
+  it("returns cached cover URL even when index is empty (blob exists in Cache API)", async () => {
+    const blob = new Blob(["cover"], { type: "image/jpeg" });
+    cacheStorageMock.get.mockImplementation(async (key: string) => {
+      if (key === "cover:cover-2") return blob;
+      return null;
+    });
+
+    // Simulate startup before loadFromIDB has finished: index is empty.
+    useCacheIndexStore.setState({ items: {}, loaded: true });
+
+    const { cacheManager } = await import("./cache-manager");
+    const url = await cacheManager.getCachedCoverUrl("cover-2");
+
+    expect(url).toBeTruthy();
+  });
+
   it("replaces smaller cover with larger size", async () => {
     const bigBlob = new Blob(["big-cover"], { type: "image/jpeg" });
 
