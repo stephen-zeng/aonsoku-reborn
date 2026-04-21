@@ -12,6 +12,7 @@ import {
   getCacheIndexItems,
   isAudioCached,
   isCoverCached,
+  useCacheIndexStore,
 } from "@/store/cache-index.store";
 import { libraryDb } from "@/store/library-db";
 import {
@@ -23,6 +24,7 @@ import {
 import { COVER_PREFIX, audioKey, coverKey, isOldCoverKey } from "./cache-keys";
 import { cacheStorage } from "./cache-storage";
 import { computeEvictionPlan } from "./eviction";
+import { syncService } from "./sync-worker-adapter";
 
 /**
  * Build a URL for fetching audio at the requested quality.
@@ -187,15 +189,55 @@ class CacheManager {
 
   async getCachedAudioUrl(songId: string): Promise<string | null> {
     const key = audioKey(songId);
-    if (!isAudioCached(songId)) return null;
 
+    // Fast path: when the index is loaded and the key is absent, the
+    // blob cannot exist in the Cache API — skip the async lookup.
+    const { loaded } = useCacheIndexStore.getState();
+    if (loaded && !isAudioCached(songId)) return null;
+
+    // Slow path (index not loaded yet, or index says cached): read the
+    // Cache API directly.  This ensures offline audio is playable
+    // immediately on app startup before loadFromIDB completes.
     const blob = await cacheStorage.get(key);
     if (!blob) {
-      getCacheIndexActions().removeItem(key);
+      if (isAudioCached(songId)) {
+        getCacheIndexActions().removeItem(key);
+      }
       return null;
     }
 
-    getCacheIndexActions().touchItem(key);
+    // If the blob exists but the in-memory index missed it (e.g.
+    // loadFromIDB has not completed yet), try to recover the original
+    // metadata from Dexie cacheMeta.  Falls back to a synthetic entry
+    // only when no persisted metadata exists.
+    if (!isAudioCached(songId)) {
+      const existingRow = await libraryDb.cacheMeta.get(key);
+      if (existingRow) {
+        getCacheIndexActions().addItem(key, {
+          id: existingRow.id,
+          type: existingRow.type,
+          source: existingRow.source,
+          triggers: existingRow.triggers,
+          quality: existingRow.quality as DownloadQuality | undefined,
+          sizeBytes: existingRow.sizeBytes,
+          cachedAt: existingRow.cachedAt,
+          lastAccessedAt: Date.now(),
+          removedFromServer: existingRow.removedFromServer,
+        });
+      } else {
+        getCacheIndexActions().addItem(key, {
+          id: songId,
+          type: "audio",
+          source: "explicit",
+          sizeBytes: blob.size,
+          cachedAt: Date.now(),
+          lastAccessedAt: Date.now(),
+        });
+      }
+    } else {
+      getCacheIndexActions().touchItem(key);
+    }
+
     return URL.createObjectURL(blob);
   }
 
@@ -242,9 +284,13 @@ class CacheManager {
   async getCachedCoverUrl(coverArtId: string): Promise<string | null> {
     const key = coverKey(coverArtId);
 
-    // Read Cache API directly — do not gate on the in-memory index,
-    // which may not have finished loading from IDB yet.  This ensures
-    // offline images are visible immediately on app startup.
+    // Fast path: when the index is loaded and the key is absent, skip
+    // the async Cache API lookup.
+    const { loaded } = useCacheIndexStore.getState();
+    if (loaded && !isCoverCached(coverArtId)) return null;
+
+    // Slow path: read Cache API directly for the startup case where
+    // the in-memory index has not finished loading from IDB yet.
     const blob = await cacheStorage.get(key);
     if (!blob) {
       if (isCoverCached(coverArtId)) {
@@ -253,7 +299,36 @@ class CacheManager {
       return null;
     }
 
-    getCacheIndexActions().touchItem(key);
+    // Self-heal: if the blob exists but the index missed it, try to
+    // recover the original metadata from Dexie cacheMeta.
+    if (!isCoverCached(coverArtId)) {
+      const existingRow = await libraryDb.cacheMeta.get(key);
+      if (existingRow) {
+        getCacheIndexActions().addItem(key, {
+          id: existingRow.id,
+          type: existingRow.type,
+          source: existingRow.source,
+          quality: existingRow.quality as DownloadQuality | undefined,
+          coverSize: (existingRow as Record<string, unknown>).coverSize as string | undefined,
+          sizeBytes: existingRow.sizeBytes,
+          cachedAt: existingRow.cachedAt,
+          lastAccessedAt: Date.now(),
+          removedFromServer: existingRow.removedFromServer,
+        });
+      } else {
+        getCacheIndexActions().addItem(key, {
+          id: coverArtId,
+          type: "cover",
+          source: "explicit",
+          sizeBytes: blob.size,
+          cachedAt: Date.now(),
+          lastAccessedAt: Date.now(),
+        });
+      }
+    } else {
+      getCacheIndexActions().touchItem(key);
+    }
+
     return URL.createObjectURL(blob);
   }
 
@@ -443,9 +518,13 @@ class CacheManager {
   }
 
   async clearAllCaches(): Promise<void> {
+    // Cancel any in-flight sync to prevent the worker from writing
+    // stale cacheMeta rows after we clear them.
+    syncService.cancel();
     await cacheStorage.clear();
     getCacheIndexActions().clear();
     await libraryDb.lyrics.clear();
+    await libraryDb.cacheMeta.clear();
     this.refreshStats();
   }
 

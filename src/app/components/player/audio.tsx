@@ -88,10 +88,6 @@ export function AudioPlayer({
       retryCountRef.current = 0;
       playPromiseRef.current = null;
 
-      if (audioSrc?.startsWith("blob:")) {
-        URL.revokeObjectURL(audioSrc);
-      }
-
       setAudioSrc(src || undefined);
     }
   }, [audioSrc, cancelRetry, isRemoteControlActive, shouldUseNativeAudio, src]);
