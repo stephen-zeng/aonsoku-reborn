@@ -61,6 +61,7 @@ export function AudioPlayer({
   const resumeGuardActiveRef = useRef(false);
   const playPromiseRef = useRef<Promise<void> | null>(null);
   const effectPausingRef = useRef(false);
+  const srcChangingRef = useRef(false);
   const MAX_RETRIES = 5;
 
   const clearRetryTimer = useCallback(() => {
@@ -87,6 +88,7 @@ export function AudioPlayer({
       cancelRetry();
       retryCountRef.current = 0;
       playPromiseRef.current = null;
+      srcChangingRef.current = true;
 
       setAudioSrc(src || undefined);
     }
@@ -484,6 +486,10 @@ export function AudioPlayer({
         onPlay?.(e);
       }}
       onPause={(e) => {
+        if (srcChangingRef.current) {
+          srcChangingRef.current = false;
+          return;
+        }
         if (effectPausingRef.current) {
           effectPausingRef.current = false;
           return;

@@ -118,6 +118,10 @@ async function setMediaSession(
 
     navigator.mediaSession.metadata = new MediaMetadata(metadata);
 
+    if (navigator.mediaSession.playbackState !== "playing") {
+      navigator.mediaSession.playbackState = "playing";
+    }
+
     if (navigator.mediaSession.metadata === null) {
       logger.info("[MediaSession] Metadata was set to null unexpectedly");
     }
@@ -139,6 +143,10 @@ async function setRadioMediaSession(label: string, radioName: string) {
 
     logger.info("[MediaSession] Setting radio metadata", metadata);
     navigator.mediaSession.metadata = new MediaMetadata(metadata);
+
+    if (navigator.mediaSession.playbackState !== "playing") {
+      navigator.mediaSession.playbackState = "playing";
+    }
   } catch (error) {
     logger.error("[MediaSession] Failed to set radio metadata:", error);
   }
