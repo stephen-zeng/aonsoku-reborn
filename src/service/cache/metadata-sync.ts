@@ -1,3 +1,8 @@
+/**
+ * @deprecated Main-thread fallback for metadata sync.
+ * The primary implementation is in sync.worker.ts (Web Worker).
+ * This file is kept for environments where Web Workers are unavailable.
+ */
 import { queryClient } from "@/lib/queryClient";
 import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
@@ -64,9 +69,9 @@ const TIER_FRESH_WINDOW_MS: Record<SyncTier, number> = {
 /**
  * Rough upper bound on items per bulk write + per JS-thread turn.
  * Splitting the 100k+ songs payload into chunks keeps the main thread
- * responsive across the long-running T3 step (the sync service still
- * runs on the main thread today; a full Web Worker migration is
- * planned but deferred — see docs/offline-architecture.md P3.3 notes).
+ * responsive across the long-running T3 step (now superseded by
+ * sync.worker.ts which runs off the main thread; this file is kept
+ * as a main-thread fallback only).
  */
 const BULK_CHUNK_SIZE = 2000;
 const PLAYLIST_DETAIL_BATCH_SIZE = 10;

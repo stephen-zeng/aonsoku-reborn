@@ -23,7 +23,8 @@ import {
 import { Switch } from "@/app/components/ui/switch";
 import { Input } from "@/app/components/ui/input";
 import { useIsOnline } from "@/store/cache.store";
-import { cacheManager, metadataSyncService } from "@/service/cache";
+import { cacheManager } from "@/service/cache";
+import { syncService } from "@/service/cache/sync-worker-adapter";
 import {
   type CachePoolBreakdown,
   useCachePoolStats,
@@ -316,14 +317,14 @@ function SyncLibrarySection() {
   const isOnline = useIsOnline();
 
   const handleRefresh = useCallback(() => {
-    metadataSyncService.syncIncremental({
+    syncService.syncIncremental({
       includeCoverArt: syncCoverArt,
       includeFullSongs: syncLibrary,
     });
   }, [syncCoverArt, syncLibrary]);
 
   const handleCancel = useCallback(() => {
-    metadataSyncService.cancel();
+    syncService.cancel();
   }, []);
 
   return (

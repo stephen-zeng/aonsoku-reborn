@@ -29,7 +29,7 @@ import {
 } from "@/app/components/ui/dropdown-menu";
 import { useIsMobile } from "@/app/hooks/use-mobile";
 import { LogoutObserver } from "@/app/observers/logout-observer";
-import { metadataSyncService } from "@/service/cache";
+import { syncService } from "@/service/cache/sync-worker-adapter";
 import { ROUTES } from "@/routes/routesList";
 import { logoutKeys, shortcutDialogKeys, stringifyShortcut } from "@/shortcuts";
 import { useAppData, useAppStore, useAppSettings } from "@/store/app.store";
@@ -120,14 +120,14 @@ export function UserDropdown() {
           )}
           <DropdownMenuSeparator />
           {isSyncing ? (
-            <DropdownMenuItem onClick={() => metadataSyncService.cancel()}>
+            <DropdownMenuItem onClick={() => syncService.cancel()}>
               <X className="mr-2 h-4 w-4" />
               <span>{t("settings.storage.sync.cancel")}</span>
             </DropdownMenuItem>
           ) : (
             <DropdownMenuItem
               onClick={() =>
-                metadataSyncService.syncAll({
+                syncService.syncAll({
                   includeCoverArt: syncCoverArt,
                   includeFullSongs: syncLibrary,
                 })

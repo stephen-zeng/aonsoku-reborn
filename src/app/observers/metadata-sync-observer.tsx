@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { metadataSyncService } from "@/service/cache";
+import { syncService } from "@/service/cache/sync-worker-adapter";
 import { useCacheStore, useIsOnline } from "@/store/cache.store";
 
 const FOCUS_THROTTLE_MS = 5 * 60 * 1000;
@@ -37,7 +37,7 @@ export function MetadataSyncObserver() {
 
     hasRun.current = true;
     lastFocusSyncAt.current = Date.now();
-    metadataSyncService.syncAll({
+    syncService.syncAll({
       includeCoverArt: syncCoverArt,
       includeFullSongs: syncLibrary,
     });
@@ -54,7 +54,7 @@ export function MetadataSyncObserver() {
       if (now - lastFocusSyncAt.current < FOCUS_THROTTLE_MS) return;
       lastFocusSyncAt.current = now;
 
-      metadataSyncService.syncIncremental({
+      syncService.syncIncremental({
         includeCoverArt: state.settings.syncCoverArt,
         includeFullSongs: state.settings.syncLibrary,
       });

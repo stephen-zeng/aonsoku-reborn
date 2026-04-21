@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
 } from "@/app/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { metadataSyncService } from "@/service/cache";
+import { syncService } from "@/service/cache/sync-worker-adapter";
 import { useCacheStore } from "@/store/cache.store";
 import type { SyncPhase, SyncState, SyncTier } from "@/types/cache";
 
@@ -164,7 +164,7 @@ export function SyncProgressBar() {
   if (!syncState.isSyncing && !showCompleted && !showError) return null;
 
   const handleRetry = () => {
-    metadataSyncService.syncAll({
+    syncService.syncAll({
       includeCoverArt: syncCoverArt,
       includeFullSongs: syncLibrary,
     });

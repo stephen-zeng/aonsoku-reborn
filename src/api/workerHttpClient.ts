@@ -1,5 +1,3 @@
-import omit from "lodash/omit";
-import { useAppStore } from "@/store/app.store";
 import type { CoverArt } from "@/types/coverArtType";
 import { AppRequestError } from "./errors";
 import {
@@ -10,21 +8,30 @@ import {
   type ServerAuthConfig,
 } from "./urlBuilder";
 
-export type { ServerAuthConfig } from "./urlBuilder";
-
-export type QueryType = Record<string, string | number | undefined>;
+export type { ServerAuthConfig, QueryType } from "./urlBuilder";
 
 export interface FetchOptions extends RequestInit {
-  query?: QueryType;
+  query?: Record<string, string | number | undefined>;
 }
 
-function getAuthConfig(): ServerAuthConfig {
-  const { url, username, password, authType, protocolVersion } =
-    useAppStore.getState().data;
-  return { url, username, password, authType, protocolVersion };
+let authConfig: ServerAuthConfig | null = null;
+
+export function initAuth(config: ServerAuthConfig): void {
+  authConfig = config;
 }
 
-async function browserFetch<T>(url: string, options: RequestInit) {
+export function updateAuth(config: ServerAuthConfig): void {
+  authConfig = config;
+}
+
+export function ensureAuth(): ServerAuthConfig {
+  if (!authConfig) {
+    throw new Error("workerHttpClient: auth config not initialized");
+  }
+  return authConfig;
+}
+
+async function workerFetch<T>(url: string, options: RequestInit) {
   try {
     const response = await fetch(url, options);
 
@@ -88,25 +95,19 @@ async function browserFetch<T>(url: string, options: RequestInit) {
   }
 }
 
-export async function httpClient<T>(
+export async function workerHttpClient<T>(
   path: string,
-  options: FetchOptions,
+  options: FetchOptions = {},
 ): Promise<{ count: number; data: T }> {
+  const config = ensureAuth();
   const url = buildUrl(
     path,
-    getAuthConfig(),
-    options.query as Record<string, string | number | undefined>,
+    config,
+    options.query as Record<string, string | number | undefined> | undefined,
   );
 
-  try {
-    const init = omit(options, "query");
-
-    return await browserFetch<T>(url, init);
-  } catch (error) {
-    console.error("Error on httpClient request", error);
-
-    throw error;
-  }
+  const { query: _, ...init } = options;
+  return workerFetch<T>(url, init as RequestInit);
 }
 
 export function getCoverArtUrl(
@@ -114,17 +115,38 @@ export function getCoverArtUrl(
   type: CoverArt = "album",
   size = "300",
 ): string {
-  return _buildCoverArtUrl(getAuthConfig(), id, type, size);
+  return _buildCoverArtUrl(ensureAuth(), id, type, size);
 }
 
 export function getSongStreamUrl(
   id: string,
   maxBitRate?: string,
   format?: string,
-) {
-  return _buildSongStreamUrl(getAuthConfig(), id, maxBitRate, format);
+): string {
+  return _buildSongStreamUrl(ensureAuth(), id, maxBitRate, format);
 }
 
-export function getDownloadUrl(id: string, maxBitRate = "0", format = "raw") {
-  return _buildDownloadUrl(getAuthConfig(), id, maxBitRate, format);
+export function getDownloadUrl(
+  id: string,
+  maxBitRate = "0",
+  format = "raw",
+): string {
+  return _buildDownloadUrl(ensureAuth(), id, maxBitRate, format);
+}
+
+export function buildAudioUrl(
+  songId: string,
+  quality: "original" | "high" | "medium" | "low",
+  purpose: "cache" | "stream",
+): string {
+  const config = ensureAuth();
+  if (quality === "original") {
+    const url = _buildDownloadUrl(config, songId);
+    return purpose === "cache" ? `${url}&_c=1` : url;
+  }
+  const bitRate = String(
+    { high: 320, medium: 192, low: 128 }[quality],
+  );
+  const url = _buildSongStreamUrl(config, songId, bitRate);
+  return purpose === "cache" ? `${url}&_c=1` : url;
 }

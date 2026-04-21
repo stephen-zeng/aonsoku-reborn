@@ -42,6 +42,15 @@ Two complementary systems:
 - **Zustand** (`src/store/`) — client state with `immer`, `persist`, `subscribeWithSelector` middleware. The player store (`player.store.ts`) is the most complex (~55KB). Persistent data (queue, song lists) goes through `idb.ts` (IndexedDB).
 - **TanStack React Query** (`src/queries/`) — server state, caching, and invalidation. Query client configured in `src/lib/queryClient.ts` (refetch-on-window-focus disabled).
 
+### Sync Architecture
+
+Metadata sync runs in a **Web Worker** (`src/service/cache/sync.worker.ts`) to avoid blocking the main thread. Communication with the main thread uses **Comlink**:
+
+- `sync-worker-adapter.ts` creates the Worker, sets up Comlink callbacks, and bridges Zustand/queryClient updates back to the main thread.
+- Auth config is injected via `initAuth`/`updateAuth` and automatically synced from `useAppStore`.
+- Worker opens its own Dexie instance to the same IndexedDB database.
+- If Workers are unavailable, falls back to `metadata-sync.ts` (deprecated, main-thread).
+
 ### Data Flow
 
 ```
