@@ -227,68 +227,64 @@ function setHandlers() {
   const { mediaSession } = navigator;
 
   try {
-    const state = usePlayerStore.getState();
-    const { togglePlayPause, playNextSong, playPrevSong, setProgress } =
-      state.actions;
-    const isRemoteActive = state.remoteControl.active;
-    const remoteSender = state.remoteControl.sendCommand;
-
-    logger.info("[MediaSession] Setting up action handlers", {
-      isRemoteActive,
-      hasRemoteSender: !!remoteSender,
-    });
+    logger.info("[MediaSession] Setting up action handlers");
 
     mediaSession.setActionHandler("seekbackward", null);
     mediaSession.setActionHandler("seekforward", null);
 
     mediaSession.setActionHandler("play", () => {
       logger.info("[MediaSession] Play action triggered");
-      if (isRemoteActive && remoteSender) {
-        remoteSender(LanControlMessageType.PLAY);
+      const state = usePlayerStore.getState();
+      if (state.remoteControl.active && state.remoteControl.sendCommand) {
+        state.remoteControl.sendCommand(LanControlMessageType.PLAY);
       } else {
-        togglePlayPause();
+        state.actions.togglePlayPause();
       }
     });
 
     mediaSession.setActionHandler("pause", () => {
       logger.info("[MediaSession] Pause action triggered");
-      if (isRemoteActive && remoteSender) {
-        remoteSender(LanControlMessageType.PAUSE);
+      const state = usePlayerStore.getState();
+      if (state.remoteControl.active && state.remoteControl.sendCommand) {
+        state.remoteControl.sendCommand(LanControlMessageType.PAUSE);
       } else {
-        togglePlayPause();
+        state.actions.togglePlayPause();
       }
     });
 
     mediaSession.setActionHandler("previoustrack", () => {
       logger.info("[MediaSession] Previous track action triggered");
-      if (isRemoteActive && remoteSender) {
-        remoteSender(LanControlMessageType.PREVIOUS);
+      const state = usePlayerStore.getState();
+      if (state.remoteControl.active && state.remoteControl.sendCommand) {
+        state.remoteControl.sendCommand(LanControlMessageType.PREVIOUS);
       } else {
-        playPrevSong();
+        state.actions.playPrevSong();
       }
     });
 
     mediaSession.setActionHandler("nexttrack", () => {
       logger.info("[MediaSession] Next track action triggered");
-      if (isRemoteActive && remoteSender) {
-        remoteSender(LanControlMessageType.NEXT);
+      const state = usePlayerStore.getState();
+      if (state.remoteControl.active && state.remoteControl.sendCommand) {
+        state.remoteControl.sendCommand(LanControlMessageType.NEXT);
       } else {
-        playNextSong();
+        state.actions.playNextSong();
       }
     });
 
     mediaSession.setActionHandler("seekto", (details) => {
       logger.info("[MediaSession] Seek action triggered:", details);
       if (details.seekTime !== undefined) {
-        if (isRemoteActive && remoteSender) {
-          remoteSender(LanControlMessageType.SEEK, {
+        const state = usePlayerStore.getState();
+        if (state.remoteControl.active && state.remoteControl.sendCommand) {
+          state.remoteControl.sendCommand(LanControlMessageType.SEEK, {
             time: details.seekTime,
           });
         } else {
           const audioPlayerRef = state.playerState.audioPlayerRef;
           if (audioPlayerRef) {
             audioPlayerRef.currentTime = details.seekTime;
-            setProgress(Math.floor(details.seekTime));
+            state.actions.setProgress(Math.floor(details.seekTime));
           }
         }
       }
