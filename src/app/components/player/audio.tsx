@@ -467,9 +467,10 @@ export function AudioPlayer({
 
   const crossOrigin = useMemo(() => {
     if (!shouldUseWebAudioReplayGain) return undefined;
+    if (audioSrc?.startsWith("blob:")) return undefined;
 
     return "anonymous";
-  }, [shouldUseWebAudioReplayGain]);
+  }, [shouldUseWebAudioReplayGain, audioSrc]);
 
   return (
     <audio
