@@ -51,6 +51,7 @@ export function buildAudioUrl(
 
 class CacheManager {
   private statsTimer: ReturnType<typeof setTimeout> | null = null;
+  private cacheCoverInflight = new Map<string, Promise<void>>();
 
   private resolveDownloadUrl(songId: string): string {
     const quality = useCacheStore.getState().settings.downloadQuality;
@@ -242,6 +243,21 @@ class CacheManager {
   }
 
   async cacheCover(coverArtId: string, size = "700"): Promise<void> {
+    const key = coverKey(coverArtId);
+    const inflight = this.cacheCoverInflight.get(key);
+    if (inflight) return inflight;
+
+    const p = this.cacheCoverImpl(coverArtId, size).finally(() => {
+      this.cacheCoverInflight.delete(key);
+    });
+    this.cacheCoverInflight.set(key, p);
+    return p;
+  }
+
+  private async cacheCoverImpl(
+    coverArtId: string,
+    size = "700",
+  ): Promise<void> {
     const key = coverKey(coverArtId);
     const items = getCacheIndexItems();
     const existing = items[key];

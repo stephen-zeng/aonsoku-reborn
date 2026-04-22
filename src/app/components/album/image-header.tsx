@@ -123,6 +123,7 @@ export default function ImageHeader({
     coverArtType,
     undefined,
     lightboxFallback,
+    "700",
   );
   const lightboxSrc = !customIcon ? cachedLightboxUrl : "";
 
