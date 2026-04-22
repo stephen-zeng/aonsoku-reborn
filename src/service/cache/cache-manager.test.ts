@@ -91,7 +91,7 @@ describe("cacheManager", () => {
     });
 
     // Simulate startup before loadFromIDB has finished: index is empty.
-    useCacheIndexStore.setState({ items: {}, loaded: true });
+    useCacheIndexStore.setState({ items: {}, loaded: false });
 
     const { cacheManager } = await import("./cache-manager");
     const url = await cacheManager.getCachedCoverUrl("cover-2");
