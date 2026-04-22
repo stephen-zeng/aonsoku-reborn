@@ -11,6 +11,7 @@ import { useOptions } from "@/app/hooks/use-options";
 import { ROUTES } from "@/routes/routesList";
 import { ISong } from "@/types/responses/song";
 import { AddToPlaylistSubMenu } from "./add-to-playlist";
+import { usePlayerStore } from "@/store/player.store";
 
 interface SelectedSongsProps {
   table: Table<ISong>;
@@ -20,6 +21,9 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const songOptions = useOptions();
+  const isUserQueueEmpty = usePlayerStore(
+    (state) => state.songlist.userQueue.songs.length === 0,
+  );
 
   const { rows } = table.getFilteredSelectedRowModel();
   const isSingleSelected = rows.length === 1;
@@ -80,6 +84,7 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
       />
       <OptionsButtons.PlayLast
         variant="context"
+        disabled={isUserQueueEmpty}
         onClick={(e) => {
           e.stopPropagation();
           handlePlayLast();

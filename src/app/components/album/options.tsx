@@ -6,6 +6,7 @@ import {
 } from "@/app/components/ui/dropdown-menu";
 import { useOptions } from "@/app/hooks/use-options";
 import { cacheManager } from "@/service/cache";
+import { usePlayerStore } from "@/store/player.store";
 import { SingleAlbum } from "@/types/responses/album";
 
 interface AlbumOptionsProps {
@@ -20,6 +21,9 @@ export function AlbumOptions({ album }: AlbumOptionsProps) {
     addToPlaylist,
     createNewPlaylist,
   } = useOptions();
+  const isUserQueueEmpty = usePlayerStore(
+    (state) => state.songlist.userQueue.songs.length === 0,
+  );
 
   function handlePlayNext() {
     playNext(album.song, { albumId: album.id });
@@ -49,7 +53,7 @@ export function AlbumOptions({ album }: AlbumOptionsProps) {
     <>
       <DropdownMenuGroup>
         <OptionsButtons.PlayNext onClick={handlePlayNext} />
-        <OptionsButtons.PlayLast onClick={handlePlayLast} />
+        <OptionsButtons.PlayLast onClick={handlePlayLast} disabled={isUserQueueEmpty} />
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
       <OptionsButtons.AddToPlaylistOption variant="dropdown">

@@ -18,11 +18,9 @@ import {
 import {
   applyShuffleOff,
   applyShuffleOn,
-  dedupAgainstExisting,
   emptyContextQueue,
   findSongTier,
   getCurrentSong,
-  getEffectiveQueue,
   hasNextEffectiveSong,
   hasPrevEffectiveSong,
   isPlayingOneSong,
@@ -353,14 +351,10 @@ export function createQueueActions(shared: SharedDeps) {
       }
       if (!list || list.length === 0) return;
 
-      const effective = getEffectiveQueue(get().songlist);
-      const uniqueList = dedupAgainstExisting(list, effective);
-      if (uniqueList.length === 0) return;
-
       set((state) => {
         state.songlist.userQueue.songs = setNextOnUserQueue(
           state.songlist.userQueue.songs,
-          uniqueList,
+          list,
         );
       });
     },
@@ -376,14 +370,10 @@ export function createQueueActions(shared: SharedDeps) {
       }
       if (!list || list.length === 0) return;
 
-      const effective = getEffectiveQueue(get().songlist);
-      const uniqueList = dedupAgainstExisting(list, effective);
-      if (uniqueList.length === 0) return;
-
       set((state) => {
         state.songlist.userQueue.songs = setLastOnUserQueue(
           state.songlist.userQueue.songs,
-          uniqueList,
+          list,
         );
       });
     },

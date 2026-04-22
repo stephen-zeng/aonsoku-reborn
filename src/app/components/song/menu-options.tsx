@@ -9,6 +9,7 @@ import { ROUTES } from "@/routes/routesList";
 import {
   usePlayerCurrentSong,
   usePlayerSongStarred,
+  usePlayerStore,
 } from "@/store/player.store";
 import { useIsAudioCached } from "@/store/cache-index.store";
 import { ISong } from "@/types/responses/song";
@@ -77,6 +78,9 @@ export function SongMenuOptions({
   } = useOptions();
   const songIndexes = [index.toString()];
   const isCached = useIsAudioCached(song.id);
+  const isUserQueueEmpty = usePlayerStore(
+    (state) => state.songlist.userQueue.songs.length === 0,
+  );
 
   return (
     <>
@@ -90,6 +94,7 @@ export function SongMenuOptions({
       />
       <OptionsButtons.PlayLast
         variant={variant}
+        disabled={isUserQueueEmpty}
         onClick={(e) => {
           e.stopPropagation();
           playLast([song]);

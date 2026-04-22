@@ -4,6 +4,7 @@ import { useOptions } from "@/app/hooks/use-options";
 import { cacheManager } from "@/service/cache";
 import { subsonic } from "@/service/subsonic";
 import { usePlaylists, useRemovePlaylist } from "@/store/playlists.store";
+import { usePlayerStore } from "@/store/player.store";
 import { Playlist, PlaylistWithEntries } from "@/types/responses/playlist";
 import { ISong } from "@/types/responses/song";
 
@@ -31,6 +32,10 @@ export function PlaylistOptions({
   const { setPlaylistDialogState, setData } = usePlaylists();
   const { play, playNext, playLast, startDownload } = useOptions();
   const { setPlaylistId, setConfirmDialogState } = useRemovePlaylist();
+  const isUserQueueEmpty = usePlayerStore(
+    (state) => state.songlist.userQueue.songs.length === 0,
+  );
+  const isAddLastDisabled = disableAddLast || isUserQueueEmpty;
 
   function handleEdit() {
     setData({
@@ -112,7 +117,7 @@ export function PlaylistOptions({
       />
       <OptionsButtons.PlayLast
         variant={variant}
-        disabled={disableAddLast}
+        disabled={isAddLastDisabled}
         onClick={(e) => {
           e.stopPropagation();
           handlePlayLast();
