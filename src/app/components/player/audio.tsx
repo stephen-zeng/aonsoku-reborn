@@ -65,6 +65,7 @@ export function AudioPlayer({
   const effectPausingRef = useRef(false);
   const srcChangingRef = useRef(false);
   const loadedSongIdRef = useRef<string | undefined>(undefined);
+  const rangeFallbackRef = useRef(false);
   const MAX_RETRIES = 5;
 
   const clearRetryTimer = useCallback(() => {
@@ -81,6 +82,8 @@ export function AudioPlayer({
     resumeGuardActiveRef.current = false;
   }, [clearRetryTimer]);
 
+  const { setProgress: setStoreProgress } = usePlayerActions();
+
   useEffect(() => {
     if (src !== audioSrc) {
       logger.info("Audio source changed", {
@@ -90,13 +93,21 @@ export function AudioPlayer({
       });
       cancelRetry();
       retryCountRef.current = 0;
+      rangeFallbackRef.current = false;
       playPromiseRef.current = null;
       srcChangingRef.current = true;
       loadedSongIdRef.current = songId;
 
       setAudioSrc(src || undefined);
     }
-  }, [audioSrc, cancelRetry, isRemoteControlActive, shouldUseNativeAudio, src, songId]);
+  }, [
+    audioSrc,
+    cancelRetry,
+    isRemoteControlActive,
+    shouldUseNativeAudio,
+    src,
+    songId,
+  ]);
 
   const audioVolume = useMemo(() => perceptualToGain(volume), [volume]);
 
@@ -195,6 +206,22 @@ export function AudioPlayer({
       }
 
       if (retryCountRef.current >= MAX_RETRIES) {
+        if (!rangeFallbackRef.current) {
+          rangeFallbackRef.current = true;
+          retryCountRef.current = 0;
+          const storeProgress = usePlayerStore.getState().playerProgress.progress;
+          const fallbackPosition = Math.max(audio.currentTime, storeProgress);
+          pendingResumePositionRef.current = fallbackPosition;
+          resumeGuardActiveRef.current = true;
+          logger.info(
+            "All retries failed — retrying from position 0 with resume guard (possible 416 Range Not Satisfiable)",
+          );
+          audio.currentTime = 0;
+          setStoreProgress(0);
+          audio.load();
+          safePlay(audio, "RangeFallback");
+          return;
+        }
         onPlaybackError?.();
         retryCountRef.current = 0;
         cancelRetry();
@@ -204,7 +231,9 @@ export function AudioPlayer({
       cancelRetry();
 
       const storeProgress = usePlayerStore.getState().playerProgress.progress;
-      const resumePosition = Math.max(audio.currentTime, storeProgress);
+      const resumePosition = rangeFallbackRef.current
+        ? 0
+        : Math.max(audio.currentTime, storeProgress);
       pendingResumePositionRef.current = resumePosition;
       resumeGuardActiveRef.current = true;
       logger.info("Retry will resume at position:", resumePosition);
@@ -246,7 +275,7 @@ export function AudioPlayer({
         safePlay(currentAudio, "Retry");
       }, delay);
     },
-    [audioRef, cancelRetry, onPlaybackError, safePlay],
+    [audioRef, cancelRetry, onPlaybackError, safePlay, setStoreProgress],
   );
 
   const handleAudioError = useCallback(() => {
@@ -328,6 +357,7 @@ export function AudioPlayer({
     return () => {
       cancelRetry();
       retryCountRef.current = 0;
+      rangeFallbackRef.current = false;
       playPromiseRef.current = null;
     };
   }, [cancelRetry]);
@@ -349,6 +379,7 @@ export function AudioPlayer({
         retryTimeoutRef.current = null;
       }
       retryCountRef.current = 0;
+      rangeFallbackRef.current = false;
       audio.load();
       safePlay(audio, "Reconnect");
     };
@@ -359,11 +390,10 @@ export function AudioPlayer({
 
   const handlePlaySuccess = useCallback(() => {
     retryCountRef.current = 0;
+    rangeFallbackRef.current = false;
     clearRetryTimer();
     resumeGuardActiveRef.current = false;
   }, [clearRetryTimer]);
-
-  const { setProgress: setStoreProgress } = usePlayerActions();
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -431,9 +461,14 @@ export function AudioPlayer({
       const resumePos = pendingResumePositionRef.current;
       if (resumePos === null) return;
 
-      logger.info("Applying pending resume position:", resumePos);
-      audio.currentTime = resumePos;
-      setStoreProgress(Math.floor(resumePos));
+      const duration = audio.duration;
+      const clampedPos = Number.isFinite(duration) && duration > 0
+        ? Math.min(resumePos, duration - 0.1)
+        : resumePos;
+
+      logger.info("Applying pending resume position:", clampedPos);
+      audio.currentTime = clampedPos;
+      setStoreProgress(Math.floor(clampedPos));
     },
     [setStoreProgress],
   );

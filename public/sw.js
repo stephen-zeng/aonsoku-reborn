@@ -229,6 +229,33 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Audio stream/download requests — intercept 416 Range Not Satisfiable.
+  // Some Subsonic-compatible servers return 416 when the browser sends a
+  // Range request that the server cannot satisfy (e.g. transcoded streams,
+  // incorrect Content-Length with estimateContentLength=true, or resuming
+  // a closed connection). When that happens, strip the Range header and
+  // retry so the server sends the full response from byte 0.
+  if (url.pathname === "/rest/stream" || url.pathname === "/rest/download") {
+    event.respondWith(
+      fetch(request).then((response) => {
+        if (response.status === 416 && request.headers.has("Range")) {
+          const headers = new Headers(request.headers);
+          headers.delete("range");
+          const newRequest = new Request(request.url, {
+            method: request.method,
+            headers,
+            credentials: request.credentials,
+            mode: request.mode,
+            cache: request.cache,
+          });
+          return fetch(newRequest);
+        }
+        return response;
+      }),
+    );
+    return;
+  }
+
   // Everything else (API mutations, non-cacheable calls): network-only pass-through
 });
 
