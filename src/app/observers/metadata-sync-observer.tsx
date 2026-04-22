@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { getNetworkStatus } from "@/app/hooks/use-network-status";
 import { syncService } from "@/service/cache/sync-worker-adapter";
 import { useCacheStore, useIsOnline } from "@/store/cache.store";
 
@@ -45,8 +46,9 @@ export function MetadataSyncObserver() {
 
   useEffect(() => {
     const handleFocus = () => {
-      if (!navigator.onLine) return;
+      const { isOnline } = getNetworkStatus();
       const state = useCacheStore.getState();
+      if (!isOnline) return;
       if (state.status.isMetered) return;
       if (state.status.syncState.isSyncing) return;
 

@@ -265,7 +265,7 @@
     "unsupported_message": "{{app_name}} no es compatible con dispositivos móviles."
   },
   "offline": {
-    "disconnected": "Server unreachable. Entering offline mode.",
+    "disconnected": "Server unreachable",
     "mode": "Offline",
     "reconnectFailed": "Could not reconnect. Continuing in offline mode.",
     "reconnected": "Reconnected to server",

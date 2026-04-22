@@ -1,13 +1,7 @@
 import { checkConfiguredServerConnectivity } from "@/api/checkConfiguredServer";
 import { probeServerConnection } from "@/api/pingServer";
+import { getConfiguredUrls } from "@/app/hooks/use-network-status";
 import { useAppStore } from "@/store/app.store";
-
-function getConfiguredUrls() {
-  const { primaryUrl, fallbackUrl, url } = useAppStore.getState().data;
-  return Array.from(
-    new Set([primaryUrl, fallbackUrl, url].filter(Boolean)),
-  ) as string[];
-}
 
 export function hasConfiguredSession() {
   const { primaryUrl, url, username, password, authType, isServerConfigured } =
@@ -29,15 +23,13 @@ export async function canUseConfiguredSession() {
     return false;
   }
 
-  if (typeof navigator !== "undefined" && navigator.onLine === false) {
-    return true;
-  }
-
   const urls = getConfiguredUrls();
   const probes = await Promise.all(
     urls.map((serverUrl) =>
       probeServerConnection(serverUrl, username, password, authType),
     ),
+  ).catch(() =>
+    urls.map(() => ({ status: "network_unreachable" as const })),
   );
 
   if (probes.some((probe) => probe.status === "ok")) {

@@ -156,7 +156,7 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             syncCoverArt: false,
           },
           status: {
-            isOnline: navigator.onLine,
+            isOnline: true,
             isMetered: false,
             currentAudioCacheSize: 0,
             currentCoverCacheSize: 0,

@@ -16,7 +16,7 @@ export const queryClient = new QueryClient({
       staleTime: Infinity,
       gcTime: TWENTY_FOUR_HOURS,
       retry: (failureCount, error) => {
-        if (!navigator.onLine || getNetworkStatus().isOfflineMode) {
+        if (getNetworkStatus().isOfflineMode) {
           return false;
         }
 

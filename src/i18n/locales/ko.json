@@ -264,7 +264,7 @@
     "unsupported_message": "{{app_name}}는 모바일 기기를 지원하지 않습니다."
   },
   "offline": {
-    "disconnected": "Server unreachable. Entering offline mode.",
+    "disconnected": "Server unreachable",
     "mode": "Offline",
     "reconnectFailed": "Could not reconnect. Continuing in offline mode.",
     "reconnected": "Reconnected to server",

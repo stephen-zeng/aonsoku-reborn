@@ -8,6 +8,8 @@ import {
   useState,
 } from "react";
 import { useAudioContext } from "@/app/hooks/use-audio-context";
+import { getNetworkStatus } from "@/app/hooks/use-network-status";
+import { useCacheStore } from "@/store/cache.store";
 import {
   usePlayerIsPlaying,
   usePlayerMediaType,
@@ -199,7 +201,7 @@ export function AudioPlayer({
 
   const scheduleRetry = useCallback(
     (audio: HTMLAudioElement) => {
-      if (!navigator.onLine) {
+      if (!getNetworkStatus().isOnline) {
         logger.info("Offline, skipping audio retry");
         cancelRetry();
         return;
@@ -248,7 +250,7 @@ export function AudioPlayer({
       const retryGeneration = retryGenerationRef.current;
 
       retryTimeoutRef.current = setTimeout(() => {
-        if (!navigator.onLine) {
+        if (!getNetworkStatus().isOnline) {
           cancelRetry();
           return;
         }
@@ -369,23 +371,26 @@ export function AudioPlayer({
   }, [cancelRetry, isPlaying]);
 
   useEffect(() => {
-    const handleOnline = () => {
-      const audio = audioRef.current;
-      if (!audio || retryCountRef.current === 0) return;
+    const unsubscribe = useCacheStore.subscribe(
+      (s) => s.status.isOnline,
+      (isOnline, prevIsOnline) => {
+        if (!prevIsOnline && isOnline) {
+          const audio = audioRef.current;
+          if (!audio || retryCountRef.current === 0) return;
 
-      logger.info("Network recovered, retrying audio playback");
-      if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current);
-        retryTimeoutRef.current = null;
-      }
-      retryCountRef.current = 0;
-      rangeFallbackRef.current = false;
-      audio.load();
-      safePlay(audio, "Reconnect");
-    };
-
-    window.addEventListener("online", handleOnline);
-    return () => window.removeEventListener("online", handleOnline);
+          logger.info("Server reachable again, retrying audio playback");
+          if (retryTimeoutRef.current) {
+            clearTimeout(retryTimeoutRef.current);
+            retryTimeoutRef.current = null;
+          }
+          retryCountRef.current = 0;
+          rangeFallbackRef.current = false;
+          audio.load();
+          safePlay(audio, "Reconnect");
+        }
+      },
+    );
+    return unsubscribe;
   }, [audioRef, safePlay]);
 
   const handlePlaySuccess = useCallback(() => {

@@ -264,7 +264,7 @@
     "unsupported_message": "{{app_name}} 不支持手机。"
   },
   "offline": {
-    "disconnected": "无法连接服务器，进入离线模式",
+    "disconnected": "无法连接服务器",
     "mode": "离线",
     "reconnectFailed": "无法重新连接，继续使用离线模式",
     "reconnected": "已重新连接到服务器",

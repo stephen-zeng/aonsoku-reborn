@@ -24,14 +24,14 @@ vi.mock("@/store/app.store", () => ({
   },
 }));
 
-function setNavigatorOnline(online: boolean) {
-  Object.defineProperty(globalThis, "navigator", {
-    configurable: true,
-    value: {
-      onLine: online,
-    },
-  });
-}
+vi.mock("@/app/hooks/use-network-status", () => ({
+  getConfiguredUrls: () => {
+    const { primaryUrl, fallbackUrl, url } = mocks.appData;
+    return Array.from(
+      new Set([primaryUrl, fallbackUrl, url].filter(Boolean)),
+    );
+  },
+}));
 
 beforeEach(() => {
   mocks.appData = {
@@ -44,25 +44,24 @@ beforeEach(() => {
     isServerConfigured: true,
   };
 
-  setNavigatorOnline(true);
   mocks.selectConfiguredServer.mockReset();
   mocks.probeServerConnection.mockReset();
 });
 
 describe("canUseConfiguredSession", () => {
-  it("keeps an existing configured session while the browser is offline", async () => {
-    setNavigatorOnline(false);
-
-    await expect(canUseConfiguredSession()).resolves.toBe(true);
-
-    expect(mocks.probeServerConnection).not.toHaveBeenCalled();
-    expect(mocks.selectConfiguredServer).not.toHaveBeenCalled();
-  });
-
   it("allows temporary server reachability failures without clearing the session", async () => {
     mocks.probeServerConnection.mockResolvedValue({
       status: "network_unreachable",
     });
+
+    await expect(canUseConfiguredSession()).resolves.toBe(true);
+
+    expect(mocks.probeServerConnection).toHaveBeenCalledTimes(1);
+    expect(mocks.selectConfiguredServer).not.toHaveBeenCalled();
+  });
+
+  it("allows the session when probeServerConnection throws", async () => {
+    mocks.probeServerConnection.mockRejectedValue(new Error("Network error"));
 
     await expect(canUseConfiguredSession()).resolves.toBe(true);
 

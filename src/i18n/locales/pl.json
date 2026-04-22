@@ -266,7 +266,7 @@
     "unsupported_message": "{{app_name}} nie jest kompatybilna z telefonami komórkowymi."
   },
   "offline": {
-    "disconnected": "Server unreachable. Entering offline mode.",
+    "disconnected": "Server unreachable",
     "mode": "Offline",
     "reconnectFailed": "Could not reconnect. Continuing in offline mode.",
     "reconnected": "Reconnected to server",

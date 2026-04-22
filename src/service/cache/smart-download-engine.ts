@@ -1,4 +1,5 @@
 import { subsonic } from "@/service/subsonic";
+import { getNetworkStatus } from "@/app/hooks/use-network-status";
 import { useCacheStore } from "@/store/cache.store";
 import {
   getCacheIndexActions,
@@ -103,7 +104,7 @@ class SmartDownloadEngine {
       }
     }
 
-    if (settings.favoritePlaylists && navigator.onLine) {
+    if (settings.favoritePlaylists && getNetworkStatus().isOnline) {
       const starredLists = await libraryDb.playlists
         .where("starredAt")
         .above(0)

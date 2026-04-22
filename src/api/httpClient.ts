@@ -1,4 +1,5 @@
 import omit from "lodash/omit";
+import { markServerUnreachable } from "@/app/hooks/use-network-status";
 import { useAppStore } from "@/store/app.store";
 import type { CoverArt } from "@/types/coverArtType";
 import { AppRequestError } from "./errors";
@@ -75,6 +76,7 @@ async function browserFetch<T>(url: string, options: RequestInit) {
     }
 
     if (error instanceof TypeError) {
+      markServerUnreachable();
       throw new AppRequestError(
         "network_unreachable",
         "The configured server is unreachable",
