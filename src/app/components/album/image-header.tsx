@@ -84,6 +84,7 @@ interface ImageHeaderProps {
   artists?: IFeaturedArtist[];
   coverArtId?: string;
   coverArtType: CoverArt;
+  coverArtSize?: string;
   coverArtAlt: string;
   badges: BadgesData;
   secondaryBadges?: BadgesData;
@@ -100,6 +101,7 @@ export default function ImageHeader({
   artists,
   coverArtId,
   coverArtType,
+  coverArtSize = "300",
   coverArtAlt,
   badges,
   secondaryBadges,
@@ -220,6 +222,7 @@ export default function ImageHeader({
                   id="cover-art-image"
                   coverArtId={coverArtId}
                   coverArtType={coverArtType}
+                  coverArtSize={coverArtSize}
                   alt={coverArtAlt}
                   className="aspect-square object-cover w-full h-full cursor-pointer"
                   width="100%"

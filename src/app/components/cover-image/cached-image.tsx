@@ -13,6 +13,7 @@ type LazyLoadImageProps = ComponentPropsWithoutRef<typeof LazyLoadImage>;
 interface CachedImageProps extends Omit<LazyLoadImageProps, "src"> {
   coverArtId?: string;
   coverArtType?: CoverArt;
+  coverArtSize?: string;
   albumId?: string;
   src?: string;
 }
@@ -95,6 +96,7 @@ function getDefaultArtUrl(coverArtType: CoverArt): string {
 export function CachedImage({
   coverArtId,
   coverArtType = "album",
+  coverArtSize = "300",
   albumId,
   src: directSrc,
   onError,
@@ -104,7 +106,7 @@ export function CachedImage({
     coverArt: coverArtId,
     coverArtType,
     albumId,
-    size: "300",
+    size: coverArtSize,
   });
   const isOffline = useIsOfflineMode();
   const [cachedSrc, setCachedSrc] = useState<string | null>(null);

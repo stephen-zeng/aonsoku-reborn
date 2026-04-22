@@ -6,6 +6,7 @@ interface CoverImageProps {
   coverArt: string;
   coverArtType: CoverArt;
   albumId?: string;
+  coverArtSize?: number;
   size?: number;
   altText: string;
 }
@@ -14,6 +15,7 @@ export function CoverImage({
   coverArt,
   coverArtType,
   albumId,
+  coverArtSize = 100,
   size = 40,
   altText,
 }: CoverImageProps) {
@@ -36,6 +38,7 @@ export function CoverImage({
         coverArtId={coverArt}
         coverArtType={coverArtType}
         albumId={albumId}
+        coverArtSize={coverArtSize.toString()}
         alt={altText}
         effect="opacity"
         width={size}

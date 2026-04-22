@@ -115,6 +115,7 @@ export const QueueItemRow = forwardRef<
               coverArtId={song.coverArt}
               coverArtType="song"
               albumId={song.albumId}
+              coverArtSize="100"
               className="w-10 h-10 rounded text-transparent object-cover"
               alt={`${song.title} - ${song.artist}`}
             />

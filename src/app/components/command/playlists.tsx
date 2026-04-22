@@ -60,6 +60,7 @@ function PlaylistItem({ playlist }: { playlist: Playlist }) {
         effect="opacity"
         coverArtId={playlist.coverArt}
         coverArtType="playlist"
+        coverArtSize="300"
         alt={playlist.name}
         className="bg-accent w-12 min-w-12 h-12 aspect-square rounded shadow-custom-5 text-transparent"
       />

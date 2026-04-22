@@ -87,6 +87,7 @@ export default function Artist() {
         title={artist.name}
         coverArtId={artist.coverArt}
         coverArtType="artist"
+        coverArtSize="700"
         coverArtAlt={artist.name}
         badges={badges}
       />
