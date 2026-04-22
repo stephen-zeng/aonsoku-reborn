@@ -1,9 +1,9 @@
 import { ListVideo, MicVocalIcon, XIcon } from "lucide-react";
 import { ComponentPropsWithoutRef } from "react";
 import { useTranslation } from "react-i18next";
+import { FullscreenSongQueue } from "@/app/components/fullscreen/queue";
 import { LyricsTab } from "@/app/components/fullscreen/lyrics";
 import { QueueSettings } from "@/app/components/fullscreen/settings";
-import { QueueSongList } from "@/app/components/queue/song-list";
 import { Button } from "@/app/components/ui/button";
 import { ResizeHandle } from "@/app/components/ui/resize-handle";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
@@ -103,7 +103,14 @@ export function MainDrawerPage() {
         </div>
         <div className="flex flex-1 relative overflow-hidden">
           <ActiveContent active={queueState}>
-            <QueueSongList />
+            <FullscreenSongQueue
+              hideHistory
+              hideCurrentSong
+              hideModeButtons
+              hideRepeatIndicator
+              useVirtualization
+              scrollAreaClassName="w-full h-full overflow-auto"
+            />
           </ActiveContent>
           <ActiveContent active={lyricsState}>
             <LyricsTab />

@@ -1,19 +1,14 @@
-import type {
-  DragEndEvent,
-  DragStartEvent,
-  SyntheticListenerMap,
-} from "@dnd-kit/core";
+import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { closestCenter, DndContext, DragOverlay } from "@dnd-kit/core";
 import {
   SortableContext,
-  useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import type { LucideIcon } from "lucide-react";
-import { GripVertical, Repeat } from "lucide-react";
+import { Repeat } from "lucide-react";
 import {
   memo,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -22,7 +17,16 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import {
+  QueueItemRow,
+  SortableQueueItem,
+} from "@/app/components/queue/queue-item-row";
 import { useQueueDndSensors } from "@/app/components/queue/dnd-sensors";
+import {
+  ScrollArea,
+  scrollAreaViewportSelector,
+} from "@/app/components/ui/scroll-area";
 import { Button } from "@/app/components/ui/button";
 import {
   usePlayHistory,
@@ -32,6 +36,7 @@ import {
   usePlayerActions,
   usePlayerCurrentSong,
   usePlayerCurrentSongIndex,
+  usePlayerIsPlaying,
   usePlayerLoop,
   useUserQueue,
   useContextQueue,
@@ -42,7 +47,6 @@ import { LoopState } from "@/types/playerContext";
 
 import { QueueCurrentSong, QueueModeButtons } from "./queue-current-song";
 import { QueueSourceLabel } from "@/app/components/queue/queue-source-label";
-import { CachedImage } from "@/app/components/cover-image/cached-image";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { FULLSCREEN_QUEUE_BG_CLASS } from "./constants";
 
@@ -96,13 +100,27 @@ function syncQueueCurrentSongPosition({
   }
 }
 
+interface FullscreenSongQueueProps {
+  hideModeButtons?: boolean;
+  hideHistory?: boolean;
+  hideCurrentSong?: boolean;
+  hideRepeatIndicator?: boolean;
+  useVirtualization?: boolean;
+  scrollAreaClassName?: string;
+  thumbClassName?: string;
+  onCurrentSongClick?: () => void;
+}
+
 export const FullscreenSongQueue = memo(function FullscreenSongQueue({
   hideModeButtons = false,
+  hideHistory = false,
+  hideCurrentSong = false,
+  hideRepeatIndicator = false,
+  useVirtualization = false,
+  scrollAreaClassName,
+  thumbClassName,
   onCurrentSongClick,
-}: {
-  hideModeButtons?: boolean;
-  onCurrentSongClick?: () => void;
-}) {
+}: FullscreenSongQueueProps) {
   const hasSongs = useHasQueueSongs();
   const currentSongIndex = usePlayerCurrentSongIndex();
   const currentSong = usePlayerCurrentSong();
@@ -111,6 +129,7 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
   const { t } = useTranslation();
   const playHistory = usePlayHistory();
   const filteredHistory = useMemo(() => {
+    if (hideHistory) return [];
     if (
       playHistory.length > 0 &&
       currentSong &&
@@ -119,7 +138,7 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
       return playHistory.slice(1);
     }
     return playHistory;
-  }, [playHistory, currentSong]);
+  }, [playHistory, currentSong, hideHistory]);
 
   const { clearHistory: clearPlayHistory } = usePlayHistoryActions();
 
@@ -150,6 +169,12 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
       contextIndex={contextIndex}
       contextSongs={contextSongs}
       hideModeButtons={hideModeButtons}
+      hideHistory={hideHistory}
+      hideCurrentSong={hideCurrentSong}
+      hideRepeatIndicator={hideRepeatIndicator}
+      useVirtualization={useVirtualization}
+      scrollAreaClassName={scrollAreaClassName}
+      thumbClassName={thumbClassName}
       clearPlayHistory={clearPlayHistory}
       clearUserQueue={clearUserQueue}
       onCurrentSongClick={onCurrentSongClick}
@@ -166,6 +191,12 @@ function UnifiedQueueView({
   contextIndex,
   contextSongs,
   hideModeButtons,
+  hideHistory,
+  hideCurrentSong,
+  hideRepeatIndicator,
+  useVirtualization,
+  scrollAreaClassName,
+  thumbClassName,
   clearPlayHistory,
   clearUserQueue,
   onCurrentSongClick,
@@ -178,6 +209,12 @@ function UnifiedQueueView({
   contextIndex: number;
   contextSongs: ISong[];
   hideModeButtons: boolean;
+  hideHistory: boolean;
+  hideCurrentSong: boolean;
+  hideRepeatIndicator: boolean;
+  useVirtualization: boolean;
+  scrollAreaClassName?: string;
+  thumbClassName?: string;
   clearPlayHistory: () => void;
   clearUserQueue: () => void;
   onCurrentSongClick?: () => void;
@@ -185,6 +222,7 @@ function UnifiedQueueView({
   const { t } = useTranslation();
   const { playSong, playFromQueue, playFromUserQueue, reorderQueue } =
     usePlayerActions();
+  const isPlaying = usePlayerIsPlaying();
   const loopState = usePlayerLoop();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
 
@@ -210,15 +248,17 @@ function UnifiedQueueView({
   );
 
   useLayoutEffect(() => {
+    if (useVirtualization) return;
     if (!queueScrollKey) return;
     const el = currentSongRef.current;
     const container = scrollContainerRef.current;
     const spacer = spacerRef.current;
     if (!el || !container || !spacer) return;
     syncQueueCurrentSongPosition({ container, el, spacer });
-  }, [queueScrollKey]);
+  }, [queueScrollKey, useVirtualization]);
 
   useEffect(() => {
+    if (useVirtualization) return;
     let rafId = 0;
     const observer = new ResizeObserver(() => {
       cancelAnimationFrame(rafId);
@@ -242,7 +282,7 @@ function UnifiedQueueView({
       cancelAnimationFrame(rafId);
       observer.disconnect();
     };
-  }, []);
+  }, [useVirtualization]);
 
   const contextPlayedCount = contextIndex + 1;
   const userQueueStart = contextPlayedCount;
@@ -303,6 +343,46 @@ function UnifiedQueueView({
   const isRepeatOne = loopState === LoopState.One;
   const isRepeatAll = loopState === LoopState.All;
 
+  if (useVirtualization) {
+    return (
+      <VirtualizedQueueView
+        playHistory={playHistory}
+        userQueueSongs={userQueueSongs}
+        upcomingContext={upcomingContext}
+        currentSong={currentSong}
+        contextSongs={contextSongs}
+        contextIndex={contextIndex}
+        contextPlayedCount={contextPlayedCount}
+        hideModeButtons={hideModeButtons}
+        hideHistory={hideHistory}
+        hideCurrentSong={hideCurrentSong}
+        hideRepeatIndicator={hideRepeatIndicator}
+        isRepeatOne={isRepeatOne}
+        isRepeatAll={isRepeatAll}
+        showContinueHeader={showContinueHeader}
+        scrollAreaClassName={scrollAreaClassName}
+        thumbClassName={thumbClassName}
+        sensors={sensors}
+        userSortableItems={userSortableItems}
+        upcomingSortableItems={upcomingSortableItems}
+        activeItem={activeItem}
+        dragOverlayBg={dragOverlayBg}
+        isPlaying={isPlaying}
+        onUserDragStart={handleUserDragStart}
+        onUserDragEnd={handleUserDragEnd}
+        onUpcomingDragStart={handleUpcomingDragStart}
+        onUpcomingDragEnd={handleUpcomingDragEnd}
+        playSong={playSong}
+        playFromQueue={playFromQueue}
+        playFromUserQueue={playFromUserQueue}
+        clearPlayHistory={clearPlayHistory}
+        clearUserQueue={clearUserQueue}
+        onCurrentSongClick={onCurrentSongClick}
+        t={t}
+      />
+    );
+  }
+
   return (
     <div
       className="flex flex-col h-full overflow-y-auto no-scrollbar"
@@ -329,24 +409,29 @@ function UnifiedQueueView({
           {playHistory.map((song, idx) => {
             const displayIdx = playHistory.length - 1 - idx;
             const displaySong = playHistory[displayIdx];
+            const isCurrent = currentSong?.id === displaySong.id;
             return (
-              <QueueListRow
+              <QueueItemRow
                 key={`${displaySong.id}-${displayIdx}`}
                 song={displaySong}
-                isActive={false}
-                onClick={() => playSong(displaySong)}
+                isPlaying={isCurrent && isPlaying}
+                isActive={isCurrent}
+                onPlay={() => playSong(displaySong)}
+                tier="context"
               />
             );
           })}
         </div>
       )}
 
-      <div
-        ref={currentSongRef}
-        className={`shrink-0 px-2 pt-2 pb-1 ${FULLSCREEN_QUEUE_BG_CLASS}`}
-      >
-        <QueueCurrentSong onClick={onCurrentSongClick} />
-      </div>
+      {!hideCurrentSong && (
+        <div
+          ref={currentSongRef}
+          className={`shrink-0 px-2 pt-2 pb-1 ${FULLSCREEN_QUEUE_BG_CLASS}`}
+        >
+          <QueueCurrentSong onClick={onCurrentSongClick} />
+        </div>
+      )}
 
       {isRepeatOne && userQueueSongs.length === 0 && (
         <div className={FULLSCREEN_QUEUE_BG_CLASS}>
@@ -365,16 +450,18 @@ function UnifiedQueueView({
             )}
             <QueueSourceLabel />
           </div>
-          <RepeatIndicator
-            icon={RepeatOne}
-            label={t("fullscreen.queueRepeating")}
-          />
+          {!hideRepeatIndicator && (
+            <RepeatIndicator
+              icon={RepeatOne}
+              label={t("fullscreen.queueRepeating")}
+            />
+          )}
         </div>
       )}
 
       {isRepeatOne && userQueueSongs.length > 0 && (
         <div className={FULLSCREEN_QUEUE_BG_CLASS}>
-          <UserQueueDnd
+          <UserQueueSection
             userQueueSongs={userQueueSongs}
             userSortableItems={userSortableItems}
             currentSong={currentSong}
@@ -384,8 +471,9 @@ function UnifiedQueueView({
             clearUserQueue={clearUserQueue}
             activeItem={activeItem}
             dragOverlayBg={dragOverlayBg}
-            t={t}
+            isPlaying={isPlaying}
             onPlaySong={(userQueueIndex) => playFromUserQueue(userQueueIndex)}
+            t={t}
             sticky
           />
           <div
@@ -394,10 +482,12 @@ function UnifiedQueueView({
             {!hideModeButtons && <QueueModeButtons />}
             <QueueSourceLabel />
           </div>
-          <RepeatIndicator
-            icon={RepeatOne}
-            label={t("fullscreen.queueRepeating")}
-          />
+          {!hideRepeatIndicator && (
+            <RepeatIndicator
+              icon={RepeatOne}
+              label={t("fullscreen.queueRepeating")}
+            />
+          )}
         </div>
       )}
 
@@ -405,7 +495,7 @@ function UnifiedQueueView({
         <>
           {userQueueSongs.length > 0 && (
             <div className={FULLSCREEN_QUEUE_BG_CLASS}>
-              <UserQueueDnd
+              <UserQueueSection
                 userQueueSongs={userQueueSongs}
                 userSortableItems={userSortableItems}
                 currentSong={currentSong}
@@ -415,8 +505,9 @@ function UnifiedQueueView({
                 clearUserQueue={clearUserQueue}
                 activeItem={activeItem}
                 dragOverlayBg={dragOverlayBg}
-                t={t}
+                isPlaying={isPlaying}
                 onPlaySong={(userQueueIndex) => playFromUserQueue(userQueueIndex)}
+                t={t}
                 sticky
               />
             </div>
@@ -453,11 +544,13 @@ function UnifiedQueueView({
                   upcomingContext.map((song, idx) => {
                     const contextIdx = contextIndex + 1 + idx;
                     return (
-                      <SortableUpcomingRow
+                      <SortableQueueItem
                         key={song.id}
+                        id={song.id}
                         song={song}
+                        isPlaying={false}
                         isActive={false}
-                        onClick={() => playFromQueue(contextSongs, contextIdx)}
+                        onPlay={() => playFromQueue(contextSongs, contextIdx)}
                         tier="context"
                       />
                     );
@@ -470,12 +563,11 @@ function UnifiedQueueView({
                       className="rounded-md shadow-lg"
                       style={{ background: dragOverlayBg || undefined }}
                     >
-                      <QueueListRow
+                      <QueueItemRow
                         song={activeItem}
+                        isPlaying={currentSong?.id === activeItem.id && isPlaying}
                         isActive={currentSong?.id === activeItem.id}
-                        onClick={() => {}}
-                        interactive={false}
-                        showDragHandle={false}
+                        onPlay={() => {}}
                       />
                     </div>
                   )}
@@ -484,7 +576,7 @@ function UnifiedQueueView({
               )}
             </DndContext>
 
-            {isRepeatAll && (
+            {isRepeatAll && !hideRepeatIndicator && (
               <RepeatIndicator
                 icon={Repeat}
                 label={t("fullscreen.queueRepeating")}
@@ -495,6 +587,391 @@ function UnifiedQueueView({
       )}
       <div ref={spacerRef} className="shrink-0" aria-hidden="true" />
     </div>
+  );
+}
+
+function VirtualizedQueueView({
+  playHistory,
+  userQueueSongs,
+  upcomingContext,
+  currentSong,
+  contextSongs,
+  contextIndex,
+  contextPlayedCount,
+  hideModeButtons,
+  hideHistory,
+  hideCurrentSong,
+  hideRepeatIndicator,
+  isRepeatOne,
+  isRepeatAll,
+  showContinueHeader,
+  scrollAreaClassName,
+  thumbClassName,
+  sensors,
+  userSortableItems,
+  upcomingSortableItems,
+  activeItem,
+  dragOverlayBg,
+  isPlaying,
+  onUserDragStart,
+  onUserDragEnd,
+  onUpcomingDragStart,
+  onUpcomingDragEnd,
+  playSong,
+  playFromQueue,
+  playFromUserQueue,
+  clearPlayHistory,
+  clearUserQueue,
+  onCurrentSongClick,
+  t,
+}: {
+  playHistory: ISong[];
+  userQueueSongs: ISong[];
+  upcomingContext: ISong[];
+  currentSong: ISong | null;
+  contextSongs: ISong[];
+  contextIndex: number;
+  contextPlayedCount: number;
+  hideModeButtons: boolean;
+  hideHistory: boolean;
+  hideCurrentSong: boolean;
+  hideRepeatIndicator: boolean;
+  isRepeatOne: boolean;
+  isRepeatAll: boolean;
+  showContinueHeader: boolean;
+  scrollAreaClassName?: string;
+  thumbClassName?: string;
+  sensors: ReturnType<typeof useQueueDndSensors>;
+  userSortableItems: string[];
+  upcomingSortableItems: string[];
+  activeItem: ISong | null;
+  dragOverlayBg: string;
+  isPlaying: boolean;
+  onUserDragStart: (e: DragStartEvent) => void;
+  onUserDragEnd: (e: DragEndEvent) => void;
+  onUpcomingDragStart: (e: DragStartEvent) => void;
+  onUpcomingDragEnd: (e: DragEndEvent) => void;
+  playSong: (song: ISong) => void;
+  playFromQueue: (songs: ISong[], index: number) => void;
+  playFromUserQueue: (index: number) => void;
+  clearPlayHistory: () => void;
+  clearUserQueue: () => void;
+  onCurrentSongClick?: () => void;
+  t: (key: string) => string;
+}) {
+  const parentRef = useRef<HTMLDivElement>(null);
+  const prevSongIdRef = useRef<string | null>(null);
+
+  const getScrollElement = useCallback(() => {
+    if (!parentRef.current) return null;
+    return parentRef.current.querySelector(scrollAreaViewportSelector);
+  }, []);
+
+  type VirtualItem =
+    | { type: "history"; song: ISong; key: string }
+    | { type: "currentSong" }
+    | { type: "queueHeader" }
+    | { type: "userQueueSong"; song: ISong; userQueueIndex: number }
+    | { type: "queueDivider" }
+    | { type: "continueHeader" }
+    | { type: "upcomingSong"; song: ISong; contextIdx: number }
+    | { type: "repeatIndicator"; icon: LucideIcon; label: string };
+
+  const virtualItems = useMemo(() => {
+    const items: VirtualItem[] = [];
+
+    if (!hideHistory) {
+      for (let i = playHistory.length - 1; i >= 0; i--) {
+        items.push({
+          type: "history",
+          song: playHistory[i],
+          key: `history-${playHistory[i].id}-${i}`,
+        });
+      }
+    }
+
+    if (!hideCurrentSong) {
+      items.push({ type: "currentSong" });
+    }
+
+    const filteredUserQueueSongs = userQueueSongs.filter(
+      (song) => song.id !== currentSong?.id,
+    );
+
+    if (filteredUserQueueSongs.length > 0) {
+      items.push({ type: "queueHeader" });
+      for (const song of filteredUserQueueSongs) {
+        const userQueueIndex = userQueueSongs.findIndex(
+          (s) => s.id === song.id,
+        );
+        items.push({
+          type: "userQueueSong",
+          song,
+          userQueueIndex,
+        });
+      }
+    }
+
+    if (filteredUserQueueSongs.length > 0 && upcomingContext.length > 0) {
+      items.push({ type: "queueDivider" });
+    }
+
+    if (showContinueHeader) {
+      items.push({ type: "continueHeader" });
+    }
+
+    for (let idx = 0; idx < upcomingContext.length; idx++) {
+      const song = upcomingContext[idx];
+      const contextIdx = contextIndex + 1 + idx;
+      items.push({ type: "upcomingSong", song, contextIdx });
+    }
+
+    if (!hideRepeatIndicator) {
+      if (isRepeatOne) {
+        items.push({
+          type: "repeatIndicator",
+          icon: RepeatOne,
+          label: t("fullscreen.queueRepeating"),
+        });
+      } else if (isRepeatAll) {
+        items.push({
+          type: "repeatIndicator",
+          icon: Repeat,
+          label: t("fullscreen.queueRepeating"),
+        });
+      }
+    }
+
+    return items;
+  }, [
+    hideHistory,
+    hideCurrentSong,
+    hideRepeatIndicator,
+    playHistory,
+    userQueueSongs,
+    upcomingContext,
+    currentSong,
+    contextIndex,
+    showContinueHeader,
+    isRepeatOne,
+    isRepeatAll,
+    t,
+  ]);
+
+  const virtualizer = useVirtualizer({
+    count: virtualItems.length,
+    getScrollElement,
+    estimateSize: (index) => {
+      const item = virtualItems[index];
+      if (!item) return 64;
+      switch (item.type) {
+        case "history":
+        case "userQueueSong":
+        case "upcomingSong":
+          return 64;
+        case "currentSong":
+          return 56;
+        case "queueHeader":
+          return 36;
+        case "queueDivider":
+          return 20;
+        case "continueHeader":
+          return 52;
+        case "repeatIndicator":
+          return 36;
+        default:
+          return 64;
+      }
+    },
+    overscan: 5,
+  });
+
+  const currentSongVirtualIndex = useMemo(() => {
+    const idx = virtualItems.findIndex((item) => item.type === "currentSong");
+    return idx >= 0 ? idx : -1;
+  }, [virtualItems]);
+
+  useEffect(() => {
+    if (currentSong?.id && currentSong?.id !== prevSongIdRef.current) {
+      prevSongIdRef.current = currentSong.id;
+      if (currentSongVirtualIndex >= 0) {
+        virtualizer.scrollToIndex(currentSongVirtualIndex, { align: "center" });
+      }
+    }
+  }, [currentSong?.id, currentSongVirtualIndex, virtualizer]);
+
+  if (virtualItems.length === 0) {
+    return (
+      <div className="flex flex-1 flex-col h-full min-w-0 items-center justify-center">
+        <span className="text-foreground/70">
+          {t("fullscreen.emptyQueue")}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={onUserDragStart}
+        onDragEnd={onUserDragEnd}
+      >
+        <SortableContext
+          items={userSortableItems}
+          strategy={verticalListSortingStrategy}
+        >
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={onUpcomingDragStart}
+            onDragEnd={onUpcomingDragEnd}
+          >
+            <SortableContext
+              items={upcomingSortableItems}
+              strategy={verticalListSortingStrategy}
+            >
+              <ScrollArea
+                ref={parentRef}
+                type="always"
+                className={scrollAreaClassName ?? "w-full h-full overflow-auto"}
+                thumbClassName={thumbClassName}
+                data-vaul-no-drag
+              >
+                <div
+                  className="px-2"
+                  style={{
+                    height: `${virtualizer.getTotalSize()}px`,
+                    width: "100%",
+                    position: "relative",
+                  }}
+                >
+                  {virtualizer.getVirtualItems().map((virtualRow) => {
+                    const item = virtualItems[virtualRow.index];
+                    if (!item) return null;
+
+                    return (
+                      <div
+                        key={virtualRow.key}
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: `${virtualRow.size}px`,
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }}
+                      >
+                        {item.type === "history" && (
+                          <QueueItemRow
+                            song={item.song}
+                            isPlaying={currentSong?.id === item.song.id && isPlaying}
+                            isActive={currentSong?.id === item.song.id}
+                            onPlay={() => playSong(item.song)}
+                            tier="context"
+                          />
+                        )}
+
+                        {item.type === "currentSong" && (
+                          <div className="px-0 pt-2 pb-0.5">
+                            <QueueCurrentSong onClick={onCurrentSongClick} />
+                          </div>
+                        )}
+
+                        {item.type === "queueHeader" && (
+                          <div className="flex items-center justify-between px-1 py-1">
+                            <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
+                              Queue
+                            </h3>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 text-xs text-foreground/50 hover:text-foreground"
+                              onClick={clearUserQueue}
+                            >
+                              {t("generic.clear")}
+                            </Button>
+                          </div>
+                        )}
+
+                        {item.type === "userQueueSong" && (
+                          <SortableQueueItem
+                            id={item.song.id}
+                            song={item.song}
+                            isPlaying={currentSong?.id === item.song.id && isPlaying}
+                            isActive={currentSong?.id === item.song.id}
+                            onPlay={() => playFromUserQueue(item.userQueueIndex)}
+                            tier="user"
+                          />
+                        )}
+
+                        {item.type === "queueDivider" && (
+                          <div className="flex items-center gap-2 px-1 py-0.5 mb-0.5">
+                            <div className="h-px flex-1 bg-foreground/10" />
+                            <span className="text-[10px] font-medium text-foreground/40 uppercase tracking-wider whitespace-nowrap">
+                              {t("fullscreen.queueContinue")}
+                            </span>
+                            <div className="h-px flex-1 bg-foreground/10" />
+                          </div>
+                        )}
+
+                        {item.type === "continueHeader" && (
+                          <div>
+                            {!hideModeButtons && <QueueModeButtons />}
+                            <div
+                              className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
+                            >
+                              <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
+                                {t("fullscreen.queueContinue")}
+                              </h3>
+                            </div>
+                            <QueueSourceLabel />
+                          </div>
+                        )}
+
+                        {item.type === "upcomingSong" && (
+                          <SortableQueueItem
+                            id={item.song.id}
+                            song={item.song}
+                            isPlaying={false}
+                            isActive={false}
+                            onPlay={() => playFromQueue(contextSongs, item.contextIdx)}
+                            tier="context"
+                          />
+                        )}
+
+                        {item.type === "repeatIndicator" && (
+                          <RepeatIndicator icon={item.icon} label={item.label} />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </SortableContext>
+          </DndContext>
+        </SortableContext>
+      </DndContext>
+      {createPortal(
+        <DragOverlay>
+          {activeItem && (
+            <div
+              className="rounded-md shadow-lg"
+              style={{ background: dragOverlayBg || undefined }}
+            >
+              <QueueItemRow
+                song={activeItem}
+                isPlaying={currentSong?.id === activeItem.id && isPlaying}
+                isActive={currentSong?.id === activeItem.id}
+                onPlay={() => {}}
+              />
+            </div>
+          )}
+        </DragOverlay>,
+        document.body,
+      )}
+    </>
   );
 }
 
@@ -515,7 +992,7 @@ function RepeatIndicator({
   );
 }
 
-function UserQueueDnd({
+function UserQueueSection({
   userQueueSongs,
   userSortableItems,
   currentSong,
@@ -525,8 +1002,9 @@ function UserQueueDnd({
   clearUserQueue,
   activeItem,
   dragOverlayBg,
-  t,
+  isPlaying,
   onPlaySong,
+  t,
   sticky = false,
 }: {
   userQueueSongs: ISong[];
@@ -538,8 +1016,9 @@ function UserQueueDnd({
   clearUserQueue: () => void;
   activeItem: ISong | null;
   dragOverlayBg: string;
-  t: (key: string) => string;
+  isPlaying: boolean;
   onPlaySong: (userQueueIndex: number) => void;
+  t: (key: string) => string;
   sticky?: boolean;
 }) {
   const filteredUserQueueSongs = userQueueSongs.filter(
@@ -579,12 +1058,15 @@ function UserQueueDnd({
             const userQueueIndex = userQueueSongs.findIndex(
               (s) => s.id === song.id,
             );
+            const isCurrent = currentSong?.id === song.id;
             return (
-              <SortableUpcomingRow
+              <SortableQueueItem
                 key={song.id}
+                id={song.id}
                 song={song}
-                isActive={false}
-                onClick={() => onPlaySong(userQueueIndex)}
+                isPlaying={isCurrent && isPlaying}
+                isActive={isCurrent}
+                onPlay={() => onPlaySong(userQueueIndex)}
                 tier="user"
               />
             );
@@ -598,12 +1080,11 @@ function UserQueueDnd({
               className="rounded-md shadow-lg"
               style={{ background: dragOverlayBg || undefined }}
             >
-              <QueueListRow
+              <QueueItemRow
                 song={activeItem}
+                isPlaying={currentSong?.id === activeItem.id && isPlaying}
                 isActive={currentSong?.id === activeItem.id}
-                onClick={() => {}}
-                interactive={false}
-                showDragHandle={false}
+                onPlay={() => {}}
               />
             </div>
           )}
@@ -613,107 +1094,3 @@ function UserQueueDnd({
     </DndContext>
   );
 }
-
-interface QueueListRowProps {
-  song: ISong;
-  isActive: boolean;
-  onClick: () => void;
-  showDragHandle?: boolean;
-  interactive?: boolean;
-  dragHandleProps?: SyntheticListenerMap;
-  tier?: "context" | "user";
-}
-
-const QueueListRow = memo(function QueueListRow({
-  song,
-  isActive,
-  onClick,
-  showDragHandle = false,
-  interactive = true,
-  dragHandleProps,
-}: QueueListRowProps) {
-  return (
-    <div
-      className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-muted/50 transition-colors ${
-        isActive ? "bg-accent" : ""
-      }`}
-      onClick={onClick}
-      onKeyDown={
-        interactive
-          ? (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onClick();
-              }
-            }
-          : undefined
-      }
-      role={interactive ? "button" : undefined}
-      tabIndex={interactive ? 0 : undefined}
-    >
-      <div className="w-9 h-9 rounded shrink-0 overflow-hidden bg-accent">
-        <CachedImage
-          coverArtId={song.coverArt}
-          coverArtType="song"
-          albumId={song.albumId}
-          className="w-9 h-9 object-cover"
-          alt={`${song.title} - ${song.artist}`}
-        />
-      </div>
-      <div className="flex flex-col min-w-0 flex-1">
-        <span
-          className={`text-sm font-medium truncate ${
-            isActive ? "text-primary" : ""
-          }`}
-        >
-          {song.title}
-        </span>
-        <span className="text-xs text-foreground/70 truncate">
-          {song.artist}
-        </span>
-      </div>
-      {showDragHandle && (
-        <span
-          className="text-foreground/30 shrink-0 cursor-grab select-none px-1 py-2 -my-2 touch-none"
-          onClick={(e) => e.stopPropagation()}
-          {...dragHandleProps}
-        >
-          <GripVertical className="w-4 h-4" />
-        </span>
-      )}
-    </div>
-  );
-});
-
-const SortableUpcomingRow = memo(function SortableUpcomingRow(
-  props: QueueListRowProps,
-) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: props.song.id });
-
-  const { role: _, tabIndex: __, ...restAttributes } = attributes;
-
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : undefined,
-    zIndex: isDragging ? 1 : undefined,
-  };
-
-  return (
-    <div ref={setNodeRef} style={style} {...restAttributes}>
-      <QueueListRow
-        {...props}
-        interactive
-        showDragHandle
-        dragHandleProps={listeners}
-      />
-    </div>
-  );
-});
