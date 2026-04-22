@@ -194,7 +194,7 @@ export const MobileLayout = memo(function MobileLayout({
               data-testid="fullscreen-playing-view"
               data-layout={playingViewLayout}
               className={cn(
-                "flex min-h-0 flex-1 flex-col items-center overflow-hidden",
+                "flex min-h-0 flex-1 flex-col items-center overflow-hidden overflow-clip",
                 useWideCenteredPlayingLayout && "justify-center",
                 useShortCompactPlayingLayout && "justify-between",
               )}
