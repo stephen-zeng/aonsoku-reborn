@@ -183,7 +183,8 @@ function UnifiedQueueView({
   onCurrentSongClick?: () => void;
 }) {
   const { t } = useTranslation();
-  const { playSong, playFromQueue, reorderQueue } = usePlayerActions();
+  const { playSong, playFromQueue, playFromUserQueue, reorderQueue } =
+    usePlayerActions();
   const loopState = usePlayerLoop();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
 
@@ -384,7 +385,7 @@ function UnifiedQueueView({
             activeItem={activeItem}
             dragOverlayBg={dragOverlayBg}
             t={t}
-            onPlaySong={(song) => playSong(song)}
+            onPlaySong={(userQueueIndex) => playFromUserQueue(userQueueIndex)}
             sticky
           />
           <div
@@ -415,7 +416,7 @@ function UnifiedQueueView({
                 activeItem={activeItem}
                 dragOverlayBg={dragOverlayBg}
                 t={t}
-                onPlaySong={(song) => playSong(song)}
+                onPlaySong={(userQueueIndex) => playFromUserQueue(userQueueIndex)}
                 sticky
               />
             </div>
@@ -451,12 +452,11 @@ function UnifiedQueueView({
                 {upcomingContext.length > 0 &&
                   upcomingContext.map((song, idx) => {
                     const contextIdx = contextIndex + 1 + idx;
-                    const isActive = currentSong?.id === song.id;
                     return (
                       <SortableUpcomingRow
                         key={song.id}
                         song={song}
-                        isActive={isActive}
+                        isActive={false}
                         onClick={() => playFromQueue(contextSongs, contextIdx)}
                         tier="context"
                       />
@@ -539,7 +539,7 @@ function UserQueueDnd({
   activeItem: ISong | null;
   dragOverlayBg: string;
   t: (key: string) => string;
-  onPlaySong: (song: ISong) => void;
+  onPlaySong: (userQueueIndex: number) => void;
   sticky?: boolean;
 }) {
   const filteredUserQueueSongs = userQueueSongs.filter(
@@ -576,13 +576,15 @@ function UserQueueDnd({
             </Button>
           </div>
           {filteredUserQueueSongs.map((song) => {
-            const isActive = currentSong?.id === song.id;
+            const userQueueIndex = userQueueSongs.findIndex(
+              (s) => s.id === song.id,
+            );
             return (
               <SortableUpcomingRow
                 key={song.id}
                 song={song}
-                isActive={isActive}
-                onClick={() => onPlaySong(song)}
+                isActive={false}
+                onClick={() => onPlaySong(userQueueIndex)}
                 tier="user"
               />
             );
