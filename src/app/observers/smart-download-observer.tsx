@@ -1,6 +1,11 @@
 import { useEffect, useRef } from "react";
 import { smartDownloadEngine } from "@/service/cache";
-import { useCacheStore, useIsMetered, useIsOnline } from "@/store/cache.store";
+import {
+  useCacheStore,
+  useIsMetered,
+  useIsOnline,
+  useLibraryCaching,
+} from "@/store/cache.store";
 
 /**
  * Runs the SmartDownloadEngine on app startup and whenever the user
@@ -8,6 +13,10 @@ import { useCacheStore, useIsMetered, useIsOnline } from "@/store/cache.store";
  * (via a subscription to `syncState.phase === "done"`) so freshly
  * synced play counts, favorites, and playlist changes feed the
  * matching pass.
+ *
+ * Skips entirely when libraryCaching is disabled — smart downloads
+ * are a form of background caching and don't make sense in pure
+ * online mode.
  *
  * Metered / offline states skip the recompute: the engine would only
  * end up queueing new downloads the user can't afford on their
@@ -17,12 +26,13 @@ import { useCacheStore, useIsMetered, useIsOnline } from "@/store/cache.store";
  */
 export function SmartDownloadObserver() {
   const rules = useCacheStore((s) => s.settings.smartRules);
+  const libraryCaching = useLibraryCaching();
   const isOnline = useIsOnline();
   const isMetered = useIsMetered();
   const lastRunSignature = useRef<string>("");
 
   useEffect(() => {
-    if (!isOnline || isMetered) return;
+    if (!libraryCaching || !isOnline || isMetered) return;
 
     const signature = JSON.stringify(rules);
     if (signature === lastRunSignature.current) {
@@ -33,11 +43,10 @@ export function SmartDownloadObserver() {
     }
     lastRunSignature.current = signature;
     smartDownloadEngine.recomputeMatches();
-  }, [rules, isOnline, isMetered]);
+  }, [rules, libraryCaching, isOnline, isMetered]);
 
   useEffect(() => {
-    // Re-run after every completed sync so new favorites / play counts
-    // / starred playlists feed the matcher.
+    if (!libraryCaching) return;
     const unsub = useCacheStore.subscribe((state, prev) => {
       if (!isOnline || isMetered) return;
       if (
@@ -48,7 +57,7 @@ export function SmartDownloadObserver() {
       }
     });
     return unsub;
-  }, [isOnline, isMetered]);
+  }, [libraryCaching, isOnline, isMetered]);
 
   return null;
 }

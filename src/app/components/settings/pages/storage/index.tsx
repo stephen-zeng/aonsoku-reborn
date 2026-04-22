@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Content,
@@ -12,6 +12,7 @@ import {
   Root,
 } from "@/app/components/settings/section";
 import { Button } from "@/app/components/ui/button";
+import { ConfirmationDialog } from "@/app/components/ui/confirmation-dialog";
 import {
   Select,
   SelectContent,
@@ -22,9 +23,9 @@ import {
 } from "@/app/components/ui/select";
 import { Switch } from "@/app/components/ui/switch";
 import { Input } from "@/app/components/ui/input";
-import { useIsOnline } from "@/store/cache.store";
 import { cacheManager } from "@/service/cache";
 import { syncService } from "@/service/cache/sync-worker-adapter";
+import { clearLibraryData } from "@/store/library-db";
 import {
   type CachePoolBreakdown,
   useCachePoolStats,
@@ -32,8 +33,10 @@ import {
 import {
   useCacheActions,
   useCacheSettings,
-  useCacheStatus,
+  useCacheStore,
+  useIsOnline,
   useLastSyncedAt,
+  useLibraryCaching,
   useSmartRules,
 } from "@/store/cache.store";
 import {
@@ -310,11 +313,37 @@ function CacheLimitsSection() {
 
 function SyncLibrarySection() {
   const { t } = useTranslation();
-  const { syncLibrary, syncCoverArt } = useCacheSettings();
-  const { setSyncLibrary, setSyncCoverArt } = useCacheActions();
+  const libraryCaching = useLibraryCaching();
+  const syncLibrary = useCacheStore((s) => s.settings.syncLibrary);
+  const syncCoverArt = useCacheStore((s) => s.settings.syncCoverArt);
+  const {
+    setLibraryCaching,
+    setSyncLibrary,
+    setSyncCoverArt,
+    setLastSyncedAt,
+  } = useCacheActions();
   const lastSyncedAt = useLastSyncedAt();
-  const { isSyncing } = useCacheStatus().syncState;
+  const isSyncing = useCacheStore((s) => s.status.syncState.isSyncing);
   const isOnline = useIsOnline();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const handleToggle = useCallback(
+    (checked: boolean) => {
+      if (!checked && lastSyncedAt !== null) {
+        setConfirmOpen(true);
+        return;
+      }
+      setLibraryCaching(checked);
+    },
+    [lastSyncedAt, setLibraryCaching],
+  );
+
+  const handleConfirmClear = useCallback(async () => {
+    await clearLibraryData();
+    setLastSyncedAt(null);
+    setLibraryCaching(false);
+    setConfirmOpen(false);
+  }, [setLastSyncedAt, setLibraryCaching]);
 
   const handleRefresh = useCallback(() => {
     syncService.syncIncremental({
@@ -338,27 +367,44 @@ function SyncLibrarySection() {
 
       <Content>
         <ContentItem>
+          <ContentItemTitle
+            info={t("settings.storage.sync.libraryCachingInfo")}
+          >
+            {t("settings.storage.sync.libraryCaching")}
+          </ContentItemTitle>
+          <ContentItemForm>
+            <Switch
+              checked={libraryCaching}
+              onCheckedChange={handleToggle}
+            />
+          </ContentItemForm>
+        </ContentItem>
+
+        <ContentItem>
           <ContentItemTitle>
             {t("settings.storage.sync.enabled")}
           </ContentItemTitle>
           <ContentItemForm>
-            <Switch checked={syncLibrary} onCheckedChange={setSyncLibrary} />
+            <Switch
+              checked={syncLibrary}
+              onCheckedChange={setSyncLibrary}
+              disabled={!libraryCaching}
+            />
           </ContentItemForm>
         </ContentItem>
 
-        {syncLibrary && (
-          <ContentItem>
-            <ContentItemTitle info={t("settings.storage.sync.coverArtInfo")}>
-              {t("settings.storage.sync.coverArt")}
-            </ContentItemTitle>
-            <ContentItemForm>
-              <Switch
-                checked={syncCoverArt}
-                onCheckedChange={setSyncCoverArt}
-              />
-            </ContentItemForm>
-          </ContentItem>
-        )}
+        <ContentItem>
+          <ContentItemTitle info={t("settings.storage.sync.coverArtInfo")}>
+            {t("settings.storage.sync.coverArt")}
+          </ContentItemTitle>
+          <ContentItemForm>
+            <Switch
+              checked={syncCoverArt}
+              onCheckedChange={setSyncCoverArt}
+              disabled={!libraryCaching}
+            />
+          </ContentItemForm>
+        </ContentItem>
 
         <ContentItem>
           <ContentItemTitle>
@@ -385,7 +431,7 @@ function SyncLibrarySection() {
                 variant="outline"
                 className="h-7 text-xs"
                 onClick={handleRefresh}
-                disabled={!isOnline}
+                disabled={!isOnline || !libraryCaching}
               >
                 {t("settings.storage.sync.syncNow")}
               </Button>
@@ -393,6 +439,16 @@ function SyncLibrarySection() {
           </ContentItemForm>
         </ContentItem>
       </Content>
+
+      <ConfirmationDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={t("settings.storage.sync.clearConfirm.title")}
+        description={t("settings.storage.sync.clearConfirm.description")}
+        onConfirm={handleConfirmClear}
+        cancelLabel={t("settings.storage.sync.clearConfirm.keep")}
+        confirmLabel={t("settings.storage.sync.clearConfirm.clear")}
+      />
     </Root>
   );
 }

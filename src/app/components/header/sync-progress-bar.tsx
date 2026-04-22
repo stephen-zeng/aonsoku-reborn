@@ -9,7 +9,7 @@ import {
 } from "@/app/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { syncService } from "@/service/cache/sync-worker-adapter";
-import { useCacheStore } from "@/store/cache.store";
+import { useCacheStore, useLibraryCaching } from "@/store/cache.store";
 import type { SyncPhase, SyncState, SyncTier } from "@/types/cache";
 
 const TIER_ORDER: Record<SyncTier, number> = { t1: 0, t2: 1, t3: 2 };
@@ -146,24 +146,28 @@ function TierRow({
 
 export function SyncProgressBar() {
   const { t } = useTranslation();
+  const libraryCaching = useLibraryCaching();
   const syncState = useCacheStore((s) => s.status.syncState);
   const syncLibrary = useCacheStore((s) => s.settings.syncLibrary);
-  const syncCoverArt = useCacheStore((s) => s.settings.syncCoverArt);
   const [showCompleted, setShowCompleted] = useState(false);
 
   useEffect(() => {
+    if (!libraryCaching) return;
     if (syncState.phase === "done" && !syncState.isSyncing) {
       setShowCompleted(true);
       const timer = setTimeout(() => setShowCompleted(false), AUTO_HIDE_MS);
       return () => clearTimeout(timer);
     }
     setShowCompleted(false);
-  }, [syncState.phase, syncState.isSyncing]);
+  }, [syncState.phase, syncState.isSyncing, libraryCaching]);
 
   const showError = syncState.phase === "error";
-  if (!syncState.isSyncing && !showCompleted && !showError) return null;
+  if (!syncState.isSyncing && !showCompleted && !showError && !libraryCaching)
+    return null;
 
   const handleRetry = () => {
+    const { syncCoverArt, syncLibrary } =
+      useCacheStore.getState().settings;
     syncService.syncAll({
       includeCoverArt: syncCoverArt,
       includeFullSongs: syncLibrary,

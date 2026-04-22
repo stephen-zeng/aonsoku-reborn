@@ -1,14 +1,15 @@
 import { RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
-import { useCacheStore } from "@/store/cache.store";
+import { useCacheStore, useLibraryCaching } from "@/store/cache.store";
 
 export function SyncIndicator() {
   const { t } = useTranslation();
+  const libraryCaching = useLibraryCaching();
   const isSyncing = useCacheStore((state) => state.status.syncState.isSyncing);
   const phase = useCacheStore((state) => state.status.syncState.phase);
 
-  if (!isSyncing) return null;
+  if (!isSyncing || !libraryCaching) return null;
 
   const phaseText = t(`settings.storage.sync.phases.${phase}`);
 

@@ -715,6 +715,8 @@
       "sync": {
         "group": "Library Sync",
         "description": "Sync library metadata for offline browsing. Downloaded songs are always available offline.",
+        "libraryCaching": "Library caching",
+        "libraryCachingInfo": "When enabled, metadata and optionally songs are cached locally for offline access. When disabled, the app stays in pure online mode and no background sync runs.",
         "enabled": "Sync library",
         "coverArt": "Include cover art",
         "coverArtInfo": "Download all album and artist images during sync. This may use significant storage and bandwidth.",
@@ -748,7 +750,13 @@
             "label": "Full song details"
           }
         },
-        "justNow": "Just now"
+        "justNow": "Just now",
+        "clearConfirm": {
+          "title": "Disable library caching?",
+          "description": "Disabling library caching will clear all synced library data (artists, albums, songs, playlists, genres). You can re-enable it and re-sync at any time.",
+          "keep": "Keep enabled",
+          "clear": "Clear and disable"
+        }
       },
       "downloadQuality": {
         "group": "Audio Quality",

@@ -24,6 +24,7 @@ interface CacheActions {
   setLruQuota: (bytes: number) => void;
   setSmartQuota: (bytes: number) => void;
   setSmartRules: (rules: Partial<SmartRuleSettings>) => void;
+  setLibraryCaching: (enabled: boolean) => void;
   setSyncLibrary: (enabled: boolean) => void;
   setSyncCoverArt: (enabled: boolean) => void;
   setIsOnline: (online: boolean) => void;
@@ -81,14 +82,11 @@ function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
       downloadQuality: normalizeQuality(old.downloadQuality),
       streamQuality: "medium",
       maxCacheSize: legacyCap,
-      // Legacy single cap most closely matched opportunistic caching
-      // behavior, so route it to the LRU pool. Assets/smart use
-      // post-P2.3 defaults so users get the richer behavior out of the
-      // box without having to revisit settings.
       assetsQuota: DEFAULT_ASSETS_QUOTA,
       lruQuota: legacyCap,
       smartQuota: DEFAULT_SMART_QUOTA,
       smartRules: { ...DEFAULT_SMART_RULES },
+      libraryCaching: false,
       syncLibrary: old.mode === "offline",
       syncCoverArt:
         typeof old.syncCoverArt === "boolean" ? old.syncCoverArt : false,
@@ -119,6 +117,7 @@ function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
         lruQuota: raw.lruQuota ?? legacyCap,
         smartQuota: raw.smartQuota ?? DEFAULT_SMART_QUOTA,
         smartRules: { ...DEFAULT_SMART_RULES, ...(raw.smartRules ?? {}) },
+        libraryCaching: raw.libraryCaching ?? false,
       };
     }
   }
@@ -130,10 +129,15 @@ function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
     return {
       ...(final as unknown as CacheSettings),
       smartRules: { ...DEFAULT_SMART_RULES },
+      libraryCaching: final.libraryCaching === true,
     };
   }
 
-  return persisted as unknown as CacheSettings;
+  return {
+    ...(persisted as unknown as CacheSettings),
+    libraryCaching:
+      (persisted as Record<string, unknown>).libraryCaching === true,
+  };
 }
 
 export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
@@ -149,9 +153,7 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             lruQuota: DEFAULT_LRU_QUOTA,
             smartQuota: DEFAULT_SMART_QUOTA,
             smartRules: { ...DEFAULT_SMART_RULES },
-            // Default-on post-P1.3: the toggle now controls whether the
-            // long-running full-songs sync step runs. T1/T2 metadata
-            // (artists, albums, playlists, genres) always sync regardless.
+            libraryCaching: false,
             syncLibrary: true,
             syncCoverArt: false,
           },
@@ -199,6 +201,11 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             setSmartRules: (rules) => {
               set((state) => {
                 Object.assign(state.settings.smartRules, rules);
+              });
+            },
+            setLibraryCaching: (enabled) => {
+              set((state) => {
+                state.settings.libraryCaching = enabled;
               });
             },
             setSyncLibrary: (enabled) => {
@@ -315,3 +322,6 @@ export const useLastSyncedAt = () =>
   useCacheStore((state) => state.status.lastSyncedAt);
 
 export const useCacheActions = () => useCacheStore((state) => state.actions);
+
+export const useLibraryCaching = () =>
+  useCacheStore((state) => state.settings.libraryCaching);

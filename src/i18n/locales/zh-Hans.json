@@ -722,6 +722,8 @@
         "entries": "已同步 {{count}} 项",
         "group": "音乐库同步",
         "lastSynced": "上次同步",
+        "libraryCaching": "资源库缓存",
+        "libraryCachingInfo": "启用后，元数据和歌曲将缓存到本地以供离线访问。禁用后，应用将保持纯在线模式，不会进行后台同步。",
         "never": "从未同步",
         "phases": {
           "albums": "正在同步专辑…",
@@ -730,13 +732,20 @@
           "coverArt": "正在同步封面图…",
           "done": "同步完成",
           "error": "同步失败",
+          "favorites": "正在同步收藏…",
           "genres": "正在同步流派…",
           "idle": "准备中…",
           "playlists": "正在同步播放列表…",
           "songs": "正在同步歌曲…"
         },
         "syncNow": "立即同步",
-        "justNow": "刚刚"
+        "justNow": "刚刚",
+        "clearConfirm": {
+          "title": "关闭资源库缓存？",
+          "description": "关闭资源库缓存将清除所有已同步的资源库数据（艺术家、专辑、歌曲、播放列表、流派）。您可以随时重新启用并重新同步。",
+          "keep": "保持开启",
+          "clear": "清除并关闭"
+        }
       },
       "downloadQuality": {
         "group": "下载质量",

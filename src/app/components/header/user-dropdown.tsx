@@ -33,7 +33,7 @@ import { syncService } from "@/service/cache/sync-worker-adapter";
 import { ROUTES } from "@/routes/routesList";
 import { logoutKeys, shortcutDialogKeys, stringifyShortcut } from "@/shortcuts";
 import { useAppData, useAppStore, useAppSettings } from "@/store/app.store";
-import { useCacheStore } from "@/store/cache.store";
+import { useCacheStore, useLibraryCaching } from "@/store/cache.store";
 import { useLanControlServerInfo } from "@/store/lanControl.store";
 import { isMacOS } from "@/utils/desktop";
 
@@ -47,9 +47,8 @@ export function UserDropdown() {
   const isMobile = useIsMobile();
   const { setOpenDialog } = useAppSettings();
   const serverInfo = useLanControlServerInfo();
-  const syncLibrary = useCacheStore((state) => state.settings.syncLibrary);
-  const syncCoverArt = useCacheStore((state) => state.settings.syncCoverArt);
-  const { isSyncing } = useCacheStore((state) => state.status.syncState);
+  const libraryCaching = useLibraryCaching();
+  const isSyncing = useCacheStore((state) => state.status.syncState.isSyncing);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [remoteControlOpen, setRemoteControlOpen] = useState(false);
@@ -119,25 +118,35 @@ export function UserDropdown() {
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
-          {isSyncing ? (
+          {isSyncing && !libraryCaching && (
             <DropdownMenuItem onClick={() => syncService.cancel()}>
               <X className="mr-2 h-4 w-4" />
               <span>{t("settings.storage.sync.cancel")}</span>
             </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem
-              onClick={() =>
-                syncService.syncAll({
-                  includeCoverArt: syncCoverArt,
-                  includeFullSongs: syncLibrary,
-                })
-              }
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              <span>{t("settings.storage.sync.syncNow")}</span>
-            </DropdownMenuItem>
           )}
-          <DropdownMenuSeparator />
+          {isSyncing && !libraryCaching && <DropdownMenuSeparator />}
+          {libraryCaching &&
+            (isSyncing ? (
+              <DropdownMenuItem onClick={() => syncService.cancel()}>
+                <X className="mr-2 h-4 w-4" />
+                <span>{t("settings.storage.sync.cancel")}</span>
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem
+                onClick={() => {
+                  const { syncLibrary, syncCoverArt } =
+                    useCacheStore.getState().settings;
+                  syncService.syncAll({
+                    includeCoverArt: syncCoverArt,
+                    includeFullSongs: syncLibrary,
+                  });
+                }}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                <span>{t("settings.storage.sync.syncNow")}</span>
+              </DropdownMenuItem>
+            ))}
+          {libraryCaching && <DropdownMenuSeparator />}
           <DropdownMenuItem onClick={() => setAboutOpen(true)}>
             <Info className="mr-2 h-4 w-4" />
             <span>{t("menu.about")}</span>

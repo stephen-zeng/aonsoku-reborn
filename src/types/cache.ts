@@ -118,6 +118,7 @@ export interface CacheSettings {
   smartQuota: number;
   /** P5: automatic-download rules. */
   smartRules: SmartRuleSettings;
+  libraryCaching: boolean;
   syncLibrary: boolean;
   syncCoverArt: boolean;
 }

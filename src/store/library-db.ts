@@ -261,6 +261,32 @@ export async function migrateLegacyStoresIfNeeded(): Promise<boolean> {
   }
 }
 
+export async function clearLibraryData(): Promise<void> {
+  await libraryDb.transaction(
+    "rw",
+    [
+      libraryDb.artists,
+      libraryDb.albums,
+      libraryDb.songs,
+      libraryDb.playlists,
+      libraryDb.playlistDetails,
+      libraryDb.genres,
+      libraryDb.syncState,
+    ],
+    async () => {
+      await Promise.all([
+        libraryDb.artists.clear(),
+        libraryDb.albums.clear(),
+        libraryDb.songs.clear(),
+        libraryDb.playlists.clear(),
+        libraryDb.playlistDetails.clear(),
+        libraryDb.genres.clear(),
+        libraryDb.syncState.clear(),
+      ]);
+    },
+  );
+}
+
 // ─── Test utilities (not for production use) ─────────────────────────
 
 /** Clear every store in libraryDb. Intended for unit tests only. */
