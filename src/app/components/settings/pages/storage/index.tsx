@@ -39,10 +39,7 @@ import {
   useLibraryCaching,
   useSmartRules,
 } from "@/store/cache.store";
-import {
-  CACHE_SIZE_OPTIONS,
-  type CacheMetaSource,
-} from "@/types/cache";
+import { CACHE_SIZE_OPTIONS, type CacheMetaSource } from "@/types/cache";
 import dateTime from "@/utils/dateTime";
 import { formatBytes } from "@/utils/formatBytes";
 
@@ -103,10 +100,7 @@ function LibraryCachingSection() {
             {t("settings.storage.sync.libraryCaching")}
           </ContentItemTitle>
           <ContentItemForm>
-            <Switch
-              checked={libraryCaching}
-              onCheckedChange={handleToggle}
-            />
+            <Switch checked={libraryCaching} onCheckedChange={handleToggle} />
           </ContentItemForm>
         </ContentItem>
 

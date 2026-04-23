@@ -11,7 +11,9 @@ export interface ServerAuthConfig {
   protocolVersion?: string;
 }
 
-export function buildQueryParams(config: ServerAuthConfig): Record<string, string> {
+export function buildQueryParams(
+  config: ServerAuthConfig,
+): Record<string, string> {
   const { username, password, authType, protocolVersion } = config;
   const auth: AuthParams = authQueryParams(username, password, authType);
 

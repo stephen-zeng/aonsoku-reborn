@@ -56,7 +56,10 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
         name: "theme_store",
         version: 2,
         merge: (persistedState, currentState) => {
-          const merged = { ...currentState, ...persistedState } as ThemePersistedState;
+          const merged = {
+            ...currentState,
+            ...persistedState,
+          } as ThemePersistedState;
           if (!VALID_MODES.has(merged.themeMode)) {
             const oldTheme = merged.theme;
             if (VALID_THEMES.has(oldTheme) && isDarkTheme(oldTheme)) {

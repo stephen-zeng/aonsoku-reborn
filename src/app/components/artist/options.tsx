@@ -44,7 +44,10 @@ export function ArtistOptions({ artist }: ArtistOptionsProps) {
     <>
       <DropdownMenuGroup>
         <OptionsButtons.PlayNext onClick={handlePlayNext} />
-        <OptionsButtons.PlayLast onClick={handlePlayLast} disabled={isUserQueueEmpty} />
+        <OptionsButtons.PlayLast
+          onClick={handlePlayLast}
+          disabled={isUserQueueEmpty}
+        />
         <DropdownMenuSeparator />
         <OptionsButtons.SaveFile onClick={handleDownload} />
         <OptionsButtons.DownloadArtist

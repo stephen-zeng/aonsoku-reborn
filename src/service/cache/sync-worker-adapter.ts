@@ -31,12 +31,8 @@ interface SyncWorkerService {
   cancel(): void;
   initAuth(config: WorkerAuthConfig): void;
   updateAuth(config: WorkerAuthConfig): void;
-  onSyncStateUpdate:
-    | ((state: Partial<SyncState>) => void)
-    | undefined;
-  onInvalidateQueries:
-    | ((keys: string[][]) => void)
-    | undefined;
+  onSyncStateUpdate: ((state: Partial<SyncState>) => void) | undefined;
+  onInvalidateQueries: ((keys: string[][]) => void) | undefined;
   onLastSyncedAt: ((timestamp: number) => void) | undefined;
   onCacheIndexRefresh: (() => void) | undefined;
 }
@@ -49,10 +45,9 @@ class SyncWorkerAdapter {
   private lastServerUrl: string;
 
   constructor() {
-    this.worker = new Worker(
-      new URL("./sync.worker.ts", import.meta.url),
-      { type: "module" },
-    );
+    this.worker = new Worker(new URL("./sync.worker.ts", import.meta.url), {
+      type: "module",
+    });
     this.worker.onerror = (event) => {
       console.error("[syncWorkerAdapter] Worker error:", event.message);
       useCacheStore.getState().actions.updateSyncState({
@@ -134,9 +129,10 @@ class SyncWorkerAdapter {
     }
   }
 
-  private buildSyncOptions(
-    options?: { includeCoverArt?: boolean; includeFullSongs?: boolean },
-  ): SyncOptions {
+  private buildSyncOptions(options?: {
+    includeCoverArt?: boolean;
+    includeFullSongs?: boolean;
+  }): SyncOptions {
     const state = useCacheStore.getState();
     const appState = useAppStore.getState();
     const playerState = usePlayerStore.getState();

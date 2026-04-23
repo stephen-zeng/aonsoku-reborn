@@ -1,20 +1,13 @@
 import { expose } from "comlink";
 import type { SyncPhase, SyncTier } from "@/types/cache";
-import {
-  type ServerAuthConfig,
-  buildCoverArtUrl,
-} from "@/api/urlBuilder";
+import { type ServerAuthConfig, buildCoverArtUrl } from "@/api/urlBuilder";
 import {
   workerHttpClient,
   initAuth as workerInitAuth,
   updateAuth as workerUpdateAuth,
   ensureAuth as workerEnsureAuth,
 } from "@/api/workerHttpClient";
-import {
-  LibraryDB,
-  withStarredAt,
-  withPlayedAt,
-} from "@/store/library-db";
+import { LibraryDB, withStarredAt, withPlayedAt } from "@/store/library-db";
 import type { PlaylistRow, CacheMetaRow } from "@/store/library-db";
 import type { GenresResponse } from "@/types/responses/genre";
 import type {
@@ -163,8 +156,7 @@ class SyncWorkerService {
     this.pendingSyncState = {
       phase,
       tier,
-      isSyncing:
-        phase !== "done" && phase !== "error" && phase !== "cancelled",
+      isSyncing: phase !== "done" && phase !== "error" && phase !== "cancelled",
       processedItems,
       totalItems,
       progress:
@@ -212,9 +204,7 @@ class SyncWorkerService {
     signal: AbortSignal,
   ): Promise<void> {
     const playlistIds = new Set(playlists.map((p) => p.id));
-    const existingIds = await db.playlistDetails
-      .toCollection()
-      .primaryKeys();
+    const existingIds = await db.playlistDetails.toCollection().primaryKeys();
     const removedIds = existingIds.filter((id) => !playlistIds.has(id));
 
     if (removedIds.length > 0) {
@@ -271,9 +261,7 @@ class SyncWorkerService {
       }
 
       if (detailsToPersist.length > 0) {
-        await db.playlistDetails.bulkPut(
-          detailsToPersist.map(withStarredAt),
-        );
+        await db.playlistDetails.bulkPut(detailsToPersist.map(withStarredAt));
       }
 
       this.updateSyncState(
@@ -348,9 +336,7 @@ class SyncWorkerService {
     }
   }
 
-  async syncIncremental(
-    options?: Omit<SyncOptions, "mode">,
-  ): Promise<void> {
+  async syncIncremental(options?: Omit<SyncOptions, "mode">): Promise<void> {
     await this.syncAll({ ...options, mode: "incremental" });
   }
 
@@ -371,9 +357,8 @@ class SyncWorkerService {
 
     this.checkAborted(signal);
     this.updateSyncState("playlists", "t1");
-    const playlistsResult = await workerHttpClient<PlaylistsResponse>(
-      "/getPlaylists",
-    );
+    const playlistsResult =
+      await workerHttpClient<PlaylistsResponse>("/getPlaylists");
     this.checkAborted(signal);
     const playlists = playlistsResult.data.playlists.playlist ?? [];
     const playlistRows = playlists.map(withStarredAt);
@@ -382,9 +367,8 @@ class SyncWorkerService {
 
     this.checkAborted(signal);
     this.updateSyncState("favorites", "t1");
-    const starredResult = await workerHttpClient<FavoritesResponse>(
-      "/getStarred2",
-    );
+    const starredResult =
+      await workerHttpClient<FavoritesResponse>("/getStarred2");
     this.checkAborted(signal);
     const starredSongs = starredResult.data.starred2?.song ?? [];
     const starredIds = new Set(
@@ -410,8 +394,9 @@ class SyncWorkerService {
     if (starredSongs.length > 0) {
       await bulkPutInChunks(
         db.songs,
-        starredSongs.map((s: { played?: string; starred?: string; [k: string]: unknown }) =>
-          withPlayedAt(withStarredAt(s)),
+        starredSongs.map(
+          (s: { played?: string; starred?: string; [k: string]: unknown }) =>
+            withPlayedAt(withStarredAt(s)),
         ),
         signal,
       );
@@ -432,9 +417,8 @@ class SyncWorkerService {
   private async runT2(signal: AbortSignal): Promise<void> {
     this.checkAborted(signal);
     this.updateSyncState("artists", "t2");
-    const artistsResult = await workerHttpClient<ArtistsResponse>(
-      "/getArtists",
-    );
+    const artistsResult =
+      await workerHttpClient<ArtistsResponse>("/getArtists");
     this.checkAborted(signal);
     const artistsList: ISimilarArtist[] = [];
     artistsResult.data.artists.index.forEach(
@@ -514,16 +498,12 @@ class SyncWorkerService {
     this.onInvalidateQueries?.([["artists"], ["albums"]]);
   }
 
-  private async runT3(
-    signal: AbortSignal,
-    songCount: number,
-  ): Promise<void> {
+  private async runT3(signal: AbortSignal, songCount: number): Promise<void> {
     this.checkAborted(signal);
     this.updateSyncState("songs", "t3");
 
     const config = workerEnsureAuth();
-    const searchAllQuery =
-      config.serverType === "navidrome" ? '""' : "";
+    const searchAllQuery = config.serverType === "navidrome" ? '""' : "";
     const searchResult = await workerHttpClient<ISearchResponse>("/search3", {
       query: {
         query: searchAllQuery,
@@ -637,10 +617,7 @@ class SyncWorkerService {
     }
   }
 
-  private async cacheCover(
-    coverArtId: string,
-    size = "700",
-  ): Promise<void> {
+  private async cacheCover(coverArtId: string, size = "700"): Promise<void> {
     const key = coverKey(coverArtId);
     const existing = await db.cacheMeta.get(key);
     if (existing) {

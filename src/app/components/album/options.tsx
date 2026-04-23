@@ -53,7 +53,10 @@ export function AlbumOptions({ album }: AlbumOptionsProps) {
     <>
       <DropdownMenuGroup>
         <OptionsButtons.PlayNext onClick={handlePlayNext} />
-        <OptionsButtons.PlayLast onClick={handlePlayLast} disabled={isUserQueueEmpty} />
+        <OptionsButtons.PlayLast
+          onClick={handlePlayLast}
+          disabled={isUserQueueEmpty}
+        />
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
       <OptionsButtons.AddToPlaylistOption variant="dropdown">

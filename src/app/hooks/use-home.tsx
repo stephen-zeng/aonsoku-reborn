@@ -181,31 +181,18 @@ export const useGetRandomSongs = () => {
 };
 
 export const useGetRecentlyAdded = () =>
-  useHomeAlbumQuery(
-    [...queryKeys.album.recentlyAdded],
-    "newest",
-  );
+  useHomeAlbumQuery([...queryKeys.album.recentlyAdded], "newest");
 
 export const useGetMostPlayed = () =>
-  useHomeAlbumQuery(
-    [...queryKeys.album.mostPlayed],
-    "frequent",
-  );
+  useHomeAlbumQuery([...queryKeys.album.mostPlayed], "frequent");
 
 export const useGetRecentlyPlayed = () => {
   const isOnline = useIsOnline();
 
-  return useHomeAlbumQuery(
-    [...queryKeys.album.recentlyPlayed],
-    "recent",
-    {
-      refetchInterval: isOnline ? convertMinutesToMs(2) : false,
-    },
-  );
+  return useHomeAlbumQuery([...queryKeys.album.recentlyPlayed], "recent", {
+    refetchInterval: isOnline ? convertMinutesToMs(2) : false,
+  });
 };
 
 export const useGetRandomAlbums = () =>
-  useHomeAlbumQuery(
-    [...queryKeys.album.random],
-    "random",
-  );
+  useHomeAlbumQuery([...queryKeys.album.random], "random");

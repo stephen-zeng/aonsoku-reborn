@@ -28,9 +28,7 @@ export async function canUseConfiguredSession() {
     urls.map((serverUrl) =>
       probeServerConnection(serverUrl, username, password, authType),
     ),
-  ).catch(() =>
-    urls.map(() => ({ status: "network_unreachable" as const })),
-  );
+  ).catch(() => urls.map(() => ({ status: "network_unreachable" as const })));
 
   if (probes.some((probe) => probe.status === "ok")) {
     await checkConfiguredServerConnectivity();

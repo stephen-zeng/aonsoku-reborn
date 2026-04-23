@@ -52,8 +52,7 @@ function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
   const raw = persisted as Partial<CacheSettings> | undefined;
   if (raw && typeof raw === "object") {
     const needsQuotaMigration =
-      raw.assetsQuota === undefined ||
-      raw.lruQuota === undefined;
+      raw.assetsQuota === undefined || raw.lruQuota === undefined;
     if (needsQuotaMigration) {
       const legacyCap =
         typeof raw.maxCacheSize === "number"

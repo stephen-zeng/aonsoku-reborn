@@ -46,8 +46,10 @@ export function CommandThemes({ runCommand }: CommandItemProps) {
           <CommandGroup key={group.key} heading={t(group.label)}>
             <div className="grid grid-cols-4">
               {group.themes.map((theme) => {
-                const activeTheme = group.key === "light" ? lightTheme : darkTheme;
-                const onThemeChange = group.key === "light" ? setLightTheme : setDarkTheme;
+                const activeTheme =
+                  group.key === "light" ? lightTheme : darkTheme;
+                const onThemeChange =
+                  group.key === "light" ? setLightTheme : setDarkTheme;
                 return (
                   <CommandItem
                     key={`${group.key}-${theme}`}
@@ -56,7 +58,10 @@ export function CommandThemes({ runCommand }: CommandItemProps) {
                   >
                     <div className="w-full h-full">
                       <ThemePlaceholder theme={theme} />
-                      <ThemeTitle theme={theme} isActive={theme === activeTheme} />
+                      <ThemeTitle
+                        theme={theme}
+                        isActive={theme === activeTheme}
+                      />
                     </div>
                   </CommandItem>
                 );
@@ -65,11 +70,19 @@ export function CommandThemes({ runCommand }: CommandItemProps) {
           </CommandGroup>
         ))
       ) : (
-        <CommandGroup heading={themeMode === ThemeMode.Light ? t("theme.modeLight") : t("theme.modeDark")}>
+        <CommandGroup
+          heading={
+            themeMode === ThemeMode.Light
+              ? t("theme.modeLight")
+              : t("theme.modeDark")
+          }
+        >
           <div className="grid grid-cols-4">
             {getThemeGroupForMode(themeMode).themes.map((theme) => {
-              const activeTheme = themeMode === ThemeMode.Light ? lightTheme : darkTheme;
-              const onThemeChange = themeMode === ThemeMode.Light ? setLightTheme : setDarkTheme;
+              const activeTheme =
+                themeMode === ThemeMode.Light ? lightTheme : darkTheme;
+              const onThemeChange =
+                themeMode === ThemeMode.Light ? setLightTheme : setDarkTheme;
               return (
                 <CommandItem
                   key={theme}
@@ -78,7 +91,10 @@ export function CommandThemes({ runCommand }: CommandItemProps) {
                 >
                   <div className="w-full h-full">
                     <ThemePlaceholder theme={theme} />
-                    <ThemeTitle theme={theme} isActive={theme === activeTheme} />
+                    <ThemeTitle
+                      theme={theme}
+                      isActive={theme === activeTheme}
+                    />
                   </div>
                 </CommandItem>
               );

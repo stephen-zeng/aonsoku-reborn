@@ -1,5 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { getOfflineArtistDetail, useOfflineQuery } from "@/lib/offlineQueryClient";
+import {
+  getOfflineArtistDetail,
+  useOfflineQuery,
+} from "@/lib/offlineQueryClient";
 import { subsonic } from "@/service/subsonic";
 import { useIsOnline } from "@/store/cache.store";
 import { queryKeys } from "@/utils/queryKeys";

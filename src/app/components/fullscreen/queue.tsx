@@ -506,7 +506,9 @@ function UnifiedQueueView({
                 activeItem={activeItem}
                 dragOverlayBg={dragOverlayBg}
                 isPlaying={isPlaying}
-                onPlaySong={(userQueueIndex) => playFromUserQueue(userQueueIndex)}
+                onPlaySong={(userQueueIndex) =>
+                  playFromUserQueue(userQueueIndex)
+                }
                 t={t}
                 sticky
               />
@@ -565,7 +567,9 @@ function UnifiedQueueView({
                     >
                       <QueueItemRow
                         song={activeItem}
-                        isPlaying={currentSong?.id === activeItem.id && isPlaying}
+                        isPlaying={
+                          currentSong?.id === activeItem.id && isPlaying
+                        }
                         isActive={currentSong?.id === activeItem.id}
                         onPlay={() => {}}
                       />
@@ -803,9 +807,7 @@ function VirtualizedQueueView({
   if (virtualItems.length === 0) {
     return (
       <div className="flex flex-1 flex-col h-full min-w-0 items-center justify-center">
-        <span className="text-foreground/70">
-          {t("fullscreen.emptyQueue")}
-        </span>
+        <span className="text-foreground/70">{t("fullscreen.emptyQueue")}</span>
       </div>
     );
   }
@@ -866,7 +868,9 @@ function VirtualizedQueueView({
                         {item.type === "history" && (
                           <QueueItemRow
                             song={item.song}
-                            isPlaying={currentSong?.id === item.song.id && isPlaying}
+                            isPlaying={
+                              currentSong?.id === item.song.id && isPlaying
+                            }
                             isActive={currentSong?.id === item.song.id}
                             onPlay={() => playSong(item.song)}
                             tier="context"
@@ -899,9 +903,13 @@ function VirtualizedQueueView({
                           <SortableQueueItem
                             id={item.song.id}
                             song={item.song}
-                            isPlaying={currentSong?.id === item.song.id && isPlaying}
+                            isPlaying={
+                              currentSong?.id === item.song.id && isPlaying
+                            }
                             isActive={currentSong?.id === item.song.id}
-                            onPlay={() => playFromUserQueue(item.userQueueIndex)}
+                            onPlay={() =>
+                              playFromUserQueue(item.userQueueIndex)
+                            }
                             tier="user"
                           />
                         )}
@@ -936,13 +944,18 @@ function VirtualizedQueueView({
                             song={item.song}
                             isPlaying={false}
                             isActive={false}
-                            onPlay={() => playFromQueue(contextSongs, item.contextIdx)}
+                            onPlay={() =>
+                              playFromQueue(contextSongs, item.contextIdx)
+                            }
                             tier="context"
                           />
                         )}
 
                         {item.type === "repeatIndicator" && (
-                          <RepeatIndicator icon={item.icon} label={item.label} />
+                          <RepeatIndicator
+                            icon={item.icon}
+                            label={item.label}
+                          />
                         )}
                       </div>
                     );

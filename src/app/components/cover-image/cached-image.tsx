@@ -1,4 +1,10 @@
-import { ComponentPropsWithoutRef, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ComponentPropsWithoutRef,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { cacheManager } from "@/service/cache";
 import { useIsCoverCached } from "@/store/cache-index.store";
@@ -80,12 +86,14 @@ function useCoverArtCacheLookup({
           pendingAutoCache.current !== primaryCacheKey
         ) {
           pendingAutoCache.current = primaryCacheKey;
-          cacheManager.cacheCover(primaryCacheKey, cacheArtSize).catch((err) => {
-            console.warn(
-              `[useCoverArtCacheLookup] auto-cache failed: ${primaryCacheKey}`,
-              err,
-            );
-          });
+          cacheManager
+            .cacheCover(primaryCacheKey, cacheArtSize)
+            .catch((err) => {
+              console.warn(
+                `[useCoverArtCacheLookup] auto-cache failed: ${primaryCacheKey}`,
+                err,
+              );
+            });
         }
       }
     }
@@ -101,7 +109,14 @@ function useCoverArtCacheLookup({
         prevObjectUrl.current = objectUrl;
       }
     };
-  }, [cacheKeys, isOffline, isPrimaryCached, primaryCacheKey, cacheArtSize, autoCache]);
+  }, [
+    cacheKeys,
+    isOffline,
+    isPrimaryCached,
+    primaryCacheKey,
+    cacheArtSize,
+    autoCache,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -205,7 +220,11 @@ export function CachedImage({
     return (
       // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
       <div
-        className={(props as Record<string, unknown>).wrapperClassName as string | undefined}
+        className={
+          (props as Record<string, unknown>).wrapperClassName as
+            | string
+            | undefined
+        }
         style={props.style}
         onClick={props.onClick}
       >

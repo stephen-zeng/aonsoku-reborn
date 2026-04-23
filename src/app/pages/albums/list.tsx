@@ -21,9 +21,7 @@ export default function AlbumsList() {
 
   useEffect(() => {
     const hasMainFilter = searchParams.has(AlbumsSearchParams.MainFilter);
-    const hasArtistNameFilter = searchParams.has(
-      AlbumsSearchParams.ArtistName,
-    );
+    const hasArtistNameFilter = searchParams.has(AlbumsSearchParams.ArtistName);
     const hasArtistIdFilter = searchParams.has(AlbumsSearchParams.ArtistId);
     const hasGenreFilter = searchParams.has(AlbumsSearchParams.Genre);
     const hasYearFilter = searchParams.has(AlbumsSearchParams.YearFilter);
@@ -34,9 +32,7 @@ export default function AlbumsList() {
     const savedArtistId = localStorage.getItem(
       PersistedAlbumListKeys.ArtistIdFilter,
     );
-    const savedFilter = localStorage.getItem(
-      PersistedAlbumListKeys.MainFilter,
-    );
+    const savedFilter = localStorage.getItem(PersistedAlbumListKeys.MainFilter);
     const isDiscography = savedFilter === AlbumsFilters.ByDiscography;
     const hasPersistedValues = savedArtistName && savedArtistId;
     const hasArtistFilter = hasArtistNameFilter && hasArtistIdFilter;
@@ -60,14 +56,8 @@ export default function AlbumsList() {
         PersistedAlbumListKeys.MainFilter,
         AlbumsFilters.ByDiscography,
       );
-      localStorage.setItem(
-        PersistedAlbumListKeys.ArtistNameFilter,
-        artistName,
-      );
-      localStorage.setItem(
-        PersistedAlbumListKeys.ArtistIdFilter,
-        artistId,
-      );
+      localStorage.setItem(PersistedAlbumListKeys.ArtistNameFilter, artistName);
+      localStorage.setItem(PersistedAlbumListKeys.ArtistIdFilter, artistId);
     }
 
     const persistedYear = localStorage.getItem(
@@ -84,8 +74,7 @@ export default function AlbumsList() {
     }
 
     if (hasYearFilter) {
-      const yearFilter =
-        searchParams.get(AlbumsSearchParams.YearFilter) || "";
+      const yearFilter = searchParams.get(AlbumsSearchParams.YearFilter) || "";
       localStorage.setItem(PersistedAlbumListKeys.YearFilter, yearFilter);
     }
 

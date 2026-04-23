@@ -26,10 +26,7 @@ export function ThemeSettingsPicker() {
   return (
     <div className="h-full space-y-4">
       <ContentItemTitle>{t("theme.label")}</ContentItemTitle>
-      <ThemeModeSelector
-        mode={themeMode}
-        onModeChange={setThemeMode}
-      />
+      <ThemeModeSelector mode={themeMode} onModeChange={setThemeMode} />
       {themeMode === ThemeMode.System ? (
         <div className="space-y-4">
           {themeGroups.map((group) => (
@@ -40,7 +37,9 @@ export function ThemeSettingsPicker() {
               <ThemeGrid
                 themes={group.themes}
                 activeTheme={group.key === "light" ? lightTheme : darkTheme}
-                onThemeChange={group.key === "light" ? setLightTheme : setDarkTheme}
+                onThemeChange={
+                  group.key === "light" ? setLightTheme : setDarkTheme
+                }
               />
             </div>
           ))}
@@ -49,7 +48,9 @@ export function ThemeSettingsPicker() {
         <ThemeGrid
           themes={themeMode === ThemeMode.Light ? lightThemes : darkThemes}
           activeTheme={themeMode === ThemeMode.Light ? lightTheme : darkTheme}
-          onThemeChange={themeMode === ThemeMode.Light ? setLightTheme : setDarkTheme}
+          onThemeChange={
+            themeMode === ThemeMode.Light ? setLightTheme : setDarkTheme
+          }
         />
       )}
     </div>

@@ -173,7 +173,9 @@ export function LyricsTab() {
   const { data: structuredLyrics, isLoading: isLoadingStructured } = useQuery({
     queryKey: [...queryKeys.lyrics.structured, songId],
     queryFn: () =>
-      songId ? subsonic.lyrics.getStructuredLyrics(songId) : Promise.resolve([]),
+      songId
+        ? subsonic.lyrics.getStructuredLyrics(songId)
+        : Promise.resolve([]),
     enabled: !!songId,
     staleTime: 5 * 60 * 1000,
   });
@@ -235,13 +237,7 @@ export function LyricsTab() {
     }
 
     return null;
-  }, [
-    structuredLyrics,
-    lyrics,
-    showTranslation,
-    songDurationMs,
-    currentSong,
-  ]);
+  }, [structuredLyrics, lyrics, showTranslation, songDurationMs, currentSong]);
 
   const noLyricsFound = t("fullscreen.noLyrics");
   const loadingLyrics = t("fullscreen.loadingLyrics");

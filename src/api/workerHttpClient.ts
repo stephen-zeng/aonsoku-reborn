@@ -133,4 +133,3 @@ export function getDownloadUrl(
 ): string {
   return _buildDownloadUrl(ensureAuth(), id, maxBitRate, format);
 }
-

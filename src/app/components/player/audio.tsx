@@ -211,7 +211,8 @@ export function AudioPlayer({
         if (!rangeFallbackRef.current) {
           rangeFallbackRef.current = true;
           retryCountRef.current = 0;
-          const storeProgress = usePlayerStore.getState().playerProgress.progress;
+          const storeProgress =
+            usePlayerStore.getState().playerProgress.progress;
           const fallbackPosition = Math.max(audio.currentTime, storeProgress);
           pendingResumePositionRef.current = fallbackPosition;
           resumeGuardActiveRef.current = true;
@@ -467,9 +468,10 @@ export function AudioPlayer({
       if (resumePos === null) return;
 
       const duration = audio.duration;
-      const clampedPos = Number.isFinite(duration) && duration > 0
-        ? Math.min(resumePos, duration - 0.1)
-        : resumePos;
+      const clampedPos =
+        Number.isFinite(duration) && duration > 0
+          ? Math.min(resumePos, duration - 0.1)
+          : resumePos;
 
       logger.info("Applying pending resume position:", clampedPos);
       audio.currentTime = clampedPos;

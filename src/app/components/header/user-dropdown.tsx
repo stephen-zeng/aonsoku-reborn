@@ -134,8 +134,7 @@ export function UserDropdown() {
             ) : (
               <DropdownMenuItem
                 onClick={() => {
-                  const { syncCoverArt } =
-                    useCacheStore.getState().settings;
+                  const { syncCoverArt } = useCacheStore.getState().settings;
                   syncService.syncAll({
                     includeCoverArt: syncCoverArt,
                     includeFullSongs: true,

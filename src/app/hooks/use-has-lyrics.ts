@@ -28,7 +28,9 @@ export function useHasLyrics() {
   const { data: structuredLyrics, isLoading: isLoadingStructured } = useQuery({
     queryKey: [...queryKeys.lyrics.structured, songId],
     queryFn: () =>
-      songId ? subsonic.lyrics.getStructuredLyrics(songId) : Promise.resolve([]),
+      songId
+        ? subsonic.lyrics.getStructuredLyrics(songId)
+        : Promise.resolve([]),
     enabled: !!songId,
     staleTime: STALE_TIME,
   });

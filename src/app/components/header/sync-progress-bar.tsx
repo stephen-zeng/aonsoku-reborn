@@ -169,8 +169,7 @@ export function SyncProgressBar() {
     return null;
 
   const handleRetry = () => {
-    const { syncCoverArt } =
-      useCacheStore.getState().settings;
+    const { syncCoverArt } = useCacheStore.getState().settings;
     syncService.syncAll({
       includeCoverArt: syncCoverArt,
       includeFullSongs: true,

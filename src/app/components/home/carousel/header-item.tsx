@@ -2,7 +2,10 @@ import clsx from "clsx";
 import { Play } from "lucide-react";
 import { isFirefox } from "react-device-detect";
 import { Link } from "react-router-dom";
-import { CachedImage, useCachedCoverUrl } from "@/app/components/cover-image/cached-image";
+import {
+  CachedImage,
+  useCachedCoverUrl,
+} from "@/app/components/cover-image/cached-image";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
 import { useIsMobile } from "@/app/hooks/use-mobile";

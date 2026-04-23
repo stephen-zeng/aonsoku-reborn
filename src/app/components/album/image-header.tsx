@@ -2,7 +2,10 @@ import randomCSSHexColor from "@chriscodesthings/random-css-hex-color";
 import clsx from "clsx";
 import { type ReactNode, useState } from "react";
 import { getCoverArtUrl } from "@/api/httpClient";
-import { CachedImage, useCachedCoverUrl } from "@/app/components/cover-image/cached-image";
+import {
+  CachedImage,
+  useCachedCoverUrl,
+} from "@/app/components/cover-image/cached-image";
 import { AlbumHeaderFallback } from "@/app/components/fallbacks/album-fallbacks";
 import { BadgesData, HeaderInfoGenerator } from "@/app/components/header-info";
 import { CustomLightBox } from "@/app/components/lightbox";

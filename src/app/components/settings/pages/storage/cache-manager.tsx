@@ -1,10 +1,5 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
-import {
-  AlertTriangle,
-  HardDrive,
-  Loader2,
-  Trash2,
-} from "lucide-react";
+import { AlertTriangle, HardDrive, Loader2, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -31,7 +26,10 @@ import {
   ScrollArea,
   scrollAreaViewportSelector,
 } from "@/app/components/ui/scroll-area";
-import { cacheManager, type CachedItemDetail } from "@/service/cache/cache-manager";
+import {
+  cacheManager,
+  type CachedItemDetail,
+} from "@/service/cache/cache-manager";
 import { formatBytes } from "@/utils/formatBytes";
 import dateTime from "@/utils/dateTime";
 
@@ -272,9 +270,7 @@ function CacheList({ items, loading, onDelete }: CacheListProps) {
                   <Badge
                     variant={item.type === "audio" ? "secondary" : "outline"}
                   >
-                    {t(
-                      `settings.storage.cacheManager.list.type_${item.type}`,
-                    )}
+                    {t(`settings.storage.cacheManager.list.type_${item.type}`)}
                   </Badge>
                 </div>
 

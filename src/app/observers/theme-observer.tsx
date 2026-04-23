@@ -1,10 +1,6 @@
 import { useCallback, useLayoutEffect } from "react";
 import { useThemeStore } from "@/store/theme.store";
-import {
-  Theme,
-  ThemeMode,
-  isDarkTheme,
-} from "@/types/themeContext";
+import { Theme, ThemeMode, isDarkTheme } from "@/types/themeContext";
 import { isDesktop } from "@/utils/desktop";
 import { setDesktopTitleBarColors, updatePwaThemeColor } from "@/utils/theme";
 

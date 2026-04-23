@@ -1,7 +1,4 @@
-import {
-  getCoverArtUrl,
-  getSongStreamUrl,
-} from "@/api/httpClient";
+import { getCoverArtUrl, getSongStreamUrl } from "@/api/httpClient";
 import { getSongCoverArtId } from "@/utils/coverArt";
 import { subsonic } from "@/service/subsonic";
 import { useCacheStore } from "@/store/cache.store";
@@ -14,10 +11,7 @@ import {
   useCacheIndexStore,
 } from "@/store/cache-index.store";
 import { libraryDb } from "@/store/library-db";
-import {
-  CachedItemMeta,
-  CacheMetaSource,
-} from "@/types/cache";
+import { CachedItemMeta, CacheMetaSource } from "@/types/cache";
 
 export interface CachedItemDetail {
   key: string;
@@ -323,7 +317,9 @@ class CacheManager {
           id: existingRow.id,
           type: existingRow.type,
           source: existingRow.source,
-          coverSize: (existingRow as Record<string, unknown>).coverSize as string | undefined,
+          coverSize: (existingRow as Record<string, unknown>).coverSize as
+            | string
+            | undefined,
           sizeBytes: existingRow.sizeBytes,
           cachedAt: existingRow.cachedAt,
           lastAccessedAt: Date.now(),
@@ -663,8 +659,8 @@ class CacheManager {
     const items = getCacheIndexItems();
     const actions = getCacheIndexActions();
 
-    const coverEntries = Object.entries(items).filter(
-      ([key]) => isOldCoverKey(key),
+    const coverEntries = Object.entries(items).filter(([key]) =>
+      isOldCoverKey(key),
     );
 
     if (coverEntries.length === 0) return;

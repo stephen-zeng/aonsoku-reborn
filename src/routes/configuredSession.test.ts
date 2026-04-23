@@ -27,9 +27,7 @@ vi.mock("@/store/app.store", () => ({
 vi.mock("@/app/hooks/use-network-status", () => ({
   getConfiguredUrls: () => {
     const { primaryUrl, fallbackUrl, url } = mocks.appData;
-    return Array.from(
-      new Set([primaryUrl, fallbackUrl, url].filter(Boolean)),
-    );
+    return Array.from(new Set([primaryUrl, fallbackUrl, url].filter(Boolean)));
   },
 }));
 
