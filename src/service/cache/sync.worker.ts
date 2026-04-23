@@ -111,13 +111,13 @@ async function bulkPutInChunks<T, K>(
 }
 
 class SyncWorkerService {
-  private abortController: AbortController | null = null;
-  private syncGeneration = 0;
-  private authReady: Promise<void>;
-  private resolveAuthReady: () => void;
+  #abortController: AbortController | null = null;
+  #syncGeneration = 0;
+  #authReady: Promise<void>;
+  #resolveAuthReady: () => void;
 
-  private syncStateTimer: ReturnType<typeof setTimeout> | null = null;
-  private pendingSyncState: Partial<SyncState> | null = null;
+  #syncStateTimer: ReturnType<typeof setTimeout> | null = null;
+  #pendingSyncState: Partial<SyncState> | null = null;
 
   onSyncStateUpdate: ((state: Partial<SyncState>) => void) | undefined;
   onInvalidateQueries: ((keys: string[][]) => void) | undefined;
@@ -125,35 +125,35 @@ class SyncWorkerService {
   onCacheIndexRefresh: (() => void) | undefined;
 
   constructor() {
-    this.authReady = new Promise((resolve) => {
-      this.resolveAuthReady = resolve;
+    this.#authReady = new Promise((resolve) => {
+      this.#resolveAuthReady = resolve;
     });
   }
 
   initAuth(config: WorkerAuthConfig): void {
     workerInitAuth(config);
-    this.resolveAuthReady();
+    this.#resolveAuthReady();
   }
 
   updateAuth(config: WorkerAuthConfig): void {
     workerUpdateAuth(config);
   }
 
-  private flushSyncState(): void {
-    if (this.pendingSyncState) {
-      const state = this.pendingSyncState;
-      this.pendingSyncState = null;
+  #flushSyncState(): void {
+    if (this.#pendingSyncState) {
+      const state = this.#pendingSyncState;
+      this.#pendingSyncState = null;
       this.onSyncStateUpdate?.(state);
     }
   }
 
-  private updateSyncState(
+  #updateSyncState(
     phase: SyncPhase,
     tier: SyncTier | undefined,
     processedItems = 0,
     totalItems = 0,
   ): void {
-    this.pendingSyncState = {
+    this.#pendingSyncState = {
       phase,
       tier,
       isSyncing: phase !== "done" && phase !== "error" && phase !== "cancelled",
@@ -162,34 +162,34 @@ class SyncWorkerService {
       progress:
         totalItems > 0 ? Math.round((processedItems / totalItems) * 100) : 0,
     };
-    if (!this.syncStateTimer) {
-      this.syncStateTimer = setTimeout(() => {
-        this.syncStateTimer = null;
-        this.flushSyncState();
+    if (!this.#syncStateTimer) {
+      this.#syncStateTimer = setTimeout(() => {
+        this.#syncStateTimer = null;
+        this.#flushSyncState();
       }, 200);
     }
   }
 
-  private forceFlushSyncState(): void {
-    if (this.syncStateTimer) {
-      clearTimeout(this.syncStateTimer);
-      this.syncStateTimer = null;
+  #forceFlushSyncState(): void {
+    if (this.#syncStateTimer) {
+      clearTimeout(this.#syncStateTimer);
+      this.#syncStateTimer = null;
     }
-    this.flushSyncState();
+    this.#flushSyncState();
   }
 
-  private checkAborted(signal: AbortSignal): void {
+  #checkAborted(signal: AbortSignal): void {
     if (signal.aborted) throw new DOMException("Aborted", "AbortError");
   }
 
-  private async recordTierCheckpoint(tier: SyncTier): Promise<void> {
+  async #recordTierCheckpoint(tier: SyncTier): Promise<void> {
     await db.syncState.put({
       key: `tier:${tier}`,
       lastSyncedAt: Date.now(),
     });
   }
 
-  private async shouldSkipTier(
+  async #shouldSkipTier(
     tier: SyncTier,
     mode: "full" | "incremental",
   ): Promise<boolean> {
@@ -199,7 +199,7 @@ class SyncWorkerService {
     return Date.now() - entry.lastSyncedAt < TIER_FRESH_WINDOW_MS[tier];
   }
 
-  private async syncPlaylistDetails(
+  async #syncPlaylistDetails(
     playlists: PlaylistRow[],
     signal: AbortSignal,
   ): Promise<void> {
@@ -216,7 +216,7 @@ class SyncWorkerService {
       offset < playlists.length;
       offset += PLAYLIST_DETAIL_BATCH_SIZE
     ) {
-      this.checkAborted(signal);
+      this.#checkAborted(signal);
 
       const batch = playlists.slice(
         offset,
@@ -264,7 +264,7 @@ class SyncWorkerService {
         await db.playlistDetails.bulkPut(detailsToPersist.map(withStarredAt));
       }
 
-      this.updateSyncState(
+      this.#updateSyncState(
         "playlists",
         "t1",
         Math.min(offset + batch.length, playlists.length),
@@ -274,40 +274,40 @@ class SyncWorkerService {
   }
 
   async syncAll(options?: SyncOptions): Promise<void> {
-    await this.authReady;
+    await this.#authReady;
     const includeFullSongs = options?.includeFullSongs ?? true;
     const mode = options?.mode ?? "full";
-    const generation = ++this.syncGeneration;
+    const generation = ++this.#syncGeneration;
 
-    if (this.abortController) {
-      this.abortController.abort();
+    if (this.#abortController) {
+      this.#abortController.abort();
     }
 
-    this.abortController = new AbortController();
-    const signal = this.abortController.signal;
+    this.#abortController = new AbortController();
+    const signal = this.#abortController.signal;
 
     try {
-      this.updateSyncState("idle", undefined);
+      this.#updateSyncState("idle", undefined);
 
-      if (!(await this.shouldSkipTier("t1", mode))) {
-        await this.runT1(signal);
+      if (!(await this.#shouldSkipTier("t1", mode))) {
+        await this.#runT1(signal);
       }
-      if (this.syncGeneration !== generation) return;
-      if (!(await this.shouldSkipTier("t2", mode))) {
-        await this.runT2(signal);
+      if (this.#syncGeneration !== generation) return;
+      if (!(await this.#shouldSkipTier("t2", mode))) {
+        await this.#runT2(signal);
       }
-      if (this.syncGeneration !== generation) return;
-      if (includeFullSongs && !(await this.shouldSkipTier("t3", mode))) {
-        await this.runT3(signal, options?.songCount ?? 100_000);
+      if (this.#syncGeneration !== generation) return;
+      if (includeFullSongs && !(await this.#shouldSkipTier("t3", mode))) {
+        await this.#runT3(signal, options?.songCount ?? 100_000);
       }
-      if (this.syncGeneration !== generation) return;
+      if (this.#syncGeneration !== generation) return;
 
       if (options?.includeCoverArt) {
-        this.updateSyncState("coverArt", undefined);
-        await this.syncCoverArt(
+        this.#updateSyncState("coverArt", undefined);
+        await this.#syncCoverArt(
           options.useAlbumCoverForSongs ?? false,
           (processed, total) => {
-            this.updateSyncState("coverArt", undefined, processed, total);
+            this.#updateSyncState("coverArt", undefined, processed, total);
           },
         );
       }
@@ -317,21 +317,21 @@ class SyncWorkerService {
         lastSyncedAt: Date.now(),
       });
       this.onLastSyncedAt?.(Date.now());
-      this.updateSyncState("done", undefined);
-      this.forceFlushSyncState();
+      this.#updateSyncState("done", undefined);
+      this.#forceFlushSyncState();
       this.onCacheIndexRefresh?.();
     } catch (err) {
-      if (this.syncGeneration !== generation) return;
+      if (this.#syncGeneration !== generation) return;
       if (err instanceof DOMException && err.name === "AbortError") {
-        this.updateSyncState("cancelled", undefined);
+        this.#updateSyncState("cancelled", undefined);
       } else {
         console.error("Metadata sync failed:", err);
-        this.updateSyncState("error", undefined);
+        this.#updateSyncState("error", undefined);
       }
-      this.forceFlushSyncState();
+      this.#forceFlushSyncState();
     } finally {
-      if (this.syncGeneration === generation) {
-        this.abortController = null;
+      if (this.#syncGeneration === generation) {
+        this.#abortController = null;
       }
     }
   }
@@ -341,35 +341,35 @@ class SyncWorkerService {
   }
 
   cancel(): void {
-    if (this.abortController) {
-      this.abortController.abort();
-      this.abortController = null;
+    if (this.#abortController) {
+      this.#abortController.abort();
+      this.#abortController = null;
     }
   }
 
-  private async runT1(signal: AbortSignal): Promise<void> {
-    this.checkAborted(signal);
-    this.updateSyncState("genres", "t1");
+  async #runT1(signal: AbortSignal): Promise<void> {
+    this.#checkAborted(signal);
+    this.#updateSyncState("genres", "t1");
     const genreResult = await workerHttpClient<GenresResponse>("/getGenres");
-    this.checkAborted(signal);
+    this.#checkAborted(signal);
     const genres = genreResult.data.genres.genre ?? [];
     await bulkPutInChunks(db.genres, genres, signal);
 
-    this.checkAborted(signal);
-    this.updateSyncState("playlists", "t1");
+    this.#checkAborted(signal);
+    this.#updateSyncState("playlists", "t1");
     const playlistsResult =
       await workerHttpClient<PlaylistsResponse>("/getPlaylists");
-    this.checkAborted(signal);
+    this.#checkAborted(signal);
     const playlists = playlistsResult.data.playlists.playlist ?? [];
     const playlistRows = playlists.map(withStarredAt);
     await bulkPutInChunks(db.playlists, playlistRows, signal);
-    await this.syncPlaylistDetails(playlistRows, signal);
+    await this.#syncPlaylistDetails(playlistRows, signal);
 
-    this.checkAborted(signal);
-    this.updateSyncState("favorites", "t1");
+    this.#checkAborted(signal);
+    this.#updateSyncState("favorites", "t1");
     const starredResult =
       await workerHttpClient<FavoritesResponse>("/getStarred2");
-    this.checkAborted(signal);
+    this.#checkAborted(signal);
     const starredSongs = starredResult.data.starred2?.song ?? [];
     const starredIds = new Set(
       starredSongs.map((song: { id: string }) => song.id),
@@ -402,8 +402,8 @@ class SyncWorkerService {
       );
     }
 
-    await this.recordTierCheckpoint("t1");
-    this.forceFlushSyncState();
+    await this.#recordTierCheckpoint("t1");
+    this.#forceFlushSyncState();
     this.onInvalidateQueries?.([
       ["playlists"],
       ["playlists", "single"],
@@ -414,12 +414,12 @@ class SyncWorkerService {
     ]);
   }
 
-  private async runT2(signal: AbortSignal): Promise<void> {
-    this.checkAborted(signal);
-    this.updateSyncState("artists", "t2");
+  async #runT2(signal: AbortSignal): Promise<void> {
+    this.#checkAborted(signal);
+    this.#updateSyncState("artists", "t2");
     const artistsResult =
       await workerHttpClient<ArtistsResponse>("/getArtists");
-    this.checkAborted(signal);
+    this.#checkAborted(signal);
     const artistsList: ISimilarArtist[] = [];
     artistsResult.data.artists.index.forEach(
       (item: { artist: ISimilarArtist[] }) => {
@@ -433,15 +433,15 @@ class SyncWorkerService {
       await bulkPutInChunks(db.artists, artistsList.map(withStarredAt), signal);
     });
 
-    this.checkAborted(signal);
-    this.updateSyncState("albums", "t2");
+    this.#checkAborted(signal);
+    this.#updateSyncState("albums", "t2");
     const allAlbums: AlbumSummary[] = [];
     let albumOffset = 0;
     const albumPageSize = 500;
     let hasMoreAlbums = true;
 
     while (hasMoreAlbums) {
-      this.checkAborted(signal);
+      this.#checkAborted(signal);
 
       const result = await workerHttpClient<AlbumListResponse>(
         "/getAlbumList2",
@@ -475,7 +475,7 @@ class SyncWorkerService {
             starred: album.starred,
           });
         }
-        this.updateSyncState(
+        this.#updateSyncState(
           "albums",
           "t2",
           allAlbums.length,
@@ -493,14 +493,14 @@ class SyncWorkerService {
       await bulkPutInChunks(db.albums, allAlbums.map(withStarredAt), signal);
     });
 
-    await this.recordTierCheckpoint("t2");
-    this.forceFlushSyncState();
+    await this.#recordTierCheckpoint("t2");
+    this.#forceFlushSyncState();
     this.onInvalidateQueries?.([["artists"], ["albums"]]);
   }
 
-  private async runT3(signal: AbortSignal, songCount: number): Promise<void> {
-    this.checkAborted(signal);
-    this.updateSyncState("songs", "t3");
+  async #runT3(signal: AbortSignal, songCount: number): Promise<void> {
+    this.#checkAborted(signal);
+    this.#updateSyncState("songs", "t3");
 
     const config = workerEnsureAuth();
     const searchAllQuery = config.serverType === "navidrome" ? '""' : "";
@@ -516,7 +516,7 @@ class SyncWorkerService {
       },
     });
 
-    this.checkAborted(signal);
+    this.#checkAborted(signal);
     const songs = searchResult.data.searchResult3?.song ?? [];
 
     if (songs.length > 0) {
@@ -535,13 +535,13 @@ class SyncWorkerService {
         withPlayedAt(withStarredAt(s)),
     );
     await bulkPutInChunks(db.songs, rows, signal);
-    this.updateSyncState("songs", "t3", songs.length, songs.length);
+    this.#updateSyncState("songs", "t3", songs.length, songs.length);
 
-    await this.recordTierCheckpoint("t3");
+    await this.#recordTierCheckpoint("t3");
 
-    await this.reconcileRemovedFromServer();
+    await this.#reconcileRemovedFromServer();
 
-    this.forceFlushSyncState();
+    this.#forceFlushSyncState();
     this.onInvalidateQueries?.([
       ["songs"],
       ["favorites", "count"],
@@ -549,7 +549,7 @@ class SyncWorkerService {
     ]);
   }
 
-  private async syncCoverArt(
+  async #syncCoverArt(
     useAlbumCoverForSongs: boolean,
     onProgress?: (current: number, total: number) => void,
   ): Promise<void> {
@@ -573,7 +573,7 @@ class SyncWorkerService {
     let completed = 0;
     for (const coverArtId of queue) {
       try {
-        await this.cacheCover(coverArtId, "700");
+        await this.#cacheCover(coverArtId, "700");
       } catch (err) {
         console.warn(
           `[cacheManager] failed to cache cover ${coverArtId}:`,
@@ -608,7 +608,7 @@ class SyncWorkerService {
               lastAccessedAt: Date.now(),
             });
           } else {
-            await this.cacheCover(album.id, "700");
+            await this.#cacheCover(album.id, "700");
           }
         } catch (err) {
           console.warn(
@@ -620,7 +620,7 @@ class SyncWorkerService {
     }
   }
 
-  private async cacheCover(coverArtId: string, size = "700"): Promise<void> {
+  async #cacheCover(coverArtId: string, size = "700"): Promise<void> {
     const key = coverKey(coverArtId);
     const existing = await db.cacheMeta.get(key);
     if (existing) {
@@ -651,7 +651,7 @@ class SyncWorkerService {
     });
   }
 
-  private async reconcileRemovedFromServer(): Promise<void> {
+  async #reconcileRemovedFromServer(): Promise<void> {
     const songCount = await db.songs.count();
     if (songCount === 0) return;
 
