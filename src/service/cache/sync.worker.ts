@@ -1,5 +1,5 @@
-import { expose } from "comlink";
-import type { SyncPhase, SyncTier } from "@/types/cache";
+import { expose, wrap, type Remote } from "comlink";
+import type { SyncPhase, SyncState, SyncTier } from "@/types/cache";
 import { type ServerAuthConfig, buildCoverArtUrl } from "@/api/urlBuilder";
 import {
   workerHttpClient,
@@ -110,6 +110,13 @@ async function bulkPutInChunks<T, K>(
   }
 }
 
+interface Callbacks {
+  onSyncStateUpdate(state: Partial<SyncState>): void;
+  onInvalidateQueries(keys: string[][]): void;
+  onLastSyncedAt(timestamp: number): void;
+  onCacheIndexRefresh(): void;
+}
+
 class SyncWorkerService {
   #abortController: AbortController | null = null;
   #syncGeneration = 0;
@@ -119,10 +126,7 @@ class SyncWorkerService {
   #syncStateTimer: ReturnType<typeof setTimeout> | null = null;
   #pendingSyncState: Partial<SyncState> | null = null;
 
-  onSyncStateUpdate: ((state: Partial<SyncState>) => void) | undefined;
-  onInvalidateQueries: ((keys: string[][]) => void) | undefined;
-  onLastSyncedAt: ((timestamp: number) => void) | undefined;
-  onCacheIndexRefresh: (() => void) | undefined;
+  #callbacks: Remote<Callbacks> | null = null;
 
   constructor() {
     this.#authReady = new Promise((resolve) => {
@@ -139,11 +143,15 @@ class SyncWorkerService {
     workerUpdateAuth(config);
   }
 
+  setCallbackPort(port: MessagePort): void {
+    this.#callbacks = wrap<Callbacks>(port);
+  }
+
   #flushSyncState(): void {
     if (this.#pendingSyncState) {
       const state = this.#pendingSyncState;
       this.#pendingSyncState = null;
-      this.onSyncStateUpdate?.(state);
+      this.#callbacks?.onSyncStateUpdate(state);
     }
   }
 
@@ -316,10 +324,10 @@ class SyncWorkerService {
         key: "full-sync",
         lastSyncedAt: Date.now(),
       });
-      this.onLastSyncedAt?.(Date.now());
+      this.#callbacks?.onLastSyncedAt(Date.now());
       this.#updateSyncState("done", undefined);
       this.#forceFlushSyncState();
-      this.onCacheIndexRefresh?.();
+      this.#callbacks?.onCacheIndexRefresh();
     } catch (err) {
       if (this.#syncGeneration !== generation) return;
       if (err instanceof DOMException && err.name === "AbortError") {
@@ -404,7 +412,7 @@ class SyncWorkerService {
 
     await this.#recordTierCheckpoint("t1");
     this.#forceFlushSyncState();
-    this.onInvalidateQueries?.([
+    this.#callbacks?.onInvalidateQueries([
       ["playlists"],
       ["playlists", "single"],
       ["genres"],
@@ -495,7 +503,7 @@ class SyncWorkerService {
 
     await this.#recordTierCheckpoint("t2");
     this.#forceFlushSyncState();
-    this.onInvalidateQueries?.([["artists"], ["albums"]]);
+    this.#callbacks?.onInvalidateQueries([["artists"], ["albums"]]);
   }
 
   async #runT3(signal: AbortSignal, songCount: number): Promise<void> {
@@ -542,7 +550,7 @@ class SyncWorkerService {
     await this.#reconcileRemovedFromServer();
 
     this.#forceFlushSyncState();
-    this.onInvalidateQueries?.([
+    this.#callbacks?.onInvalidateQueries([
       ["songs"],
       ["favorites", "count"],
       ["favorites", "list"],

@@ -1,4 +1,4 @@
-import { wrap, proxy, type Remote } from "comlink";
+import { wrap, expose, transfer, type Remote } from "comlink";
 import { queryClient } from "@/lib/queryClient";
 import { useAppStore } from "@/store/app.store";
 import { useCacheStore } from "@/store/cache.store";
@@ -25,16 +25,44 @@ interface SyncOptions {
   useAlbumCoverForSongs?: boolean;
 }
 
+interface Callbacks {
+  onSyncStateUpdate(state: Partial<SyncState>): void;
+  onInvalidateQueries(keys: string[][]): void;
+  onLastSyncedAt(timestamp: number): void;
+  onCacheIndexRefresh(): void;
+}
+
 interface SyncWorkerService {
   syncAll(options: SyncOptions): Promise<void>;
   syncIncremental(options: SyncOptions): Promise<void>;
   cancel(): void;
   initAuth(config: WorkerAuthConfig): void;
   updateAuth(config: WorkerAuthConfig): void;
-  onSyncStateUpdate: ((state: Partial<SyncState>) => void) | undefined;
-  onInvalidateQueries: ((keys: string[][]) => void) | undefined;
-  onLastSyncedAt: ((timestamp: number) => void) | undefined;
-  onCacheIndexRefresh: (() => void) | undefined;
+  setCallbackPort(port: MessagePort): void;
+}
+
+async function refreshCacheIndexFromIDB(): Promise<void> {
+  try {
+    const { libraryDb } = await import("@/store/library-db");
+    const rows = await libraryDb.cacheMeta.toArray();
+    const actions = getCacheIndexActions();
+    actions.clear();
+    for (const row of rows) {
+      actions.addItem(row.key, {
+        id: row.id,
+        type: row.type,
+        source: row.source,
+        triggers: row.triggers,
+        coverSize: row.type === "cover" ? row.coverSize : undefined,
+        sizeBytes: row.sizeBytes,
+        cachedAt: row.cachedAt,
+        lastAccessedAt: row.lastAccessedAt,
+        removedFromServer: row.removedFromServer,
+      });
+    }
+  } catch (err) {
+    console.warn("[syncWorkerAdapter] failed to refresh cache index:", err);
+  }
 }
 
 class SyncWorkerAdapter {
@@ -43,6 +71,7 @@ class SyncWorkerAdapter {
   private unsubAuth: (() => void) | null = null;
   private authReady: Promise<void>;
   private lastServerUrl: string;
+  private callbackPort: MessagePort | null = null;
 
   constructor() {
     this.worker = new Worker(new URL("./sync.worker.ts", import.meta.url), {
@@ -86,47 +115,28 @@ class SyncWorkerAdapter {
   }
 
   private setupCallbacks(): void {
-    this.proxy.onSyncStateUpdate = proxy((state: Partial<SyncState>) => {
-      useCacheStore.getState().actions.updateSyncState(state);
-    });
+    const { port1, port2 } = new MessageChannel();
+    this.callbackPort = port1;
 
-    this.proxy.onInvalidateQueries = proxy((keys: string[][]) => {
-      for (const key of keys) {
-        queryClient.invalidateQueries({ queryKey: key });
-      }
-    });
+    const callbacks: Callbacks = {
+      onSyncStateUpdate(state: Partial<SyncState>) {
+        useCacheStore.getState().actions.updateSyncState(state);
+      },
+      onInvalidateQueries(keys: string[][]) {
+        for (const key of keys) {
+          queryClient.invalidateQueries({ queryKey: key });
+        }
+      },
+      onLastSyncedAt(timestamp: number) {
+        useCacheStore.getState().actions.setLastSyncedAt(timestamp);
+      },
+      onCacheIndexRefresh() {
+        refreshCacheIndexFromIDB();
+      },
+    };
 
-    this.proxy.onLastSyncedAt = proxy((timestamp: number) => {
-      useCacheStore.getState().actions.setLastSyncedAt(timestamp);
-    });
-
-    this.proxy.onCacheIndexRefresh = proxy(() => {
-      this.refreshCacheIndexFromIDB();
-    });
-  }
-
-  private async refreshCacheIndexFromIDB(): Promise<void> {
-    try {
-      const { libraryDb } = await import("@/store/library-db");
-      const rows = await libraryDb.cacheMeta.toArray();
-      const actions = getCacheIndexActions();
-      actions.clear();
-      for (const row of rows) {
-        actions.addItem(row.key, {
-          id: row.id,
-          type: row.type,
-          source: row.source,
-          triggers: row.triggers,
-          coverSize: row.type === "cover" ? row.coverSize : undefined,
-          sizeBytes: row.sizeBytes,
-          cachedAt: row.cachedAt,
-          lastAccessedAt: row.lastAccessedAt,
-          removedFromServer: row.removedFromServer,
-        });
-      }
-    } catch (err) {
-      console.warn("[syncWorkerAdapter] failed to refresh cache index:", err);
-    }
+    expose(callbacks, port1);
+    this.proxy.setCallbackPort(transfer(port2, [port2]));
   }
 
   private buildSyncOptions(options?: {
@@ -168,6 +178,7 @@ class SyncWorkerAdapter {
 
   terminate(): void {
     this.unsubAuth?.();
+    this.callbackPort?.close();
     this.worker.terminate();
   }
 }
