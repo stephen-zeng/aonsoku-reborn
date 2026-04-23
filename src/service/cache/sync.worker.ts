@@ -560,6 +560,9 @@ class SyncWorkerService {
     await db.albums.each((a) => {
       if (a.coverArt) coverArtIds.add(a.coverArt);
     });
+    await db.playlists.each((p) => {
+      if (p.coverArt) coverArtIds.add(p.coverArt);
+    });
     if (!useAlbumCoverForSongs) {
       await db.songs.each((s) => {
         if (s.coverArt) coverArtIds.add(s.coverArt);
