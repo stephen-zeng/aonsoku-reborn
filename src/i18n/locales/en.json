@@ -829,9 +829,7 @@
         "enabled": "Enable smart downloads",
         "rule": {
           "favoriteSongs": "Favorite songs",
-          "favoritePlaylists": "Favorite playlists",
-          "frequentPlays": "Frequently played (≥ N plays)",
-          "recentPlays": "Recently played (last N days)"
+          "favoritePlaylists": "Favorite playlists"
         }
       }
     },

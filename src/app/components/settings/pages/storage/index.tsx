@@ -22,7 +22,6 @@ import {
   SelectValue,
 } from "@/app/components/ui/select";
 import { Switch } from "@/app/components/ui/switch";
-import { Input } from "@/app/components/ui/input";
 import { cacheManager } from "@/service/cache";
 import { syncService } from "@/service/cache/sync-worker-adapter";
 import { clearLibraryData } from "@/store/library-db";
@@ -302,10 +301,6 @@ function SmartDownloadSection() {
   const setEnabled = (enabled: boolean) => setSmartRules({ enabled });
   const setRule = (key: keyof typeof rules, value: boolean) =>
     setSmartRules({ [key]: value } as Partial<typeof rules>);
-  const setThreshold = (
-    key: "frequentPlaysThreshold" | "recentPlaysDays",
-    value: number,
-  ) => setSmartRules({ [key]: Math.max(1, value) });
 
   const sizeLabel = useMemo(() => {
     if (smartQuota === 0) {
@@ -334,7 +329,6 @@ function SmartDownloadSection() {
   const rows: Array<{
     key: keyof typeof rules;
     labelKey: string;
-    extra?: JSX.Element;
   }> = [
     {
       key: "favoriteSongs",
@@ -343,40 +337,6 @@ function SmartDownloadSection() {
     {
       key: "favoritePlaylists",
       labelKey: "settings.storage.smart.rule.favoritePlaylists",
-    },
-    {
-      key: "frequentPlays",
-      labelKey: "settings.storage.smart.rule.frequentPlays",
-      extra: (
-        <Input
-          type="number"
-          min={1}
-          max={999}
-          value={rules.frequentPlaysThreshold}
-          onChange={(e) =>
-            setThreshold("frequentPlaysThreshold", Number(e.target.value))
-          }
-          disabled={!rules.enabled || !rules.frequentPlays}
-          className="h-7 w-16 text-xs"
-        />
-      ),
-    },
-    {
-      key: "recentPlays",
-      labelKey: "settings.storage.smart.rule.recentPlays",
-      extra: (
-        <Input
-          type="number"
-          min={1}
-          max={365}
-          value={rules.recentPlaysDays}
-          onChange={(e) =>
-            setThreshold("recentPlaysDays", Number(e.target.value))
-          }
-          disabled={!rules.enabled || !rules.recentPlays}
-          className="h-7 w-16 text-xs"
-        />
-      ),
     },
   ];
 
@@ -399,11 +359,10 @@ function SmartDownloadSection() {
           </ContentItemForm>
         </ContentItem>
 
-        {rows.map(({ key, labelKey, extra }) => (
+        {rows.map(({ key, labelKey }) => (
           <ContentItem key={key}>
             <ContentItemTitle>{t(labelKey)}</ContentItemTitle>
-            <ContentItemForm className="gap-2">
-              {extra}
+            <ContentItemForm>
               <Switch
                 checked={rules.enabled && Boolean(rules[key])}
                 disabled={!rules.enabled}

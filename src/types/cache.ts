@@ -32,22 +32,12 @@ export interface SmartRuleSettings {
   enabled: boolean;
   favoriteSongs: boolean;
   favoritePlaylists: boolean;
-  frequentPlays: boolean;
-  /** Min playCount to qualify for the "frequently played" rule. */
-  frequentPlaysThreshold: number;
-  recentPlays: boolean;
-  /** Trailing days for the "recently played" rule. */
-  recentPlaysDays: number;
 }
 
 export const DEFAULT_SMART_RULES: SmartRuleSettings = {
   enabled: false,
   favoriteSongs: true,
   favoritePlaylists: true,
-  frequentPlays: true,
-  frequentPlaysThreshold: 5,
-  recentPlays: true,
-  recentPlaysDays: 14,
 };
 
 export interface CachedItemMeta {

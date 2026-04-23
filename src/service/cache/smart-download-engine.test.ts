@@ -35,11 +35,8 @@ describe("smartDownloadEngine", () => {
         smartRules: {
           ...state.settings.smartRules,
           enabled: true,
-          favoriteSongs: false,
+          favoriteSongs: true,
           favoritePlaylists: false,
-          frequentPlays: true,
-          frequentPlaysThreshold: 5,
-          recentPlays: false,
         },
       },
     }));
@@ -49,8 +46,8 @@ describe("smartDownloadEngine", () => {
     const { smartDownloadEngine } = await import("./smart-download-engine");
 
     await libraryDb.songs.bulkPut([
-      makeSong("existing", { playCount: 10, size: 100 }),
-      makeSong("new", { playCount: 10, size: 50 }),
+      makeSong("existing", { starredAt: 1, size: 100 }),
+      makeSong("new", { starredAt: 1, size: 50 }),
     ]);
 
     useCacheIndexStore.setState((state) => ({
@@ -60,7 +57,7 @@ describe("smartDownloadEngine", () => {
           id: "existing",
           type: "audio",
           source: "smart",
-          triggers: ["frequent"],
+          triggers: ["favorite"],
           sizeBytes: 100,
           cachedAt: 1,
           lastAccessedAt: 1,

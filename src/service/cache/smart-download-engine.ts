@@ -11,8 +11,6 @@ import { audioKey } from "./cache-keys";
 import { cacheManager } from "./cache-manager";
 import { cacheStorage } from "./cache-storage";
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
 type TriggerMap = Map<string, Set<string>>;
 
 /**
@@ -29,10 +27,6 @@ type TriggerMap = Map<string, Set<string>>;
  *      `starredAt > 0`, union the Subsonic `getPlaylist` entries.
  *      Best-effort: a failed fetch (offline / 404) simply skips that
  *      playlist rather than blowing up the whole pass.
- *  - frequentPlays       : libraryDb.songs where
- *      `playCount >= threshold`
- *  - recentPlays         : libraryDb.songs where
- *      `playedAt > now - (days * 1d)`
  *
  * Multi-rule hits are tracked per-song: a song kept by both "favorite"
  * and "frequent" lists both names in its `triggers` array, and is
@@ -78,29 +72,6 @@ class SmartDownloadEngine {
         .toArray();
       for (const song of starred) {
         addTrigger(song.id, "favorite");
-      }
-    }
-
-    if (settings.frequentPlays) {
-      const threshold = Math.max(1, settings.frequentPlaysThreshold);
-      const frequent = await libraryDb.songs
-        .where("playCount")
-        .aboveOrEqual(threshold)
-        .toArray();
-      for (const song of frequent) {
-        addTrigger(song.id, "frequent");
-      }
-    }
-
-    if (settings.recentPlays) {
-      const days = Math.max(1, settings.recentPlaysDays);
-      const cutoff = Date.now() - days * DAY_MS;
-      const recent = await libraryDb.songs
-        .where("playedAt")
-        .above(cutoff)
-        .toArray();
-      for (const song of recent) {
-        addTrigger(song.id, "recent");
       }
     }
 
