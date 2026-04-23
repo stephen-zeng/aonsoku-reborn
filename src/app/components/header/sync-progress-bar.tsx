@@ -161,7 +161,11 @@ export function SyncProgressBar() {
   }, [syncState.phase, syncState.isSyncing, libraryCaching]);
 
   const showError = syncState.phase === "error";
-  if (!syncState.isSyncing && !showCompleted && !showError && !libraryCaching)
+  const isInactive =
+    syncState.phase === "idle" ||
+    syncState.phase === "done" ||
+    syncState.phase === "cancelled";
+  if (!syncState.isSyncing && !showCompleted && !showError && isInactive)
     return null;
 
   const handleRetry = () => {
