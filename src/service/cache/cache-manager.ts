@@ -51,12 +51,51 @@ export function buildAudioUrl(
 class CacheManager {
   private statsTimer: ReturnType<typeof setTimeout> | null = null;
   private cacheCoverInflight = new Map<string, Promise<void>>();
+  private cacheSongInflight = new Map<string, Promise<void>>();
 
   private resolveDownloadUrl(songId: string): string {
     return buildAudioUrl(songId, "cache");
   }
 
+  private async readResponseWithProgress(
+    response: Response,
+    onProgress?: (loaded: number, total: number) => void,
+  ): Promise<Blob> {
+    const contentLength = Number(response.headers.get("Content-Length") || 0);
+    const reader = response.body?.getReader();
+
+    if (!reader || !contentLength) {
+      return response.blob();
+    }
+
+    let received = 0;
+    const chunks: Uint8Array[] = [];
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      received += value.length;
+      onProgress?.(received, contentLength);
+    }
+
+    return new Blob(chunks);
+  }
+
   async cacheSong(songId: string): Promise<void> {
+    const key = audioKey(songId);
+    const inflight = this.cacheSongInflight.get(key);
+    if (inflight) return inflight;
+
+    const p = this.cacheSongImpl(songId).finally(() => {
+      this.cacheSongInflight.delete(key);
+      getCacheIndexActions().clearDownloadProgress(songId);
+    });
+    this.cacheSongInflight.set(key, p);
+    return p;
+  }
+
+  private async cacheSongImpl(songId: string): Promise<void> {
     if (isAudioCached(songId)) return;
 
     const url = this.resolveDownloadUrl(songId);
@@ -67,7 +106,14 @@ class CacheManager {
       );
     }
 
-    const blob = await response.blob();
+    const actions = getCacheIndexActions();
+    const blob = await this.readResponseWithProgress(
+      response,
+      (loaded, total) => {
+        actions.setDownloadProgress(songId, Math.round((loaded / total) * 100));
+      },
+    );
+
     const key = audioKey(songId);
     await cacheStorage.put(key, blob, blob.type || "audio/mpeg");
 
@@ -99,6 +145,22 @@ class CacheManager {
    * `"smart"` so future LRU pressure doesn't evict it.
    */
   async cacheSmartSong(songId: string, triggers: string[]): Promise<void> {
+    const key = audioKey(songId);
+    const inflight = this.cacheSongInflight.get(key);
+    if (inflight) return inflight;
+
+    const p = this.cacheSmartSongImpl(songId, triggers).finally(() => {
+      this.cacheSongInflight.delete(key);
+      getCacheIndexActions().clearDownloadProgress(songId);
+    });
+    this.cacheSongInflight.set(key, p);
+    return p;
+  }
+
+  private async cacheSmartSongImpl(
+    songId: string,
+    triggers: string[],
+  ): Promise<void> {
     const key = audioKey(songId);
     const existing = getCacheIndexItems()[key];
 
@@ -132,7 +194,13 @@ class CacheManager {
       );
     }
 
-    const blob = await response.blob();
+    const actions = getCacheIndexActions();
+    const blob = await this.readResponseWithProgress(
+      response,
+      (loaded, total) => {
+        actions.setDownloadProgress(songId, Math.round((loaded / total) * 100));
+      },
+    );
     await cacheStorage.put(key, blob, blob.type || "audio/mpeg");
 
     const meta: CachedItemMeta = {

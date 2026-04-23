@@ -12,6 +12,8 @@ const IDB_KEY = "cache-index-v1";
 interface CacheIndexState {
   items: Record<string, CachedItemMeta>;
   loaded: boolean;
+  /** Per-song download progress: songId → 0–100. Not persisted. */
+  downloads: Record<string, number>;
   actions: {
     loadFromIDB: () => Promise<void>;
     addItem: (key: string, meta: CachedItemMeta) => void;
@@ -19,6 +21,8 @@ interface CacheIndexState {
     touchItem: (key: string) => void;
     setRemovedFromServer: (key: string, removed: boolean) => void;
     clear: () => void;
+    setDownloadProgress: (songId: string, progress: number) => void;
+    clearDownloadProgress: (songId: string) => void;
   };
 }
 
@@ -65,6 +69,7 @@ export const useCacheIndexStore = createWithEqualityFn<CacheIndexState>()(
       immer((setState, getState) => ({
         items: {},
         loaded: false,
+        downloads: {},
         actions: {
           loadFromIDB: async () => {
             try {
@@ -133,6 +138,16 @@ export const useCacheIndexStore = createWithEqualityFn<CacheIndexState>()(
               state.items = {};
             });
             schedulePersist({});
+          },
+          setDownloadProgress: (songId, progress) => {
+            setState((state) => {
+              state.downloads[songId] = progress;
+            });
+          },
+          clearDownloadProgress: (songId) => {
+            setState((state) => {
+              delete state.downloads[songId];
+            });
           },
         },
       })),
@@ -241,3 +256,6 @@ export function useOrphanCount(): number {
  */
 export const useCachePoolStats = (): CachePoolStats =>
   useCacheIndexStore((state) => computePoolStats(state.items), shallow);
+
+export const useDownloadProgress = (songId: string): number | undefined =>
+  useCacheIndexStore((state) => state.downloads[songId]);

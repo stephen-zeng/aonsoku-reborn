@@ -1,37 +1,44 @@
 import { useCallback, useState } from "react";
 import { audioKey, cacheManager } from "@/service/cache";
-import { useIsAudioCached } from "@/store/cache-index.store";
+import {
+  useDownloadProgress,
+  useIsAudioCached,
+} from "@/store/cache-index.store";
 
 interface UseSongCacheStateResult {
   isCached: boolean;
   isLoading: boolean;
+  progress?: number;
   cache: () => Promise<void>;
   remove: () => Promise<void>;
 }
 
 export function useSongCacheState(songId: string): UseSongCacheStateResult {
   const isCached = useIsAudioCached(songId);
-  const [isLoading, setIsLoading] = useState(false);
+  const progress = useDownloadProgress(songId);
+  const [isLocalLoading, setIsLocalLoading] = useState(false);
+
+  const isLoading = isLocalLoading || progress !== undefined;
 
   const cache = useCallback(async () => {
-    if (isCached) return;
-    setIsLoading(true);
+    if (isCached || isLoading) return;
+    setIsLocalLoading(true);
     try {
       await cacheManager.cacheSong(songId);
     } finally {
-      setIsLoading(false);
+      setIsLocalLoading(false);
     }
-  }, [songId, isCached]);
+  }, [songId, isCached, isLoading]);
 
   const remove = useCallback(async () => {
     if (!isCached) return;
-    setIsLoading(true);
+    setIsLocalLoading(true);
     try {
       await cacheManager.evictItem(audioKey(songId));
     } finally {
-      setIsLoading(false);
+      setIsLocalLoading(false);
     }
   }, [songId, isCached]);
 
-  return { isCached, isLoading, cache, remove };
+  return { isCached, isLoading, progress, cache, remove };
 }

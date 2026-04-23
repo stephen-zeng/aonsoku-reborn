@@ -1,7 +1,8 @@
 import { clsx } from "clsx";
-import { CircleArrowDown, Loader2, Trash2 } from "lucide-react";
+import { CircleArrowDown, Trash2 } from "lucide-react";
 import { useHasHover } from "@/app/hooks/use-input-mode";
 import { useSongCacheState } from "@/app/hooks/use-song-cache";
+import { DownloadingIndicator } from "@/app/components/table/cached-indicator";
 import { Button } from "@/app/components/ui/button";
 
 interface CacheButtonProps {
@@ -13,7 +14,8 @@ export function CacheButton({
   songId,
   groupName = "tablerow",
 }: CacheButtonProps) {
-  const { isCached, isLoading, cache, remove } = useSongCacheState(songId);
+  const { isCached, isLoading, progress, cache, remove } =
+    useSongCacheState(songId);
   const hasHover = useHasHover();
 
   return (
@@ -36,7 +38,10 @@ export function CacheButton({
       }}
     >
       {isLoading ? (
-        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+        <DownloadingIndicator
+          progress={progress}
+          className="w-4 h-4"
+        />
       ) : isCached ? (
         <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
       ) : (

@@ -8,7 +8,10 @@ import {
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { audioKey } from "@/service/cache";
-import { useCacheIndexStore } from "@/store/cache-index.store";
+import {
+  useCacheIndexStore,
+  useDownloadProgress,
+} from "@/store/cache-index.store";
 import type { CacheMetaSource } from "@/types/cache";
 
 type IndicatorVariant = "compact" | "full";
@@ -39,8 +42,13 @@ export function CachedIndicator({
 }: CachedIndicatorProps) {
   const { t } = useTranslation();
   const meta = useAudioCacheMeta(songId);
+  const progress = useDownloadProgress(songId);
   const isCached = Boolean(meta);
   const source = meta?.source as CacheMetaSource | undefined;
+
+  if (progress !== undefined) {
+    return <DownloadingIndicator progress={progress} className={className} />;
+  }
 
   if (!isCached) {
     if (variant === "compact") return null;
@@ -100,9 +108,7 @@ interface DownloadingIndicatorProps {
 }
 
 /**
- * Shown while a `cacheSong` operation is in flight. A wire-up point
- * for future download-progress state — no callsites yet because the
- * cacheManager does not currently report progress per song.
+ * Shown while a `cacheSong` operation is in flight.
  */
 export function DownloadingIndicator({
   progress,
