@@ -265,6 +265,14 @@ class CacheManager {
     });
   }
 
+  /**
+   * Resolve a cached audio blob to a local URL the <audio> element can
+   * play. Returns `null` when the song is not in the cache.
+   *
+   * **Callers must call `URL.revokeObjectURL()` on the returned string
+   * when they are done with it (e.g. on song change or unmount) to
+   * avoid leaking memory.**
+   */
   async getCachedAudioUrl(songId: string): Promise<string | null> {
     const key = audioKey(songId);
 
@@ -372,6 +380,13 @@ class CacheManager {
     persistCacheMeta(key, { key, ...meta });
   }
 
+  /**
+   * Resolve a cached cover art blob to a local URL for <img> elements.
+   * Returns `null` when the cover is not in the cache.
+   *
+   * **Callers must call `URL.revokeObjectURL()` on the returned string
+   * when they are done with it to avoid leaking memory.**
+   */
   async getCachedCoverUrl(coverArtId: string): Promise<string | null> {
     const key = coverKey(coverArtId);
 
