@@ -823,6 +823,36 @@
           }
         }
       },
+      "cacheManager": {
+        "group": "Cache Manager",
+        "description": "View and manage individual cached items.",
+        "filter": {
+          "all": "All",
+          "audio": "Audio",
+          "cover": "Cover Art",
+          "explicit": "Explicit",
+          "smart": "Smart",
+          "lru": "LRU"
+        },
+        "list": {
+          "name": "Name",
+          "type": "Type",
+          "source": "Source",
+          "size": "Size",
+          "cachedAt": "Cached",
+          "actions": "Actions",
+          "delete": "Delete",
+          "empty": "No cached items.",
+          "total": "{{count}} items, {{size}} total",
+          "type_audio": "Audio",
+          "type_cover": "Cover",
+          "removedFromServer": "Removed from server"
+        },
+        "confirmDelete": {
+          "title": "Delete cached item?",
+          "description": "This will remove '{{name}}' from the cache. It can be re-downloaded later."
+        }
+      },
       "smart": {
         "group": "Smart Downloads",
         "description": "Automatically cache songs matching any enabled rule. They're evicted the moment every triggering rule stops matching, and never take priority over manual downloads.",

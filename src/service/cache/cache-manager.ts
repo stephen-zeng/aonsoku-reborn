@@ -21,6 +21,21 @@ import {
   DownloadQuality,
   QUALITY_MAX_BITRATE,
 } from "@/types/cache";
+
+export interface CachedItemDetail {
+  key: string;
+  id: string;
+  type: "audio" | "cover";
+  source: CacheMetaSource;
+  name: string;
+  subtitle?: string;
+  sizeBytes: number;
+  cachedAt: number;
+  lastAccessedAt: number;
+  quality?: DownloadQuality;
+  coverSize?: string;
+  removedFromServer?: boolean;
+}
 import { COVER_PREFIX, audioKey, coverKey, isOldCoverKey } from "./cache-keys";
 import { cacheStorage } from "./cache-storage";
 import { computeEvictionPlan } from "./eviction";
@@ -531,6 +546,54 @@ class CacheManager {
       getCacheIndexActions().removeItem(key);
     }
     this.refreshStats();
+  }
+
+  async listCachedItems(): Promise<CachedItemDetail[]> {
+    const items = getCacheIndexItems();
+    const entries = Object.entries(items);
+    if (entries.length === 0) return [];
+
+    const results: CachedItemDetail[] = [];
+
+    for (const [key, meta] of entries) {
+      let name = meta.id;
+      let subtitle: string | undefined;
+
+      if (meta.type === "audio") {
+        const song = await libraryDb.songs.get(meta.id);
+        if (song) {
+          name = song.title || meta.id;
+          subtitle = song.artist || undefined;
+        }
+      } else {
+        const album = await libraryDb.albums.get(meta.id);
+        if (album?.name) {
+          name = album.name;
+        } else {
+          const artist = await libraryDb.artists.get(meta.id);
+          if (artist?.name) {
+            name = artist.name;
+          }
+        }
+      }
+
+      results.push({
+        key,
+        id: meta.id,
+        type: meta.type,
+        source: meta.source,
+        name,
+        subtitle,
+        sizeBytes: meta.sizeBytes,
+        cachedAt: meta.cachedAt,
+        lastAccessedAt: meta.lastAccessedAt,
+        quality: meta.quality,
+        coverSize: meta.coverSize,
+        removedFromServer: meta.removedFromServer,
+      });
+    }
+
+    return results;
   }
 
   async clearAllCaches(): Promise<void> {

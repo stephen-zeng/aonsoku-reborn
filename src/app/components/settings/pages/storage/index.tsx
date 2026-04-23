@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { CacheManagerSection } from "./cache-manager";
 import {
   Content,
   ContentItem,
@@ -530,6 +531,7 @@ export function Storage() {
       {libraryCaching && <DownloadQualitySection />}
       {libraryCaching && <SmartDownloadSection />}
       <CacheLimitsSection />
+      <CacheManagerSection />
     </div>
   );
 }

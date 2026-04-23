@@ -779,6 +779,36 @@
         "clearAudio": "清除",
         "clearCovers": "清除",
         "clearAll": "清除所有缓存"
+      },
+      "cacheManager": {
+        "group": "缓存管理器",
+        "description": "查看并管理单个缓存项。",
+        "filter": {
+          "all": "全部",
+          "audio": "音频",
+          "cover": "封面图",
+          "explicit": "手动下载",
+          "smart": "智能下载",
+          "lru": "自动缓存"
+        },
+        "list": {
+          "name": "名称",
+          "type": "类型",
+          "source": "来源",
+          "size": "大小",
+          "cachedAt": "缓存时间",
+          "actions": "操作",
+          "delete": "删除",
+          "empty": "没有缓存项。",
+          "total": "共 {{count}} 项，{{size}}",
+          "type_audio": "音频",
+          "type_cover": "封面",
+          "removedFromServer": "已从服务器移除"
+        },
+        "confirmDelete": {
+          "title": "删除缓存项？",
+          "description": "这将从缓存中移除「{{name}}」。之后可以重新下载。"
+        }
       }
     }
   },
