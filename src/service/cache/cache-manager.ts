@@ -344,12 +344,8 @@ class CacheManager {
     const existing = items[key];
     const existingSize = Number(existing?.coverSize ?? "0");
     const requestedSize = Number(size);
-    const shouldReplaceExisting = existingSize < requestedSize && !!existing;
 
-    if (existing) {
-      if (existingSize >= requestedSize) return;
-      await cacheStorage.delete(key);
-    }
+    if (existing && existingSize >= requestedSize) return;
 
     const url = getCoverArtUrl(coverArtId, "album", size);
     if (url.startsWith("/default_")) return;
@@ -359,7 +355,7 @@ class CacheManager {
 
     const blob = await response.blob();
 
-    if (shouldReplaceExisting) {
+    if (existing) {
       await cacheStorage.delete(key);
     }
 
