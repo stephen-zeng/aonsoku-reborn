@@ -9,10 +9,10 @@ import { CachedItemMeta } from "@/types/cache";
  *  - `audioLru` — applies to `type: "audio" && source: "lru"` entries
  *    (playback auto-cache + queue prefetch).
  *
- * Explicit downloads are never evicted here; smart-pool items are gated
- * upstream by the smart-download engine (it refuses to enqueue more
- * when its quota is full). Both pools' sizes are reported from the
- * cache index but not acted on by this module.
+ * Explicit and smart downloads are never evicted here; the
+ * smart-download engine evicts items when their triggering rules
+ * no longer match. Both pools' sizes are reported from the cache
+ * index but not acted on by this module.
  *
  * A quota of `0` means unlimited for that pool.
  */

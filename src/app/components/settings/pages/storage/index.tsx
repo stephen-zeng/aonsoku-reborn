@@ -294,37 +294,10 @@ function SmartDownloadSection() {
   const { t } = useTranslation();
   const rules = useSmartRules();
   const { setSmartRules } = useCacheActions();
-  const { smartQuota, lruQuota } = useCacheSettings();
-  const { setSmartQuota, setLruQuota } = useCacheActions();
-  const stats = useCachePoolStats();
 
   const setEnabled = (enabled: boolean) => setSmartRules({ enabled });
   const setRule = (key: keyof typeof rules, value: boolean) =>
     setSmartRules({ [key]: value } as Partial<typeof rules>);
-
-  const sizeLabel = useMemo(() => {
-    if (smartQuota === 0) {
-      return t("settings.storage.limits.unlimited");
-    }
-    const option = CACHE_SIZE_OPTIONS.find((o) => o.value === smartQuota);
-    return option?.label ?? formatBytes(smartQuota);
-  }, [smartQuota, t]);
-
-  const handleClearSmart = useCallback(() => {
-    cacheManager.clearAudioBySource("smart");
-  }, []);
-
-  const handleClearLru = useCallback(() => {
-    cacheManager.clearAudioBySource("lru");
-  }, []);
-
-  const lruSizeLabel = useMemo(() => {
-    if (lruQuota === 0) {
-      return t("settings.storage.limits.unlimited");
-    }
-    const option = CACHE_SIZE_OPTIONS.find((o) => o.value === lruQuota);
-    return option?.label ?? formatBytes(lruQuota);
-  }, [lruQuota, t]);
 
   const rows: Array<{
     key: keyof typeof rules;
@@ -371,84 +344,6 @@ function SmartDownloadSection() {
             </ContentItemForm>
           </ContentItem>
         ))}
-
-        <ContentItem>
-          <ContentItemTitle info={t("settings.storage.limits.quota")}>
-            {t("settings.storage.limits.pool.smart.label")}
-          </ContentItemTitle>
-          <ContentItemForm className="gap-2">
-            <Select
-              value={smartQuota.toString()}
-              onValueChange={(value) => setSmartQuota(Number(value))}
-            >
-              <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left w-[130px]">
-                <SelectValue>
-                  <span className="text-sm text-foreground">{sizeLabel}</span>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent align="end">
-                <SelectGroup>
-                  {CACHE_SIZE_OPTIONS.map((option) => (
-                    <SelectItem
-                      key={option.value}
-                      value={option.value.toString()}
-                    >
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs"
-              onClick={handleClearSmart}
-              disabled={stats.smart.count === 0}
-            >
-              {t("settings.storage.limits.clearAudio")}
-            </Button>
-          </ContentItemForm>
-        </ContentItem>
-
-        <ContentItem>
-          <ContentItemTitle info={t("settings.storage.limits.quota")}>
-            {t("settings.storage.limits.pool.lru.label")}
-          </ContentItemTitle>
-          <ContentItemForm className="gap-2">
-            <Select
-              value={lruQuota.toString()}
-              onValueChange={(value) => setLruQuota(Number(value))}
-            >
-              <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left w-[130px]">
-                <SelectValue>
-                  <span className="text-sm text-foreground">{lruSizeLabel}</span>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent align="end">
-                <SelectGroup>
-                  {CACHE_SIZE_OPTIONS.map((option) => (
-                    <SelectItem
-                      key={option.value}
-                      value={option.value.toString()}
-                    >
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs"
-              onClick={handleClearLru}
-              disabled={stats.lru.count === 0}
-            >
-              {t("settings.storage.limits.clearAudio")}
-            </Button>
-          </ContentItemForm>
-        </ContentItem>
       </Content>
 
       <ContentSeparator />
@@ -542,8 +437,8 @@ function PoolRow({
 
 function CacheLimitsSection() {
   const { t } = useTranslation();
-  const { assetsQuota } = useCacheSettings();
-  const { setAssetsQuota } = useCacheActions();
+  const { assetsQuota, lruQuota } = useCacheSettings();
+  const { setAssetsQuota, setLruQuota } = useCacheActions();
   const stats = useCachePoolStats();
 
   const totalCount =
@@ -582,6 +477,19 @@ function CacheLimitsSection() {
           stats={stats.explicit}
           quota={null}
           onClear={clearBySource("explicit")}
+        />
+        <PoolRow
+          labelKey="smart"
+          stats={stats.smart}
+          quota={null}
+          onClear={clearBySource("smart")}
+        />
+        <PoolRow
+          labelKey="lru"
+          stats={stats.lru}
+          quota={lruQuota}
+          onQuotaChange={setLruQuota}
+          onClear={clearBySource("lru")}
         />
         <PoolRow
           labelKey="assets"

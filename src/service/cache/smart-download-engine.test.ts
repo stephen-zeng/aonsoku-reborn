@@ -31,7 +31,6 @@ describe("smartDownloadEngine", () => {
       ...state,
       settings: {
         ...state.settings,
-        smartQuota: 100,
         smartRules: {
           ...state.settings.smartRules,
           enabled: true,
@@ -42,32 +41,21 @@ describe("smartDownloadEngine", () => {
     }));
   });
 
-  it("does not admit new smart downloads when the smart pool is full", async () => {
+  it("caches new songs that match a smart-download rule", async () => {
     const { smartDownloadEngine } = await import("./smart-download-engine");
 
     await libraryDb.songs.bulkPut([
-      makeSong("existing", { starredAt: 1, size: 100 }),
-      makeSong("new", { starredAt: 1, size: 50 }),
+      makeSong("starred-song", { starredAt: 1 }),
+      makeSong("unstarred-song", { starredAt: 0 }),
     ]);
-
-    useCacheIndexStore.setState((state) => ({
-      ...state,
-      items: {
-        "audio/existing": {
-          id: "existing",
-          type: "audio",
-          source: "smart",
-          triggers: ["favorite"],
-          sizeBytes: 100,
-          cachedAt: 1,
-          lastAccessedAt: 1,
-        },
-      },
-    }));
 
     await smartDownloadEngine.recomputeMatches();
 
-    expect(cacheSmartSong).not.toHaveBeenCalled();
+    expect(cacheSmartSong).toHaveBeenCalledWith("starred-song", ["favorite"]);
+    expect(cacheSmartSong).not.toHaveBeenCalledWith(
+      "unstarred-song",
+      expect.anything(),
+    );
   });
 });
 

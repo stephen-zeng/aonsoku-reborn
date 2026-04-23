@@ -95,17 +95,15 @@ export interface CacheSettings {
   /** Quality for streaming playback (not cached). */
   streamQuality: DownloadQuality;
   /**
-   * @deprecated Replaced by `assetsQuota` + `lruQuota` + `smartQuota`
-   * in P2.3. Kept in the type so the cache-store migration can read
-   * the old value one time; new code must consume the per-pool quotas.
+   * @deprecated Replaced by `assetsQuota` + `lruQuota` in P2.3.
+   * Kept in the type so the cache-store migration can read the old
+   * value one time; new code must consume the per-pool quotas.
    */
   maxCacheSize: number;
   /** Cap for L2 resources: cover art (and lyrics once P7.2 lands). */
   assetsQuota: number;
   /** Cap for the LRU audio pool (implicit playback/queue prefetch). */
   lruQuota: number;
-  /** Cap for the smart-download audio pool. */
-  smartQuota: number;
   /** P5: automatic-download rules. */
   smartRules: SmartRuleSettings;
   libraryCaching: boolean;
@@ -150,4 +148,3 @@ export const CACHE_SIZE_OPTIONS = [
 export const DEFAULT_MAX_CACHE_SIZE = 2_147_483_648; // 2 GB
 export const DEFAULT_ASSETS_QUOTA = 536_870_912; // 512 MB
 export const DEFAULT_LRU_QUOTA = 1_073_741_824; // 1 GB
-export const DEFAULT_SMART_QUOTA = 3_221_225_472; // 3 GB

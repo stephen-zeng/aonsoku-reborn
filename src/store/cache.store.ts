@@ -9,7 +9,6 @@ import {
   DEFAULT_ASSETS_QUOTA,
   DEFAULT_LRU_QUOTA,
   DEFAULT_MAX_CACHE_SIZE,
-  DEFAULT_SMART_QUOTA,
   DEFAULT_SMART_RULES,
   DownloadQuality,
   SmartRuleSettings,
@@ -22,7 +21,6 @@ interface CacheActions {
   setMaxCacheSize: (bytes: number) => void;
   setAssetsQuota: (bytes: number) => void;
   setLruQuota: (bytes: number) => void;
-  setSmartQuota: (bytes: number) => void;
   setSmartRules: (rules: Partial<SmartRuleSettings>) => void;
   setLibraryCaching: (enabled: boolean) => void;
   setSyncCoverArt: (enabled: boolean) => void;
@@ -83,7 +81,6 @@ function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
       maxCacheSize: legacyCap,
       assetsQuota: DEFAULT_ASSETS_QUOTA,
       lruQuota: legacyCap,
-      smartQuota: DEFAULT_SMART_QUOTA,
       smartRules: { ...DEFAULT_SMART_RULES },
       libraryCaching: false,
       syncLibrary: old.mode === "offline",
@@ -98,8 +95,7 @@ function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
   if (raw && typeof raw === "object") {
     const needsQuotaMigration =
       raw.assetsQuota === undefined ||
-      raw.lruQuota === undefined ||
-      raw.smartQuota === undefined;
+      raw.lruQuota === undefined;
     const needsQualityMigration =
       raw.streamQuality === undefined ||
       (raw.downloadQuality as unknown) === "stream";
@@ -114,7 +110,6 @@ function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
         streamQuality: raw.streamQuality ?? "medium",
         assetsQuota: raw.assetsQuota ?? DEFAULT_ASSETS_QUOTA,
         lruQuota: raw.lruQuota ?? legacyCap,
-        smartQuota: raw.smartQuota ?? DEFAULT_SMART_QUOTA,
         smartRules: { ...DEFAULT_SMART_RULES, ...(raw.smartRules ?? {}) },
         libraryCaching: raw.libraryCaching ?? false,
       };
@@ -150,7 +145,6 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             maxCacheSize: DEFAULT_MAX_CACHE_SIZE,
             assetsQuota: DEFAULT_ASSETS_QUOTA,
             lruQuota: DEFAULT_LRU_QUOTA,
-            smartQuota: DEFAULT_SMART_QUOTA,
             smartRules: { ...DEFAULT_SMART_RULES },
             libraryCaching: false,
             syncLibrary: true,
@@ -190,11 +184,6 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             setLruQuota: (bytes) => {
               set((state) => {
                 state.settings.lruQuota = bytes;
-              });
-            },
-            setSmartQuota: (bytes) => {
-              set((state) => {
-                state.settings.smartQuota = bytes;
               });
             },
             setSmartRules: (rules) => {

@@ -29,7 +29,7 @@ type TriggerMap = Map<string, Set<string>>;
  *      playlist rather than blowing up the whole pass.
  *
  * Multi-rule hits are tracked per-song: a song kept by both "favorite"
- * and "frequent" lists both names in its `triggers` array, and is
+ * and "playlist" rules has both names in its `triggers` array, and is
  * evicted only when every triggering rule stops matching.
  */
 class SmartDownloadEngine {
@@ -100,19 +100,11 @@ class SmartDownloadEngine {
 
   private async reconcile(target: TriggerMap): Promise<void> {
     const items = getCacheIndexItems();
-    const smartQuota = useCacheStore.getState().settings.smartQuota;
-    let projectedSmartUsage = Object.values(items).reduce((sum, meta) => {
-      if (meta.type === "audio" && meta.source === "smart") {
-        return sum + meta.sizeBytes;
-      }
-      return sum;
-    }, 0);
 
     // Prune: smart entries not in target anymore.
     for (const [key, meta] of Object.entries(items)) {
       if (meta.type !== "audio" || meta.source !== "smart") continue;
       if (!target.has(meta.id)) {
-        projectedSmartUsage -= meta.sizeBytes;
         await this.evictSmartEntry(key);
       }
     }
@@ -124,21 +116,8 @@ class SmartDownloadEngine {
       const triggers = Array.from(triggersSet);
 
       if (!existing) {
-        if (
-          !(await this.canAdmitSmartSong(
-            songId,
-            projectedSmartUsage,
-            smartQuota,
-          ))
-        ) {
-          continue;
-        }
         try {
           await cacheManager.cacheSmartSong(songId, triggers);
-          const added = getCacheIndexItems()[key];
-          if (added?.type === "audio" && added.source === "smart") {
-            projectedSmartUsage += added.sizeBytes;
-          }
         } catch (err) {
           console.warn(`[smart-download] failed to cache ${songId}:`, err);
         }
@@ -157,22 +136,6 @@ class SmartDownloadEngine {
       // refuses to demote explicit, and the lru→smart upgrade path is
       // handled inside cacheSmartSong.
     }
-  }
-
-  private async canAdmitSmartSong(
-    songId: string,
-    projectedSmartUsage: number,
-    smartQuota: number,
-  ): Promise<boolean> {
-    if (smartQuota === 0) return true;
-
-    const row = await libraryDb.songs.get(songId);
-    const estimatedSize = row?.size ?? 0;
-
-    if (estimatedSize > 0) {
-      return projectedSmartUsage + estimatedSize <= smartQuota;
-    }
-    return projectedSmartUsage < smartQuota;
   }
 
   private async evictSmartEntry(key: string): Promise<void> {
