@@ -747,6 +747,14 @@
           "clear": "清除并关闭"
         }
       },
+      "streaming": {
+        "group": "流媒体质量",
+        "description": "选择实时播放的音频码率。较低的码率可节省带宽。"
+      },
+      "offline": {
+        "group": "离线体验",
+        "description": "在本地缓存歌曲、元数据和封面图以供离线访问。启用资源库缓存后可设置下载质量、智能下载和同步选项。"
+      },
       "downloadQuality": {
         "group": "下载质量",
         "description": "选择下载歌曲的音频质量。",

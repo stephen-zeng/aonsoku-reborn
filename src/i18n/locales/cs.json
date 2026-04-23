@@ -744,6 +744,14 @@
         "syncNow": "Synchronizovat nyní",
         "justNow": "Právě teď"
       },
+      "streaming": {
+        "group": "Kvalita streamování",
+        "description": "Bitrate pro živé přehrávání. Nižší hodnoty šetří pásmo."
+      },
+      "offline": {
+        "group": "Offline režim",
+        "description": "Ukládat skladby, metadata a obaly místně pro offline přístup. Povolte mezipaměť knihovny pro odemčení kvality stahování, chytrých stahování a nastavení synchronizace."
+      },
       "downloadQuality": {
         "group": "Kvalita stahování",
         "description": "Vyberte zvukovou kvalitu pro stažené skladby.",

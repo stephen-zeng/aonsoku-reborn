@@ -758,6 +758,14 @@
           "clear": "Clear and disable"
         }
       },
+      "streaming": {
+        "group": "Streaming Quality",
+        "description": "Bitrate for live playback. Lower values save bandwidth."
+      },
+      "offline": {
+        "group": "Offline Experience",
+        "description": "Cache songs, metadata, and artwork locally for offline access. Enable library caching to unlock download quality, smart downloads, and sync settings."
+      },
       "downloadQuality": {
         "group": "Audio Quality",
         "description": "Bitrate for streaming and cached audio. Lower values save bandwidth and storage; original keeps the source file untouched.",

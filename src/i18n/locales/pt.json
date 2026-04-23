@@ -745,6 +745,14 @@
         "syncNow": "Sincronizar Agora",
         "justNow": "Agora mesmo"
       },
+      "streaming": {
+        "group": "Qualidade de Streaming",
+        "description": "Taxa de bits para reprodução em direto. Valores mais baixos poupam largura de banda."
+      },
+      "offline": {
+        "group": "Experiência Offline",
+        "description": "Coloque em cache músicas, metadados e capas localmente para acesso offline. Ative o cache da biblioteca para desbloquear a qualidade de descarregamento, descarregamentos inteligentes e configurações de sincronização."
+      },
       "downloadQuality": {
         "group": "Qualidade de Descarregamento",
         "description": "Escolha a qualidade de áudio para as músicas descarregadas.",

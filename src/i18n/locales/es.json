@@ -745,6 +745,14 @@
         "syncNow": "Sincronizar Ahora",
         "justNow": "Justo ahora"
       },
+      "streaming": {
+        "group": "Calidad de Streaming",
+        "description": "Tasa de bits para la reproducción en directo. Valores más bajos ahorran ancho de banda."
+      },
+      "offline": {
+        "group": "Experiencia Sin Conexión",
+        "description": "Almacena canciones, metadatos y portadas localmente para acceso sin conexión. Habilita el caché de la biblioteca para desbloquear la calidad de descarga, descargas inteligentes y ajustes de sincronización."
+      },
       "downloadQuality": {
         "group": "Calidad de Descarga",
         "description": "Elija la calidad de audio para las canciones descargadas.",

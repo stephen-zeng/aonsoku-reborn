@@ -752,6 +752,14 @@
         "syncNow": "Synchronizuj Teraz",
         "justNow": "Właśnie teraz"
       },
+      "streaming": {
+        "group": "Jakość Strumieniowania",
+        "description": "Szybkość transmisji dla odtwarzania na żywo. Niższe wartości oszczędzają przepustowość."
+      },
+      "offline": {
+        "group": "Tryb Offline",
+        "description": "Buforuj utwory, metadane i okładki lokalnie, aby mieć do nich dostęp offline. Włącz buforowanie biblioteki, aby odblokować jakość pobierania, inteligentne pobieranie i ustawienia synchronizacji."
+      },
       "downloadQuality": {
         "group": "Jakość Pobierania",
         "description": "Wybierz jakość audio dla pobieranych utworów.",

@@ -738,6 +738,14 @@
         "syncNow": "Şimdi Senkronize Et",
         "justNow": "Az önce"
       },
+      "streaming": {
+        "group": "Yayın Kalitesi",
+        "description": "Canlı oynatım için bit hızı. Düşük değerler bant genişliğinden tasarruf sağlar."
+      },
+      "offline": {
+        "group": "Çevrimdışı Deneyim",
+        "description": "Çevrimdışı erişim için şarkıları, meta verileri ve kapak resimlerini yerel olarak önbelleğe al. İndirme kalitesi, akıllı indirmeler ve senkronizasyon ayarlarını açmak için kitaplık önbelleğe almayı etkinleştirin."
+      },
       "downloadQuality": {
         "group": "İndirme Kalitesi",
         "description": "İndirilen şarkılar için ses kalitesini seçin.",

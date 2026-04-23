@@ -738,6 +738,14 @@
         "syncNow": "Synkronisera nu",
         "justNow": "Just nu"
       },
+      "streaming": {
+        "group": "Streamingkvalitet",
+        "description": "Bithastighet för direktuppspelning. Lägre värden sparar bandbredd."
+      },
+      "offline": {
+        "group": "Offlineupplevelse",
+        "description": "Cacha låtar, metadata och omslagsbilder lokalt för offlineåtkomst. Aktivera bibliotekscache för att låsa upp nedladdningskvalitet, smarta nedladdningar och synkroniseringsinställningar."
+      },
       "downloadQuality": {
         "group": "Nedladdningskvalitet",
         "description": "Välj ljudkvalitet för nedladdade låtar.",

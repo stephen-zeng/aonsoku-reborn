@@ -738,6 +738,14 @@
         "syncNow": "Jetzt synchronisieren",
         "justNow": "Gerade eben"
       },
+      "streaming": {
+        "group": "Streaming-Qualität",
+        "description": "Bitrate für Live-Wiedergabe. Niedrigere Werte sparen Bandbreite."
+      },
+      "offline": {
+        "group": "Offline-Erfahrung",
+        "description": "Songs, Metadaten und Cover lokal zwischenspeichern für Offline-Zugriff. Aktivieren Sie die Bibliotheks-Zwischenspeicherung, um Download-Qualität, smarte Downloads und Synchronisationseinstellungen freizuschalten."
+      },
       "downloadQuality": {
         "group": "Download-Qualität",
         "description": "Wählen Sie die Audioqualität für heruntergeladene Songs.",

@@ -50,17 +50,17 @@ import { formatBytes } from "@/utils/formatBytes";
 
 const downloadQualities: DownloadQuality[] = DOWNLOAD_QUALITIES;
 
-function DownloadQualitySection() {
+function StreamingSection() {
   const { t } = useTranslation();
-  const { downloadQuality, streamQuality } = useCacheSettings();
-  const { setDownloadQuality, setStreamQuality } = useCacheActions();
+  const { streamQuality } = useCacheSettings();
+  const { setStreamQuality } = useCacheActions();
 
   return (
     <Root>
       <Header>
-        <HeaderTitle>{t("settings.storage.downloadQuality.group")}</HeaderTitle>
+        <HeaderTitle>{t("settings.storage.streaming.group")}</HeaderTitle>
         <HeaderDescription>
-          {t("settings.storage.downloadQuality.description")}
+          {t("settings.storage.streaming.description")}
         </HeaderDescription>
       </Header>
 
@@ -99,7 +99,95 @@ function DownloadQualitySection() {
             </Select>
           </ContentItemForm>
         </ContentItem>
+      </Content>
 
+      <ContentSeparator />
+    </Root>
+  );
+}
+
+function LibraryCachingSection() {
+  const { t } = useTranslation();
+  const libraryCaching = useLibraryCaching();
+  const { setLibraryCaching, setLastSyncedAt } = useCacheActions();
+  const lastSyncedAt = useLastSyncedAt();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const handleToggle = useCallback(
+    (checked: boolean) => {
+      if (!checked && lastSyncedAt !== null) {
+        setConfirmOpen(true);
+        return;
+      }
+      setLibraryCaching(checked);
+    },
+    [lastSyncedAt, setLibraryCaching],
+  );
+
+  const handleConfirmClear = useCallback(async () => {
+    await clearLibraryData();
+    setLastSyncedAt(null);
+    setLibraryCaching(false);
+    setConfirmOpen(false);
+  }, [setLastSyncedAt, setLibraryCaching]);
+
+  return (
+    <Root>
+      <Header>
+        <HeaderTitle>{t("settings.storage.offline.group")}</HeaderTitle>
+        <HeaderDescription>
+          {t("settings.storage.offline.description")}
+        </HeaderDescription>
+      </Header>
+
+      <Content>
+        <ContentItem>
+          <ContentItemTitle
+            info={t("settings.storage.sync.libraryCachingInfo")}
+          >
+            {t("settings.storage.sync.libraryCaching")}
+          </ContentItemTitle>
+          <ContentItemForm>
+            <Switch
+              checked={libraryCaching}
+              onCheckedChange={handleToggle}
+            />
+          </ContentItemForm>
+        </ContentItem>
+      </Content>
+
+      <ContentSeparator />
+
+      <ConfirmationDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={t("settings.storage.sync.clearConfirm.title")}
+        description={t("settings.storage.sync.clearConfirm.description")}
+        onConfirm={handleConfirmClear}
+        cancelLabel={t("settings.storage.sync.clearConfirm.keep")}
+        confirmLabel={t("settings.storage.sync.clearConfirm.clear")}
+      />
+    </Root>
+  );
+}
+
+function DownloadQualitySection() {
+  const { t } = useTranslation();
+  const { downloadQuality } = useCacheSettings();
+  const { setDownloadQuality } = useCacheActions();
+
+  return (
+    <Root>
+      <Header>
+        <HeaderTitle>
+          {t("settings.storage.downloadQuality.group")}
+        </HeaderTitle>
+        <HeaderDescription>
+          {t("settings.storage.downloadQuality.description")}
+        </HeaderDescription>
+      </Header>
+
+      <Content>
         <ContentItem>
           <ContentItemTitle
             info={t("settings.storage.downloadQuality.downloadInfo")}
@@ -137,318 +225,6 @@ function DownloadQualitySection() {
       </Content>
 
       <ContentSeparator />
-    </Root>
-  );
-}
-
-interface PoolRowProps {
-  labelKey: "explicit" | "smart" | "lru" | "assets";
-  stats: CachePoolBreakdown;
-  quota: number | null;
-  onQuotaChange?: (bytes: number) => void;
-  onClear: () => void;
-}
-
-function PoolRow({
-  labelKey,
-  stats,
-  quota,
-  onQuotaChange,
-  onClear,
-}: PoolRowProps) {
-  const { t } = useTranslation();
-  const sizeLabel = useMemo(() => {
-    if (quota === null || quota === 0) {
-      return t("settings.storage.limits.unlimited");
-    }
-    const option = CACHE_SIZE_OPTIONS.find((o) => o.value === quota);
-    return option?.label ?? formatBytes(quota);
-  }, [quota, t]);
-
-  const entriesLabel =
-    labelKey === "assets"
-      ? t("settings.storage.limits.imageEntries", { count: stats.count })
-      : t("settings.storage.limits.songEntries", { count: stats.count });
-
-  return (
-    <ContentItem className="flex-col items-start gap-2 sm:flex-row sm:items-center">
-      <div className="flex-1 min-w-0">
-        <ContentItemTitle>
-          {t(`settings.storage.limits.pool.${labelKey}.label`)}
-        </ContentItemTitle>
-        <p className="text-xs text-muted-foreground">
-          {t(`settings.storage.limits.pool.${labelKey}.description`)}
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          {formatBytes(stats.sizeBytes)} · {entriesLabel}
-        </p>
-      </div>
-
-      <div className="flex items-center gap-2 shrink-0">
-        {onQuotaChange && quota !== null ? (
-          <Select
-            value={quota.toString()}
-            onValueChange={(value) => onQuotaChange(Number(value))}
-          >
-            <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left w-[130px]">
-              <SelectValue>
-                <span className="text-sm text-foreground">{sizeLabel}</span>
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align="end">
-              <SelectGroup>
-                {CACHE_SIZE_OPTIONS.map((option) => (
-                  <SelectItem
-                    key={option.value}
-                    value={option.value.toString()}
-                  >
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        ) : (
-          <span className="text-xs text-muted-foreground">{sizeLabel}</span>
-        )}
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-7 text-xs"
-          onClick={onClear}
-          disabled={stats.count === 0}
-        >
-          {t("settings.storage.limits.clearAudio")}
-        </Button>
-      </div>
-    </ContentItem>
-  );
-}
-
-function CacheLimitsSection() {
-  const { t } = useTranslation();
-  const { assetsQuota, lruQuota, smartQuota } = useCacheSettings();
-  const { setAssetsQuota, setLruQuota, setSmartQuota } = useCacheActions();
-  const stats = useCachePoolStats();
-
-  const totalCount =
-    stats.explicit.count +
-    stats.smart.count +
-    stats.lru.count +
-    stats.assets.count;
-
-  const clearBySource = useCallback(
-    (source: CacheMetaSource) => () => {
-      cacheManager.clearAudioBySource(source);
-    },
-    [],
-  );
-
-  const handleClearAssets = useCallback(() => {
-    cacheManager.clearAssets();
-  }, []);
-
-  const handleClearAll = useCallback(() => {
-    cacheManager.clearAllCaches();
-  }, []);
-
-  return (
-    <Root>
-      <Header>
-        <HeaderTitle>{t("settings.storage.limits.group")}</HeaderTitle>
-        <HeaderDescription>
-          {t("settings.storage.limits.description")}
-        </HeaderDescription>
-      </Header>
-
-      <Content>
-        <PoolRow
-          labelKey="explicit"
-          stats={stats.explicit}
-          quota={null}
-          onClear={clearBySource("explicit")}
-        />
-        <PoolRow
-          labelKey="smart"
-          stats={stats.smart}
-          quota={smartQuota}
-          onQuotaChange={setSmartQuota}
-          onClear={clearBySource("smart")}
-        />
-        <PoolRow
-          labelKey="lru"
-          stats={stats.lru}
-          quota={lruQuota}
-          onQuotaChange={setLruQuota}
-          onClear={clearBySource("lru")}
-        />
-        <PoolRow
-          labelKey="assets"
-          stats={stats.assets}
-          quota={assetsQuota}
-          onQuotaChange={setAssetsQuota}
-          onClear={handleClearAssets}
-        />
-
-        <ContentItem>
-          <div className="flex-1" />
-          <ContentItemForm>
-            <Button
-              size="sm"
-              variant="destructive"
-              className="h-8"
-              onClick={handleClearAll}
-              disabled={totalCount === 0}
-            >
-              {t("settings.storage.limits.clearAll")}
-            </Button>
-          </ContentItemForm>
-        </ContentItem>
-      </Content>
-
-      <ContentSeparator />
-    </Root>
-  );
-}
-
-function SyncLibrarySection() {
-  const { t } = useTranslation();
-  const libraryCaching = useLibraryCaching();
-  const syncLibrary = useCacheStore((s) => s.settings.syncLibrary);
-  const syncCoverArt = useCacheStore((s) => s.settings.syncCoverArt);
-  const {
-    setLibraryCaching,
-    setSyncLibrary,
-    setSyncCoverArt,
-    setLastSyncedAt,
-  } = useCacheActions();
-  const lastSyncedAt = useLastSyncedAt();
-  const isSyncing = useCacheStore((s) => s.status.syncState.isSyncing);
-  const isOnline = useIsOnline();
-  const [confirmOpen, setConfirmOpen] = useState(false);
-
-  const handleToggle = useCallback(
-    (checked: boolean) => {
-      if (!checked && lastSyncedAt !== null) {
-        setConfirmOpen(true);
-        return;
-      }
-      setLibraryCaching(checked);
-    },
-    [lastSyncedAt, setLibraryCaching],
-  );
-
-  const handleConfirmClear = useCallback(async () => {
-    await clearLibraryData();
-    setLastSyncedAt(null);
-    setLibraryCaching(false);
-    setConfirmOpen(false);
-  }, [setLastSyncedAt, setLibraryCaching]);
-
-  const handleRefresh = useCallback(() => {
-    syncService.syncIncremental({
-      includeCoverArt: syncCoverArt,
-      includeFullSongs: syncLibrary,
-    });
-  }, [syncCoverArt, syncLibrary]);
-
-  const handleCancel = useCallback(() => {
-    syncService.cancel();
-  }, []);
-
-  return (
-    <Root>
-      <Header>
-        <HeaderTitle>{t("settings.storage.sync.group")}</HeaderTitle>
-        <HeaderDescription>
-          {t("settings.storage.sync.description")}
-        </HeaderDescription>
-      </Header>
-
-      <Content>
-        <ContentItem>
-          <ContentItemTitle
-            info={t("settings.storage.sync.libraryCachingInfo")}
-          >
-            {t("settings.storage.sync.libraryCaching")}
-          </ContentItemTitle>
-          <ContentItemForm>
-            <Switch
-              checked={libraryCaching}
-              onCheckedChange={handleToggle}
-            />
-          </ContentItemForm>
-        </ContentItem>
-
-        <ContentItem>
-          <ContentItemTitle>
-            {t("settings.storage.sync.enabled")}
-          </ContentItemTitle>
-          <ContentItemForm>
-            <Switch
-              checked={syncLibrary}
-              onCheckedChange={setSyncLibrary}
-              disabled={!libraryCaching}
-            />
-          </ContentItemForm>
-        </ContentItem>
-
-        <ContentItem>
-          <ContentItemTitle info={t("settings.storage.sync.coverArtInfo")}>
-            {t("settings.storage.sync.coverArt")}
-          </ContentItemTitle>
-          <ContentItemForm>
-            <Switch
-              checked={syncCoverArt}
-              onCheckedChange={setSyncCoverArt}
-              disabled={!libraryCaching}
-            />
-          </ContentItemForm>
-        </ContentItem>
-
-        <ContentItem>
-          <ContentItemTitle>
-            {t("settings.storage.sync.lastSynced")}
-          </ContentItemTitle>
-          <ContentItemForm className="gap-2">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              {lastSyncedAt
-                ? dateTime(lastSyncedAt).fromNow()
-                : t("settings.storage.sync.never")}
-            </span>
-            {isSyncing ? (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-xs"
-                onClick={handleCancel}
-              >
-                {t("settings.storage.sync.cancel")}
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-xs"
-                onClick={handleRefresh}
-                disabled={!isOnline || !libraryCaching}
-              >
-                {t("settings.storage.sync.syncNow")}
-              </Button>
-            )}
-          </ContentItemForm>
-        </ContentItem>
-      </Content>
-
-      <ConfirmationDialog
-        open={confirmOpen}
-        onOpenChange={setConfirmOpen}
-        title={t("settings.storage.sync.clearConfirm.title")}
-        description={t("settings.storage.sync.clearConfirm.description")}
-        onConfirm={handleConfirmClear}
-        cancelLabel={t("settings.storage.sync.clearConfirm.keep")}
-        confirmLabel={t("settings.storage.sync.clearConfirm.clear")}
-      />
     </Root>
   );
 }
@@ -554,13 +330,283 @@ function SmartDownloadSection() {
   );
 }
 
+function SyncSection() {
+  const { t } = useTranslation();
+  const syncLibrary = useCacheStore((s) => s.settings.syncLibrary);
+  const syncCoverArt = useCacheStore((s) => s.settings.syncCoverArt);
+  const { setSyncLibrary, setSyncCoverArt } = useCacheActions();
+  const lastSyncedAt = useLastSyncedAt();
+  const isSyncing = useCacheStore((s) => s.status.syncState.isSyncing);
+  const isOnline = useIsOnline();
+
+  const handleRefresh = useCallback(() => {
+    syncService.syncIncremental({
+      includeCoverArt: syncCoverArt,
+      includeFullSongs: syncLibrary,
+    });
+  }, [syncCoverArt, syncLibrary]);
+
+  const handleCancel = useCallback(() => {
+    syncService.cancel();
+  }, []);
+
+  return (
+    <Root>
+      <Header>
+        <HeaderTitle>{t("settings.storage.sync.group")}</HeaderTitle>
+        <HeaderDescription>
+          {t("settings.storage.sync.description")}
+        </HeaderDescription>
+      </Header>
+
+      <Content>
+        <ContentItem>
+          <ContentItemTitle>
+            {t("settings.storage.sync.enabled")}
+          </ContentItemTitle>
+          <ContentItemForm>
+            <Switch
+              checked={syncLibrary}
+              onCheckedChange={setSyncLibrary}
+            />
+          </ContentItemForm>
+        </ContentItem>
+
+        <ContentItem>
+          <ContentItemTitle info={t("settings.storage.sync.coverArtInfo")}>
+            {t("settings.storage.sync.coverArt")}
+          </ContentItemTitle>
+          <ContentItemForm>
+            <Switch
+              checked={syncCoverArt}
+              onCheckedChange={setSyncCoverArt}
+            />
+          </ContentItemForm>
+        </ContentItem>
+
+        <ContentItem>
+          <ContentItemTitle>
+            {t("settings.storage.sync.lastSynced")}
+          </ContentItemTitle>
+          <ContentItemForm className="gap-2">
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              {lastSyncedAt
+                ? dateTime(lastSyncedAt).fromNow()
+                : t("settings.storage.sync.never")}
+            </span>
+            {isSyncing ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                onClick={handleCancel}
+              >
+                {t("settings.storage.sync.cancel")}
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                onClick={handleRefresh}
+                disabled={!isOnline}
+              >
+                {t("settings.storage.sync.syncNow")}
+              </Button>
+            )}
+          </ContentItemForm>
+        </ContentItem>
+      </Content>
+
+      <ContentSeparator />
+    </Root>
+  );
+}
+
+interface PoolRowProps {
+  labelKey: "explicit" | "smart" | "lru" | "assets";
+  stats: CachePoolBreakdown;
+  quota: number | null;
+  onQuotaChange?: (bytes: number) => void;
+  onClear: () => void;
+}
+
+function PoolRow({
+  labelKey,
+  stats,
+  quota,
+  onQuotaChange,
+  onClear,
+}: PoolRowProps) {
+  const { t } = useTranslation();
+  const sizeLabel = useMemo(() => {
+    if (quota === null || quota === 0) {
+      return t("settings.storage.limits.unlimited");
+    }
+    const option = CACHE_SIZE_OPTIONS.find((o) => o.value === quota);
+    return option?.label ?? formatBytes(quota);
+  }, [quota, t]);
+
+  const entriesLabel =
+    labelKey === "assets"
+      ? t("settings.storage.limits.imageEntries", { count: stats.count })
+      : t("settings.storage.limits.songEntries", { count: stats.count });
+
+  return (
+    <ContentItem className="flex-col items-start gap-2 sm:flex-row sm:items-center">
+      <div className="flex-1 min-w-0">
+        <ContentItemTitle>
+          {t(`settings.storage.limits.pool.${labelKey}.label`)}
+        </ContentItemTitle>
+        <p className="text-xs text-muted-foreground">
+          {t(`settings.storage.limits.pool.${labelKey}.description`)}
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          {formatBytes(stats.sizeBytes)} · {entriesLabel}
+        </p>
+      </div>
+
+      <div className="flex items-center gap-2 shrink-0">
+        {onQuotaChange && quota !== null ? (
+          <Select
+            value={quota.toString()}
+            onValueChange={(value) => onQuotaChange(Number(value))}
+          >
+            <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left w-[130px]">
+              <SelectValue>
+                <span className="text-sm text-foreground">{sizeLabel}</span>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectGroup>
+                {CACHE_SIZE_OPTIONS.map((option) => (
+                  <SelectItem
+                    key={option.value}
+                    value={option.value.toString()}
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        ) : (
+          <span className="text-xs text-muted-foreground">{sizeLabel}</span>
+        )}
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 text-xs"
+          onClick={onClear}
+          disabled={stats.count === 0}
+        >
+          {t("settings.storage.limits.clearAudio")}
+        </Button>
+      </div>
+    </ContentItem>
+  );
+}
+
+function CacheLimitsSection() {
+  const { t } = useTranslation();
+  const { assetsQuota, lruQuota, smartQuota } = useCacheSettings();
+  const { setAssetsQuota, setLruQuota, setSmartQuota } = useCacheActions();
+  const stats = useCachePoolStats();
+  const { enabled: smartEnabled } = useSmartRules();
+
+  const totalCount =
+    stats.explicit.count +
+    stats.smart.count +
+    stats.lru.count +
+    stats.assets.count;
+
+  const clearBySource = useCallback(
+    (source: CacheMetaSource) => () => {
+      cacheManager.clearAudioBySource(source);
+    },
+    [],
+  );
+
+  const handleClearAssets = useCallback(() => {
+    cacheManager.clearAssets();
+  }, []);
+
+  const handleClearAll = useCallback(() => {
+    cacheManager.clearAllCaches();
+  }, []);
+
+  return (
+    <Root>
+      <Header>
+        <HeaderTitle>{t("settings.storage.limits.group")}</HeaderTitle>
+        <HeaderDescription>
+          {t("settings.storage.limits.description")}
+        </HeaderDescription>
+      </Header>
+
+      <Content>
+        <PoolRow
+          labelKey="explicit"
+          stats={stats.explicit}
+          quota={null}
+          onClear={clearBySource("explicit")}
+        />
+        {smartEnabled && (
+          <PoolRow
+            labelKey="smart"
+            stats={stats.smart}
+            quota={smartQuota}
+            onQuotaChange={setSmartQuota}
+            onClear={clearBySource("smart")}
+          />
+        )}
+        <PoolRow
+          labelKey="lru"
+          stats={stats.lru}
+          quota={lruQuota}
+          onQuotaChange={setLruQuota}
+          onClear={clearBySource("lru")}
+        />
+        <PoolRow
+          labelKey="assets"
+          stats={stats.assets}
+          quota={assetsQuota}
+          onQuotaChange={setAssetsQuota}
+          onClear={handleClearAssets}
+        />
+
+        <ContentItem>
+          <div className="flex-1" />
+          <ContentItemForm>
+            <Button
+              size="sm"
+              variant="destructive"
+              className="h-8"
+              onClick={handleClearAll}
+              disabled={totalCount === 0}
+            >
+              {t("settings.storage.limits.clearAll")}
+            </Button>
+          </ContentItemForm>
+        </ContentItem>
+      </Content>
+
+      <ContentSeparator />
+    </Root>
+  );
+}
+
 export function Storage() {
+  const libraryCaching = useLibraryCaching();
+
   return (
     <div className="space-y-4">
-      <DownloadQualitySection />
+      <StreamingSection />
+      <LibraryCachingSection />
+      {libraryCaching && <DownloadQualitySection />}
+      {libraryCaching && <SmartDownloadSection />}
+      {libraryCaching && <SyncSection />}
       <CacheLimitsSection />
-      <SmartDownloadSection />
-      <SyncLibrarySection />
     </div>
   );
 }
