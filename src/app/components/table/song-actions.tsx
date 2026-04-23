@@ -2,7 +2,6 @@ import { Row } from "@tanstack/react-table";
 import { useHasHover } from "@/app/hooks/use-input-mode";
 import { SongMenuOptions } from "@/app/components/song/menu-options";
 import { CachedIndicator } from "@/app/components/table/cached-indicator";
-import { CacheButton } from "@/app/components/table/cache-button";
 import { TableActionButton } from "@/app/components/table/action-button";
 import { TableLikeButton } from "@/app/components/table/like-button";
 import { ISong } from "@/types/responses/song";
@@ -29,7 +28,6 @@ export function SongTableActions({ row }: SongTableActionsProps) {
       <CachedIndicator songId={row.original.id} />
       {hasHover && (
         <>
-          <CacheButton songId={row.original.id} />
           <TableLikeButton
             type="song"
             entityId={row.original.id}
