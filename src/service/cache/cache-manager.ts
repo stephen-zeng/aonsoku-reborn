@@ -138,6 +138,12 @@ class CacheManager {
       cachedAt: Date.now(),
       lastAccessedAt: Date.now(),
     };
+
+    await libraryDb.cacheMeta.put({
+      key,
+      ...meta,
+    });
+
     getCacheIndexActions().addItem(key, meta);
     this.scheduleStatsRefresh();
     persistCacheMeta(key, { key, ...meta });
@@ -184,7 +190,7 @@ class CacheManager {
         // Refresh triggers so "why is this cached?" stays accurate.
         const updated = { ...existing, triggers, lastAccessedAt: Date.now() };
         getCacheIndexActions().addItem(key, updated);
-        persistCacheMeta(key, { key, ...updated });
+        await persistCacheMeta(key, { key, ...updated });
         return;
       }
       if (existing.source === "lru") {
@@ -194,8 +200,9 @@ class CacheManager {
           triggers,
           lastAccessedAt: Date.now(),
         };
+
         getCacheIndexActions().addItem(key, updated);
-        persistCacheMeta(key, { key, ...updated });
+        await persistCacheMeta(key, { key, ...updated });
         return;
       }
     }
@@ -226,6 +233,12 @@ class CacheManager {
       cachedAt: Date.now(),
       lastAccessedAt: Date.now(),
     };
+
+    await libraryDb.cacheMeta.put({
+      key,
+      ...meta,
+    });
+
     getCacheIndexActions().addItem(key, meta);
     this.scheduleStatsRefresh();
     persistCacheMeta(key, { key, ...meta });
@@ -375,6 +388,12 @@ class CacheManager {
       cachedAt: existing?.cachedAt ?? Date.now(),
       lastAccessedAt: Date.now(),
     };
+
+    await libraryDb.cacheMeta.put({
+      key,
+      ...meta,
+    });
+
     getCacheIndexActions().addItem(key, meta);
     this.scheduleStatsRefresh();
     persistCacheMeta(key, { key, ...meta });
@@ -633,6 +652,9 @@ class CacheManager {
   async evictItem(key: string): Promise<void> {
     await cacheStorage.delete(key);
     getCacheIndexActions().removeItem(key);
+
+    await libraryDb.cacheMeta.delete(key);
+
     this.scheduleStatsRefresh();
     deleteCacheMeta(key);
   }
@@ -657,7 +679,7 @@ class CacheManager {
       getCacheIndexActions().removeItem(key);
     }
     if (keysToDelete.length > 0) {
-      bulkDeleteCacheMeta(keysToDelete);
+      await bulkDeleteCacheMeta(keysToDelete);
     }
     this.refreshStats();
   }
@@ -674,7 +696,7 @@ class CacheManager {
       getCacheIndexActions().removeItem(key);
     }
     if (keysToDelete.length > 0) {
-      bulkDeleteCacheMeta(keysToDelete);
+      await bulkDeleteCacheMeta(keysToDelete);
     }
     this.refreshStats();
   }
