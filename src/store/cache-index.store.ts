@@ -34,6 +34,37 @@ interface CacheIndexState {
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
 let indexFlushed = false;
 
+const pendingTouches = new Map<string, number>();
+let touchFlushTimer: ReturnType<typeof setTimeout> | null = null;
+
+function flushPendingTouches(): void {
+  if (pendingTouches.size === 0) return;
+  const entries = Array.from(pendingTouches.entries());
+  pendingTouches.clear();
+  touchFlushTimer = null;
+  import("@/store/library-db")
+    .then(({ libraryDb }) => {
+      for (const [key, lastAccessedAt] of entries) {
+        libraryDb.cacheMeta
+          .update(key, { lastAccessedAt })
+          .catch((err: unknown) => {
+            console.warn(
+              `[cacheIndex] failed to touch cacheMeta ${key}:`,
+              err,
+            );
+          });
+      }
+    })
+    .catch(() => {});
+}
+
+function scheduleTouchFlush(key: string, lastAccessedAt: number): void {
+  pendingTouches.set(key, lastAccessedAt);
+  if (!touchFlushTimer) {
+    touchFlushTimer = setTimeout(flushPendingTouches, 2000);
+  }
+}
+
 function schedulePersist(items: Record<string, CachedItemMeta>) {
   if (persistTimer) clearTimeout(persistTimer);
   indexFlushed = false;
@@ -50,6 +81,11 @@ function flushIndexPersist() {
     clearTimeout(persistTimer);
     persistTimer = null;
   }
+  if (touchFlushTimer) {
+    clearTimeout(touchFlushTimer);
+    touchFlushTimer = null;
+  }
+  flushPendingTouches();
   indexFlushed = true;
   const items = useCacheIndexStore.getState().items;
   idbSetWithRetry(IDB_KEY, items, cacheIndexStore);
@@ -126,16 +162,7 @@ export const useCacheIndexStore = createWithEqualityFn<CacheIndexState>()(
               }
             });
             schedulePersist(getState().items);
-            import("@/store/library-db")
-              .then(({ libraryDb }) =>
-                libraryDb.cacheMeta.update(key, { lastAccessedAt: now }),
-              )
-              .catch((err) => {
-                console.warn(
-                  `[cacheIndex] failed to touch cacheMeta ${key}:`,
-                  err,
-                );
-              });
+            scheduleTouchFlush(key, now);
           },
           setRemovedFromServer: (key, removed) => {
             setState((state) => {
