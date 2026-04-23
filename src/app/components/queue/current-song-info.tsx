@@ -14,8 +14,6 @@ export function CurrentSongInfo() {
 
   if (!currentSong) return null;
 
-  if (!currentSong) return null;
-
   return (
     <div className="mr-12 hidden lg:block w-[260px] lg:w-[320px] 2xl:w-[380px]">
       <AspectRatio
