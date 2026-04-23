@@ -6,6 +6,7 @@ import { EllipsisVertical, GripVertical, PlayIcon } from "lucide-react";
 import { CSSProperties, forwardRef, useState } from "react";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { CachedIndicator } from "@/app/components/table/cached-indicator";
+import { CacheButton } from "@/app/components/table/cache-button";
 import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { Button } from "@/app/components/ui/button";
@@ -140,8 +141,9 @@ export const QueueItemRow = forwardRef<
           <QueueArtists song={song} />
         </div>
 
-        <div className="relative w-[60px] flex-shrink-0 flex items-center justify-end">
+        <div className="relative w-[88px] flex-shrink-0 flex items-center justify-end gap-1">
           <CachedIndicator songId={song.id} />
+          <CacheButton songId={song.id} groupName="queuerow" />
           <span
             className={clsx(
               "text-xs transition-opacity",

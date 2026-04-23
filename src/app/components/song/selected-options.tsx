@@ -8,6 +8,8 @@ import {
   ContextMenuSeparator,
 } from "@/app/components/ui/context-menu";
 import { useOptions } from "@/app/hooks/use-options";
+import { audioKey, cacheManager } from "@/service/cache";
+import { useCacheIndexStore } from "@/store/cache-index.store";
 import { ROUTES } from "@/routes/routesList";
 import { ISong } from "@/types/responses/song";
 import { AddToPlaylistSubMenu } from "./add-to-playlist";
@@ -48,6 +50,39 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
 
     reset(() => songOptions.startDownload(firstSong.id));
   }
+
+  async function handleCacheSongs() {
+    for (const song of songs) {
+      const key = audioKey(song.id);
+      const isCached = key in useCacheIndexStore.getState().items;
+      if (!isCached) {
+        try {
+          await cacheManager.cacheSong(song.id);
+        } catch {
+          // Best-effort: skip songs that fail to cache
+        }
+      }
+    }
+    reset(() => {});
+  }
+
+  async function handleRemoveCachedSongs() {
+    for (const song of songs) {
+      const key = audioKey(song.id);
+      const isCached = key in useCacheIndexStore.getState().items;
+      if (isCached) {
+        await cacheManager.evictItem(key);
+      }
+    }
+    reset(() => {});
+  }
+
+  const hasUncached = songs.some(
+    (s) => !(audioKey(s.id) in useCacheIndexStore.getState().items),
+  );
+  const hasCached = songs.some(
+    (s) => audioKey(s.id) in useCacheIndexStore.getState().items,
+  );
 
   async function handleAddToPlaylist(id: string) {
     const songIdToAdd = songs.map((s) => s.id);
@@ -149,6 +184,25 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
             }}
           />
         </>
+      )}
+      <ContextMenuSeparator />
+      {hasUncached && (
+        <OptionsButtons.DownloadSong
+          variant="context"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCacheSongs();
+          }}
+        />
+      )}
+      {hasCached && (
+        <OptionsButtons.RemoveDownload
+          variant="context"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleRemoveCachedSongs();
+          }}
+        />
       )}
       <ContextMenuSeparator />
       <ContextMenuItem disabled inset>
