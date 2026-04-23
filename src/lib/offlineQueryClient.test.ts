@@ -11,6 +11,7 @@ import {
   getOfflineAlbumsList,
   getOfflineArtistDetail,
   getOfflinePlaylistDetail,
+  getOfflineSearchResults,
   getOfflineSongsList,
   idbFirstQueryFn,
   offlineData,
@@ -314,6 +315,163 @@ describe("offline list readers", () => {
     });
 
     expect(songs.map((song) => song.id)).toEqual(["song-2", "song-1"]);
+  });
+});
+
+describe("getOfflineSearchResults", () => {
+  it("returns matching artists, albums, and songs", async () => {
+    await libraryDb.artists.put({
+      id: "artist-1",
+      name: "Björk",
+      albumCount: 3,
+      coverArt: "artist-cover",
+      artistImageUrl: "",
+    });
+    await libraryDb.albums.put({
+      id: "album-1",
+      name: "Homogenic",
+      artist: "Björk",
+      artistId: "artist-1",
+      coverArt: "",
+      songCount: 1,
+      duration: 180,
+      playCount: 0,
+      created: "2024-01-01T00:00:00.000Z",
+      year: 1997,
+      genre: "electronic",
+      userRating: 0,
+      genres: [],
+      musicBrainzId: "",
+      isCompilation: false,
+      sortName: "Homogenic",
+      discTitles: [],
+    });
+    await libraryDb.songs.put(
+      makeSong("song-1", {
+        title: "Hunter",
+        artist: "Björk",
+        album: "Homogenic",
+        albumId: "album-1",
+        artistId: "artist-1",
+      }),
+    );
+
+    const result = await getOfflineSearchResults({
+      query: "bjork",
+      artistCount: 10,
+      albumCount: 10,
+      songCount: 10,
+    });
+
+    expect(result.artist).toHaveLength(1);
+    expect(result.artist![0].name).toBe("Björk");
+    expect(result.album).toHaveLength(1);
+    expect(result.album![0].name).toBe("Homogenic");
+    expect(result.song).toHaveLength(1);
+    expect(result.song![0].title).toBe("Hunter");
+  });
+
+  it("returns empty arrays when query has no matches", async () => {
+    await libraryDb.artists.put({
+      id: "artist-1",
+      name: "Radiohead",
+      albumCount: 1,
+      coverArt: "",
+      artistImageUrl: "",
+    });
+
+    const result = await getOfflineSearchResults({ query: "coldplay" });
+
+    expect(result.artist).toBeUndefined();
+    expect(result.album).toBeUndefined();
+    expect(result.song).toBeUndefined();
+  });
+
+  it("returns empty result for empty query", async () => {
+    await libraryDb.artists.put({
+      id: "artist-1",
+      name: "Radiohead",
+      albumCount: 1,
+      coverArt: "",
+      artistImageUrl: "",
+    });
+
+    const result = await getOfflineSearchResults({ query: "" });
+
+    expect(result.artist).toEqual([]);
+    expect(result.album).toEqual([]);
+    expect(result.song).toEqual([]);
+  });
+
+  it("respects count limits", async () => {
+    await libraryDb.songs.bulkPut([
+      makeSong("song-1", { title: "Alpha One" }),
+      makeSong("song-2", { title: "Alpha Two" }),
+      makeSong("song-3", { title: "Alpha Three" }),
+    ]);
+
+    const result = await getOfflineSearchResults({
+      query: "alpha",
+      songCount: 2,
+    });
+
+    expect(result.song).toHaveLength(2);
+  });
+
+  it("matches with diacritics normalization", async () => {
+    await libraryDb.artists.put({
+      id: "artist-1",
+      name: "Dvořák",
+      albumCount: 1,
+      coverArt: "",
+      artistImageUrl: "",
+    });
+
+    const result = await getOfflineSearchResults({ query: "dvorak" });
+
+    expect(result.artist).toHaveLength(1);
+    expect(result.artist![0].name).toBe("Dvořák");
+  });
+
+  it("matches multi-token queries across fields", async () => {
+    await libraryDb.songs.put(
+      makeSong("song-1", {
+        title: "Bohemian Rhapsody",
+        artist: "Queen",
+        album: "A Night at the Opera",
+      }),
+    );
+
+    const result = await getOfflineSearchResults({
+      query: "bohemian queen",
+    });
+
+    expect(result.song).toHaveLength(1);
+  });
+
+  it("does not match when not all tokens are present", async () => {
+    await libraryDb.songs.put(
+      makeSong("song-1", {
+        title: "Bohemian Rhapsody",
+        artist: "Queen",
+      }),
+    );
+
+    const result = await getOfflineSearchResults({
+      query: "bohemian beatles",
+    });
+
+    expect(result.song).toBeUndefined();
+  });
+
+  it("matches partial tokens", async () => {
+    await libraryDb.albums.put(
+      makeAlbum("album-1", { name: "Homogenic", artist: "Björk" }),
+    );
+
+    const result = await getOfflineSearchResults({ query: "homo" });
+
+    expect(result.album).toHaveLength(1);
   });
 });
 

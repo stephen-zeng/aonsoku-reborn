@@ -8,6 +8,7 @@ import { libraryDb } from "@/store/library-db";
 import type { Albums, SingleAlbum } from "@/types/responses/album";
 import type { IArtist } from "@/types/responses/artist";
 import type { PlaylistWithEntries } from "@/types/responses/playlist";
+import type { Search } from "@/types/responses/search";
 import type { ISong } from "@/types/responses/song";
 import {
   AlbumsFilters,
@@ -15,6 +16,7 @@ import {
   SortOptions,
   YearSortOptions,
 } from "@/utils/albumsFilter";
+import { matchesAllTokens, tokenizeQuery } from "@/utils/search";
 
 /**
  * Readers that return the current IDB contents for each library table.
@@ -28,6 +30,59 @@ export const offlineData = {
   songs: () => libraryDb.songs.toArray(),
   playlists: () => libraryDb.playlists.toArray(),
 } as const;
+
+interface OfflineSearchOptions {
+  query: string;
+  artistCount?: number;
+  albumCount?: number;
+  songCount?: number;
+}
+
+export async function getOfflineSearchResults(
+  options: OfflineSearchOptions,
+): Promise<Search> {
+  const {
+    query,
+    artistCount = 20,
+    albumCount = 20,
+    songCount = 20,
+  } = options;
+  const tokens = tokenizeQuery(query);
+
+  if (tokens.length === 0) {
+    return { artist: [], album: [], song: [] };
+  }
+
+  const [artists, albums, songs] = await Promise.all([
+    offlineData.artists(),
+    offlineData.albums(),
+    offlineData.songs(),
+  ]);
+
+  const matchedArtists = artists
+    .filter((artist) =>
+      matchesAllTokens(tokens, [artist.name]),
+    )
+    .slice(0, artistCount);
+
+  const matchedAlbums = albums
+    .filter((album) =>
+      matchesAllTokens(tokens, [album.name, album.artist, album.genre]),
+    )
+    .slice(0, albumCount);
+
+  const matchedSongs = songs
+    .filter((song) =>
+      matchesAllTokens(tokens, [song.title, song.artist, song.album]),
+    )
+    .slice(0, songCount);
+
+  return {
+    artist: matchedArtists.length > 0 ? matchedArtists : undefined,
+    album: matchedAlbums.length > 0 ? matchedAlbums : undefined,
+    song: matchedSongs.length > 0 ? matchedSongs : undefined,
+  };
+}
 
 function normalizeArtistAlbums(
   albums: Albums[],
