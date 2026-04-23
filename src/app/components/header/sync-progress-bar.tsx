@@ -9,7 +9,7 @@ import {
 } from "@/app/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { syncService } from "@/service/cache/sync-worker-adapter";
-import { useCacheStore, useLibraryCaching } from "@/store/cache.store";
+import { useCacheStore, useIsOnline, useLibraryCaching } from "@/store/cache.store";
 import type { SyncPhase, SyncState, SyncTier } from "@/types/cache";
 
 const TIER_ORDER: Record<SyncTier, number> = { t1: 0, t2: 1, t3: 2 };
@@ -147,6 +147,7 @@ function TierRow({
 export function SyncProgressBar() {
   const { t } = useTranslation();
   const libraryCaching = useLibraryCaching();
+  const isOnline = useIsOnline();
   const syncState = useCacheStore((s) => s.status.syncState);
   const [showCompleted, setShowCompleted] = useState(false);
 
@@ -159,6 +160,8 @@ export function SyncProgressBar() {
     }
     setShowCompleted(false);
   }, [syncState.phase, syncState.isSyncing, libraryCaching]);
+
+  if (!isOnline) return null;
 
   const showError = syncState.phase === "error";
   const isInactive =
