@@ -26,14 +26,13 @@ const FOCUS_THROTTLE_MS = 5 * 60 * 1000;
  * Both paths skip when offline, on a metered/slow connection
  * (P6.1 — user-initiated sync via the settings refresh button is
  * still allowed), or while a sync is already running. The
- * full-songs T3 step is gated by the `syncLibrary` setting; the
- * toggle is now a "include all songs" switch rather than an on/off
- * for offline caching. When `libraryCaching` is false, no sync
+ * full-songs T3 step now always runs when library caching is on;
+ * the old `syncLibrary` toggle has been merged into the single
+ * library caching switch. When `libraryCaching` is false, no sync
  * runs at all — the app stays in pure online mode.
  */
 export function MetadataSyncObserver() {
   const libraryCaching = useLibraryCaching();
-  const syncLibrary = useCacheStore((s) => s.settings.syncLibrary);
   const syncCoverArt = useCacheStore((s) => s.settings.syncCoverArt);
   const isOnline = useIsOnline();
   const isMetered = useIsMetered();
@@ -52,16 +51,16 @@ export function MetadataSyncObserver() {
       lastFocusSyncAt.current = Date.now();
       syncService.syncAll({
         includeCoverArt: syncCoverArt,
-        includeFullSongs: syncLibrary,
+        includeFullSongs: true,
       });
     } else if (justEnabled) {
       lastFocusSyncAt.current = Date.now();
       syncService.syncAll({
         includeCoverArt: syncCoverArt,
-        includeFullSongs: syncLibrary,
+        includeFullSongs: true,
       });
     }
-  }, [libraryCaching, syncLibrary, syncCoverArt, isOnline, isMetered]);
+  }, [libraryCaching, syncCoverArt, isOnline, isMetered]);
 
   useEffect(() => {
     if (!libraryCaching) {
@@ -84,7 +83,7 @@ export function MetadataSyncObserver() {
 
       syncService.syncIncremental({
         includeCoverArt: state.settings.syncCoverArt,
-        includeFullSongs: state.settings.syncLibrary,
+        includeFullSongs: true,
       });
     };
 

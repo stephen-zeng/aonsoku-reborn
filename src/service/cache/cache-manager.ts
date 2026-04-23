@@ -554,7 +554,7 @@ class CacheManager {
    * cleared automatically.
    *
    * Safe to call after any sync that refreshed the songs table. If
-   * the songs table is empty (e.g. `syncLibrary` off, fresh install)
+   * the songs table is empty (e.g. library caching off, fresh install)
    * this is a no-op — we'd otherwise mark every download as an
    * orphan, which would confuse users.
    */

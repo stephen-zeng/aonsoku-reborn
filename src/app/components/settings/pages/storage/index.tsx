@@ -109,8 +109,12 @@ function StreamingSection() {
 function LibraryCachingSection() {
   const { t } = useTranslation();
   const libraryCaching = useLibraryCaching();
-  const { setLibraryCaching, setLastSyncedAt } = useCacheActions();
+  const syncCoverArt = useCacheStore((s) => s.settings.syncCoverArt);
+  const { setLibraryCaching, setLastSyncedAt, setSyncCoverArt } =
+    useCacheActions();
   const lastSyncedAt = useLastSyncedAt();
+  const isSyncing = useCacheStore((s) => s.status.syncState.isSyncing);
+  const isOnline = useIsOnline();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleToggle = useCallback(
@@ -130,6 +134,17 @@ function LibraryCachingSection() {
     setLibraryCaching(false);
     setConfirmOpen(false);
   }, [setLastSyncedAt, setLibraryCaching]);
+
+  const handleRefresh = useCallback(() => {
+    syncService.syncIncremental({
+      includeCoverArt: syncCoverArt,
+      includeFullSongs: true,
+    });
+  }, [syncCoverArt]);
+
+  const handleCancel = useCallback(() => {
+    syncService.cancel();
+  }, []);
 
   return (
     <Root>
@@ -152,6 +167,53 @@ function LibraryCachingSection() {
               checked={libraryCaching}
               onCheckedChange={handleToggle}
             />
+          </ContentItemForm>
+        </ContentItem>
+
+        <ContentItem>
+          <ContentItemTitle info={t("settings.storage.sync.coverArtInfo")}>
+            {t("settings.storage.sync.coverArt")}
+          </ContentItemTitle>
+          <ContentItemForm>
+            <Switch
+              checked={syncCoverArt}
+              onCheckedChange={setSyncCoverArt}
+              disabled={!libraryCaching}
+            />
+          </ContentItemForm>
+        </ContentItem>
+
+        <ContentItem>
+          <ContentItemTitle>
+            {t("settings.storage.sync.lastSynced")}
+          </ContentItemTitle>
+          <ContentItemForm className="gap-2">
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              {lastSyncedAt
+                ? dateTime(lastSyncedAt).fromNow()
+                : t("settings.storage.sync.never")}
+            </span>
+            {libraryCaching &&
+              (isSyncing ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                  onClick={handleCancel}
+                >
+                  {t("settings.storage.sync.cancel")}
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                  onClick={handleRefresh}
+                  disabled={!isOnline}
+                >
+                  {t("settings.storage.sync.syncNow")}
+                </Button>
+              ))}
           </ContentItemForm>
         </ContentItem>
       </Content>
@@ -233,6 +295,9 @@ function SmartDownloadSection() {
   const { t } = useTranslation();
   const rules = useSmartRules();
   const { setSmartRules } = useCacheActions();
+  const { smartQuota, lruQuota } = useCacheSettings();
+  const { setSmartQuota, setLruQuota } = useCacheActions();
+  const stats = useCachePoolStats();
 
   const setEnabled = (enabled: boolean) => setSmartRules({ enabled });
   const setRule = (key: keyof typeof rules, value: boolean) =>
@@ -241,6 +306,30 @@ function SmartDownloadSection() {
     key: "frequentPlaysThreshold" | "recentPlaysDays",
     value: number,
   ) => setSmartRules({ [key]: Math.max(1, value) });
+
+  const sizeLabel = useMemo(() => {
+    if (smartQuota === 0) {
+      return t("settings.storage.limits.unlimited");
+    }
+    const option = CACHE_SIZE_OPTIONS.find((o) => o.value === smartQuota);
+    return option?.label ?? formatBytes(smartQuota);
+  }, [smartQuota, t]);
+
+  const handleClearSmart = useCallback(() => {
+    cacheManager.clearAudioBySource("smart");
+  }, []);
+
+  const handleClearLru = useCallback(() => {
+    cacheManager.clearAudioBySource("lru");
+  }, []);
+
+  const lruSizeLabel = useMemo(() => {
+    if (lruQuota === 0) {
+      return t("settings.storage.limits.unlimited");
+    }
+    const option = CACHE_SIZE_OPTIONS.find((o) => o.value === lruQuota);
+    return option?.label ?? formatBytes(lruQuota);
+  }, [lruQuota, t]);
 
   const rows: Array<{
     key: keyof typeof rules;
@@ -323,97 +412,82 @@ function SmartDownloadSection() {
             </ContentItemForm>
           </ContentItem>
         ))}
-      </Content>
-
-      <ContentSeparator />
-    </Root>
-  );
-}
-
-function SyncSection() {
-  const { t } = useTranslation();
-  const syncLibrary = useCacheStore((s) => s.settings.syncLibrary);
-  const syncCoverArt = useCacheStore((s) => s.settings.syncCoverArt);
-  const { setSyncLibrary, setSyncCoverArt } = useCacheActions();
-  const lastSyncedAt = useLastSyncedAt();
-  const isSyncing = useCacheStore((s) => s.status.syncState.isSyncing);
-  const isOnline = useIsOnline();
-
-  const handleRefresh = useCallback(() => {
-    syncService.syncIncremental({
-      includeCoverArt: syncCoverArt,
-      includeFullSongs: syncLibrary,
-    });
-  }, [syncCoverArt, syncLibrary]);
-
-  const handleCancel = useCallback(() => {
-    syncService.cancel();
-  }, []);
-
-  return (
-    <Root>
-      <Header>
-        <HeaderTitle>{t("settings.storage.sync.group")}</HeaderTitle>
-        <HeaderDescription>
-          {t("settings.storage.sync.description")}
-        </HeaderDescription>
-      </Header>
-
-      <Content>
-        <ContentItem>
-          <ContentItemTitle>
-            {t("settings.storage.sync.enabled")}
-          </ContentItemTitle>
-          <ContentItemForm>
-            <Switch
-              checked={syncLibrary}
-              onCheckedChange={setSyncLibrary}
-            />
-          </ContentItemForm>
-        </ContentItem>
 
         <ContentItem>
-          <ContentItemTitle info={t("settings.storage.sync.coverArtInfo")}>
-            {t("settings.storage.sync.coverArt")}
-          </ContentItemTitle>
-          <ContentItemForm>
-            <Switch
-              checked={syncCoverArt}
-              onCheckedChange={setSyncCoverArt}
-            />
-          </ContentItemForm>
-        </ContentItem>
-
-        <ContentItem>
-          <ContentItemTitle>
-            {t("settings.storage.sync.lastSynced")}
+          <ContentItemTitle info={t("settings.storage.limits.quota")}>
+            {t("settings.storage.limits.pool.smart.label")}
           </ContentItemTitle>
           <ContentItemForm className="gap-2">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              {lastSyncedAt
-                ? dateTime(lastSyncedAt).fromNow()
-                : t("settings.storage.sync.never")}
-            </span>
-            {isSyncing ? (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-xs"
-                onClick={handleCancel}
-              >
-                {t("settings.storage.sync.cancel")}
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-xs"
-                onClick={handleRefresh}
-                disabled={!isOnline}
-              >
-                {t("settings.storage.sync.syncNow")}
-              </Button>
-            )}
+            <Select
+              value={smartQuota.toString()}
+              onValueChange={(value) => setSmartQuota(Number(value))}
+            >
+              <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left w-[130px]">
+                <SelectValue>
+                  <span className="text-sm text-foreground">{sizeLabel}</span>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent align="end">
+                <SelectGroup>
+                  {CACHE_SIZE_OPTIONS.map((option) => (
+                    <SelectItem
+                      key={option.value}
+                      value={option.value.toString()}
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs"
+              onClick={handleClearSmart}
+              disabled={stats.smart.count === 0}
+            >
+              {t("settings.storage.limits.clearAudio")}
+            </Button>
+          </ContentItemForm>
+        </ContentItem>
+
+        <ContentItem>
+          <ContentItemTitle info={t("settings.storage.limits.quota")}>
+            {t("settings.storage.limits.pool.lru.label")}
+          </ContentItemTitle>
+          <ContentItemForm className="gap-2">
+            <Select
+              value={lruQuota.toString()}
+              onValueChange={(value) => setLruQuota(Number(value))}
+            >
+              <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left w-[130px]">
+                <SelectValue>
+                  <span className="text-sm text-foreground">{lruSizeLabel}</span>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent align="end">
+                <SelectGroup>
+                  {CACHE_SIZE_OPTIONS.map((option) => (
+                    <SelectItem
+                      key={option.value}
+                      value={option.value.toString()}
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs"
+              onClick={handleClearLru}
+              disabled={stats.lru.count === 0}
+            >
+              {t("settings.storage.limits.clearAudio")}
+            </Button>
           </ContentItemForm>
         </ContentItem>
       </Content>
@@ -509,10 +583,9 @@ function PoolRow({
 
 function CacheLimitsSection() {
   const { t } = useTranslation();
-  const { assetsQuota, lruQuota, smartQuota } = useCacheSettings();
-  const { setAssetsQuota, setLruQuota, setSmartQuota } = useCacheActions();
+  const { assetsQuota } = useCacheSettings();
+  const { setAssetsQuota } = useCacheActions();
   const stats = useCachePoolStats();
-  const { enabled: smartEnabled } = useSmartRules();
 
   const totalCount =
     stats.explicit.count +
@@ -550,22 +623,6 @@ function CacheLimitsSection() {
           stats={stats.explicit}
           quota={null}
           onClear={clearBySource("explicit")}
-        />
-        {smartEnabled && (
-          <PoolRow
-            labelKey="smart"
-            stats={stats.smart}
-            quota={smartQuota}
-            onQuotaChange={setSmartQuota}
-            onClear={clearBySource("smart")}
-          />
-        )}
-        <PoolRow
-          labelKey="lru"
-          stats={stats.lru}
-          quota={lruQuota}
-          onQuotaChange={setLruQuota}
-          onClear={clearBySource("lru")}
         />
         <PoolRow
           labelKey="assets"
@@ -605,7 +662,6 @@ export function Storage() {
       <LibraryCachingSection />
       {libraryCaching && <DownloadQualitySection />}
       {libraryCaching && <SmartDownloadSection />}
-      {libraryCaching && <SyncSection />}
       <CacheLimitsSection />
     </div>
   );

@@ -148,7 +148,6 @@ export function SyncProgressBar() {
   const { t } = useTranslation();
   const libraryCaching = useLibraryCaching();
   const syncState = useCacheStore((s) => s.status.syncState);
-  const syncLibrary = useCacheStore((s) => s.settings.syncLibrary);
   const [showCompleted, setShowCompleted] = useState(false);
 
   useEffect(() => {
@@ -166,11 +165,11 @@ export function SyncProgressBar() {
     return null;
 
   const handleRetry = () => {
-    const { syncCoverArt, syncLibrary } =
+    const { syncCoverArt } =
       useCacheStore.getState().settings;
     syncService.syncAll({
       includeCoverArt: syncCoverArt,
-      includeFullSongs: syncLibrary,
+      includeFullSongs: true,
     });
   };
 
@@ -217,7 +216,7 @@ export function SyncProgressBar() {
             phase={syncState.phase}
             progress={tierProgress("t2", syncState)}
           />
-          {syncLibrary && (
+          {libraryCaching && (
             <TierRow
               tier="t3"
               status={tierStatus("t3", syncState)}

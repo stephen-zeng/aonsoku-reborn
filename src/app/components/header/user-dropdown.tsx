@@ -134,11 +134,11 @@ export function UserDropdown() {
             ) : (
               <DropdownMenuItem
                 onClick={() => {
-                  const { syncLibrary, syncCoverArt } =
+                  const { syncCoverArt } =
                     useCacheStore.getState().settings;
                   syncService.syncAll({
                     includeCoverArt: syncCoverArt,
-                    includeFullSongs: syncLibrary,
+                    includeFullSongs: true,
                   });
                 }}
               >

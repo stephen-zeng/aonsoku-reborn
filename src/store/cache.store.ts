@@ -25,7 +25,6 @@ interface CacheActions {
   setSmartQuota: (bytes: number) => void;
   setSmartRules: (rules: Partial<SmartRuleSettings>) => void;
   setLibraryCaching: (enabled: boolean) => void;
-  setSyncLibrary: (enabled: boolean) => void;
   setSyncCoverArt: (enabled: boolean) => void;
   setIsOnline: (online: boolean) => void;
   setIsMetered: (metered: boolean) => void;
@@ -206,10 +205,6 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             setLibraryCaching: (enabled) => {
               set((state) => {
                 state.settings.libraryCaching = enabled;
-              });
-            },
-            setSyncLibrary: (enabled) => {
-              set((state) => {
                 state.settings.syncLibrary = enabled;
               });
             },

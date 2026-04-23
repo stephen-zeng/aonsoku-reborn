@@ -149,7 +149,8 @@ class SyncWorkerAdapter {
     const playerState = usePlayerStore.getState();
     return {
       includeCoverArt: options?.includeCoverArt ?? state.settings.syncCoverArt,
-      includeFullSongs: options?.includeFullSongs ?? state.settings.syncLibrary,
+      includeFullSongs:
+        options?.includeFullSongs ?? state.settings.libraryCaching,
       songCount: appState.data.songCount ?? 100_000,
       downloadQuality: state.settings.downloadQuality,
       useAlbumCoverForSongs:
