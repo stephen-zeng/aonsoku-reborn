@@ -102,13 +102,18 @@ export function resolveCacheKeys(
   albumId: string | undefined,
 ): string[] {
   if (coverArtType === "song" && albumId) {
-    const preferredId = getSongCoverArtId({ albumId, coverArt: coverArtId ?? "" });
-    if (!preferredId) return [];
-    const alternateId = preferredId === albumId ? (coverArtId || undefined) : albumId;
-    if (alternateId && alternateId !== preferredId) {
-      return [preferredId, alternateId];
+    const useAlbumCoverForSongs =
+      usePlayerStore.getState().settings.coverArt.useAlbumCoverForSongs;
+
+    if (useAlbumCoverForSongs) {
+      const alternateId = coverArtId && coverArtId !== albumId ? coverArtId : undefined;
+      return alternateId ? [albumId, alternateId] : [albumId];
     }
-    return [preferredId];
+
+    // When off, prefer song cover but always fallback to album cover
+    const preferredId = coverArtId || albumId;
+    const alternateId = coverArtId && coverArtId !== albumId ? albumId : undefined;
+    return alternateId ? [preferredId, alternateId] : [preferredId];
   }
   if (!coverArtId) return [];
   return [coverArtId];

@@ -383,7 +383,7 @@ class CacheManager {
         [
           ...artists.map((artist) => artist.coverArt),
           ...albums.map((album) => album.coverArt),
-          ...songs.map((song) => song.coverArt),
+          ...(useAlbumCoverForSongs ? [] : songs.map((song) => song.coverArt)),
         ].filter((value): value is string => Boolean(value)),
       ),
     );

@@ -581,9 +581,11 @@ class SyncWorkerService {
     await db.albums.each((a) => {
       if (a.coverArt) coverArtIds.add(a.coverArt);
     });
-    await db.songs.each((s) => {
-      if (s.coverArt) coverArtIds.add(s.coverArt);
-    });
+    if (!useAlbumCoverForSongs) {
+      await db.songs.each((s) => {
+        if (s.coverArt) coverArtIds.add(s.coverArt);
+      });
+    }
 
     const queue = Array.from(coverArtIds);
     let completed = 0;
