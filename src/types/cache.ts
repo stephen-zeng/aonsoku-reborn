@@ -26,7 +26,7 @@ export const DEFAULT_SMART_RULES: SmartRuleSettings = {
 
 export interface CachedItemMeta {
   id: string;
-  type: "audio" | "cover";
+  type: "audio" | "cover" | "album" | "playlist";
   source: CacheMetaSource;
   /**
    * Rule names (smart-download only) that currently keep this item

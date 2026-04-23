@@ -3,7 +3,12 @@ import { devtools, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
-import { audioKey, coverKey } from "@/service/cache/cache-keys";
+import {
+  albumKey,
+  audioKey,
+  coverKey,
+  playlistKey,
+} from "@/service/cache/cache-keys";
 import { cacheIndexStore, idbSetWithRetry } from "@/store/idb";
 import { CachedItemMeta, CacheMetaSource } from "@/types/cache";
 
@@ -176,6 +181,14 @@ export function isCoverCached(coverArtId: string): boolean {
   return coverKey(coverArtId) in useCacheIndexStore.getState().items;
 }
 
+export function isAlbumCached(albumId: string): boolean {
+  return albumKey(albumId) in useCacheIndexStore.getState().items;
+}
+
+export function isPlaylistCached(playlistId: string): boolean {
+  return playlistKey(playlistId) in useCacheIndexStore.getState().items;
+}
+
 export function getCacheIndexItems(): Record<string, CachedItemMeta> {
   return useCacheIndexStore.getState().items;
 }
@@ -186,6 +199,12 @@ export function getCacheIndexActions() {
 
 export const useIsAudioCached = (songId: string) =>
   useCacheIndexStore((state) => audioKey(songId) in state.items);
+
+export const useIsAlbumCached = (albumId: string) =>
+  useCacheIndexStore((state) => albumKey(albumId) in state.items);
+
+export const useIsPlaylistCached = (playlistId: string) =>
+  useCacheIndexStore((state) => playlistKey(playlistId) in state.items);
 
 export const useIsCoverCached = (coverArtId: string) =>
   useCacheIndexStore((state) => coverKey(coverArtId) in state.items);

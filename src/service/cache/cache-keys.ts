@@ -6,6 +6,14 @@ export function coverKey(coverArtId: string): string {
   return `cover:${coverArtId}`;
 }
 
+export function albumKey(albumId: string): string {
+  return `album:${albumId}`;
+}
+
+export function playlistKey(playlistId: string): string {
+  return `playlist:${playlistId}`;
+}
+
 export function songIdFromKey(key: string): string | null {
   if (!key.startsWith("audio:")) return null;
   return key.slice(6);

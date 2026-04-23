@@ -16,7 +16,7 @@ import { getSongCoverArtId } from "@/utils/coverArt";
 export interface CachedItemDetail {
   key: string;
   id: string;
-  type: "audio" | "cover";
+  type: "audio" | "cover" | "album" | "playlist";
   source: CacheMetaSource;
   name: string;
   subtitle?: string;
@@ -27,7 +27,14 @@ export interface CachedItemDetail {
   removedFromServer?: boolean;
 }
 
-import { audioKey, COVER_PREFIX, coverKey, isOldCoverKey } from "./cache-keys";
+import {
+  albumKey,
+  audioKey,
+  COVER_PREFIX,
+  coverKey,
+  isOldCoverKey,
+  playlistKey,
+} from "./cache-keys";
 import { cacheStorage } from "./cache-storage";
 import { computeEvictionPlan } from "./eviction";
 import {
@@ -541,6 +548,7 @@ class CacheManager {
     const album = await subsonic.albums.getOne(albumId);
     if (!album?.song) return;
     await this.cacheBulk(album.song, onProgress);
+    this.recordCollectionEntry(albumKey(albumId), albumId, "album");
   }
 
   async cachePlaylist(
@@ -550,6 +558,7 @@ class CacheManager {
     const playlist = await subsonic.playlists.getOne(playlistId);
     if (!playlist?.entry) return;
     await this.cacheBulk(playlist.entry, onProgress);
+    this.recordCollectionEntry(playlistKey(playlistId), playlistId, "playlist");
   }
 
   async cacheArtist(
@@ -583,6 +592,24 @@ class CacheManager {
     }
   }
 
+  private recordCollectionEntry(
+    key: string,
+    id: string,
+    type: "album" | "playlist",
+  ): void {
+    const now = Date.now();
+    const meta: CachedItemMeta = {
+      id,
+      type,
+      source: "explicit",
+      sizeBytes: 0,
+      cachedAt: now,
+      lastAccessedAt: now,
+    };
+    getCacheIndexActions().addItem(key, meta);
+    persistCacheMeta(key, { key, ...meta });
+  }
+
   async evictItem(key: string): Promise<void> {
     await cacheStorage.delete(key);
     getCacheIndexActions().removeItem(key);
@@ -597,7 +624,12 @@ class CacheManager {
   async clearAudioBySource(source: CacheMetaSource): Promise<void> {
     const items = getCacheIndexItems();
     const keysToDelete = Object.entries(items)
-      .filter(([, meta]) => meta.type === "audio" && meta.source === source)
+      .filter(
+        ([, meta]) =>
+          (meta.type === "audio" && meta.source === source) ||
+          ((meta.type === "album" || meta.type === "playlist") &&
+            meta.source === source),
+      )
       .map(([key]) => key);
 
     await Promise.all(keysToDelete.map((key) => cacheStorage.delete(key)));
@@ -643,6 +675,17 @@ class CacheManager {
         if (song) {
           name = song.title || meta.id;
           subtitle = song.artist || undefined;
+        }
+      } else if (meta.type === "album") {
+        const album = await libraryDb.albums.get(meta.id);
+        if (album?.name) {
+          name = album.name;
+          subtitle = album.artist || undefined;
+        }
+      } else if (meta.type === "playlist") {
+        const playlist = await libraryDb.playlists.get(meta.id);
+        if (playlist?.name) {
+          name = playlist.name;
         }
       } else {
         const album = await libraryDb.albums.get(meta.id);
