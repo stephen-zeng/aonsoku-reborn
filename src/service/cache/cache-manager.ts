@@ -499,23 +499,38 @@ class CacheManager {
     songs: { id: string; coverArt?: string; albumId?: string }[],
     onProgress?: (current: number, total: number) => void,
   ): Promise<void> {
+    const seenCovers = new Set<string>();
     let completed = 0;
-    for (const song of songs) {
+    const total = songs.length;
+    const concurrency = 3;
+
+    const run = async (song: {
+      id: string;
+      coverArt?: string;
+      albumId?: string;
+    }): Promise<void> => {
       try {
         await this.cacheSong(song.id);
         const coverArtId = getSongCoverArtId({
           albumId: song.albumId,
           coverArt: song.coverArt ?? "",
         });
-        if (coverArtId) {
+        if (coverArtId && !seenCovers.has(coverArtId)) {
+          seenCovers.add(coverArtId);
           await this.cacheCover(coverArtId);
         }
       } catch (err) {
         console.error(`Failed to cache song ${song.id}:`, err);
       }
       completed++;
-      onProgress?.(completed, songs.length);
+      onProgress?.(completed, total);
+    };
+
+    for (let i = 0; i < songs.length; i += concurrency) {
+      const batch = songs.slice(i, i + concurrency);
+      await Promise.all(batch.map(run));
     }
+
     await this.enforceStorageLimit();
   }
 
