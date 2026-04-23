@@ -41,9 +41,9 @@ export function CachedIndicator({
   className,
 }: CachedIndicatorProps) {
   const { t } = useTranslation();
+  const isCached = useCacheIndexStore((state) => audioKey(songId) in state.items);
   const meta = useAudioCacheMeta(songId);
   const progress = useDownloadProgress(songId);
-  const isCached = Boolean(meta);
   const source = meta?.source as CacheMetaSource | undefined;
 
   if (progress !== undefined) {

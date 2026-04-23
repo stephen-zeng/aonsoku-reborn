@@ -125,6 +125,12 @@ class CacheManager {
       cachedAt: Date.now(),
       lastAccessedAt: Date.now(),
     };
+
+    await libraryDb.cacheMeta.put({
+      key,
+      ...meta,
+    });
+
     getCacheIndexActions().addItem(key, meta);
     this.scheduleStatsRefresh();
 
@@ -168,20 +174,34 @@ class CacheManager {
       if (existing.source === "explicit") return; // user already owns it
       if (existing.source === "smart") {
         // Refresh triggers so "why is this cached?" stays accurate.
-        getCacheIndexActions().addItem(key, {
+        const meta = {
           ...existing,
           triggers,
           lastAccessedAt: Date.now(),
+        };
+
+        await libraryDb.cacheMeta.put({
+          key,
+          ...meta,
         });
+
+        getCacheIndexActions().addItem(key, meta);
         return;
       }
       if (existing.source === "lru") {
-        getCacheIndexActions().addItem(key, {
+        const meta = {
           ...existing,
-          source: "smart",
+          source: "smart" as const,
           triggers,
           lastAccessedAt: Date.now(),
+        };
+
+        await libraryDb.cacheMeta.put({
+          key,
+          ...meta,
         });
+
+        getCacheIndexActions().addItem(key, meta);
         return;
       }
     }
@@ -212,6 +232,12 @@ class CacheManager {
       cachedAt: Date.now(),
       lastAccessedAt: Date.now(),
     };
+
+    await libraryDb.cacheMeta.put({
+      key,
+      ...meta,
+    });
+
     getCacheIndexActions().addItem(key, meta);
     this.scheduleStatsRefresh();
 
@@ -354,6 +380,12 @@ class CacheManager {
       cachedAt: existing?.cachedAt ?? Date.now(),
       lastAccessedAt: Date.now(),
     };
+
+    await libraryDb.cacheMeta.put({
+      key,
+      ...meta,
+    });
+
     getCacheIndexActions().addItem(key, meta);
     this.scheduleStatsRefresh();
   }
@@ -561,6 +593,9 @@ class CacheManager {
   async evictItem(key: string): Promise<void> {
     await cacheStorage.delete(key);
     getCacheIndexActions().removeItem(key);
+
+    await libraryDb.cacheMeta.delete(key);
+
     this.scheduleStatsRefresh();
   }
 
@@ -578,6 +613,9 @@ class CacheManager {
     for (const key of keysToDelete) {
       getCacheIndexActions().removeItem(key);
     }
+
+    await libraryDb.cacheMeta.bulkDelete(keysToDelete);
+
     this.refreshStats();
   }
 
@@ -592,6 +630,9 @@ class CacheManager {
     for (const key of keysToDelete) {
       getCacheIndexActions().removeItem(key);
     }
+
+    await libraryDb.cacheMeta.bulkDelete(keysToDelete);
+
     this.refreshStats();
   }
 
