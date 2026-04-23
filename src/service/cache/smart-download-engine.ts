@@ -10,6 +10,7 @@ import type { SmartRuleSettings } from "@/types/cache";
 import { audioKey } from "./cache-keys";
 import { cacheManager } from "./cache-manager";
 import { cacheStorage } from "./cache-storage";
+import { deleteCacheMeta, persistCacheMeta } from "./persist-meta";
 
 type TriggerMap = Map<string, Set<string>>;
 
@@ -131,12 +132,7 @@ class SmartDownloadEngine {
             lastAccessedAt: existing.lastAccessedAt,
           };
           getCacheIndexActions().addItem(key, updated);
-          libraryDb.cacheMeta.put({ key, ...updated }).catch((err) => {
-            console.warn(
-              `[smart-download] failed to update cacheMeta for ${key}:`,
-              err,
-            );
-          });
+          persistCacheMeta(key, { key, ...updated });
         }
       }
       // Explicit/lru entries are left alone — cacheSmartSong already
@@ -148,12 +144,7 @@ class SmartDownloadEngine {
   private async evictSmartEntry(key: string): Promise<void> {
     await cacheStorage.delete(key);
     getCacheIndexActions().removeItem(key);
-    libraryDb.cacheMeta.delete(key).catch((err) => {
-      console.warn(
-        `[smart-download] failed to delete cacheMeta for ${key}:`,
-        err,
-      );
-    });
+    deleteCacheMeta(key);
   }
 }
 
