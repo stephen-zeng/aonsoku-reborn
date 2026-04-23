@@ -803,6 +803,8 @@
           "all": "All",
           "audio": "Audio",
           "cover": "Cover Art",
+          "album": "Album",
+          "playlist": "Playlist",
           "explicit": "Explicit",
           "smart": "Smart",
           "lru": "LRU"
@@ -819,6 +821,8 @@
           "total": "{{count}} items, {{size}} total",
           "type_audio": "Audio",
           "type_cover": "Cover",
+          "type_album": "Album",
+          "type_playlist": "Playlist",
           "removedFromServer": "Removed from server"
         },
         "confirmDelete": {

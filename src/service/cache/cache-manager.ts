@@ -1,8 +1,6 @@
 import { getCoverArtUrl, getSongStreamUrl } from "@/api/httpClient";
-import { getSongCoverArtId } from "@/utils/coverArt";
 import { subsonic } from "@/service/subsonic";
 import { useCacheStore } from "@/store/cache.store";
-import { usePlayerStore } from "@/store/player.store";
 import {
   getCacheIndexActions,
   getCacheIndexItems,
@@ -11,12 +9,14 @@ import {
   useCacheIndexStore,
 } from "@/store/cache-index.store";
 import { libraryDb } from "@/store/library-db";
+import { usePlayerStore } from "@/store/player.store";
 import { CachedItemMeta, CacheMetaSource } from "@/types/cache";
+import { getSongCoverArtId } from "@/utils/coverArt";
 
 export interface CachedItemDetail {
   key: string;
   id: string;
-  type: "audio" | "cover";
+  type: "audio" | "cover" | "album" | "playlist";
   source: CacheMetaSource;
   name: string;
   subtitle?: string;
@@ -26,9 +26,22 @@ export interface CachedItemDetail {
   coverSize?: string;
   removedFromServer?: boolean;
 }
-import { COVER_PREFIX, audioKey, coverKey, isOldCoverKey } from "./cache-keys";
+
+import {
+  albumKey,
+  audioKey,
+  COVER_PREFIX,
+  coverKey,
+  isOldCoverKey,
+  playlistKey,
+} from "./cache-keys";
 import { cacheStorage } from "./cache-storage";
 import { computeEvictionPlan } from "./eviction";
+import {
+  bulkDeleteCacheMeta,
+  deleteCacheMeta,
+  persistCacheMeta,
+} from "./persist-meta";
 import { syncService } from "./sync-worker-adapter";
 
 /**
@@ -133,6 +146,7 @@ class CacheManager {
 
     getCacheIndexActions().addItem(key, meta);
     this.scheduleStatsRefresh();
+    persistCacheMeta(key, { key, ...meta });
 
     // Bundle structured lyrics with the audio so offline playback shows
     // them without another network trip. Fire-and-forget: lyrics are a
@@ -174,34 +188,21 @@ class CacheManager {
       if (existing.source === "explicit") return; // user already owns it
       if (existing.source === "smart") {
         // Refresh triggers so "why is this cached?" stays accurate.
-        const meta = {
-          ...existing,
-          triggers,
-          lastAccessedAt: Date.now(),
-        };
-
-        await libraryDb.cacheMeta.put({
-          key,
-          ...meta,
-        });
-
-        getCacheIndexActions().addItem(key, meta);
+        const updated = { ...existing, triggers, lastAccessedAt: Date.now() };
+        getCacheIndexActions().addItem(key, updated);
+        await persistCacheMeta(key, { key, ...updated });
         return;
       }
       if (existing.source === "lru") {
-        const meta = {
+        const updated = {
           ...existing,
           source: "smart" as const,
           triggers,
           lastAccessedAt: Date.now(),
         };
 
-        await libraryDb.cacheMeta.put({
-          key,
-          ...meta,
-        });
-
-        getCacheIndexActions().addItem(key, meta);
+        getCacheIndexActions().addItem(key, updated);
+        await persistCacheMeta(key, { key, ...updated });
         return;
       }
     }
@@ -240,6 +241,7 @@ class CacheManager {
 
     getCacheIndexActions().addItem(key, meta);
     this.scheduleStatsRefresh();
+    persistCacheMeta(key, { key, ...meta });
 
     // Same rationale as cacheSong: bring lyrics along.
     this.cacheLyrics(songId).catch(() => {});
@@ -276,6 +278,14 @@ class CacheManager {
     });
   }
 
+  /**
+   * Resolve a cached audio blob to a local URL the <audio> element can
+   * play. Returns `null` when the song is not in the cache.
+   *
+   * **Callers must call `URL.revokeObjectURL()` on the returned string
+   * when they are done with it (e.g. on song change or unmount) to
+   * avoid leaking memory.**
+   */
   async getCachedAudioUrl(songId: string): Promise<string | null> {
     const key = audioKey(songId);
 
@@ -313,14 +323,16 @@ class CacheManager {
           removedFromServer: existingRow.removedFromServer,
         });
       } else {
-        getCacheIndexActions().addItem(key, {
+        const syntheticMeta = {
           id: songId,
-          type: "audio",
-          source: "explicit",
+          type: "audio" as const,
+          source: "explicit" as const,
           sizeBytes: blob.size,
           cachedAt: Date.now(),
           lastAccessedAt: Date.now(),
-        });
+        };
+        getCacheIndexActions().addItem(key, syntheticMeta);
+        persistCacheMeta(key, { key, ...syntheticMeta });
       }
     } else {
       getCacheIndexActions().touchItem(key);
@@ -350,12 +362,8 @@ class CacheManager {
     const existing = items[key];
     const existingSize = Number(existing?.coverSize ?? "0");
     const requestedSize = Number(size);
-    const shouldReplaceExisting = existingSize < requestedSize && !!existing;
 
-    if (existing) {
-      if (existingSize >= requestedSize) return;
-      await cacheStorage.delete(key);
-    }
+    if (existing && existingSize >= requestedSize) return;
 
     const url = getCoverArtUrl(coverArtId, "album", size);
     if (url.startsWith("/default_")) return;
@@ -365,7 +373,7 @@ class CacheManager {
 
     const blob = await response.blob();
 
-    if (shouldReplaceExisting) {
+    if (existing) {
       await cacheStorage.delete(key);
     }
 
@@ -388,8 +396,16 @@ class CacheManager {
 
     getCacheIndexActions().addItem(key, meta);
     this.scheduleStatsRefresh();
+    persistCacheMeta(key, { key, ...meta });
   }
 
+  /**
+   * Resolve a cached cover art blob to a local URL for <img> elements.
+   * Returns `null` when the cover is not in the cache.
+   *
+   * **Callers must call `URL.revokeObjectURL()` on the returned string
+   * when they are done with it to avoid leaking memory.**
+   */
   async getCachedCoverUrl(coverArtId: string): Promise<string | null> {
     const key = coverKey(coverArtId);
 
@@ -426,14 +442,17 @@ class CacheManager {
           removedFromServer: existingRow.removedFromServer,
         });
       } else {
-        getCacheIndexActions().addItem(key, {
+        const syntheticMeta = {
           id: coverArtId,
-          type: "cover",
-          source: "explicit",
+          type: "cover" as const,
+          source: "explicit" as const,
+          coverSize: "700",
           sizeBytes: blob.size,
           cachedAt: Date.now(),
           lastAccessedAt: Date.now(),
-        });
+        };
+        getCacheIndexActions().addItem(key, syntheticMeta);
+        persistCacheMeta(key, { key, ...syntheticMeta });
       }
     } else {
       getCacheIndexActions().touchItem(key);
@@ -521,23 +540,43 @@ class CacheManager {
     songs: { id: string; coverArt?: string; albumId?: string }[],
     onProgress?: (current: number, total: number) => void,
   ): Promise<void> {
+    const seenCovers = new Set<string>();
     let completed = 0;
-    for (const song of songs) {
+    const total = songs.length;
+    const concurrency = 3;
+    const evictionInterval = 10;
+
+    const run = async (song: {
+      id: string;
+      coverArt?: string;
+      albumId?: string;
+    }): Promise<void> => {
       try {
         await this.cacheSong(song.id);
         const coverArtId = getSongCoverArtId({
           albumId: song.albumId,
           coverArt: song.coverArt ?? "",
         });
-        if (coverArtId) {
+        if (coverArtId && !seenCovers.has(coverArtId)) {
+          seenCovers.add(coverArtId);
           await this.cacheCover(coverArtId);
         }
       } catch (err) {
         console.error(`Failed to cache song ${song.id}:`, err);
       }
       completed++;
-      onProgress?.(completed, songs.length);
+      onProgress?.(completed, total);
+
+      if (completed % evictionInterval === 0) {
+        await this.enforceStorageLimit();
+      }
+    };
+
+    for (let i = 0; i < songs.length; i += concurrency) {
+      const batch = songs.slice(i, i + concurrency);
+      await Promise.all(batch.map(run));
     }
+
     await this.enforceStorageLimit();
   }
 
@@ -548,6 +587,7 @@ class CacheManager {
     const album = await subsonic.albums.getOne(albumId);
     if (!album?.song) return;
     await this.cacheBulk(album.song, onProgress);
+    this.recordCollectionEntry(albumKey(albumId), albumId, "album");
   }
 
   async cachePlaylist(
@@ -557,6 +597,7 @@ class CacheManager {
     const playlist = await subsonic.playlists.getOne(playlistId);
     if (!playlist?.entry) return;
     await this.cacheBulk(playlist.entry, onProgress);
+    this.recordCollectionEntry(playlistKey(playlistId), playlistId, "playlist");
   }
 
   async cacheArtist(
@@ -590,6 +631,24 @@ class CacheManager {
     }
   }
 
+  private recordCollectionEntry(
+    key: string,
+    id: string,
+    type: "album" | "playlist",
+  ): void {
+    const now = Date.now();
+    const meta: CachedItemMeta = {
+      id,
+      type,
+      source: "explicit",
+      sizeBytes: 0,
+      cachedAt: now,
+      lastAccessedAt: now,
+    };
+    getCacheIndexActions().addItem(key, meta);
+    persistCacheMeta(key, { key, ...meta });
+  }
+
   async evictItem(key: string): Promise<void> {
     await cacheStorage.delete(key);
     getCacheIndexActions().removeItem(key);
@@ -597,6 +656,7 @@ class CacheManager {
     await libraryDb.cacheMeta.delete(key);
 
     this.scheduleStatsRefresh();
+    deleteCacheMeta(key);
   }
 
   /**
@@ -606,16 +666,21 @@ class CacheManager {
   async clearAudioBySource(source: CacheMetaSource): Promise<void> {
     const items = getCacheIndexItems();
     const keysToDelete = Object.entries(items)
-      .filter(([, meta]) => meta.type === "audio" && meta.source === source)
+      .filter(
+        ([, meta]) =>
+          (meta.type === "audio" && meta.source === source) ||
+          ((meta.type === "album" || meta.type === "playlist") &&
+            meta.source === source),
+      )
       .map(([key]) => key);
 
     await Promise.all(keysToDelete.map((key) => cacheStorage.delete(key)));
     for (const key of keysToDelete) {
       getCacheIndexActions().removeItem(key);
     }
-
-    await libraryDb.cacheMeta.bulkDelete(keysToDelete);
-
+    if (keysToDelete.length > 0) {
+      await bulkDeleteCacheMeta(keysToDelete);
+    }
     this.refreshStats();
   }
 
@@ -630,9 +695,9 @@ class CacheManager {
     for (const key of keysToDelete) {
       getCacheIndexActions().removeItem(key);
     }
-
-    await libraryDb.cacheMeta.bulkDelete(keysToDelete);
-
+    if (keysToDelete.length > 0) {
+      await bulkDeleteCacheMeta(keysToDelete);
+    }
     this.refreshStats();
   }
 
@@ -652,6 +717,17 @@ class CacheManager {
         if (song) {
           name = song.title || meta.id;
           subtitle = song.artist || undefined;
+        }
+      } else if (meta.type === "album") {
+        const album = await libraryDb.albums.get(meta.id);
+        if (album?.name) {
+          name = album.name;
+          subtitle = album.artist || undefined;
+        }
+      } else if (meta.type === "playlist") {
+        const playlist = await libraryDb.playlists.get(meta.id);
+        if (playlist?.name) {
+          name = playlist.name;
         }
       } else {
         const album = await libraryDb.albums.get(meta.id);

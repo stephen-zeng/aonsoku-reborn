@@ -1,5 +1,5 @@
-import { subsonic } from "@/service/subsonic";
 import { getNetworkStatus } from "@/app/hooks/use-network-status";
+import { subsonic } from "@/service/subsonic";
 import { useCacheStore } from "@/store/cache.store";
 import {
   getCacheIndexActions,
@@ -10,6 +10,7 @@ import type { SmartRuleSettings } from "@/types/cache";
 import { audioKey } from "./cache-keys";
 import { cacheManager } from "./cache-manager";
 import { cacheStorage } from "./cache-storage";
+import { deleteCacheMeta, persistCacheMeta } from "./persist-meta";
 
 type TriggerMap = Map<string, Set<string>>;
 
@@ -125,11 +126,13 @@ class SmartDownloadEngine {
         const current = new Set(existing.triggers ?? []);
         const incoming = new Set(triggers);
         if (!setsEqual(current, incoming)) {
-          getCacheIndexActions().addItem(key, {
+          const updated = {
             ...existing,
             triggers,
             lastAccessedAt: existing.lastAccessedAt,
-          });
+          };
+          getCacheIndexActions().addItem(key, updated);
+          persistCacheMeta(key, { key, ...updated });
         }
       }
       // Explicit/lru entries are left alone — cacheSmartSong already
@@ -141,6 +144,7 @@ class SmartDownloadEngine {
   private async evictSmartEntry(key: string): Promise<void> {
     await cacheStorage.delete(key);
     getCacheIndexActions().removeItem(key);
+    deleteCacheMeta(key);
   }
 }
 

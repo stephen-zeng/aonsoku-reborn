@@ -770,6 +770,8 @@
           "all": "全部",
           "audio": "音频",
           "cover": "封面图",
+          "album": "专辑",
+          "playlist": "播放列表",
           "explicit": "手动下载",
           "smart": "智能下载",
           "lru": "自动缓存"
@@ -786,6 +788,8 @@
           "total": "共 {{count}} 项，{{size}}",
           "type_audio": "音频",
           "type_cover": "封面",
+          "type_album": "专辑",
+          "type_playlist": "播放列表",
           "removedFromServer": "已从服务器移除"
         },
         "confirmDelete": {
