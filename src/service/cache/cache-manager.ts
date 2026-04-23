@@ -1,8 +1,6 @@
 import { getCoverArtUrl, getSongStreamUrl } from "@/api/httpClient";
-import { getSongCoverArtId } from "@/utils/coverArt";
 import { subsonic } from "@/service/subsonic";
 import { useCacheStore } from "@/store/cache.store";
-import { usePlayerStore } from "@/store/player.store";
 import {
   getCacheIndexActions,
   getCacheIndexItems,
@@ -11,7 +9,9 @@ import {
   useCacheIndexStore,
 } from "@/store/cache-index.store";
 import { libraryDb } from "@/store/library-db";
+import { usePlayerStore } from "@/store/player.store";
 import { CachedItemMeta, CacheMetaSource } from "@/types/cache";
+import { getSongCoverArtId } from "@/utils/coverArt";
 
 export interface CachedItemDetail {
   key: string;
@@ -26,7 +26,8 @@ export interface CachedItemDetail {
   coverSize?: string;
   removedFromServer?: boolean;
 }
-import { COVER_PREFIX, audioKey, coverKey, isOldCoverKey } from "./cache-keys";
+
+import { audioKey, COVER_PREFIX, coverKey, isOldCoverKey } from "./cache-keys";
 import { cacheStorage } from "./cache-storage";
 import { computeEvictionPlan } from "./eviction";
 import { syncService } from "./sync-worker-adapter";
@@ -127,6 +128,12 @@ class CacheManager {
     };
     getCacheIndexActions().addItem(key, meta);
     this.scheduleStatsRefresh();
+    libraryDb.cacheMeta.put({ key, ...meta }).catch((err) => {
+      console.warn(
+        `[cacheManager] failed to persist cacheMeta for ${key}:`,
+        err,
+      );
+    });
 
     // Bundle structured lyrics with the audio so offline playback shows
     // them without another network trip. Fire-and-forget: lyrics are a
@@ -168,20 +175,20 @@ class CacheManager {
       if (existing.source === "explicit") return; // user already owns it
       if (existing.source === "smart") {
         // Refresh triggers so "why is this cached?" stays accurate.
-        getCacheIndexActions().addItem(key, {
-          ...existing,
-          triggers,
-          lastAccessedAt: Date.now(),
-        });
+        const updated = { ...existing, triggers, lastAccessedAt: Date.now() };
+        getCacheIndexActions().addItem(key, updated);
+        libraryDb.cacheMeta.put({ key, ...updated }).catch(() => {});
         return;
       }
       if (existing.source === "lru") {
-        getCacheIndexActions().addItem(key, {
+        const updated = {
           ...existing,
-          source: "smart",
+          source: "smart" as const,
           triggers,
           lastAccessedAt: Date.now(),
-        });
+        };
+        getCacheIndexActions().addItem(key, updated);
+        libraryDb.cacheMeta.put({ key, ...updated }).catch(() => {});
         return;
       }
     }
@@ -214,6 +221,12 @@ class CacheManager {
     };
     getCacheIndexActions().addItem(key, meta);
     this.scheduleStatsRefresh();
+    libraryDb.cacheMeta.put({ key, ...meta }).catch((err) => {
+      console.warn(
+        `[cacheManager] failed to persist cacheMeta for ${key}:`,
+        err,
+      );
+    });
 
     // Same rationale as cacheSong: bring lyrics along.
     this.cacheLyrics(songId).catch(() => {});
@@ -287,13 +300,20 @@ class CacheManager {
           removedFromServer: existingRow.removedFromServer,
         });
       } else {
-        getCacheIndexActions().addItem(key, {
+        const syntheticMeta = {
           id: songId,
-          type: "audio",
-          source: "explicit",
+          type: "audio" as const,
+          source: "explicit" as const,
           sizeBytes: blob.size,
           cachedAt: Date.now(),
           lastAccessedAt: Date.now(),
+        };
+        getCacheIndexActions().addItem(key, syntheticMeta);
+        libraryDb.cacheMeta.put({ key, ...syntheticMeta }).catch((err) => {
+          console.warn(
+            `[cacheManager] failed to persist synthetic cacheMeta for ${key}:`,
+            err,
+          );
         });
       }
     } else {
@@ -356,6 +376,12 @@ class CacheManager {
     };
     getCacheIndexActions().addItem(key, meta);
     this.scheduleStatsRefresh();
+    libraryDb.cacheMeta.put({ key, ...meta }).catch((err) => {
+      console.warn(
+        `[cacheManager] failed to persist cacheMeta for ${key}:`,
+        err,
+      );
+    });
   }
 
   async getCachedCoverUrl(coverArtId: string): Promise<string | null> {
@@ -394,13 +420,21 @@ class CacheManager {
           removedFromServer: existingRow.removedFromServer,
         });
       } else {
-        getCacheIndexActions().addItem(key, {
+        const syntheticMeta = {
           id: coverArtId,
-          type: "cover",
-          source: "explicit",
+          type: "cover" as const,
+          source: "explicit" as const,
+          coverSize: "700",
           sizeBytes: blob.size,
           cachedAt: Date.now(),
           lastAccessedAt: Date.now(),
+        };
+        getCacheIndexActions().addItem(key, syntheticMeta);
+        libraryDb.cacheMeta.put({ key, ...syntheticMeta }).catch((err) => {
+          console.warn(
+            `[cacheManager] failed to persist synthetic cacheMeta for ${key}:`,
+            err,
+          );
         });
       }
     } else {
@@ -562,6 +596,12 @@ class CacheManager {
     await cacheStorage.delete(key);
     getCacheIndexActions().removeItem(key);
     this.scheduleStatsRefresh();
+    libraryDb.cacheMeta.delete(key).catch((err) => {
+      console.warn(
+        `[cacheManager] failed to delete cacheMeta for ${key}:`,
+        err,
+      );
+    });
   }
 
   /**
@@ -578,6 +618,11 @@ class CacheManager {
     for (const key of keysToDelete) {
       getCacheIndexActions().removeItem(key);
     }
+    if (keysToDelete.length > 0) {
+      libraryDb.cacheMeta.bulkDelete(keysToDelete).catch((err) => {
+        console.warn(`[cacheManager] failed to bulkDelete cacheMeta:`, err);
+      });
+    }
     this.refreshStats();
   }
 
@@ -591,6 +636,11 @@ class CacheManager {
     await Promise.all(keysToDelete.map((key) => cacheStorage.delete(key)));
     for (const key of keysToDelete) {
       getCacheIndexActions().removeItem(key);
+    }
+    if (keysToDelete.length > 0) {
+      libraryDb.cacheMeta.bulkDelete(keysToDelete).catch((err) => {
+        console.warn(`[cacheManager] failed to bulkDelete cacheMeta:`, err);
+      });
     }
     this.refreshStats();
   }

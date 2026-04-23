@@ -113,13 +113,24 @@ export const useCacheIndexStore = createWithEqualityFn<CacheIndexState>()(
             schedulePersist(getState().items);
           },
           touchItem: (key) => {
+            const now = Date.now();
             setState((state) => {
               const item = state.items[key];
               if (item) {
-                item.lastAccessedAt = Date.now();
+                item.lastAccessedAt = now;
               }
             });
             schedulePersist(getState().items);
+            import("@/store/library-db")
+              .then(({ libraryDb }) =>
+                libraryDb.cacheMeta.update(key, { lastAccessedAt: now }),
+              )
+              .catch((err) => {
+                console.warn(
+                  `[cacheIndex] failed to touch cacheMeta ${key}:`,
+                  err,
+                );
+              });
           },
           setRemovedFromServer: (key, removed) => {
             setState((state) => {

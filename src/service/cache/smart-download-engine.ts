@@ -1,5 +1,5 @@
-import { subsonic } from "@/service/subsonic";
 import { getNetworkStatus } from "@/app/hooks/use-network-status";
+import { subsonic } from "@/service/subsonic";
 import { useCacheStore } from "@/store/cache.store";
 import {
   getCacheIndexActions,
@@ -125,10 +125,17 @@ class SmartDownloadEngine {
         const current = new Set(existing.triggers ?? []);
         const incoming = new Set(triggers);
         if (!setsEqual(current, incoming)) {
-          getCacheIndexActions().addItem(key, {
+          const updated = {
             ...existing,
             triggers,
             lastAccessedAt: existing.lastAccessedAt,
+          };
+          getCacheIndexActions().addItem(key, updated);
+          libraryDb.cacheMeta.put({ key, ...updated }).catch((err) => {
+            console.warn(
+              `[smart-download] failed to update cacheMeta for ${key}:`,
+              err,
+            );
           });
         }
       }
@@ -141,6 +148,12 @@ class SmartDownloadEngine {
   private async evictSmartEntry(key: string): Promise<void> {
     await cacheStorage.delete(key);
     getCacheIndexActions().removeItem(key);
+    libraryDb.cacheMeta.delete(key).catch((err) => {
+      console.warn(
+        `[smart-download] failed to delete cacheMeta for ${key}:`,
+        err,
+      );
+    });
   }
 }
 

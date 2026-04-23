@@ -133,6 +133,11 @@ describe("cacheManager", () => {
       "image/jpeg",
     );
 
+    const meta = await libraryDb.cacheMeta.get("cover:cover-1");
+    expect(meta).not.toBeUndefined();
+    expect(meta?.coverSize).toBe("700");
+    expect(meta?.sizeBytes).toBe(bigBlob.size);
+
     vi.restoreAllMocks();
   });
 
@@ -178,5 +183,106 @@ describe("cacheManager", () => {
 
     expect(await libraryDb.lyrics.count()).toBe(1);
     expect(useCacheIndexStore.getState().items).toEqual({});
+  });
+
+  it("evictItem removes the row from libraryDb.cacheMeta", async () => {
+    await libraryDb.cacheMeta.put({
+      key: "audio:song-1",
+      id: "song-1",
+      type: "audio",
+      source: "explicit",
+      sizeBytes: 100,
+      cachedAt: 1,
+      lastAccessedAt: 1,
+    });
+
+    useCacheIndexStore.setState({
+      items: {
+        "audio:song-1": {
+          id: "song-1",
+          type: "audio",
+          source: "explicit",
+          sizeBytes: 100,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+      },
+      loaded: true,
+    });
+
+    const { cacheManager } = await import("./cache-manager");
+    await cacheManager.evictItem("audio:song-1");
+
+    expect(await libraryDb.cacheMeta.get("audio:song-1")).toBeUndefined();
+  });
+
+  it("clearAudioBySource removes matching rows from libraryDb.cacheMeta", async () => {
+    await libraryDb.cacheMeta.bulkPut([
+      {
+        key: "audio:song-1",
+        id: "song-1",
+        type: "audio",
+        source: "explicit",
+        sizeBytes: 100,
+        cachedAt: 1,
+        lastAccessedAt: 1,
+      },
+      {
+        key: "audio:song-2",
+        id: "song-2",
+        type: "audio",
+        source: "lru",
+        sizeBytes: 200,
+        cachedAt: 1,
+        lastAccessedAt: 1,
+      },
+    ]);
+
+    useCacheIndexStore.setState({
+      items: {
+        "audio:song-1": {
+          id: "song-1",
+          type: "audio",
+          source: "explicit",
+          sizeBytes: 100,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+        "audio:song-2": {
+          id: "song-2",
+          type: "audio",
+          source: "lru",
+          sizeBytes: 200,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+      },
+      loaded: true,
+    });
+
+    const { cacheManager } = await import("./cache-manager");
+    await cacheManager.clearAudioBySource("explicit");
+
+    expect(await libraryDb.cacheMeta.get("audio:song-1")).toBeUndefined();
+    expect(await libraryDb.cacheMeta.get("audio:song-2")).not.toBeUndefined();
+  });
+
+  it("self-heal for audio writes a synthetic row to libraryDb.cacheMeta when missing", async () => {
+    const blob = new Blob(["audio"], { type: "audio/mpeg" });
+    cacheStorageMock.get.mockImplementation(async (key: string) => {
+      if (key === "audio:song-x") return blob;
+      return null;
+    });
+
+    useCacheIndexStore.setState({ items: {}, loaded: false });
+
+    const { cacheManager } = await import("./cache-manager");
+    const url = await cacheManager.getCachedAudioUrl("song-x");
+
+    expect(url).toBeTruthy();
+    const meta = await libraryDb.cacheMeta.get("audio:song-x");
+    expect(meta).not.toBeUndefined();
+    expect(meta?.type).toBe("audio");
+    expect(meta?.source).toBe("explicit");
   });
 });

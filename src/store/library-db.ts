@@ -41,7 +41,7 @@ export interface PlaylistDetailRow extends PlaylistWithEntries {
 export type GenreRow = Genre;
 
 export interface CacheMetaRow {
-  /** Composite key: "audio/<songId>" or "cover/<coverArtId>/<size>". */
+  /** Composite key: "audio/<songId>" or "cover/<coverArtId>". */
   key: string;
   /** Underlying resource id (songId for audio, coverArtId for cover). */
   id: string;
@@ -49,6 +49,8 @@ export interface CacheMetaRow {
   source: CacheMetaSource;
   /** Rule names (P5) that caused a smart-cached item to land here. */
   triggers?: string[];
+  /** For cover entries: the resolution (e.g. "700") that was requested. */
+  coverSize?: string;
   sizeBytes: number;
   cachedAt: number;
   lastAccessedAt: number;
