@@ -510,6 +510,7 @@ class CacheManager {
     let completed = 0;
     const total = songs.length;
     const concurrency = 3;
+    const evictionInterval = 10;
 
     const run = async (song: {
       id: string;
@@ -531,6 +532,10 @@ class CacheManager {
       }
       completed++;
       onProgress?.(completed, total);
+
+      if (completed % evictionInterval === 0) {
+        await this.enforceStorageLimit();
+      }
     };
 
     for (let i = 0; i < songs.length; i += concurrency) {
