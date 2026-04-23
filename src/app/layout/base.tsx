@@ -43,7 +43,7 @@ function CSSVariableSync() {
 
 export default function BaseLayout() {
   return (
-    <div className="h-screen w-screen overflow-hidden">
+    <div className="min-h-screen w-screen">
       <CSSVariableSync />
       <MemoHeader />
       <MemoMiniSidebar />
