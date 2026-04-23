@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { Play, SearchIcon } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,9 +7,10 @@ import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { useSongList } from "@/app/hooks/use-song-list";
+import { useOfflineQuery } from "@/lib/offlineQueryClient";
+import { getOfflineSearchResults } from "@/lib/offlineQueryClient";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
-import { useIsOnline } from "@/store/cache.store";
 import { usePlayerActions } from "@/store/player.store";
 import { CoverArt } from "@/types/coverArtType";
 import { Albums } from "@/types/responses/album";
@@ -112,18 +112,24 @@ export default function MobileSearch() {
   const { getAlbumSongs, getArtistAllSongs } = useSongList();
 
   const enableQuery = byteLength(query) >= 3;
-  const isOnline = useIsOnline();
 
-  const { data: searchResult } = useQuery({
+  const { data: searchResult } = useOfflineQuery({
     queryKey: [...queryKeys.search, query],
-    queryFn: () =>
+    onlineFn: () =>
       subsonic.search.get({
         query,
         albumCount: 6,
         artistCount: 6,
         songCount: 6,
       }),
-    enabled: enableQuery && isOnline,
+    offlineFn: () =>
+      getOfflineSearchResults({
+        query,
+        artistCount: 6,
+        albumCount: 6,
+        songCount: 6,
+      }),
+    enabled: enableQuery,
     staleTime: convertMinutesToMs(5),
   });
 
