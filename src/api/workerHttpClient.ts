@@ -134,19 +134,3 @@ export function getDownloadUrl(
   return _buildDownloadUrl(ensureAuth(), id, maxBitRate, format);
 }
 
-export function buildAudioUrl(
-  songId: string,
-  quality: "original" | "high" | "medium" | "low",
-  purpose: "cache" | "stream",
-): string {
-  const config = ensureAuth();
-  if (quality === "original") {
-    const url = _buildDownloadUrl(config, songId);
-    return purpose === "cache" ? `${url}&_c=1` : url;
-  }
-  const bitRate = String(
-    { high: 320, medium: 192, low: 128 }[quality],
-  );
-  const url = _buildSongStreamUrl(config, songId, bitRate);
-  return purpose === "cache" ? `${url}&_c=1` : url;
-}

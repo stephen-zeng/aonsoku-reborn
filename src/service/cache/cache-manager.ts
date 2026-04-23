@@ -1,6 +1,5 @@
 import {
   getCoverArtUrl,
-  getDownloadUrl,
   getSongStreamUrl,
 } from "@/api/httpClient";
 import { getSongCoverArtId } from "@/utils/coverArt";
@@ -18,8 +17,6 @@ import { libraryDb } from "@/store/library-db";
 import {
   CachedItemMeta,
   CacheMetaSource,
-  DownloadQuality,
-  QUALITY_MAX_BITRATE,
 } from "@/types/cache";
 
 export interface CachedItemDetail {
@@ -32,7 +29,6 @@ export interface CachedItemDetail {
   sizeBytes: number;
   cachedAt: number;
   lastAccessedAt: number;
-  quality?: DownloadQuality;
   coverSize?: string;
   removedFromServer?: boolean;
 }
@@ -42,9 +38,9 @@ import { computeEvictionPlan } from "./eviction";
 import { syncService } from "./sync-worker-adapter";
 
 /**
- * Build a URL for fetching audio at the requested quality.
- * - "original" → /download (raw file, no transcode)
- * - "high" / "medium" / "low" → /stream with a maxBitRate cap
+ * Build a URL for fetching audio.
+ * Always uses /stream with no maxBitRate, letting the server decide
+ * the output quality.
  *
  * `purpose: "cache"` adds a `_c=1` query param so the Service Worker's
  * stale-while-revalidate API cache doesn't collide with a concurrent
@@ -52,15 +48,9 @@ import { syncService } from "./sync-worker-adapter";
  */
 export function buildAudioUrl(
   songId: string,
-  quality: DownloadQuality,
   purpose: "cache" | "stream",
 ): string {
-  if (quality === "original") {
-    const url = getDownloadUrl(songId);
-    return purpose === "cache" ? `${url}&_c=1` : url;
-  }
-  const bitRate = QUALITY_MAX_BITRATE[quality].toString();
-  const url = getSongStreamUrl(songId, bitRate);
+  const url = getSongStreamUrl(songId);
   return purpose === "cache" ? `${url}&_c=1` : url;
 }
 
@@ -69,14 +59,12 @@ class CacheManager {
   private cacheCoverInflight = new Map<string, Promise<void>>();
 
   private resolveDownloadUrl(songId: string): string {
-    const quality = useCacheStore.getState().settings.downloadQuality;
-    return buildAudioUrl(songId, quality, "cache");
+    return buildAudioUrl(songId, "cache");
   }
 
   async cacheSong(songId: string): Promise<void> {
     if (isAudioCached(songId)) return;
 
-    const quality = useCacheStore.getState().settings.downloadQuality;
     const url = this.resolveDownloadUrl(songId);
     const response = await fetch(url);
     if (!response.ok) {
@@ -93,7 +81,6 @@ class CacheManager {
       id: songId,
       type: "audio",
       source: "explicit",
-      quality,
       sizeBytes: blob.size,
       cachedAt: Date.now(),
       lastAccessedAt: Date.now(),
@@ -143,7 +130,6 @@ class CacheManager {
       }
     }
 
-    const quality = useCacheStore.getState().settings.downloadQuality;
     const url = this.resolveDownloadUrl(songId);
     const response = await fetch(url);
     if (!response.ok) {
@@ -160,7 +146,6 @@ class CacheManager {
       type: "audio",
       source: "smart",
       triggers,
-      quality,
       sizeBytes: blob.size,
       cachedAt: Date.now(),
       lastAccessedAt: Date.now(),
@@ -234,7 +219,6 @@ class CacheManager {
           type: existingRow.type,
           source: existingRow.source,
           triggers: existingRow.triggers,
-          quality: existingRow.quality as DownloadQuality | undefined,
           sizeBytes: existingRow.sizeBytes,
           cachedAt: existingRow.cachedAt,
           lastAccessedAt: Date.now(),
@@ -339,7 +323,6 @@ class CacheManager {
           id: existingRow.id,
           type: existingRow.type,
           source: existingRow.source,
-          quality: existingRow.quality as DownloadQuality | undefined,
           coverSize: (existingRow as Record<string, unknown>).coverSize as string | undefined,
           sizeBytes: existingRow.sizeBytes,
           cachedAt: existingRow.cachedAt,
@@ -587,7 +570,6 @@ class CacheManager {
         sizeBytes: meta.sizeBytes,
         cachedAt: meta.cachedAt,
         lastAccessedAt: meta.lastAccessedAt,
-        quality: meta.quality,
         coverSize: meta.coverSize,
         removedFromServer: meta.removedFromServer,
       });

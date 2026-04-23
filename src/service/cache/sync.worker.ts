@@ -1,5 +1,5 @@
 import { expose } from "comlink";
-import type { SyncPhase, SyncTier, DownloadQuality } from "@/types/cache";
+import type { SyncPhase, SyncTier } from "@/types/cache";
 import {
   type ServerAuthConfig,
   buildCoverArtUrl,
@@ -37,7 +37,6 @@ interface SyncOptions {
   includeFullSongs?: boolean;
   mode?: "full" | "incremental";
   songCount?: number;
-  downloadQuality?: DownloadQuality;
   useAlbumCoverForSongs?: boolean;
 }
 

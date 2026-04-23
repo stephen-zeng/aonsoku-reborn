@@ -758,36 +758,9 @@
           "clear": "Clear and disable"
         }
       },
-      "streaming": {
-        "group": "Streaming Quality",
-        "description": "Bitrate for live playback. Lower values save bandwidth."
-      },
       "offline": {
         "group": "Offline Experience",
         "description": "Cache songs, metadata, and artwork locally for offline access. Enable library caching to unlock download quality, smart downloads, and sync settings."
-      },
-      "downloadQuality": {
-        "group": "Audio Quality",
-        "description": "Bitrate for streaming and cached audio. Lower values save bandwidth and storage; original keeps the source file untouched.",
-        "label": "Download quality",
-        "streamLabel": "Streaming quality",
-        "streamInfo": "Used while playing songs that aren't cached locally. Lower bitrates save bandwidth.",
-        "downloadLabel": "Download quality",
-        "downloadInfo": "Used when caching songs for offline playback. Higher bitrates use more storage.",
-        "tier": {
-          "original": "Original (no transcode)",
-          "high": "High · 320 kbps",
-          "medium": "Medium · 192 kbps",
-          "low": "Low · 128 kbps"
-        },
-        "stream": {
-          "label": "Stream quality",
-          "description": "Download at the server's transcode quality setting."
-        },
-        "original": {
-          "label": "Original quality",
-          "description": "Download the original file without transcoding."
-        }
       },
       "limits": {
         "group": "Cache Storage",

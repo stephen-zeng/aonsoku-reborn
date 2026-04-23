@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
 import { buildAudioUrl, cacheManager } from "@/service/cache";
-import { useCacheStore } from "@/store/cache.store";
 import {
   usePlayerCurrentList,
   usePlayerCurrentSongIndex,
@@ -11,7 +10,6 @@ import {
 import { LoopState } from "@/types/playerContext";
 
 export function usePreloadAudio() {
-  const streamQuality = useCacheStore((state) => state.settings.streamQuality);
   const preloadRef = useRef<HTMLAudioElement | null>(null);
   const preloadedSongIdRef = useRef<string | null>(null);
   const preloadBlobUrlRef = useRef<string | null>(null);
@@ -83,11 +81,7 @@ export function usePreloadAudio() {
         preloadBlobUrlRef.current = cachedUrl;
       } else {
         if (preloadRef.current) {
-          preloadRef.current.src = buildAudioUrl(
-            nextSongId,
-            streamQuality,
-            "stream",
-          );
+          preloadRef.current.src = buildAudioUrl(nextSongId, "stream");
         }
       }
       preloadedSongIdRef.current = nextSongId;
@@ -96,7 +90,7 @@ export function usePreloadAudio() {
     return () => {
       cancelled = true;
     };
-  }, [nextSongId, streamQuality]);
+  }, [nextSongId]);
 
   useEffect(() => {
     return () => {

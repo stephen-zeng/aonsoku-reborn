@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMatches } from "react-router-dom";
-import { getDownloadUrl } from "@/api/httpClient";
+import { getSongStreamUrl } from "@/api/httpClient";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
 import { usePlaylistRemoveSong } from "@/store/playlists.store";
@@ -49,7 +49,7 @@ export function useOptions() {
   }
 
   function startDownload(id: string) {
-    const url = getDownloadUrl(id);
+    const url = getSongStreamUrl(id);
 
     if (isDesktop()) {
       downloadDesktop(url, id);

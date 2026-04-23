@@ -743,26 +743,9 @@
         "syncNow": "Sincronizza Ora",
         "justNow": "Adesso"
       },
-      "streaming": {
-        "group": "Qualità Streaming",
-        "description": "Bitrate per la riproduzione in diretta. Valori più bassi risparmiano banda."
-      },
       "offline": {
         "group": "Esperienza Offline",
         "description": "Memorizza brani, metadati e copertine localmente per l'accesso offline. Abilita la cache della libreria per sbloccare qualità di download, download intelligenti e impostazioni di sincronizzazione."
-      },
-      "downloadQuality": {
-        "group": "Qualità Download",
-        "description": "Scegli la qualità audio per i brani scaricati.",
-        "label": "Qualità download",
-        "stream": {
-          "label": "Qualità stream",
-          "description": "Scarica con l'impostazione di qualità di transcodifica del server."
-        },
-        "original": {
-          "label": "Qualità originale",
-          "description": "Scarica il file originale senza transcodifica."
-        }
       },
       "limits": {
         "group": "Cache",

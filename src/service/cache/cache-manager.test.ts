@@ -31,7 +31,6 @@ vi.mock("@/store/cache.store", () => ({
   useCacheStore: {
     getState: () => ({
       settings: {
-        downloadQuality: "original",
         assetsQuota: 0,
         lruQuota: 0,
       },

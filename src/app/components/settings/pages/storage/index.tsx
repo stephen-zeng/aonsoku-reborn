@@ -42,69 +42,9 @@ import {
 import {
   CACHE_SIZE_OPTIONS,
   type CacheMetaSource,
-  DOWNLOAD_QUALITIES,
-  DownloadQuality,
 } from "@/types/cache";
 import dateTime from "@/utils/dateTime";
 import { formatBytes } from "@/utils/formatBytes";
-
-const downloadQualities: DownloadQuality[] = DOWNLOAD_QUALITIES;
-
-function StreamingSection() {
-  const { t } = useTranslation();
-  const { streamQuality } = useCacheSettings();
-  const { setStreamQuality } = useCacheActions();
-
-  return (
-    <Root>
-      <Header>
-        <HeaderTitle>{t("settings.storage.streaming.group")}</HeaderTitle>
-        <HeaderDescription>
-          {t("settings.storage.streaming.description")}
-        </HeaderDescription>
-      </Header>
-
-      <Content>
-        <ContentItem>
-          <ContentItemTitle
-            info={t("settings.storage.downloadQuality.streamInfo")}
-          >
-            {t("settings.storage.downloadQuality.streamLabel")}
-          </ContentItemTitle>
-          <ContentItemForm>
-            <Select
-              value={streamQuality}
-              onValueChange={(value) =>
-                setStreamQuality(value as DownloadQuality)
-              }
-            >
-              <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left">
-                <SelectValue>
-                  <span className="text-sm text-foreground">
-                    {t(
-                      `settings.storage.downloadQuality.tier.${streamQuality}`,
-                    )}
-                  </span>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent align="end">
-                <SelectGroup>
-                  {downloadQualities.map((q) => (
-                    <SelectItem key={q} value={q}>
-                      {t(`settings.storage.downloadQuality.tier.${q}`)}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </ContentItemForm>
-        </ContentItem>
-      </Content>
-
-      <ContentSeparator />
-    </Root>
-  );
-}
 
 function LibraryCachingSection() {
   const { t } = useTranslation();
@@ -229,64 +169,6 @@ function LibraryCachingSection() {
         cancelLabel={t("settings.storage.sync.clearConfirm.keep")}
         confirmLabel={t("settings.storage.sync.clearConfirm.clear")}
       />
-    </Root>
-  );
-}
-
-function DownloadQualitySection() {
-  const { t } = useTranslation();
-  const { downloadQuality } = useCacheSettings();
-  const { setDownloadQuality } = useCacheActions();
-
-  return (
-    <Root>
-      <Header>
-        <HeaderTitle>
-          {t("settings.storage.downloadQuality.group")}
-        </HeaderTitle>
-        <HeaderDescription>
-          {t("settings.storage.downloadQuality.description")}
-        </HeaderDescription>
-      </Header>
-
-      <Content>
-        <ContentItem>
-          <ContentItemTitle
-            info={t("settings.storage.downloadQuality.downloadInfo")}
-          >
-            {t("settings.storage.downloadQuality.downloadLabel")}
-          </ContentItemTitle>
-          <ContentItemForm>
-            <Select
-              value={downloadQuality}
-              onValueChange={(value) =>
-                setDownloadQuality(value as DownloadQuality)
-              }
-            >
-              <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left">
-                <SelectValue>
-                  <span className="text-sm text-foreground">
-                    {t(
-                      `settings.storage.downloadQuality.tier.${downloadQuality}`,
-                    )}
-                  </span>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent align="end">
-                <SelectGroup>
-                  {downloadQualities.map((q) => (
-                    <SelectItem key={q} value={q}>
-                      {t(`settings.storage.downloadQuality.tier.${q}`)}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </ContentItemForm>
-        </ContentItem>
-      </Content>
-
-      <ContentSeparator />
     </Root>
   );
 }
@@ -526,9 +408,7 @@ export function Storage() {
 
   return (
     <div className="space-y-4">
-      <StreamingSection />
       <LibraryCachingSection />
-      {libraryCaching && <DownloadQualitySection />}
       {libraryCaching && <SmartDownloadSection />}
       <CacheLimitsSection />
       <CacheManagerSection />

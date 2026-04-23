@@ -22,7 +22,6 @@ interface SyncOptions {
   includeFullSongs?: boolean;
   mode?: "full" | "incremental";
   songCount?: number;
-  downloadQuality?: "original" | "high" | "medium" | "low";
   useAlbumCoverForSongs?: boolean;
 }
 
@@ -123,12 +122,6 @@ class SyncWorkerAdapter {
           type: row.type,
           source: row.source,
           triggers: row.triggers,
-          quality: row.quality as
-            | "original"
-            | "high"
-            | "medium"
-            | "low"
-            | undefined,
           coverSize: row.type === "cover" ? row.coverSize : undefined,
           sizeBytes: row.sizeBytes,
           cachedAt: row.cachedAt,
@@ -152,7 +145,6 @@ class SyncWorkerAdapter {
       includeFullSongs:
         options?.includeFullSongs ?? state.settings.libraryCaching,
       songCount: appState.data.songCount ?? 100_000,
-      downloadQuality: state.settings.downloadQuality,
       useAlbumCoverForSongs:
         playerState.settings.coverArt.useAlbumCoverForSongs,
     };

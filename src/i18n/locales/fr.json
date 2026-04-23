@@ -753,26 +753,9 @@
         "syncNow": "Synchroniser maintenant",
         "justNow": "À l'instant"
       },
-      "streaming": {
-        "group": "Qualité de diffusion",
-        "description": "Débit pour la lecture en direct. Des valeurs plus basses économisent la bande passante."
-      },
       "offline": {
         "group": "Expérience hors ligne",
         "description": "Mettre en cache les titres, les métadonnées et les pochettes localement pour un accès hors ligne. Activez la mise en cache de la bibliothèque pour déverrouiller la qualité de téléchargement, les téléchargements intelligents et les paramètres de synchronisation."
-      },
-      "downloadQuality": {
-        "group": "Qualité de téléchargement",
-        "description": "Choisissez la qualité audio pour les titres téléchargés.",
-        "label": "Qualité de téléchargement",
-        "stream": {
-          "label": "Qualité de flux",
-          "description": "Télécharger selon le paramètre de qualité de transcodage du serveur."
-        },
-        "original": {
-          "label": "Qualité originale",
-          "description": "Télécharger le fichier original sans transcodage."
-        }
       },
       "limits": {
         "group": "Stockage en cache",

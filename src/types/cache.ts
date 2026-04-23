@@ -1,21 +1,5 @@
-export type DownloadQuality = "original" | "high" | "medium" | "low";
-
-/** Bitrate cap (kbps) passed to the Subsonic stream endpoint. 0 = raw. */
-export const QUALITY_MAX_BITRATE: Record<DownloadQuality, number> = {
-  original: 0,
-  high: 320,
-  medium: 192,
-  low: 128,
-};
-
-export const DOWNLOAD_QUALITIES: DownloadQuality[] = [
-  "original",
-  "high",
-  "medium",
-  "low",
-];
-
 /**
+ * Why a cached item exists. Determines eviction eligibility:
  * Why a cached item exists. Determines eviction eligibility:
  *
  *  - "explicit" — user pressed "Download" on a song / album / playlist.
@@ -50,7 +34,6 @@ export interface CachedItemMeta {
    * the entry is evicted.
    */
   triggers?: string[];
-  quality?: DownloadQuality;
   /** For cover entries: the resolution (e.g. "700") that was requested. */
   coverSize?: string;
   sizeBytes: number;
@@ -90,10 +73,6 @@ export interface SyncState {
 }
 
 export interface CacheSettings {
-  /** Quality for cached/downloaded audio (cacheSong path). */
-  downloadQuality: DownloadQuality;
-  /** Quality for streaming playback (not cached). */
-  streamQuality: DownloadQuality;
   /**
    * @deprecated Replaced by `assetsQuota` + `lruQuota` in P2.3.
    * Kept in the type so the cache-store migration can read the old

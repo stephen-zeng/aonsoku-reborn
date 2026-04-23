@@ -49,7 +49,6 @@ export interface CacheMetaRow {
   source: CacheMetaSource;
   /** Rule names (P5) that caused a smart-cached item to land here. */
   triggers?: string[];
-  quality?: string;
   sizeBytes: number;
   cachedAt: number;
   lastAccessedAt: number;
@@ -159,7 +158,6 @@ const LEGACY_CACHE_INDEX_KEY = "cache-index-v1";
 interface LegacyCachedItemMeta {
   id: string;
   type: "audio" | "cover";
-  quality?: string;
   sizeBytes: number;
   cachedAt: number;
   lastAccessedAt: number;
@@ -238,7 +236,6 @@ export async function migrateLegacyStoresIfNeeded(): Promise<boolean> {
               // them as explicit so they are protected from auto-eviction
               // until the user manually clears them.
               source: "explicit" as const,
-              quality: meta.quality,
               sizeBytes: meta.sizeBytes,
               cachedAt: meta.cachedAt,
               lastAccessedAt: meta.lastAccessedAt,
