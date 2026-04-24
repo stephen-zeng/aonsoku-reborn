@@ -57,7 +57,7 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
         }
       }
     }
-    reset(() => {});
+    reset(() => { });
   }
 
   async function handleRemoveCachedSongs() {
@@ -68,7 +68,7 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
         await cacheManager.evictItem(key);
       }
     }
-    reset(() => {});
+    reset(() => { });
   }
 
   const hasUncached = songs.some(
@@ -159,7 +159,6 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
                   }}
                 />
               )}
-              <ContextMenuSeparator />
             </>
           )}
           <ContextMenuSeparator />
@@ -191,10 +190,15 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
           }}
         />
       )}
-      <ContextMenuSeparator />
-      <ContextMenuItem disabled inset>
-        {t("table.menu.selectedCount", { count: rows.length })}
-      </ContextMenuItem>
+      {rows.length > 1 && (
+        <>
+          <ContextMenuSeparator />
+          <ContextMenuItem disabled inset>
+            {t("table.menu.selectedCount", { count: rows.length })}
+          </ContextMenuItem>
+        </>
+      )}
+
     </>
   );
 }
