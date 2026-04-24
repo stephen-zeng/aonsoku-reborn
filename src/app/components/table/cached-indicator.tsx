@@ -168,6 +168,7 @@ export function DownloadingIndicator({
         r={normalizedRadius}
         cx={radius}
         cy={radius}
+        transform={`rotate(-90 ${radius} ${radius})`}
       />
     </svg>
   );
