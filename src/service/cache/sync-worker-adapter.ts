@@ -47,7 +47,6 @@ async function refreshCacheIndexFromIDB(): Promise<void> {
     const { libraryDb } = await import("@/store/library-db");
     const rows = await libraryDb.cacheMeta.toArray();
     const actions = getCacheIndexActions();
-    actions.clear();
     for (const row of rows) {
       actions.addItem(row.key, {
         id: row.id,
