@@ -20,6 +20,7 @@ import type { AlbumListResponse } from "@/types/responses/album";
 import type { FavoritesResponse } from "@/types/responses/song";
 import type { ISearchResponse } from "@/types/responses/search";
 import { coverKey } from "@/service/cache/cache-keys";
+import { asyncPool } from "@/service/cache/concurrency";
 
 interface WorkerAuthConfig extends ServerAuthConfig {
   serverType?: string | null;
@@ -31,6 +32,7 @@ interface SyncOptions {
   mode?: "full" | "incremental";
   songCount?: number;
   useAlbumCoverForSongs?: boolean;
+  coverArtConcurrency?: number;
 }
 
 const TIER_FRESH_WINDOW_MS: Record<SyncTier, number> = {
@@ -314,6 +316,7 @@ class SyncWorkerService {
         this.#updateSyncState("coverArt", undefined);
         await this.#syncCoverArt(
           options.useAlbumCoverForSongs ?? false,
+          options.coverArtConcurrency ?? 1,
           (processed, total) => {
             this.#updateSyncState("coverArt", undefined, processed, total);
           },
@@ -559,6 +562,7 @@ class SyncWorkerService {
 
   async #syncCoverArt(
     useAlbumCoverForSongs: boolean,
+    concurrency: number,
     onProgress?: (current: number, total: number) => void,
   ): Promise<void> {
     const coverArtIds = new Set<string>();
@@ -578,19 +582,21 @@ class SyncWorkerService {
     }
 
     const queue = Array.from(coverArtIds);
-    let completed = 0;
-    for (const coverArtId of queue) {
-      try {
-        await this.#cacheCover(coverArtId, "700");
-      } catch (err) {
-        console.warn(
-          `[cacheManager] failed to cache cover ${coverArtId}:`,
-          err,
-        );
-      }
-      completed += 1;
-      onProgress?.(completed, queue.length);
-    }
+    await asyncPool(
+      queue,
+      concurrency,
+      async (coverArtId) => {
+        try {
+          await this.#cacheCover(coverArtId, "700");
+        } catch (err) {
+          console.warn(
+            `[cacheManager] failed to cache cover ${coverArtId}:`,
+            err,
+          );
+        }
+      },
+      onProgress,
+    );
 
     if (useAlbumCoverForSongs) {
       const albums = await db.albums.toArray();

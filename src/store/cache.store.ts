@@ -6,6 +6,9 @@ import { createWithEqualityFn } from "zustand/traditional";
 import {
   CacheSettings,
   CacheStatus,
+  COVER_ART_CONCURRENCY_DEFAULT,
+  COVER_ART_CONCURRENCY_MAX,
+  COVER_ART_CONCURRENCY_MIN,
   DEFAULT_ASSETS_QUOTA,
   DEFAULT_LRU_QUOTA,
   DEFAULT_MAX_CACHE_SIZE,
@@ -21,6 +24,7 @@ interface CacheActions {
   setSmartRules: (rules: Partial<SmartRuleSettings>) => void;
   setLibraryCaching: (enabled: boolean) => void;
   setSyncCoverArt: (enabled: boolean) => void;
+  setCoverArtConcurrency: (concurrency: number) => void;
   setIsOnline: (online: boolean) => void;
   setIsMetered: (metered: boolean) => void;
   updateCacheStats: (stats: {
@@ -99,6 +103,7 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             libraryCaching: false,
             syncLibrary: true,
             syncCoverArt: false,
+            coverArtConcurrency: COVER_ART_CONCURRENCY_DEFAULT,
           },
           status: {
             isOnline: true,
@@ -140,6 +145,14 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             setSyncCoverArt: (enabled) => {
               set((state) => {
                 state.settings.syncCoverArt = enabled;
+              });
+            },
+            setCoverArtConcurrency: (concurrency) => {
+              set((state) => {
+                state.settings.coverArtConcurrency = Math.min(
+                  COVER_ART_CONCURRENCY_MAX,
+                  Math.max(COVER_ART_CONCURRENCY_MIN, concurrency),
+                );
               });
             },
             setIsOnline: (online) => {

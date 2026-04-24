@@ -23,6 +23,7 @@ interface SyncOptions {
   mode?: "full" | "incremental";
   songCount?: number;
   useAlbumCoverForSongs?: boolean;
+  coverArtConcurrency?: number;
 }
 
 interface Callbacks {
@@ -153,6 +154,7 @@ class SyncWorkerAdapter {
       songCount: appState.data.songCount ?? 100_000,
       useAlbumCoverForSongs:
         playerState.settings.coverArt.useAlbumCoverForSongs,
+      coverArtConcurrency: state.settings.coverArtConcurrency,
     };
   }
 

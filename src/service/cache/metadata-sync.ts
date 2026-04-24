@@ -57,7 +57,8 @@ interface SyncOptions {
    * rather than row-level upsert. True delta can be layered on later
    * without changing the caller contract.
    */
-  mode?: "full" | "incremental";
+   mode?: "full" | "incremental";
+  coverArtConcurrency?: number;
 }
 
 const TIER_FRESH_WINDOW_MS: Record<SyncTier, number> = {
@@ -270,9 +271,15 @@ class MetadataSyncService {
       if (options?.includeCoverArt) {
         this.updateSyncState("coverArt", undefined);
         const { cacheManager } = await import("./cache-manager");
-        await cacheManager.syncCoverArt((processed, total) => {
-          this.updateSyncState("coverArt", undefined, processed, total);
-        });
+        const concurrency =
+          options.coverArtConcurrency ??
+          useCacheStore.getState().settings.coverArtConcurrency;
+        await cacheManager.syncCoverArt(
+          (processed, total) => {
+            this.updateSyncState("coverArt", undefined, processed, total);
+          },
+          concurrency,
+        );
       }
 
       await libraryDb.syncState.put({

@@ -1,5 +1,6 @@
 import { getCoverArtUrl, getSongStreamUrl } from "@/api/httpClient";
 import { subsonic } from "@/service/subsonic";
+import { asyncPool } from "@/service/cache/concurrency";
 import { useCacheStore } from "@/store/cache.store";
 import {
   getCacheIndexActions,
@@ -461,7 +462,10 @@ class CacheManager {
     return URL.createObjectURL(blob);
   }
 
-  async syncCoverArt(onProgress?: (current: number, total: number) => void) {
+  async syncCoverArt(
+    onProgress?: (current: number, total: number) => void,
+    concurrency = 1,
+  ) {
     const useAlbumCoverForSongs =
       usePlayerStore.getState().settings.coverArt.useAlbumCoverForSongs;
 
@@ -486,19 +490,21 @@ class CacheManager {
       ),
     );
 
-    let completed = 0;
-    for (const coverArtId of queue) {
-      try {
-        await this.cacheCover(coverArtId, "700");
-      } catch (err) {
-        console.warn(
-          `[cacheManager] failed to cache cover ${coverArtId}:`,
-          err,
-        );
-      }
-      completed += 1;
-      onProgress?.(completed, queue.length);
-    }
+    await asyncPool(
+      queue,
+      concurrency,
+      async (coverArtId) => {
+        try {
+          await this.cacheCover(coverArtId, "700");
+        } catch (err) {
+          console.warn(
+            `[cacheManager] failed to cache cover ${coverArtId}:`,
+            err,
+          );
+        }
+      },
+      onProgress,
+    );
 
     // When songs resolve to albumId, make sure album.id is also cached.
     if (useAlbumCoverForSongs) {

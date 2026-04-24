@@ -88,6 +88,8 @@ export interface CacheSettings {
   libraryCaching: boolean;
   syncLibrary: boolean;
   syncCoverArt: boolean;
+  /** Number of parallel downloads for cover art sync (1 = sequential, 4 = default, 8 = max). */
+  coverArtConcurrency: number;
 }
 
 export interface CacheStatus {
@@ -127,3 +129,7 @@ export const CACHE_SIZE_OPTIONS = [
 export const DEFAULT_MAX_CACHE_SIZE = 2_147_483_648; // 2 GB
 export const DEFAULT_ASSETS_QUOTA = 536_870_912; // 512 MB
 export const DEFAULT_LRU_QUOTA = 1_073_741_824; // 1 GB
+
+export const COVER_ART_CONCURRENCY_MIN = 1;
+export const COVER_ART_CONCURRENCY_DEFAULT = 4;
+export const COVER_ART_CONCURRENCY_MAX = 8;

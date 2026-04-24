@@ -39,7 +39,12 @@ import {
   useLibraryCaching,
   useSmartRules,
 } from "@/store/cache.store";
-import { CACHE_SIZE_OPTIONS, type CacheMetaSource } from "@/types/cache";
+import {
+  CACHE_SIZE_OPTIONS,
+  COVER_ART_CONCURRENCY_MAX,
+  COVER_ART_CONCURRENCY_MIN,
+  type CacheMetaSource,
+} from "@/types/cache";
 import dateTime from "@/utils/dateTime";
 import { formatBytes } from "@/utils/formatBytes";
 
@@ -47,7 +52,10 @@ function LibraryCachingSection() {
   const { t } = useTranslation();
   const libraryCaching = useLibraryCaching();
   const syncCoverArt = useCacheStore((s) => s.settings.syncCoverArt);
-  const { setLibraryCaching, setLastSyncedAt, setSyncCoverArt } =
+  const coverArtConcurrency = useCacheStore(
+    (s) => s.settings.coverArtConcurrency,
+  );
+  const { setLibraryCaching, setLastSyncedAt, setSyncCoverArt, setCoverArtConcurrency } =
     useCacheActions();
   const lastSyncedAt = useLastSyncedAt();
   const isSyncing = useCacheStore((s) => s.status.syncState.isSyncing);
@@ -114,6 +122,39 @@ function LibraryCachingSection() {
               onCheckedChange={setSyncCoverArt}
               disabled={!libraryCaching}
             />
+          </ContentItemForm>
+        </ContentItem>
+
+        <ContentItem>
+          <ContentItemTitle info={t("settings.storage.sync.coverArtConcurrencyInfo")}>
+            {t("settings.storage.sync.coverArtConcurrency")}
+          </ContentItemTitle>
+          <ContentItemForm>
+            <Select
+              value={coverArtConcurrency.toString()}
+              onValueChange={(value) =>
+                setCoverArtConcurrency(Number.parseInt(value, 10))
+              }
+              disabled={!libraryCaching || !syncCoverArt}
+            >
+              <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left w-[130px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent align="end">
+                <SelectGroup>
+                  {Array.from(
+                    { length: COVER_ART_CONCURRENCY_MAX - COVER_ART_CONCURRENCY_MIN + 1 },
+                    (_, i) => COVER_ART_CONCURRENCY_MIN + i,
+                  ).map((n) => (
+                    <SelectItem key={n} value={n.toString()}>
+                      {n === 1
+                        ? t("settings.storage.sync.coverArtConcurrencyOff")
+                        : n}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </ContentItemForm>
         </ContentItem>
 
