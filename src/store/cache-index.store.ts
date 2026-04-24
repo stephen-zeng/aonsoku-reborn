@@ -48,10 +48,7 @@ function flushPendingTouches(): void {
         libraryDb.cacheMeta
           .update(key, { lastAccessedAt })
           .catch((err: unknown) => {
-            console.warn(
-              `[cacheIndex] failed to touch cacheMeta ${key}:`,
-              err,
-            );
+            console.warn(`[cacheIndex] failed to touch cacheMeta ${key}:`, err);
           });
       }
     })
@@ -130,7 +127,10 @@ export const useCacheIndexStore = createWithEqualityFn<CacheIndexState>()(
                       source: meta.source ?? "explicit",
                     };
                   }
-                  state.items = migrated;
+                  state.items = {
+                    ...migrated,
+                    ...state.items,
+                  };
                 }
                 state.loaded = true;
               });

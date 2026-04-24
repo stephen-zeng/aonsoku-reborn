@@ -67,10 +67,91 @@ describe("cache-index.store · loadFromIDB", () => {
     expect(items["audio/lru"]?.source).toBe("lru");
   });
 
-  it("marks the store as loaded even when IDB is empty", async () => {
+  it("marks the store as loaded without clearing current items when IDB is empty", async () => {
+    useCacheIndexStore.getState().actions.addItem("audio:new-song", {
+      id: "new-song",
+      type: "audio",
+      source: "explicit",
+      sizeBytes: 4096,
+      cachedAt: 4,
+      lastAccessedAt: 4,
+    });
+
     await useCacheIndexStore.getState().actions.loadFromIDB();
+
     expect(useCacheIndexStore.getState().loaded).toBe(true);
-    expect(useCacheIndexStore.getState().items).toEqual({});
+    expect(useCacheIndexStore.getState().items["audio:new-song"]).toMatchObject(
+      {
+        id: "new-song",
+        source: "explicit",
+      },
+    );
+  });
+
+  it("merges persisted entries with items added before load finishes", async () => {
+    await idbSet(
+      INDEX_KEY,
+      {
+        "audio:stored-song": {
+          id: "stored-song",
+          type: "audio",
+          source: "explicit",
+          sizeBytes: 1024,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+      },
+      cacheIndexStore,
+    );
+
+    useCacheIndexStore.getState().actions.addItem("audio:new-song", {
+      id: "new-song",
+      type: "audio",
+      source: "explicit",
+      sizeBytes: 4096,
+      cachedAt: 4,
+      lastAccessedAt: 4,
+    });
+
+    await useCacheIndexStore.getState().actions.loadFromIDB();
+
+    const items = useCacheIndexStore.getState().items;
+    expect(items["audio:stored-song"]?.id).toBe("stored-song");
+    expect(items["audio:new-song"]?.id).toBe("new-song");
+  });
+
+  it("keeps current in-memory entries when persisted keys conflict", async () => {
+    await idbSet(
+      INDEX_KEY,
+      {
+        "audio:conflict": {
+          id: "conflict",
+          type: "audio",
+          source: "explicit",
+          sizeBytes: 1024,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+      },
+      cacheIndexStore,
+    );
+
+    useCacheIndexStore.getState().actions.addItem("audio:conflict", {
+      id: "conflict",
+      type: "audio",
+      source: "smart",
+      triggers: ["favorite"],
+      sizeBytes: 4096,
+      cachedAt: 4,
+      lastAccessedAt: 4,
+    });
+
+    await useCacheIndexStore.getState().actions.loadFromIDB();
+
+    const item = useCacheIndexStore.getState().items["audio:conflict"];
+    expect(item?.source).toBe("smart");
+    expect(item?.triggers).toEqual(["favorite"]);
+    expect(item?.sizeBytes).toBe(4096);
   });
 });
 
