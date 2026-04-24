@@ -142,13 +142,8 @@ class CacheManager {
       lastAccessedAt: Date.now(),
     };
 
-    await libraryDb.cacheMeta.put({
-      key,
-      ...meta,
-    });
-
-    getCacheIndexActions().addItem(key, meta);
-    getCacheIndexActions().clearDownloadProgress(songId);
+    actions.addItem(key, meta);
+    actions.clearDownloadProgress(songId);
     this.scheduleStatsRefresh();
     persistCacheMeta(key, { key, ...meta });
 
@@ -238,13 +233,8 @@ class CacheManager {
       lastAccessedAt: Date.now(),
     };
 
-    await libraryDb.cacheMeta.put({
-      key,
-      ...meta,
-    });
-
-    getCacheIndexActions().addItem(key, meta);
-    getCacheIndexActions().clearDownloadProgress(songId);
+    actions.addItem(key, meta);
+    actions.clearDownloadProgress(songId);
     this.scheduleStatsRefresh();
     persistCacheMeta(key, { key, ...meta });
 
@@ -393,11 +383,6 @@ class CacheManager {
       cachedAt: existing?.cachedAt ?? Date.now(),
       lastAccessedAt: Date.now(),
     };
-
-    await libraryDb.cacheMeta.put({
-      key,
-      ...meta,
-    });
 
     getCacheIndexActions().addItem(key, meta);
     this.scheduleStatsRefresh();

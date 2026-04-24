@@ -10,6 +10,7 @@ import {
   playlistKey,
 } from "@/service/cache/cache-keys";
 import { cacheIndexStore, idbSetWithRetry } from "@/store/idb";
+import type { CacheMetaRow } from "@/store/library-db";
 import { CachedItemMeta, CacheMetaSource } from "@/types/cache";
 
 const IDB_KEY = "cache-index-v1";
@@ -72,6 +73,38 @@ function schedulePersist(items: Record<string, CachedItemMeta>) {
   }, 500);
 }
 
+function migrateStoredItems(
+  stored: Record<string, Partial<CachedItemMeta> | undefined> | undefined,
+): Record<string, CachedItemMeta> {
+  if (!stored) return {};
+
+  // Pre-P2.1 entries lack the `source` field. Default them to
+  // "explicit" so they are treated as protected downloads, never
+  // silently evicted by LRU.
+  const migrated: Record<string, CachedItemMeta> = {};
+  for (const [key, meta] of Object.entries(stored)) {
+    if (!meta) continue;
+    migrated[key] = {
+      ...(meta as CachedItemMeta),
+      source: meta.source ?? "explicit",
+    };
+  }
+  return migrated;
+}
+
+function cacheMetaRowsToItems(
+  rows: CacheMetaRow[],
+): Record<string, CachedItemMeta> {
+  const items: Record<string, CachedItemMeta> = {};
+  for (const { key, ...meta } of rows) {
+    items[key] = {
+      ...meta,
+      source: meta.source ?? "explicit",
+    };
+  }
+  return items;
+}
+
 function flushIndexPersist() {
   if (indexFlushed) return;
   if (persistTimer) {
@@ -111,27 +144,44 @@ export const useCacheIndexStore = createWithEqualityFn<CacheIndexState>()(
         actions: {
           loadFromIDB: async () => {
             try {
-              const stored = await get<
-                Record<string, Partial<CachedItemMeta> | undefined>
-              >(IDB_KEY, cacheIndexStore);
+              const [storedResult, cacheMetaRowsResult] =
+                await Promise.allSettled([
+                  get<Record<string, Partial<CachedItemMeta> | undefined>>(
+                    IDB_KEY,
+                    cacheIndexStore,
+                  ),
+                  import("@/store/library-db").then(({ libraryDb }) =>
+                    libraryDb.cacheMeta.toArray(),
+                  ),
+                ]);
+              if (storedResult.status === "rejected") {
+                console.warn(
+                  "Failed to load legacy cache index",
+                  storedResult.reason,
+                );
+              }
+              if (cacheMetaRowsResult.status === "rejected") {
+                console.warn(
+                  "Failed to load cache metadata from Dexie",
+                  cacheMetaRowsResult.reason,
+                );
+              }
+              const stored =
+                storedResult.status === "fulfilled"
+                  ? storedResult.value
+                  : undefined;
+              const cacheMetaRows =
+                cacheMetaRowsResult.status === "fulfilled"
+                  ? cacheMetaRowsResult.value
+                  : [];
+              const migrated = migrateStoredItems(stored);
+              const fromCacheMeta = cacheMetaRowsToItems(cacheMetaRows);
               setState((state) => {
-                if (stored) {
-                  // Pre-P2.1 entries lack the `source` field. Default
-                  // them to "explicit" so they are treated as protected
-                  // downloads, never silently evicted by LRU.
-                  const migrated: Record<string, CachedItemMeta> = {};
-                  for (const [key, meta] of Object.entries(stored)) {
-                    if (!meta) continue;
-                    migrated[key] = {
-                      ...(meta as CachedItemMeta),
-                      source: meta.source ?? "explicit",
-                    };
-                  }
-                  state.items = {
-                    ...migrated,
-                    ...state.items,
-                  };
-                }
+                state.items = {
+                  ...migrated,
+                  ...fromCacheMeta,
+                  ...state.items,
+                };
                 state.loaded = true;
               });
             } catch (err) {

@@ -1,13 +1,15 @@
 import { clear as idbClear, set as idbSet } from "idb-keyval";
 import { beforeEach, describe, expect, it } from "vitest";
 import { cacheIndexStore } from "@/store/idb";
+import { _resetLibraryDbForTests, libraryDb } from "@/store/library-db";
 import { useCacheIndexStore } from "./cache-index.store";
 
 const INDEX_KEY = "cache-index-v1";
 
 beforeEach(async () => {
   await idbClear(cacheIndexStore);
-  useCacheIndexStore.setState({ items: {}, loaded: false });
+  await _resetLibraryDbForTests();
+  useCacheIndexStore.setState({ items: {}, loaded: false, downloads: {} });
 });
 
 describe("cache-index.store · loadFromIDB", () => {
@@ -65,6 +67,91 @@ describe("cache-index.store · loadFromIDB", () => {
     expect(items["audio/smart"]?.source).toBe("smart");
     expect(items["audio/smart"]?.triggers).toEqual(["favorite"]);
     expect(items["audio/lru"]?.source).toBe("lru");
+  });
+
+  it("restores cached audio from libraryDb.cacheMeta when legacy index is empty", async () => {
+    await libraryDb.cacheMeta.put({
+      key: "audio:dexie-song",
+      id: "dexie-song",
+      type: "audio",
+      source: "explicit",
+      sizeBytes: 8192,
+      cachedAt: 10,
+      lastAccessedAt: 11,
+    });
+
+    await useCacheIndexStore.getState().actions.loadFromIDB();
+
+    const item = useCacheIndexStore.getState().items["audio:dexie-song"];
+    expect(item).toMatchObject({
+      id: "dexie-song",
+      type: "audio",
+      source: "explicit",
+      sizeBytes: 8192,
+    });
+  });
+
+  it("prefers cacheMeta rows over legacy rows and keeps metadata fields", async () => {
+    await idbSet(
+      INDEX_KEY,
+      {
+        "audio:smart": {
+          id: "smart",
+          type: "audio",
+          source: "explicit",
+          sizeBytes: 1024,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+        "cover:cover-1": {
+          id: "cover-1",
+          type: "cover",
+          source: "explicit",
+          coverSize: "300",
+          sizeBytes: 300,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+      },
+      cacheIndexStore,
+    );
+    await libraryDb.cacheMeta.bulkPut([
+      {
+        key: "audio:smart",
+        id: "smart",
+        type: "audio",
+        source: "smart",
+        triggers: ["favorite"],
+        sizeBytes: 4096,
+        cachedAt: 4,
+        lastAccessedAt: 5,
+        removedFromServer: true,
+      },
+      {
+        key: "cover:cover-1",
+        id: "cover-1",
+        type: "cover",
+        source: "explicit",
+        coverSize: "700",
+        sizeBytes: 700,
+        cachedAt: 6,
+        lastAccessedAt: 7,
+      },
+    ]);
+
+    await useCacheIndexStore.getState().actions.loadFromIDB();
+
+    const items = useCacheIndexStore.getState().items;
+    expect(items["audio:smart"]).toMatchObject({
+      source: "smart",
+      triggers: ["favorite"],
+      removedFromServer: true,
+      sizeBytes: 4096,
+    });
+    expect(items["cover:cover-1"]).toMatchObject({
+      coverSize: "700",
+      sizeBytes: 700,
+    });
   });
 
   it("marks the store as loaded without clearing current items when IDB is empty", async () => {
@@ -135,6 +222,15 @@ describe("cache-index.store · loadFromIDB", () => {
       },
       cacheIndexStore,
     );
+    await libraryDb.cacheMeta.put({
+      key: "audio:conflict",
+      id: "conflict",
+      type: "audio",
+      source: "explicit",
+      sizeBytes: 2048,
+      cachedAt: 2,
+      lastAccessedAt: 2,
+    });
 
     useCacheIndexStore.getState().actions.addItem("audio:conflict", {
       id: "conflict",
