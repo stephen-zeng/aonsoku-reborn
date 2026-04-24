@@ -88,6 +88,7 @@ class CacheManager {
     try {
       while (true) {
         const { done, value } = await reader.read();
+        console.log(received, contentLength);
         if (done) break;
         chunks.push(value);
         received += value.length;
