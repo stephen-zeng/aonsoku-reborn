@@ -93,6 +93,8 @@ class CacheManager {
       onProgress?.(received, contentLength);
     }
 
+    onProgress?.(contentLength, contentLength);
+
     return new Blob(chunks);
   }
 
@@ -146,6 +148,7 @@ class CacheManager {
     });
 
     getCacheIndexActions().addItem(key, meta);
+    getCacheIndexActions().clearDownloadProgress(songId);
     this.scheduleStatsRefresh();
     persistCacheMeta(key, { key, ...meta });
 
@@ -241,6 +244,7 @@ class CacheManager {
     });
 
     getCacheIndexActions().addItem(key, meta);
+    getCacheIndexActions().clearDownloadProgress(songId);
     this.scheduleStatsRefresh();
     persistCacheMeta(key, { key, ...meta });
 
