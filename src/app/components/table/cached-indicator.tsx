@@ -129,27 +129,46 @@ export function DownloadingIndicator({
     );
   }
 
-  // Minimal progress ring built from two overlapping borders.
-  // Kept inline so callers can tuck it into any layout without a
-  // layout-shift from ring-specific sizing.
   const clamped = Math.max(0, Math.min(100, progress ?? 0));
+  const radius = 7;
+  const stroke = 2.5;
+  const normalizedRadius = radius - stroke / 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (clamped / 100) * circumference;
+
   return (
-    <div
-      className={cn(
-        "w-3.5 h-3.5 flex-shrink-0 rounded-full bg-muted-foreground/10",
-        "relative overflow-hidden",
-        className,
-      )}
+    <svg
+      width={radius * 2}
+      height={radius * 2}
+      viewBox={`0 0 ${radius * 2} ${radius * 2}`}
+      className={cn("flex-shrink-0", className)}
       aria-label={t("offline.badge.downloading")}
       role="progressbar"
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={clamped}
     >
-      <div
-        className="absolute inset-0 bg-muted-foreground/40"
-        style={{ clipPath: `inset(${100 - clamped}% 0 0 0)` }}
+      <circle
+        stroke="currentColor"
+        fill="transparent"
+        strokeWidth={stroke}
+        className="text-muted-foreground/20"
+        r={normalizedRadius}
+        cx={radius}
+        cy={radius}
       />
-    </div>
+      <circle
+        stroke="currentColor"
+        fill="transparent"
+        strokeWidth={stroke}
+        strokeDasharray={`${circumference} ${circumference}`}
+        style={{ strokeDashoffset }}
+        strokeLinecap="round"
+        className="text-muted-foreground transition-all duration-300 ease-in-out"
+        r={normalizedRadius}
+        cx={radius}
+        cy={radius}
+      />
+    </svg>
   );
 }
