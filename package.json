@@ -88,7 +88,6 @@
     "dayjs": "^1.11.13",
     "dexie": "^4.4.2",
     "discord-rpc": "^4.0.1",
-    "electron-dl": "^4.0.0",
     "electron-store": "^10.0.1",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",

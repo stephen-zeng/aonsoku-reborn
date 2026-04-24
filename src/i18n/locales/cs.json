@@ -104,11 +104,6 @@
       "yy": "%d years"
     }
   },
-  "downloads": {
-    "completed": "Soubor byl stažen.",
-    "failed": "Nastala chyba při stahování souboru.",
-    "started": "Stahování začalo."
-  },
   "error": {
     "notFound": "Not found"
   },
@@ -294,7 +289,6 @@
     },
     "removeFromQueue": "Remove from queue",
     "unlike": "Unlike",
-    "saveFile": "Uložit soubor",
     "downloadAlbum": "Stáhnout album",
     "downloadPlaylist": "Stáhnout playlist",
     "downloadArtist": "Stáhnout umělce",

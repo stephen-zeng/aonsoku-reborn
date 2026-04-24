@@ -104,11 +104,6 @@
       "yy": "%d 年"
     }
   },
-  "downloads": {
-    "completed": "你的文件已经被成功下载。",
-    "failed": "下载你的文件时出现了一个错误。",
-    "started": "下载已经开始。"
-  },
   "error": {
     "notFound": "Not found"
   },
@@ -294,7 +289,6 @@
     },
     "removeFromQueue": "从队列中移除",
     "unlike": "Unlike",
-    "saveFile": "保存文件",
     "downloadAlbum": "下载专辑",
     "downloadPlaylist": "下载播放列表",
     "downloadArtist": "下载艺术家",

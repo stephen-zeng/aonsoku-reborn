@@ -1,5 +1,4 @@
 import { RpcPayload } from "../main/core/discordRpc";
-import { IDownloadPayload } from "../main/core/downloads";
 import { ISettingPayload } from "../main/core/settings";
 import type {
   CurrentSongData,
@@ -21,9 +20,6 @@ export enum IpcChannels {
   CloseWindow = "close-window",
   ThemeChanged = "theme-changed",
   UpdateNativeTheme = "update-native-theme",
-  HandleDownloads = "handle-downloads",
-  DownloadCompleted = "download-completed",
-  DownloadFailed = "download-failed",
   UpdatePlayerState = "update-player-state",
   PlayerStateListener = "player-state-listener",
   SetDiscordRpcActivity = "set-discord-rpc-activity",
@@ -76,9 +72,6 @@ export interface IAonsokuAPI {
   closeWindow: () => void;
   setTitleBarOverlayColors: (colors: OverlayColors) => void;
   setNativeTheme: (isDark: boolean) => void;
-  downloadFile: (payload: IDownloadPayload) => void;
-  downloadCompletedListener: (func: (fileId: string) => void) => void;
-  downloadFailedListener: (func: (fileId: string) => void) => void;
   updatePlayerState: (payload: PlayerStatePayload) => void;
   playerStateListener: (
     func: (action: PlayerStateListenerActions) => void,

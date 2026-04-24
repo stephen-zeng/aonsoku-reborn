@@ -15,7 +15,6 @@ vi.mock("./cache-storage", () => ({
 
 vi.mock("@/api/httpClient", () => ({
   getCoverArtUrl: vi.fn(() => "/cover"),
-  getDownloadUrl: vi.fn(() => "/download"),
   getSongStreamUrl: vi.fn(() => "/stream"),
 }));
 

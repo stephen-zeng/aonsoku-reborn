@@ -104,11 +104,6 @@
       "yy": "%d years"
     }
   },
-  "downloads": {
-    "completed": "Your file has been downloaded.",
-    "failed": "There was an error downloading your file.",
-    "started": "Download started."
-  },
   "error": {
     "notFound": "Not found"
   },
@@ -294,7 +289,6 @@
     },
     "removeFromQueue": "Remove from queue",
     "unlike": "Unlike",
-    "saveFile": "ഫയൽ സേവ് ചെയ്യുക",
     "downloadAlbum": "ആൽബം ഡൗൺലോഡ് ചെയ്യുക",
     "downloadPlaylist": "പ്ലേലിസ്റ്റ് ഡൗൺലോഡ് ചെയ്യുക",
     "downloadArtist": "ആർട്ടിസ്റ്റ് ഡൗൺലോഡ് ചെയ്യുക",

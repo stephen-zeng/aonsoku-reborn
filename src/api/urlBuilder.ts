@@ -77,12 +77,3 @@ export function buildSongStreamUrl(
     estimateContentLength: "true",
   });
 }
-
-export function buildDownloadUrl(
-  config: ServerAuthConfig,
-  id: string,
-  maxBitRate = "0",
-  format = "raw",
-): string {
-  return buildUrl("download", config, { id, maxBitRate, format });
-}

@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMatches } from "react-router-dom";
-import { getSongStreamUrl } from "@/api/httpClient";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
 import { usePlaylistRemoveSong } from "@/store/playlists.store";
@@ -8,15 +7,12 @@ import { useSongInfo } from "@/store/ui.store";
 import { UpdateParams } from "@/types/responses/playlist";
 import type { QueueSourceId } from "@/types/playerContext";
 import { ISong } from "@/types/responses/song";
-import { isDesktop } from "@/utils/desktop";
 import { queryKeys } from "@/utils/queryKeys";
-import { useDownload } from "./use-download";
 
 type SongIdToAdd = Pick<UpdateParams, "songIdToAdd">["songIdToAdd"];
 
 export function useOptions() {
   const { setNextOnQueue, setLastOnQueue, setSongList } = usePlayerActions();
-  const { downloadBrowser, downloadDesktop } = useDownload();
   const { setActionData, setConfirmDialogState } = usePlaylistRemoveSong();
   const matches = useMatches();
   const { setSongId, setModalOpen } = useSongInfo();
@@ -46,16 +42,6 @@ export function useOptions() {
     sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
   ) {
     setLastOnQueue(list, sourceId);
-  }
-
-  function startDownload(id: string) {
-    const url = getSongStreamUrl(id);
-
-    if (isDesktop()) {
-      downloadDesktop(url, id);
-    } else {
-      downloadBrowser(url);
-    }
   }
 
   const updateMutation = useMutation({
@@ -111,7 +97,6 @@ export function useOptions() {
     play,
     playNext,
     playLast,
-    startDownload,
     addToPlaylist,
     createNewPlaylist,
     removeSongFromPlaylist,

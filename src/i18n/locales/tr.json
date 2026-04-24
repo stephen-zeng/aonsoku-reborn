@@ -104,11 +104,6 @@
       "yy": "%d yıl"
     }
   },
-  "downloads": {
-    "completed": "Dosyanız indirildi.",
-    "failed": "Dosyanız indirilirken bir hata oluştu.",
-    "started": "İndirme başlatıldı."
-  },
   "error": {
     "notFound": "Not found"
   },
@@ -294,7 +289,6 @@
     },
     "removeFromQueue": "Remove from queue",
     "unlike": "Unlike",
-    "saveFile": "Dosyayı kaydet",
     "downloadAlbum": "Albümü indir",
     "downloadPlaylist": "Çalma listesini indir",
     "downloadArtist": "Sanatçıyı indir",

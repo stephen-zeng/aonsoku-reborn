@@ -61,7 +61,6 @@ export function PlaylistButtons({ playlist }: PlaylistButtonsProps) {
             playlist={playlist}
             disablePlayNext={!playlist.entry}
             disableAddLast={!playlist.entry}
-            disableDownload={!playlist.entry}
           />
         }
       />

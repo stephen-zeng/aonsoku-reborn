@@ -72,7 +72,6 @@ export function SongMenuOptions({
     createNewPlaylist,
     addToPlaylist,
     removeSongFromPlaylist,
-    startDownload,
     openSongInfo,
     isOnPlaylistPage,
   } = useOptions();
@@ -141,13 +140,6 @@ export function SongMenuOptions({
           <ContextMenuSeparator />
         </>
       )}
-      <OptionsButtons.SaveFile
-        variant={variant}
-        onClick={(e) => {
-          e.stopPropagation();
-          startDownload(song.id);
-        }}
-      />
       {isCached ? (
         <OptionsButtons.RemoveDownload
           variant={variant}

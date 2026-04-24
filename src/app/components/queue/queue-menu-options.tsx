@@ -28,7 +28,6 @@ export function QueueMenuOptions({
     playLast,
     createNewPlaylist,
     addToPlaylist,
-    startDownload,
     openSongInfo,
   } = useOptions();
   const isCached = useIsAudioCached(song.id);
@@ -97,13 +96,6 @@ export function QueueMenuOptions({
           <ContextMenuSeparator />
         </>
       )}
-      <OptionsButtons.SaveFile
-        variant={variant}
-        onClick={(e) => {
-          e.stopPropagation();
-          startDownload(song.id);
-        }}
-      />
       {isCached ? (
         <OptionsButtons.RemoveDownload
           variant={variant}

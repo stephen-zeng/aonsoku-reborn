@@ -106,11 +106,6 @@
       "yy": "%d anos"
     }
   },
-  "downloads": {
-    "completed": "Download concluído com sucesso.",
-    "failed": "Ocorreu um erro ao baixar o arquivo.",
-    "started": "Download iniciado."
-  },
   "error": {
     "notFound": "Not found"
   },
@@ -296,7 +291,6 @@
     },
     "removeFromQueue": "Remove from queue",
     "unlike": "Unlike",
-    "saveFile": "Salvar arquivo",
     "downloadAlbum": "Baixar álbum",
     "downloadPlaylist": "Baixar playlist",
     "downloadArtist": "Baixar artista",

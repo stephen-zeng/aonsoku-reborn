@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { AuthType } from "@/types/serverConfig";
 import {
   buildCoverArtUrl,
-  buildDownloadUrl,
   buildQueryParams,
   buildSongStreamUrl,
   buildUrl,
@@ -130,25 +129,5 @@ describe("buildSongStreamUrl", () => {
     const url = buildSongStreamUrl(tokenConfig, "song-1", "128", "mp3");
     expect(url).toContain("maxBitRate=128");
     expect(url).toContain("format=mp3");
-  });
-});
-
-describe("buildDownloadUrl", () => {
-  it("builds download URL with id", () => {
-    const url = buildDownloadUrl(tokenConfig, "song-1");
-    expect(url).toContain("/rest/download?");
-    expect(url).toContain("id=song-1");
-  });
-
-  it("uses default maxBitRate and format", () => {
-    const url = buildDownloadUrl(tokenConfig, "song-1");
-    expect(url).toContain("maxBitRate=0");
-    expect(url).toContain("format=raw");
-  });
-
-  it("allows custom maxBitRate and format", () => {
-    const url = buildDownloadUrl(tokenConfig, "song-1", "256", "flac");
-    expect(url).toContain("maxBitRate=256");
-    expect(url).toContain("format=flac");
   });
 });

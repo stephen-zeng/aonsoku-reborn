@@ -17,7 +17,6 @@ export function AlbumOptions({ album }: AlbumOptionsProps) {
   const {
     playNext,
     playLast,
-    startDownload,
     addToPlaylist,
     createNewPlaylist,
   } = useOptions();
@@ -31,10 +30,6 @@ export function AlbumOptions({ album }: AlbumOptionsProps) {
 
   function handlePlayLast() {
     playLast(album.song, { albumId: album.id });
-  }
-
-  function handleDownload() {
-    startDownload(album.id);
   }
 
   function handleAddToPlaylist(id: string) {
@@ -68,7 +63,6 @@ export function AlbumOptions({ album }: AlbumOptionsProps) {
       </OptionsButtons.AddToPlaylistOption>
       <DropdownMenuSeparator />
       <DropdownMenuGroup>
-        <OptionsButtons.SaveFile onClick={handleDownload} />
         <OptionsButtons.DownloadAlbum
           onClick={() => cacheManager.cacheAlbum(album.id)}
         />

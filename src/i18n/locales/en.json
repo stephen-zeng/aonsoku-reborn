@@ -406,7 +406,6 @@
       "artist": "Go to artist",
       "album": "Go to album"
     },
-    "saveFile": "Save file",
     "downloadAlbum": "Download album",
     "downloadPlaylist": "Download playlist",
     "downloadArtist": "Download artist",
@@ -488,11 +487,6 @@
       "refresh": "Refresh status",
       "startScan": "Quick Scan"
     }
-  },
-  "downloads": {
-    "started": "Download started.",
-    "failed": "There was an error downloading your file.",
-    "completed": "Your file has been downloaded."
   },
   "queue": {
     "title": "Queue",

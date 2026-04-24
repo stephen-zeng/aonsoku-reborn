@@ -152,7 +152,6 @@ export function playlistsColumns(): ColumnDefType<Playlist>[] {
                   playlist={playlist}
                   disablePlayNext={disableOption}
                   disableAddLast={disableOption}
-                  disableDownload={disableOption}
                 />
               }
             />

@@ -4,7 +4,6 @@ import {
   buildUrl,
   buildCoverArtUrl as _buildCoverArtUrl,
   buildSongStreamUrl as _buildSongStreamUrl,
-  buildDownloadUrl as _buildDownloadUrl,
   type ServerAuthConfig,
 } from "./urlBuilder";
 
@@ -124,12 +123,4 @@ export function getSongStreamUrl(
   format?: string,
 ): string {
   return _buildSongStreamUrl(ensureAuth(), id, maxBitRate, format);
-}
-
-export function getDownloadUrl(
-  id: string,
-  maxBitRate = "0",
-  format = "raw",
-): string {
-  return _buildDownloadUrl(ensureAuth(), id, maxBitRate, format);
 }

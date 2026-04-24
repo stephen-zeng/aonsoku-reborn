@@ -2,7 +2,6 @@ import omit from "lodash/omit";
 import {
   CircleArrowDown,
   Disc3,
-  DownloadIcon,
   Heart,
   Info,
   ListEnd,
@@ -62,19 +61,6 @@ function PlayLast({ variant = "dropdown", ...props }: DropdownMenuItemProps) {
       variant={variant}
       icon={<ListEnd className="mr-2 h-4 w-4" />}
       label={t("options.addLast")}
-      {...props}
-    />
-  );
-}
-
-function SaveFile({ variant = "dropdown", ...props }: DropdownMenuItemProps) {
-  const { t } = useTranslation();
-
-  return (
-    <MenuItemFactory
-      variant={variant}
-      icon={<DownloadIcon className="mr-2 h-4 w-4" />}
-      label={t("options.saveFile")}
       {...props}
     />
   );
@@ -312,7 +298,6 @@ export const OptionsButtons = {
   Play,
   PlayNext,
   PlayLast,
-  SaveFile,
   DownloadSong,
   Like,
   AddToPlaylistOption,

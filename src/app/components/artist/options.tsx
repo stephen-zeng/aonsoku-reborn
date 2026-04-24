@@ -16,7 +16,7 @@ interface ArtistOptionsProps {
 
 export function ArtistOptions({ artist }: ArtistOptionsProps) {
   const { getArtistAllSongs } = useSongList();
-  const { playLast, playNext, startDownload } = useOptions();
+  const { playLast, playNext } = useOptions();
   const isUserQueueEmpty = usePlayerStore(
     (state) => state.songlist.userQueue.songs.length === 0,
   );
@@ -36,10 +36,6 @@ export function ArtistOptions({ artist }: ArtistOptionsProps) {
     await getSongsToQueue(playLast);
   }
 
-  function handleDownload() {
-    startDownload(artist.id);
-  }
-
   return (
     <>
       <DropdownMenuGroup>
@@ -49,7 +45,6 @@ export function ArtistOptions({ artist }: ArtistOptionsProps) {
           disabled={isUserQueueEmpty}
         />
         <DropdownMenuSeparator />
-        <OptionsButtons.SaveFile onClick={handleDownload} />
         <OptionsButtons.DownloadArtist
           onClick={() => cacheManager.cacheArtist(artist.id)}
         />

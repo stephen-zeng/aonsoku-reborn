@@ -104,11 +104,6 @@
       "yy": "%d Jahren"
     }
   },
-  "downloads": {
-    "completed": "Ihre Datei wurde heruntergeladen.",
-    "failed": "Beim Herunterladen Ihrer Datei ist ein Fehler aufgetreten.",
-    "started": "Download gestartet."
-  },
   "error": {
     "notFound": "Not found"
   },
@@ -294,7 +289,6 @@
     },
     "removeFromQueue": "Remove from queue",
     "unlike": "Unlike",
-    "saveFile": "Datei speichern",
     "downloadAlbum": "Album herunterladen",
     "downloadPlaylist": "Wiedergabeliste herunterladen",
     "downloadArtist": "Künstler herunterladen",

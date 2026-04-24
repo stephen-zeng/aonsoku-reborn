@@ -45,12 +45,6 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
     reset(() => songOptions.playLast(songs));
   }
 
-  async function handleDownload() {
-    if (!isSingleSelected) return;
-
-    reset(() => songOptions.startDownload(firstSong.id));
-  }
-
   async function handleCacheSongs() {
     for (const song of songs) {
       const key = audioKey(song.id);
@@ -168,13 +162,6 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
               <ContextMenuSeparator />
             </>
           )}
-          <OptionsButtons.SaveFile
-            variant="context"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDownload();
-            }}
-          />
           <ContextMenuSeparator />
           <OptionsButtons.SongInfo
             variant="context"

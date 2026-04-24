@@ -104,11 +104,6 @@
       "yy": "%d년"
     }
   },
-  "downloads": {
-    "completed": "다운로드가 완료되었습니다.",
-    "failed": "다운로드에 실패했습니다.",
-    "started": "다운로드 시작."
-  },
   "error": {
     "notFound": "Not found"
   },
@@ -294,7 +289,6 @@
     },
     "removeFromQueue": "Remove from queue",
     "unlike": "Unlike",
-    "saveFile": "파일 저장",
     "downloadAlbum": "앨범 다운로드",
     "downloadPlaylist": "재생목록 다운로드",
     "downloadArtist": "아티스트 다운로드",

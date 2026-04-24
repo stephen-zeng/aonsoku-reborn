@@ -104,11 +104,6 @@
       "yy": "%d år"
     }
   },
-  "downloads": {
-    "completed": "Din fil har laddats ner.",
-    "failed": "Det uppstod ett fel vid nedladdningen av din fil.",
-    "started": "Nedladdning startad."
-  },
   "error": {
     "notFound": "Not found"
   },
@@ -294,7 +289,6 @@
     },
     "removeFromQueue": "Remove from queue",
     "unlike": "Unlike",
-    "saveFile": "Spara fil",
     "downloadAlbum": "Ladda ner album",
     "downloadPlaylist": "Ladda ner spellista",
     "downloadArtist": "Ladda ner artist",
