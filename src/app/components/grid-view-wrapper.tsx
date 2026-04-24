@@ -35,7 +35,8 @@ export function GridViewWrapper<T>({
   defaultWidth = 181,
   type,
 }: GridViewWrapperProps<T>) {
-  const scrollDivRef = useRef<HTMLDivElement | null>(null);
+  const gridWrapperRef = useRef<HTMLDivElement | null>(null);
+  const scrollDivRef = useRef<HTMLElement | null>(null);
   const [gridColumnsSize, setGridColumnsSize] = useState(4);
   const [effectivePadding, setEffectivePadding] = useState(padding);
   const [effectiveGap, setEffectiveGap] = useState(gap);
@@ -54,61 +55,84 @@ export function GridViewWrapper<T>({
     [gridColumnsSize, list.length],
   );
 
-  const calculateSize = useCallback(() => {
-    if (!scrollDivRef.current) {
+  const getGridLayout = useCallback(
+    (viewportWidth: number) => {
+      let columns = 2;
+
+      if (viewportWidth >= 1536) {
+        columns = 8;
+      } else if (viewportWidth >= 1024) {
+        columns = 6;
+      } else if (viewportWidth >= 768) {
+        columns = 4;
+      } else if (viewportWidth >= 480) {
+        columns = 3;
+      }
+
+      const isMobileView = viewportWidth < 768;
+
       return {
-        width: defaultWidth,
-        height: defaultWidth + titleHeight,
+        columns,
+        gap: isMobileView ? 12 : gap,
+        padding: isMobileView ? 16 : padding,
       };
-    }
+    },
+    [gap, padding],
+  );
 
-    const pageWidth = scrollDivRef.current.offsetWidth;
-    const gapsDifference = (gridColumnsSize - 1) * effectiveGap;
-    const bothSidesPaddingSize = effectivePadding * 2;
-    const remainSpace = pageWidth - bothSidesPaddingSize - gapsDifference;
+  const calculateSize = useCallback(
+    (columns: number, gridPadding: number, gridGap: number) => {
+      const pageWidth = gridWrapperRef.current?.clientWidth ?? 0;
 
-    const width = remainSpace / gridColumnsSize;
-    const height = width + titleHeight;
+      if (pageWidth <= 0) {
+        return {
+          width: defaultWidth,
+          height: defaultWidth + titleHeight,
+        };
+      }
 
-    return {
-      width,
-      height,
-    };
-  }, [
-    defaultWidth,
-    effectiveGap,
-    effectivePadding,
-    gridColumnsSize,
-    titleHeight,
-  ]);
+      const gapsDifference = (columns - 1) * gridGap;
+      const bothSidesPaddingSize = gridPadding * 2;
+      const remainSpace = pageWidth - bothSidesPaddingSize - gapsDifference;
+      const width = Math.max(0, remainSpace) / columns;
+      const height = width + titleHeight;
+
+      return {
+        width,
+        height,
+      };
+    },
+    [defaultWidth, titleHeight],
+  );
 
   useLayoutEffect(() => {
     scrollDivRef.current = getMainScrollElement();
 
     const handleResize = () => {
       const width = window.innerWidth;
+      const layout = getGridLayout(width);
+      const newSize = calculateSize(
+        layout.columns,
+        layout.padding,
+        layout.gap,
+      );
 
-      if (width >= 1536) {
-        setGridColumnsSize(8); // 2xl breakpoint
-      } else if (width >= 1024) {
-        setGridColumnsSize(6); // lg breakpoint
-      } else if (width >= 768) {
-        setGridColumnsSize(4); // md breakpoint
-      } else if (width >= 480) {
-        setGridColumnsSize(3); // small mobile
-      } else {
-        setGridColumnsSize(2); // very small mobile
-      }
+      setGridColumnsSize(layout.columns);
+      setEffectivePadding(layout.padding);
+      setEffectiveGap(layout.gap);
+      setSize((currentSize) => {
+        if (
+          currentSize.width === newSize.width &&
+          currentSize.height === newSize.height
+        ) {
+          return currentSize;
+        }
 
-      const isMobileView = width < 768;
-      setEffectivePadding(isMobileView ? 16 : padding);
-      setEffectiveGap(isMobileView ? 12 : gap);
-
-      const newSize = calculateSize();
-      setSize(newSize);
+        return newSize;
+      });
     };
 
-    let animationFrameId: number;
+    let animationFrameId = 0;
 
     const resizeHandler = () => {
       if (animationFrameId) {
@@ -120,11 +144,18 @@ export function GridViewWrapper<T>({
     handleResize();
     window.addEventListener("resize", resizeHandler);
 
+    const resizeObserver =
+      "ResizeObserver" in window ? new ResizeObserver(resizeHandler) : null;
+    if (gridWrapperRef.current) {
+      resizeObserver?.observe(gridWrapperRef.current);
+    }
+
     return () => {
       window.removeEventListener("resize", resizeHandler);
+      resizeObserver?.disconnect();
       cancelAnimationFrame(animationFrameId);
     };
-  }, [calculateSize, padding, gap]);
+  }, [calculateSize, getGridLayout]);
 
   const grid = useGrid({
     scrollRef: scrollDivRef,
@@ -206,32 +237,37 @@ export function GridViewWrapper<T>({
 
   return (
     <div
-      style={{
-        width: columnVirtualizer.getTotalSize(),
-        height: rowVirtualizer.getTotalSize(),
-        position: "relative",
-      }}
+      ref={gridWrapperRef}
+      className="w-full overflow-hidden relative"
     >
-      {rowVirtualizer.getVirtualItems().map((virtualRow) => (
-        <Fragment key={virtualRow.key}>
-          {columnVirtualizer.getVirtualItems().map((virtualColumn) => {
-            const item = grid.getVirtualItem({
-              row: virtualRow,
-              column: virtualColumn,
-            });
+      <div
+        style={{
+          width: columnVirtualizer.getTotalSize(),
+          height: rowVirtualizer.getTotalSize(),
+          position: "relative",
+        }}
+      >
+        {rowVirtualizer.getVirtualItems().map((virtualRow) => (
+          <Fragment key={virtualRow.key}>
+            {columnVirtualizer.getVirtualItems().map((virtualColumn) => {
+              const item = grid.getVirtualItem({
+                row: virtualRow,
+                column: virtualColumn,
+              });
 
-            if (!item) return null;
+              if (!item) return null;
 
-            const child = list[item.index];
+              const child = list[item.index];
 
-            return (
-              <div key={virtualColumn.key} style={item.style}>
-                {children(child)}
-              </div>
-            );
-          })}
-        </Fragment>
-      ))}
+              return (
+                <div key={virtualColumn.key} style={item.style}>
+                  {children(child)}
+                </div>
+              );
+            })}
+          </Fragment>
+        ))}
+      </div>
     </div>
   );
 }
