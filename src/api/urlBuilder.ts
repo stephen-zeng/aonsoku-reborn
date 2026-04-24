@@ -74,6 +74,6 @@ export function buildSongStreamUrl(
     id,
     maxBitRate,
     format,
-    estimateContentLength: "true",
+    // estimateContentLength: "true",
   });
 }
