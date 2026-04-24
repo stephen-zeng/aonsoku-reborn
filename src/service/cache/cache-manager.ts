@@ -83,6 +83,7 @@ async function fetchWithRetry(
     try {
       return await fetch(url);
     } catch (err) {
+      console.log(err);
       if (attempt < retries && isCorsOrNetworkError(err)) {
         const delay = FETCH_RETRY_BASE_DELAY * 2 ** attempt;
         await new Promise((r) => setTimeout(r, delay));
