@@ -62,41 +62,6 @@ export function buildAudioUrl(
   return purpose === "cache" ? `${url}&_c=1` : url;
 }
 
-const MAX_FETCH_RETRIES = 3;
-const FETCH_RETRY_BASE_DELAY = 1000;
-
-function isCorsOrNetworkError(err: unknown): boolean {
-  if (!(err instanceof TypeError)) return false;
-  const msg = err.message?.toLowerCase() ?? "";
-  return (
-    msg.includes("failed to fetch") ||
-    msg.includes("network request failed") ||
-    msg.includes("networkerror") ||
-    msg.includes("err_failed")
-  );
-}
-
-async function fetchWithRetry(
-  url: string,
-  retries = MAX_FETCH_RETRIES,
-): Promise<Response> {
-  for (let attempt = 0; ; attempt++) {
-    try {
-      return await fetch(url);
-    } catch (err) {
-      console.log("bxx");
-      console.log(err, isCorsOrNetworkError(err));
-      if (attempt < retries && isCorsOrNetworkError(err)) {
-        console.log("hi");
-        const delay = FETCH_RETRY_BASE_DELAY * 2 ** attempt;
-        await new Promise((r) => setTimeout(r, delay));
-        continue;
-      }
-      throw err;
-    }
-  }
-}
-
 class CacheManager {
   private statsTimer: ReturnType<typeof setTimeout> | null = null;
   private cacheCoverInflight = new Map<string, Promise<void>>();
@@ -120,12 +85,18 @@ class CacheManager {
     let received = 0;
     const chunks: Uint8Array[] = [];
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value);
-      received += value.length;
-      onProgress?.(received, contentLength);
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        received += value.length;
+        onProgress?.(received, contentLength);
+      }
+    } catch (err) {
+      if (received < contentLength) {
+        throw err;
+      }
     }
 
     onProgress?.(contentLength, contentLength);
@@ -150,7 +121,7 @@ class CacheManager {
     if (isAudioCached(songId)) return;
 
     const url = this.resolveDownloadUrl(songId);
-    const response = await fetchWithRetry(url);
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error(
         `Failed to fetch audio for ${songId}: ${response.status}`,
@@ -242,7 +213,7 @@ class CacheManager {
     }
 
     const url = this.resolveDownloadUrl(songId);
-    const response = await fetchWithRetry(url);
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error(
         `Smart-download failed for ${songId}: ${response.status}`,
@@ -398,7 +369,7 @@ class CacheManager {
     const url = getCoverArtUrl(coverArtId, "album", size);
     if (url.startsWith("/default_")) return;
 
-    const response = await fetchWithRetry(url);
+    const response = await fetch(url);
     if (!response.ok) return;
 
     const blob = await response.blob();
