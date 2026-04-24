@@ -31,7 +31,7 @@ export function MainRoutes() {
         mainDrawerState && "lg:pr-right-panel",
       )}
     >
-      <div className="w-full bg-background-foreground">
+      <div className="w-full">
         <Outlet />
       </div>
     </main>
