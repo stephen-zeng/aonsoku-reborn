@@ -1,6 +1,6 @@
 import { getCoverArtUrl, getSongStreamUrl } from "@/api/httpClient";
-import { subsonic } from "@/service/subsonic";
 import { asyncPool } from "@/service/cache/concurrency";
+import { subsonic } from "@/service/subsonic";
 import { useCacheStore } from "@/store/cache.store";
 import {
   getCacheIndexActions,
@@ -189,7 +189,7 @@ class CacheManager {
         // Refresh triggers so "why is this cached?" stays accurate.
         const updated = { ...existing, triggers, lastAccessedAt: Date.now() };
         getCacheIndexActions().addItem(key, updated);
-        await persistCacheMeta(key, { key, ...updated });
+        persistCacheMeta(key, { key, ...updated });
         return;
       }
       if (existing.source === "lru") {
@@ -201,7 +201,7 @@ class CacheManager {
         };
 
         getCacheIndexActions().addItem(key, updated);
-        await persistCacheMeta(key, { key, ...updated });
+        persistCacheMeta(key, { key, ...updated });
         return;
       }
     }
