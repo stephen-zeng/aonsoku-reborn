@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export function usePlayerBreakpoint(breakpoint = 640) {
+export function usePlayerBreakpoint(breakpoint = 768) {
   const [isBelow, setIsBelow] = useState(false);
 
   useEffect(() => {

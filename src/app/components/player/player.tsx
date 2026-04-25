@@ -159,7 +159,7 @@ export function Player() {
 
   const handleFooterClick = useCallback(
     (event: React.MouseEvent) => {
-      if (!isMobile || window.innerWidth >= 640) return;
+      if (!isMobile || window.innerWidth >= 768) return;
 
       // Check if the click target is a control button or interactive element
       const target = event.target as HTMLElement;
@@ -212,20 +212,20 @@ export function Player() {
       }}
       onClick={handleFooterClick}
     >
-      <div className="w-full h-full grid grid-cols-[1fr_auto] gap-3 px-3 sm:grid-cols-player sm:gap-2 sm:px-4">
+      <div className="w-full h-full grid grid-cols-[1fr_auto] gap-3 px-3 md:grid-cols-player md:gap-2 md:px-4">
         {/* Track Info */}
-        <div className="flex items-center gap-1 w-full sm:gap-2">
+        <div className="flex items-center gap-1 w-full md:gap-2">
           {isSong && <MemoTrackInfo song={song} />}
           {isRadio && <MemoRadioInfo radio={radio} />}
         </div>
         {/* Main Controls */}
-        <div className="hidden sm:col-span-2 sm:flex flex-col justify-center items-center px-4 gap-1">
+        <div className="hidden md:col-span-2 md:flex flex-col justify-center items-center px-4 gap-1">
           <MemoPlayerControls song={song} radio={radio} />
 
           {isSong && <MemoPlayerProgress audioRef={getAudioRef()} />}
         </div>
         {/* Mobile Controls - Only Play/Pause and Next */}
-        <div className="flex sm:hidden items-center gap-1">
+        <div className="flex md:hidden items-center gap-1">
           <Button
             variant="ghost"
             disabled={!song && !radio}
@@ -252,7 +252,7 @@ export function Player() {
           </Button>
         </div>
         {/* Remain Controls and Volume */}
-        <div className="hidden sm:flex items-center w-full justify-end">
+        <div className="hidden md:flex items-center w-full justify-end">
           <div className="flex items-center gap-1">
             {isSong && (
               <>

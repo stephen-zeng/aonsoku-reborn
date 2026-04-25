@@ -71,7 +71,7 @@
   }
 
   /* Mobile optimization: smaller player height + bottom nav */
-  @media (max-width: 640px) {
+  @media (max-width: 767px) {
     :root {
       --player-height: 64px;
     }

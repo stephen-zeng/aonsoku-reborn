@@ -53,7 +53,7 @@ export function FullscreenProgress({
     max: currentDuration ?? 0,
     step: 1,
     isBuffering,
-    className: "w-full h-2 sm:h-3",
+    className: "w-full h-2 md:h-3",
     onValueChange: ([value]: [number]) => handleSeeking(value),
     onValueCommit: ([value]: [number]) => handleSeeked(value),
     onPointerUp: handleSeekedFallback,
@@ -76,10 +76,10 @@ export function FullscreenProgress({
   }
 
   return (
-    <div className="flex items-center gap-2 sm:gap-3 w-full">
+    <div className="flex items-center gap-2 md:gap-3 w-full">
       <div
-        className={`min-w-[36px] sm:min-w-[42px] text-right tabular-nums text-foreground/70 ${
-          thin ? "text-xs" : "text-xs sm:text-sm"
+        className={`min-w-[36px] md:min-w-[42px] text-right tabular-nums text-foreground/70 ${
+          thin ? "text-xs" : "text-xs md:text-sm"
         }`}
       >
         {currentTime}
@@ -88,8 +88,8 @@ export function FullscreenProgress({
       <ProgressSlider {...sliderProps} />
 
       <div
-        className={`min-w-[36px] sm:min-w-[42px] text-left tabular-nums text-foreground/70 ${
-          thin ? "text-xs" : "text-xs sm:text-sm"
+        className={`min-w-[36px] md:min-w-[42px] text-left tabular-nums text-foreground/70 ${
+          thin ? "text-xs" : "text-xs md:text-sm"
         }`}
       >
         {songDuration}

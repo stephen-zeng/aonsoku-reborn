@@ -43,7 +43,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
       data-testid="fullscreen-desktop-layout"
     >
       <div
-        className={`fullscreen-desktop-playing flex h-full min-w-0 shrink-0 flex-col px-8 pt-6 pb-4 transition-[width] duration-300 sm:px-12 ${rightPanelView ? "w-1/2" : "w-full"}`}
+        className={`fullscreen-desktop-playing flex h-full min-w-0 shrink-0 flex-col px-8 pt-6 pb-4 transition-[width] duration-300 md:px-12 ${rightPanelView ? "w-1/2" : "w-full"}`}
       >
         <div className="flex items-center gap-2 shrink-0">
           <Button
