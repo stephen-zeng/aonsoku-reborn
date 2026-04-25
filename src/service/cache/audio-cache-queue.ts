@@ -71,6 +71,15 @@ export class AudioCacheQueue {
     return this.inflight.has(songId) && !this.isQueued(songId);
   }
 
+  /** Clear the queue and reject any pending entries. */
+  clear(): void {
+    for (const entry of this.queue) {
+      entry.reject(new DOMException("Aborted", "AbortError"));
+      this.inflight.delete(entry.task.songId);
+    }
+    this.queue.length = 0;
+  }
+
   private schedule(): void {
     while (this.running < this.concurrency && this.queue.length > 0) {
       const entry = this.queue.shift()!;

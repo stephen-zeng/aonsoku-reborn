@@ -11,29 +11,8 @@ import {
 } from "@/store/cache-index.store";
 import { libraryDb } from "@/store/library-db";
 import { usePlayerStore } from "@/store/player.store";
-import {
-  CachedItemMeta,
-  CacheMetaSource,
-  CacheTask,
-  Priority,
-} from "@/types/cache";
+import { CachedItemMeta, CacheMetaSource, Priority } from "@/types/cache";
 import { getSongCoverArtId } from "@/utils/coverArt";
-import { AudioCacheQueue } from "./audio-cache-queue";
-
-export interface CachedItemDetail {
-  key: string;
-  id: string;
-  type: "audio" | "cover" | "album" | "playlist";
-  source: CacheMetaSource;
-  name: string;
-  subtitle?: string;
-  sizeBytes: number;
-  cachedAt: number;
-  lastAccessedAt: number;
-  coverSize?: string;
-  removedFromServer?: boolean;
-}
-
 import {
   albumKey,
   audioKey,
@@ -50,6 +29,21 @@ import {
   persistCacheMeta,
 } from "./persist-meta";
 import { syncService } from "./sync-worker-adapter";
+import { audioCacheService } from "./audio-cache-worker-adapter";
+
+export interface CachedItemDetail {
+  key: string;
+  id: string;
+  type: "audio" | "cover" | "album" | "playlist";
+  source: CacheMetaSource;
+  name: string;
+  subtitle?: string;
+  sizeBytes: number;
+  cachedAt: number;
+  lastAccessedAt: number;
+  coverSize?: string;
+  removedFromServer?: boolean;
+}
 
 /**
  * Build a URL for fetching audio.
@@ -68,173 +62,54 @@ export function buildAudioUrl(
   return purpose === "cache" ? `${url}&_c=1` : url;
 }
 
+// ═══════════════════════════════════════════════════════════════════
+//  Stats helper (extracted to avoid circular deps)
+// ═══════════════════════════════════════════════════════════════════
+
+function refreshCacheStats(): void {
+  const items = getCacheIndexItems();
+  let audioSize = 0;
+  let coverSize = 0;
+  let audioCount = 0;
+  let coverCount = 0;
+
+  for (const meta of Object.values(items)) {
+    if (meta.type === "audio") {
+      audioSize += meta.sizeBytes;
+      audioCount++;
+    } else {
+      coverSize += meta.sizeBytes;
+      coverCount++;
+    }
+  }
+
+  useCacheStore.getState().actions.updateCacheStats({
+    audioSize,
+    coverSize,
+    audioCount,
+    coverCount,
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  CacheManager — strategy / orchestration layer (main thread only)
+// ═══════════════════════════════════════════════════════════════════
+
 class CacheManager {
   private statsTimer: ReturnType<typeof setTimeout> | null = null;
   private cacheCoverInflight = new Map<string, Promise<void>>();
-  private downloadClearTimers = new Map<
-    string,
-    ReturnType<typeof setTimeout>
-  >();
-  private readonly downloadQueue: AudioCacheQueue;
-
-  constructor() {
-    this.downloadQueue = new AudioCacheQueue(
-      (task) => this.executeDownload(task),
-      4,
-    );
-  }
-
-  private scheduleClearDownloadProgress(songId: string): void {
-    const existing = this.downloadClearTimers.get(songId);
-    if (existing) clearTimeout(existing);
-    const timer = setTimeout(() => {
-      this.downloadClearTimers.delete(songId);
-      getCacheIndexActions().clearDownloadProgress(songId);
-    }, 2000);
-    this.downloadClearTimers.set(songId, timer);
-  }
-
-  private resolveDownloadUrl(songId: string): string {
-    return buildAudioUrl(songId, "cache");
-  }
-
-  private async readResponseWithProgress(
-    response: Response,
-    onProgress?: (loaded: number, total: number) => void,
-    onBytesReceived?: (bytes: number) => void,
-  ): Promise<Blob> {
-    const contentLengthHeader = response.headers.get("Content-Length");
-    const contentLength = contentLengthHeader ? Number(contentLengthHeader) : 0;
-    const hasValidContentLength =
-      contentLengthHeader !== null &&
-      !Number.isNaN(contentLength) &&
-      contentLength > 0;
-    const reader = response.body?.getReader();
-
-    if (!reader || !hasValidContentLength) {
-      // No Content-Length: stream chunks and report byte counts.
-      if (!reader) {
-        return response.blob();
-      }
-
-      let received = 0;
-      const chunks: Uint8Array[] = [];
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          chunks.push(value);
-          received += value.length;
-          onBytesReceived?.(received);
-        }
-      } finally {
-        reader.releaseLock();
-      }
-
-      return new Blob(chunks);
-    }
-
-    let received = 0;
-    const chunks: Uint8Array[] = [];
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        chunks.push(value);
-        received += value.length;
-        onProgress?.(received, contentLength);
-      }
-    } catch (err) {
-      if (received < contentLength) {
-        throw err;
-      }
-    } finally {
-      reader.releaseLock();
-    }
-
-    onProgress?.(contentLength, contentLength);
-
-    return new Blob(chunks);
-  }
 
   isDownloadQueued(songId: string): boolean {
-    return this.downloadQueue.isQueued(songId);
+    return audioCacheService.isQueued(songId) || audioCacheService.isInFlight(songId);
   }
 
   async cacheSong(songId: string): Promise<void> {
     if (isAudioCached(songId)) return;
-    const promise = this.downloadQueue.enqueue({
+    getCacheIndexActions().setDownloadProgress(songId, 0);
+    return audioCacheService.cacheSong({
       songId,
       priority: Priority.Explicit,
       source: "explicit",
-    });
-    getCacheIndexActions().setDownloadProgress(songId, 0);
-    return promise;
-  }
-
-  private createProgressCallbacks(songId: string) {
-    const actions = getCacheIndexActions();
-    return {
-      onProgress: (loaded: number, total: number) => {
-        actions.setDownloadProgress(songId, Math.round((loaded / total) * 100));
-      },
-      onBytesReceived: (bytes: number) => {
-        actions.setDownloadProgress(songId, -bytes);
-      },
-    };
-  }
-
-  private async executeDownload(task: CacheTask): Promise<void> {
-    try {
-      await this.downloadAndStoreAudio(task);
-    } finally {
-      this.scheduleClearDownloadProgress(task.songId);
-    }
-  }
-
-  private async downloadAndStoreAudio(task: CacheTask): Promise<void> {
-    const { songId, source, triggers } = task;
-    const url = this.resolveDownloadUrl(songId);
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch audio for ${songId}: ${response.status}`,
-      );
-    }
-
-    const { onProgress, onBytesReceived } =
-      this.createProgressCallbacks(songId);
-    const blob = await this.readResponseWithProgress(
-      response,
-      onProgress,
-      onBytesReceived,
-    );
-
-    const key = audioKey(songId);
-    await cacheStorage.put(key, blob, blob.type || "audio/mpeg");
-
-    const meta: CachedItemMeta = {
-      id: songId,
-      type: "audio",
-      source,
-      triggers,
-      sizeBytes: blob.size,
-      cachedAt: Date.now(),
-      lastAccessedAt: Date.now(),
-    };
-
-    const actions = getCacheIndexActions();
-    actions.addItem(key, meta);
-    this.scheduleStatsRefresh();
-    persistCacheMeta(key, { key, ...meta });
-
-    // Bundle structured lyrics with the audio so offline playback shows
-    // them without another network trip. Fire-and-forget: lyrics are a
-    // nice-to-have, never worth failing the cache operation over.
-    this.cacheLyrics(songId).catch((err) => {
-      console.warn(`[cacheManager] lyrics prefetch failed for ${songId}:`, err);
     });
   }
 
@@ -273,7 +148,7 @@ class CacheManager {
       }
     }
 
-    return this.downloadQueue.enqueue({
+    return audioCacheService.cacheSong({
       songId,
       priority: Priority.Background,
       source: "smart",
@@ -786,8 +661,9 @@ class CacheManager {
   }
 
   async clearAllCaches(): Promise<void> {
-    // Cancel any in-flight sync to prevent the worker from writing
+    // Cancel any in-flight downloads so the Worker doesn't write
     // stale cacheMeta rows after we clear them.
+    audioCacheService.cancelAll();
     syncService.cancel();
     await cacheStorage.clear();
     getCacheIndexActions().clear();
@@ -836,28 +712,7 @@ class CacheManager {
   }
 
   refreshStats(): void {
-    const items = getCacheIndexItems();
-    let audioSize = 0;
-    let coverSize = 0;
-    let audioCount = 0;
-    let coverCount = 0;
-
-    for (const meta of Object.values(items)) {
-      if (meta.type === "audio") {
-        audioSize += meta.sizeBytes;
-        audioCount++;
-      } else {
-        coverSize += meta.sizeBytes;
-        coverCount++;
-      }
-    }
-
-    useCacheStore.getState().actions.updateCacheStats({
-      audioSize,
-      coverSize,
-      audioCount,
-      coverCount,
-    });
+    refreshCacheStats();
   }
 
   /**
