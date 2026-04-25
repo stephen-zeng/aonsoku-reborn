@@ -69,6 +69,16 @@ export default function FullscreenMode({
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: initial useEffect
   useEffect(() => {
+    if (open) {
+      document.body.classList.add("overflow-hidden");
+      return () => {
+        document.body.classList.remove("overflow-hidden");
+      };
+    }
+  }, [open]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: initial useEffect
+  useEffect(() => {
     return () => {
       if (isDesktop()) {
         exitFullscreenWindow().then(() => {
