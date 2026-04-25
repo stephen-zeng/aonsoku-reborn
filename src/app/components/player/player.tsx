@@ -146,7 +146,13 @@ export function Player() {
 
     const currentProgress = Math.floor(audio.currentTime);
     setProgress(currentProgress);
-  }, [getAudioRef, setProgress]);
+
+    if (audio.buffered.length > 0) {
+      const bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
+      const clamped = Math.min(bufferedEnd, audio.duration || 0);
+      setBufferedProgress(clamped);
+    }
+  }, [getAudioRef, setProgress, setBufferedProgress]);
 
   const trackReplayGain = useMemo(
     (): ReplayGainParams =>
@@ -197,14 +203,8 @@ export function Player() {
     updateAudioDuration();
   }, [setStoreIsBuffering, updateAudioDuration]);
 
-  const lastProgressUpdateRef = useRef(0);
-
   const handleAudioProgress = useCallback(
     (e: React.SyntheticEvent<HTMLAudioElement>) => {
-      const now = Date.now();
-      if (now - lastProgressUpdateRef.current < 200) return;
-      lastProgressUpdateRef.current = now;
-
       const audio = e.currentTarget;
       if (audio.buffered.length > 0) {
         const bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
