@@ -179,19 +179,13 @@ export function SyncProgressBar() {
     });
   };
 
-  const barLabel = showError
-    ? t("settings.storage.sync.phases.error")
-    : showCompleted
-      ? t("settings.storage.sync.phases.done")
-      : `${syncState.progress}% · ${t(`settings.storage.sync.phases.${syncState.phase}`)}`;
-
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
-          size="sm"
-          className="h-8 gap-2 electron-no-drag text-xs"
+          size="icon"
+          className="h-8 w-8 electron-no-drag"
         >
           {showError ? (
             <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
@@ -200,9 +194,6 @@ export function SyncProgressBar() {
           ) : (
             <RefreshCw className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
           )}
-          <span className="hidden sm:inline max-w-[200px] truncate">
-            {barLabel}
-          </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-64 p-3">
