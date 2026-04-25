@@ -223,7 +223,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
         merge: (persistedState, currentState) => {
           return merge(currentState, persistedState);
         },
-        partialize: (state) => {
+          partialize: (state) => {
           const appStore = omit(state, [
             "songlist",
             "actions",
@@ -238,6 +238,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
             "playerState.desktopFullscreenPanelView",
             "playerState.hasPrev",
             "playerState.hasNext",
+            "playerProgress.bufferedProgress",
             "remoteControl",
           ]);
 
@@ -605,6 +606,9 @@ export const usePlayerCurrentSongIndex = () =>
 
 export const usePlayerProgress = () =>
   usePlayerStore((state) => state.playerProgress.progress);
+
+export const usePlayerBufferedProgress = () =>
+  usePlayerStore((state) => state.playerProgress.bufferedProgress);
 
 export const usePlayerVolume = () =>
   usePlayerStore(

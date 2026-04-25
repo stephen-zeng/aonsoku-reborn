@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ProgressSlider } from "@/app/components/ui/slider";
 import { useAudioSeeking } from "@/app/hooks/use-audio-seeking";
 import {
+  usePlayerBufferedProgress,
   usePlayerDuration,
   usePlayerIsBuffering,
   usePlayerProgress,
@@ -20,6 +21,7 @@ export function FullscreenProgress({
   stacked?: boolean;
 }) {
   const progress = usePlayerProgress();
+  const bufferedProgress = usePlayerBufferedProgress();
   const audioPlayerRef = usePlayerRef();
   const currentDuration = usePlayerDuration();
   const isBuffering = usePlayerIsBuffering();
@@ -53,6 +55,7 @@ export function FullscreenProgress({
     max: currentDuration ?? 0,
     step: 1,
     isBuffering,
+    bufferedProgress,
     className: "w-full h-2 md:h-3",
     onValueChange: ([value]: [number]) => handleSeeking(value),
     onValueCommit: ([value]: [number]) => handleSeeked(value),

@@ -47,6 +47,7 @@ export function createPlaybackActions(shared: SharedDeps) {
       if (isRemoteActive()) return;
       set((state) => {
         state.playerProgress.progress = 0;
+        state.playerProgress.bufferedProgress = 0;
       });
     },
 
@@ -96,6 +97,15 @@ export function createPlaybackActions(shared: SharedDeps) {
       if (get().playerState.isBuffering === value) return;
       set((state) => {
         state.playerState.isBuffering = value;
+      });
+    },
+
+    setBufferedProgress: (value: number) => {
+      if (isRemoteActive()) return;
+      const prev = get().playerProgress.bufferedProgress;
+      if (prev === value) return;
+      set((state) => {
+        state.playerProgress.bufferedProgress = value;
       });
     },
 

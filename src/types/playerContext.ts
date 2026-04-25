@@ -72,6 +72,7 @@ export interface IPlayerState {
 
 export interface IPlayerProgress {
   progress: number;
+  bufferedProgress: number;
 }
 
 export interface IVolumeSettings {
@@ -185,6 +186,7 @@ export interface IPlayerActions {
   handleVolumeWheel: (isScrollingDown: boolean) => void;
   setCurrentDuration: (duration: number) => void;
   setIsBuffering: (value: boolean) => void;
+  setBufferedProgress: (value: number) => void;
   setPlayRadio: (list: Radio[], index: number) => void;
   setAudioPlayerRef: (ref: HTMLAudioElement) => void;
   setNextOnQueue: (

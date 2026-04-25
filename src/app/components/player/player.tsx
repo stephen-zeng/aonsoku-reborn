@@ -61,6 +61,7 @@ export function Player() {
     setAudioPlayerRef,
     setCurrentDuration,
     setIsBuffering: setStoreIsBuffering,
+    setBufferedProgress,
     setProgress,
     setPlayingState,
     handleSongEnded,
@@ -96,6 +97,7 @@ export function Player() {
   useEffect(() => {
     if (!isSong || !songId) return;
     if (isRemoteControlActive) return;
+    setBufferedProgress(0);
 
     const currentAudio = audioRef.current;
     if (
@@ -110,7 +112,7 @@ export function Player() {
         setAudioPlayerRef(null);
       }
     };
-  }, [isRemoteControlActive, isSong, setAudioPlayerRef, songId]);
+  }, [isRemoteControlActive, isSong, setAudioPlayerRef, songId, setBufferedProgress]);
 
   const updateAudioDuration = useCallback(() => {
     const audio = getAudioRef().current;
@@ -195,9 +197,28 @@ export function Player() {
     updateAudioDuration();
   }, [setStoreIsBuffering, updateAudioDuration]);
 
+  const lastProgressUpdateRef = useRef(0);
+
+  const handleAudioProgress = useCallback(
+    (e: React.SyntheticEvent<HTMLAudioElement>) => {
+      const now = Date.now();
+      if (now - lastProgressUpdateRef.current < 200) return;
+      lastProgressUpdateRef.current = now;
+
+      const audio = e.currentTarget;
+      if (audio.buffered.length > 0) {
+        const bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
+        const clamped = Math.min(bufferedEnd, audio.duration || 0);
+        setBufferedProgress(clamped);
+      }
+    },
+    [setBufferedProgress],
+  );
+
   const handlePlaybackError = useCallback(() => {
+    setBufferedProgress(0);
     toast.error(t("warnings.songError"));
-  }, [t]);
+  }, [t, setBufferedProgress]);
 
   const handleReplayGainError = useCallback(() => {
     toast.error(t("warnings.songError"));
@@ -286,6 +307,7 @@ export function Player() {
           onLoadedMetadata={setupDuration}
           onDurationChange={updateAudioDuration}
           onTimeUpdate={setupProgress}
+          onProgress={handleAudioProgress}
           onEnded={handleSongEnded}
           onWaiting={handleAudioWaiting}
           onPlaying={handleAudioPlaying}

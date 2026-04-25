@@ -5,6 +5,7 @@ export {
   usePlayerCurrentSong,
   usePlayerCurrentSongIndex,
   usePlayerProgress,
+  usePlayerBufferedProgress,
   usePlayerVolume,
   useVolumeSettings,
   useReplayGainState,

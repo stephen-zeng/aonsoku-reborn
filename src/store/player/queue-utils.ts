@@ -225,6 +225,7 @@ export function resetPlaybackState(state: Draft<IPlayerContext>): void {
   state.playerState.isPlaying = false;
   state.playerState.isBuffering = false;
   state.playerProgress.progress = 0;
+  state.playerProgress.bufferedProgress = 0;
   state.playerState.currentDuration = 0;
   state.songlist.isShuffleActive = false;
   state.songlist.shuffleHistory = [];

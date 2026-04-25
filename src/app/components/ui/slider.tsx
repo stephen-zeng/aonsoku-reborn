@@ -18,6 +18,7 @@ type SliderProps = React.ComponentPropsWithoutRef<
   variant?: Variant;
   tooltipValue?: string;
   isBuffering?: boolean;
+  bufferedProgress?: number;
 };
 
 const Slider = React.forwardRef<
@@ -30,6 +31,7 @@ const Slider = React.forwardRef<
       tooltipValue,
       variant = "default",
       isBuffering = false,
+      bufferedProgress = 0,
       ...props
     },
     ref,
@@ -62,6 +64,10 @@ const Slider = React.forwardRef<
           )}
           onContextMenu={handleContextMenu}
         >
+          <BufferedProgressIndicator
+            bufferedProgress={bufferedProgress}
+            max={props.max ?? 100}
+          />
           <SliderPrimitive.Range
             className={clsx(
               "absolute h-full select-none rounded",
@@ -97,6 +103,26 @@ const Slider = React.forwardRef<
   },
 );
 Slider.displayName = SliderPrimitive.Root.displayName;
+
+function BufferedProgressIndicator({
+  bufferedProgress,
+  max,
+}: {
+  bufferedProgress: number;
+  max: number;
+}) {
+  const safeMax = Number.isFinite(max) && max > 0 ? max : 100;
+  const percentage = Math.min((bufferedProgress / safeMax) * 100, 100);
+
+  return (
+    <div
+      className="absolute h-full bg-muted-foreground/30 rounded"
+      style={{ width: `${percentage}%` }}
+      aria-hidden="true"
+      data-buffered-progress
+    />
+  );
+}
 
 export { Slider };
 
@@ -163,6 +189,7 @@ type ProgressSliderProps = React.ComponentPropsWithoutRef<
   tooltipValue?: string;
   tooltipTransformer?: (value: number) => string;
   isBuffering?: boolean;
+  bufferedProgress?: number;
 };
 
 export function ProgressSlider(props: ProgressSliderProps) {
@@ -172,6 +199,7 @@ export function ProgressSlider(props: ProgressSliderProps) {
     tooltipTransformer,
     variant = "default",
     isBuffering = false,
+    bufferedProgress = 0,
     onValueChange,
     ...rest
   } = props;
@@ -327,6 +355,10 @@ export function ProgressSlider(props: ProgressSliderProps) {
           )}
           onContextMenu={handleContextMenu}
         >
+          <BufferedProgressIndicator
+            bufferedProgress={bufferedProgress}
+            max={maxValue}
+          />
           <SliderPrimitive.Range
             className={clsx(
               "absolute h-full select-none transition-[border-radius]",

@@ -171,6 +171,7 @@ export function createQueueActions(shared: SharedDeps) {
       if (listsAreEqual && !sameIndex && !shuffle && sameSourceId) {
         set((state) => {
           state.playerProgress.progress = 0;
+          state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
           state.songlist.contextQueue.currentIndex = index;
           resetUserQueue(state.songlist);
@@ -191,6 +192,7 @@ export function createQueueActions(shared: SharedDeps) {
 
         set((state) => {
           state.playerProgress.progress = 0;
+          state.playerProgress.bufferedProgress = 0;
           state.songlist.contextQueue = {
             ...emptyContextQueue(),
             songs: shuffledSongs,
@@ -213,6 +215,7 @@ export function createQueueActions(shared: SharedDeps) {
         const trimmed = trimQueueToWindow(songlist, index);
         set((state) => {
           state.playerProgress.progress = 0;
+          state.playerProgress.bufferedProgress = 0;
           state.songlist.contextQueue = {
             ...emptyContextQueue(),
             songs: trimmed.songs,
@@ -255,6 +258,7 @@ export function createQueueActions(shared: SharedDeps) {
       if (listsAreEqual) {
         set((state) => {
           state.playerProgress.progress = 0;
+          state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
           state.songlist.contextQueue.currentIndex = contextIndex;
           state.songlist.isInUserQueue = false;
@@ -320,6 +324,7 @@ export function createQueueActions(shared: SharedDeps) {
       } else {
         set((state) => {
           state.playerProgress.progress = 0;
+          state.playerProgress.bufferedProgress = 0;
           state.playerState.mediaType = "song";
           state.songlist.contextQueue = {
             ...emptyContextQueue(),
@@ -442,6 +447,7 @@ export function createQueueActions(shared: SharedDeps) {
           state.songlist.originalContextSongs.filter((s) => s.id !== id);
         if (shouldResetProgress) {
           state.playerProgress.progress = 0;
+          state.playerProgress.bufferedProgress = 0;
         }
       });
     },
@@ -574,6 +580,7 @@ export function createQueueActions(shared: SharedDeps) {
           state.songlist.userQueue.songs.splice(0, 1);
           state.songlist.playedUserQueueHistory.push(consumed);
           state.playerProgress.progress = 0;
+          state.playerProgress.bufferedProgress = 0;
 
           if (state.songlist.userQueue.songs.length > 0) {
             state.playerState.isPlaying = true;
@@ -601,6 +608,7 @@ export function createQueueActions(shared: SharedDeps) {
         set((state) => {
           state.songlist.isInUserQueue = true;
           state.playerProgress.progress = 0;
+          state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
         });
         return;
@@ -609,6 +617,7 @@ export function createQueueActions(shared: SharedDeps) {
       if (loopState === LoopState.One) {
         set((state) => {
           state.playerProgress.progress = 0;
+          state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
         });
         return;
@@ -618,6 +627,7 @@ export function createQueueActions(shared: SharedDeps) {
         set((state) => {
           state.songlist.contextQueue.currentIndex += 1;
           state.playerProgress.progress = 0;
+          state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
         });
         return;
@@ -630,6 +640,7 @@ export function createQueueActions(shared: SharedDeps) {
           state.songlist.contextQueue.currentIndex = 0;
           reshuffleContextForWrap(state.songlist, lastPlayedSongId);
           state.playerProgress.progress = 0;
+          state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
         });
       }
@@ -646,6 +657,7 @@ export function createQueueActions(shared: SharedDeps) {
       if (currentSong && progress > PREV_SEEK_THRESHOLD) {
         set((state) => {
           state.playerProgress.progress = 0;
+          state.playerProgress.bufferedProgress = 0;
         });
         lastPrevSongTime = Date.now();
         const audioRef = get().playerState.audioPlayerRef;
@@ -672,6 +684,7 @@ export function createQueueActions(shared: SharedDeps) {
           state.songlist.userQueue.songs.unshift(restored);
           state.songlist.isInUserQueue = true;
           state.playerProgress.progress = 0;
+          state.playerProgress.bufferedProgress = 0;
 
           if (!wasInUserQueue) {
             state.songlist.contextQueue.currentIndex = Math.max(
@@ -689,6 +702,7 @@ export function createQueueActions(shared: SharedDeps) {
         set((state) => {
           state.songlist.isInUserQueue = false;
           state.playerProgress.progress = 0;
+          state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
         });
         return;
@@ -698,6 +712,7 @@ export function createQueueActions(shared: SharedDeps) {
         set((state) => {
           state.songlist.contextQueue.currentIndex -= 1;
           state.playerProgress.progress = 0;
+          state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
         });
       }
@@ -763,11 +778,13 @@ export function createQueueActions(shared: SharedDeps) {
       } else if (loopState === LoopState.One) {
         set((state) => {
           state.playerProgress.progress = 0;
+          state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
         });
       } else {
         set((state) => {
           state.playerProgress.progress = 0;
+          state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = false;
         });
       }

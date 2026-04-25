@@ -41,6 +41,7 @@ export function AudioPlayer({
   songId,
   onLoadedMetadata,
   onTimeUpdate,
+  onProgress,
   onCanPlay,
   onPlay,
   ...props
@@ -528,6 +529,7 @@ export function AudioPlayer({
       crossOrigin={crossOrigin}
       onError={handleError}
       onTimeUpdate={handleTimeUpdate}
+      onProgress={onProgress}
       onLoadedMetadata={handleLoadedMetadata}
       onDurationChange={(e) => props.onDurationChange?.(e)}
       onCanPlay={handleCanPlay}
