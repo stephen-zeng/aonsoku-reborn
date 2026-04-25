@@ -18,7 +18,7 @@ const IDB_KEY = "cache-index-v1";
 interface CacheIndexState {
   items: Record<string, CachedItemMeta>;
   loaded: boolean;
-  /** Per-song download progress: songId → 0–100. Not persisted. */
+  /** Per-song download progress: songId → 0–100 for percentage, or negative byte count. Not persisted. */
   downloads: Record<string, number>;
   actions: {
     loadFromIDB: () => Promise<void>;
@@ -366,3 +366,9 @@ export const useCachePoolStats = (): CachePoolStats =>
 
 export const useDownloadProgress = (songId: string): number | undefined =>
   useCacheIndexStore((state) => state.downloads[songId]);
+
+export const useDownloadBytes = (songId: string): number | undefined =>
+  useCacheIndexStore((state) => {
+    const value = state.downloads[songId];
+    return value !== undefined && value < 0 ? -value : undefined;
+  });

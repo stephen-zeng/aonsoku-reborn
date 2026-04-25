@@ -47,7 +47,12 @@ export function CachedIndicator({
   const source = meta?.source as CacheMetaSource | undefined;
 
   if (progress !== undefined) {
-    return <DownloadingIndicator progress={progress} className={className} />;
+    return (
+      <DownloadingIndicator
+        progress={progress}
+        className={className}
+      />
+    );
   }
 
   if (!isCached) {
@@ -107,6 +112,11 @@ interface DownloadingIndicatorProps {
   className?: string;
 }
 
+const RADIUS = 7;
+const STROKE = 2.5;
+const NORMALIZED_RADIUS = RADIUS - STROKE / 2;
+const CIRCUMFERENCE = NORMALIZED_RADIUS * 2 * Math.PI;
+
 /**
  * Shown while a `cacheSong` operation is in flight.
  */
@@ -115,7 +125,7 @@ export function DownloadingIndicator({
   className,
 }: DownloadingIndicatorProps) {
   const { t } = useTranslation();
-  const hasProgress = typeof progress === "number";
+  const hasProgress = typeof progress === "number" && progress >= 0;
 
   if (!hasProgress) {
     return (
@@ -130,17 +140,14 @@ export function DownloadingIndicator({
   }
 
   const clamped = Math.max(0, Math.min(100, progress ?? 0));
-  const radius = 7;
-  const stroke = 2.5;
-  const normalizedRadius = radius - stroke / 2;
-  const circumference = normalizedRadius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (clamped / 100) * circumference;
+  const strokeDashoffset =
+    CIRCUMFERENCE - (clamped / 100) * CIRCUMFERENCE;
 
   return (
     <svg
-      width={radius * 2}
-      height={radius * 2}
-      viewBox={`0 0 ${radius * 2} ${radius * 2}`}
+      width={RADIUS * 2}
+      height={RADIUS * 2}
+      viewBox={`0 0 ${RADIUS * 2} ${RADIUS * 2}`}
       className={cn("flex-shrink-0", className)}
       aria-label={t("offline.badge.downloading")}
       role="progressbar"
@@ -151,24 +158,24 @@ export function DownloadingIndicator({
       <circle
         stroke="currentColor"
         fill="transparent"
-        strokeWidth={stroke}
+        strokeWidth={STROKE}
         className="text-muted-foreground/20"
-        r={normalizedRadius}
-        cx={radius}
-        cy={radius}
+        r={NORMALIZED_RADIUS}
+        cx={RADIUS}
+        cy={RADIUS}
       />
       <circle
         stroke="currentColor"
         fill="transparent"
-        strokeWidth={stroke}
-        strokeDasharray={`${circumference} ${circumference}`}
+        strokeWidth={STROKE}
+        strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
         style={{ strokeDashoffset }}
         strokeLinecap="round"
         className="text-muted-foreground transition-all duration-300 ease-in-out"
-        r={normalizedRadius}
-        cx={radius}
-        cy={radius}
-        transform={`rotate(-90 ${radius} ${radius})`}
+        r={NORMALIZED_RADIUS}
+        cx={RADIUS}
+        cy={RADIUS}
+        transform={`rotate(-90 ${RADIUS} ${RADIUS})`}
       />
     </svg>
   );
