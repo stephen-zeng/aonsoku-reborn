@@ -122,7 +122,7 @@ describe("buildSongStreamUrl", () => {
     const url = buildSongStreamUrl(tokenConfig, "song-1");
     expect(url).toContain("/rest/stream?");
     expect(url).toContain("id=song-1");
-    expect(url).toContain("estimateContentLength=true");
+    expect(url).toContain("estimateContentLength=false");
   });
 
   it("includes optional maxBitRate and format", () => {

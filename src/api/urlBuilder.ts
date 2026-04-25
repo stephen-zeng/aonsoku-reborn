@@ -74,6 +74,6 @@ export function buildSongStreamUrl(
     id,
     maxBitRate,
     format,
-    // estimateContentLength: "true",
+    estimateContentLength: "false",  // enabling may cause http/2 issues
   });
 }
