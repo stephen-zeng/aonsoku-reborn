@@ -48,17 +48,16 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
   }
 
   async function handleCacheSongs() {
-    for (const song of songs) {
-      const key = audioKey(song.id);
-      const isCached = key in useCacheIndexStore.getState().items;
-      if (!isCached) {
-        try {
-          await cacheManager.cacheSong(song.id);
-        } catch {
+    const uncached = songs.filter(
+      (s) => !(audioKey(s.id) in useCacheIndexStore.getState().items),
+    );
+    await Promise.all(
+      uncached.map((s) =>
+        cacheManager.cacheSong(s.id).catch(() => {
           // Best-effort: skip songs that fail to cache
-        }
-      }
-    }
+        }),
+      ),
+    );
     reset(() => {});
   }
 

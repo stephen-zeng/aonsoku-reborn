@@ -159,13 +159,19 @@ class CacheManager {
     return new Blob(chunks);
   }
 
+  isDownloadQueued(songId: string): boolean {
+    return this.downloadQueue.isQueued(songId);
+  }
+
   async cacheSong(songId: string): Promise<void> {
     if (isAudioCached(songId)) return;
-    return this.downloadQueue.enqueue({
+    const promise = this.downloadQueue.enqueue({
       songId,
       priority: Priority.Explicit,
       source: "explicit",
     });
+    getCacheIndexActions().setDownloadProgress(songId, 0);
+    return promise;
   }
 
   private createProgressCallbacks(songId: string) {

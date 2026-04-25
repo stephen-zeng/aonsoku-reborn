@@ -61,6 +61,16 @@ export class AudioCacheQueue {
     return promise;
   }
 
+  /** Returns true if the given songId is currently waiting in the queue (not yet downloading). */
+  isQueued(songId: string): boolean {
+    return this.queue.some((q) => q.task.songId === songId);
+  }
+
+  /** Returns true if the given songId is currently being downloaded. */
+  isInFlight(songId: string): boolean {
+    return this.inflight.has(songId) && !this.isQueued(songId);
+  }
+
   private schedule(): void {
     while (this.running < this.concurrency && this.queue.length > 0) {
       const entry = this.queue.shift()!;

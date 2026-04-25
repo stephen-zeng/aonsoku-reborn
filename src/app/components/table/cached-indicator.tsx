@@ -136,6 +136,7 @@ export function DownloadingIndicator({
     );
   }
 
+  const isQueued = progress === 0;
   const clamped = Math.max(0, Math.min(100, progress ?? 0));
   const strokeDashoffset = CIRCUMFERENCE - (clamped / 100) * CIRCUMFERENCE;
 
@@ -164,10 +165,15 @@ export function DownloadingIndicator({
         stroke="currentColor"
         fill="transparent"
         strokeWidth={STROKE}
-        strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
-        style={{ strokeDashoffset }}
+        strokeDasharray={
+          isQueued ? "2 3" : `${CIRCUMFERENCE} ${CIRCUMFERENCE}`
+        }
+        strokeDashoffset={isQueued ? 0 : strokeDashoffset}
         strokeLinecap="round"
-        className="text-muted-foreground transition-all duration-300 ease-in-out"
+        className={cn(
+          "text-muted-foreground transition-all duration-300 ease-in-out",
+          isQueued && "opacity-40",
+        )}
         r={NORMALIZED_RADIUS}
         cx={RADIUS}
         cy={RADIUS}
