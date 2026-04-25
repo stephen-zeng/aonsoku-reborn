@@ -111,11 +111,7 @@ export function GridViewWrapper<T>({
     const handleResize = () => {
       const width = window.innerWidth;
       const layout = getGridLayout(width);
-      const newSize = calculateSize(
-        layout.columns,
-        layout.padding,
-        layout.gap,
-      );
+      const newSize = calculateSize(layout.columns, layout.padding, layout.gap);
 
       setGridColumnsSize(layout.columns);
       setEffectivePadding(layout.padding);
@@ -236,10 +232,7 @@ export function GridViewWrapper<T>({
   }, [routeKey, rowVirtualizer.scrollOffset, type]);
 
   return (
-    <div
-      ref={gridWrapperRef}
-      className="w-full overflow-hidden relative"
-    >
+    <div ref={gridWrapperRef} className="w-full overflow-hidden relative">
       <div
         style={{
           width: columnVirtualizer.getTotalSize(),

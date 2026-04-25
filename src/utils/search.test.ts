@@ -80,9 +80,9 @@ describe("matchesAllTokens", () => {
 
   it("handles diacritics across tokens and targets", () => {
     const tokens = tokenizeQuery("Dvorak Requiem");
-    expect(
-      matchesAllTokens(tokens, ["Dvořák", "Requiem in D minor"]),
-    ).toBe(true);
+    expect(matchesAllTokens(tokens, ["Dvořák", "Requiem in D minor"])).toBe(
+      true,
+    );
   });
 
   it("matches partial tokens", () => {

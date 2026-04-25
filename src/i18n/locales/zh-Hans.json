@@ -737,6 +737,23 @@
         },
         "syncNow": "立即同步",
         "justNow": "刚刚",
+        "downloading": "正在下载 {{count}} 首歌曲",
+        "completed": "完成",
+        "showMore": "显示另外 {{count}} 首",
+        "tier": {
+          "t1": {
+            "label": "基础数据",
+            "description": "收藏 · 播放列表 · 流派"
+          },
+          "t2": {
+            "label": "库骨架",
+            "description": "艺术家 · 专辑"
+          },
+          "t3": {
+            "label": "完整歌曲",
+            "description": "全部歌曲元数据"
+          }
+        },
         "clearConfirm": {
           "title": "关闭资源库缓存？",
           "description": "关闭资源库缓存将清除所有已同步的资源库数据（艺术家、专辑、歌曲、播放列表、流派）。您可以随时重新启用并重新同步。",

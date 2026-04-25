@@ -14,6 +14,7 @@ import { ROUTES } from "@/routes/routesList";
 import { ISong } from "@/types/responses/song";
 import { AddToPlaylistSubMenu } from "./add-to-playlist";
 import { usePlayerStore } from "@/store/player.store";
+import { useLibraryCaching } from "@/store/cache.store";
 
 interface SelectedSongsProps {
   table: Table<ISong>;
@@ -23,6 +24,7 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const songOptions = useOptions();
+  const libraryCaching = useLibraryCaching();
   const isUserQueueEmpty = usePlayerStore(
     (state) => state.songlist.userQueue.songs.length === 0,
   );
@@ -46,18 +48,17 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
   }
 
   async function handleCacheSongs() {
-    for (const song of songs) {
-      const key = audioKey(song.id);
-      const isCached = key in useCacheIndexStore.getState().items;
-      if (!isCached) {
-        try {
-          await cacheManager.cacheSong(song.id);
-        } catch {
+    const uncached = songs.filter(
+      (s) => !(audioKey(s.id) in useCacheIndexStore.getState().items),
+    );
+    await Promise.all(
+      uncached.map((s) =>
+        cacheManager.cacheSong(s.id).catch(() => {
           // Best-effort: skip songs that fail to cache
-        }
-      }
-    }
-    reset(() => { });
+        }),
+      ),
+    );
+    reset(() => {});
   }
 
   async function handleRemoveCachedSongs() {
@@ -68,7 +69,7 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
         await cacheManager.evictItem(key);
       }
     }
-    reset(() => { });
+    reset(() => {});
   }
 
   const hasUncached = songs.some(
@@ -171,25 +172,27 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
           />
         </>
       )}
-      <ContextMenuSeparator />
-      {hasUncached && (
-        <OptionsButtons.DownloadSong
-          variant="context"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleCacheSongs();
-          }}
-        />
-      )}
-      {hasCached && (
-        <OptionsButtons.RemoveDownload
-          variant="context"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleRemoveCachedSongs();
-          }}
-        />
-      )}
+      {libraryCaching && <>
+        <ContextMenuSeparator />
+        {hasUncached && (
+          <OptionsButtons.DownloadSong
+            variant="context"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCacheSongs();
+            }}
+          />
+        )}
+        {hasCached && (
+          <OptionsButtons.RemoveDownload
+            variant="context"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRemoveCachedSongs();
+            }}
+          />
+        )}
+      </>}
       {rows.length > 1 && (
         <>
           <ContextMenuSeparator />
@@ -198,7 +201,6 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
           </ContextMenuItem>
         </>
       )}
-
     </>
   );
 }

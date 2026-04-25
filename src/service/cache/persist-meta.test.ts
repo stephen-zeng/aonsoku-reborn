@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { _resetLibraryDbForTests, libraryDb } from "@/store/library-db";
-import { persistCacheMeta, deleteCacheMeta, bulkDeleteCacheMeta } from "./persist-meta";
+import {
+  persistCacheMeta,
+  deleteCacheMeta,
+  bulkDeleteCacheMeta,
+} from "./persist-meta";
 
 beforeEach(async () => {
   await _resetLibraryDbForTests();

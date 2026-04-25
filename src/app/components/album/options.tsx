@@ -14,12 +14,7 @@ interface AlbumOptionsProps {
 }
 
 export function AlbumOptions({ album }: AlbumOptionsProps) {
-  const {
-    playNext,
-    playLast,
-    addToPlaylist,
-    createNewPlaylist,
-  } = useOptions();
+  const { playNext, playLast, addToPlaylist, createNewPlaylist } = useOptions();
   const isUserQueueEmpty = usePlayerStore(
     (state) => state.songlist.userQueue.songs.length === 0,
   );

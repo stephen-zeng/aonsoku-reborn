@@ -133,3 +133,26 @@ export const DEFAULT_LRU_QUOTA = 1_073_741_824; // 1 GB
 export const COVER_ART_CONCURRENCY_MIN = 1;
 export const COVER_ART_CONCURRENCY_DEFAULT = 4;
 export const COVER_ART_CONCURRENCY_MAX = 8;
+
+/**
+ * Audio download priority — higher values preempt lower ones in the
+ * global AudioCacheQueue.
+ */
+export const Priority = {
+  Playback: 2,
+  Explicit: 1,
+  Background: 0,
+} as const;
+
+export type Priority = (typeof Priority)[keyof typeof Priority];
+
+/** A unit of work for AudioCacheQueue. */
+export interface CacheTask {
+  songId: string;
+  priority: Priority;
+  source: CacheMetaSource;
+  triggers?: string[];
+}
+
+/** Function that performs the actual download for one CacheTask. */
+export type CacheTaskExecutor = (task: CacheTask) => Promise<void>;

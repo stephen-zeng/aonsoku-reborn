@@ -738,16 +738,23 @@
         },
         "tier": {
           "t1": {
-            "label": "Essentials (favorites · playlists · genres)"
+            "label": "Essentials",
+            "description": "Favorites · Playlists · Genres"
           },
           "t2": {
-            "label": "Library skeleton (artists · albums)"
+            "label": "Library Skeleton",
+            "description": "Artists · Albums"
           },
           "t3": {
-            "label": "Full song details"
+            "label": "Full Songs",
+            "description": "All song metadata"
           }
         },
         "justNow": "Just now",
+        "downloading_one": "Downloading {{count}} song",
+        "downloading_other": "Downloading {{count}} songs",
+        "completed": "Done",
+        "showMore": "Show {{count}} more",
         "clearConfirm": {
           "title": "Disable library caching?",
           "description": "Disabling library caching will clear all synced library data (artists, albums, songs, playlists, genres). You can re-enable it and re-sync at any time.",

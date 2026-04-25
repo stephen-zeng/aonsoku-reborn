@@ -9,7 +9,9 @@ describe("normalizeServerUrl", () => {
   });
 
   it("does not modify URL without trailing slash", () => {
-    expect(normalizeServerUrl("https://example.com")).toBe("https://example.com");
+    expect(normalizeServerUrl("https://example.com")).toBe(
+      "https://example.com",
+    );
   });
 
   it("trims but keeps URL with no slash", () => {

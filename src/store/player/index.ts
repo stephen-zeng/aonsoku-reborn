@@ -223,7 +223,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
         merge: (persistedState, currentState) => {
           return merge(currentState, persistedState);
         },
-          partialize: (state) => {
+        partialize: (state) => {
           const appStore = omit(state, [
             "songlist",
             "actions",

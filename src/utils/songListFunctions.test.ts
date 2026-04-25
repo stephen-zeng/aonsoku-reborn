@@ -47,12 +47,7 @@ describe("MAX_SHUFFLE_HISTORY", () => {
 
 describe("shuffleWithGapAvoidance", () => {
   it("places fresh songs before recent songs", () => {
-    const songs = [
-      { id: "a" },
-      { id: "b" },
-      { id: "c" },
-      { id: "d" },
-    ];
+    const songs = [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "d" }];
     const history = ["a", "c"];
     const result = shuffleWithGapAvoidance(songs, history);
 
@@ -86,9 +81,7 @@ describe("shuffleWithGapAvoidance", () => {
     const history = ["c", "a", "b"];
     const result = shuffleWithGapAvoidance(songs, history);
     const recentPart = result.slice(0);
-    const recentIds = recentPart.filter(
-      (s) => history.includes(s.id),
-    );
+    const recentIds = recentPart.filter((s) => history.includes(s.id));
     expect(recentIds.map((s) => s.id)).toEqual(["c", "a", "b"]);
   });
 
@@ -105,13 +98,7 @@ describe("shuffleWithGapAvoidance", () => {
 
 describe("addNextSongList", () => {
   it("inserts new list after the index", () => {
-    expect(addNextSongList(1, [1, 2, 3], [10, 20])).toEqual([
-      1,
-      2,
-      10,
-      20,
-      3,
-    ]);
+    expect(addNextSongList(1, [1, 2, 3], [10, 20])).toEqual([1, 2, 10, 20, 3]);
   });
 
   it("inserts at end when index is last element", () => {

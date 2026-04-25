@@ -6,7 +6,6 @@ import { NavigationButtons } from "@/app/components/header/navigation-buttons";
 import { SyncProgressBar } from "@/app/components/header/sync-progress-bar";
 import { OfflineIndicator } from "@/app/components/offline-indicator";
 import { UserDropdown } from "@/app/components/header/user-dropdown";
-import { SettingsButton } from "@/app/components/settings/header-button";
 import { useAppWindow } from "@/app/hooks/use-app-window";
 import { useWindowControlsOverlay } from "@/app/hooks/use-window-controls-overlay";
 import { cn } from "@/lib/utils";
@@ -158,9 +157,6 @@ export function Header() {
       <div className="flex justify-end items-center gap-2">
         <OfflineIndicator />
         <SyncProgressBar />
-        <div className="hidden md:block">
-          <SettingsButton />
-        </div>
         <UserDropdown />
         {/* Spacing for Windows/Linux window controls on right side */}
         {rightSpacingWidth > 10 && (

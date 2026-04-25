@@ -7,7 +7,10 @@ import {
   convertLrcToAMLL,
   convertStructuredToAMLL,
 } from "./lrc-converter";
-import type { IStructuredLyric, IStructuredLyricLine } from "@/types/responses/song";
+import type {
+  IStructuredLyric,
+  IStructuredLyricLine,
+} from "@/types/responses/song";
 
 describe("LRC_TIMESTAMP_REGEX", () => {
   it("matches standard LRC timestamps", () => {
@@ -136,14 +139,10 @@ describe("convertStructuredToAMLL", () => {
 
   it("applies external translation track", () => {
     const primary: IStructuredLyric = {
-      line: [
-        { start: 0, value: "Hello" },
-      ],
+      line: [{ start: 0, value: "Hello" }],
     };
     const translation: IStructuredLyric = {
-      line: [
-        { start: 0, value: "Hola" },
-      ],
+      line: [{ start: 0, value: "Hola" }],
     };
     const result = convertStructuredToAMLL(primary, translation);
     expect(result[0].translatedLyric).toBe("Hola");
