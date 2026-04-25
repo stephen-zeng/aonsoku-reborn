@@ -1,5 +1,4 @@
 import { Settings } from "lucide-react";
-import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/app/components/ui/button";
@@ -12,11 +11,7 @@ export function SettingsButton() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { openDialog, setOpenDialog } = useAppSettings();
-
-  useHotkeys("mod+comma", () => {
-    setOpenDialog(!openDialog);
-  });
+  const { setOpenDialog } = useAppSettings();
 
   function handleClick() {
     if (isMobile) {
