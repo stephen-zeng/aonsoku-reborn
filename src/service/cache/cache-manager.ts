@@ -11,8 +11,14 @@ import {
 } from "@/store/cache-index.store";
 import { libraryDb } from "@/store/library-db";
 import { usePlayerStore } from "@/store/player.store";
-import { CachedItemMeta, CacheMetaSource } from "@/types/cache";
+import {
+  CachedItemMeta,
+  CacheMetaSource,
+  CacheTask,
+  Priority,
+} from "@/types/cache";
 import { getSongCoverArtId } from "@/utils/coverArt";
+import { AudioCacheQueue } from "./audio-cache-queue";
 
 export interface CachedItemDetail {
   key: string;
@@ -65,11 +71,18 @@ export function buildAudioUrl(
 class CacheManager {
   private statsTimer: ReturnType<typeof setTimeout> | null = null;
   private cacheCoverInflight = new Map<string, Promise<void>>();
-  private cacheSongInflight = new Map<string, Promise<void>>();
   private downloadClearTimers = new Map<
     string,
     ReturnType<typeof setTimeout>
   >();
+  private readonly downloadQueue: AudioCacheQueue;
+
+  constructor() {
+    this.downloadQueue = new AudioCacheQueue(
+      (task) => this.executeDownload(task),
+      4,
+    );
+  }
 
   private scheduleClearDownloadProgress(songId: string): void {
     const existing = this.downloadClearTimers.get(songId);
@@ -147,18 +160,12 @@ class CacheManager {
   }
 
   async cacheSong(songId: string): Promise<void> {
-    const key = audioKey(songId);
-    const inflight = this.cacheSongInflight.get(key);
-    if (inflight) return inflight;
-
-    const p = this.cacheSongImpl(songId).finally(() => {
-      this.cacheSongInflight.delete(key);
-      // Keep the "completed" state visible briefly so the sync popover
-      // can show a "done" tick before the row vanishes.
-      this.scheduleClearDownloadProgress(songId);
+    if (isAudioCached(songId)) return;
+    return this.downloadQueue.enqueue({
+      songId,
+      priority: Priority.Explicit,
+      source: "explicit",
     });
-    this.cacheSongInflight.set(key, p);
-    return p;
   }
 
   private createProgressCallbacks(songId: string) {
@@ -173,11 +180,16 @@ class CacheManager {
     };
   }
 
-  private async downloadAndStoreAudio(
-    songId: string,
-    source: CacheMetaSource,
-    triggers?: string[],
-  ): Promise<void> {
+  private async executeDownload(task: CacheTask): Promise<void> {
+    try {
+      await this.downloadAndStoreAudio(task);
+    } finally {
+      this.scheduleClearDownloadProgress(task.songId);
+    }
+  }
+
+  private async downloadAndStoreAudio(task: CacheTask): Promise<void> {
+    const { songId, source, triggers } = task;
     const url = this.resolveDownloadUrl(songId);
     const response = await fetch(url);
     if (!response.ok) {
@@ -220,11 +232,6 @@ class CacheManager {
     });
   }
 
-  private async cacheSongImpl(songId: string): Promise<void> {
-    if (isAudioCached(songId)) return;
-    await this.downloadAndStoreAudio(songId, "explicit");
-  }
-
   /**
    * Download `songId` and tag it as a smart-download, carrying the
    * rule names that triggered the decision. Used by the
@@ -234,24 +241,6 @@ class CacheManager {
    * `"smart"` so future LRU pressure doesn't evict it.
    */
   async cacheSmartSong(songId: string, triggers: string[]): Promise<void> {
-    const key = audioKey(songId);
-    const inflight = this.cacheSongInflight.get(key);
-    if (inflight) return inflight;
-
-    const p = this.cacheSmartSongImpl(songId, triggers).finally(() => {
-      this.cacheSongInflight.delete(key);
-      // Keep the "completed" state visible briefly so the sync popover
-      // can show a "done" tick before the row vanishes.
-      this.scheduleClearDownloadProgress(songId);
-    });
-    this.cacheSongInflight.set(key, p);
-    return p;
-  }
-
-  private async cacheSmartSongImpl(
-    songId: string,
-    triggers: string[],
-  ): Promise<void> {
     const key = audioKey(songId);
     const existing = getCacheIndexItems()[key];
 
@@ -278,7 +267,12 @@ class CacheManager {
       }
     }
 
-    await this.downloadAndStoreAudio(songId, "smart", triggers);
+    return this.downloadQueue.enqueue({
+      songId,
+      priority: Priority.Background,
+      source: "smart",
+      triggers,
+    });
   }
 
   /**
@@ -577,39 +571,31 @@ class CacheManager {
     const seenCovers = new Set<string>();
     let completed = 0;
     const total = songs.length;
-    const concurrency = 3;
     const evictionInterval = 10;
 
-    const run = async (song: {
-      id: string;
-      coverArt?: string;
-      albumId?: string;
-    }): Promise<void> => {
-      try {
-        await this.cacheSong(song.id);
-        const coverArtId = getSongCoverArtId({
-          albumId: song.albumId,
-          coverArt: song.coverArt ?? "",
-        });
-        if (coverArtId && !seenCovers.has(coverArtId)) {
-          seenCovers.add(coverArtId);
-          await this.cacheCover(coverArtId);
+    await Promise.all(
+      songs.map(async (song) => {
+        try {
+          await this.cacheSong(song.id);
+          const coverArtId = getSongCoverArtId({
+            albumId: song.albumId,
+            coverArt: song.coverArt ?? "",
+          });
+          if (coverArtId && !seenCovers.has(coverArtId)) {
+            seenCovers.add(coverArtId);
+            await this.cacheCover(coverArtId);
+          }
+        } catch (err) {
+          console.error(`Failed to cache song ${song.id}:`, err);
         }
-      } catch (err) {
-        console.error(`Failed to cache song ${song.id}:`, err);
-      }
-      completed++;
-      onProgress?.(completed, total);
+        completed++;
+        onProgress?.(completed, total);
 
-      if (completed % evictionInterval === 0) {
-        await this.enforceStorageLimit();
-      }
-    };
-
-    for (let i = 0; i < songs.length; i += concurrency) {
-      const batch = songs.slice(i, i + concurrency);
-      await Promise.all(batch.map(run));
-    }
+        if (completed % evictionInterval === 0) {
+          await this.enforceStorageLimit();
+        }
+      }),
+    );
 
     await this.enforceStorageLimit();
   }
