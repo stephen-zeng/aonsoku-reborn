@@ -443,12 +443,12 @@ export function SyncProgressBar() {
 
 	const triggerLabel = showError
 		? t("settings.storage.sync.phases.error")
-		: showCompleted
-			? t("settings.storage.sync.phases.done")
-			: isSyncing
-				? t("settings.storage.sync.phases.idle")
-				: hasDownloads
-					? t("settings.storage.sync.downloading", { count: downloadCount })
+		: isSyncing
+			? t("settings.storage.sync.phases.idle")
+			: hasDownloads
+				? t("settings.storage.sync.downloading", { count: downloadCount })
+				: showCompleted
+					? t("settings.storage.sync.phases.done")
 					: t("settings.storage.sync.syncNow");
 
 	return (
@@ -460,20 +460,20 @@ export function SyncProgressBar() {
 					className="h-8 w-8 electron-no-drag"
 					aria-label={triggerLabel}
 				>
-					{showError ? (
-						<AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-					) : showCompleted ? (
-						<Check className="w-3.5 h-3.5 text-emerald-500" />
-					) : isSyncing ? (
-						<RefreshCw className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
-					) : hasDownloads ? (
-						<DownloadingIndicator
-							progress={averageProgress}
-							className="w-3.5 h-3.5"
-						/>
-					) : (
-						<RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />
-					)}
+				{showError ? (
+					<AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+				) : isSyncing ? (
+					<RefreshCw className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+				) : hasDownloads ? (
+					<DownloadingIndicator
+						progress={averageProgress}
+						className="w-3.5 h-3.5"
+					/>
+				) : showCompleted ? (
+					<Check className="w-3.5 h-3.5 text-emerald-500" />
+				) : (
+					<RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />
+				)}
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent align="end" className="w-80 p-4">
