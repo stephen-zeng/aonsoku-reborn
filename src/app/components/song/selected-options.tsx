@@ -14,6 +14,7 @@ import { ROUTES } from "@/routes/routesList";
 import { ISong } from "@/types/responses/song";
 import { AddToPlaylistSubMenu } from "./add-to-playlist";
 import { usePlayerStore } from "@/store/player.store";
+import { useLibraryCaching } from "@/store/cache.store";
 
 interface SelectedSongsProps {
   table: Table<ISong>;
@@ -23,6 +24,7 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const songOptions = useOptions();
+  const libraryCaching = useLibraryCaching();
   const isUserQueueEmpty = usePlayerStore(
     (state) => state.songlist.userQueue.songs.length === 0,
   );
@@ -171,25 +173,27 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
           />
         </>
       )}
-      <ContextMenuSeparator />
-      {hasUncached && (
-        <OptionsButtons.DownloadSong
-          variant="context"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleCacheSongs();
-          }}
-        />
-      )}
-      {hasCached && (
-        <OptionsButtons.RemoveDownload
-          variant="context"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleRemoveCachedSongs();
-          }}
-        />
-      )}
+      {libraryCaching && <>
+        <ContextMenuSeparator />
+        {hasUncached && (
+          <OptionsButtons.DownloadSong
+            variant="context"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCacheSongs();
+            }}
+          />
+        )}
+        {hasCached && (
+          <OptionsButtons.RemoveDownload
+            variant="context"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRemoveCachedSongs();
+            }}
+          />
+        )}
+      </>}
       {rows.length > 1 && (
         <>
           <ContextMenuSeparator />

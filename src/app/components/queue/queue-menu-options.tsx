@@ -6,6 +6,7 @@ import { useOptions } from "@/app/hooks/use-options";
 import { cacheManager, audioKey } from "@/service/cache";
 import { ROUTES } from "@/routes/routesList";
 import { useIsAudioCached } from "@/store/cache-index.store";
+import { useLibraryCaching } from "@/store/cache.store";
 import { usePlayerActions, usePlayerStore } from "@/store/player.store";
 import { type QueueTier } from "@/types/playerContext";
 import { ISong } from "@/types/responses/song";
@@ -26,6 +27,7 @@ export function QueueMenuOptions({
   const { playNext, playLast, createNewPlaylist, addToPlaylist, openSongInfo } =
     useOptions();
   const isCached = useIsAudioCached(song.id);
+  const libraryCaching = useLibraryCaching();
   const isUserQueueEmpty = usePlayerStore(
     (state) => state.songlist.userQueue.songs.length === 0,
   );
@@ -91,24 +93,25 @@ export function QueueMenuOptions({
           <ContextMenuSeparator />
         </>
       )}
-      {isCached ? (
-        <OptionsButtons.RemoveDownload
-          variant={variant}
-          onClick={(e) => {
-            e.stopPropagation();
-            cacheManager.evictItem(audioKey(song.id));
-          }}
-        />
-      ) : (
-        <OptionsButtons.DownloadSong
-          variant={variant}
-          onClick={(e) => {
-            e.stopPropagation();
-            cacheManager.cacheSong(song.id);
-          }}
-        />
-      )}
-      <ContextMenuSeparator />
+      {libraryCaching &&
+        (isCached ? (
+          <OptionsButtons.RemoveDownload
+            variant={variant}
+            onClick={(e) => {
+              e.stopPropagation();
+              cacheManager.evictItem(audioKey(song.id));
+            }}
+          />
+        ) : (
+          <OptionsButtons.DownloadSong
+            variant={variant}
+            onClick={(e) => {
+              e.stopPropagation();
+              cacheManager.cacheSong(song.id);
+            }}
+          />
+        ))}
+      {libraryCaching && <ContextMenuSeparator />}
       <OptionsButtons.SongInfo
         variant={variant}
         onClick={(e) => {

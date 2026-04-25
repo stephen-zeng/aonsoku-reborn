@@ -12,6 +12,7 @@ import {
   usePlayerStore,
 } from "@/store/player.store";
 import { useIsAudioCached } from "@/store/cache-index.store";
+import { useLibraryCaching } from "@/store/cache.store";
 import { ISong } from "@/types/responses/song";
 import { AddToPlaylistSubMenu } from "./add-to-playlist";
 
@@ -77,6 +78,7 @@ export function SongMenuOptions({
   } = useOptions();
   const songIndexes = [index.toString()];
   const isCached = useIsAudioCached(song.id);
+  const libraryCaching = useLibraryCaching();
   const isUserQueueEmpty = usePlayerStore(
     (state) => state.songlist.userQueue.songs.length === 0,
   );
@@ -140,24 +142,25 @@ export function SongMenuOptions({
           <ContextMenuSeparator />
         </>
       )}
-      {isCached ? (
-        <OptionsButtons.RemoveDownload
-          variant={variant}
-          onClick={(e) => {
-            e.stopPropagation();
-            cacheManager.evictItem(audioKey(song.id));
-          }}
-        />
-      ) : (
-        <OptionsButtons.DownloadSong
-          variant={variant}
-          onClick={(e) => {
-            e.stopPropagation();
-            cacheManager.cacheSong(song.id);
-          }}
-        />
-      )}
-      <ContextMenuSeparator />
+      {libraryCaching &&
+        (isCached ? (
+          <OptionsButtons.RemoveDownload
+            variant={variant}
+            onClick={(e) => {
+              e.stopPropagation();
+              cacheManager.evictItem(audioKey(song.id));
+            }}
+          />
+        ) : (
+          <OptionsButtons.DownloadSong
+            variant={variant}
+            onClick={(e) => {
+              e.stopPropagation();
+              cacheManager.cacheSong(song.id);
+            }}
+          />
+        ))}
+      {libraryCaching && <ContextMenuSeparator />}
       <OptionsButtons.SongInfo
         variant={variant}
         onClick={(e) => {
