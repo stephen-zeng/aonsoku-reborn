@@ -74,12 +74,38 @@ class CacheManager {
   private async readResponseWithProgress(
     response: Response,
     onProgress?: (loaded: number, total: number) => void,
+    onBytesReceived?: (bytes: number) => void,
   ): Promise<Blob> {
-    const contentLength = Number(response.headers.get("Content-Length") || 0);
+    const contentLengthHeader = response.headers.get("Content-Length");
+    const contentLength = contentLengthHeader ? Number(contentLengthHeader) : 0;
+    const hasValidContentLength =
+      contentLengthHeader !== null &&
+      !Number.isNaN(contentLength) &&
+      contentLength > 0;
     const reader = response.body?.getReader();
 
-    if (!reader || !contentLength) {
-      return response.blob();
+    if (!reader || !hasValidContentLength) {
+      // No Content-Length: stream chunks and report byte counts.
+      if (!reader) {
+        return response.blob();
+      }
+
+      let received = 0;
+      const chunks: Uint8Array[] = [];
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          received += value.length;
+          onBytesReceived?.(received);
+        }
+      } finally {
+        reader.releaseLock();
+      }
+
+      return new Blob(chunks);
     }
 
     let received = 0;
@@ -88,7 +114,6 @@ class CacheManager {
     try {
       while (true) {
         const { done, value } = await reader.read();
-        console.log(received, contentLength);
         if (done) break;
         chunks.push(value);
         received += value.length;
@@ -98,6 +123,8 @@ class CacheManager {
       if (received < contentLength) {
         throw err;
       }
+    } finally {
+      reader.releaseLock();
     }
 
     onProgress?.(contentLength, contentLength);
@@ -118,9 +145,23 @@ class CacheManager {
     return p;
   }
 
-  private async cacheSongImpl(songId: string): Promise<void> {
-    if (isAudioCached(songId)) return;
+  private createProgressCallbacks(songId: string) {
+    const actions = getCacheIndexActions();
+    return {
+      onProgress: (loaded: number, total: number) => {
+        actions.setDownloadProgress(songId, Math.round((loaded / total) * 100));
+      },
+      onBytesReceived: (bytes: number) => {
+        actions.setDownloadProgress(songId, -bytes);
+      },
+    };
+  }
 
+  private async downloadAndStoreAudio(
+    songId: string,
+    source: CacheMetaSource,
+    triggers?: string[],
+  ): Promise<void> {
     const url = this.resolveDownloadUrl(songId);
     const response = await fetch(url);
     if (!response.ok) {
@@ -129,12 +170,12 @@ class CacheManager {
       );
     }
 
-    const actions = getCacheIndexActions();
+    const { onProgress, onBytesReceived } =
+      this.createProgressCallbacks(songId);
     const blob = await this.readResponseWithProgress(
       response,
-      (loaded, total) => {
-        actions.setDownloadProgress(songId, Math.round((loaded / total) * 100));
-      },
+      onProgress,
+      onBytesReceived,
     );
 
     const key = audioKey(songId);
@@ -143,14 +184,15 @@ class CacheManager {
     const meta: CachedItemMeta = {
       id: songId,
       type: "audio",
-      source: "explicit",
+      source,
+      triggers,
       sizeBytes: blob.size,
       cachedAt: Date.now(),
       lastAccessedAt: Date.now(),
     };
 
+    const actions = getCacheIndexActions();
     actions.addItem(key, meta);
-    actions.clearDownloadProgress(songId);
     this.scheduleStatsRefresh();
     persistCacheMeta(key, { key, ...meta });
 
@@ -160,6 +202,11 @@ class CacheManager {
     this.cacheLyrics(songId).catch((err) => {
       console.warn(`[cacheManager] lyrics prefetch failed for ${songId}:`, err);
     });
+  }
+
+  private async cacheSongImpl(songId: string): Promise<void> {
+    if (isAudioCached(songId)) return;
+    await this.downloadAndStoreAudio(songId, "explicit");
   }
 
   /**
@@ -213,40 +260,7 @@ class CacheManager {
       }
     }
 
-    const url = this.resolveDownloadUrl(songId);
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(
-        `Smart-download failed for ${songId}: ${response.status}`,
-      );
-    }
-
-    const actions = getCacheIndexActions();
-    const blob = await this.readResponseWithProgress(
-      response,
-      (loaded, total) => {
-        actions.setDownloadProgress(songId, Math.round((loaded / total) * 100));
-      },
-    );
-    await cacheStorage.put(key, blob, blob.type || "audio/mpeg");
-
-    const meta: CachedItemMeta = {
-      id: songId,
-      type: "audio",
-      source: "smart",
-      triggers,
-      sizeBytes: blob.size,
-      cachedAt: Date.now(),
-      lastAccessedAt: Date.now(),
-    };
-
-    actions.addItem(key, meta);
-    actions.clearDownloadProgress(songId);
-    this.scheduleStatsRefresh();
-    persistCacheMeta(key, { key, ...meta });
-
-    // Same rationale as cacheSong: bring lyrics along.
-    this.cacheLyrics(songId).catch(() => {});
+    await this.downloadAndStoreAudio(songId, "smart", triggers);
   }
 
   /**
