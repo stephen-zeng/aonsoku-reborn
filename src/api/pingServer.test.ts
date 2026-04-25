@@ -60,7 +60,9 @@ describe("pingServer", () => {
   });
 
   it("returns false on network error", async () => {
-    globalThis.fetch = vi.fn().mockRejectedValue(new TypeError("Network error"));
+    globalThis.fetch = vi
+      .fn()
+      .mockRejectedValue(new TypeError("Network error"));
     const result = await pingServer(
       "https://example.com",
       "admin",

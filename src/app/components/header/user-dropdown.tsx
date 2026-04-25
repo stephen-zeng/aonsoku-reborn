@@ -96,12 +96,10 @@ export function UserDropdown() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {isMobile && (
-            <DropdownMenuItem onClick={handleSettingsClick}>
-              <Settings className="mr-2 h-4 w-4" />
-              <span>{t("settings.label")}</span>
-            </DropdownMenuItem>
-          )}
+          <DropdownMenuItem onClick={handleSettingsClick}>
+            <Settings className="mr-2 h-4 w-4" />
+            <span>{t("settings.label")}</span>
+          </DropdownMenuItem>
           {!isMobile && (
             <DropdownMenuItem onClick={() => setShortcutsOpen(true)}>
               <Keyboard className="mr-2 h-4 w-4" />

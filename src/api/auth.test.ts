@@ -32,7 +32,11 @@ describe("authQueryParams", () => {
   });
 
   it("handles undefined-like values by defaulting to empty string", () => {
-    const result = authQueryParams(null as unknown as string, null as unknown as string, AuthType.PASSWORD);
+    const result = authQueryParams(
+      null as unknown as string,
+      null as unknown as string,
+      AuthType.PASSWORD,
+    );
     expect(result).toEqual({ u: "", p: "" });
   });
 });

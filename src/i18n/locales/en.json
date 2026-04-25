@@ -738,13 +738,16 @@
         },
         "tier": {
           "t1": {
-            "label": "Essentials (favorites · playlists · genres)"
+            "label": "Essentials",
+            "description": "Favorites · Playlists · Genres"
           },
           "t2": {
-            "label": "Library skeleton (artists · albums)"
+            "label": "Library Skeleton",
+            "description": "Artists · Albums"
           },
           "t3": {
-            "label": "Full song details"
+            "label": "Full Songs",
+            "description": "All song metadata"
           }
         },
         "justNow": "Just now",

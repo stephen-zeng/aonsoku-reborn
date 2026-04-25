@@ -1,5 +1,4 @@
 import { AlertTriangle, Check, Loader2, RefreshCw } from "lucide-react";
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import {
@@ -9,11 +8,16 @@ import {
 } from "@/app/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { syncService } from "@/service/cache/sync-worker-adapter";
-import { useCacheStore, useIsOnline, useLibraryCaching } from "@/store/cache.store";
+import {
+  useCacheStore,
+  useIsOnline,
+  useLastSyncedAt,
+  useLibraryCaching,
+} from "@/store/cache.store";
 import type { SyncPhase, SyncState, SyncTier } from "@/types/cache";
+import dayjs from "@/utils/dateTime";
 
 const TIER_ORDER: Record<SyncTier, number> = { t1: 0, t2: 1, t3: 2 };
-const AUTO_HIDE_MS = 2000;
 
 const T1_PHASE_WEIGHTS: Record<string, number> = {
   genres: 0.2,
@@ -114,8 +118,11 @@ function TierRow({
           >
             {t(`settings.storage.sync.tier.${tier}.label`)}
           </p>
+          <p className="text-[10px] text-muted-foreground truncate leading-tight">
+            {t(`settings.storage.sync.tier.${tier}.description`)}
+          </p>
           {status === "running" && (
-            <p className="text-xs text-muted-foreground truncate">
+            <p className="text-[10px] text-blue-500 truncate leading-tight">
               {phaseLabel}
             </p>
           )}
@@ -132,44 +139,60 @@ function TierRow({
           </span>
         )}
       </div>
-      {status === "running" && (
-        <div className="ml-7 mt-1 h-1 rounded-full bg-muted overflow-hidden">
-          <div
-            className="h-full rounded-full bg-blue-500 transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      )}
+      <div className="ml-7 mt-1.5 h-1.5 rounded-full bg-muted overflow-hidden">
+        <div
+          className={cn(
+            "h-full rounded-full transition-all duration-300",
+            status === "done" && "bg-emerald-500",
+            status === "running" && "bg-blue-500",
+          )}
+          style={{
+            width: status === "pending" ? "0%" : `${progress}%`,
+          }}
+        />
+      </div>
     </div>
   );
+}
+
+function getSyncTitle(t: (key: string) => string, phase: SyncPhase): string {
+  switch (phase) {
+    case "idle":
+      return t("settings.storage.sync.group");
+    case "done":
+      return t("settings.storage.sync.phases.done");
+    case "error":
+      return t("settings.storage.sync.phases.error");
+    case "cancelled":
+      return t("settings.storage.sync.phases.cancelled");
+    default:
+      return t("settings.storage.sync.phases.idle");
+  }
+}
+
+function formatLastSynced(
+  lastSyncedAt: number | null,
+  t: (key: string) => string,
+): string {
+  if (!lastSyncedAt) return t("settings.storage.sync.never");
+  const fromNow = dayjs(lastSyncedAt).fromNow();
+  if (fromNow === "a few seconds ago" || fromNow === "几秒前") {
+    return t("settings.storage.sync.justNow");
+  }
+  return fromNow;
 }
 
 export function SyncProgressBar() {
   const { t } = useTranslation();
   const libraryCaching = useLibraryCaching();
   const isOnline = useIsOnline();
+  const lastSyncedAt = useLastSyncedAt();
   const syncState = useCacheStore((s) => s.status.syncState);
-  const [showCompleted, setShowCompleted] = useState(false);
-
-  useEffect(() => {
-    if (!libraryCaching) return;
-    if (syncState.phase === "done" && !syncState.isSyncing) {
-      setShowCompleted(true);
-      const timer = setTimeout(() => setShowCompleted(false), AUTO_HIDE_MS);
-      return () => clearTimeout(timer);
-    }
-    setShowCompleted(false);
-  }, [syncState.phase, syncState.isSyncing, libraryCaching]);
 
   if (!isOnline) return null;
 
   const showError = syncState.phase === "error";
-  const isInactive =
-    syncState.phase === "idle" ||
-    syncState.phase === "done" ||
-    syncState.phase === "cancelled";
-  if (!syncState.isSyncing && !showCompleted && !showError && isInactive)
-    return null;
+  const showCompleted = syncState.phase === "done";
 
   const handleRetry = () => {
     const { syncCoverArt } = useCacheStore.getState().settings;
@@ -178,6 +201,12 @@ export function SyncProgressBar() {
       includeFullSongs: true,
     });
   };
+
+  const isSyncing = syncState.isSyncing;
+  const title = isSyncing
+    ? t("settings.storage.sync.phases.idle")
+    : getSyncTitle(t, syncState.phase);
+  const timeText = formatLastSynced(lastSyncedAt, t);
 
   return (
     <Popover>
@@ -191,16 +220,29 @@ export function SyncProgressBar() {
             <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
           ) : showCompleted ? (
             <Check className="w-3.5 h-3.5 text-emerald-500" />
-          ) : (
+          ) : syncState.isSyncing ? (
             <RefreshCw className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+          ) : (
+            <RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-64 p-3">
+      <PopoverContent align="end" className="w-80 p-4">
         <div className="space-y-1">
-          <p className="text-xs font-semibold mb-2">
-            {t("settings.storage.sync.group")}
-          </p>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold">{title}</p>
+            <p className="text-[10px] text-muted-foreground">{timeText}</p>
+          </div>
+
+          {/* Error Banner */}
+          {showError && (
+            <div className="mb-3 px-2.5 py-1.5 rounded-md bg-amber-500/10 text-amber-600 text-[10px] flex items-center gap-1.5">
+              <AlertTriangle className="w-3 h-3 shrink-0" />
+              <span>{t("settings.storage.sync.phases.error")}</span>
+            </div>
+          )}
+
           <TierRow
             tier="t1"
             status={tierStatus("t1", syncState)}
@@ -221,19 +263,19 @@ export function SyncProgressBar() {
               progress={tierProgress("t3", syncState)}
             />
           )}
-          {showError && (
-            <div className="pt-2 mt-2 border-t">
-              <Button
-                size="sm"
-                variant="outline"
-                className="w-full h-7 text-xs"
-                onClick={handleRetry}
-              >
-                <RefreshCw className="w-3 h-3 mr-1" />
-                {t("settings.storage.sync.syncNow")}
-              </Button>
-            </div>
-          )}
+
+          {/* Always-visible sync button */}
+          <div className="pt-3 mt-2 border-t">
+            <Button
+              size="sm"
+              variant={showError ? "default" : "outline"}
+              className="w-full h-8 text-xs"
+              onClick={handleRetry}
+            >
+              <RefreshCw className="w-3 h-3 mr-1.5" />
+              {t("settings.storage.sync.syncNow")}
+            </Button>
+          </div>
         </div>
       </PopoverContent>
     </Popover>

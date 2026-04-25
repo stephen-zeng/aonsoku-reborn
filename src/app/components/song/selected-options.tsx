@@ -57,7 +57,7 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
         }
       }
     }
-    reset(() => { });
+    reset(() => {});
   }
 
   async function handleRemoveCachedSongs() {
@@ -68,7 +68,7 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
         await cacheManager.evictItem(key);
       }
     }
-    reset(() => { });
+    reset(() => {});
   }
 
   const hasUncached = songs.some(
@@ -198,7 +198,6 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
           </ContextMenuItem>
         </>
       )}
-
     </>
   );
 }

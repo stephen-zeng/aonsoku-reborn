@@ -112,7 +112,13 @@ export function Player() {
         setAudioPlayerRef(null);
       }
     };
-  }, [isRemoteControlActive, isSong, setAudioPlayerRef, songId, setBufferedProgress]);
+  }, [
+    isRemoteControlActive,
+    isSong,
+    setAudioPlayerRef,
+    songId,
+    setBufferedProgress,
+  ]);
 
   const updateAudioDuration = useCallback(() => {
     const audio = getAudioRef().current;

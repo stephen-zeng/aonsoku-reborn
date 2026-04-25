@@ -23,9 +23,7 @@ describe("SearchParamsHandler", () => {
   });
 
   it("works with multiple params", () => {
-    const handler = new SearchParamsHandler(
-      new URLSearchParams("a=1&b=2&c=3"),
-    );
+    const handler = new SearchParamsHandler(new URLSearchParams("a=1&b=2&c=3"));
     expect(handler.getSearchParam("b", "")).toBe("2");
   });
 });

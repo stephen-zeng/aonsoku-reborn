@@ -14,7 +14,11 @@ describe("sortRecentAlbums", () => {
   });
 
   it("places albums without year at the end", () => {
-    const albums = [makeAlbum(undefined), makeAlbum(2024), makeAlbum(undefined)];
+    const albums = [
+      makeAlbum(undefined),
+      makeAlbum(2024),
+      makeAlbum(undefined),
+    ];
     const result = sortRecentAlbums(albums);
     expect(result[0].year).toBe(2024);
     expect(result[1].year).toBeUndefined();

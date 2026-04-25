@@ -33,7 +33,15 @@ import {
 import { formatBytes } from "@/utils/formatBytes";
 import dateTime from "@/utils/dateTime";
 
-type CacheFilter = "all" | "audio" | "cover" | "album" | "playlist" | "explicit" | "smart" | "lru";
+type CacheFilter =
+  | "all"
+  | "audio"
+  | "cover"
+  | "album"
+  | "playlist"
+  | "explicit"
+  | "smart"
+  | "lru";
 
 export function CacheManagerSection() {
   const { t } = useTranslation();
@@ -61,11 +69,12 @@ export function CacheManagerSection() {
   }, [loadItems]);
 
   const filteredItems = useMemo(() => {
-  if (filter === "all") return items;
-  if (filter === "audio") return items.filter((i) => i.type === "audio");
-  if (filter === "cover") return items.filter((i) => i.type === "cover");
-  if (filter === "album") return items.filter((i) => i.type === "album");
-  if (filter === "playlist") return items.filter((i) => i.type === "playlist");
+    if (filter === "all") return items;
+    if (filter === "audio") return items.filter((i) => i.type === "audio");
+    if (filter === "cover") return items.filter((i) => i.type === "cover");
+    if (filter === "album") return items.filter((i) => i.type === "album");
+    if (filter === "playlist")
+      return items.filter((i) => i.type === "playlist");
     return items.filter((i) => i.source === filter);
   }, [items, filter]);
 
@@ -279,7 +288,8 @@ function CacheList({ items, loading, onDelete }: CacheListProps) {
                 </div>
 
                 <div className="w-24 text-center hidden sm:block">
-                  {item.type === "audio" || item.type === "album" ||
+                  {item.type === "audio" ||
+                  item.type === "album" ||
                   item.type === "playlist" ? (
                     <SourceBadge source={item.source} />
                   ) : (

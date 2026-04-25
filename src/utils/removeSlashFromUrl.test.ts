@@ -3,11 +3,15 @@ import { removeSlashFromUrl } from "./removeSlashFromUrl";
 
 describe("removeSlashFromUrl", () => {
   it("removes trailing slash", () => {
-    expect(removeSlashFromUrl("https://example.com/")).toBe("https://example.com");
+    expect(removeSlashFromUrl("https://example.com/")).toBe(
+      "https://example.com",
+    );
   });
 
   it("does not modify URL without trailing slash", () => {
-    expect(removeSlashFromUrl("https://example.com")).toBe("https://example.com");
+    expect(removeSlashFromUrl("https://example.com")).toBe(
+      "https://example.com",
+    );
   });
 
   it("removes only the last slash", () => {

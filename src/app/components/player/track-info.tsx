@@ -144,10 +144,10 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
           />
         </div>
         <div className="flex flex-col justify-center">
-        <span
-          className="text-xs md:text-sm font-medium"
-          data-testid="song-no-playing-label"
-        >
+          <span
+            className="text-xs md:text-sm font-medium"
+            data-testid="song-no-playing-label"
+          >
             {t("player.noSongPlaying")}
           </span>
         </div>
@@ -199,7 +199,7 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
         <MarqueeTitle gap="mr-2">
           {isMobile ? (
             <span
-            className="text-xs md:text-sm font-medium"
+              className="text-xs md:text-sm font-medium"
               data-testid="track-title"
             >
               {song.title}
@@ -248,7 +248,7 @@ function TrackInfoArtistsLinks({
     const reducedArtists = artists.slice(0, ALBUM_ARTISTS_MAX_NUMBER);
 
     return (
-      <div         className="flex items-center gap-1 text-[10px] md:text-xs text-muted-foreground w-full maskImage-marquee-fade-finished">
+      <div className="flex items-center gap-1 text-[10px] md:text-xs text-muted-foreground w-full maskImage-marquee-fade-finished">
         {reducedArtists.map(({ id, name }, index) => (
           <div key={id} className="flex items-center">
             <ArtistLink

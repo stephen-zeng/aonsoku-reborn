@@ -23,13 +23,8 @@ export function QueueMenuOptions({
 }: QueueMenuOptionsProps) {
   const navigate = useNavigate();
   const { removeSongFromQueue } = usePlayerActions();
-  const {
-    playNext,
-    playLast,
-    createNewPlaylist,
-    addToPlaylist,
-    openSongInfo,
-  } = useOptions();
+  const { playNext, playLast, createNewPlaylist, addToPlaylist, openSongInfo } =
+    useOptions();
   const isCached = useIsAudioCached(song.id);
   const isUserQueueEmpty = usePlayerStore(
     (state) => state.songlist.userQueue.songs.length === 0,

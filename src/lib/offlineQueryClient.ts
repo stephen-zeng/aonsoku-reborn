@@ -41,12 +41,7 @@ interface OfflineSearchOptions {
 export async function getOfflineSearchResults(
   options: OfflineSearchOptions,
 ): Promise<Search> {
-  const {
-    query,
-    artistCount = 20,
-    albumCount = 20,
-    songCount = 20,
-  } = options;
+  const { query, artistCount = 20, albumCount = 20, songCount = 20 } = options;
   const tokens = tokenizeQuery(query);
 
   if (tokens.length === 0) {
@@ -60,9 +55,7 @@ export async function getOfflineSearchResults(
   ]);
 
   const matchedArtists = artists
-    .filter((artist) =>
-      matchesAllTokens(tokens, [artist.name]),
-    )
+    .filter((artist) => matchesAllTokens(tokens, [artist.name]))
     .slice(0, artistCount);
 
   const matchedAlbums = albums

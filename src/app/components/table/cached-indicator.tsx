@@ -41,18 +41,15 @@ export function CachedIndicator({
   className,
 }: CachedIndicatorProps) {
   const { t } = useTranslation();
-  const isCached = useCacheIndexStore((state) => audioKey(songId) in state.items);
+  const isCached = useCacheIndexStore(
+    (state) => audioKey(songId) in state.items,
+  );
   const meta = useAudioCacheMeta(songId);
   const progress = useDownloadProgress(songId);
   const source = meta?.source as CacheMetaSource | undefined;
 
   if (progress !== undefined) {
-    return (
-      <DownloadingIndicator
-        progress={progress}
-        className={className}
-      />
-    );
+    return <DownloadingIndicator progress={progress} className={className} />;
   }
 
   if (!isCached) {
@@ -140,8 +137,7 @@ export function DownloadingIndicator({
   }
 
   const clamped = Math.max(0, Math.min(100, progress ?? 0));
-  const strokeDashoffset =
-    CIRCUMFERENCE - (clamped / 100) * CIRCUMFERENCE;
+  const strokeDashoffset = CIRCUMFERENCE - (clamped / 100) * CIRCUMFERENCE;
 
   return (
     <svg

@@ -55,8 +55,12 @@ function LibraryCachingSection() {
   const coverArtConcurrency = useCacheStore(
     (s) => s.settings.coverArtConcurrency,
   );
-  const { setLibraryCaching, setLastSyncedAt, setSyncCoverArt, setCoverArtConcurrency } =
-    useCacheActions();
+  const {
+    setLibraryCaching,
+    setLastSyncedAt,
+    setSyncCoverArt,
+    setCoverArtConcurrency,
+  } = useCacheActions();
   const lastSyncedAt = useLastSyncedAt();
   const isSyncing = useCacheStore((s) => s.status.syncState.isSyncing);
   const isOnline = useIsOnline();
@@ -126,7 +130,9 @@ function LibraryCachingSection() {
         </ContentItem>
 
         <ContentItem>
-          <ContentItemTitle info={t("settings.storage.sync.coverArtConcurrencyInfo")}>
+          <ContentItemTitle
+            info={t("settings.storage.sync.coverArtConcurrencyInfo")}
+          >
             {t("settings.storage.sync.coverArtConcurrency")}
           </ContentItemTitle>
           <ContentItemForm>
@@ -143,7 +149,12 @@ function LibraryCachingSection() {
               <SelectContent align="end">
                 <SelectGroup>
                   {Array.from(
-                    { length: COVER_ART_CONCURRENCY_MAX - COVER_ART_CONCURRENCY_MIN + 1 },
+                    {
+                      length:
+                        COVER_ART_CONCURRENCY_MAX -
+                        COVER_ART_CONCURRENCY_MIN +
+                        1,
+                    },
                     (_, i) => COVER_ART_CONCURRENCY_MIN + i,
                   ).map((n) => (
                     <SelectItem key={n} value={n.toString()}>
