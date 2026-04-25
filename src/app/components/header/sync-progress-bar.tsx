@@ -189,7 +189,7 @@ const PREVIEW_LIMIT = 3;
 
 const DownloadSection = memo(function DownloadSection() {
 	const { t } = useTranslation();
-	const { downloads, count, averageProgress, hasDownloads } =
+	const { downloads, count, hasDownloads } =
 		useActiveDownloadsSummary();
 	const [expanded, setExpanded] = useState(false);
 	const [songNames, setSongNames] = useState<Record<string, string>>({});
@@ -262,15 +262,6 @@ const DownloadSection = memo(function DownloadSection() {
 							{t("settings.storage.sync.downloading", { count })}
 						</p>
 					</div>
-					<span className="text-xs tabular-nums shrink-0 text-muted-foreground">
-						{averageProgress}%
-					</span>
-				</div>
-				<div className="ml-7 mt-1.5 h-1.5 rounded-full bg-muted overflow-hidden">
-					<div
-						className="h-full rounded-full bg-blue-500 transition-all duration-300"
-						style={{ width: `${averageProgress}%` }}
-					/>
 				</div>
 			</div>
 
@@ -432,7 +423,7 @@ export function SyncProgressBar() {
 	const isOnline = useIsOnline();
 	const lastSyncedAt = useLastSyncedAt();
 	const syncState = useSyncState();
-	const { count: downloadCount, hasDownloads, averageProgress } =
+	const { count: downloadCount, hasDownloads } =
 		useActiveDownloadsSummary();
 
 	if (!isOnline || !libraryCaching) return null;
@@ -465,10 +456,7 @@ export function SyncProgressBar() {
 				) : isSyncing ? (
 					<RefreshCw className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
 				) : hasDownloads ? (
-					<DownloadingIndicator
-						progress={averageProgress}
-						className="w-3.5 h-3.5"
-					/>
+					<RefreshCw className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
 				) : showCompleted ? (
 					<Check className="w-3.5 h-3.5 text-emerald-500" />
 				) : (
