@@ -737,6 +737,9 @@
         },
         "syncNow": "立即同步",
         "justNow": "刚刚",
+        "downloading": "正在下载 {{count}} 首歌曲",
+        "completed": "完成",
+        "showMore": "显示另外 {{count}} 首",
         "tier": {
           "t1": {
             "label": "基础数据",

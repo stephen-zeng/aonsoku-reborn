@@ -66,6 +66,20 @@ class CacheManager {
   private statsTimer: ReturnType<typeof setTimeout> | null = null;
   private cacheCoverInflight = new Map<string, Promise<void>>();
   private cacheSongInflight = new Map<string, Promise<void>>();
+  private downloadClearTimers = new Map<
+    string,
+    ReturnType<typeof setTimeout>
+  >();
+
+  private scheduleClearDownloadProgress(songId: string): void {
+    const existing = this.downloadClearTimers.get(songId);
+    if (existing) clearTimeout(existing);
+    const timer = setTimeout(() => {
+      this.downloadClearTimers.delete(songId);
+      getCacheIndexActions().clearDownloadProgress(songId);
+    }, 2000);
+    this.downloadClearTimers.set(songId, timer);
+  }
 
   private resolveDownloadUrl(songId: string): string {
     return buildAudioUrl(songId, "cache");
@@ -139,7 +153,9 @@ class CacheManager {
 
     const p = this.cacheSongImpl(songId).finally(() => {
       this.cacheSongInflight.delete(key);
-      getCacheIndexActions().clearDownloadProgress(songId);
+      // Keep the "completed" state visible briefly so the sync popover
+      // can show a "done" tick before the row vanishes.
+      this.scheduleClearDownloadProgress(songId);
     });
     this.cacheSongInflight.set(key, p);
     return p;
@@ -224,7 +240,9 @@ class CacheManager {
 
     const p = this.cacheSmartSongImpl(songId, triggers).finally(() => {
       this.cacheSongInflight.delete(key);
-      getCacheIndexActions().clearDownloadProgress(songId);
+      // Keep the "completed" state visible briefly so the sync popover
+      // can show a "done" tick before the row vanishes.
+      this.scheduleClearDownloadProgress(songId);
     });
     this.cacheSongInflight.set(key, p);
     return p;

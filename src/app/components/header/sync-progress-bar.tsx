@@ -1,5 +1,12 @@
-import { AlertTriangle, Check, Loader2, RefreshCw } from "lucide-react";
-import { memo, useCallback, useMemo } from "react";
+import {
+	AlertTriangle,
+	Check,
+	ChevronDown,
+	ChevronUp,
+	Loader2,
+	RefreshCw,
+} from "lucide-react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import {
@@ -7,8 +14,10 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/app/components/ui/popover";
+import { DownloadingIndicator } from "@/app/components/table/cached-indicator";
 import { cn } from "@/lib/utils";
 import { syncService } from "@/service/cache/sync-worker-adapter";
+import { useActiveDownloadsSummary } from "@/store/cache-index.store";
 import {
 	useCacheStore,
 	useIsOnline,
@@ -16,6 +25,8 @@ import {
 	useLibraryCaching,
 	useSyncState,
 } from "@/store/cache.store";
+import { libraryDb } from "@/store/library-db";
+import { formatBytes } from "@/utils/formatBytes";
 import type { SyncPhase, SyncState, SyncTier } from "@/types/cache";
 import dateTime from "@/utils/dateTime";
 
@@ -174,6 +185,160 @@ const TierRow = memo(function TierRow({
 	);
 });
 
+const PREVIEW_LIMIT = 3;
+
+const DownloadSection = memo(function DownloadSection() {
+	const { t } = useTranslation();
+	const { downloads, count, averageProgress, hasDownloads } =
+		useActiveDownloadsSummary();
+	const [expanded, setExpanded] = useState(false);
+	const [songNames, setSongNames] = useState<Record<string, string>>({});
+	const fetchedRef = useRef<Set<string>>(new Set());
+
+	useEffect(() => {
+		if (!hasDownloads) {
+			fetchedRef.current.clear();
+			return;
+		}
+
+		const needed = downloads
+			.map((d) => d.songId)
+			.filter((id) => !fetchedRef.current.has(id));
+		if (needed.length === 0) return;
+
+		let cancelled = false;
+
+		const fetchNames = async () => {
+			try {
+				const songs = await libraryDb.songs.bulkGet(needed);
+				if (cancelled) return;
+				const newNames: Record<string, string> = {};
+				songs.forEach((song, i) => {
+					newNames[needed[i]] = song?.title || needed[i];
+				});
+				setSongNames((prev) => ({ ...prev, ...newNames }));
+				needed.forEach((id) => fetchedRef.current.add(id));
+			} catch (err) {
+				console.warn("[DownloadSection] failed to fetch song names:", err);
+			}
+		};
+
+		fetchNames();
+
+		return () => {
+			cancelled = true;
+		};
+	}, [hasDownloads, downloads]);
+
+	if (!hasDownloads) return null;
+
+	const allCompleted = downloads.every((d) => d.isCompleted);
+	const visibleDownloads = expanded
+		? downloads
+		: downloads.slice(0, PREVIEW_LIMIT);
+	const hasMore = downloads.length > PREVIEW_LIMIT;
+
+	return (
+		<div className="pt-2 border-t">
+			{/* Overview row */}
+			<div className="py-1">
+				<div className="flex items-center gap-2">
+					<span
+						className={cn(
+							"w-5 h-5 flex items-center justify-center rounded-full shrink-0",
+							allCompleted
+								? "bg-emerald-500/10 text-emerald-500"
+								: "bg-blue-500/10 text-blue-500",
+						)}
+					>
+						{allCompleted ? (
+							<Check className="w-3 h-3" />
+						) : (
+							<Loader2 className="w-3 h-3 animate-spin" />
+						)}
+					</span>
+					<div className="flex-1 min-w-0">
+						<p className="text-xs font-medium">
+							{t("settings.storage.sync.downloading", { count })}
+						</p>
+					</div>
+					<span className="text-xs tabular-nums shrink-0 text-muted-foreground">
+						{averageProgress}%
+					</span>
+				</div>
+				<div className="ml-7 mt-1.5 h-1.5 rounded-full bg-muted overflow-hidden">
+					<div
+						className="h-full rounded-full bg-blue-500 transition-all duration-300"
+						style={{ width: `${averageProgress}%` }}
+					/>
+				</div>
+			</div>
+
+			{/* Download list — always show first 3 */}
+			<div className="ml-7 mt-2 space-y-2 max-h-40 overflow-y-auto">
+				{visibleDownloads.map(
+					({
+						songId,
+						progress,
+						isCompleted,
+						isIndeterminate,
+						bytesReceived,
+					}) => (
+						<div key={songId} className="flex items-center gap-2">
+							<div className="flex-1 min-w-0">
+								<p className="text-[10px] truncate">
+									{songNames[songId] || "…"}
+								</p>
+							</div>
+							<span className="text-[10px] tabular-nums shrink-0 text-muted-foreground">
+								{isCompleted
+									? t("settings.storage.sync.completed")
+									: isIndeterminate
+										? formatBytes(bytesReceived)
+										: `${progress}%`}
+							</span>
+							{isCompleted ? (
+								<Check className="w-3 h-3 text-emerald-500 shrink-0" />
+							) : isIndeterminate ? (
+								<Loader2 className="w-3 h-3 animate-spin text-muted-foreground shrink-0" />
+							) : (
+								<DownloadingIndicator
+									progress={progress}
+									className="w-3.5 h-3.5"
+								/>
+							)}
+						</div>
+					),
+				)}
+			</div>
+
+			{/* Show more / less */}
+			{hasMore && (
+				<Button
+					variant="ghost"
+					size="sm"
+					className="ml-7 mt-1 h-5 text-[10px] text-muted-foreground hover:text-foreground p-0"
+					onClick={() => setExpanded((v) => !v)}
+				>
+					{expanded ? (
+						<>
+							<ChevronUp className="w-3 h-3 mr-1" />
+							{t("generic.hideDetails")}
+						</>
+					) : (
+						<>
+							<ChevronDown className="w-3 h-3 mr-1" />
+							{t("settings.storage.sync.showMore", {
+								count: downloads.length - PREVIEW_LIMIT,
+							})}
+						</>
+					)}
+				</Button>
+			)}
+		</div>
+	);
+});
+
 function SyncPopoverContent({
 	syncState,
 	lastSyncedAt,
@@ -186,7 +351,7 @@ function SyncPopoverContent({
 	const showError = syncState.phase === "error";
 	const isSyncing = syncState.isSyncing;
 
-	const handleRetry = useCallback(() => {
+	const handleSyncNow = useCallback(() => {
 		const { settings } = useCacheStore.getState();
 		syncService.syncAll({
 			includeCoverArt: settings.syncCoverArt,
@@ -238,13 +403,15 @@ function SyncPopoverContent({
 				/>
 			))}
 
+			<DownloadSection />
+
 			{/* Always-visible sync button */}
 			<div className="pt-3">
 				<Button
 					size="sm"
 					variant={showError ? "default" : "outline"}
 					className="w-full h-8 text-xs"
-					onClick={handleRetry}
+					onClick={handleSyncNow}
 					disabled={isSyncing}
 				>
 					{isSyncing ? (
@@ -265,6 +432,8 @@ export function SyncProgressBar() {
 	const isOnline = useIsOnline();
 	const lastSyncedAt = useLastSyncedAt();
 	const syncState = useSyncState();
+	const { count: downloadCount, hasDownloads, averageProgress } =
+		useActiveDownloadsSummary();
 
 	if (!isOnline || !libraryCaching) return null;
 
@@ -278,7 +447,9 @@ export function SyncProgressBar() {
 			? t("settings.storage.sync.phases.done")
 			: isSyncing
 				? t("settings.storage.sync.phases.idle")
-				: t("settings.storage.sync.syncNow");
+				: hasDownloads
+					? t("settings.storage.sync.downloading", { count: downloadCount })
+					: t("settings.storage.sync.syncNow");
 
 	return (
 		<Popover>
@@ -295,6 +466,11 @@ export function SyncProgressBar() {
 						<Check className="w-3.5 h-3.5 text-emerald-500" />
 					) : isSyncing ? (
 						<RefreshCw className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+					) : hasDownloads ? (
+						<DownloadingIndicator
+							progress={averageProgress}
+							className="w-3.5 h-3.5"
+						/>
 					) : (
 						<RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />
 					)}

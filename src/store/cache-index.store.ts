@@ -372,3 +372,81 @@ export const useDownloadBytes = (songId: string): number | undefined =>
     const value = state.downloads[songId];
     return value !== undefined && value < 0 ? -value : undefined;
   });
+
+export interface ActiveDownload {
+  songId: string;
+  progress: number;
+  isCompleted: boolean;
+  isIndeterminate: boolean;
+  bytesReceived: number;
+}
+
+function activeDownloadsEqual(
+	a: ReturnType<typeof useActiveDownloadsSummary>,
+	b: ReturnType<typeof useActiveDownloadsSummary>,
+): boolean {
+	if (
+		a.count !== b.count ||
+		a.averageProgress !== b.averageProgress ||
+		a.hasDownloads !== b.hasDownloads ||
+		a.downloads.length !== b.downloads.length
+	) {
+		return false;
+	}
+	for (let i = 0; i < a.downloads.length; i++) {
+		const ad = a.downloads[i];
+		const bd = b.downloads[i];
+		if (
+			ad.songId !== bd.songId ||
+			ad.progress !== bd.progress ||
+			ad.isCompleted !== bd.isCompleted ||
+			ad.isIndeterminate !== bd.isIndeterminate ||
+			ad.bytesReceived !== bd.bytesReceived
+		) {
+			return false;
+		}
+	}
+	return true;
+}
+
+export const useActiveDownloadsSummary = () =>
+	useCacheIndexStore(
+		(state) => {
+			const downloads: ActiveDownload[] = [];
+			let totalProgress = 0;
+			let determinateCount = 0;
+
+			for (const [songId, value] of Object.entries(state.downloads)) {
+				const isIndeterminate = value < 0;
+				const isCompleted = !isIndeterminate && value === 100;
+				const progress = isIndeterminate ? 0 : value;
+				const bytesReceived = isIndeterminate ? -value : 0;
+
+				downloads.push({
+					songId,
+					progress,
+					isCompleted,
+					isIndeterminate,
+					bytesReceived,
+				});
+
+				if (!isIndeterminate) {
+					totalProgress += value;
+					determinateCount++;
+				}
+			}
+
+			const averageProgress =
+				determinateCount > 0
+					? Math.round(totalProgress / determinateCount)
+					: 0;
+
+			return {
+				downloads,
+				count: downloads.length,
+				averageProgress,
+				hasDownloads: downloads.length > 0,
+			};
+		},
+		activeDownloadsEqual,
+	);
