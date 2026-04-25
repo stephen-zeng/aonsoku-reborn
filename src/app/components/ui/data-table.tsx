@@ -440,6 +440,13 @@ export function DataTable<TData, TValue>({
                         )}
                         style={columnDef.style}
                         role="columnheader"
+                        onClick={(e) => {
+                          const target = e.target as HTMLElement;
+                          if (target.closest("button")) return;
+                          if (selectedRows.length > 0) {
+                            setRowSelection({});
+                          }
+                        }}
                       >
                         {header.isPlaceholder
                           ? null
@@ -468,6 +475,11 @@ export function DataTable<TData, TValue>({
                             isClassic && "border-b",
                           )}
                           role="row"
+                          onClick={() => {
+                            if (selectedRows.length > 0) {
+                              setRowSelection({});
+                            }
+                          }}
                         >
                           <div className="w-12 flex items-center justify-center">
                             <Disc2Icon strokeWidth={1.75} />

@@ -373,6 +373,13 @@ export function DataTableList<TData, TValue>({
               key={headerGroup.id}
               className="w-full flex flex-row border-b pr-[10px] bg-muted"
               role="row"
+              onClick={(e) => {
+                const target = e.target as HTMLElement;
+                if (target.closest("button")) return;
+                if (selectedRows.length > 0) {
+                  setRowSelection({});
+                }
+              }}
             >
               {headerGroup.headers.map((header) => (
                 <MemoDataTableListHeader key={header.id} header={header} />
