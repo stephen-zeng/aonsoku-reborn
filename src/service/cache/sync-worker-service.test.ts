@@ -110,6 +110,7 @@ let callbacks: {
 beforeEach(async () => {
   await _resetLibraryDbForTests();
   vi.clearAllMocks();
+  mockWorkerHttpClient.mockReset();
 
   service = new SyncWorkerService(libraryDb);
   callbacks = {

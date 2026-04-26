@@ -418,7 +418,7 @@ export class SyncWorkerService {
     this.#updateSyncState("genres", "t1");
     const genreResult = await workerHttpClient<GenresResponse>("/getGenres");
     this.#checkAborted(signal);
-    const genres = genreResult.data.genres.genre ?? [];
+    const genres = genreResult.data.genres?.genre ?? [];
     await bulkPutInChunks(this.db.genres, genres, signal);
 
     this.#checkAborted(signal);
@@ -426,7 +426,7 @@ export class SyncWorkerService {
     const playlistsResult =
       await workerHttpClient<PlaylistsResponse>("/getPlaylists");
     this.#checkAborted(signal);
-    const playlists = playlistsResult.data.playlists.playlist ?? [];
+    const playlists = playlistsResult.data.playlists?.playlist ?? [];
     const playlistRows = playlists.map(withStarredAt);
     await bulkPutInChunks(this.db.playlists, playlistRows, signal);
     await this.#syncPlaylistDetails(playlistRows, signal);
