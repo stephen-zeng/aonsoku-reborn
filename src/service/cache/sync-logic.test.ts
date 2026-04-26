@@ -9,10 +9,7 @@ import {
   type PlaylistDetailRow,
 } from "@/store/library-db";
 
-function makeSong(
-  id: string,
-  overrides: Partial<SongRow> = {},
-): SongRow {
+function makeSong(id: string, overrides: Partial<SongRow> = {}): SongRow {
   return {
     id,
     parent: "album_1",
@@ -81,9 +78,7 @@ describe("Song stale deletion safety threshold", () => {
     await libraryDb.songs.bulkPut([makeSong("old_song_1")]);
 
     const serverIds = new Set(serverSongs.map((s) => s.id));
-    const allExistingKeys = await libraryDb.songs
-      .toCollection()
-      .primaryKeys();
+    const allExistingKeys = await libraryDb.songs.toCollection().primaryKeys();
     const staleIds = allExistingKeys.filter(
       (id) => !serverIds.has(id as string),
     );
@@ -115,9 +110,7 @@ describe("Song stale deletion safety threshold", () => {
     );
 
     const serverIds = new Set(serverSongs.map((s) => s.id));
-    const allExistingKeys = await libraryDb.songs
-      .toCollection()
-      .primaryKeys();
+    const allExistingKeys = await libraryDb.songs.toCollection().primaryKeys();
     const staleIds = allExistingKeys.filter(
       (id) => !serverIds.has(id as string),
     );
@@ -140,10 +133,7 @@ describe("Song stale deletion safety threshold", () => {
   });
 
   it("does not attempt deletion when no songs from server (empty sync)", async () => {
-    await libraryDb.songs.bulkPut([
-      makeSong("local_1"),
-      makeSong("local_2"),
-    ]);
+    await libraryDb.songs.bulkPut([makeSong("local_1"), makeSong("local_2")]);
 
     const allSongs: SongRow[] = [];
     if (allSongs.length > 0) {
@@ -164,11 +154,7 @@ describe("Song stale deletion safety threshold", () => {
 
 describe("clearAndBulkPutInChunks empty data guard", () => {
   it("does not clear table when rows are empty", async () => {
-    const genres = [
-      { value: "Rock" },
-      { value: "Pop" },
-      { value: "Jazz" },
-    ];
+    const genres = [{ value: "Rock" }, { value: "Pop" }, { value: "Jazz" }];
     await libraryDb.genres.bulkPut(genres);
     expect(await libraryDb.genres.count()).toBe(3);
 
@@ -176,10 +162,7 @@ describe("clearAndBulkPutInChunks empty data guard", () => {
     const rows: never[] = [];
     const signal = new AbortController().signal;
 
-    const clearAndBulkPutInChunks = async <
-      T,
-      K,
-    >(
+    const clearAndBulkPutInChunks = async <T, K>(
       table: {
         clear: () => Promise<void>;
         bulkPut: (rows: T[]) => Promise<K>;
@@ -321,12 +304,8 @@ describe("Playlist details deletion safety guard", () => {
     // when the removed count equals or exceeds existing count.
     // Simulate: server returns empty list → all would be removed
     const emptyPlaylists: PlaylistRow[] = [];
-    const emptyPlaylistIds = new Set(
-      emptyPlaylists.map((p) => p.id),
-    );
-    const allRemovedIds = existingIds.filter(
-      (id) => !emptyPlaylistIds.has(id),
-    );
+    const emptyPlaylistIds = new Set(emptyPlaylists.map((p) => p.id));
+    const allRemovedIds = existingIds.filter((id) => !emptyPlaylistIds.has(id));
 
     // When playlists is empty, guard prevents deletion
     const shouldDelete =
@@ -463,11 +442,7 @@ describe("Favorites sync — only unstar songs confirmed in local DB", () => {
 
 describe("reconcileRemovedFromServer threshold", () => {
   it("marks songs as removed when minority is missing from songs table", async () => {
-    const songs = [
-      makeSong("song_1"),
-      makeSong("song_2"),
-      makeSong("song_3"),
-    ];
+    const songs = [makeSong("song_1"), makeSong("song_2"), makeSong("song_3")];
     await libraryDb.songs.bulkPut(songs.map(withPlayedAt));
 
     await libraryDb.cacheMeta.bulkPut([
@@ -483,10 +458,7 @@ describe("reconcileRemovedFromServer threshold", () => {
 
     const cachedIds = cachedItems.map((item) => item.id);
     const existingServerIds = new Set(
-      await libraryDb.songs
-        .where("id")
-        .anyOf(cachedIds)
-        .primaryKeys(),
+      await libraryDb.songs.where("id").anyOf(cachedIds).primaryKeys(),
     );
 
     const updates: CacheMetaRow[] = [];
@@ -536,10 +508,7 @@ describe("reconcileRemovedFromServer threshold", () => {
 
     const cachedIds = cachedItems.map((item) => item.id);
     const existingServerIds = new Set(
-      await libraryDb.songs
-        .where("id")
-        .anyOf(cachedIds)
-        .primaryKeys(),
+      await libraryDb.songs.where("id").anyOf(cachedIds).primaryKeys(),
     );
 
     const updates: CacheMetaRow[] = [];
@@ -560,10 +529,7 @@ describe("reconcileRemovedFromServer threshold", () => {
     expect(removeCount).toBeGreaterThan(cachedItems.length * 0.5);
 
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-    if (
-      removeCount > 0 &&
-      removeCount > cachedItems.length * 0.5
-    ) {
+    if (removeCount > 0 && removeCount > cachedItems.length * 0.5) {
       console.warn(
         `[sync] Skipping remove-reconciliation: ${removeCount}/${cachedItems.length} cached audio items would be marked as removed.`,
       );
@@ -610,9 +576,8 @@ describe("Search3 pagination", () => {
     }
 
     const totalSongs = 1200;
-    const allServerSongs = Array.from(
-      { length: totalSongs },
-      (_, i) => makeSong(`song_${i}`),
+    const allServerSongs = Array.from({ length: totalSongs }, (_, i) =>
+      makeSong(`song_${i}`),
     );
 
     const allSongs: SongRow[] = [];
@@ -620,11 +585,7 @@ describe("Search3 pagination", () => {
     let hasMoreSongs = true;
 
     while (hasMoreSongs) {
-      const page = simulatePagination(
-        allServerSongs,
-        songOffset,
-        PAGE_SIZE,
-      );
+      const page = simulatePagination(allServerSongs, songOffset, PAGE_SIZE);
       if (page.length === 0) {
         hasMoreSongs = false;
       } else {
@@ -655,9 +616,8 @@ describe("Search3 pagination", () => {
       );
     }
 
-    const allServerSongs = Array.from(
-      { length: 350 },
-      (_, i) => makeSong(`song_${i}`),
+    const allServerSongs = Array.from({ length: 350 }, (_, i) =>
+      makeSong(`song_${i}`),
     );
 
     const allSongs: SongRow[] = [];
@@ -665,11 +625,7 @@ describe("Search3 pagination", () => {
     let hasMoreSongs = true;
 
     while (hasMoreSongs) {
-      const page = simulatePagination(
-        allServerSongs,
-        songOffset,
-        PAGE_SIZE,
-      );
+      const page = simulatePagination(allServerSongs, songOffset, PAGE_SIZE);
       if (page.length === 0) {
         hasMoreSongs = false;
       } else {

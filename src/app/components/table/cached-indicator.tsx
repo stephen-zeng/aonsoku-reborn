@@ -165,9 +165,7 @@ export function DownloadingIndicator({
         stroke="currentColor"
         fill="transparent"
         strokeWidth={STROKE}
-        strokeDasharray={
-          isQueued ? "2 3" : `${CIRCUMFERENCE} ${CIRCUMFERENCE}`
-        }
+        strokeDasharray={isQueued ? "2 3" : `${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
         strokeDashoffset={isQueued ? 0 : strokeDashoffset}
         strokeLinecap="round"
         className={cn(

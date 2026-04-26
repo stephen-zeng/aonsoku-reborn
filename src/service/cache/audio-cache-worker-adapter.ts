@@ -1,6 +1,9 @@
 import { wrap, expose, transfer, type Remote } from "comlink";
 import { useAppStore } from "@/store/app.store";
-import { getCacheIndexActions, getCacheIndexItems } from "@/store/cache-index.store";
+import {
+  getCacheIndexActions,
+  getCacheIndexItems,
+} from "@/store/cache-index.store";
 import { useCacheStore } from "@/store/cache.store";
 import { audioKey } from "@/service/cache/cache-keys";
 import { AudioCacheQueue } from "@/service/cache/audio-cache-queue";
@@ -79,14 +82,12 @@ function refreshCacheStatsFromIndex(): void {
     }
   }
 
-  useCacheStore
-    .getState()
-    .actions.updateCacheStats({
-      audioSize,
-      coverSize,
-      audioCount,
-      coverCount,
-    });
+  useCacheStore.getState().actions.updateCacheStats({
+    audioSize,
+    coverSize,
+    audioCount,
+    coverCount,
+  });
 }
 
 /* ── Main-thread fallback ──────────────────────────────────────── */

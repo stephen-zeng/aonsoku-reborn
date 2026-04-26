@@ -135,9 +135,7 @@ async function persistCacheMeta(
       return;
     } catch (err) {
       if (attempt < MAX_RETRIES) {
-        await new Promise((r) =>
-          setTimeout(r, RETRY_DELAY_MS * (attempt + 1)),
-        );
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * (attempt + 1)));
       } else {
         console.warn(
           `[audioCacheWorker] failed to persist cacheMeta for ${key} after ${MAX_RETRIES + 1} attempts:`,
@@ -159,10 +157,7 @@ class AudioCacheWorkerService {
   #callbacks: Remote<Callbacks> | null = null;
 
   constructor() {
-    this.#queue = new AudioCacheQueue(
-      (task) => this.#executeDownload(task),
-      4,
-    );
+    this.#queue = new AudioCacheQueue((task) => this.#executeDownload(task), 4);
     this.#authReady = new Promise((resolve) => {
       this.#resolveAuthReady = resolve;
     });
@@ -221,8 +216,7 @@ class AudioCacheWorkerService {
       ) {
         return;
       }
-      const msg =
-        err instanceof Error ? err.message : String(err);
+      const msg = err instanceof Error ? err.message : String(err);
       this.#callbacks?.onError(songId, msg);
       throw err;
     }

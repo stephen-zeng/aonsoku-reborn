@@ -29,7 +29,9 @@ vi.mock("@/api/workerHttpClient", () => ({
 }));
 
 vi.mock("@/api/urlBuilder", () => ({
-  buildCoverArtUrl: vi.fn(() => "http://test-server.local/rest/getCoverArt?id=test"),
+  buildCoverArtUrl: vi.fn(
+    () => "http://test-server.local/rest/getCoverArt?id=test",
+  ),
 }));
 
 vi.mock("comlink", () => ({
@@ -41,10 +43,7 @@ const mockWorkerHttpClient = vi.mocked(
   await import("@/api/workerHttpClient"),
 ).workerHttpClient;
 
-function makeSong(
-  id: string,
-  overrides: Partial<SongRow> = {},
-): SongRow {
+function makeSong(id: string, overrides: Partial<SongRow> = {}): SongRow {
   return {
     id,
     parent: "album_1",
@@ -175,7 +174,9 @@ function mockT2(opts?: { artists?: unknown[]; albums?: unknown[] }) {
     .mockResolvedValueOnce({
       count: 0,
       data: {
-        artists: { index: artists.length > 0 ? [{ name: "A", artist: artists }] : [] },
+        artists: {
+          index: artists.length > 0 ? [{ name: "A", artist: artists }] : [],
+        },
         status: "ok",
       },
     })
@@ -271,7 +272,10 @@ describe("SyncWorkerService", () => {
       mockT2();
       mockT3();
 
-      await service.syncAll({ includeFullSongs: false, includeCoverArt: false });
+      await service.syncAll({
+        includeFullSongs: false,
+        includeCoverArt: false,
+      });
 
       const song2 = await libraryDb.songs.get("song_2");
       expect(song2?.starredAt).toBeUndefined();
@@ -281,12 +285,31 @@ describe("SyncWorkerService", () => {
   describe("syncAll - T2", () => {
     it("syncs artists and clears old ones", async () => {
       await libraryDb.artists.bulkPut([
-        { id: "old_artist", name: "Old Artist", albumCount: 0, coverArt: "", artistImageUrl: "", starredAt: undefined },
+        {
+          id: "old_artist",
+          name: "Old Artist",
+          albumCount: 0,
+          coverArt: "",
+          artistImageUrl: "",
+          starredAt: undefined,
+        },
       ]);
 
       const artists = [
-        { id: "ar_1", name: "Alpha", albumCount: 1, coverArt: "", artistImageUrl: "" },
-        { id: "ar_2", name: "Beta", albumCount: 2, coverArt: "", artistImageUrl: "" },
+        {
+          id: "ar_1",
+          name: "Alpha",
+          albumCount: 1,
+          coverArt: "",
+          artistImageUrl: "",
+        },
+        {
+          id: "ar_2",
+          name: "Beta",
+          albumCount: 2,
+          coverArt: "",
+          artistImageUrl: "",
+        },
       ];
 
       mockT1();
@@ -328,11 +351,13 @@ describe("SyncWorkerService", () => {
 
   describe("syncAll - T3", () => {
     it("syncs songs and performs stale deletion within safety threshold", async () => {
-      await libraryDb.songs.bulkPut([
-        makeSong("song_0"),
-        ...Array.from({ length: 9 }, (_, i) => makeSong(`song_${i + 1}`)),
-        makeSong("old_song"),
-      ].map(withPlayedAt));
+      await libraryDb.songs.bulkPut(
+        [
+          makeSong("song_0"),
+          ...Array.from({ length: 9 }, (_, i) => makeSong(`song_${i + 1}`)),
+          makeSong("old_song"),
+        ].map(withPlayedAt),
+      );
 
       const serverSongs = Array.from({ length: 10 }, (_, i) =>
         makeSong(`song_${i}`),
@@ -384,7 +409,9 @@ describe("SyncWorkerService", () => {
         (call) => call[0] === "/search3",
       );
       expect(searchCall).toBeDefined();
-      expect((searchCall![1] as { query: Record<string, string> }).query.query).toBe('""');
+      expect(
+        (searchCall![1] as { query: Record<string, string> }).query.query,
+      ).toBe('""');
     });
   });
 
@@ -402,7 +429,10 @@ describe("SyncWorkerService", () => {
         data: { status: "ok" },
       });
 
-      await service.syncIncremental({ includeFullSongs: true, includeCoverArt: false });
+      await service.syncIncremental({
+        includeFullSongs: true,
+        includeCoverArt: false,
+      });
 
       expect(mockWorkerHttpClient).not.toHaveBeenCalledWith(
         "/getGenres",
@@ -420,7 +450,10 @@ describe("SyncWorkerService", () => {
       mockT2();
       mockT3();
 
-      await service.syncIncremental({ includeFullSongs: true, includeCoverArt: false });
+      await service.syncIncremental({
+        includeFullSongs: true,
+        includeCoverArt: false,
+      });
 
       expect(mockWorkerHttpClient).toHaveBeenCalled();
     });
@@ -562,9 +595,9 @@ describe("bulkPutInChunks", () => {
     const controller = new AbortController();
     controller.abort();
 
-    await expect(bulkPutInChunks(table, rows, controller.signal)).rejects.toThrow(
-      "Aborted",
-    );
+    await expect(
+      bulkPutInChunks(table, rows, controller.signal),
+    ).rejects.toThrow("Aborted");
   });
 });
 

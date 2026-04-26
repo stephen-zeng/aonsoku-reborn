@@ -7,7 +7,11 @@ beforeEach(() => {
       maxCacheSize: 2_147_483_648,
       assetsQuota: 536_870_912,
       lruQuota: 1_073_741_824,
-      smartRules: { enabled: false, favoriteSongs: true, favoritePlaylists: true },
+      smartRules: {
+        enabled: false,
+        favoriteSongs: true,
+        favoritePlaylists: true,
+      },
       libraryCaching: false,
       syncLibrary: true,
       syncCoverArt: false,

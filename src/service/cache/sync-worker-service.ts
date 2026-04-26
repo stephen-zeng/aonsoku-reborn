@@ -1,8 +1,5 @@
 import type { SyncPhase, SyncState, SyncTier } from "@/types/cache";
-import {
-  type ServerAuthConfig,
-  buildCoverArtUrl,
-} from "@/api/urlBuilder";
+import { type ServerAuthConfig, buildCoverArtUrl } from "@/api/urlBuilder";
 import {
   workerHttpClient,
   initAuth as workerInitAuth,
@@ -10,20 +7,14 @@ import {
   ensureAuth as workerEnsureAuth,
 } from "@/api/workerHttpClient";
 import { LibraryDB, withStarredAt, withPlayedAt } from "@/store/library-db";
-import type {
-  PlaylistRow,
-  CacheMetaRow,
-} from "@/store/library-db";
+import type { PlaylistRow, CacheMetaRow } from "@/store/library-db";
 import type { GenresResponse } from "@/types/responses/genre";
 import type {
   PlaylistsResponse,
   PlaylistWithEntries,
   PlaylistWithEntriesResponse,
 } from "@/types/responses/playlist";
-import type {
-  ArtistsResponse,
-  ISimilarArtist,
-} from "@/types/responses/artist";
+import type { ArtistsResponse, ISimilarArtist } from "@/types/responses/artist";
 import type { AlbumListResponse } from "@/types/responses/album";
 import type { FavoritesResponse } from "@/types/responses/song";
 import type { ISearchResponse } from "@/types/responses/search";
@@ -263,7 +254,9 @@ export class SyncWorkerService {
     signal: AbortSignal,
   ): Promise<void> {
     const playlistIds = new Set(playlists.map((p) => p.id));
-    const existingIds = await this.db.playlistDetails.toCollection().primaryKeys();
+    const existingIds = await this.db.playlistDetails
+      .toCollection()
+      .primaryKeys();
     const removedIds = existingIds.filter((id) => !playlistIds.has(id));
 
     if (
@@ -324,7 +317,9 @@ export class SyncWorkerService {
       }
 
       if (detailsToPersist.length > 0) {
-        await this.db.playlistDetails.bulkPut(detailsToPersist.map(withStarredAt));
+        await this.db.playlistDetails.bulkPut(
+          detailsToPersist.map(withStarredAt),
+        );
       }
 
       this.#updateSyncState(
@@ -400,9 +395,7 @@ export class SyncWorkerService {
     }
   }
 
-  async syncIncremental(
-    options?: Omit<SyncOptions, "mode">,
-  ): Promise<void> {
+  async syncIncremental(options?: Omit<SyncOptions, "mode">): Promise<void> {
     await this.syncAll({ ...options, mode: "incremental" });
   }
 
@@ -505,7 +498,11 @@ export class SyncWorkerService {
 
     await this.db.transaction("rw", this.db.artists, async () => {
       await this.db.artists.clear();
-      await bulkPutInChunks(this.db.artists, artistsList.map(withStarredAt), signal);
+      await bulkPutInChunks(
+        this.db.artists,
+        artistsList.map(withStarredAt),
+        signal,
+      );
     });
 
     this.#checkAborted(signal);
@@ -565,7 +562,11 @@ export class SyncWorkerService {
 
     await this.db.transaction("rw", this.db.albums, async () => {
       await this.db.albums.clear();
-      await bulkPutInChunks(this.db.albums, allAlbums.map(withStarredAt), signal);
+      await bulkPutInChunks(
+        this.db.albums,
+        allAlbums.map(withStarredAt),
+        signal,
+      );
     });
 
     await this.#recordTierCheckpoint("t2");
@@ -588,20 +589,17 @@ export class SyncWorkerService {
     while (hasMoreSongs) {
       this.#checkAborted(signal);
 
-      const searchResult = await workerHttpClient<ISearchResponse>(
-        "/search3",
-        {
-          query: {
-            query: searchAllQuery,
-            artistCount: "0",
-            artistOffset: "0",
-            albumCount: "0",
-            albumOffset: "0",
-            songCount: PAGE_SIZE.toString(),
-            songOffset: songOffset.toString(),
-          },
+      const searchResult = await workerHttpClient<ISearchResponse>("/search3", {
+        query: {
+          query: searchAllQuery,
+          artistCount: "0",
+          artistOffset: "0",
+          albumCount: "0",
+          albumOffset: "0",
+          songCount: PAGE_SIZE.toString(),
+          songOffset: songOffset.toString(),
         },
-      );
+      });
 
       this.#checkAborted(signal);
       const page = searchResult.data.searchResult3?.song ?? [];

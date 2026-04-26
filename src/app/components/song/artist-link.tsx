@@ -24,7 +24,11 @@ export function ArtistLink({
 }: ArtistLinkProps) {
   if (disableNavigation || !artistId) {
     return (
-      <span className={cn("truncate", className)} onClick={props.onClick} title={props.title}>
+      <span
+        className={cn("truncate", className)}
+        onClick={props.onClick}
+        title={props.title}
+      >
         {props.children}
       </span>
     );

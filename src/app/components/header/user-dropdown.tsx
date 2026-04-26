@@ -1,11 +1,4 @@
-import {
-  Cast,
-  Info,
-  Keyboard,
-  LogOut,
-  Settings,
-  User,
-} from "lucide-react";
+import { Cast, Info, Keyboard, LogOut, Settings, User } from "lucide-react";
 import { useState } from "react";
 import { Fragment } from "react/jsx-runtime";
 import { useHotkeys } from "react-hotkeys-hook";

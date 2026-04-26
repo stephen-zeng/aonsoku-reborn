@@ -2,7 +2,12 @@ import { clear as idbClear, set as idbSet } from "idb-keyval";
 import { beforeEach, describe, expect, it } from "vitest";
 import { cacheIndexStore } from "@/store/idb";
 import { _resetLibraryDbForTests, libraryDb } from "@/store/library-db";
-import { useCacheIndexStore, isAudioCached, isCoverCached, computePoolStats } from "./cache-index.store";
+import {
+  useCacheIndexStore,
+  isAudioCached,
+  isCoverCached,
+  computePoolStats,
+} from "./cache-index.store";
 
 const INDEX_KEY = "cache-index-v1";
 
@@ -329,8 +334,12 @@ describe("cache-index.store · setRemovedFromServer", () => {
       lastAccessedAt: 1,
     });
 
-    useCacheIndexStore.getState().actions.setRemovedFromServer("audio:s1", true);
-    expect(useCacheIndexStore.getState().items["audio:s1"].removedFromServer).toBe(true);
+    useCacheIndexStore
+      .getState()
+      .actions.setRemovedFromServer("audio:s1", true);
+    expect(
+      useCacheIndexStore.getState().items["audio:s1"].removedFromServer,
+    ).toBe(true);
   });
 
   it("removes removedFromServer when set to false", () => {
@@ -345,14 +354,20 @@ describe("cache-index.store · setRemovedFromServer", () => {
       removedFromServer: true,
     });
 
-    useCacheIndexStore.getState().actions.setRemovedFromServer("audio:s2", false);
+    useCacheIndexStore
+      .getState()
+      .actions.setRemovedFromServer("audio:s2", false);
     const item = useCacheIndexStore.getState().items["audio:s2"];
     expect(item.removedFromServer).toBeUndefined();
   });
 
   it("no-ops for nonexistent key", () => {
-    useCacheIndexStore.getState().actions.setRemovedFromServer("audio:missing", true);
-    expect(useCacheIndexStore.getState().items["audio:missing"]).toBeUndefined();
+    useCacheIndexStore
+      .getState()
+      .actions.setRemovedFromServer("audio:missing", true);
+    expect(
+      useCacheIndexStore.getState().items["audio:missing"],
+    ).toBeUndefined();
   });
 });
 

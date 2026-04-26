@@ -100,7 +100,9 @@ class CacheManager {
   private cacheCoverInflight = new Map<string, Promise<void>>();
 
   isDownloadQueued(songId: string): boolean {
-    return audioCacheService.isQueued(songId) || audioCacheService.isInFlight(songId);
+    return (
+      audioCacheService.isQueued(songId) || audioCacheService.isInFlight(songId)
+    );
   }
 
   async cacheSong(songId: string): Promise<void> {
@@ -706,7 +708,11 @@ class CacheManager {
       }
     }
 
-    if (removeCount > 0 && removeCount > Object.values(items).filter((m) => m.type === "audio").length * 0.5) {
+    if (
+      removeCount > 0 &&
+      removeCount >
+        Object.values(items).filter((m) => m.type === "audio").length * 0.5
+    ) {
       console.warn(
         `[cacheManager] Skipping remove-reconciliation: ${removeCount} cached audio items would be marked as removed. The songs table is likely incomplete.`,
       );

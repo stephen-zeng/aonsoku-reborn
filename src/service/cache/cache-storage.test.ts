@@ -2,32 +2,29 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockCache = new Map<string, Response>();
 
-vi.stubGlobal(
-  "caches",
-  {
-    open: vi.fn(async () => ({
-      put: vi.fn(async (url: string, response: Response) => {
-        mockCache.set(url, response);
-      }),
-      match: vi.fn(async (url: string) => {
-        const r = mockCache.get(url);
-        return r ?? undefined;
-      }),
-      delete: vi.fn(async (url: string) => {
-        return mockCache.delete(url);
-      }),
-      keys: vi.fn(async () => {
-        return Array.from(mockCache.keys()).map(
-          (k) => new Request(`http://localhost${k}`),
-        );
-      }),
-    })),
-    delete: vi.fn(async () => {
-      mockCache.clear();
-      return true;
+vi.stubGlobal("caches", {
+  open: vi.fn(async () => ({
+    put: vi.fn(async (url: string, response: Response) => {
+      mockCache.set(url, response);
     }),
-  },
-);
+    match: vi.fn(async (url: string) => {
+      const r = mockCache.get(url);
+      return r ?? undefined;
+    }),
+    delete: vi.fn(async (url: string) => {
+      return mockCache.delete(url);
+    }),
+    keys: vi.fn(async () => {
+      return Array.from(mockCache.keys()).map(
+        (k) => new Request(`http://localhost${k}`),
+      );
+    }),
+  })),
+  delete: vi.fn(async () => {
+    mockCache.clear();
+    return true;
+  }),
+});
 
 import { cacheStorage } from "./cache-storage";
 

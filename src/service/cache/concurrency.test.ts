@@ -4,29 +4,21 @@ import { asyncPool } from "./concurrency";
 describe("asyncPool", () => {
   it("processes items sequentially when concurrency is 1", async () => {
     const order: number[] = [];
-    await asyncPool(
-      [1, 2, 3],
-      1,
-      async (item) => {
-        order.push(item);
-      },
-    );
+    await asyncPool([1, 2, 3], 1, async (item) => {
+      order.push(item);
+    });
     expect(order).toEqual([1, 2, 3]);
   });
 
   it("runs up to concurrency items simultaneously", async () => {
     let running = 0;
     let maxRunning = 0;
-    await asyncPool(
-      [1, 2, 3, 4, 5],
-      2,
-      async () => {
-        running++;
-        maxRunning = Math.max(maxRunning, running);
-        await new Promise((r) => setTimeout(r, 10));
-        running--;
-      },
-    );
+    await asyncPool([1, 2, 3, 4, 5], 2, async () => {
+      running++;
+      maxRunning = Math.max(maxRunning, running);
+      await new Promise((r) => setTimeout(r, 10));
+      running--;
+    });
     expect(maxRunning).toBeGreaterThan(1);
     expect(maxRunning).toBeLessThanOrEqual(2);
   });
@@ -91,13 +83,9 @@ describe("asyncPool", () => {
 
   it("handles concurrency of 0 as sequential", async () => {
     const order: number[] = [];
-    await asyncPool(
-      [1, 2, 3],
-      0,
-      async (item) => {
-        order.push(item);
-      },
-    );
+    await asyncPool([1, 2, 3], 0, async (item) => {
+      order.push(item);
+    });
     expect(order).toEqual([1, 2, 3]);
   });
 

@@ -541,10 +541,10 @@
         },
         "description": "Normaliserar automatiskt uppspelningsnivåerna för ljud för en konsekvent lyssningsupplevelse.",
         "enabled": "Aktiverad",
-      "error": {
-        "button": "Försök igen",
-        "message": "Ett fel uppstod vid uppspelning av låten med Replay Gain."
-      },
+        "error": {
+          "button": "Försök igen",
+          "message": "Ett fel uppstod vid uppspelning av låten med Replay Gain."
+        },
         "group": "ReplayGain",
         "mode": {
           "album": "Albumförstärkning",

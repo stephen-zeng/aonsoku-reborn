@@ -172,27 +172,29 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
           />
         </>
       )}
-      {libraryCaching && <>
-        <ContextMenuSeparator />
-        {hasUncached && (
-          <OptionsButtons.DownloadSong
-            variant="context"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCacheSongs();
-            }}
-          />
-        )}
-        {hasCached && (
-          <OptionsButtons.RemoveDownload
-            variant="context"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleRemoveCachedSongs();
-            }}
-          />
-        )}
-      </>}
+      {libraryCaching && (
+        <>
+          <ContextMenuSeparator />
+          {hasUncached && (
+            <OptionsButtons.DownloadSong
+              variant="context"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCacheSongs();
+              }}
+            />
+          )}
+          {hasCached && (
+            <OptionsButtons.RemoveDownload
+              variant="context"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRemoveCachedSongs();
+              }}
+            />
+          )}
+        </>
+      )}
       {rows.length > 1 && (
         <>
           <ContextMenuSeparator />

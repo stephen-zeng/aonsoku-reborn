@@ -84,10 +84,7 @@ function makeSong(
   };
 }
 
-function makePlaylist(
-  id: string,
-  overrides: Record<string, unknown> = {},
-) {
+function makePlaylist(id: string, overrides: Record<string, unknown> = {}) {
   return {
     id,
     name: `Playlist ${id}`,
@@ -152,7 +149,11 @@ describe("smartDownloadEngine", () => {
       ...state,
       settings: {
         ...state.settings,
-        smartRules: { enabled: false, favoriteSongs: true, favoritePlaylists: true },
+        smartRules: {
+          enabled: false,
+          favoriteSongs: true,
+          favoritePlaylists: true,
+        },
       },
     }));
 
@@ -230,7 +231,9 @@ describe("smartDownloadEngine", () => {
     await smartDownloadEngine.recomputeMatches();
 
     expect(cacheSmartSong).not.toHaveBeenCalled();
-    expect(useCacheIndexStore.getState().items["audio:starred-song"].triggers).toEqual(["favorite"]);
+    expect(
+      useCacheIndexStore.getState().items["audio:starred-song"].triggers,
+    ).toEqual(["favorite"]);
   });
 
   it("does not touch explicit entries that match a rule", async () => {
@@ -250,7 +253,9 @@ describe("smartDownloadEngine", () => {
       loaded: true,
     });
 
-    await libraryDb.songs.bulkPut([makeSong("explicit-song", { starredAt: 1 })]);
+    await libraryDb.songs.bulkPut([
+      makeSong("explicit-song", { starredAt: 1 }),
+    ]);
     await smartDownloadEngine.recomputeMatches();
 
     expect(cacheSmartSong).not.toHaveBeenCalledWith(
@@ -275,9 +280,7 @@ describe("smartDownloadEngine", () => {
       },
     }));
 
-    await libraryDb.playlists.bulkPut([
-      makePlaylist("pl-1", { id: "pl-1" }),
-    ]);
+    await libraryDb.playlists.bulkPut([makePlaylist("pl-1", { id: "pl-1" })]);
 
     (subsonic.playlists.getOne as ReturnType<typeof vi.fn>).mockResolvedValue({
       entry: [{ id: "song-from-pl" }],
@@ -290,7 +293,9 @@ describe("smartDownloadEngine", () => {
 
   it("skips playlist caching when offline", async () => {
     const { getNetworkStatus } = await import("@/app/hooks/use-network-status");
-    (getNetworkStatus as ReturnType<typeof vi.fn>).mockReturnValue({ isOnline: false });
+    (getNetworkStatus as ReturnType<typeof vi.fn>).mockReturnValue({
+      isOnline: false,
+    });
 
     const { smartDownloadEngine } = await import("./smart-download-engine");
 
@@ -333,7 +338,9 @@ describe("smartDownloadEngine", () => {
   it("adds multiple triggers for a song matching multiple rules", async () => {
     const { subsonic } = await import("@/service/subsonic");
     const { getNetworkStatus } = await import("@/app/hooks/use-network-status");
-    (getNetworkStatus as ReturnType<typeof vi.fn>).mockReturnValue({ isOnline: true });
+    (getNetworkStatus as ReturnType<typeof vi.fn>).mockReturnValue({
+      isOnline: true,
+    });
     const { smartDownloadEngine } = await import("./smart-download-engine");
 
     useCacheStore.setState((state) => ({
@@ -349,9 +356,7 @@ describe("smartDownloadEngine", () => {
     }));
 
     await libraryDb.songs.bulkPut([makeSong("dual-song", { starredAt: 1 })]);
-    await libraryDb.playlists.bulkPut([
-      makePlaylist("pl-1", { id: "pl-1" }),
-    ]);
+    await libraryDb.playlists.bulkPut([makePlaylist("pl-1", { id: "pl-1" })]);
 
     (subsonic.playlists.getOne as ReturnType<typeof vi.fn>).mockResolvedValue({
       entry: [{ id: "dual-song" }],
