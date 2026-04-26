@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { isAudioCached, useCacheIndexStore } from "@/store/cache-index.store";
 import { cacheIndexStore } from "@/store/idb";
 import { _resetLibraryDbForTests, libraryDb } from "@/store/library-db";
+import { Priority } from "@/types/cache";
 
 const cacheStorageMock = {
   clear: vi.fn(),
@@ -11,8 +12,19 @@ const cacheStorageMock = {
   put: vi.fn(),
 };
 
+const audioCacheServiceMock = {
+  cacheSong: vi.fn(() => Promise.resolve()),
+  isQueued: vi.fn(() => false),
+  isInFlight: vi.fn(() => false),
+  cancelAll: vi.fn(),
+};
+
 vi.mock("./cache-storage", () => ({
   cacheStorage: cacheStorageMock,
+}));
+
+vi.mock("./audio-cache-worker-adapter", () => ({
+  audioCacheService: audioCacheServiceMock,
 }));
 
 vi.mock("@/api/httpClient", () => ({
@@ -51,6 +63,8 @@ describe("cacheManager", () => {
     cacheStorageMock.get.mockReset();
     cacheStorageMock.put.mockReset();
     cacheStorageMock.put.mockResolvedValue(undefined);
+    audioCacheServiceMock.cacheSong.mockReset();
+    audioCacheServiceMock.cacheSong.mockResolvedValue(undefined);
     await idbClear(cacheIndexStore);
     await _resetLibraryDbForTests();
     useCacheIndexStore.setState({ items: {}, loaded: true, downloads: {} });
@@ -145,52 +159,22 @@ describe("cacheManager", () => {
     vi.restoreAllMocks();
   });
 
-  it("cacheSong updates the index and clears progress when cacheMeta persistence retries", async () => {
-    const audioBlob = new Blob(["audio"], { type: "audio/mpeg" });
-    const originalPut = libraryDb.cacheMeta.put.bind(libraryDb.cacheMeta);
-    const putSpy = vi.spyOn(libraryDb.cacheMeta, "put");
-    let putCalls = 0;
-    putSpy.mockImplementation(async (...args) => {
-      putCalls++;
-      if (putCalls === 1) throw new Error("DB locked");
-      return originalPut(...args);
-    });
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: true,
-      headers: { get: () => null },
-      blob: () => Promise.resolve(audioBlob),
-    } as unknown as Response);
+  it("cacheSong delegates to audioCacheService and sets initial progress", async () => {
     useCacheIndexStore.setState({
       items: {},
       loaded: true,
-      downloads: { "song-1": 50 },
+      downloads: {},
     });
 
     const { cacheManager } = await import("./cache-manager");
     await cacheManager.cacheSong("song-1");
 
-    expect(cacheStorageMock.put).toHaveBeenCalledWith(
-      "audio:song-1",
-      audioBlob,
-      "audio/mpeg",
-    );
-    expect(useCacheIndexStore.getState().items["audio:song-1"]).toMatchObject({
-      id: "song-1",
-      type: "audio",
+    expect(audioCacheServiceMock.cacheSong).toHaveBeenCalledWith({
+      songId: "song-1",
+      priority: Priority.Explicit,
       source: "explicit",
-      sizeBytes: audioBlob.size,
     });
-    expect(useCacheIndexStore.getState().downloads["song-1"]).toBeUndefined();
-
-    await vi.waitFor(async () => {
-      expect(await libraryDb.cacheMeta.get("audio:song-1")).toMatchObject({
-        id: "song-1",
-        source: "explicit",
-      });
-    });
-
-    putSpy.mockRestore();
-    vi.restoreAllMocks();
+    expect(useCacheIndexStore.getState().downloads["song-1"]).toBe(0);
   });
 
   it("loadFromIDB restores audio cached state from cacheMeta only", async () => {
@@ -225,15 +209,12 @@ describe("cacheManager", () => {
       loaded: true,
       downloads: {},
     });
-    const fetchSpy = vi.spyOn(globalThis, "fetch");
 
     const { cacheManager } = await import("./cache-manager");
     await cacheManager.cacheSong("song-1");
 
-    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(audioCacheServiceMock.cacheSong).not.toHaveBeenCalled();
     expect(cacheStorageMock.put).not.toHaveBeenCalled();
-
-    fetchSpy.mockRestore();
   });
 
   it("clearAllCaches also clears prefetched lyrics rows", async () => {
