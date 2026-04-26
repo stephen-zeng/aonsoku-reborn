@@ -1,5 +1,6 @@
 import { ComponentPropsWithoutRef, forwardRef } from "react";
 import { cn } from "@/lib/utils";
+import { IMAGE_HEADER_EFFECT_GRADIENT } from "./image-header-gradients";
 
 export const ImageHeaderEffect = forwardRef<
   HTMLDivElement,
@@ -9,9 +10,8 @@ export const ImageHeaderEffect = forwardRef<
     <div
       ref={ref}
       className={cn(
-        "bg-gradient-to-b from-background/60 to-background-foreground",
-        "w-full h-64 z-0",
-        "absolute top-[calc(3rem+130px)] sm:top-[calc(3rem+160px)] md:top-[calc(3rem+200px)] 2xl:top-[calc(3rem+250px)]",
+        IMAGE_HEADER_EFFECT_GRADIENT,
+        "absolute top-full w-full h-24 md:h-64 z-0 pointer-events-none",
         className,
       )}
       {...props}

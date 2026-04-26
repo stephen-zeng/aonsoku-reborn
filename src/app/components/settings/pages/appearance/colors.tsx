@@ -15,12 +15,7 @@ import { useSongColor } from "@/store/player.store";
 
 export function ColorSettings() {
   const { t } = useTranslation();
-  const {
-    useSongColorOnQueue,
-    setUseSongColorOnQueue,
-    useSongColorOnBigPlayer,
-    setUseSongColorOnBigPlayer,
-  } = useSongColor();
+  const { useSongColorOnQueue, setUseSongColorOnQueue } = useSongColor();
 
   return (
     <Root>
@@ -39,18 +34,6 @@ export function ColorSettings() {
             <Switch
               checked={useSongColorOnQueue}
               onCheckedChange={setUseSongColorOnQueue}
-            />
-          </ContentItemForm>
-        </ContentItem>
-
-        <ContentItem>
-          <ContentItemTitle>
-            {t("settings.appearance.colors.bigPlayer.label")}
-          </ContentItemTitle>
-          <ContentItemForm>
-            <Switch
-              checked={useSongColorOnBigPlayer}
-              onCheckedChange={setUseSongColorOnBigPlayer}
             />
           </ContentItemForm>
         </ContentItem>

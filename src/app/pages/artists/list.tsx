@@ -9,11 +9,13 @@ import { HeaderTitle } from "@/app/components/header-title";
 import ListWrapper from "@/app/components/list-wrapper";
 import { MainViewTypeSelector } from "@/app/components/main-grid";
 import { DataTableList } from "@/app/components/ui/data-table-list";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import { useSongList } from "@/app/hooks/use-song-list";
 import { artistsColumns } from "@/app/tables/artists-columns";
 import { subsonic } from "@/service/subsonic";
 import { useAppArtistsViewType } from "@/store/app.store";
 import { usePlayerActions } from "@/store/player.store";
+import { ColumnFilter } from "@/types/columnFilter";
 import { ISimilarArtist } from "@/types/responses/artist";
 import { queryKeys } from "@/utils/queryKeys";
 
@@ -27,6 +29,7 @@ export default function ArtistsList() {
   const { t } = useTranslation();
   const { getArtistAllSongs } = useSongList();
   const { setSongList } = usePlayerActions();
+  const isMobile = useIsMobile();
   const {
     artistsPageViewType,
     setArtistsPageViewType,
@@ -35,6 +38,9 @@ export default function ArtistsList() {
   } = useAppArtistsViewType();
 
   const columns = artistsColumns();
+  const artistColumnFilter: ColumnFilter[] | undefined = isMobile
+    ? (["index", "name", "starred"] as ColumnFilter[])
+    : undefined;
 
   const { data: artists, isLoading } = useQuery({
     queryKey: [queryKeys.artist.all],
@@ -44,7 +50,7 @@ export default function ArtistsList() {
   async function handlePlayArtistRadio(artist: ISimilarArtist) {
     const songList = await getArtistAllSongs(artist.name);
 
-    if (songList) setSongList(songList, 0);
+    if (songList) setSongList(songList, 0, false, undefined, artist.name);
   }
 
   if (isLoading) return <ArtistsFallback />;
@@ -71,6 +77,7 @@ export default function ArtistsList() {
             columns={columns}
             data={artists}
             handlePlaySong={(row) => handlePlayArtistRadio(row.original)}
+            columnFilter={artistColumnFilter}
             allowRowSelection={false}
             dataType="artist"
           />

@@ -25,7 +25,7 @@ export function HeaderInfoGenerator({
   badges,
 }: HeaderInfoProps) {
   return (
-    <div className="flex text-sm">
+    <div className="flex flex-wrap text-sm justify-center md:justify-start">
       <Fragment>
         {badges
           .filter((item) => item.content)
@@ -35,12 +35,14 @@ export function HeaderInfoGenerator({
               {item.type === "link" ? (
                 <Link
                   to={item.link}
-                  className="flex opacity-80 text-shadow-lg hover:opacity-100 hover:underline"
+                  className="flex whitespace-nowrap opacity-80 text-shadow-lg hover:opacity-100 hover:underline"
                 >
                   {item.content}
                 </Link>
               ) : (
-                <p className="opacity-80 text-shadow-lg">{item.content}</p>
+                <p className="whitespace-nowrap opacity-80 text-shadow-lg">
+                  {item.content}
+                </p>
               )}
               {index < array.length - 1 && <Dot />}
             </Fragment>

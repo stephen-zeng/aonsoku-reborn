@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { AlbumComment } from "@/app/components/album/comment";
@@ -15,6 +16,8 @@ import {
   useGetArtistAlbums,
   useGetGenreAlbums,
 } from "@/app/hooks/use-album";
+import { useHasHover } from "@/app/hooks/use-input-mode";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import ErrorPage from "@/app/pages/error-page";
 import { songsColumns } from "@/app/tables/songs-columns";
 import { ROUTES } from "@/routes/routesList";
@@ -28,6 +31,16 @@ export default function Album() {
   const { albumId } = useParams() as { albumId: string };
   const { setSongList } = usePlayerActions();
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
+  const hasHover = useHasHover();
+  const columns = useMemo(
+    () =>
+      songsColumns({
+        disableTextNavigation: true,
+        hasHover,
+      }),
+    [hasHover],
+  );
 
   const {
     data: album,
@@ -48,8 +61,6 @@ export default function Album() {
   }
   if (!album) return <AlbumFallback />;
 
-  const columns = songsColumns();
-
   const albumDuration = album.duration
     ? convertSecondsToHumanRead(album.duration)
     : null;
@@ -61,6 +72,9 @@ export default function Album() {
       type: "link",
       link: ROUTES.ALBUMS.GENRE(album.genre),
     },
+  ];
+
+  const secondaryBadges: BadgesData = [
     {
       content: album.songCount
         ? t("playlist.songCount", { count: album.songCount })
@@ -75,17 +89,26 @@ export default function Album() {
     },
   ];
 
-  const columnsToShow: ColumnFilter[] = [
-    "trackNumber",
-    "title",
-    // 'artist',
-    "duration",
-    "playCount",
-    "played",
-    "bitRate",
-    "contentType",
-    "select",
-  ];
+  const hasTrackNumbers = album.song.some((song) => song.track > 0);
+
+  const columnsToShow: ColumnFilter[] = isMobile
+    ? [
+        ...(hasTrackNumbers ? ["trackNumber" as ColumnFilter] : []),
+        "title",
+        "duration",
+        "select",
+      ]
+    : [
+        ...(hasTrackNumbers ? ["trackNumber" as ColumnFilter] : []),
+        "title",
+        // 'artist',
+        "duration",
+        "playCount",
+        "played",
+        "bitRate",
+        "contentType",
+        "select",
+      ];
 
   function removeCurrentAlbumFromList(moreAlbums: Albums[], sort = false) {
     if (moreAlbums.length === 0 || !album) return null;
@@ -127,6 +150,7 @@ export default function Album() {
         coverArtSize="700"
         coverArtAlt={album.name}
         badges={badges}
+        secondaryBadges={secondaryBadges}
       />
 
       <ListWrapper>
@@ -136,7 +160,13 @@ export default function Album() {
           columns={columns}
           data={album.song}
           handlePlaySong={(row) =>
-            setSongList(album.song, row.index, false, { albumId: album.id })
+            setSongList(
+              album.song,
+              row.index,
+              false,
+              { albumId: album.id },
+              album.name,
+            )
           }
           columnFilter={columnsToShow}
           showDiscNumber={true}

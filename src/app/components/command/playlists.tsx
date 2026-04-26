@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { LazyLoadImage } from "react-lazy-load-image-component";
 import { useNavigate } from "react-router-dom";
-import { getCoverArtUrl } from "@/api/httpClient";
+import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { Dot } from "@/app/components/dot";
 import { CommandGroup, CommandItem } from "@/app/components/ui/command";
 import { ROUTES } from "@/routes/routesList";
@@ -56,9 +55,11 @@ function PlaylistItem({ playlist }: { playlist: Playlist }) {
 
   return (
     <div className="truncate flex items-center gap-2">
-      <LazyLoadImage
+      <CachedImage
         effect="opacity"
-        src={getCoverArtUrl(playlist.coverArt, "playlist", "300")}
+        coverArtId={playlist.coverArt}
+        coverArtType="playlist"
+        coverArtSize="300"
         alt={playlist.name}
         className="bg-accent w-12 min-w-12 h-12 aspect-square rounded shadow-custom-5 text-transparent"
       />

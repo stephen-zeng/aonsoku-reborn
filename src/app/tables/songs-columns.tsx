@@ -26,7 +26,15 @@ const MemoDataTableColumnHeader = memo(
   DataTableColumnHeader,
 ) as typeof DataTableColumnHeader;
 
-export function songsColumns(): ColumnDefType<ISong>[] {
+type SongsColumnsOptions = {
+  disableTextNavigation?: boolean;
+  hasHover?: boolean;
+};
+
+export function songsColumns({
+  disableTextNavigation = false,
+  hasHover = true,
+}: SongsColumnsOptions = {}): ColumnDefType<ISong>[] {
   return [
     {
       id: "index",
@@ -38,16 +46,12 @@ export function songsColumns(): ColumnDefType<ISong>[] {
       header: () => {
         return <div className="w-full text-center">#</div>;
       },
-      cell: ({ row, table }) => {
+      cell: ({ row }) => {
         const trackNumber = row.index + 1;
         const song = row.original;
 
         return (
-          <MemoPlaySongButton
-            trackNumber={trackNumber}
-            trackId={song.id}
-            handlePlayButton={() => table.options.meta?.handlePlaySong?.(row)}
-          />
+          <MemoPlaySongButton trackNumber={trackNumber} trackId={song.id} />
         );
       },
     },
@@ -61,16 +65,12 @@ export function songsColumns(): ColumnDefType<ISong>[] {
       header: () => {
         return <div className="w-full text-center">#</div>;
       },
-      cell: ({ row, table }) => {
+      cell: ({ row }) => {
         const song = row.original;
         const trackNumber = song.track;
 
         return (
-          <MemoPlaySongButton
-            trackNumber={trackNumber}
-            trackId={song.id}
-            handlePlayButton={() => table.options.meta?.handlePlaySong?.(row)}
-          />
+          <MemoPlaySongButton trackNumber={trackNumber} trackId={song.id} />
         );
       },
     },
@@ -79,7 +79,7 @@ export function songsColumns(): ColumnDefType<ISong>[] {
       accessorKey: "title",
       style: {
         flex: 1,
-        minWidth: 210,
+        minWidth: 120,
       },
       enableSorting: true,
       sortingFn: "customSortFn",
@@ -88,7 +88,13 @@ export function songsColumns(): ColumnDefType<ISong>[] {
           {i18n.t("table.columns.title")}
         </MemoDataTableColumnHeader>
       ),
-      cell: ({ row }) => <MemoTableSongTitle song={row.original} />,
+      cell: ({ row, table }) => (
+        <MemoTableSongTitle
+          disableTextNavigation={disableTextNavigation}
+          song={row.original}
+          onPlay={() => table.options.meta?.handlePlaySong?.(row)}
+        />
+      ),
     },
     {
       id: "artist",
@@ -108,12 +114,24 @@ export function songsColumns(): ColumnDefType<ISong>[] {
         const { artist, artistId, artists } = row.original;
 
         if (artists && artists.length > 1) {
-          return <ArtistsLinks artists={artists} />;
+          return (
+            <ArtistsLinks
+              artists={artists}
+              disableNavigation={disableTextNavigation}
+            />
+          );
         }
 
         if (!artistId) return artist;
 
-        return <ArtistLink artistId={artistId}>{artist}</ArtistLink>;
+        return (
+          <ArtistLink
+            artistId={artistId}
+            disableNavigation={disableTextNavigation}
+          >
+            {artist}
+          </ArtistLink>
+        );
       },
     },
     {
@@ -133,6 +151,13 @@ export function songsColumns(): ColumnDefType<ISong>[] {
         </MemoDataTableColumnHeader>
       ),
       cell: ({ row }) => {
+        if (disableTextNavigation) {
+          return (
+            <span className="truncate text-foreground/70">
+              {row.original.album}
+            </span>
+          );
+        }
         return (
           <MemoLink
             to={ROUTES.ALBUM.PAGE(row.original.albumId)}
@@ -163,6 +188,7 @@ export function songsColumns(): ColumnDefType<ISong>[] {
         width: 80,
         maxWidth: 80,
       },
+      className: "hidden md:flex",
       enableSorting: true,
       sortingFn: "basic",
       header: ({ column, table }) => (
@@ -273,15 +299,16 @@ export function songsColumns(): ColumnDefType<ISong>[] {
     {
       id: "select",
       style: {
-        width: 120,
-        maxWidth: 120,
+        width: hasHover ? 120 : 48,
+        maxWidth: hasHover ? 120 : 48,
         justifyContent: "end",
       },
-      header: () => (
-        <MemoSimpleTooltip text={i18n.t("table.columns.favorite")}>
-          <HeartIcon className="w-4 h-4 mr-2" />
-        </MemoSimpleTooltip>
-      ),
+      header: () =>
+        hasHover ? (
+          <MemoSimpleTooltip text={i18n.t("table.columns.favorite")}>
+            <HeartIcon className="w-4 h-4 mr-2" />
+          </MemoSimpleTooltip>
+        ) : null,
       cell: ({ row }) => <MemoSongTableActions row={row} />,
     },
   ];

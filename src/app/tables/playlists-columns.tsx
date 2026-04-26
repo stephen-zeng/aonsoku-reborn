@@ -1,4 +1,4 @@
-import { Eye, EyeOff, ClockIcon } from "lucide-react";
+import { ClockIcon, Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { PlaylistOptions } from "@/app/components/playlist/options";
@@ -25,17 +25,11 @@ export function playlistsColumns(): ColumnDefType<Playlist>[] {
       header: () => {
         return <div className="w-full text-center">#</div>;
       },
-      cell: ({ row, table }) => {
+      cell: ({ row }) => {
         const index = row.index + 1;
         const playlist = row.original;
 
-        return (
-          <PlaySongButton
-            trackNumber={index}
-            trackId={playlist.id}
-            handlePlayButton={() => table.options.meta?.handlePlaySong?.(row)}
-          />
-        );
+        return <PlaySongButton trackNumber={index} trackId={playlist.id} />;
       },
     },
     {

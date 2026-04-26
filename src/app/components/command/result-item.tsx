@@ -1,12 +1,13 @@
 import { Play } from "lucide-react";
-import { getCoverArtUrl } from "@/api/httpClient";
 import Image from "@/app/components/image";
 import { Button } from "@/app/components/ui/button";
 import { CoverArt } from "@/types/coverArtType";
+import { useCoverArtUrlFromSongPreference } from "@/utils/coverArt";
 
 interface ResultItemProps {
   coverArt: string;
   coverArtType: CoverArt;
+  albumId?: string;
   title: string;
   artist: string;
   onClick: () => void;
@@ -15,15 +16,23 @@ interface ResultItemProps {
 export function ResultItem({
   coverArt,
   coverArtType,
+  albumId,
   title,
   artist,
   onClick,
 }: ResultItemProps) {
+  const src = useCoverArtUrlFromSongPreference({
+    coverArt,
+    coverArtType,
+    albumId,
+    size: "100",
+  });
+
   return (
     <div className="flex w-full justify-between items-center">
       <div className="flex gap-2 w-[420px]">
         <Image
-          src={getCoverArtUrl(coverArt, coverArtType, "100")}
+          src={src}
           width={40}
           height={40}
           className="aspect-square object-cover rounded shadow"

@@ -4,7 +4,6 @@ import { ElementType, Fragment, memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 import { PlaylistOptions } from "@/app/components/playlist/options";
-import { PodcastSidebarItem } from "@/app/components/podcasts/sidebar-item";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { Button } from "@/app/components/ui/button";
 import { SidebarItems } from "@/app/layout/sidebar";
@@ -14,7 +13,6 @@ import { Playlist } from "@/types/responses/playlist";
 import { GridViewWrapperType, resetGridClickedItem } from "@/utils/gridTools";
 
 const ListMusic = memo(ListMusicIcon);
-const MemoPodcastSidebarItem = memo(PodcastSidebarItem);
 const MemoContextMenuProvider = memo(ContextMenuProvider);
 const MemoPlaylistOptions = memo(PlaylistOptions);
 
@@ -29,7 +27,6 @@ export function SidebarGenerator({ list }: { list: ISidebarItem[] }) {
   const location = useLocation();
   const { t } = useTranslation();
   const hideRadiosSection = useAppStore().pages.hideRadiosSection;
-  const isPodcastsActive = useAppStore().podcasts.active;
 
   const isActive = useCallback(
     (route: string) => {
@@ -41,13 +38,8 @@ export function SidebarGenerator({ list }: { list: ISidebarItem[] }) {
   return (
     <>
       {list.map((item) => {
-        // Setting to show/hide Radios/Podcasts section
+        // Setting to show/hide Radios section
         if (hideRadiosSection && item.id === SidebarItems.Radios) return null;
-        if (!isPodcastsActive && item.id === SidebarItems.Podcasts) return null;
-
-        if (isPodcastsActive && item.id === SidebarItems.Podcasts) {
-          return <MemoPodcastSidebarItem key={item.id} item={item} />;
-        }
 
         return (
           <Link
@@ -59,7 +51,9 @@ export function SidebarGenerator({ list }: { list: ISidebarItem[] }) {
               isActive(item.route) && "pointer-events-none",
             )}
             onClick={() => {
-              resetGridClickedItem({ name: item.id as GridViewWrapperType });
+              resetGridClickedItem({
+                name: item.id as GridViewWrapperType,
+              });
             }}
           >
             <Button

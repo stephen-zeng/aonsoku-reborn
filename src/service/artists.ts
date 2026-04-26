@@ -3,6 +3,8 @@ import {
   ArtistInfoResponse,
   ArtistResponse,
   ArtistsResponse,
+  IArtist,
+  IArtistInfo,
   ISimilarArtist,
 } from "@/types/responses/artist";
 
@@ -10,8 +12,6 @@ async function getAll() {
   const response = await httpClient<ArtistsResponse>("/getArtists", {
     method: "GET",
   });
-
-  if (!response) return [];
 
   const artistsList: ISimilarArtist[] = [];
 
@@ -22,7 +22,7 @@ async function getAll() {
   return artistsList.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-async function getOne(id: string) {
+async function getOne(id: string): Promise<IArtist | undefined> {
   const response = await httpClient<ArtistResponse>("/getArtist", {
     method: "GET",
     query: {
@@ -30,10 +30,10 @@ async function getOne(id: string) {
     },
   });
 
-  return response?.data.artist;
+  return response.data.artist;
 }
 
-async function getInfo(id: string) {
+async function getInfo(id: string): Promise<IArtistInfo | null> {
   const response = await httpClient<ArtistInfoResponse>("/getArtistInfo", {
     method: "GET",
     query: {
@@ -41,7 +41,7 @@ async function getInfo(id: string) {
     },
   });
 
-  return response?.data.artistInfo;
+  return response.data.artistInfo;
 }
 
 export const artists = {

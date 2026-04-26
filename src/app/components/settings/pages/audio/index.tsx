@@ -1,3 +1,4 @@
+import { HistorySettings } from "./history";
 import { LyricsSettings } from "./lyrics";
 import { ReplayGainConfig } from "./replay-gain";
 
@@ -6,6 +7,7 @@ export function Audio() {
     <div className="space-y-4">
       <ReplayGainConfig />
       <LyricsSettings />
+      <HistorySettings />
     </div>
   );
 }

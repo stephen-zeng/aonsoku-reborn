@@ -1,12 +1,12 @@
-import { SVGProps } from 'react'
-import { cn } from '@/lib/utils'
+import { SVGProps } from "react";
+import { cn } from "@/lib/utils";
 
 type AppIconProps = SVGProps<SVGSVGElement> & {
-  size?: number
-}
+  size?: number;
+};
 
 export function AppIcon({ size = 48, className, ...props }: AppIconProps) {
-  const strokeSize = 2
+  const strokeSize = 2;
 
   return (
     <svg
@@ -15,7 +15,7 @@ export function AppIcon({ size = 48, className, ...props }: AppIconProps) {
       viewBox="0 0 48 48"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={cn('fill-primary text-primary', className)}
+      className={cn("fill-primary text-primary", className)}
       {...props}
     >
       <g>
@@ -42,5 +42,5 @@ export function AppIcon({ size = 48, className, ...props }: AppIconProps) {
         />
       </g>
     </svg>
-  )
+  );
 }

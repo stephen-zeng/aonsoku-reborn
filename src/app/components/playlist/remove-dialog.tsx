@@ -1,19 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MouseEvent } from "react";
+import { type MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMatches, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/app/components/ui/alert-dialog";
+import { ConfirmationDialog } from "@/app/components/ui/confirmation-dialog";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { useRemovePlaylist } from "@/store/playlists.store";
@@ -58,23 +49,12 @@ export function RemovePlaylistDialog() {
   }
 
   return (
-    <AlertDialog open={confirmDialogState}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t("playlist.form.delete.title")}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t("playlist.form.delete.description")}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => setConfirmDialogState(false)}>
-            {t("logout.dialog.cancel")}
-          </AlertDialogCancel>
-          <AlertDialogAction onClick={handleRemovePlaylist}>
-            {t("logout.dialog.confirm")}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmationDialog
+      open={confirmDialogState}
+      onOpenChange={setConfirmDialogState}
+      title={t("playlist.form.delete.title")}
+      description={t("playlist.form.delete.description")}
+      onConfirm={handleRemovePlaylist}
+    />
   );
 }

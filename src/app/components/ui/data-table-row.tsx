@@ -33,12 +33,14 @@ export function TableRow<TData>({
   const isClassic = variant === "classic";
   const isModern = variant === "modern";
 
+  // @ts-expect-error row type
+  const songId = row.original.id as string;
+
   const isRowSongActive = useMemo(() => {
     if (dataType !== "song") return false;
 
-    // @ts-expect-error row type
-    return row.original.id === currentSong.id;
-  }, [currentSong.id, dataType, row.original]);
+    return songId === currentSong?.id;
+  }, [currentSong?.id, dataType, songId]);
 
   return (
     <MemoContextMenuProvider options={contextMenuOptions}>
@@ -58,7 +60,7 @@ export function TableRow<TData>({
             !isNextRowSelected(index) &&
             "rounded-b-md",
           isModern && !row.getIsSelected() && "rounded-md",
-          "hover:bg-muted data-[state=selected]:bg-primary/75",
+          "hover:bg-muted md:data-[state=selected]:bg-primary/75",
           isClassic && "border-b",
           isRowSongActive && isModern && "row-active bg-accent",
         )}

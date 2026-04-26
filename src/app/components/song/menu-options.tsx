@@ -1,20 +1,67 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { OptionsButtons } from "@/app/components/options/buttons";
 import { ContextMenuSeparator } from "@/app/components/ui/context-menu";
 import { useOptions } from "@/app/hooks/use-options";
+import { useSongStarMutation } from "@/app/hooks/use-song-star-mutation";
+import { ROUTES } from "@/routes/routesList";
+import {
+  usePlayerCurrentSong,
+  usePlayerSongStarred,
+} from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { AddToPlaylistSubMenu } from "./add-to-playlist";
+
+interface MenuLikeButtonProps {
+  variant: "context" | "dropdown";
+  song: ISong;
+}
+
+function MenuLikeButton({ variant, song }: MenuLikeButtonProps) {
+  const { isStarred, setIsStarred, toggleStar } = useSongStarMutation({
+    songId: song.id,
+    initialStarred: typeof song.starred === "string",
+    albumId: song.albumId,
+  });
+
+  const currentSong = usePlayerCurrentSong();
+  const isSongStarred = usePlayerSongStarred();
+
+  useEffect(() => {
+    if (currentSong?.id === song.id) {
+      setIsStarred(isSongStarred);
+    }
+  }, [currentSong?.id, song.id, isSongStarred, setIsStarred]);
+
+  return (
+    <>
+      <OptionsButtons.Like
+        variant={variant}
+        isStarred={isStarred}
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleStar();
+        }}
+      />
+      <ContextMenuSeparator />
+    </>
+  );
+}
 
 interface SongMenuOptionsProps {
   variant: "context" | "dropdown";
   song: ISong;
   index: number;
+  showLikeOption?: boolean;
 }
 
 export function SongMenuOptions({
   variant,
   song,
   index,
+  showLikeOption = false,
 }: SongMenuOptionsProps) {
+  const navigate = useNavigate();
   const {
     playNext,
     playLast,
@@ -29,6 +76,7 @@ export function SongMenuOptions({
 
   return (
     <>
+      {showLikeOption && <MenuLikeButton variant={variant} song={song} />}
       <OptionsButtons.PlayNext
         variant={variant}
         onClick={(e) => {
@@ -61,6 +109,29 @@ export function SongMenuOptions({
         />
       )}
       <ContextMenuSeparator />
+      {(song.artistId || song.albumId) && (
+        <>
+          {song.artistId && (
+            <OptionsButtons.GotoArtist
+              variant={variant}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(ROUTES.ARTIST.PAGE(song.artistId!));
+              }}
+            />
+          )}
+          {song.albumId && (
+            <OptionsButtons.GotoAlbum
+              variant={variant}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(ROUTES.ALBUM.PAGE(song.albumId));
+              }}
+            />
+          )}
+          <ContextMenuSeparator />
+        </>
+      )}
       <OptionsButtons.Download
         variant={variant}
         onClick={(e) => {

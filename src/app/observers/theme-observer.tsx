@@ -1,7 +1,7 @@
 import { useLayoutEffect } from "react";
 import { useTheme } from "@/store/theme.store";
 import { Theme } from "@/types/themeContext";
-import { setDesktopTitleBarColors } from "@/utils/theme";
+import { setDesktopTitleBarColors, updatePwaThemeColor } from "@/utils/theme";
 
 export const appThemes: Theme[] = Object.values(Theme);
 
@@ -15,6 +15,7 @@ export function ThemeObserver() {
     root.classList.add(theme);
 
     setDesktopTitleBarColors();
+    updatePwaThemeColor();
   }, [theme]);
 
   return null;

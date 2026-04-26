@@ -24,6 +24,7 @@ const artist = {
 
 const favorites = {
   count: "get-favorite-count",
+  list: "get-favorite-songs",
 };
 
 const song = {
@@ -41,20 +42,14 @@ const search = "search-key";
 
 const genre = "get-all-genres";
 
+const lyrics = {
+  plain: "get-lyrics",
+  structured: "get-structured-lyrics",
+};
+
 const update = {
   serverInfo: "get-server-info",
   check: "check-for-updates",
-};
-
-const podcast = {
-  all: "get-all-podcasts",
-  one: "get-podcast",
-};
-
-const episode = {
-  all: "get-podcast-episodes",
-  one: "get-episode",
-  latest: "get-latest-episodes",
 };
 
 export const queryKeys = {
@@ -66,7 +61,6 @@ export const queryKeys = {
   radio,
   search,
   genre,
+  lyrics,
   update,
-  podcast,
-  episode,
 };

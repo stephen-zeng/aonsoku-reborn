@@ -5,21 +5,22 @@ import {
   AlbumFallback,
   AlbumsFallback,
 } from "@/app/components/fallbacks/album-fallbacks";
-import { ArtistsFallback } from "@/app/components/fallbacks/artists.tsx";
+import {
+  ArtistFallback,
+  ArtistsFallback,
+} from "@/app/components/fallbacks/artists";
 import { HomeFallback } from "@/app/components/fallbacks/home-fallbacks";
 import { PlaylistFallback } from "@/app/components/fallbacks/playlist-fallbacks";
 import {
-  EpisodeFallback,
-  LatestEpisodesFallback,
-  PodcastFallback,
-} from "@/app/components/fallbacks/podcast-fallbacks";
-import {
+  FavoritesFallback,
   InfinitySongListFallback,
-  SongListFallback,
+  MobileLibraryFallback,
+  PlaylistsListFallback,
+  RadiosListFallback,
 } from "@/app/components/fallbacks/song-fallbacks";
 import { albumsLoader } from "@/routes/loaders/albumsLoader";
 import { loginLoader } from "@/routes/loginLoader";
-import { podcastsLoader, protectedLoader } from "@/routes/protectedLoader";
+import { protectedLoader } from "@/routes/protectedLoader";
 import { ROUTES } from "@/routes/routesList";
 
 const BaseLayout = lazy(() => import("@/app/layout/base"));
@@ -35,18 +36,16 @@ const Playlist = lazy(() => import("@/app/pages/playlists/playlist"));
 const Radios = lazy(() => import("@/app/pages/radios/radios-list"));
 const SongList = lazy(() => import("@/app/pages/songs/songlist"));
 const Home = lazy(() => import("@/app/pages/home"));
-const PodcastsList = lazy(() => import("@/app/pages/podcasts/list"));
-const Podcast = lazy(() => import("@/app/pages/podcasts/podcast"));
-const Episode = lazy(() => import("@/app/pages/podcasts/episode"));
-const LatestEpisodes = lazy(
-  () => import("@/app/pages/podcasts/latest-episodes"),
-);
+const MobileLibrary = lazy(() => import("@/app/pages/mobile/library"));
+const MobileSearch = lazy(() => import("@/app/pages/mobile/search"));
+const MobileSettings = lazy(() => import("@/app/pages/mobile/settings"));
 
 export const router = createHashRouter([
   {
     path: ROUTES.LIBRARY.HOME,
     element: <BaseLayout />,
     loader: protectedLoader,
+    shouldRevalidate: () => false,
     children: [
       {
         id: "home",
@@ -94,7 +93,7 @@ export const router = createHashRouter([
         path: ROUTES.LIBRARY.FAVORITES,
         errorElement: <ErrorPage />,
         element: (
-          <Suspense fallback={<InfinitySongListFallback />}>
+          <Suspense fallback={<FavoritesFallback />}>
             <Favorites />
           </Suspense>
         ),
@@ -104,7 +103,7 @@ export const router = createHashRouter([
         path: ROUTES.LIBRARY.PLAYLISTS,
         errorElement: <ErrorPage />,
         element: (
-          <Suspense fallback={<SongListFallback />}>
+          <Suspense fallback={<PlaylistsListFallback />}>
             <PlaylistsPage />
           </Suspense>
         ),
@@ -114,7 +113,7 @@ export const router = createHashRouter([
         path: ROUTES.LIBRARY.RADIOS,
         errorElement: <ErrorPage />,
         element: (
-          <Suspense fallback={<SongListFallback />}>
+          <Suspense fallback={<RadiosListFallback />}>
             <Radios />
           </Suspense>
         ),
@@ -124,7 +123,7 @@ export const router = createHashRouter([
         path: ROUTES.ARTIST.PATH,
         errorElement: <ErrorPage />,
         element: (
-          <Suspense fallback={<AlbumFallback />}>
+          <Suspense fallback={<ArtistFallback />}>
             <Artist />
           </Suspense>
         ),
@@ -150,46 +149,32 @@ export const router = createHashRouter([
         ),
       },
       {
-        id: "podcasts",
-        path: ROUTES.LIBRARY.PODCASTS,
+        id: "mobile-library",
+        path: ROUTES.MOBILE.LIBRARY,
         errorElement: <ErrorPage />,
-        loader: podcastsLoader,
         element: (
-          <Suspense fallback={<AlbumsFallback />}>
-            <PodcastsList />
+          <Suspense fallback={<MobileLibraryFallback />}>
+            <MobileLibrary />
           </Suspense>
         ),
       },
       {
-        id: "podcast",
-        path: ROUTES.PODCASTS.PATH,
+        id: "mobile-search",
+        path: ROUTES.MOBILE.SEARCH,
         errorElement: <ErrorPage />,
-        loader: podcastsLoader,
         element: (
-          <Suspense fallback={<PodcastFallback />}>
-            <Podcast />
+          <Suspense>
+            <MobileSearch />
           </Suspense>
         ),
       },
       {
-        id: "episode",
-        path: ROUTES.EPISODES.PATH,
+        id: "mobile-settings",
+        path: ROUTES.MOBILE.SETTINGS,
         errorElement: <ErrorPage />,
-        loader: podcastsLoader,
         element: (
-          <Suspense fallback={<EpisodeFallback />}>
-            <Episode />
-          </Suspense>
-        ),
-      },
-      {
-        id: "latest-episodes",
-        path: ROUTES.EPISODES.LATEST,
-        errorElement: <ErrorPage />,
-        loader: podcastsLoader,
-        element: (
-          <Suspense fallback={<LatestEpisodesFallback />}>
-            <LatestEpisodes />
+          <Suspense>
+            <MobileSettings />
           </Suspense>
         ),
       },

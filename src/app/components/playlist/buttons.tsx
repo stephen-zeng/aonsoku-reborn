@@ -21,24 +21,37 @@ export function PlaylistButtons({ playlist }: PlaylistButtonsProps) {
   return (
     <Actions.Container>
       <Actions.Button
-        tooltip={buttonsTooltips.play}
-        buttonStyle="primary"
-        onClick={() =>
-          setSongList(playlist.entry, 0, false, { playlistId: playlist.id })
-        }
-        disabled={!playlist.entry}
-      >
-        <Actions.PlayIcon />
-      </Actions.Button>
-
-      <Actions.Button
         tooltip={buttonsTooltips.shuffle}
         onClick={() =>
-          setSongList(playlist.entry, 0, true, { playlistId: playlist.id })
+          setSongList(
+            playlist.entry,
+            0,
+            true,
+            { playlistId: playlist.id },
+            playlist.name,
+          )
         }
         disabled={!playlist.entry}
       >
         <Actions.ShuffleIcon />
+      </Actions.Button>
+
+      <Actions.Button
+        tooltip={buttonsTooltips.play}
+        buttonStyle="primary"
+        className="md:order-first"
+        onClick={() =>
+          setSongList(
+            playlist.entry,
+            0,
+            false,
+            { playlistId: playlist.id },
+            playlist.name,
+          )
+        }
+        disabled={!playlist.entry}
+      >
+        <Actions.PlayIcon />
       </Actions.Button>
 
       <Actions.Dropdown

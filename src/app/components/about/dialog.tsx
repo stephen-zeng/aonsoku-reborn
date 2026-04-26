@@ -19,7 +19,7 @@ interface AboutDialogProps {
 
 export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
   const { t } = useTranslation();
-  const { name, version, url } = getAppInfo();
+  const { name, version, buildHash, buildTime, url } = getAppInfo();
 
   const { data: server, isLoading } = useQuery({
     queryKey: [queryKeys.update.serverInfo],
@@ -53,6 +53,15 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
                   <p>{t("about.version")}</p>
                   <div className="text-xs font-medium bg-primary/60 text-foreground px-2 rounded-full border border-primary flex items-center justify-center">
                     {version}
+                  </div>
+                  <div className="text-xs font-medium bg-muted text-muted-foreground px-2 rounded-full border flex items-center justify-center font-mono">
+                    {buildHash}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <p>{t("about.buildTime")}</p>
+                  <div className="text-xs font-medium bg-muted text-muted-foreground px-2 rounded-full border flex items-center justify-center font-mono">
+                    {buildTime}
                   </div>
                 </div>
               </div>

@@ -14,7 +14,7 @@ async function fetchSongs(offset: number, count: number) {
   return response?.song ?? [];
 }
 
-async function fetchTotalSongs() {
+async function fetchTotalSongs(): Promise<number> {
   const storedSongCount = useAppStore.getState().data.songCount;
 
   if (storedSongCount && storedSongCount > 0) {

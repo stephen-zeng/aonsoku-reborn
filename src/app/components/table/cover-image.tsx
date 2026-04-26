@@ -1,11 +1,11 @@
-import { LazyLoadImage } from "react-lazy-load-image-component";
-import { getCoverArtUrl } from "@/api/httpClient";
+import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { cn } from "@/lib/utils";
 import { CoverArt } from "@/types/coverArtType";
 
 interface CoverImageProps {
   coverArt: string;
   coverArtType: CoverArt;
+  albumId?: string;
   coverArtSize?: number;
   size?: number;
   altText: string;
@@ -14,7 +14,8 @@ interface CoverImageProps {
 export function CoverImage({
   coverArt,
   coverArtType,
-  coverArtSize = 80,
+  albumId,
+  coverArtSize = 100,
   size = 40,
   altText,
 }: CoverImageProps) {
@@ -33,8 +34,11 @@ export function CoverImage({
         setSizes(),
       )}
     >
-      <LazyLoadImage
-        src={getCoverArtUrl(coverArt, coverArtType, coverArtSize.toString())}
+      <CachedImage
+        coverArtId={coverArt}
+        coverArtType={coverArtType}
+        albumId={albumId}
+        coverArtSize={coverArtSize.toString()}
         alt={altText}
         effect="opacity"
         width={size}

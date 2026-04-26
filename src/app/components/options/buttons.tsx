@@ -1,19 +1,22 @@
 import omit from "lodash/omit";
 import {
-  CheckIcon,
+  Disc3,
   DownloadIcon,
+  Heart,
   Info,
   ListEnd,
   ListPlus,
+  ListX,
   Pencil,
   PlayIcon,
   PlusIcon,
-  PodcastIcon,
   Trash,
+  User,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ContextMenuItem } from "@/app/components/ui/context-menu";
 import { DropdownMenuItem } from "@/app/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import { MenuItemFactory } from "./menu-item-factory";
 import { SubMenuFactory } from "./sub-menu-factory";
 
@@ -143,6 +146,22 @@ function RemoveFromPlaylist({
   );
 }
 
+function RemoveFromQueue({
+  variant = "dropdown",
+  ...props
+}: DropdownMenuItemProps) {
+  const { t } = useTranslation();
+
+  return (
+    <MenuItemFactory
+      variant={variant}
+      icon={<ListX className="mr-2 h-4 w-4" />}
+      label={t("options.removeFromQueue")}
+      {...props}
+    />
+  );
+}
+
 function SongInfo({ variant = "dropdown", ...props }: DropdownMenuItemProps) {
   const { t } = useTranslation();
 
@@ -156,40 +175,52 @@ function SongInfo({ variant = "dropdown", ...props }: DropdownMenuItemProps) {
   );
 }
 
-function MarkAsPlayed({
-  variant = "dropdown",
-  ...props
-}: DropdownMenuItemProps) {
+function GotoArtist({ variant = "dropdown", ...props }: DropdownMenuItemProps) {
   const { t } = useTranslation();
 
   return (
     <MenuItemFactory
       variant={variant}
-      icon={<CheckIcon className="mr-2 h-4 w-4" />}
-      label={t("options.markAsPlayed")}
+      icon={<User className="mr-2 h-4 w-4" />}
+      label={t("options.goto.artist")}
       {...props}
     />
   );
 }
 
-type GotoPodcastProps = DropdownMenuItemProps & {
-  type: "podcast" | "episode";
-};
-
-function GotoPodcast({
-  variant = "dropdown",
-  type = "podcast",
-  ...props
-}: GotoPodcastProps) {
+function GotoAlbum({ variant = "dropdown", ...props }: DropdownMenuItemProps) {
   const { t } = useTranslation();
-
-  const label = t(`options.goto.${type}`);
 
   return (
     <MenuItemFactory
       variant={variant}
-      icon={<PodcastIcon className="mr-2 h-4 w-4" />}
-      label={label}
+      icon={<Disc3 className="mr-2 h-4 w-4" />}
+      label={t("options.goto.album")}
+      {...props}
+    />
+  );
+}
+
+type LikeProps = DropdownMenuItemProps & {
+  isStarred?: boolean;
+  label?: string;
+};
+
+function Like({ variant = "dropdown", isStarred, label, ...props }: LikeProps) {
+  const { t } = useTranslation();
+
+  return (
+    <MenuItemFactory
+      variant={variant}
+      icon={
+        <Heart
+          className={cn(
+            "mr-2 h-4 w-4",
+            isStarred && "text-red-500 fill-red-500",
+          )}
+        />
+      }
+      label={label ?? (isStarred ? t("options.unlike") : t("options.like"))}
       {...props}
     />
   );
@@ -200,11 +231,13 @@ export const OptionsButtons = {
   PlayNext,
   PlayLast,
   Download,
+  Like,
   AddToPlaylistOption,
   EditPlaylist,
   RemovePlaylist,
   RemoveFromPlaylist,
+  RemoveFromQueue,
   SongInfo,
-  MarkAsPlayed,
-  GotoPodcast,
+  GotoArtist,
+  GotoAlbum,
 };

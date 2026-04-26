@@ -30,15 +30,14 @@ async function getRandomSongs({
     },
   });
 
-  return response?.data.randomSongs.song;
+  return response.data.randomSongs.song;
 }
 
 async function getFavoriteSongs() {
   const response = await httpClient<FavoritesResponse>("/getStarred2", {
     method: "GET",
   });
-  console.log(response);
-  return response?.data.starred2;
+  return response.data.starred2;
 }
 
 async function getTopSongs(artistName: string) {
@@ -49,7 +48,7 @@ async function getTopSongs(artistName: string) {
     },
   });
 
-  return response?.data.topSongs.song;
+  return response.data.topSongs.song;
 }
 
 async function getAllSongs(songCount: number) {
@@ -72,7 +71,7 @@ async function getSong(id: string) {
     },
   });
 
-  return response?.data.song;
+  return response.data.song;
 }
 
 export const songs = {

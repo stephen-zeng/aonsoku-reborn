@@ -1,17 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MouseEvent } from "react";
+import { type MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/app/components/ui/alert-dialog";
+import { ConfirmationDialog } from "@/app/components/ui/confirmation-dialog";
 import { subsonic } from "@/service/subsonic";
 import { useRadios } from "@/store/radios.store";
 import { Radio } from "@/types/responses/radios";
@@ -46,23 +37,12 @@ export function RemoveRadioDialog() {
   }
 
   return (
-    <AlertDialog open={confirmDeleteState}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t("radios.form.delete.title")}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t("radios.form.delete.description")}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => setConfirmDeleteState(false)}>
-            {t("logout.dialog.cancel")}
-          </AlertDialogCancel>
-          <AlertDialogAction onClick={handleRemoveRadio}>
-            {t("logout.dialog.confirm")}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmationDialog
+      open={confirmDeleteState}
+      onOpenChange={setConfirmDeleteState}
+      title={t("radios.form.delete.title")}
+      description={t("radios.form.delete.description")}
+      onConfirm={handleRemoveRadio}
+    />
   );
 }

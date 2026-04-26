@@ -16,8 +16,9 @@
     "favorites": "Favorites",
     "playlists": "Playlists",
     "radios": "Radios",
-    "podcasts": "Podcasts",
-    "emptyPlaylist": "No playlists created yet"
+    "emptyPlaylist": "No playlists created yet",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar"
   },
   "menu": {
     "language": "Language",
@@ -31,6 +32,7 @@
     "hideDetails": "Hide details",
     "viewAll": "View all",
     "loading": "Loading…",
+    "clear": "Clear",
     "viewMode": {
       "label": "View Mode",
       "modes": {
@@ -63,6 +65,17 @@
     "tinacious-design": "Tinacious Design",
     "vue-dark": "Vue Dark",
     "vim-dark-soft": "Vim Dark Soft"
+  },
+  "favorites": {
+    "headline": "Favorites",
+    "songCount_one": "{{count}} song",
+    "songCount_other": "{{count}} songs",
+    "duration": "~ {{duration}}",
+    "noSongs": "No favorite songs yet!",
+    "buttons": {
+      "play": "Play {{name}}",
+      "shuffle": "Play {{name}} in shuffle mode"
+    }
   },
   "playlist": {
     "headline": "Playlist",
@@ -208,87 +221,6 @@
     "recentAlbums": "Recent albums",
     "relatedArtists": "Related artists"
   },
-  "podcasts": {
-    "form": {
-      "latestEpisodes": "Latest Episodes",
-      "addButton": "Add Podcast",
-      "search": "Search podcasts…",
-      "dialog": {
-        "title": "Create Podcast",
-        "feedUrl": "Feed URL",
-        "message": "You can add multiple URLs, one per line.",
-        "saveButton": "Save",
-        "validations": {
-          "url": "Please provide valid URLs.",
-          "urlLength": "URLs must be at least 10 characters",
-          "protocol": "URLs must start with http:// or https://",
-          "atLeastOneUrl": "Please provide at least one URL."
-        }
-      },
-      "toasts": {
-        "success": "Podcast created successfully! It will be available to listen to in just a few minutes!",
-        "error": "Failed to create podcast!"
-      }
-    },
-    "emptyPage": {
-      "message": "No podcasts added",
-      "description": "It looks like you have not added any podcasts yet. Add one above!"
-    },
-    "latestEpisodes": {
-      "emptyPage": {
-        "message": "No episodes available",
-        "description": "Try adding more podcasts.",
-        "goToPodcasts": "Go to Podcasts"
-      }
-    },
-    "emptyResults": {
-      "title": "No results found.",
-      "info": "We couldn't find any podcasts matching your search term.",
-      "action": "Please check your spelling or try different keywords."
-    },
-    "filters": {
-      "episodes": {
-        "search": "Search episodes…",
-        "orderBy": {
-          "publishDate": "Publish Date",
-          "title": "Title",
-          "duration": "Duration"
-        }
-      },
-      "podcasts": {
-        "orderBy": {
-          "title": "Title",
-          "episodeCount": "Episode Count"
-        }
-      }
-    },
-    "header": {
-      "episodeCount_one": "{{count}} episode",
-      "episodeCount_many": "{{count}} episodes",
-      "episodeCount_other": "{{count}} episodes",
-      "feed": "Feed",
-      "website": "Official Website",
-      "unfollow": {
-        "tooltip": "Unfollow {{title}}",
-        "dialog": {
-          "title": "Are you sure you want to unfollow this podcast?",
-          "description": "To listen to this podcast again in the future, you'll need to recreate it."
-        },
-        "toasts": {
-          "success": "You have successfully unfollowed the podcast!",
-          "error": "An error occurred while trying to unfollow the podcast. Please try again."
-        }
-      }
-    },
-    "list": {
-      "episodes": "Episodes",
-      "notFoundMessage": "This podcast doesn't have any episodes yet!",
-      "progress": {
-        "remainingTime": "{{time}} remaining",
-        "completed": "Completed"
-      }
-    }
-  },
   "table": {
     "columns": {
       "title": "Title",
@@ -353,9 +285,14 @@
     "noLyrics": "No lyrics found",
     "loadingLyrics": "Searching for lyrics…",
     "queue": "Queue",
+    "queueHistory": "History",
+    "queueContinue": "Continue Playing",
+    "queueRepeating": "Repeating",
+    "queueFromSource": "From {{source}}",
     "playing": "Playing now",
     "lyrics": "Lyrics",
-    "switchButton": "Switch to Big Player"
+    "switchButton": "Switch to Big Player",
+    "emptyQueue": "No songs in queue"
   },
   "logout": {
     "dialog": {
@@ -423,6 +360,9 @@
       },
       "like": "Like {{song}} by {{artist}}",
       "dislike": "Remove like from {{song}} by {{artist}}",
+      "star": "Star current song",
+      "unstar": "Unstar current song",
+      "progress": "Seek",
       "miniPlayer": {
         "open": "Open Miniplayer",
         "close": "Close Miniplayer"
@@ -433,11 +373,16 @@
       }
     }
   },
+  "error": {
+    "notFound": "Not found"
+  },
   "options": {
     "play": "Play",
     "playNext": "Play next",
-    "addLast": "Add last",
+    "addLast": "Add to queue",
     "download": "Download",
+    "like": "Like",
+    "unlike": "Unlike",
     "playlist": {
       "add": "Add to playlist",
       "edit": "Edit playlist",
@@ -447,11 +392,11 @@
       "notFound": "No playlist found",
       "removeSong": "Remove from playlist"
     },
+    "removeFromQueue": "Remove from queue",
     "info": "Get info",
-    "markAsPlayed": "Mark as played",
     "goto": {
-      "episode": "Go to episode",
-      "podcast": "Go to podcast"
+      "artist": "Go to artist",
+      "album": "Go to album"
     }
   },
   "radios": {
@@ -582,6 +527,11 @@
       "started": "The update process has started.",
       "success": "The update has been installed! The app will now restart.",
       "error": "Failed to install the update. Please try downloading it directly from GitHub."
+    },
+    "sw": {
+      "updating": "Updating...",
+      "refresh": "Refresh to update",
+      "error": "Update failed – Retry"
     }
   },
   "about": {
@@ -590,6 +540,7 @@
     "version": "Version",
     "type": "Type",
     "apiVersion": "API Version",
+    "buildTime": "Build Time",
     "toasts": {
       "copy": "Link copied to clipboard!"
     }
@@ -607,7 +558,46 @@
       "content": "Content",
       "accounts": "Accounts",
       "desktop": "Desktop Application",
-      "privacy": "Privacy & Security"
+      "server": "Server",
+      "privacy": "Privacy & Security",
+      "storage": "Storage"
+    },
+    "server": {
+      "group": "Server",
+      "description": "Manage the primary server and optional fallback URL used at startup.",
+      "primaryUrl": {
+        "label": "Primary URL",
+        "info": "The server URL Aonsoku tries first when the app starts.",
+        "placeholder": "https://your-server.example.com"
+      },
+      "fallbackUrl": {
+        "label": "Fallback URL",
+        "info": "Optional server URL used when the primary URL cannot be reached at startup.",
+        "placeholder": "https://fallback-server.example.com"
+      },
+      "activeUrl": {
+        "label": "Current URL",
+        "info": "The server URL currently used by this app session.",
+        "empty": "No server selected"
+      },
+      "activeType": {
+        "label": "Current server",
+        "info": "Shows whether this session is using the primary or fallback URL.",
+        "primary": "Primary URL",
+        "fallback": "Fallback URL",
+        "none": "Not connected"
+      },
+      "validation": {
+        "primaryUrl": "Please enter a valid primary URL.",
+        "fallbackUrl": "Please enter a valid fallback URL."
+      },
+      "toast": {
+        "success": "Server URLs saved successfully.",
+        "error": "Unable to reach the primary or fallback server."
+      },
+      "save": "Save server URLs",
+      "saving": "Saving...",
+      "locked": "Server URL settings are locked by this deployment."
     },
     "appearance": {
       "general": {
@@ -616,6 +606,10 @@
         "fullscreen": {
           "label": "Enable automatic fullscreen",
           "info": "If enabled, when accessing the big player, the app will automatically enter fullscreen mode."
+        },
+        "albumCoverForSongs": {
+          "label": "Always use album covers",
+          "info": "When enabled, every song artwork request uses the album cover to reduce loading time."
         }
       },
       "colors": {
@@ -657,6 +651,18 @@
         "preferSynced": {
           "label": "Prefer synced lyrics",
           "info": "When enabled, synced lyrics will be prioritized over unsynced lyrics."
+        },
+        "showTranslation": {
+          "label": "Show translation",
+          "info": "When available, show translated lyrics below the original lyrics."
+        }
+      },
+      "history": {
+        "group": "Play History",
+        "description": "Songs that play for more than 10 seconds are recorded in your play history.",
+        "maxSize": {
+          "label": "Maximum history size",
+          "info": "The maximum number of songs to keep in play history. Older entries are removed when the limit is exceeded."
         }
       }
     },
@@ -670,28 +676,61 @@
         }
       }
     },
+    "storage": {
+      "coverArt": {
+        "group": "Cover Art Cache",
+        "description": "Cache album cover images for faster loading.",
+        "enabled": "Enable cover art cache",
+        "size": "Cache size",
+        "entries": "{{count}} images cached",
+        "clear": "Clear cover art cache"
+      },
+      "audio": {
+        "group": "Audio Cache",
+        "description": "Cache audio files for instant playback on repeated listens.",
+        "enabled": "Enable audio cache",
+        "maxSize": "Maximum cache size",
+        "size": "Cache size",
+        "entries": "{{count}} songs cached",
+        "clear": "Clear audio cache"
+      },
+      "metadata": {
+        "group": "All Caches",
+        "description": "Clear all cached data including metadata, cover art, and audio files.",
+        "clear": "Clear all caches"
+      },
+      "sync": {
+        "group": "Sync on Launch",
+        "description": "Cache all metadata on every app launch for offline browsing. Audio files are never synced.",
+        "enabled": "Enable sync on launch",
+        "coverArt": "Include cover art",
+        "coverArtInfo": "Download all album and artist images during sync. This may use significant storage and bandwidth.",
+        "lastSynced": "Last synced",
+        "never": "Never",
+        "syncNow": "Sync Now",
+        "cancel": "Cancel",
+        "clear": "Clear",
+        "entries": "{{count}} items synced",
+        "phases": {
+          "idle": "Preparing…",
+          "genres": "Syncing genres…",
+          "artists": "Syncing artists…",
+          "playlists": "Syncing playlists…",
+          "albums": "Syncing albums…",
+          "songs": "Syncing songs…",
+          "coverArt": "Syncing cover art…",
+          "done": "Sync complete",
+          "error": "Sync failed",
+          "cancelled": "Sync cancelled"
+        }
+      }
+    },
     "content": {
       "sidebar": {
         "group": "Sidebar",
         "description": "Manage the visibility and organization of sections displayed in the sidebar.",
         "radios": {
           "section": "Hide radios section"
-        }
-      },
-      "podcast": {
-        "group": "Podcasts",
-        "description": "Enable integration with the Aonsoku Podcasts service.",
-        "enabled": {
-          "label": "Enable Integration"
-        },
-        "service": {
-          "url": "Podcast Service URL"
-        },
-        "credentials": {
-          "label": "Use Logged-In User and Server URL",
-          "error": "Username and Server URL are required.",
-          "user": "Username",
-          "url": "Server URL"
         }
       }
     },
@@ -729,6 +768,7 @@
           "info": "Manually check for available updates."
         },
         "checking": "Checking for updates...",
+        "checkingManually": "Checking for updates...",
         "upToDate": "You're up to date",
         "updateAvailable": "Update Available",
         "updateAvailableDesc": "Version {{version}} is available",
@@ -771,7 +811,10 @@
         "serverError": "Failed to start LAN control server.",
         "passwordRegenerated": "Password regenerated successfully.",
         "addressCopied": "Server address copied to clipboard.",
-        "passwordCopied": "Password copied to clipboard."
+        "passwordCopied": "Password copied to clipboard.",
+        "copyPassword": "Copy password",
+        "copyAddress": "Copy address",
+        "regeneratePassword": "Regenerate password"
       }
     }
   },
@@ -857,5 +900,14 @@
       "y": "1 year",
       "yy": "%d years"
     }
+  },
+  "offline": {
+    "mode": "Offline",
+    "reconnecting": "Reconnecting…",
+    "reconnected": "Reconnected to server",
+    "reconnectFailed": "Could not reconnect. Continuing in offline mode.",
+    "songUnavailable": "This song is not available offline",
+    "disconnected": "Server unreachable. Entering offline mode.",
+    "searchUnavailable": "Search requires an offline library sync."
   }
 }

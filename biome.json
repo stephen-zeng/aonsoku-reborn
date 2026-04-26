@@ -18,7 +18,13 @@
       "arrowParentheses": "always",
       "trailingCommas": "all"
     },
-    "globals": ["navigator", "window", "document"]
+    "globals": [
+      "navigator",
+      "window",
+      "document",
+      "__BUILD_HASH__",
+      "__BUILD_TIME__"
+    ]
   },
   "json": {
     "formatter": {

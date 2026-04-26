@@ -18,17 +18,11 @@ export function radiosColumns(): ColumnDefType<Radio>[] {
       header: () => {
         return <div className="w-full text-center">#</div>;
       },
-      cell: ({ row, table }) => {
+      cell: ({ row }) => {
         const trackNumber = row.index + 1;
         const radio = row.original;
 
-        return (
-          <PlaySongButton
-            trackNumber={trackNumber}
-            trackId={radio.id}
-            handlePlayButton={() => table.options.meta?.handlePlaySong?.(row)}
-          />
-        );
+        return <PlaySongButton trackNumber={trackNumber} trackId={radio.id} />;
       },
     },
     {

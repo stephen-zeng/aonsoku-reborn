@@ -1,0 +1,199 @@
+import { useSortable } from "@dnd-kit/sortable";
+import type { DraggableAttributes, SyntheticListenerMap } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
+import clsx from "clsx";
+import { EllipsisVertical, GripVertical, PlayIcon } from "lucide-react";
+import { CSSProperties, forwardRef, useState } from "react";
+import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
+import { ContextMenuProvider } from "@/app/components/table/context-menu";
+import { Button } from "@/app/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/app/components/ui/dropdown-menu";
+import { ISong } from "@/types/responses/song";
+import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
+import { useSongCoverArtUrl } from "@/utils/coverArt";
+import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
+import { QueueMenuOptions } from "./queue-menu-options";
+
+interface QueueItemRowProps {
+  song: ISong;
+  isPlaying: boolean;
+  isActive: boolean;
+  onPlay: () => void;
+  style?: CSSProperties;
+  tier?: "context" | "user";
+}
+
+export function SortableQueueItem({
+  id,
+  ...props
+}: QueueItemRowProps & { id: string }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style: CSSProperties = {
+    ...props.style,
+    transform: CSS.Translate.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : undefined,
+    zIndex: isDragging ? 1 : undefined,
+  };
+
+  return (
+    <QueueItemRow
+      ref={setNodeRef}
+      {...props}
+      style={style}
+      dragAttributes={attributes}
+      dragListeners={listeners}
+    />
+  );
+}
+
+interface InternalQueueItemRowProps extends QueueItemRowProps {
+  dragAttributes?: DraggableAttributes;
+  dragListeners?: SyntheticListenerMap;
+}
+
+export const QueueItemRow = forwardRef<
+  HTMLDivElement,
+  InternalQueueItemRowProps
+>(function QueueItemRow(
+  {
+    song,
+    isPlaying,
+    isActive,
+    onPlay,
+    style,
+    dragAttributes,
+    dragListeners,
+    tier,
+  },
+  ref,
+) {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const coverArtUrl = useSongCoverArtUrl(song, "100");
+
+  return (
+    <ContextMenuProvider
+      options={<QueueMenuOptions variant="context" song={song} tier={tier} />}
+    >
+      <div
+        ref={ref}
+        className={clsx([
+          "group/queuerow flex items-center w-full h-16 text-sm rounded-md px-3 gap-2",
+          "hover:bg-muted",
+          isActive && "bg-accent",
+        ])}
+        style={style}
+        {...dragAttributes}
+      >
+        <span
+          className="text-foreground/30 shrink-0 cursor-grab select-none py-2 -my-2 touch-none"
+          {...dragListeners}
+        >
+          <GripVertical className="w-4 h-4" />
+        </span>
+        <div
+          className="group/cover relative w-10 h-10 flex-shrink-0 cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPlay();
+          }}
+        >
+          <div className="w-10 h-10 bg-accent rounded overflow-hidden">
+            <img
+              src={coverArtUrl}
+              className="w-10 h-10 rounded text-transparent object-cover"
+              alt={`${song.title} - ${song.artist}`}
+            />
+          </div>
+          {isPlaying && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded">
+              <EqualizerBars size={18} className="text-white mb-0.5" />
+            </div>
+          )}
+          <div
+            className={clsx(
+              "absolute inset-0 flex items-center justify-center bg-black/40 rounded",
+              "opacity-0 group-hover/cover:opacity-100 transition-opacity",
+            )}
+          >
+            <PlayIcon size={16} className="text-white fill-white" />
+          </div>
+        </div>
+
+        <div className="flex flex-col min-w-0 flex-1">
+          <span className="font-semibold truncate text-sm">{song.title}</span>
+          <QueueArtists song={song} />
+        </div>
+
+        <div className="relative w-[60px] flex-shrink-0 flex items-center justify-end">
+          <span
+            className={clsx(
+              "text-xs transition-opacity",
+              !dropdownOpen && "group-hover/queuerow:opacity-0",
+              dropdownOpen && "opacity-0",
+            )}
+          >
+            {convertSecondsToTime(song.duration)}
+          </span>
+          <div className="absolute inset-0 flex items-center justify-end">
+            <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={clsx(
+                    "w-8 h-8 p-1 rounded-full",
+                    "data-[state=open]:opacity-100",
+                    "opacity-0 group-hover/queuerow:opacity-100 transition-opacity",
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  <EllipsisVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <QueueMenuOptions variant="dropdown" song={song} />
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </div>
+    </ContextMenuProvider>
+  );
+});
+
+function QueueArtists({ song }: { song: ISong }) {
+  const { artist, artists } = song;
+
+  if (artists && artists.length > 1) {
+    const names = artists
+      .slice(0, ALBUM_ARTISTS_MAX_NUMBER)
+      .map((a) => a.name)
+      .join(", ");
+
+    return (
+      <span className="font-normal text-xs opacity-70 truncate">{names}</span>
+    );
+  }
+
+  return (
+    <span className="font-normal text-xs opacity-70 truncate">{artist}</span>
+  );
+}

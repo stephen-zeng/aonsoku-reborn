@@ -23,7 +23,10 @@ function Container({ children, className, ...rest }: ActionsContainerProps) {
   return (
     <div
       {...rest}
-      className={cn("w-full my-6 flex items-center gap-1", className)}
+      className={cn(
+        "w-full my-3 md:my-6 flex items-center justify-center md:justify-start gap-1",
+        className,
+      )}
     >
       {children}
     </div>
@@ -46,11 +49,11 @@ function Button({
   const button = (
     <ComponentButton
       className={cn(
-        "rounded-full w-14 h-14 ease-linear duration-100 transition",
+        "rounded-full ease-linear duration-100 transition",
         "border-[1px] border-transparent",
         buttonStyle === "primary"
-          ? "hover:scale-105 mr-2"
-          : "hover:bg-foreground/20",
+          ? "w-14 h-14 hover:scale-105"
+          : "w-12 h-12 md:w-14 md:h-14 hover:bg-foreground/20",
         className,
       )}
       variant={buttonStyle === "primary" ? "default" : "ghost"}
@@ -79,7 +82,7 @@ function Dropdown({ tooltip, options }: DropdownProps) {
       >
         <ComponentButton
           className={clsx(
-            "rounded-full w-14 h-14 border-transparent",
+            "rounded-full w-12 h-12 md:w-14 md:h-14 border-transparent",
             "data-[state=open]:bg-foreground/20",
             "hover:bg-foreground/20",
             "ease-linear duration-100 transition",
@@ -87,7 +90,7 @@ function Dropdown({ tooltip, options }: DropdownProps) {
           variant="ghost"
         >
           <SimpleTooltip text={tooltip}>
-            <div className="min-w-14 h-14 rounded-full flex justify-center items-center">
+            <div className="min-w-12 h-12 md:min-w-14 md:h-14 rounded-full flex justify-center items-center">
               <EllipsisIcon />
             </div>
           </SimpleTooltip>

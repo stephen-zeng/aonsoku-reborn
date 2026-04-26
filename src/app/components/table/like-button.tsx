@@ -1,65 +1,89 @@
 import { clsx } from "clsx";
 import { Heart } from "lucide-react";
-import { useEffect, useState } from "react";
-
+import { useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import { Button } from "@/app/components/ui/button";
+import { useSongStarMutation } from "@/app/hooks/use-song-star-mutation";
 import { subsonic } from "@/service/subsonic";
 import {
-  usePlayerActions,
-  usePlayerMediaType,
-  usePlayerSonglist,
+  usePlayerCurrentSong,
   usePlayerSongStarred,
 } from "@/store/player.store";
-import { isMobile } from "react-device-detect";
+import { queryKeys } from "@/utils/queryKeys";
 
 interface TableLikeButtonProps {
   type: "song" | "artist";
   starred: boolean;
   entityId: string;
+  albumId?: string;
 }
 
 export function TableLikeButton({
   entityId,
   starred,
   type,
+  albumId,
 }: TableLikeButtonProps) {
-  const [isStarred, setIsStarred] = useState(starred);
-  const { currentSong } = usePlayerSonglist();
+  const songStar = useSongStarMutation({
+    songId: entityId,
+    initialStarred: starred,
+    albumId,
+  });
+
+  const currentSong = usePlayerCurrentSong();
   const isSongStarred = usePlayerSongStarred();
-  const { isRadio, isSong } = usePlayerMediaType();
-  const { starCurrentSong, starSongInQueue } = usePlayerActions();
 
   useEffect(() => {
     if (type === "artist") return;
-    if (isRadio) return;
-
-    const isSongPlaying = currentSong.id === entityId;
-
-    if (isSongPlaying) setIsStarred(isSongStarred);
-  }, [currentSong, entityId, isSongStarred, isRadio, type]);
-
-  async function handleStarred() {
-    const state = !isStarred;
-
-    await subsonic.star.handleStarItem({
-      id: entityId,
-      starred: isStarred,
-    });
-    setIsStarred(state);
-
-    if (type === "song" && isSong) {
-      const isSongPlaying = currentSong.id === entityId;
-      isSongPlaying ? starCurrentSong() : starSongInQueue(entityId);
+    if (currentSong?.id === entityId) {
+      songStar.setIsStarred(isSongStarred);
     }
+  }, [currentSong?.id, entityId, isSongStarred, type, songStar.setIsStarred]);
+
+  const queryClient = useQueryClient();
+
+  const artistStarMutation = useMutation({
+    mutationFn: subsonic.star.handleStarItem,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.artist.single, entityId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.favorites.count],
+      });
+    },
+  });
+
+  function handleStarred() {
+    if (type === "song") {
+      songStar.toggleStar();
+      return;
+    }
+
+    artistStarMutation.mutate(
+      { id: entityId, starred },
+      {
+        onError: () => {
+          queryClient.invalidateQueries({
+            queryKey: [queryKeys.artist.single, entityId],
+          });
+        },
+      },
+    );
   }
+
+  const isStarred = type === "song" ? songStar.isStarred : starred;
+  const hasHover = useHasHover();
 
   return (
     <Button
       variant="ghost"
+      disabled={songStar.isPending || artistStarMutation.isPending}
       className={clsx(
         "w-8 h-8 p-1 rounded-full transition-opacity",
         !isStarred && "opacity-0 group-hover/tablerow:opacity-100",
-        isMobile && "opacity-100",
+        !hasHover && "opacity-100",
       )}
       onClick={(e) => {
         e.stopPropagation();

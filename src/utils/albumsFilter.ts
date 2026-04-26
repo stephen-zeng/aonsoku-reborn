@@ -88,17 +88,6 @@ export enum SortOptions {
   Desc = "desc",
 }
 
-export enum EpisodesOrderByOptions {
-  PublishedAt = "published_at",
-  Title = "title",
-  Duration = "duration",
-}
-
-export enum PodcastsOrderByOptions {
-  Title = "title",
-  EpisodeCount = "episode_count",
-}
-
 export enum SongsOrderByOptions {
   LastAdded = "created",
   Artist = "artist",

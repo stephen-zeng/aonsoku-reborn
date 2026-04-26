@@ -7,8 +7,10 @@ import { Content } from "./content";
 import { Desktop } from "./desktop";
 import { Language } from "./language";
 import { Privacy } from "./privacy";
+import { ServerSettings } from "./server";
 
 const pages: Record<SettingsOptions, JSX.Element> = {
+  server: <ServerSettings />,
   appearance: <Appearance />,
   audio: <Audio />,
   language: <Language />,

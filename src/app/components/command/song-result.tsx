@@ -50,6 +50,7 @@ export function CommandSongResult({
               <ResultItem
                 coverArt={song.coverArt}
                 coverArtType="song"
+                albumId={song.albumId}
                 title={song.title}
                 artist={song.artist}
                 onClick={() => playSong(song)}

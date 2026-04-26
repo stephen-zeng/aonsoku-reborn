@@ -1,7 +1,9 @@
 import { httpClient } from "@/api/httpClient";
 import {
   CreateParams,
+  Playlist,
   PlaylistsResponse,
+  PlaylistWithEntries,
   PlaylistWithEntriesResponse,
   SinglePlaylistResponse,
   UpdateParams,
@@ -13,10 +15,10 @@ async function getAll() {
     method: "GET",
   });
 
-  return response?.data.playlists.playlist ?? [];
+  return response.data.playlists.playlist ?? [];
 }
 
-async function getOne(id: string) {
+async function getOne(id: string): Promise<PlaylistWithEntries | null> {
   const response = await httpClient<PlaylistWithEntriesResponse>(
     "/getPlaylist",
     {
@@ -27,7 +29,7 @@ async function getOne(id: string) {
     },
   );
 
-  return response?.data.playlist;
+  return response.data.playlist;
 }
 
 async function remove(id: string) {
@@ -54,7 +56,7 @@ async function create(name: string, songs?: string[]) {
     },
   );
 
-  return response?.data.playlist;
+  return response.data.playlist as Playlist;
 }
 
 async function update({

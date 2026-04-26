@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Badge } from "@/app/components/ui/badge";
+import { Button } from "@/app/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -7,16 +9,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/app/components/ui/dialog";
-import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
-import { Badge } from "@/app/components/ui/badge";
-import { useLanControlClientStore } from "@/store/lanControlClient.store";
-import { useLanControlServerInfo } from "@/store/lanControl.store";
-import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 import { subsonic } from "@/service/subsonic";
+import { useLanControlServerInfo } from "@/store/lanControl.store";
+import { useLanControlClientStore } from "@/store/lanControlClient.store";
 import { ISong } from "@/types/responses/song";
-import { getCoverArtUrl } from "@/api/httpClient";
+import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
+import { useCoverArtUrlFromSongPreference } from "@/utils/coverArt";
 
 interface RemoteControlDialogProps {
   open: boolean;
@@ -114,13 +114,15 @@ export function RemoteControlDialog({
     currentSong?.artist ||
     t("lanControl.remote.emptyArtist");
   const displayAlbum = fullSongInfo?.album || currentSong?.album || "";
-  const coverArtUrl = fullSongInfo?.coverArt
-    ? getCoverArtUrl(fullSongInfo.coverArt)
-    : null;
+  const coverArtUrl = useCoverArtUrlFromSongPreference({
+    coverArt: fullSongInfo?.coverArt ?? currentSong?.coverArt,
+    coverArtType: "song",
+    albumId: fullSongInfo?.albumId ?? currentSong?.albumId,
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("lanControl.remote.title")}</DialogTitle>
           <DialogDescription>
@@ -256,7 +258,7 @@ export function RemoteControlDialog({
               )}
             </header>
             <div className="flex gap-3">
-              {coverArtUrl && (
+              {(fullSongInfo?.coverArt || currentSong?.coverArt) && (
                 <div className="shrink-0">
                   <img
                     src={coverArtUrl}

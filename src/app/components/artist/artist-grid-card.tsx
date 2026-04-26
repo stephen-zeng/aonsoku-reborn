@@ -1,6 +1,5 @@
 import { memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { getCoverArtUrl } from "@/api/httpClient";
 import { PreviewCard } from "@/app/components/preview-card/card";
 import { useSongList } from "@/app/hooks/use-song-list";
 import { ROUTES } from "@/routes/routesList";
@@ -20,15 +19,16 @@ function ArtistCard({ artist }: ArtistCardProps) {
     const songList = await getArtistAllSongs(artist.id);
 
     if (songList) {
-      setSongList(songList, 0);
+      setSongList(songList, 0, false, undefined, artist.name);
     }
-  }, [artist.id, getArtistAllSongs, setSongList]);
+  }, [artist.id, artist.name, getArtistAllSongs, setSongList]);
 
   return (
     <PreviewCard.Root className="flex flex-col w-full h-full">
       <PreviewCard.ImageWrapper link={ROUTES.ARTIST.PAGE(artist.id)}>
         <PreviewCard.Image
-          src={getCoverArtUrl(artist.coverArt, "artist")}
+          coverArtId={artist.coverArt}
+          coverArtType="artist"
           alt={artist.name}
         />
         <PreviewCard.PlayButton onClick={handlePlayArtistRadio} />

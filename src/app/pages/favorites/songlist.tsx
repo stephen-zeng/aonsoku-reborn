@@ -1,95 +1,138 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
-import { ShadowHeader } from "@/app/components/album/shadow-header";
-import { InfinitySongListFallback } from "@/app/components/fallbacks/song-fallbacks";
-import { HeaderTitle } from "@/app/components/header-title";
-import { DataTableList } from "@/app/components/ui/data-table-list";
-import { useTotalFavorites } from "@/app/hooks/use-favorite-songs";
+import { useQuery } from "@tanstack/react-query";
+import type { Row } from "@tanstack/react-table";
+import ImageHeader from "@/app/components/album/image-header";
+import {
+  FavoritesButtons,
+  FavoritesIcon,
+} from "@/app/components/favorites/buttons";
+import { BadgesData } from "@/app/components/header-info";
+import ListWrapper from "@/app/components/list-wrapper";
+import { DataTable } from "@/app/components/ui/data-table";
+import { useIsMobile } from "@/app/hooks/use-mobile";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import { songsColumns } from "@/app/tables/songs-columns";
-import { getFavoriteSongs } from "@/queries/songs";
+import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
 import { ColumnFilter } from "@/types/columnFilter";
-import { AlbumsSearchParams } from "@/utils/albumsFilter";
+import { ISong } from "@/types/responses/song";
+import { convertSecondsToHumanRead } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
-import { SearchParamsHandler } from "@/utils/searchParamsHandler";
+
+const COLUMNS_DESKTOP: ColumnFilter[] = [
+  "title",
+  "album",
+  "duration",
+  "playCount",
+  "contentType",
+  "select",
+];
+const COLUMNS_MOBILE: ColumnFilter[] = ["title", "select"];
 
 export default function SongList() {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
+  const hasHover = useHasHover();
   const { setSongList } = usePlayerActions();
-  const [searchParams] = useSearchParams();
-  const { getSearchParam } = new SearchParamsHandler(searchParams);
-  const columns = songsColumns();
 
-  const filter = getSearchParam<string>(AlbumsSearchParams.MainFilter, "");
-  const query = getSearchParam<string>(AlbumsSearchParams.Query, "");
-  const artistId = getSearchParam<string>(AlbumsSearchParams.ArtistId, "");
+  const columns = useMemo(
+    () => songsColumns({ disableTextNavigation: true, hasHover }),
+    [hasHover],
+  );
 
-  async function fetchSongs() {
-    return getFavoriteSongs();
+  const {
+    data: songs,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: [queryKeys.favorites.list],
+    queryFn: async () => {
+      const response = await subsonic.songs.getFavoriteSongs();
+      return response?.song ?? [];
+    },
+  });
+
+  const songlist = useMemo(() => songs ?? [], [songs]);
+
+  const { songCountText, durationText } = useMemo(() => {
+    if (!songlist.length) return { songCountText: null, durationText: null };
+    const totalDuration = songlist.reduce(
+      (acc, song) => acc + (song.duration ?? 0),
+      0,
+    );
+    return {
+      songCountText: t("favorites.songCount", { count: songlist.length }),
+      durationText: t("favorites.duration", {
+        duration: convertSecondsToHumanRead(totalDuration),
+      }),
+    };
+  }, [songlist, t]);
+
+  const badges = useMemo<BadgesData>(
+    () => [
+      { content: songCountText, type: "text" as const },
+      { content: durationText, type: "text" as const },
+    ],
+    [songCountText, durationText],
+  );
+
+  const columnsToShow = isMobile ? COLUMNS_MOBILE : COLUMNS_DESKTOP;
+
+  const songlistRef = useRef(songlist);
+  songlistRef.current = songlist;
+  const sourceName = t("sidebar.favorites");
+  const sourceNameRef = useRef(sourceName);
+  sourceNameRef.current = sourceName;
+
+  const handlePlaySong = useCallback(
+    (row: Row<ISong>) => {
+      setSongList(
+        songlistRef.current,
+        row.index,
+        false,
+        undefined,
+        sourceNameRef.current,
+      );
+    },
+    [setSongList],
+  );
+
+  const customIcon = useMemo(() => <FavoritesIcon />, []);
+
+  if (isLoading) {
+    return null;
   }
 
-  const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } =
-    useInfiniteQuery({
-      queryKey: [queryKeys.song.all, filter, query, artistId],
-      initialPageParam: 0,
-      queryFn: fetchSongs,
-      getNextPageParam: (lastPage) => lastPage.nextOffset,
-    });
-
-  const { data: songCountData, isLoading: songCountIsLoading } =
-    useTotalFavorites();
-
-  if (isLoading && !isFetchingNextPage) {
-    return <InfinitySongListFallback />;
+  if (isError) {
+    return null;
   }
-  if (!data) return null;
-
-  const songlist = data.pages.flatMap((page) => page.songs) ?? [];
-  const songCount = songCountData ?? 0;
-
-  function handlePlaySong(index: number) {
-    if (songlist) setSongList(songlist, index);
-  }
-
-  const columnsToShow: ColumnFilter[] = [
-    "index",
-    "title",
-    // 'artist',
-    "album",
-    "duration",
-    "playCount",
-    "played",
-    "contentType",
-    "select",
-  ];
-
-  const title = t("sidebar.favorites");
 
   return (
-    <div className="w-full h-content">
-      <ShadowHeader
-        showGlassEffect={false}
-        fixed={false}
-        className="relative w-full justify-between items-center"
-      >
-        <HeaderTitle
-          title={title}
-          count={songCount}
-          loading={songCountIsLoading}
-        />
-      </ShadowHeader>
+    <div className="w-full">
+      <ImageHeader
+        type={t("favorites.headline")}
+        title={t("sidebar.favorites")}
+        badges={badges}
+        coverArtType="album"
+        coverArtSize="700"
+        coverArtAlt={t("sidebar.favorites")}
+        customIcon={customIcon}
+        showSimpleSubtitle
+      />
 
-      <div className="w-full h-[calc(100%-80px)] overflow-auto">
-        <DataTableList
+      <ListWrapper>
+        <FavoritesButtons songs={songlist} sourceName={sourceName} />
+
+        <DataTable
           columns={columns}
           data={songlist}
-          handlePlaySong={(row) => handlePlaySong(row.index)}
+          handlePlaySong={handlePlaySong}
           columnFilter={columnsToShow}
-          fetchNextPage={fetchNextPage}
-          hasNextPage={hasNextPage}
+          noRowsMessage={t("favorites.noSongs")}
+          variant="modern"
         />
-      </div>
+      </ListWrapper>
     </div>
   );
 }

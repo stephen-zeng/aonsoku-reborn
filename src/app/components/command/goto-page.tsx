@@ -14,7 +14,6 @@ export function CommandGotoPage({ runCommand }: CommandItemProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const hideRadiosSection = useAppStore().pages.hideRadiosSection;
-  const isPodcastsActive = useAppStore().podcasts.active;
 
   const pages = [...mainMenuItems, ...libraryItems];
 
@@ -22,7 +21,6 @@ export function CommandGotoPage({ runCommand }: CommandItemProps) {
     <CommandGroup heading={t("command.pages")}>
       {pages.map(({ id, route, title }) => {
         if (hideRadiosSection && id === SidebarItems.Radios) return null;
-        if (!isPodcastsActive && id === SidebarItems.Podcasts) return null;
 
         return (
           <CommandItem

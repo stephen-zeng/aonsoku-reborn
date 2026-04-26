@@ -16,9 +16,8 @@ interface PlayerLikeButtonProps {
 export function PlayerLikeButton({ disabled }: PlayerLikeButtonProps) {
   const { t } = useTranslation();
   const isSongStarred = usePlayerSongStarred();
-  const { title: song, artist } = usePlayerStore(
-    (state) => state.songlist.currentSong,
-  );
+  const { title: song, artist } =
+    usePlayerStore((state) => state.songlist.currentSong) || {};
   const { starCurrentSong } = usePlayerActions();
 
   const translationLabel = `player.tooltips.${isSongStarred ? "dislike" : "like"}`;

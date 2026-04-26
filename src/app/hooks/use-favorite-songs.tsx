@@ -9,9 +9,8 @@ async function fetchFavorites() {
   return response?.song ?? [];
 }
 
-async function fetchTotalFavorites() {
+async function fetchTotalFavorites(): Promise<number> {
   const storedFavoriteCount = useAppStore.getState().data.favoriteCount;
-
   if (storedFavoriteCount && storedFavoriteCount > 0) {
     return storedFavoriteCount;
   }

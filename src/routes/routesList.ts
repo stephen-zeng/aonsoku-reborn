@@ -8,8 +8,6 @@ const LIBRARY = {
   ALBUMS: "/library/albums",
   FAVORITES: "/library/favorites",
   PLAYLISTS: "/library/playlists",
-  PODCASTS: "/library/podcasts",
-  EPISODES: "/library/episodes",
   RADIOS: "/library/radios",
 };
 
@@ -55,28 +53,24 @@ const PLAYLIST = {
   PATH: `${LIBRARY.PLAYLISTS}/:playlistId`,
 };
 
-const PODCASTS = {
-  PAGE: (podcastId: string) => `${LIBRARY.PODCASTS}/${podcastId}`,
-  PATH: `${LIBRARY.PODCASTS}/:podcastId`,
-};
-
-const EPISODES = {
-  PAGE: (episodeId: string) => `${LIBRARY.EPISODES}/${episodeId}`,
-  PATH: `${LIBRARY.EPISODES}/:episodeId`,
-  LATEST: `${LIBRARY.EPISODES}/latest`,
-};
-
 const SERVER_CONFIG = "/server-config";
+
+const MOBILE = {
+  LIBRARY: "/mobile/library",
+  SEARCH: "/mobile/search",
+  SETTINGS: "/mobile/settings",
+};
+
+export const PLAYER_SEARCH_PARAM = "player";
 
 export const ROUTES = {
   LIBRARY,
+  MOBILE,
   ARTIST,
   ALBUM,
   ALBUMS,
   SONGS,
   FAVORITES,
   PLAYLIST,
-  PODCASTS,
-  EPISODES,
   SERVER_CONFIG,
 };

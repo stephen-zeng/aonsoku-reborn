@@ -1,35 +1,148 @@
 {
-  "menu": {
-    "serverLogout": "Выйти из аккаунта",
-    "language": "Язык",
+  "about": {
+    "apiVersion": "Версия API",
+    "buildTime": "Build Time",
+    "client": "Клиент",
     "server": "Сервер",
-    "about": "Описание"
+    "toasts": {
+      "copy": "Ссылка скопирована в буфер обмена!"
+    },
+    "type": "Тип",
+    "version": "Версия"
   },
-  "home": {
-    "recentlyAdded": "Недавно добавлено",
-    "recentlyPlayed": "Недавно прослушанные",
-    "mostPlayed": "Наиболее прослушиваемые",
-    "explore": "Обзор"
+  "album": {
+    "buttons": {
+      "dislike": "Убрать лайк с {{name}}",
+      "like": "Лайкнуть {{name}}"
+    },
+    "headline": "Альбом",
+    "info": {
+      "about": "О {{name}}",
+      "lastfm": "Открыть в Last.fm",
+      "musicbrainz": "Открыть в MusicBrainz"
+    },
+    "list": {
+      "empty": {
+        "action": "Может быть, попробовать перенастроить фильтры?",
+        "info": "Похоже, альбомов с этим фильтром нет.",
+        "title": "Упс, здесь нет альбомов!"
+      },
+      "filter": {
+        "artist": "Исполнитель",
+        "discography": "Дискография",
+        "favorites": "Избранное",
+        "genre": "Жанр",
+        "mostPlayed": "Самые прослушиевамые",
+        "name": "Имя",
+        "random": "Случайно",
+        "recentlyAdded": "Недавно добавленные",
+        "recentlyPlayed": "Недавно прослушанные",
+        "releaseYear": "Год выпуска",
+        "search": "Поиск"
+      },
+      "genre": {
+        "label": "Выберите жанр…",
+        "loading": "Загрузка жанров…",
+        "notFound": "Жанры не найдены.",
+        "search": "Найти жанр…"
+      },
+      "header": {
+        "albumsByArtist": "Альбомы {{artist}}"
+      },
+      "search": {
+        "placeholder": "Искать альбомы…"
+      }
+    },
+    "more": {
+      "discography": "Дискография исполнителя",
+      "genreTitle": "Больше из жанра {{genre}}",
+      "listTitle": "Больше от этого исполнителя"
+    },
+    "table": {
+      "discNumber": "Диск {{number}}"
+    }
   },
-  "sidebar": {
-    "artists": "Исполнители",
-    "radios": "Радио",
-    "miniSearch": "Поиск",
-    "albums": "Альбомы",
-    "favorites": "Избранное",
-    "playlists": "Плейлисты",
-    "songs": "Треки",
-    "library": "Библиотека",
-    "search": "Поиск…",
-    "home": "Главная",
-    "emptyPlaylist": "Пока не создано ни одного плейлиста",
-    "podcasts": "Подкасты"
+  "artist": {
+    "buttons": {
+      "options": "Больше для {{artist}}",
+      "play": "Радио по исполнителю {{artist}}",
+      "shuffle": "Радио по исполнителю {{artist}} в случайном порядке"
+    },
+    "headline": "Исполнитель",
+    "info": {
+      "albumsCount_one": "{{count}} альбом",
+      "albumsCount_other": "{{count}} albums"
+    },
+    "recentAlbums": "Недавние альбомы",
+    "relatedArtists": "Похожие исполнители",
+    "topSongs": "Популярные"
+  },
+  "command": {
+    "commands": {
+      "heading": "Команды",
+      "pages": "Перейти на страницу",
+      "theme": "Сменить тему"
+    },
+    "inputPlaceholder": "Поиск альбома, исполнителя или трека",
+    "noResults": "Результаты не найдены.",
+    "pages": "Страницы"
+  },
+  "dayjs": {
+    "relativeTime": {
+      "M": "1 месяц",
+      "MM": "%d месяцев",
+      "d": "1 день",
+      "dd": "%d дней",
+      "future": "через %s",
+      "h": "1 час",
+      "hh": "%d часов",
+      "m": "1 минуту",
+      "mm": "%d минут",
+      "past": "%s назад",
+      "s": "несколько секунд",
+      "y": "1 год",
+      "yy": "%d лет"
+    }
+  },
+  "downloads": {
+    "completed": "Ваш файл скачан.",
+    "failed": "Произошла ошибка при скачивании вашего файла.",
+    "started": "Скачивание начато."
+  },
+  "error": {
+    "notFound": "Not found"
+  },
+  "favorites": {
+    "buttons": {
+      "play": "Воспроизвести {{name}}",
+      "shuffle": "Воспроизвести {{name}} в случайном порядке"
+    },
+    "duration": "~ {{duration}}",
+    "headline": "Избранное",
+    "noSongs": "Пока нет избранных песен!",
+    "songCount_one": "{{count}} песня",
+    "songCount_other": "{{count}} песен"
+  },
+  "fullscreen": {
+    "emptyQueue": "No songs in queue",
+    "loadingLyrics": "Поиск текста трека…",
+    "lyrics": "Текст",
+    "noLyrics": "Текст трека не найден",
+    "playing": "Сейчас играет",
+    "queue": "Очередь",
+    "queueContinue": "Continue Playing",
+    "queueFromSource": "From {{source}}",
+    "queueHistory": "History",
+    "queueRepeating": "Repeating",
+    "switchButton": "Перейти в полноэкранный режим"
   },
   "generic": {
+    "beta": "Бета",
+    "clear": "Clear",
+    "hideDetails": "Скрыть детали",
     "loading": "Загрузка…",
     "seeMore": "Еще",
     "showDetails": "Показать детали",
-    "hideDetails": "Скрыть детали",
     "viewAll": "Посмотреть все",
     "viewMode": {
       "label": "Режим просмотра",
@@ -37,681 +150,764 @@
         "list": "Список",
         "poster": "Постер"
       }
-    },
-    "beta": "Бета"
-  },
-  "theme": {
-    "label": "Тема",
-    "light": "Светлая",
-    "dark": "Темная",
-    "system": "Как в системе",
-    "black": "Черно-белая",
-    "one-dark": "One Dark",
-    "night-owl-light": "Night Owl Light",
-    "marmalade-beaver": "Marmalade Beaver",
-    "noctis-lilac": "Noctis Lilac",
-    "material-theme": "Material Theme",
-    "monokai-pro": "Monokai Pro",
-    "github-dark": "Github Dark",
-    "shades-of-purple": "Shades Of Purple",
-    "bearded-solarized": "Bearded Solarized",
-    "catppuccin-mocha": "Catppuccin Mocha",
-    "dracula": "Dracula",
-    "discord": "Discord",
-    "tinacious-design": "Tinacious Design",
-    "vue-dark": "Vue Dark",
-    "vim-dark-soft": "Vim Dark Soft",
-    "nuclear-dark": "Nuclear Dark",
-    "achiever": "Achiever"
-  },
-  "command": {
-    "inputPlaceholder": "Поиск альбома, исполнителя или трека",
-    "noResults": "Результаты не найдены.",
-    "commands": {
-      "heading": "Команды",
-      "pages": "Перейти на страницу",
-      "theme": "Сменить тему"
-    },
-    "pages": "Страницы"
-  },
-  "player": {
-    "tooltips": {
-      "next": "Следующий",
-      "repeat": {
-        "disable": "Выключить повтор",
-        "enableOne": "Включить повтор одного",
-        "enable": "Включить повтор"
-      },
-      "shuffle": {
-        "enable": "Включить перемешивание",
-        "disable": "Выключить перемешивание"
-      },
-      "like": "Лайкнуть {{song}} исполнителя {{artist}}",
-      "dislike": "Убрать лайк с {{song}} исполнителя {{artist}}",
-      "pause": "Пауза",
-      "play": "Воспроизвести",
-      "previous": "Предыдущий",
-      "rewind": "Отмотать {{amount}} секунд",
-      "forward": "Пролистать {{amount}} секунд",
-      "miniPlayer": {
-        "open": "Открыть мини-проигрыватель",
-        "close": "Закрыть мини-проигрыватель"
-      },
-      "volume": {
-        "mute": "Заглушить",
-        "unmute": "Разглушить"
-      }
-    },
-    "noSongPlaying": "Сейчас трек не играет",
-    "noRadioPlaying": "Сейчас радио не играет"
-  },
-  "album": {
-    "list": {
-      "header": {
-        "albumsByArtist": "Альбомы {{artist}}"
-      },
-      "genre": {
-        "label": "Выберите жанр…",
-        "search": "Найти жанр…",
-        "loading": "Загрузка жанров…",
-        "notFound": "Жанры не найдены."
-      },
-      "filter": {
-        "artist": "Исполнитель",
-        "genre": "Жанр",
-        "mostPlayed": "Самые прослушиевамые",
-        "favorites": "Избранное",
-        "discography": "Дискография",
-        "search": "Поиск",
-        "recentlyPlayed": "Недавно прослушанные",
-        "releaseYear": "Год выпуска",
-        "recentlyAdded": "Недавно добавленные",
-        "name": "Имя",
-        "random": "Случайно"
-      },
-      "empty": {
-        "title": "Упс, здесь нет альбомов!",
-        "action": "Может быть, попробовать перенастроить фильтры?",
-        "info": "Похоже, альбомов с этим фильтром нет."
-      },
-      "search": {
-        "placeholder": "Искать альбомы…"
-      }
-    },
-    "headline": "Альбом",
-    "buttons": {
-      "like": "Лайкнуть {{name}}",
-      "dislike": "Убрать лайк с {{name}}"
-    },
-    "info": {
-      "about": "О {{name}}",
-      "musicbrainz": "Открыть в MusicBrainz",
-      "lastfm": "Открыть в Last.fm"
-    },
-    "more": {
-      "listTitle": "Больше от этого исполнителя",
-      "genreTitle": "Больше из жанра {{genre}}",
-      "discography": "Дискография исполнителя"
-    },
-    "table": {
-      "discNumber": "Диск {{number}}"
     }
   },
-  "logout": {
-    "dialog": {
-      "description": "Подтвердите выход из системы.",
-      "confirm": "Продолжить",
-      "title": "Готовы ли вы попрощаться?",
-      "cancel": "Отменить"
+  "home": {
+    "explore": "Обзор",
+    "mostPlayed": "Наиболее прослушиваемые",
+    "recentlyAdded": "Недавно добавлено",
+    "recentlyPlayed": "Недавно прослушанные"
+  },
+  "lanControl": {
+    "remote": {
+      "actions": {
+        "connect": "Connect",
+        "connecting": "Connecting...",
+        "disconnect": "Disconnect",
+        "refresh": "Refresh state"
+      },
+      "address": "Server address",
+      "autoConnectFailed": "Failed to connect to remote device, entering local playback mode",
+      "clickToPlay": "Click to play",
+      "controls": {
+        "next": "Next",
+        "pause": "Pause",
+        "play": "Play",
+        "previous": "Previous",
+        "repeat": "Toggle repeat",
+        "shuffle": "Toggle shuffle"
+      },
+      "currentlyPlaying": "Currently playing",
+      "description": "Connect to a LAN control server and manage playback remotely.",
+      "emptyArtist": "Unknown artist",
+      "emptyTitle": "No track playing",
+      "ip": "IP Address",
+      "items": "items",
+      "library": {
+        "albums": "Albums",
+        "back": "Back",
+        "loading": "Loading...",
+        "noAlbums": "No albums available",
+        "noPlaylists": "No playlists available",
+        "noResults": "No results found",
+        "playlists": "Playlists",
+        "search": "Search",
+        "searchButton": "Search",
+        "searchPlaceholder": "Search songs, albums...",
+        "searching": "Searching...",
+        "songs": "Songs"
+      },
+      "loadingSong": "Loading...",
+      "menu": "Control other devices",
+      "nowPlaying": "Now playing",
+      "password": "Access code",
+      "playing": "Playing",
+      "port": "Port",
+      "queue": "Playback queue",
+      "queueEmpty": "Queue is empty",
+      "serverRunning": "This device is currently running as a LAN Control server. You cannot control other devices while this device is in server mode.",
+      "status": {
+        "authenticating": "Authenticating",
+        "connected": "Connected",
+        "connecting": "Connecting",
+        "disconnected": "Disconnected",
+        "error": "Error",
+        "label": "Status"
+      },
+      "tabs": {
+        "control": "Control",
+        "library": "Library"
+      },
+      "title": "Control other devices",
+      "unknownDevice": "Unknown device",
+      "version": "v{{version}}",
+      "volume": "Volume: {{volume}}%"
     }
   },
   "login": {
     "form": {
-      "validations": {
-        "usernameLength": "Имя пользователя должно содержать не менее 2 символов.",
-        "protocol": "URL должен начинаться с http:// или https://",
-        "username": "Пожалуйста, укажите имя пользователя",
-        "passwordLength": "Пароль должен содержать не менее 2 символов.",
-        "password": "Пожалуйста, введите пароль",
-        "url": "Введите корректный URL-адрес."
-      },
+      "connect": "Подключиться",
+      "connecting": "Подключение…",
+      "description": "Подключитесь к вашему серверу Subsonic.",
+      "password": "Пароль",
       "server": "Сервер",
       "url": "URL",
-      "username": "Имя пользователя",
-      "password": "Пароль",
-      "connect": "Подключиться",
-      "description": "Подключитесь к вашему серверу Subsonic.",
-      "usernamePlaceholder": "Ваше имя пользователя",
       "urlDescription": "Это URL вашего сервера",
-      "connecting": "Подключение…"
+      "username": "Имя пользователя",
+      "usernamePlaceholder": "Ваше имя пользователя",
+      "validations": {
+        "password": "Пожалуйста, введите пароль",
+        "passwordLength": "Пароль должен содержать не менее 2 символов.",
+        "protocol": "URL должен начинаться с http:// или https://",
+        "url": "Введите корректный URL-адрес.",
+        "username": "Пожалуйста, укажите имя пользователя",
+        "usernameLength": "Имя пользователя должно содержать не менее 2 символов."
+      }
+    }
+  },
+  "logout": {
+    "dialog": {
+      "cancel": "Отменить",
+      "confirm": "Продолжить",
+      "description": "Подтвердите выход из системы.",
+      "title": "Готовы ли вы попрощаться?"
+    }
+  },
+  "menu": {
+    "about": "Описание",
+    "language": "Язык",
+    "server": "Сервер",
+    "serverLogout": "Выйти из аккаунта"
+  },
+  "mobile": {
+    "access_recommendation": "Пожалуйста, используйте компьютер или планшет для доступа.",
+    "unsupported_message": "{{app_name}} несовместимо с мобильными телефонами."
+  },
+  "offline": {
+    "disconnected": "Server unreachable. Entering offline mode.",
+    "mode": "Offline",
+    "reconnectFailed": "Could not reconnect. Continuing in offline mode.",
+    "reconnected": "Reconnected to server",
+    "reconnecting": "Reconnecting…",
+    "searchUnavailable": "Search requires an offline library sync.",
+    "songUnavailable": "This song is not available offline"
+  },
+  "options": {
+    "addLast": "Добавить в очередь",
+    "download": "Скачать",
+    "goto": {
+      "album": "Перейти к альбому",
+      "artist": "Перейти к исполнителю"
+    },
+    "info": "Информация",
+    "like": "Like",
+    "play": "Воспроизвести",
+    "playNext": "Воспроизвести следующим",
+    "playlist": {
+      "add": "Добавить в плейлист",
+      "create": "Новый плейлист",
+      "delete": "Удалить плейлист",
+      "edit": "Редактировать плейлист",
+      "notFound": "Плейлисты не найдены",
+      "removeSong": "Удалить из плейлиста",
+      "search": "Найти плейлист"
+    },
+    "removeFromQueue": "Remove from queue",
+    "unlike": "Unlike"
+  },
+  "player": {
+    "noRadioPlaying": "Сейчас радио не играет",
+    "noSongPlaying": "Сейчас трек не играет",
+    "tooltips": {
+      "dislike": "Убрать лайк с {{song}} исполнителя {{artist}}",
+      "forward": "Пролистать {{amount}} секунд",
+      "like": "Лайкнуть {{song}} исполнителя {{artist}}",
+      "miniPlayer": {
+        "close": "Закрыть мини-проигрыватель",
+        "open": "Открыть мини-проигрыватель"
+      },
+      "next": "Следующий",
+      "pause": "Пауза",
+      "play": "Воспроизвести",
+      "previous": "Предыдущий",
+      "progress": "Seek",
+      "repeat": {
+        "disable": "Выключить повтор",
+        "enable": "Включить повтор",
+        "enableOne": "Включить повтор одного"
+      },
+      "rewind": "Отмотать {{amount}} секунд",
+      "shuffle": {
+        "disable": "Выключить перемешивание",
+        "enable": "Включить перемешивание"
+      },
+      "star": "Star current song",
+      "unstar": "Unstar current song",
+      "volume": {
+        "mute": "Заглушить",
+        "unmute": "Разглушить"
+      }
     }
   },
   "playlist": {
+    "buttons": {
+      "options": "Больше для {{name}}",
+      "play": "Прослушать {{name}}",
+      "shuffle": "Прослушать {{name}} в случайном порядке"
+    },
     "duration": "около {{duration}}",
-    "refresh": "Обновить плейлисты",
     "form": {
       "create": {
-        "title": "Создать плейлист",
         "button": "Создать",
+        "title": "Создать плейлист",
         "toast": {
           "error": "Не удалось создать плейлист!",
           "success": "Плейлист создан!"
         }
       },
-      "labels": {
-        "name": "Имя",
-        "isPublicDescription": "Выберите эту опцию, чтобы сделать плейлист общедоступным. Это позволит другим пользователям просматривать и получать доступ к вашему плейлисту.",
-        "isPublic": "Публичный",
-        "commentDescription": "Напишите краткое описание этого плейлиста",
-        "comment": "Комментарий"
+      "delete": {
+        "description": "Это действие не может быть отменено.",
+        "title": "Вы уверены, что хотите удалить этот плейлист?",
+        "toast": {
+          "error": "Не удалось удалить плейлист!",
+          "success": "Плейлист удален!"
+        }
       },
       "edit": {
         "button": "Обновить",
+        "title": "Редактировать плейлист",
         "toast": {
-          "success": "Плейлист обновлен!",
-          "error": "Не удалось обновить плейлист!"
-        },
-        "title": "Редактировать плейлист"
+          "error": "Не удалось обновить плейлист!",
+          "success": "Плейлист обновлен!"
+        }
       },
-      "delete": {
-        "title": "Вы уверены, что хотите удалить этот плейлист?",
+      "labels": {
+        "comment": "Комментарий",
+        "commentDescription": "Напишите краткое описание этого плейлиста",
+        "isPublic": "Публичный",
+        "isPublicDescription": "Выберите эту опцию, чтобы сделать плейлист общедоступным. Это позволит другим пользователям просматривать и получать доступ к вашему плейлисту.",
+        "name": "Имя"
+      },
+      "removeSong": {
+        "description": "Это действие не может быть отменено.",
+        "title_one": "Вы уверены, что хотите удалить выбранный трек?",
+        "title_other": "Are you sure you want to remove the selected songs?",
         "toast": {
-          "success": "Плейлист удален!",
-          "error": "Не удалось удалить плейлист!"
-        },
-        "description": "Это действие не может быть отменено."
+          "error_one": "Не удалось удалить трек!",
+          "error_other": "Failed to remove the songs!",
+          "success_one": "Трек удален!",
+          "success_other": "Songs removed successfully!"
+        }
       },
       "validations": {
         "nameLength": "Имя плейлиста должно содержать более 2 символов."
-      },
-      "removeSong": {
-        "toast": {
-          "success_one": "Трек удален!",
-          "success_few": "Треки удалены!",
-          "success_many": "Треки удалены!",
-          "error_one": "Не удалось удалить трек!",
-          "error_few": "Не удалось удалить треки!",
-          "error_many": "Не удалось удалить треки!"
-        },
-        "description": "Это действие не может быть отменено.",
-        "title_one": "Вы уверены, что хотите удалить выбранный трек?",
-        "title_few": "Вы уверены, что хотите удалить выбранные треки?",
-        "title_many": "Вы уверены, что хотите удалить выбранные треки?"
       }
     },
-    "buttons": {
-      "play": "Прослушать {{name}}",
-      "shuffle": "Прослушать {{name}} в случайном порядке",
-      "options": "Больше для {{name}}"
-    },
+    "headline": "Плейлист",
     "noSongList": "Этот плейлист не содержит треков!",
+    "refresh": "Обновить плейлисты",
     "songCount_one": "{{count}} трек",
-    "songCount_few": "{{count}} трека",
-    "songCount_many": "{{count}} треков",
-    "headline": "Плейлист"
+    "songCount_other": "{{count}} songs"
   },
-  "songs": {
-    "list": {
-      "filter": {
-        "clear": "Очистить фильтры"
-      },
-      "byArtist": "Треки {{artist}}",
-      "search": {
-        "placeholder": "Искать треки…"
-      }
-    }
-  },
-  "artist": {
-    "buttons": {
-      "shuffle": "Радио по исполнителю {{artist}} в случайном порядке",
-      "options": "Больше для {{artist}}",
-      "play": "Радио по исполнителю {{artist}}"
-    },
-    "info": {
-      "albumsCount_one": "{{count}} альбом",
-      "albumsCount_few": "{{count}} альбома",
-      "albumsCount_many": "{{count}} альбомов"
-    },
-    "recentAlbums": "Недавние альбомы",
-    "headline": "Исполнитель",
-    "topSongs": "Популярные",
-    "relatedArtists": "Похожие исполнители"
-  },
-  "table": {
-    "columns": {
-      "year": "Год",
-      "bpm": "BPM",
-      "bitrate": "Битрейт",
-      "quality": "Качество",
-      "name": "Имя",
-      "albumCount": "Количество альбомов",
-      "lastPlayed": "Прослушано последний раз",
-      "songCount": "Количество треков",
-      "comment": "Комментарий",
-      "public": "Публичный",
-      "track": "Трек",
-      "genres": "Жанры",
-      "size": "Размер",
-      "codec": "Кодек",
-      "path": "Путь",
-      "discNumber": "Номер диска",
-      "trackGain": "Усиление трека",
-      "favorite": "Избранный",
-      "trackPeak": "Максимальная громкость трека",
-      "albumPeak": "Максимальная громкость альбома",
-      "title": "Название",
-      "album": "Альбом",
-      "artist": "Исполнитель",
-      "plays": "Прослушивания",
-      "duration": "Длительность",
-      "contributors": "Участники",
-      "samplingRate": "Частота дискретизации",
-      "albumArtist": "Автор альбома",
-      "bitDepth": "Битовая глубина",
-      "albumGain": "Усиление альбома",
-      "channelCount": "Количество каналов",
-      "recordLabel": "Лейбл"
-    },
-    "buttons": {
-      "play": "Прослушать {{title}} исполнителя {{artist}}",
-      "pause": "Приостановить {{title}} исполнителя {{artist}}"
-    },
-    "lastPlayed": "{{date}} назад",
-    "pagination": {
-      "rowsPerPage": "Строк на странице",
-      "currentPage": "Страница {{currentPage}} из {{totalPages}}",
-      "screenReader": {
-        "firstPage": "Перейти на первую страницу",
-        "previousPage": "Перейти на предыдущую страницу",
-        "nextPage": "Перейти на следующую страницу",
-        "lastPage": "Перейти на последнюю страницу"
-      }
-    },
-    "sort": {
-      "asc": "По возрастанию",
-      "reset": "Сбросить",
-      "desc": "По убыванию"
-    },
-    "menu": {
-      "selectedCount_one": "{{count}} выбран",
-      "selectedCount_few": "{{count}} выбрано",
-      "selectedCount_many": "{{count}} выбрано"
-    }
-  },
-  "fullscreen": {
-    "queue": "Очередь",
-    "playing": "Сейчас играет",
-    "switchButton": "Перейти в полноэкранный режим",
-    "loadingLyrics": "Поиск текста трека…",
-    "noLyrics": "Текст трека не найден",
-    "lyrics": "Текст"
-  },
-  "toast": {
-    "server": {
-      "success": "Сервер успешно сохранен!",
-      "error": "Связь с сервером не удалась!"
-    }
-  },
-  "options": {
-    "play": "Воспроизвести",
-    "playNext": "Воспроизвести следующим",
-    "addLast": "Добавить последним",
-    "download": "Скачать",
-    "playlist": {
-      "add": "Добавить в плейлист",
-      "edit": "Редактировать плейлист",
-      "delete": "Удалить плейлист",
-      "search": "Найти плейлист",
-      "create": "Новый плейлист",
-      "removeSong": "Удалить из плейлиста",
-      "notFound": "Плейлисты не найдены"
-    },
-    "info": "Информация",
-    "markAsPlayed": "Отметить как проигранное",
-    "goto": {
-      "episode": "Перейти к эпизоду",
-      "podcast": "Перейти к подкасту"
-    }
+  "queue": {
+    "clear": "Очистить очередь",
+    "close": "Закрыть очередь",
+    "open": "Открыть очередь",
+    "title": "Очередь"
   },
   "radios": {
     "addRadio": "Добавить радио",
-    "table": {
-      "name": "Имя",
-      "homepage": "URL главной страницы",
-      "actions": {
-        "delete": "Удалить радио",
-        "edit": "Редактировать радио"
-      },
-      "stream": "URL потока",
-      "pauseTooltip": "Приостановить радио {{name}}",
-      "playTooltip": "Включить радио {{name}}"
-    },
-    "form": {
-      "create": {
-        "title": "Добавить радио",
-        "toast": {
-          "success": "Радио создано!",
-          "error": "Не удалось создать радио!"
-        },
-        "button": "Сохранить"
-      },
-      "edit": {
-        "title": "Редактирование радио",
-        "toast": {
-          "error": "Не удалось обновить радио!",
-          "success": "Радио обновлено!"
-        },
-        "button": "Обновить"
-      },
-      "delete": {
-        "description": "Это действие не может быть отменено.",
-        "toast": {
-          "success": "Радио удалено!",
-          "error": "Не удалось удалить радио!"
-        },
-        "title": "Вы уверены, что хотите удалить эту радиостанцию?"
-      },
-      "validations": {
-        "name": "Название радио должно содержать не менее 3 символов.",
-        "homepageUrlLength": "URL главной страницы должен содержать не менее 10 символов",
-        "url": "Укажите корректный URL-адрес.",
-        "streamUrlLength": "URL потока должен содержать не менее 10 символов"
-      }
-    },
-    "label": "Радио",
     "empty": {
       "info": "Нажмите, чтобы добавить свою первую радиостанцию.",
       "title": "У вас нет радио!"
     },
-    "error": "Не удаётся воспроизвести Радио, проверьте Ссылку потока!"
-  },
-  "time": {
-    "hour": "{{hour}} час",
-    "minutes": "{{minutes}} минут",
-    "seconds": "{{seconds}} с",
-    "days_one": "{{days}} день",
-    "days_few": "{{days}} дня",
-    "days_many": "{{days}} дней"
+    "error": "Не удаётся воспроизвести Радио, проверьте Ссылку потока!",
+    "form": {
+      "create": {
+        "button": "Сохранить",
+        "title": "Добавить радио",
+        "toast": {
+          "error": "Не удалось создать радио!",
+          "success": "Радио создано!"
+        }
+      },
+      "delete": {
+        "description": "Это действие не может быть отменено.",
+        "title": "Вы уверены, что хотите удалить эту радиостанцию?",
+        "toast": {
+          "error": "Не удалось удалить радио!",
+          "success": "Радио удалено!"
+        }
+      },
+      "edit": {
+        "button": "Обновить",
+        "title": "Редактирование радио",
+        "toast": {
+          "error": "Не удалось обновить радио!",
+          "success": "Радио обновлено!"
+        }
+      },
+      "validations": {
+        "homepageUrlLength": "URL главной страницы должен содержать не менее 10 символов",
+        "name": "Название радио должно содержать не менее 3 символов.",
+        "streamUrlLength": "URL потока должен содержать не менее 10 символов",
+        "url": "Укажите корректный URL-адрес."
+      }
+    },
+    "label": "Радио",
+    "table": {
+      "actions": {
+        "delete": "Удалить радио",
+        "edit": "Редактировать радио"
+      },
+      "homepage": "URL главной страницы",
+      "name": "Имя",
+      "pauseTooltip": "Приостановить радио {{name}}",
+      "playTooltip": "Включить радио {{name}}",
+      "stream": "URL потока"
+    }
   },
   "server": {
-    "status": "Статус",
     "buttons": {
       "refresh": "Перезагрузить статус",
       "startScan": "Быстрое сканирование"
     },
+    "folderCount_one": "{{count}} папка",
+    "folderCount_other": "{{count}} folders",
+    "incompatible": {
+      "description": "Этот сервер использует более старую версию протокола Subsonic, которая поддерживается не полностью. Это может привести к проблемам, поэтому, пожалуйста, действуйте с осторожностью.",
+      "skip": "Продолжить в любом случае",
+      "title": "Несовместимый сервер"
+    },
     "lastScan": "Последнее сканирование: {{date}}",
     "management": "Управление сервером",
-    "folderCount_one": "{{count}} папка",
-    "folderCount_few": "{{count}} папки",
-    "folderCount_many": "{{count}} папок",
     "songCount_one": "{{count}} трек",
-    "songCount_few": "{{count}} трека",
-    "songCount_many": "{{count}} треков",
-    "incompatible": {
-      "title": "Несовместимый сервер",
-      "skip": "Продолжить в любом случае",
-      "description": "Этот сервер использует более старую версию протокола Subsonic, которая поддерживается не полностью. Это может привести к проблемам, поэтому, пожалуйста, действуйте с осторожностью."
-    }
-  },
-  "downloads": {
-    "started": "Скачивание начато.",
-    "failed": "Произошла ошибка при скачивании вашего файла.",
-    "completed": "Ваш файл скачан."
-  },
-  "shortcuts": {
-    "modal": {
-      "title": "Сочетания клавиш",
-      "description": {
-        "first": "Нажмите",
-        "last": "для переключения этого окна."
-      }
-    },
-    "playback": {
-      "next": "Перейти к следующему",
-      "repeat": "Повтор",
-      "previous": "Перейти к предыдущему",
-      "label": "Воспроизведение",
-      "play": "Воспроизведение / Пауза",
-      "shuffle": "Перемешивание",
-      "lowerVolume": "Сделать тише",
-      "raiseVolume": "Сделать громче"
-    },
-    "navigation": {
-      "label": "Навигация"
-    }
-  },
-  "warnings": {
-    "reload": "Сейчас играет трек!\nВы уверены, что хотите перезагрузить страницу?",
-    "songError": "Не удалось включить песню, проверьте сервер!"
-  },
-  "update": {
-    "dialog": {
-      "remindLater": "Напомнить позже",
-      "install": "Установить и перезапустить",
-      "title": "Доступна новая версия!"
-    },
-    "toasts": {
-      "success": "Обновление установлено! Приложение сейчас перезапустится.",
-      "started": "Процесс обновления начался.",
-      "error": "Не удалось установить обновление. Попробуйте загрузить его напрямую с GitHub."
-    }
-  },
-  "about": {
-    "client": "Клиент",
-    "server": "Сервер",
-    "version": "Версия",
-    "type": "Тип",
-    "apiVersion": "Версия API",
-    "toasts": {
-      "copy": "Ссылка скопирована в буфер обмена!"
-    }
-  },
-  "mobile": {
-    "unsupported_message": "{{app_name}} несовместимо с мобильными телефонами.",
-    "access_recommendation": "Пожалуйста, используйте компьютер или планшет для доступа."
-  },
-  "dayjs": {
-    "relativeTime": {
-      "d": "1 день",
-      "yy": "%d лет",
-      "y": "1 год",
-      "future": "через %s",
-      "past": "%s назад",
-      "hh": "%d часов",
-      "h": "1 час",
-      "s": "несколько секунд",
-      "M": "1 месяц",
-      "MM": "%d месяцев",
-      "m": "1 минуту",
-      "mm": "%d минут",
-      "dd": "%d дней"
-    }
-  },
-  "songInfo": {
-    "title": "О треке",
-    "error": "Не удалось получить информацию о треке. Попробуйте еще раз позже."
-  },
-  "queue": {
-    "clear": "Очистить очередь",
-    "title": "Очередь",
-    "open": "Открыть очередь",
-    "close": "Закрыть очередь"
-  },
-  "podcasts": {
-    "form": {
-      "dialog": {
-        "title": "Создать подкаст",
-        "validations": {
-          "urlLength": "URL-адреса должны состоять не менее чем из 10 символов",
-          "atLeastOneUrl": "Пожалуйста, введите хотя бы один URL-адрес.",
-          "url": "Пожалуйста, введите рабочие ссылки.",
-          "protocol": "URL-адреса должны начинаться с http:// или https://"
-        },
-        "message": "Вы можете добавить несколько URL-адресов - по одной на строку.",
-        "saveButton": "Сохранить",
-        "feedUrl": "Ссылка"
-      },
-      "latestEpisodes": "Новые эпизоды",
-      "toasts": {
-        "error": "Не удалось создать подкаст!",
-        "success": "Подкаст успешно создан! Он будет доступен для прослушивания всего через несколько минут!"
-      },
-      "addButton": "Добавить подкаст",
-      "search": "Искать подкасты…"
-    },
-    "header": {
-      "episodeCount_one": "{{count}} эпизод",
-      "episodeCount_few": "{{count}} эпизода",
-      "episodeCount_many": "{{count}} эпизодов",
-      "unfollow": {
-        "dialog": {
-          "description": "Чтобы снова послушать этот подкаст в будущем, вам нужно будет его пересоздать.",
-          "title": "Вы уверены, что хотите отписаться от этого подкаста?"
-        },
-        "toasts": {
-          "success": "Вы успешно отписались от этого подкаста!",
-          "error": "Возникла ошибка при попытке отписаться от этого подкаста. Повторите попытку."
-        },
-        "tooltip": "Отписаться от {{title}}"
-      },
-      "feed": "Лента",
-      "website": "Официальный сайт"
-    },
-    "list": {
-      "episodes": "Эпизоды",
-      "progress": {
-        "completed": "Завершено",
-        "remainingTime": "{{time}} осталось"
-      },
-      "notFoundMessage": "Этот подкаст пока не имеет ни одного эпизода!"
-    },
-    "emptyPage": {
-      "message": "Нет добавленных подкастов",
-      "description": "Похоже, вы ещё не добавили ни одного подкаста. Добавьте один выше!"
-    },
-    "latestEpisodes": {
-      "emptyPage": {
-        "message": "Нет доступных эпизодов",
-        "description": "Попробуйте добавить больше подкастов.",
-        "goToPodcasts": "Перейти в Подкасты"
-      }
-    },
-    "emptyResults": {
-      "title": "Ничего не найдено.",
-      "action": "Пожалуйста, проверьте правильность написания или попробуйте другие ключевые слова.",
-      "info": "Мы не смогли найти ни одного подходящего подкаста."
-    },
-    "filters": {
-      "episodes": {
-        "orderBy": {
-          "publishDate": "Дата публикации",
-          "duration": "Длительность",
-          "title": "Название"
-        },
-        "search": "Искать эпизоды…"
-      },
-      "podcasts": {
-        "orderBy": {
-          "title": "Название",
-          "episodeCount": "Количество эпизодов"
-        }
-      }
-    }
+    "songCount_other": "{{count}} songs",
+    "status": "Статус"
   },
   "settings": {
-    "audio": {
-      "replayGain": {
-        "enabled": "Включено",
-        "description": "Автоматически выровнять громкость звука для комфортного прослушивания.",
-        "mode": {
-          "label": "Режим",
-          "album": "Усиление альбома",
-          "track": "Усиление трека"
+    "accounts": {
+      "discord": {
+        "description": "Share your currently playing song with friends on Discord.",
+        "enabled": {
+          "label": "Enable Integration"
         },
+        "group": "Discord Rich Presence"
+      }
+    },
+    "appearance": {
+      "colors": {
+        "bigPlayer": {
+          "blurSize": "Степень Размытия",
+          "label": "Большой проигрыватель"
+        },
+        "description": "Выберите, должно ли приложение использовать в качестве фона основной цвет из обложки текущего альбома.",
+        "group": "Динамические цвета",
+        "queue": {
+          "intensity": "Интенсивность цвета",
+          "label": "Очередь и текст"
+        }
+      },
+      "general": {
+        "albumCoverForSongs": {
+          "info": "When enabled, every song artwork request uses the album cover to reduce loading time.",
+          "label": "Always use album covers"
+        },
+        "description": "Настроить параметры отображения и внешний вид приложения.",
+        "fullscreen": {
+          "info": "Если включено, при запуске большого проигрывателя приложение автоматически перейдет в полноэкранный режим.",
+          "label": "Включить автоматический полный экран"
+        },
+        "group": "Общее"
+      }
+    },
+    "audio": {
+      "history": {
+        "description": "Songs that play for more than 10 seconds are recorded in your play history.",
+        "group": "Play History",
+        "maxSize": {
+          "info": "The maximum number of songs to keep in play history. Older entries are removed when the limit is exceeded.",
+          "label": "Maximum history size"
+        }
+      },
+      "lyrics": {
+        "description": "Редактировать настройки текстов песен.",
+        "group": "Текст",
+        "preferSynced": {
+          "info": "Когда активно, синхронизированный текст будет использоваться вместо локального.",
+          "label": "Приоритизировать синхронизированный текст песни"
+        },
+        "showTranslation": {
+          "info": "When available, show translated lyrics below the original lyrics.",
+          "label": "Show translation"
+        }
+      },
+      "replayGain": {
+        "defaultGain": {
+          "info": "Этот уровень усиления применяется к песням, не имеющим автоматического параметра в метаданных, обеспечивающего соответствующий уровень громкости. Рекомендуемый диапазон усиления — между -10 дБ и -1 дБ.",
+          "label": "Усиление по умолчанию (дБ)"
+        },
+        "description": "Автоматически выровнять громкость звука для комфортного прослушивания.",
+        "enabled": "Включено",
         "error": {
           "button": "Попробуйте снова",
           "message": "При попытке проигрывания трека с использованием Автоматической громкости произошла ошибка."
         },
         "group": "Автоматическая громкость",
-        "preAmp": "Предусиление (дБ)",
-        "defaultGain": {
-          "label": "Усиление по умолчанию (дБ)",
-          "info": "Этот уровень усиления применяется к песням, не имеющим автоматического параметра в метаданных, обеспечивающего соответствующий уровень громкости. Рекомендуемый диапазон усиления — между -10 дБ и -1 дБ."
-        }
-      },
-      "lyrics": {
-        "group": "Текст",
-        "description": "Редактировать настройки текстов песен.",
-        "preferSynced": {
-          "label": "Приоритизировать синхронизированный текст песни",
-          "info": "Когда активно, синхронизированный текст будет использоваться вместо локального."
-        }
+        "mode": {
+          "album": "Усиление альбома",
+          "label": "Режим",
+          "track": "Усиление трека"
+        },
+        "preAmp": "Предусиление (дБ)"
       }
     },
-    "appearance": {
-      "general": {
-        "fullscreen": {
-          "label": "Включить автоматический полный экран",
-          "info": "Если включено, при запуске большого проигрывателя приложение автоматически перейдет в полноэкранный режим."
-        },
-        "group": "Общее",
-        "description": "Настроить параметры отображения и внешний вид приложения."
-      },
-      "colors": {
-        "group": "Динамические цвета",
-        "description": "Выберите, должно ли приложение использовать в качестве фона основной цвет из обложки текущего альбома.",
-        "queue": {
-          "label": "Очередь и текст",
-          "intensity": "Интенсивность цвета"
-        },
-        "bigPlayer": {
-          "label": "Большой проигрыватель",
-          "blurSize": "Степень Размытия"
-        }
-      }
-    },
-    "options": {
-      "privacy": "Безопасность и Приватность",
-      "appearance": "Внешний вид",
-      "language": "Язык и Регион",
-      "audio": "Проигрыватель и Звук",
-      "content": "Содержимое"
-    },
-    "label": "Настройки",
     "content": {
       "sidebar": {
-        "group": "Боковая панель",
         "description": "Управлять видимостью и организацией секций, отображаемых в боковой панели.",
+        "group": "Боковая панель",
         "radios": {
           "section": "Скрыть меню радио"
         }
-      },
-      "podcast": {
-        "enabled": {
-          "label": "Включить интеграцию"
-        },
-        "credentials": {
-          "url": "Ссылка на сервер",
-          "user": "Имя пользователя",
-          "label": "Использовать текущего пользователя и ссылку сервера",
-          "error": "Требуется имя пользователя и ссылка на сервер."
-        },
-        "description": "Включить интеграцию с сервисом подкастов Aonsoku.",
-        "service": {
-          "url": "Ссылка сервиса подкастов"
-        },
-        "group": "Подкасты"
       }
+    },
+    "desktop": {
+      "general": {
+        "description": "Customize preferences for the desktop application.",
+        "group": "General",
+        "tray": {
+          "info": "When enabled, the app will minimize to the system tray instead of closing when you click the close button.",
+          "label": "Minimize to Tray"
+        }
+      },
+      "lanControl": {
+        "address": {
+          "info": "Available server addresses for LAN control access.",
+          "label": "Server Addresses"
+        },
+        "addressCopied": "Server address copied to clipboard.",
+        "allowNavidromeAuth": {
+          "info": "Enable authentication using Navidrome credentials.",
+          "label": "Allow Navidrome Authentication"
+        },
+        "copyAddress": "Copy address",
+        "copyPassword": "Copy password",
+        "description": "Manage LAN control settings for remote access.",
+        "enable": {
+          "info": "Turn on LAN control to allow remote access to this application.",
+          "label": "Enable LAN Control"
+        },
+        "group": "LAN Control",
+        "password": {
+          "info": "Set a password for secure access to the LAN control server.",
+          "label": "Password"
+        },
+        "passwordCopied": "Password copied to clipboard.",
+        "passwordRegenerated": "Password regenerated successfully.",
+        "port": {
+          "info": "Specify the port number for the LAN control server.",
+          "label": "Port"
+        },
+        "regeneratePassword": "Regenerate password",
+        "serverError": "Failed to start LAN control server.",
+        "serverStarted": "LAN control server started successfully."
+      },
+      "updates": {
+        "availableVersion": "Version {{version}} available",
+        "checkNow": {
+          "info": "Manually check for available updates.",
+          "label": "Check for Updates"
+        },
+        "checking": "Checking for updates...",
+        "checkingManually": "Checking for updates...",
+        "currentVersion": {
+          "info": "The version of Aonsoku you are currently running.",
+          "label": "Current Version"
+        },
+        "description": "Check for and install application updates.",
+        "download": "Download Update",
+        "downloadError": "Download Failed",
+        "downloadStarted": "Download Started",
+        "downloadStartedDesc": "Update download has begun",
+        "downloading": "Downloading... {{percent}}%",
+        "group": "App Updates",
+        "installNow": "Install and Restart",
+        "readyToInstall": "Ready to install (restart required)",
+        "status": {
+          "info": "The current status of application updates.",
+          "label": "Update Status"
+        },
+        "upToDate": "You're up to date",
+        "updateAvailable": "Update Available",
+        "updateAvailableDesc": "Version {{version}} is available",
+        "updateError": "Update Check Failed",
+        "updateReady": "Update Ready",
+        "updateReadyDesc": "Update will be installed when you restart the app"
+      }
+    },
+    "label": "Настройки",
+    "options": {
+      "accounts": "Accounts",
+      "appearance": "Внешний вид",
+      "audio": "Проигрыватель и Звук",
+      "content": "Содержимое",
+      "desktop": "Desktop Application",
+      "language": "Язык и Регион",
+      "privacy": "Безопасность и Приватность",
+      "server": "Server",
+      "storage": "Storage"
     },
     "privacy": {
       "services": {
+        "description": "Управлять внешними сервисами, к которым у Aonsoku есть доступ.",
         "group": "Внешние сервисы",
         "lrclib": {
-          "label": "LRCLIB",
-          "info": "Для поиска текстов песен используется LRCLIB."
+          "info": "Для поиска текстов песен используется LRCLIB.",
+          "label": "LRCLIB"
+        }
+      }
+    },
+    "server": {
+      "activeType": {
+        "fallback": "Fallback URL",
+        "info": "Shows whether this session is using the primary or fallback URL.",
+        "label": "Current server",
+        "none": "Not connected",
+        "primary": "Primary URL"
+      },
+      "activeUrl": {
+        "empty": "No server selected",
+        "info": "The server URL currently used by this app session.",
+        "label": "Current URL"
+      },
+      "description": "Manage the primary server and optional fallback URL used at startup.",
+      "fallbackUrl": {
+        "info": "Optional server URL used when the primary URL cannot be reached at startup.",
+        "label": "Fallback URL",
+        "placeholder": "https://fallback-server.example.com"
+      },
+      "group": "Server",
+      "locked": "Server URL settings are locked by this deployment.",
+      "primaryUrl": {
+        "info": "The server URL Aonsoku tries first when the app starts.",
+        "label": "Primary URL",
+        "placeholder": "https://your-server.example.com"
+      },
+      "save": "Save server URLs",
+      "saving": "Saving...",
+      "toast": {
+        "error": "Unable to reach the primary or fallback server.",
+        "success": "Server URLs saved successfully."
+      },
+      "validation": {
+        "fallbackUrl": "Please enter a valid fallback URL.",
+        "primaryUrl": "Please enter a valid primary URL."
+      }
+    },
+    "storage": {
+      "audio": {
+        "clear": "Clear audio cache",
+        "description": "Cache audio files for instant playback on repeated listens.",
+        "enabled": "Enable audio cache",
+        "entries": "{{count}} songs cached",
+        "group": "Audio Cache",
+        "maxSize": "Maximum cache size",
+        "size": "Cache size"
+      },
+      "coverArt": {
+        "clear": "Clear cover art cache",
+        "description": "Cache album cover images for faster loading.",
+        "enabled": "Enable cover art cache",
+        "entries": "{{count}} images cached",
+        "group": "Cover Art Cache",
+        "size": "Cache size"
+      },
+      "metadata": {
+        "clear": "Clear all caches",
+        "description": "Clear all cached data including metadata, cover art, and audio files.",
+        "group": "All Caches"
+      },
+      "sync": {
+        "cancel": "Cancel",
+        "clear": "Clear",
+        "coverArt": "Include cover art",
+        "coverArtInfo": "Download all album and artist images during sync. This may use significant storage and bandwidth.",
+        "description": "Cache all metadata on every app launch for offline browsing. Audio files are never synced.",
+        "enabled": "Enable sync on launch",
+        "entries": "{{count}} items synced",
+        "group": "Sync on Launch",
+        "lastSynced": "Last synced",
+        "never": "Never",
+        "phases": {
+          "albums": "Syncing albums…",
+          "artists": "Syncing artists…",
+          "cancelled": "Sync cancelled",
+          "coverArt": "Syncing cover art…",
+          "done": "Sync complete",
+          "error": "Sync failed",
+          "genres": "Syncing genres…",
+          "idle": "Preparing…",
+          "playlists": "Syncing playlists…",
+          "songs": "Syncing songs…"
         },
-        "description": "Управлять внешними сервисами, к которым у Aonsoku есть доступ."
+        "syncNow": "Sync Now"
       }
     }
+  },
+  "shortcuts": {
+    "modal": {
+      "description": {
+        "first": "Нажмите",
+        "last": "для переключения этого окна."
+      },
+      "title": "Сочетания клавиш"
+    },
+    "navigation": {
+      "label": "Навигация"
+    },
+    "playback": {
+      "label": "Воспроизведение",
+      "lowerVolume": "Сделать тише",
+      "next": "Перейти к следующему",
+      "play": "Воспроизведение / Пауза",
+      "previous": "Перейти к предыдущему",
+      "raiseVolume": "Сделать громче",
+      "repeat": "Повтор",
+      "shuffle": "Перемешивание"
+    }
+  },
+  "sidebar": {
+    "albums": "Альбомы",
+    "artists": "Исполнители",
+    "collapse": "Свернуть боковую панель",
+    "emptyPlaylist": "Пока не создано ни одного плейлиста",
+    "expand": "Развернуть боковую панель",
+    "favorites": "Избранное",
+    "home": "Главная",
+    "library": "Библиотека",
+    "miniSearch": "Поиск",
+    "playlists": "Плейлисты",
+    "radios": "Радио",
+    "search": "Поиск…",
+    "songs": "Треки"
+  },
+  "songInfo": {
+    "error": "Не удалось получить информацию о треке. Попробуйте еще раз позже.",
+    "title": "О треке"
+  },
+  "songs": {
+    "list": {
+      "byArtist": "Треки {{artist}}",
+      "filter": {
+        "clear": "Очистить фильтры"
+      },
+      "search": {
+        "placeholder": "Искать треки…"
+      }
+    },
+    "sort": {
+      "album": "Album A-Z",
+      "artist": "Artist A-Z",
+      "lastAdded": "Last Added",
+      "title": "Song A-Z"
+    }
+  },
+  "table": {
+    "buttons": {
+      "pause": "Приостановить {{title}} исполнителя {{artist}}",
+      "play": "Прослушать {{title}} исполнителя {{artist}}"
+    },
+    "columns": {
+      "album": "Альбом",
+      "albumArtist": "Автор альбома",
+      "albumCount": "Количество альбомов",
+      "albumGain": "Усиление альбома",
+      "albumPeak": "Максимальная громкость альбома",
+      "artist": "Исполнитель",
+      "bitDepth": "Битовая глубина",
+      "bitrate": "Битрейт",
+      "bpm": "BPM",
+      "channelCount": "Количество каналов",
+      "codec": "Кодек",
+      "comment": "Комментарий",
+      "contributors": "Участники",
+      "discNumber": "Номер диска",
+      "duration": "Длительность",
+      "favorite": "Избранный",
+      "genres": "Жанры",
+      "lastPlayed": "Прослушано последний раз",
+      "name": "Имя",
+      "path": "Путь",
+      "plays": "Прослушивания",
+      "public": "Публичный",
+      "quality": "Качество",
+      "recordLabel": "Лейбл",
+      "samplingRate": "Частота дискретизации",
+      "size": "Размер",
+      "songCount": "Количество треков",
+      "title": "Название",
+      "track": "Трек",
+      "trackGain": "Усиление трека",
+      "trackPeak": "Максимальная громкость трека",
+      "year": "Год"
+    },
+    "lastPlayed": "{{date}} назад",
+    "menu": {
+      "selectedCount_one": "{{count}} выбран",
+      "selectedCount_other": "{{count}} selected"
+    },
+    "pagination": {
+      "currentPage": "Страница {{currentPage}} из {{totalPages}}",
+      "rowsPerPage": "Строк на странице",
+      "screenReader": {
+        "firstPage": "Перейти на первую страницу",
+        "lastPage": "Перейти на последнюю страницу",
+        "nextPage": "Перейти на следующую страницу",
+        "previousPage": "Перейти на предыдущую страницу"
+      }
+    },
+    "sort": {
+      "asc": "По возрастанию",
+      "desc": "По убыванию",
+      "reset": "Сбросить"
+    }
+  },
+  "theme": {
+    "achiever": "Achiever",
+    "bearded-solarized": "Bearded Solarized",
+    "black": "Черно-белая",
+    "catppuccin-mocha": "Catppuccin Mocha",
+    "dark": "Темная",
+    "discord": "Discord",
+    "dracula": "Dracula",
+    "github-dark": "Github Dark",
+    "label": "Тема",
+    "light": "Светлая",
+    "marmalade-beaver": "Marmalade Beaver",
+    "material-theme": "Material Theme",
+    "monokai-pro": "Monokai Pro",
+    "night-owl-light": "Night Owl Light",
+    "noctis-lilac": "Noctis Lilac",
+    "nuclear-dark": "Nuclear Dark",
+    "one-dark": "One Dark",
+    "shades-of-purple": "Shades Of Purple",
+    "system": "Как в системе",
+    "tinacious-design": "Tinacious Design",
+    "vim-dark-soft": "Vim Dark Soft",
+    "vue-dark": "Vue Dark"
+  },
+  "time": {
+    "days_one": "{{days}} день",
+    "days_other": "{{days}} days",
+    "hour": "{{hour}} час",
+    "minutes": "{{minutes}} минут",
+    "seconds": "{{seconds}} с"
+  },
+  "toast": {
+    "server": {
+      "error": "Связь с сервером не удалась!",
+      "success": "Сервер успешно сохранен!"
+    }
+  },
+  "update": {
+    "dialog": {
+      "install": "Установить и перезапустить",
+      "remindLater": "Напомнить позже",
+      "title": "Доступна новая версия!"
+    },
+    "sw": {
+      "error": "Update failed – Retry",
+      "refresh": "Refresh to update",
+      "updating": "Updating..."
+    },
+    "toasts": {
+      "error": "Не удалось установить обновление. Попробуйте загрузить его напрямую с GitHub.",
+      "started": "Процесс обновления начался.",
+      "success": "Обновление установлено! Приложение сейчас перезапустится."
+    }
+  },
+  "warnings": {
+    "reload": "Сейчас играет трек!\nВы уверены, что хотите перезагрузить страницу?",
+    "songError": "Не удалось включить песню, проверьте сервер!"
   }
 }

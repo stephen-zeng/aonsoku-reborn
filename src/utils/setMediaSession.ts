@@ -1,14 +1,12 @@
-import { getCoverArtUrl } from "@/api/httpClient";
 import { usePlayerStore } from "@/store/player.store";
-import { EpisodeWithPodcast } from "@/types/responses/podcasts";
-import { ISong } from "@/types/responses/song";
 import { LanControlMessageType } from "@/types/lanControl";
+import { ISong } from "@/types/responses/song";
+import { getCoverArtUrlFromSongPreference } from "./coverArt";
+import { isValidDuration } from "./duration";
+import { logger } from "./logger";
 
-const artworkSizes = ["96", "128", "192", "256", "384", "512"];
+const MEDIA_SESSION_COVER_SIZE = "300";
 
-/**
- * Check if MediaSession API is supported and available
- */
 function isMediaSessionSupported(): boolean {
   return (
     typeof navigator !== "undefined" &&
@@ -17,25 +15,14 @@ function isMediaSessionSupported(): boolean {
   );
 }
 
-/**
- * Log MediaSession related information for debugging
- */
-function logMediaSessionInfo(action: string, data?: unknown): void {
-  if (!isMediaSessionSupported()) {
-    console.warn(`[MediaSession] ${action}: API not supported`);
-    return;
-  }
-  console.log(`[MediaSession] ${action}:`, data);
-}
-
 function removeMediaSession() {
   if (!isMediaSessionSupported()) return;
 
   try {
     navigator.mediaSession.metadata = null;
-    logMediaSessionInfo("Removed metadata");
+    logger.info("[MediaSession] Removed metadata");
   } catch (error) {
-    console.error("[MediaSession] Failed to remove metadata:", error);
+    logger.error("[MediaSession] Failed to remove metadata:", error);
   }
 }
 
@@ -47,25 +34,38 @@ function setMediaSession(
         artist: string;
         album: string;
         coverArt?: string;
+        albumId?: string;
         duration?: number;
       },
 ) {
   if (!isMediaSessionSupported()) {
-    console.warn("[MediaSession] navigator.mediaSession not available");
+    logger.info("[MediaSession] navigator.mediaSession not available");
     return;
   }
 
-  try {
-    const artwork = song.coverArt
-      ? artworkSizes.map((size): MediaImage => {
-          return {
-            src: getCoverArtUrl(song.coverArt, "song", size),
-            sizes: [size, size].join("x"),
-            type: "image/jpeg",
-          };
-        })
-      : [];
+  function buildArtwork(): { artwork: MediaImage[] } {
+    if (!song.coverArt && !song.albumId) return { artwork: [] };
 
+    const src = getCoverArtUrlFromSongPreference({
+      coverArt: song.coverArt,
+      coverArtType: "song",
+      albumId: song.albumId,
+      size: MEDIA_SESSION_COVER_SIZE,
+    });
+
+    return {
+      artwork: [
+        {
+          src,
+          sizes: `${MEDIA_SESSION_COVER_SIZE}x${MEDIA_SESSION_COVER_SIZE}`,
+          type: "image/jpeg",
+        },
+      ],
+    };
+  }
+
+  try {
+    const { artwork } = buildArtwork();
     const metadata = {
       title: song.title || "Unknown Title",
       artist: song.artist || "Unknown Artist",
@@ -73,7 +73,7 @@ function setMediaSession(
       artwork,
     };
 
-    logMediaSessionInfo("Setting metadata", {
+    logger.info("[MediaSession] Setting metadata", {
       title: metadata.title,
       artist: metadata.artist,
       album: metadata.album,
@@ -82,38 +82,11 @@ function setMediaSession(
 
     navigator.mediaSession.metadata = new MediaMetadata(metadata);
 
-    // Verify that metadata was actually set
     if (navigator.mediaSession.metadata === null) {
-      console.warn("[MediaSession] Metadata was set to null unexpectedly");
+      logger.info("[MediaSession] Metadata was set to null unexpectedly");
     }
   } catch (error) {
-    console.error("[MediaSession] Failed to set metadata:", error);
-  }
-}
-
-function setPodcastMediaSession(episode: EpisodeWithPodcast) {
-  if (!isMediaSessionSupported()) return;
-
-  try {
-    const metadata = {
-      title: episode.title || "Unknown Episode",
-      album: episode.podcast?.title || "Unknown Podcast",
-      artist: episode.podcast?.author || "Unknown Author",
-      artwork: episode.image_url
-        ? [
-            {
-              src: episode.image_url,
-              sizes: "",
-              type: "image/jpeg",
-            },
-          ]
-        : [],
-    };
-
-    logMediaSessionInfo("Setting podcast metadata", metadata);
-    navigator.mediaSession.metadata = new MediaMetadata(metadata);
-  } catch (error) {
-    console.error("[MediaSession] Failed to set podcast metadata:", error);
+    logger.error("[MediaSession] Failed to set metadata:", error);
   }
 }
 
@@ -128,10 +101,10 @@ async function setRadioMediaSession(label: string, radioName: string) {
       artwork: [],
     };
 
-    logMediaSessionInfo("Setting radio metadata", metadata);
+    logger.info("[MediaSession] Setting radio metadata", metadata);
     navigator.mediaSession.metadata = new MediaMetadata(metadata);
   } catch (error) {
-    console.error("[MediaSession] Failed to set radio metadata:", error);
+    logger.error("[MediaSession] Failed to set radio metadata:", error);
   }
 }
 
@@ -148,21 +121,17 @@ function setPlaybackState(state: boolean | null) {
       newState = "paused";
     }
 
-    logMediaSessionInfo("Setting playback state", newState);
+    logger.info("[MediaSession] Setting playback state", newState);
     navigator.mediaSession.playbackState = newState;
 
-    // Verify that playback state was actually set
     if (navigator.mediaSession.playbackState !== newState) {
-      console.warn(
-        "[MediaSession] Playback state mismatch:",
-        "expected",
-        newState,
-        "got",
-        navigator.mediaSession.playbackState,
-      );
+      logger.info("[MediaSession] Playback state mismatch:", {
+        expected: newState,
+        actual: navigator.mediaSession.playbackState,
+      });
     }
   } catch (error) {
-    console.error("[MediaSession] Failed to set playback state:", error);
+    logger.error("[MediaSession] Failed to set playback state:", error);
   }
 }
 
@@ -173,22 +142,19 @@ function setPositionState(
 ) {
   if (!isMediaSessionSupported()) return;
 
-  // Validate inputs
-  if (typeof duration !== "number" || duration < 0) {
-    console.warn("[MediaSession] Invalid duration:", duration);
+  if (!isValidDuration(duration)) {
+    logger.info("[MediaSession] Invalid duration:", duration);
     return;
   }
   if (typeof position !== "number" || position < 0) {
-    console.warn("[MediaSession] Invalid position:", position);
+    logger.info("[MediaSession] Invalid position:", position);
     return;
   }
   if (position > duration) {
-    console.warn(
-      "[MediaSession] Position exceeds duration:",
+    logger.info("[MediaSession] Position exceeds duration:", {
       position,
-      ">",
       duration,
-    );
+    });
     position = duration;
   }
 
@@ -198,20 +164,19 @@ function setPositionState(
       playbackRate: playbackRate,
       position: position,
     });
-    logMediaSessionInfo("Set position state", {
+    logger.info("[MediaSession] Set position state", {
       duration,
       position,
       playbackRate,
     });
   } catch (error) {
-    // Position state might not be supported on all browsers
-    console.warn("[MediaSession] Failed to set position state:", error);
+    logger.info("[MediaSession] Failed to set position state:", error);
   }
 }
 
 function setHandlers() {
   if (!isMediaSessionSupported()) {
-    console.warn("[MediaSession] Cannot set handlers: API not supported");
+    logger.info("[MediaSession] Cannot set handlers: API not supported");
     return;
   }
 
@@ -224,18 +189,16 @@ function setHandlers() {
     const isRemoteActive = state.remoteControl.active;
     const remoteSender = state.remoteControl.sendCommand;
 
-    logMediaSessionInfo("Setting up action handlers", {
+    logger.info("[MediaSession] Setting up action handlers", {
       isRemoteActive,
       hasRemoteSender: !!remoteSender,
     });
 
-    // Clear previous handlers
     mediaSession.setActionHandler("seekbackward", null);
     mediaSession.setActionHandler("seekforward", null);
 
-    // Play/Pause handler
     mediaSession.setActionHandler("play", () => {
-      console.log("[MediaSession] Play action triggered");
+      logger.info("[MediaSession] Play action triggered");
       if (isRemoteActive && remoteSender) {
         remoteSender(LanControlMessageType.PLAY);
       } else {
@@ -244,7 +207,7 @@ function setHandlers() {
     });
 
     mediaSession.setActionHandler("pause", () => {
-      console.log("[MediaSession] Pause action triggered");
+      logger.info("[MediaSession] Pause action triggered");
       if (isRemoteActive && remoteSender) {
         remoteSender(LanControlMessageType.PAUSE);
       } else {
@@ -252,9 +215,8 @@ function setHandlers() {
       }
     });
 
-    // Previous track handler
     mediaSession.setActionHandler("previoustrack", () => {
-      console.log("[MediaSession] Previous track action triggered");
+      logger.info("[MediaSession] Previous track action triggered");
       if (isRemoteActive && remoteSender) {
         remoteSender(LanControlMessageType.PREVIOUS);
       } else {
@@ -262,9 +224,8 @@ function setHandlers() {
       }
     });
 
-    // Next track handler
     mediaSession.setActionHandler("nexttrack", () => {
-      console.log("[MediaSession] Next track action triggered");
+      logger.info("[MediaSession] Next track action triggered");
       if (isRemoteActive && remoteSender) {
         remoteSender(LanControlMessageType.NEXT);
       } else {
@@ -272,12 +233,13 @@ function setHandlers() {
       }
     });
 
-    // Seek handler
     mediaSession.setActionHandler("seekto", (details) => {
-      console.log("[MediaSession] Seek action triggered:", details);
+      logger.info("[MediaSession] Seek action triggered:", details);
       if (details.seekTime !== undefined) {
         if (isRemoteActive && remoteSender) {
-          remoteSender(LanControlMessageType.SEEK, { time: details.seekTime });
+          remoteSender(LanControlMessageType.SEEK, {
+            time: details.seekTime,
+          });
         } else {
           const audioPlayerRef = state.playerState.audioPlayerRef;
           if (audioPlayerRef) {
@@ -288,73 +250,9 @@ function setHandlers() {
       }
     });
 
-    console.log("[MediaSession] All action handlers set successfully");
+    logger.info("[MediaSession] All action handlers set successfully");
   } catch (error) {
-    console.error("[MediaSession] Failed to set action handlers:", error);
-  }
-}
-
-interface SetPodcastHandlerParams {
-  handleSeekAction: (value: number) => void;
-}
-
-function setPodcastHandlers({ handleSeekAction }: SetPodcastHandlerParams) {
-  if (!isMediaSessionSupported()) {
-    console.warn(
-      "[MediaSession] Cannot set podcast handlers: API not supported",
-    );
-    return;
-  }
-
-  const { mediaSession } = navigator;
-
-  try {
-    const state = usePlayerStore.getState();
-    const { setPlayingState, setProgress } = state.actions;
-
-    logMediaSessionInfo("Setting up podcast action handlers");
-
-    mediaSession.setActionHandler("previoustrack", null);
-    mediaSession.setActionHandler("nexttrack", null);
-
-    mediaSession.setActionHandler("play", () => {
-      console.log("[MediaSession] Podcast play action triggered");
-      setPlayingState(true);
-    });
-
-    mediaSession.setActionHandler("pause", () => {
-      console.log("[MediaSession] Podcast pause action triggered");
-      setPlayingState(false);
-    });
-
-    mediaSession.setActionHandler("seekbackward", () => {
-      console.log("[MediaSession] Podcast seek backward action triggered");
-      handleSeekAction(-15);
-    });
-
-    mediaSession.setActionHandler("seekforward", () => {
-      console.log("[MediaSession] Podcast seek forward action triggered");
-      handleSeekAction(30);
-    });
-
-    // Support seekto for iOS and other platforms
-    mediaSession.setActionHandler("seekto", (details) => {
-      console.log("[MediaSession] Podcast seek to action triggered:", details);
-      if (details.seekTime !== undefined) {
-        const audioPlayerRef = state.playerState.audioPlayerRef;
-        if (audioPlayerRef) {
-          audioPlayerRef.currentTime = details.seekTime;
-          setProgress(Math.floor(details.seekTime));
-        }
-      }
-    });
-
-    console.log("[MediaSession] Podcast action handlers set successfully");
-  } catch (error) {
-    console.error(
-      "[MediaSession] Failed to set podcast action handlers:",
-      error,
-    );
+    logger.error("[MediaSession] Failed to set action handlers:", error);
   }
 }
 
@@ -362,9 +260,7 @@ export const manageMediaSession = {
   removeMediaSession,
   setMediaSession,
   setRadioMediaSession,
-  setPodcastMediaSession,
   setPlaybackState,
   setPositionState,
   setHandlers,
-  setPodcastHandlers,
 };

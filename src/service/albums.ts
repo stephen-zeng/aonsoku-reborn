@@ -4,6 +4,8 @@ import {
   AlbumListResponse,
   AlbumListType,
   GetAlbumResponse,
+  IAlbumInfo,
+  SingleAlbum,
 } from "@/types/responses/album";
 
 export interface AlbumListParams {
@@ -38,12 +40,12 @@ async function getAlbumList(params: Partial<AlbumListParams> = {}) {
   });
 
   return {
-    albumsCount: response?.count,
-    list: response?.data.albumList2.album,
+    albumsCount: response.count,
+    list: response.data.albumList2.album,
   };
 }
 
-async function getOne(id: string) {
+async function getOne(id: string): Promise<SingleAlbum | undefined> {
   const response = await httpClient<GetAlbumResponse>("/getAlbum", {
     method: "GET",
     query: {
@@ -51,10 +53,10 @@ async function getOne(id: string) {
     },
   });
 
-  return response?.data.album;
+  return response.data.album;
 }
 
-async function getInfo(id: string) {
+async function getInfo(id: string): Promise<IAlbumInfo | null> {
   const response = await httpClient<AlbumInfoResponse>("/getAlbumInfo2", {
     method: "GET",
     query: {
@@ -62,7 +64,7 @@ async function getInfo(id: string) {
     },
   });
 
-  return response?.data.albumInfo;
+  return response.data.albumInfo;
 }
 
 export const albums = {

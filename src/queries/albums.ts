@@ -30,8 +30,7 @@ export async function albumSearch({ query, count, offset }: AlbumSearch) {
     albumOffset: offset,
   });
 
-  if (!response) return emptyResponse;
-  if (!response.album) return emptyResponse;
+  if (!response?.album) return emptyResponse;
 
   let nextOffset: number | null = null;
   if (response.album.length >= count) {

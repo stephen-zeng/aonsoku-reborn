@@ -6,6 +6,7 @@ export const useGetAlbum = (albumId: string) => {
   return useQuery({
     queryKey: [queryKeys.album.single, albumId],
     queryFn: () => subsonic.albums.getOne(albumId),
+    enabled: !!albumId,
   });
 };
 

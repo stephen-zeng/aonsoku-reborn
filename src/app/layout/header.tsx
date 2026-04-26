@@ -1,23 +1,35 @@
+import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
+import { memo, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import { NavigationButtons } from "@/app/components/header/navigation-buttons";
 import { UserDropdown } from "@/app/components/header/user-dropdown";
 import { SettingsButton } from "@/app/components/settings/header-button";
 import { useAppWindow } from "@/app/hooks/use-app-window";
 import { useWindowControlsOverlay } from "@/app/hooks/use-window-controls-overlay";
-import { useThemeColor } from "@/app/hooks/use-theme-color";
+import { cn } from "@/lib/utils";
+import { ROUTES } from "@/routes/routesList";
+import { useSidebar } from "@/store/ui.store";
 import { isDesktop, isLinux, isMacOS, isWindows } from "@/utils/desktop";
 import { isWindowControlsOverlayAvailable } from "@/utils/pwa";
 import CommandMenu from "../components/command/command-menu";
-import { memo, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { SwUpdateChip } from "../components/header/sw-update-chip";
 import { Button } from "../components/ui/button";
-import { HomeIcon } from "lucide-react";
+
+const mobileRootRoutes = [
+  ROUTES.LIBRARY.HOME,
+  ROUTES.MOBILE.LIBRARY,
+  ROUTES.MOBILE.SEARCH,
+];
 
 export function Header() {
+  const { t } = useTranslation();
   const { isFullscreen } = useAppWindow();
+  const { isCollapsed, toggleSidebar } = useSidebar();
+  const { pathname } = useLocation();
   const MemoCommandMenu = memo(CommandMenu);
 
-  // Update browser theme color dynamically
-  useThemeColor();
+  const isMobileRootPage = mobileRootRoutes.includes(pathname);
 
   // Check if we're in PWA mode with window controls overlay
   const hasWindowControls = isWindowControlsOverlayAvailable();
@@ -81,9 +93,21 @@ export function Header() {
         ? 122 // Electron Windows default
         : 94 // Electron Linux default
     : 0;
+  const sidebarToggleLabel = t(
+    isCollapsed ? "sidebar.expand" : "sidebar.collapse",
+  );
+  const SidebarToggleIcon = isCollapsed
+    ? PanelLeftOpenIcon
+    : PanelLeftCloseIcon;
 
   return (
-    <header className="w-full grid grid-cols-header h-header px-4 fixed top-0 right-0 left-0 z-20 bg-background border-b electron-drag">
+    <header
+      className="w-full flex justify-between items-center md:grid md:grid-cols-header h-header pt-[var(--safe-area-top)] fixed top-0 right-0 left-0 z-20 bg-background/95 supports-[backdrop-filter]:bg-background/60 backdrop-blur-md border-b electron-drag"
+      style={{
+        paddingLeft: "max(1rem, var(--safe-area-left))",
+        paddingRight: "max(1rem, var(--safe-area-right))",
+      }}
+    >
       <div className="flex items-center">
         {/* Spacing for macOS window controls (traffic lights) on left side */}
         {leftSpacingWidth > 10 && (
@@ -92,7 +116,7 @@ export function Header() {
             className="flex-shrink-0"
           />
         )}
-        <div className="w-8 h-8">
+        {/* <div className="w-8 h-8">
           <Link to="/">
             <Button
               variant="ghost"
@@ -102,20 +126,37 @@ export function Header() {
               <HomeIcon className="w-4 h-4" strokeWidth={1.5} />
             </Button>
           </Link>
+        </div> */}
+        <div className="hidden xl:block w-8 h-8">
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn("h-8 w-8 p-0 rounded-md transition-colors")}
+            title={sidebarToggleLabel}
+            aria-label={sidebarToggleLabel}
+            data-state={isCollapsed ? "collapsed" : "expanded"}
+            onClick={toggleSidebar}
+          >
+            <SidebarToggleIcon className="w-4 h-4" strokeWidth={1.5} />
+          </Button>
         </div>
-        <div className="md:hidden flex justify-center items-center px-4 gap-2 w-full">
-          <NavigationButtons />
-          <MemoCommandMenu />
-        </div>
+        <SwUpdateChip />
+        {!isMobileRootPage && (
+          <div className="md:hidden flex items-center gap-2">
+            <NavigationButtons />
+          </div>
+        )}
       </div>
-      <div className="col-span-2 flex items-center justify-center">
-        <div className="hidden md:flex justify-center items-center px-4 gap-2 w-full">
+      <div className="hidden md:flex col-span-2 items-center justify-center">
+        <div className="flex justify-center items-center px-4 gap-2 w-full">
           <NavigationButtons />
           <MemoCommandMenu />
         </div>
       </div>
       <div className="flex justify-end items-center gap-2">
-        <SettingsButton />
+        <div className="hidden md:block">
+          <SettingsButton />
+        </div>
         <UserDropdown />
         {/* Spacing for Windows/Linux window controls on right side */}
         {rightSpacingWidth > 10 && (

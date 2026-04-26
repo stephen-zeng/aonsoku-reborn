@@ -34,6 +34,9 @@ export function TableListRow<TData>({
 }: TableRowProps<TData>) {
   const currentSong = usePlayerCurrentSong();
 
+  // @ts-expect-error row type
+  const songId = row.original.id as string;
+
   function handleTouchStart() {
     isTap = true;
     tapTimeout = setTimeout(() => {
@@ -48,13 +51,14 @@ export function TableListRow<TData>({
   function handleTouchEnd(e: TouchEvent<HTMLDivElement>) {
     clearTimeout(tapTimeout);
     if (isTap) {
-      // Check if the touch target is within a button or interactive element
+      // Check if the touch target is within a button, interactive element, or menu
       const target = e.target as HTMLElement;
       const isButton = target.closest("button");
       const isInteractive = target.closest('[role="button"]');
+      const isMenuContent = target.closest("[data-radix-menu-content]");
 
-      // Don't trigger the row tap if touching a button or interactive element
-      if (!isButton && !isInteractive) {
+      // Don't trigger the row tap if touching a button, interactive element, or menu
+      if (!isButton && !isInteractive && !isMenuContent) {
         handleRowTap(e, row);
       }
     }
@@ -68,9 +72,8 @@ export function TableListRow<TData>({
   const isRowSongActive = useMemo(() => {
     if (dataType !== "song") return false;
 
-    // @ts-expect-error row type
-    return row.original.id === currentSong.id;
-  }, [currentSong.id, dataType, row.original]);
+    return songId === currentSong?.id;
+  }, [currentSong?.id, dataType, songId]);
 
   const isQueue = pageType === "queue";
 
@@ -90,7 +93,7 @@ export function TableListRow<TData>({
         onContextMenu={(e) => handleClicks(e, row)}
         className={clsx(
           "group/tablerow w-[calc(100%-10px)] flex flex-row transition-colors",
-          "data-[state=selected]:bg-primary/75 hover:bg-muted",
+          "md:data-[state=selected]:bg-primary/75 hover:bg-muted",
           isQueue && "rounded-md",
           isRowSongActive && "row-active bg-accent",
         )}

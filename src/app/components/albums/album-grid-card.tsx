@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { getCoverArtUrl } from "@/api/httpClient";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import { PreviewCard } from "@/app/components/preview-card/card";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
@@ -12,12 +12,13 @@ type AlbumCardProps = {
 
 function AlbumCard({ album }: AlbumCardProps) {
   const { setSongList } = usePlayerActions();
+  const hasHover = useHasHover();
 
   async function handlePlayAlbum() {
     const response = await subsonic.albums.getOne(album.id);
 
     if (response) {
-      setSongList(response.song, 0);
+      setSongList(response.song, 0, false, { albumId: album.id }, album.name);
     }
   }
 
@@ -25,12 +26,12 @@ function AlbumCard({ album }: AlbumCardProps) {
     <PreviewCard.Root>
       <PreviewCard.ImageWrapper link={ROUTES.ALBUM.PAGE(album.id)}>
         <PreviewCard.Image
-          src={getCoverArtUrl(album.coverArt, "album", "300")}
+          coverArtId={album.coverArt}
+          coverArtType="album"
+          coverArtSize="300"
           alt={album.name}
         />
-        {window.innerWidth > 640 && (
-          <PreviewCard.PlayButton onClick={handlePlayAlbum} />
-        )}
+        {hasHover && <PreviewCard.PlayButton onClick={handlePlayAlbum} />}
       </PreviewCard.ImageWrapper>
       <PreviewCard.InfoWrapper>
         <PreviewCard.Title link={ROUTES.ALBUM.PAGE(album.id)}>
