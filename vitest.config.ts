@@ -7,6 +7,10 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    __BUILD_HASH__: JSON.stringify("test-hash"),
+    __BUILD_TIME__: 1714128000000,
+  },
   test: {
     environment: "node",
     setupFiles: ["./vitest.setup.ts"],
