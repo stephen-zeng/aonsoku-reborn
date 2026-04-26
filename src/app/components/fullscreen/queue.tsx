@@ -296,6 +296,35 @@ function UnifiedQueueView({
     };
   }, [useVirtualization]);
 
+  useEffect(() => {
+    if (useVirtualization) return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const handleScrollEnd = () => {
+      const el = currentSongRef.current;
+      const spacer = spacerRef.current;
+      if (!el || !container || !spacer) return;
+      const containerRect = container.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const partiallyVisible =
+        elRect.top < containerRect.bottom &&
+        elRect.bottom > containerRect.top;
+      const fullyVisible =
+        elRect.top >= containerRect.top &&
+        elRect.bottom <= containerRect.bottom;
+      if (partiallyVisible && !fullyVisible) {
+        syncQueueCurrentSongPosition({
+          container,
+          el,
+          spacer,
+          behavior: "smooth",
+        });
+      }
+    };
+    container.addEventListener("scrollend", handleScrollEnd);
+    return () => container.removeEventListener("scrollend", handleScrollEnd);
+  }, [useVirtualization]);
+
   const contextPlayedCount = contextIndex + 1;
   const userQueueStart = contextPlayedCount;
 
@@ -829,6 +858,33 @@ function VirtualizedQueueView({
     }
   }, [currentSong?.id, currentSongVirtualIndex, virtualizer]);
 
+  useEffect(() => {
+    const scrollEl = getScrollElement();
+    if (!scrollEl) return;
+    const handleScrollEnd = () => {
+      const currentSongEl = scrollEl.querySelector<HTMLElement>(
+        "[data-current-song]",
+      );
+      if (!currentSongEl) return;
+      const containerRect = scrollEl.getBoundingClientRect();
+      const elRect = currentSongEl.getBoundingClientRect();
+      const partiallyVisible =
+        elRect.top < containerRect.bottom &&
+        elRect.bottom > containerRect.top;
+      const fullyVisible =
+        elRect.top >= containerRect.top &&
+        elRect.bottom <= containerRect.bottom;
+      if (partiallyVisible && !fullyVisible && currentSongVirtualIndex >= 0) {
+        virtualizer.scrollToIndex(currentSongVirtualIndex, {
+          align: "start",
+          behavior: "smooth",
+        });
+      }
+    };
+    scrollEl.addEventListener("scrollend", handleScrollEnd);
+    return () => scrollEl.removeEventListener("scrollend", handleScrollEnd);
+  }, [currentSongVirtualIndex, virtualizer, getScrollElement]);
+
   if (virtualItems.length === 0) {
     return (
       <div className="flex flex-1 flex-col h-full min-w-0 items-center justify-center">
@@ -904,7 +960,10 @@ function VirtualizedQueueView({
                         )}
 
                         {item.type === "currentSong" && (
-                          <div className="px-0 pt-2 pb-0.5">
+                          <div
+                            data-current-song
+                            className="px-0 pt-2 pb-0.5"
+                          >
                             <QueueCurrentSong onClick={onCurrentSongClick} />
                           </div>
                         )}
