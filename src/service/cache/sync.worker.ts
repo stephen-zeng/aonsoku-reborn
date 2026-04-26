@@ -217,7 +217,11 @@ class SyncWorkerService {
     const existingIds = await db.playlistDetails.toCollection().primaryKeys();
     const removedIds = existingIds.filter((id) => !playlistIds.has(id));
 
-    if (removedIds.length > 0) {
+    if (
+      removedIds.length > 0 &&
+      playlists.length > 0 &&
+      removedIds.length < existingIds.length
+    ) {
       await db.playlistDetails.bulkDelete(removedIds);
     }
 
@@ -390,10 +394,19 @@ class SyncWorkerService {
       .where("starredAt")
       .above(0)
       .primaryKeys();
-    if (previouslyStarred.length > 0) {
+    if (previouslyStarred.length > 0 && starredIds.size > 0) {
+      const toUnstar = previouslyStarred.filter(
+        (songId) => !starredIds.has(songId),
+      );
+      const localSongs = await db.songs
+        .where("id")
+        .anyOf(toUnstar)
+        .toArray();
+      const confirmedLocal = new Set(localSongs.map((s) => s.id));
+
       await Promise.all(
-        previouslyStarred
-          .filter((songId) => !starredIds.has(songId))
+        toUnstar
+          .filter((songId) => confirmedLocal.has(songId as string))
           .map((songId) =>
             db.songs.update(songId, {
               starred: undefined,
@@ -515,38 +528,67 @@ class SyncWorkerService {
 
     const config = workerEnsureAuth();
     const searchAllQuery = config.serverType === "navidrome" ? '""' : "";
-    const searchResult = await workerHttpClient<ISearchResponse>("/search3", {
-      query: {
-        query: searchAllQuery,
-        artistCount: "0",
-        artistOffset: "0",
-        albumCount: "0",
-        albumOffset: "0",
-        songCount: songCount.toString(),
-        songOffset: "0",
-      },
-    });
 
-    this.#checkAborted(signal);
-    const songs = searchResult.data.searchResult3?.song ?? [];
+    const PAGE_SIZE = 500;
+    const allSongs: ISong[] = [];
+    let songOffset = 0;
+    let hasMoreSongs = true;
 
-    if (songs.length > 0) {
-      const serverIds = new Set(songs.map((s: { id: string }) => s.id));
-      const allExistingKeys = await db.songs.toCollection().primaryKeys();
-      const staleIds = allExistingKeys.filter(
-        (id) => !serverIds.has(id as string),
+    while (hasMoreSongs) {
+      this.#checkAborted(signal);
+
+      const searchResult = await workerHttpClient<ISearchResponse>(
+        "/search3",
+        {
+          query: {
+            query: searchAllQuery,
+            artistCount: "0",
+            artistOffset: "0",
+            albumCount: "0",
+            albumOffset: "0",
+            songCount: PAGE_SIZE.toString(),
+            songOffset: songOffset.toString(),
+          },
+        },
       );
-      if (staleIds.length > 0) {
-        await db.songs.bulkDelete(staleIds);
+
+      this.#checkAborted(signal);
+      const page = searchResult.data.searchResult3?.song ?? [];
+      if (page.length === 0) {
+        hasMoreSongs = false;
+      } else {
+        allSongs.push(...page);
+        songOffset += page.length;
+        this.#updateSyncState("songs", "t3", allSongs.length, songCount);
+        if (page.length < PAGE_SIZE) {
+          hasMoreSongs = false;
+        }
       }
     }
 
-    const rows = songs.map(
+    const rows = allSongs.map(
       (s: { played?: string; starred?: string; [k: string]: unknown }) =>
         withPlayedAt(withStarredAt(s)),
     );
     await bulkPutInChunks(db.songs, rows, signal);
-    this.#updateSyncState("songs", "t3", songs.length, songs.length);
+
+    if (allSongs.length > 0) {
+      const serverIds = new Set(allSongs.map((s) => s.id));
+      const allExistingKeys = await db.songs.toCollection().primaryKeys();
+      const staleIds = allExistingKeys.filter(
+        (id) => !serverIds.has(id as string),
+      );
+      const maxDeletions = Math.ceil(allSongs.length * 0.1);
+      if (staleIds.length > 0 && staleIds.length <= maxDeletions) {
+        await db.songs.bulkDelete(staleIds);
+      } else if (staleIds.length > maxDeletions) {
+        console.warn(
+          `[sync] Skipping song stale deletion: ${staleIds.length} local songs missing from server, exceeds safety threshold of ${maxDeletions} (10%% of ${allSongs.length} synced songs). This likely indicates an incomplete sync.`,
+        );
+      }
+    }
+
+    this.#updateSyncState("songs", "t3", allSongs.length, allSongs.length);
 
     await this.#recordTierCheckpoint("t3");
 
@@ -682,15 +724,24 @@ class SyncWorkerService {
     );
 
     const updates: CacheMetaRow[] = [];
+    let removeCount = 0;
     for (const item of cachedItems) {
       const existsOnServer = existingServerIds.has(item.id);
       const shouldMarkRemoved = !existsOnServer;
       if (shouldMarkRemoved !== Boolean(item.removedFromServer)) {
+        if (shouldMarkRemoved) removeCount++;
         updates.push({
           ...item,
           removedFromServer: shouldMarkRemoved || undefined,
         });
       }
+    }
+
+    if (removeCount > cachedItems.length * 0.5) {
+      console.warn(
+        `[sync] Skipping remove-reconciliation: ${removeCount}/${cachedItems.length} cached audio items would be marked as removed. The songs table is likely incomplete.`,
+      );
+      return;
     }
 
     if (updates.length > 0) {

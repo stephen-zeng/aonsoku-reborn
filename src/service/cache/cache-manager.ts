@@ -693,13 +693,28 @@ class CacheManager {
     const items = getCacheIndexItems();
     const { setRemovedFromServer } = getCacheIndexActions();
 
+    let removeCount = 0;
+    const updates: Array<[key: string, shouldMarkRemoved: boolean]> = [];
+
     for (const [key, meta] of Object.entries(items)) {
       if (meta.type !== "audio") continue;
       const existsOnServer = (await libraryDb.songs.get(meta.id)) !== undefined;
       const shouldMarkRemoved = !existsOnServer;
       if (shouldMarkRemoved !== Boolean(meta.removedFromServer)) {
-        setRemovedFromServer(key, shouldMarkRemoved);
+        if (shouldMarkRemoved) removeCount++;
+        updates.push([key, shouldMarkRemoved]);
       }
+    }
+
+    if (removeCount > 0 && removeCount > Object.values(items).filter((m) => m.type === "audio").length * 0.5) {
+      console.warn(
+        `[cacheManager] Skipping remove-reconciliation: ${removeCount} cached audio items would be marked as removed. The songs table is likely incomplete.`,
+      );
+      return;
+    }
+
+    for (const [key, shouldMarkRemoved] of updates) {
+      setRemovedFromServer(key, shouldMarkRemoved);
     }
   }
 

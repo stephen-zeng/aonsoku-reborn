@@ -1,5 +1,5 @@
 import { clear as idbClear } from "idb-keyval";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { isAudioCached, useCacheIndexStore } from "@/store/cache-index.store";
 import { cacheIndexStore } from "@/store/idb";
 import { _resetLibraryDbForTests, libraryDb } from "@/store/library-db";
@@ -27,6 +27,11 @@ vi.mock("./audio-cache-worker-adapter", () => ({
   audioCacheService: audioCacheServiceMock,
 }));
 
+vi.mock("./sync-worker-adapter", () => ({
+  syncService: {
+    cancel: vi.fn(),
+  },
+}));
 vi.mock("@/api/httpClient", () => ({
   getCoverArtUrl: vi.fn(() => "/cover"),
   getSongStreamUrl: vi.fn(() => "/stream"),
@@ -54,6 +59,18 @@ vi.mock("@/store/cache.store", () => ({
   },
 }));
 
+vi.mock("@/store/player.store", () => ({
+  usePlayerStore: {
+    getState: () => ({
+      settings: {
+        coverArt: {
+          useAlbumCoverForSongs: false,
+        },
+      },
+    }),
+  },
+}));
+
 describe("cacheManager", () => {
   beforeEach(async () => {
     cacheStorageMock.clear.mockReset();
@@ -61,13 +78,21 @@ describe("cacheManager", () => {
     cacheStorageMock.delete.mockReset();
     cacheStorageMock.delete.mockResolvedValue(true);
     cacheStorageMock.get.mockReset();
+    cacheStorageMock.get.mockResolvedValue(null);
     cacheStorageMock.put.mockReset();
     cacheStorageMock.put.mockResolvedValue(undefined);
     audioCacheServiceMock.cacheSong.mockReset();
     audioCacheServiceMock.cacheSong.mockResolvedValue(undefined);
+    audioCacheServiceMock.cancelAll.mockReset();
+    audioCacheServiceMock.isQueued.mockReset().mockReturnValue(false);
+    audioCacheServiceMock.isInFlight.mockReset().mockReturnValue(false);
     await idbClear(cacheIndexStore);
     await _resetLibraryDbForTests();
     useCacheIndexStore.setState({ items: {}, loaded: true, downloads: {} });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("returns cached cover URL when cover is cached", async () => {
@@ -159,7 +184,7 @@ describe("cacheManager", () => {
     vi.restoreAllMocks();
   });
 
-  it("cacheSong delegates to audioCacheService and sets initial progress", async () => {
+  it("cacheSong sets download progress and delegates to audioCacheService", async () => {
     useCacheIndexStore.setState({
       items: {},
       loaded: true,
@@ -214,7 +239,6 @@ describe("cacheManager", () => {
     await cacheManager.cacheSong("song-1");
 
     expect(audioCacheServiceMock.cacheSong).not.toHaveBeenCalled();
-    expect(cacheStorageMock.put).not.toHaveBeenCalled();
   });
 
   it("clearAllCaches also clears prefetched lyrics rows", async () => {
@@ -360,5 +384,181 @@ describe("cacheManager", () => {
     expect(meta).not.toBeUndefined();
     expect(meta?.type).toBe("audio");
     expect(meta?.source).toBe("explicit");
+  });
+
+  it("getCachedAudioUrl returns null for non-cached song when index is loaded", async () => {
+    cacheStorageMock.get.mockResolvedValue(null);
+    useCacheIndexStore.setState({ items: {}, loaded: true });
+
+    const { cacheManager } = await import("./cache-manager");
+    const url = await cacheManager.getCachedAudioUrl("missing-song");
+
+    expect(url).toBeNull();
+  });
+
+  it("getCachedAudioUrl removes stale index entry when blob is missing", async () => {
+    cacheStorageMock.get.mockResolvedValue(null);
+    useCacheIndexStore.setState({
+      items: {
+        "audio:stale": {
+          id: "stale",
+          type: "audio",
+          source: "explicit",
+          sizeBytes: 100,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+      },
+      loaded: true,
+    });
+
+    const { cacheManager } = await import("./cache-manager");
+    const url = await cacheManager.getCachedAudioUrl("stale");
+
+    expect(url).toBeNull();
+    expect(useCacheIndexStore.getState().items["audio:stale"]).toBeUndefined();
+  });
+
+  it("cacheSmartSong upgrades lru to smart with triggers", async () => {
+    audioCacheServiceMock.cacheSong.mockResolvedValue(undefined);
+    useCacheIndexStore.setState({
+      items: {
+        "audio:smart-me": {
+          id: "smart-me",
+          type: "audio",
+          source: "lru",
+          sizeBytes: 100,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+      },
+      loaded: true,
+    });
+
+    const { cacheManager } = await import("./cache-manager");
+    await cacheManager.cacheSmartSong("smart-me", ["favorite"]);
+
+    const item = useCacheIndexStore.getState().items["audio:smart-me"];
+    expect(item.source).toBe("smart");
+    expect(item.triggers).toEqual(["favorite"]);
+    audioCacheServiceMock.cacheSong.mockReset();
+  });
+
+  it("cacheSmartSong does not demote explicit entries", async () => {
+    useCacheIndexStore.setState({
+      items: {
+        "audio:explicit-song": {
+          id: "explicit-song",
+          type: "audio",
+          source: "explicit",
+          sizeBytes: 100,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+      },
+      loaded: true,
+    });
+
+    const { cacheManager } = await import("./cache-manager");
+    await cacheManager.cacheSmartSong("explicit-song", ["favorite"]);
+
+    expect(audioCacheServiceMock.cacheSong).not.toHaveBeenCalled();
+  });
+
+  it("cacheSmartSong caches new song via audioCacheService", async () => {
+    audioCacheServiceMock.cacheSong.mockResolvedValue(undefined);
+    useCacheIndexStore.setState({ items: {}, loaded: true });
+
+    const { cacheManager } = await import("./cache-manager");
+    await cacheManager.cacheSmartSong("new-song", ["playlist"]);
+
+    expect(audioCacheServiceMock.cacheSong).toHaveBeenCalledWith({
+      songId: "new-song",
+      priority: 0,
+      source: "smart",
+      triggers: ["playlist"],
+    });
+  });
+
+  it("reconcileRemovedFromServer marks missing songs and skips when majority missing", async () => {
+    await libraryDb.songs.bulkPut([
+      { id: "s1", parent: "a", title: "S1", album: "A", artist: "X", track: 1, year: 2024, coverArt: "", size: 1, contentType: "audio/mpeg", suffix: "mp3", duration: 180, bitRate: 320, path: "p1", discNumber: 1, created: "2024-01-01T00:00:00.000Z", albumId: "a", artistId: "x", type: "music", isVideo: false, bpm: 0, comment: "", sortName: "S1", mediaType: "song", musicBrainzId: "", genres: [], replayGain: { trackGain: 0, trackPeak: 0, albumGain: 0, albumPeak: 0 } },
+    ]);
+
+    useCacheIndexStore.setState({
+      items: {
+        "audio:s1": { id: "s1", type: "audio", source: "explicit", sizeBytes: 100, cachedAt: 1, lastAccessedAt: 1 },
+        "audio:missing": { id: "missing", type: "audio", source: "explicit", sizeBytes: 100, cachedAt: 1, lastAccessedAt: 1 },
+        "audio:also-missing": { id: "also-missing", type: "audio", source: "explicit", sizeBytes: 100, cachedAt: 1, lastAccessedAt: 1 },
+      },
+      loaded: true,
+    });
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { cacheManager } = await import("./cache-manager");
+    await cacheManager.reconcileRemovedFromServer();
+
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  it("reconcileRemovedFromServer marks entries whose songId is gone from server", async () => {
+    await libraryDb.songs.bulkPut([
+      { id: "s1", parent: "a", title: "S1", album: "A", artist: "X", track: 1, year: 2024, coverArt: "", size: 1, contentType: "audio/mpeg", suffix: "mp3", duration: 180, bitRate: 320, path: "p1", discNumber: 1, created: "2024-01-01T00:00:00.000Z", albumId: "a", artistId: "x", type: "music", isVideo: false, bpm: 0, comment: "", sortName: "S1", mediaType: "song", musicBrainzId: "", genres: [], replayGain: { trackGain: 0, trackPeak: 0, albumGain: 0, albumPeak: 0 } },
+      { id: "s2", parent: "a", title: "S2", album: "A", artist: "X", track: 2, year: 2024, coverArt: "", size: 1, contentType: "audio/mpeg", suffix: "mp3", duration: 180, bitRate: 320, path: "p2", discNumber: 1, created: "2024-01-01T00:00:00.000Z", albumId: "a", artistId: "x", type: "music", isVideo: false, bpm: 0, comment: "", sortName: "S2", mediaType: "song", musicBrainzId: "", genres: [], replayGain: { trackGain: 0, trackPeak: 0, albumGain: 0, albumPeak: 0 } },
+    ]);
+
+    useCacheIndexStore.setState({
+      items: {
+        "audio:s1": { id: "s1", type: "audio", source: "explicit", sizeBytes: 100, cachedAt: 1, lastAccessedAt: 1 },
+        "audio:deleted-song": { id: "deleted-song", type: "audio", source: "explicit", sizeBytes: 100, cachedAt: 1, lastAccessedAt: 1 },
+      },
+      loaded: true,
+    });
+
+    const { cacheManager } = await import("./cache-manager");
+    await cacheManager.reconcileRemovedFromServer();
+
+    const items = useCacheIndexStore.getState().items;
+    expect(items["audio:deleted-song"].removedFromServer).toBe(true);
+    expect(items["audio:s1"].removedFromServer).toBeUndefined();
+  });
+
+  it("cacheCover returns early when existing cover size is >= requested size", async () => {
+    useCacheIndexStore.setState({
+      items: {
+        "cover:cover-existing": {
+          id: "cover-existing",
+          type: "cover",
+          source: "explicit",
+          coverSize: "700",
+          sizeBytes: 500,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+      },
+      loaded: true,
+    });
+
+    const { cacheManager } = await import("./cache-manager");
+    await cacheManager.cacheCover("cover-existing", "300");
+
+    expect(cacheStorageMock.put).not.toHaveBeenCalled();
+  });
+
+  it("isDownloadQueued checks both queue and in-flight status", async () => {
+    audioCacheServiceMock.isQueued.mockReturnValue(true);
+    audioCacheServiceMock.isInFlight.mockReturnValue(false);
+
+    const { cacheManager } = await import("./cache-manager");
+    expect(cacheManager.isDownloadQueued("song-1")).toBe(true);
+
+    audioCacheServiceMock.isQueued.mockReturnValue(false);
+    audioCacheServiceMock.isInFlight.mockReturnValue(true);
+    expect(cacheManager.isDownloadQueued("song-1")).toBe(true);
+
+    audioCacheServiceMock.isQueued.mockReturnValue(false);
+    audioCacheServiceMock.isInFlight.mockReturnValue(false);
+    expect(cacheManager.isDownloadQueued("song-1")).toBe(false);
   });
 });

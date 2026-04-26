@@ -4,6 +4,7 @@
  * This file is kept for environments where Web Workers are unavailable.
  */
 import { queryClient } from "@/lib/queryClient";
+import { httpClient } from "@/api/httpClient";
 import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
 import { useCacheStore } from "@/store/cache.store";
@@ -14,6 +15,8 @@ import {
   withStarredAt,
 } from "@/store/library-db";
 import type { SyncPhase, SyncTier } from "@/types/cache";
+import type { ISearchResponse } from "@/types/responses/search";
+import type { ISong } from "@/types/responses/song";
 import { queryKeys } from "@/utils/queryKeys";
 
 interface AlbumSummary {
@@ -108,10 +111,9 @@ async function clearAndBulkPutInChunks<T, K>(
   signal: AbortSignal,
 ): Promise<void> {
   if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+  if (rows.length === 0) return;
   await table.clear();
-  if (rows.length > 0) {
-    await bulkPutInChunks(table, rows, signal);
-  }
+  await bulkPutInChunks(table, rows, signal);
 }
 
 /**
@@ -173,7 +175,11 @@ class MetadataSyncService {
       .primaryKeys();
     const removedIds = existingIds.filter((id) => !playlistIds.has(id));
 
-    if (removedIds.length > 0) {
+    if (
+      removedIds.length > 0 &&
+      playlists.length > 0 &&
+      removedIds.length < existingIds.length
+    ) {
       await libraryDb.playlistDetails.bulkDelete(removedIds);
     }
 
@@ -335,15 +341,26 @@ class MetadataSyncService {
 
     // Reconcile starred state instead of pure upsert: otherwise songs
     // unstarred on the server remain falsely marked as favorites in
-    // Dexie until a later full T3 rebuild happens.
+    // Dexie until a later full T3 rebuild happens. Only unstar songs
+    // that we have locally (i.e., T3 has synced them and confirmed
+    // they're no longer starred).
     const previouslyStarred = await libraryDb.songs
       .where("starredAt")
       .above(0)
       .primaryKeys();
-    if (previouslyStarred.length > 0) {
+    if (previouslyStarred.length > 0 && starredIds.size > 0) {
+      const toUnstar = previouslyStarred.filter(
+        (songId) => !starredIds.has(songId),
+      );
+      const localSongs = await libraryDb.songs
+        .where("id")
+        .anyOf(toUnstar)
+        .toArray();
+      const confirmedLocal = new Set(localSongs.map((s) => s.id));
+
       await Promise.all(
-        previouslyStarred
-          .filter((songId) => !starredIds.has(songId))
+        toUnstar
+          .filter((songId) => confirmedLocal.has(songId))
           .map((songId) =>
             libraryDb.songs.update(songId, {
               starred: undefined,
@@ -448,21 +465,75 @@ class MetadataSyncService {
   }
 
   /**
-   * T3 — the long tail: every song detail. Uses
-   * `search3?query=""&songCount=N` to page through the whole
-   * library. Expected to take minutes to tens of minutes on large
+   * T3 — the long tail: every song detail. Pages through
+   * `search3?query=""` to fetch the complete song library.
+   * Expected to take minutes to tens of minutes on large
    * libraries; gated behind `includeFullSongs` so users on big servers
    * who don't need offline-everywhere can opt out.
    */
   private async runT3(signal: AbortSignal): Promise<void> {
     this.checkAborted(signal);
     this.updateSyncState("songs", "t3");
-    const knownSongCount = useAppStore.getState().data.songCount ?? 100_000;
-    const songs = await subsonic.songs.getAllSongs(knownSongCount);
-    this.checkAborted(signal);
-    const rows = (songs ?? []).map((s) => withPlayedAt(withStarredAt(s)));
-    await clearAndBulkPutInChunks(libraryDb.songs, rows, signal);
-    this.updateSyncState("songs", "t3", songs.length, songs.length);
+
+    const serverType = useAppStore.getState().data.serverType;
+    const searchAllQuery = serverType === "navidrome" ? '""' : "";
+    const PAGE_SIZE = 500;
+    const allSongs: ISong[] = [];
+    let songOffset = 0;
+    let hasMoreSongs = true;
+
+    while (hasMoreSongs) {
+      this.checkAborted(signal);
+      const result = await httpClient<ISearchResponse>("/search3", {
+        method: "GET",
+        query: {
+          query: searchAllQuery,
+          artistCount: "0",
+          artistOffset: "0",
+          albumCount: "0",
+          albumOffset: "0",
+          songCount: PAGE_SIZE.toString(),
+          songOffset: songOffset.toString(),
+        },
+      });
+      this.checkAborted(signal);
+
+      const page = result.data.searchResult3?.song ?? [];
+      if (page.length === 0) {
+        hasMoreSongs = false;
+      } else {
+        allSongs.push(...page);
+        songOffset += page.length;
+        this.updateSyncState("songs", "t3", allSongs.length, allSongs.length);
+        if (page.length < PAGE_SIZE) {
+          hasMoreSongs = false;
+        }
+        if (allSongs.length % 2000 === 0) {
+          await yieldToMain();
+        }
+      }
+    }
+
+    const rows = allSongs.map((s) => withPlayedAt(withStarredAt(s)));
+    await bulkPutInChunks(libraryDb.songs, rows, signal);
+
+    if (rows.length > 0) {
+      const serverIds = new Set(rows.map((s) => s.id));
+      const allExistingKeys = await libraryDb.songs
+        .toCollection()
+        .primaryKeys();
+      const staleIds = allExistingKeys.filter((id) => !serverIds.has(id));
+      const maxDeletions = Math.ceil(rows.length * 0.1);
+      if (staleIds.length > 0 && staleIds.length <= maxDeletions) {
+        await libraryDb.songs.bulkDelete(staleIds);
+      } else if (staleIds.length > maxDeletions) {
+        console.warn(
+          `[metadataSync] Skipping song stale deletion: ${staleIds.length} local songs missing from server, exceeds safety threshold of ${maxDeletions} (10%% of ${rows.length} synced songs). This likely indicates an incomplete sync.`,
+        );
+      }
+    }
+
+    this.updateSyncState("songs", "t3", rows.length, rows.length);
 
     await this.recordTierCheckpoint("t3");
 

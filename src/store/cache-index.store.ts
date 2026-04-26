@@ -312,7 +312,7 @@ function emptyBreakdown(): CachePoolBreakdown {
   return { sizeBytes: 0, count: 0 };
 }
 
-function computePoolStats(
+export function computePoolStats(
   items: Record<string, CachedItemMeta>,
 ): CachePoolStats {
   const stats: CachePoolStats = {
