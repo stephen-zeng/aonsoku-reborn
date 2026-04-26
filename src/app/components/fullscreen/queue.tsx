@@ -22,6 +22,7 @@ import {
   QueueItemRow,
   SortableQueueItem,
 } from "@/app/components/queue/queue-item-row";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import { useQueueDndSensors } from "@/app/components/queue/dnd-sensors";
 import {
   ScrollArea,
@@ -121,6 +122,7 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
   thumbClassName,
   onCurrentSongClick,
 }: FullscreenSongQueueProps) {
+  const isMobile = useIsMobile();
   const hasSongs = useHasQueueSongs();
   const currentSongIndex = usePlayerCurrentSongIndex();
   const currentSong = usePlayerCurrentSong();
@@ -178,6 +180,7 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
       clearPlayHistory={clearPlayHistory}
       clearUserQueue={clearUserQueue}
       onCurrentSongClick={onCurrentSongClick}
+      isMobile={isMobile}
     />
   );
 });
@@ -200,6 +203,7 @@ function UnifiedQueueView({
   clearPlayHistory,
   clearUserQueue,
   onCurrentSongClick,
+  isMobile,
 }: {
   playHistory: ISong[];
   userQueueSongs: ISong[];
@@ -218,6 +222,7 @@ function UnifiedQueueView({
   clearPlayHistory: () => void;
   clearUserQueue: () => void;
   onCurrentSongClick?: () => void;
+  isMobile: boolean;
 }) {
   const { t } = useTranslation();
   const { playSong, playFromQueue, playFromUserQueue, reorderQueue } =
@@ -225,6 +230,12 @@ function UnifiedQueueView({
   const isPlaying = usePlayerIsPlaying();
   const loopState = usePlayerLoop();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
+
+  const queueItemProps = {
+    hideDownload: true as const,
+    hideDuration: isMobile,
+    hideDropdownButton: isMobile,
+  };
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentSongRef = useRef<HTMLDivElement>(null);
@@ -379,6 +390,7 @@ function UnifiedQueueView({
         clearUserQueue={clearUserQueue}
         onCurrentSongClick={onCurrentSongClick}
         t={t}
+        queueItemProps={queueItemProps}
       />
     );
   }
@@ -418,6 +430,7 @@ function UnifiedQueueView({
                 isActive={isCurrent}
                 onPlay={() => playSong(displaySong)}
                 tier="context"
+                {...queueItemProps}
               />
             );
           })}
@@ -475,6 +488,7 @@ function UnifiedQueueView({
             onPlaySong={(userQueueIndex) => playFromUserQueue(userQueueIndex)}
             t={t}
             sticky
+            queueItemProps={queueItemProps}
           />
           <div
             className={`${FULLSCREEN_QUEUE_BG_CLASS} sticky top-0 z-10 px-2 pt-1 pb-1`}
@@ -511,6 +525,7 @@ function UnifiedQueueView({
                 }
                 t={t}
                 sticky
+                queueItemProps={queueItemProps}
               />
             </div>
           )}
@@ -554,6 +569,7 @@ function UnifiedQueueView({
                         isActive={false}
                         onPlay={() => playFromQueue(contextSongs, contextIdx)}
                         tier="context"
+                        {...queueItemProps}
                       />
                     );
                   })}
@@ -572,6 +588,7 @@ function UnifiedQueueView({
                         }
                         isActive={currentSong?.id === activeItem.id}
                         onPlay={() => {}}
+                        {...queueItemProps}
                       />
                     </div>
                   )}
@@ -628,6 +645,7 @@ function VirtualizedQueueView({
   clearUserQueue,
   onCurrentSongClick,
   t,
+  queueItemProps,
 }: {
   playHistory: ISong[];
   userQueueSongs: ISong[];
@@ -662,6 +680,11 @@ function VirtualizedQueueView({
   clearUserQueue: () => void;
   onCurrentSongClick?: () => void;
   t: (key: string) => string;
+  queueItemProps: {
+    hideDownload: boolean;
+    hideDuration: boolean;
+    hideDropdownButton: boolean;
+  };
 }) {
   const parentRef = useRef<HTMLDivElement>(null);
   const prevSongIdRef = useRef<string | null>(null);
@@ -874,6 +897,7 @@ function VirtualizedQueueView({
                             isActive={currentSong?.id === item.song.id}
                             onPlay={() => playSong(item.song)}
                             tier="context"
+                            {...queueItemProps}
                           />
                         )}
 
@@ -911,6 +935,7 @@ function VirtualizedQueueView({
                               playFromUserQueue(item.userQueueIndex)
                             }
                             tier="user"
+                            {...queueItemProps}
                           />
                         )}
 
@@ -948,6 +973,7 @@ function VirtualizedQueueView({
                               playFromQueue(contextSongs, item.contextIdx)
                             }
                             tier="context"
+                            {...queueItemProps}
                           />
                         )}
 
@@ -978,6 +1004,7 @@ function VirtualizedQueueView({
                 isPlaying={currentSong?.id === activeItem.id && isPlaying}
                 isActive={currentSong?.id === activeItem.id}
                 onPlay={() => {}}
+                {...queueItemProps}
               />
             </div>
           )}
@@ -1019,6 +1046,7 @@ function UserQueueSection({
   onPlaySong,
   t,
   sticky = false,
+  queueItemProps,
 }: {
   userQueueSongs: ISong[];
   userSortableItems: string[];
@@ -1033,6 +1061,11 @@ function UserQueueSection({
   onPlaySong: (userQueueIndex: number) => void;
   t: (key: string) => string;
   sticky?: boolean;
+  queueItemProps: {
+    hideDownload: boolean;
+    hideDuration: boolean;
+    hideDropdownButton: boolean;
+  };
 }) {
   const filteredUserQueueSongs = userQueueSongs.filter(
     (song) => song.id !== currentSong?.id,
@@ -1081,6 +1114,7 @@ function UserQueueSection({
                 isActive={isCurrent}
                 onPlay={() => onPlaySong(userQueueIndex)}
                 tier="user"
+                {...queueItemProps}
               />
             );
           })}
@@ -1098,6 +1132,7 @@ function UserQueueSection({
                 isPlaying={currentSong?.id === activeItem.id && isPlaying}
                 isActive={currentSong?.id === activeItem.id}
                 onPlay={() => {}}
+                {...queueItemProps}
               />
             </div>
           )}

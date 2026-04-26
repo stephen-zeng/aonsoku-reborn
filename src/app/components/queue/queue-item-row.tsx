@@ -27,6 +27,9 @@ interface QueueItemRowProps {
   onPlay: () => void;
   style?: CSSProperties;
   tier?: "context" | "user";
+  hideDownload?: boolean;
+  hideDuration?: boolean;
+  hideDropdownButton?: boolean;
 }
 
 export function SortableQueueItem({
@@ -79,71 +82,66 @@ export const QueueItemRow = forwardRef<
     dragAttributes,
     dragListeners,
     tier,
+    hideDownload,
+    hideDuration,
+    hideDropdownButton,
   },
   ref,
 ) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  return (
-    <ContextMenuProvider
-      options={<QueueMenuOptions variant="context" song={song} tier={tier} />}
+  const content = (
+    <div
+      ref={ref}
+      className={clsx([
+        "group/queuerow flex items-center w-full h-16 text-sm rounded-md px-3 gap-2",
+        "hover:bg-muted",
+        isActive && "bg-accent",
+      ])}
+      style={style}
+      {...dragAttributes}
     >
       <div
-        ref={ref}
-        className={clsx([
-          "group/queuerow flex items-center w-full h-16 text-sm rounded-md px-3 gap-2",
-          "hover:bg-muted",
-          isActive && "bg-accent",
-        ])}
-        style={style}
-        {...dragAttributes}
+        className="group/cover relative w-10 h-10 flex-shrink-0 cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation();
+          onPlay();
+        }}
       >
-        <span
-          className="text-foreground/30 shrink-0 cursor-grab select-none py-2 -my-2 touch-none"
-          {...dragListeners}
-        >
-          <GripVertical className="w-4 h-4" />
-        </span>
+        <div className="w-10 h-10 bg-accent rounded overflow-hidden">
+          <CachedImage
+            coverArtId={song.coverArt}
+            coverArtType="song"
+            albumId={song.albumId}
+            coverArtSize="100"
+            className="w-10 h-10 rounded text-transparent object-cover"
+            alt={`${song.title} - ${song.artist}`}
+          />
+        </div>
+        {isPlaying && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded">
+            <EqualizerBars size={18} className="text-white mb-0.5" />
+          </div>
+        )}
         <div
-          className="group/cover relative w-10 h-10 flex-shrink-0 cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation();
-            onPlay();
-          }}
-        >
-          <div className="w-10 h-10 bg-accent rounded overflow-hidden">
-            <CachedImage
-              coverArtId={song.coverArt}
-              coverArtType="song"
-              albumId={song.albumId}
-              coverArtSize="100"
-              className="w-10 h-10 rounded text-transparent object-cover"
-              alt={`${song.title} - ${song.artist}`}
-            />
-          </div>
-          {isPlaying && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded">
-              <EqualizerBars size={18} className="text-white mb-0.5" />
-            </div>
+          className={clsx(
+            "absolute inset-0 flex items-center justify-center bg-black/40 rounded",
+            "opacity-0 group-hover/cover:opacity-100 transition-opacity",
           )}
-          <div
-            className={clsx(
-              "absolute inset-0 flex items-center justify-center bg-black/40 rounded",
-              "opacity-0 group-hover/cover:opacity-100 transition-opacity",
-            )}
-          >
-            <PlayIcon size={16} className="text-white fill-white" />
-          </div>
+        >
+          <PlayIcon size={16} className="text-white fill-white" />
         </div>
+      </div>
 
-        <div className="flex flex-col min-w-0 flex-1">
-          <span className="font-semibold truncate text-sm">{song.title}</span>
-          <QueueArtists song={song} />
-        </div>
+      <div className="flex flex-col min-w-0 flex-1">
+        <span className="font-semibold truncate text-sm">{song.title}</span>
+        <QueueArtists song={song} />
+      </div>
 
-        <div className="relative w-[88px] flex-shrink-0 flex items-center justify-end gap-1">
-          <CachedIndicator songId={song.id} />
-          <CacheButton songId={song.id} groupName="queuerow" />
+      <div className="relative flex-shrink-0 flex items-center justify-end gap-1">
+        {!hideDownload && <CachedIndicator songId={song.id} />}
+        {!hideDownload && <CacheButton songId={song.id} groupName="queuerow" />}
+        {!hideDuration && (
           <span
             className={clsx(
               "text-xs transition-opacity",
@@ -153,6 +151,8 @@ export const QueueItemRow = forwardRef<
           >
             {convertSecondsToTime(song.duration)}
           </span>
+        )}
+        {!hideDropdownButton && (
           <div className="absolute inset-0 flex items-center justify-end">
             <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
               <DropdownMenuTrigger asChild>
@@ -179,8 +179,25 @@ export const QueueItemRow = forwardRef<
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </div>
+        )}
       </div>
+
+      {dragListeners && (
+        <span
+          className="text-foreground/30 shrink-0 cursor-grab select-none py-4 px-2 -my-2 -mr-2 touch-none"
+          {...dragListeners}
+        >
+          <GripVertical className="w-5 h-5" />
+        </span>
+      )}
+    </div>
+  );
+
+  return (
+    <ContextMenuProvider
+      options={<QueueMenuOptions variant="context" song={song} tier={tier} />}
+    >
+      {content}
     </ContextMenuProvider>
   );
 });
