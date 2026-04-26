@@ -647,7 +647,7 @@
       "language": "语言和地区",
       "privacy": "隐私和安全",
       "server": "服务器",
-      "storage": "本地体验"
+      "storage": "离线体验"
     },
     "privacy": {
       "services": {

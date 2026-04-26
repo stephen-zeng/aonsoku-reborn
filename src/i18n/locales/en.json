@@ -567,7 +567,7 @@
       "desktop": "Desktop Application",
       "server": "Server",
       "privacy": "Privacy & Security",
-      "storage": "Local Experience"
+      "storage": "Offline Experience"
     },
     "server": {
       "group": "Server",

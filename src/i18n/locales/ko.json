@@ -647,7 +647,7 @@
       "language": "언어 및 지역",
       "privacy": "개인정보 및 보안",
       "server": "서버",
-      "storage": "로컬 환경"
+      "storage": "오프라인 환경"
     },
     "privacy": {
       "services": {

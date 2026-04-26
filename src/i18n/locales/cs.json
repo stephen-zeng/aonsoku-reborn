@@ -653,7 +653,7 @@
       "language": "Jazyk a oblast",
       "privacy": "Soukromí a zabezpečení",
       "server": "Server",
-      "storage": "Lokální úložiště"
+      "storage": "Offline prostředí"
     },
     "privacy": {
       "services": {

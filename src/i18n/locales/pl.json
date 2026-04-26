@@ -661,7 +661,7 @@
       "language": "Język i region",
       "privacy": "Prywatność i bezpieczeństwo",
       "server": "Serwer",
-      "storage": "Doświadczenie lokalne"
+      "storage": "Doświadczenie offline"
     },
     "privacy": {
       "services": {
