@@ -3,10 +3,8 @@ import {
   Info,
   Keyboard,
   LogOut,
-  RefreshCw,
   Settings,
   User,
-  X,
 } from "lucide-react";
 import { useState } from "react";
 import { Fragment } from "react/jsx-runtime";
@@ -29,11 +27,9 @@ import {
 } from "@/app/components/ui/dropdown-menu";
 import { useIsMobile } from "@/app/hooks/use-mobile";
 import { LogoutObserver } from "@/app/observers/logout-observer";
-import { syncService } from "@/service/cache/sync-worker-adapter";
 import { ROUTES } from "@/routes/routesList";
 import { logoutKeys, shortcutDialogKeys, stringifyShortcut } from "@/shortcuts";
 import { useAppData, useAppStore, useAppSettings } from "@/store/app.store";
-import { useCacheStore, useLibraryCaching } from "@/store/cache.store";
 import { useLanControlServerInfo } from "@/store/lanControl.store";
 import { isMacOS } from "@/utils/desktop";
 
@@ -47,8 +43,6 @@ export function UserDropdown() {
   const isMobile = useIsMobile();
   const { setOpenDialog } = useAppSettings();
   const serverInfo = useLanControlServerInfo();
-  const libraryCaching = useLibraryCaching();
-  const isSyncing = useCacheStore((state) => state.status.syncState.isSyncing);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [remoteControlOpen, setRemoteControlOpen] = useState(false);
@@ -96,10 +90,6 @@ export function UserDropdown() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleSettingsClick}>
-            <Settings className="mr-2 h-4 w-4" />
-            <span>{t("settings.label")}</span>
-          </DropdownMenuItem>
           {!isMobile && (
             <DropdownMenuItem onClick={() => setShortcutsOpen(true)}>
               <Keyboard className="mr-2 h-4 w-4" />
@@ -116,34 +106,11 @@ export function UserDropdown() {
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
-          {isSyncing && !libraryCaching && (
-            <DropdownMenuItem onClick={() => syncService.cancel()}>
-              <X className="mr-2 h-4 w-4" />
-              <span>{t("settings.storage.sync.cancel")}</span>
-            </DropdownMenuItem>
-          )}
-          {isSyncing && !libraryCaching && <DropdownMenuSeparator />}
-          {libraryCaching &&
-            (isSyncing ? (
-              <DropdownMenuItem onClick={() => syncService.cancel()}>
-                <X className="mr-2 h-4 w-4" />
-                <span>{t("settings.storage.sync.cancel")}</span>
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem
-                onClick={() => {
-                  const { syncCoverArt } = useCacheStore.getState().settings;
-                  syncService.syncAll({
-                    includeCoverArt: syncCoverArt,
-                    includeFullSongs: true,
-                  });
-                }}
-              >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                <span>{t("settings.storage.sync.syncNow")}</span>
-              </DropdownMenuItem>
-            ))}
-          {libraryCaching && <DropdownMenuSeparator />}
+          <DropdownMenuItem onClick={handleSettingsClick}>
+            <Settings className="mr-2 h-4 w-4" />
+            <span>{t("settings.label")}</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setAboutOpen(true)}>
             <Info className="mr-2 h-4 w-4" />
             <span>{t("menu.about")}</span>
