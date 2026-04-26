@@ -858,6 +858,10 @@
           "t3": {
             "description": "Tutti i metadati dei brani",
             "label": "Brani completi"
+          },
+          "coverArt": {
+            "label": "Copertine",
+            "description": "Immagini di album · artisti · playlist"
           }
         }
       }

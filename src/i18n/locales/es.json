@@ -860,6 +860,10 @@
           "t3": {
             "description": "Todos los metadatos de canciones",
             "label": "Canciones completas"
+          },
+          "coverArt": {
+            "label": "Portadas",
+            "description": "Imágenes de álbumes · artistas · listas de reproducción"
           }
         }
       }

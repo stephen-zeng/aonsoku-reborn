@@ -853,6 +853,10 @@
           "t3": {
             "description": "All låtmetadata",
             "label": "Fullständiga låtar"
+          },
+          "coverArt": {
+            "label": "Omslagsbilder",
+            "description": "Album- · artist- · spellistebilder"
           }
         }
       }

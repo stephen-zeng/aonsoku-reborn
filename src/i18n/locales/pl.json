@@ -867,6 +867,10 @@
           "t3": {
             "description": "Wszystkie metadane utworów",
             "label": "Pełne utwory"
+          },
+          "coverArt": {
+            "label": "Okładki",
+            "description": "Obrazy albumów · artystów · playlist"
           }
         }
       }

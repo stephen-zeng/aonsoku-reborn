@@ -860,6 +860,10 @@
           "t3": {
             "description": "Toutes les métadonnées des pistes",
             "label": "Pistes complètes"
+          },
+          "coverArt": {
+            "label": "Pochettes",
+            "description": "Images d'albums · d'artistes · de listes de lecture"
           }
         }
       }

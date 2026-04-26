@@ -868,6 +868,10 @@
           "t3": {
             "description": "Toutes les métadonnées des titres",
             "label": "Titres complets"
+          },
+          "coverArt": {
+            "label": "Pochettes",
+            "description": "Images d'albums · d'artistes · de playlists"
           }
         }
       }

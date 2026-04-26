@@ -853,6 +853,10 @@
           "t3": {
             "description": "모든 곡 메타데이터",
             "label": "전체 곡"
+          },
+          "coverArt": {
+            "label": "커버 아트",
+            "description": "앨범 · 아티스트 · 재생목록 이미지"
           }
         }
       }

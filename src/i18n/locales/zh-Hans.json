@@ -854,6 +854,10 @@
           "t3": {
             "description": "全部歌曲元数据",
             "label": "完整歌曲"
+          },
+          "coverArt": {
+            "label": "封面图",
+            "description": "专辑 · 艺术家 · 播放列表图片"
           }
         }
       }

@@ -859,6 +859,10 @@
           "t3": {
             "description": "Všechna metadata skladeb",
             "label": "Plné skladby"
+          },
+          "coverArt": {
+            "label": "Obaly alb",
+            "description": "Obrázky alb · interpretů · playlistů"
           }
         }
       }

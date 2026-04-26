@@ -853,6 +853,10 @@
           "t3": {
             "description": "Alle Song-Metadaten",
             "label": "Vollständige Songs"
+          },
+          "coverArt": {
+            "label": "Cover-Art",
+            "description": "Album · Künstler · Playlist-Bilder"
           }
         }
       }

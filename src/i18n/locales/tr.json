@@ -853,6 +853,10 @@
           "t3": {
             "description": "Tüm şarkı meta verileri",
             "label": "Tüm Şarkılar"
+          },
+          "coverArt": {
+            "label": "Kapak Görselleri",
+            "description": "Albüm · Sanatçı · Çalma listesi görselleri"
           }
         }
       }

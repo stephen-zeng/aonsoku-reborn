@@ -3,21 +3,21 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  Image,
   Loader2,
   RefreshCw,
 } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { DownloadingIndicator } from "@/app/components/table/cached-indicator";
 import { Button } from "@/app/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/app/components/ui/popover";
-import { DownloadingIndicator } from "@/app/components/table/cached-indicator";
 import { cn } from "@/lib/utils";
 import { syncService } from "@/service/cache/sync-worker-adapter";
-import { useActiveDownloadsSummary } from "@/store/cache-index.store";
 import {
   useCacheStore,
   useIsOnline,
@@ -25,10 +25,11 @@ import {
   useLibraryCaching,
   useSyncState,
 } from "@/store/cache.store";
+import { useActiveDownloadsSummary } from "@/store/cache-index.store";
 import { libraryDb } from "@/store/library-db";
-import { formatBytes } from "@/utils/formatBytes";
 import type { SyncPhase, SyncState, SyncTier } from "@/types/cache";
 import dateTime from "@/utils/dateTime";
+import { formatBytes } from "@/utils/formatBytes";
 
 const TIER_ORDER: Record<SyncTier, number> = { t1: 0, t2: 1, t3: 2 };
 
@@ -73,8 +74,11 @@ function tierProgress(tier: SyncTier, state: SyncState): number {
   return Math.min(100, Math.round(completed * 100));
 }
 
+const POST_TIER_PHASES: Set<string> = new Set(["coverArt"]);
+
 function tierStatus(tier: SyncTier, state: SyncState): TierStatus {
-  if (state.phase === "done") return "done";
+  if (state.phase === "done" || state.phase === "cancelled") return "done";
+  if (POST_TIER_PHASES.has(state.phase)) return "done";
   if (state.phase === "error") {
     if (!state.tier) return "pending";
     const errored = TIER_ORDER[state.tier];
@@ -164,6 +168,70 @@ const TierRow = memo(function TierRow({
           {status === "running" && (
             <p className="text-[10px] text-blue-500 truncate leading-tight">
               {phaseLabel}
+            </p>
+          )}
+        </div>
+        {status === "running" && (
+          <span className="text-xs tabular-nums shrink-0 text-muted-foreground">
+            {progress}%
+          </span>
+        )}
+      </div>
+      {status === "running" && (
+        <div className="ml-7 mt-1.5 h-1.5 rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-full bg-blue-500 transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      )}
+    </div>
+  );
+});
+
+const CoverArtRow = memo(function CoverArtRow({
+  status,
+  progress,
+}: {
+  status: TierStatus;
+  progress: number;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="py-1">
+      <div className="flex items-center gap-2">
+        <span
+          className={cn(
+            "w-5 h-5 flex items-center justify-center rounded-full shrink-0",
+            status === "done" && "bg-emerald-500/10 text-emerald-500",
+            status === "running" && "bg-blue-500/10 text-blue-500",
+            status === "error" && "bg-amber-500/10 text-amber-500",
+            status === "pending" && "text-muted-foreground",
+          )}
+        >
+          {status === "done" && <Check className="w-3 h-3" />}
+          {status === "running" && <Image className="w-3 h-3 animate-pulse" />}
+          {status === "error" && <AlertTriangle className="w-3 h-3" />}
+          {status === "pending" && (
+            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
+          )}
+        </span>
+        <div className="flex-1 min-w-0">
+          <p
+            className={cn(
+              "text-xs font-medium",
+              status === "pending" && "text-muted-foreground",
+            )}
+          >
+            {t("settings.storage.sync.tier.coverArt.label")}
+          </p>
+          <p className="text-[10px] text-muted-foreground truncate leading-tight">
+            {t("settings.storage.sync.tier.coverArt.description")}
+          </p>
+          {status === "running" && (
+            <p className="text-[10px] text-blue-500 truncate leading-tight">
+              {t("settings.storage.sync.phases.coverArt")}
             </p>
           )}
         </div>
@@ -337,6 +405,7 @@ function SyncPopoverContent({
   lastSyncedAt: number | null;
 }) {
   const { t } = useTranslation();
+  const syncCoverArt = useCacheStore((s) => s.settings.syncCoverArt);
 
   const showError = syncState.phase === "error";
   const isSyncing = syncState.isSyncing;
@@ -367,6 +436,20 @@ function SyncPopoverContent({
     [syncState],
   );
 
+  const coverArtStatus = useMemo<TierStatus>(() => {
+    if (syncState.phase === "done" || syncState.phase === "cancelled")
+      return "done";
+    if (syncState.phase === "coverArt") return "running";
+    if (syncState.phase === "error") {
+      if (!syncState.tier) return "pending";
+      return "pending";
+    }
+    return "pending";
+  }, [syncState.phase, syncState.tier]);
+
+  const coverArtProgress =
+    syncState.phase === "coverArt" ? syncState.progress : 0;
+
   return (
     <div className="space-y-1">
       {/* Header */}
@@ -392,6 +475,10 @@ function SyncPopoverContent({
           progress={progress}
         />
       ))}
+
+      {syncCoverArt && (
+        <CoverArtRow status={coverArtStatus} progress={coverArtProgress} />
+      )}
 
       <DownloadSection />
 

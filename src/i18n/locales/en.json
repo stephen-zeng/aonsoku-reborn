@@ -748,6 +748,10 @@
           "t3": {
             "label": "Full Songs",
             "description": "All song metadata"
+          },
+          "coverArt": {
+            "label": "Cover Art",
+            "description": "Album · Artist · Playlist images"
           }
         },
         "justNow": "Just now",
