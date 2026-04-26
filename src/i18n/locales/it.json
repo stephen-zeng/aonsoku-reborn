@@ -1,19 +1,23 @@
 {
   "about": {
-    "apiVersion": "API Version",
-    "buildTime": "Build Time",
+    "apiVersion": "Versione API",
+    "buildTime": "Data di compilazione",
     "client": "Client",
     "server": "Server",
     "toasts": {
-      "copy": "Link copied to clipboard!"
+      "copy": "Link copiato negli appunti!"
     },
-    "type": "Type",
-    "version": "Version"
+    "type": "Tipo",
+    "version": "Versione"
   },
   "album": {
     "buttons": {
       "dislike": "Rimuovi {{name}} dai preferiti",
       "like": "Metti nei preferiti {{name}}"
+    },
+    "detail": {
+      "songsUnavailable": "Elenco tracce non disponibile offline. Sincronizza la libreria per rendere le tracce disponibili.",
+      "songsUnavailableTitle": "Tracce non disponibili"
     },
     "headline": "Album",
     "info": {
@@ -70,9 +74,9 @@
     },
     "headline": "Artista",
     "info": {
+      "albumsCount_many": "{{count}} album",
       "albumsCount_one": "{{count}} album",
-      "albumsCount_other": "{{count}} album",
-      "albumsCount_many": "{{count}} album"
+      "albumsCount_other": "{{count}} album"
     },
     "recentAlbums": "Album recenti",
     "relatedArtists": "Artisti correlati",
@@ -82,7 +86,7 @@
     "commands": {
       "heading": "Comandi",
       "pages": "Vai alla pagina",
-      "theme": "Tema del cambiamento"
+      "theme": "Cambia tema"
     },
     "inputPlaceholder": "Cerca un album, un artista o una canzone",
     "noResults": "Nessun risultato trovato.",
@@ -90,23 +94,23 @@
   },
   "dayjs": {
     "relativeTime": {
-      "M": "1 month",
-      "MM": "%d months",
-      "d": "1 day",
-      "dd": "%d days",
-      "future": "in %s",
-      "h": "1 hour",
-      "hh": "%d hours",
-      "m": "1 minute",
-      "mm": "%d minutes",
-      "past": "%s ago",
-      "s": "a few seconds",
-      "y": "1 year",
-      "yy": "%d years"
+      "M": "1 mese",
+      "MM": "%d mesi",
+      "d": "1 giorno",
+      "dd": "%d giorni",
+      "future": "tra %s",
+      "h": "1 ora",
+      "hh": "%d ore",
+      "m": "1 minuto",
+      "mm": "%d minuti",
+      "past": "%s fa",
+      "s": "pochi secondi",
+      "y": "1 anno",
+      "yy": "%d anni"
     }
   },
   "error": {
-    "notFound": "Not found"
+    "notFound": "Non trovato"
   },
   "favorites": {
     "buttons": {
@@ -120,21 +124,21 @@
     "songCount_other": "{{count}} canzoni"
   },
   "fullscreen": {
-    "emptyQueue": "No songs in queue",
+    "emptyQueue": "Nessuna canzone in coda",
     "loadingLyrics": "Cercando i testi…",
     "lyrics": "Testi",
     "noLyrics": "Nessun testo trovato",
     "playing": "In riproduzione",
     "queue": "Coda",
-    "queueContinue": "Continue Playing",
-    "queueFromSource": "From {{source}}",
-    "queueHistory": "History",
-    "queueRepeating": "Repeating",
+    "queueContinue": "Continua a riprodurre",
+    "queueFromSource": "Da {{source}}",
+    "queueHistory": "Cronologia",
+    "queueRepeating": "Ripetizione",
     "switchButton": "Passa a Riproduttore Grande"
   },
   "generic": {
     "beta": "Beta",
-    "clear": "Clear",
+    "clear": "Cancella",
     "hideDetails": "Nascondi dettagli",
     "loading": "Caricamento…",
     "seeMore": "Per saperne di più",
@@ -157,65 +161,65 @@
   "lanControl": {
     "remote": {
       "actions": {
-        "connect": "Connect",
-        "connecting": "Connecting...",
-        "disconnect": "Disconnect",
-        "refresh": "Refresh state"
+        "connect": "Connetti",
+        "connecting": "Connessione in corso...",
+        "disconnect": "Disconnetti",
+        "refresh": "Aggiorna stato"
       },
-      "address": "Server address",
-      "autoConnectFailed": "Failed to connect to remote device, entering local playback mode",
-      "clickToPlay": "Click to play",
+      "address": "Indirizzo server",
+      "autoConnectFailed": "Connessione al dispositivo remoto fallita, attivazione modalità riproduzione locale",
+      "clickToPlay": "Clicca per riprodurre",
       "controls": {
-        "next": "Next",
-        "pause": "Pause",
-        "play": "Play",
-        "previous": "Previous",
-        "repeat": "Toggle repeat",
-        "shuffle": "Toggle shuffle"
+        "next": "Successiva",
+        "pause": "Pausa",
+        "play": "Riproduci",
+        "previous": "Precedente",
+        "repeat": "Attiva/Disattiva ripetizione",
+        "shuffle": "Attiva/Disattiva casuale"
       },
-      "currentlyPlaying": "Currently playing",
-      "description": "Connect to a LAN control server and manage playback remotely.",
-      "emptyArtist": "Unknown artist",
-      "emptyTitle": "No track playing",
-      "ip": "IP Address",
-      "items": "items",
+      "currentlyPlaying": "In riproduzione",
+      "description": "Connettiti a un server LAN Control e gestisci la riproduzione da remoto.",
+      "emptyArtist": "Artista sconosciuto",
+      "emptyTitle": "Nessuna traccia in riproduzione",
+      "ip": "Indirizzo IP",
+      "items": "elementi",
       "library": {
-        "albums": "Albums",
-        "back": "Back",
-        "loading": "Loading...",
-        "noAlbums": "No albums available",
-        "noPlaylists": "No playlists available",
-        "noResults": "No results found",
-        "playlists": "Playlists",
-        "search": "Search",
-        "searchButton": "Search",
-        "searchPlaceholder": "Search songs, albums...",
-        "searching": "Searching...",
-        "songs": "Songs"
+        "albums": "Album",
+        "back": "Indietro",
+        "loading": "Caricamento in corso...",
+        "noAlbums": "Nessun album disponibile",
+        "noPlaylists": "Nessuna playlist disponibile",
+        "noResults": "Nessun risultato trovato",
+        "playlists": "Playlist",
+        "search": "Cerca",
+        "searchButton": "Cerca",
+        "searchPlaceholder": "Cerca brani, album...",
+        "searching": "Ricerca in corso...",
+        "songs": "Brani"
       },
-      "loadingSong": "Loading...",
-      "menu": "Control other devices",
-      "nowPlaying": "Now playing",
-      "password": "Access code",
-      "playing": "Playing",
-      "port": "Port",
-      "queue": "Playback queue",
-      "queueEmpty": "Queue is empty",
-      "serverRunning": "This device is currently running as a LAN Control server. You cannot control other devices while this device is in server mode.",
+      "loadingSong": "Caricamento in corso...",
+      "menu": "Controlla altri dispositivi",
+      "nowPlaying": "In riproduzione",
+      "password": "Codice di accesso",
+      "playing": "In riproduzione",
+      "port": "Porta",
+      "queue": "Coda di riproduzione",
+      "queueEmpty": "La coda è vuota",
+      "serverRunning": "Questo dispositivo è attualmente in esecuzione come server LAN Control. Non puoi controllare altri dispositivi mentre questo dispositivo è in modalità server.",
       "status": {
-        "authenticating": "Authenticating",
-        "connected": "Connected",
-        "connecting": "Connecting",
-        "disconnected": "Disconnected",
-        "error": "Error",
-        "label": "Status"
+        "authenticating": "In autenticazione",
+        "connected": "Connesso",
+        "connecting": "Connessione in corso",
+        "disconnected": "Disconnesso",
+        "error": "Errore",
+        "label": "Stato"
       },
       "tabs": {
-        "control": "Control",
-        "library": "Library"
+        "control": "Controllo",
+        "library": "Libreria"
       },
-      "title": "Control other devices",
-      "unknownDevice": "Unknown device",
+      "title": "Controlla altri dispositivi",
+      "unknownDevice": "Dispositivo sconosciuto",
       "version": "v{{version}}",
       "volume": "Volume: {{volume}}%"
     }
@@ -256,27 +260,39 @@
     "serverLogout": "Esci"
   },
   "mobile": {
-    "access_recommendation": "Please access it from a computer or tablet.",
-    "unsupported_message": "{{app_name}} isn't compatible with mobile phones."
+    "access_recommendation": "Accedi da un computer o tablet.",
+    "unsupported_message": "{{app_name}} non è compatibile con i telefoni."
   },
   "offline": {
-    "disconnected": "Server unreachable",
+    "badge": {
+      "cloud": "Richiede connessione",
+      "downloaded": "Scaricato",
+      "downloading": "Scaricamento in corso…",
+      "orphan": "Rimosso dal server (ancora riproducibile offline)",
+      "smart": "Salvato da una regola di download intelligente"
+    },
+    "disconnected": "Server non raggiungibile",
+    "metered": "Limitato",
+    "meteredTooltip": "Sei su una connessione lenta o limitata. La sincronizzazione in background e i download intelligenti sono in pausa — tocca un pulsante di download per forzare.",
     "mode": "Offline",
-    "reconnectFailed": "Could not reconnect. Continuing in offline mode.",
-    "reconnected": "Reconnected to server",
-    "reconnecting": "Reconnecting…",
-    "searchUnavailable": "Search requires an offline library sync.",
-    "songUnavailable": "This song is not available offline"
+    "reconnectFailed": "Impossibile riconnettersi. Continuazione in modalità offline.",
+    "reconnected": "Riconnesso al server",
+    "reconnecting": "Riconnessione in corso…",
+    "searchUnavailable": "La ricerca richiede una sincronizzazione della libreria offline.",
+    "songUnavailable": "Questa canzone non è disponibile offline"
   },
   "options": {
     "addLast": "Aggiungi alla fine",
     "download": "Scarica",
+    "downloadAlbum": "Scarica album",
+    "downloadArtist": "Scarica artista",
+    "downloadPlaylist": "Scarica playlist",
     "goto": {
       "album": "Vai all'album",
       "artist": "Vai all'artista"
     },
     "info": "Informazioni",
-    "like": "Like",
+    "like": "Mi piace",
     "play": "Riproduci",
     "playNext": "Riproduci successivo",
     "playlist": {
@@ -288,44 +304,41 @@
       "removeSong": "Rimuovi dalla playlist",
       "search": "Cerca una playlist"
     },
+    "removeDownload": "Rimuovi download",
     "removeFromQueue": "Rimuovi dalla coda",
-    "unlike": "Unlike",
-    "downloadAlbum": "Scarica album",
-    "downloadPlaylist": "Scarica playlist",
-    "downloadArtist": "Scarica artista",
-    "removeDownload": "Rimuovi download"
+    "unlike": "Non mi piace più"
   },
   "player": {
     "noRadioPlaying": "Nessuna radio in riproduzione",
     "noSongPlaying": "Nessuna canzone in riproduzione",
     "tooltips": {
-      "dislike": "Remove like from {{song}} by {{artist}}",
-      "forward": "Forward {{amount}} seconds",
-      "like": "Like {{song}} by {{artist}}",
+      "dislike": "Rimuovi mi piace da {{song}} di {{artist}}",
+      "forward": "Avanti {{amount}} secondi",
+      "like": "Metti mi piace a {{song}} di {{artist}}",
       "miniPlayer": {
-        "close": "Close Miniplayer",
-        "open": "Open Miniplayer"
+        "close": "Chiudi Miniplayer",
+        "open": "Apri Miniplayer"
       },
-      "next": "Next",
-      "pause": "Pause",
-      "play": "Play",
-      "previous": "Previous",
-      "progress": "Seek",
+      "next": "Successiva",
+      "pause": "Pausa",
+      "play": "Riproduci",
+      "previous": "Precedente",
+      "progress": "Cerca",
       "repeat": {
-        "disable": "Disable repeat",
-        "enable": "Enable repeat",
-        "enableOne": "Enable repeat one"
+        "disable": "Disattiva ripetizione",
+        "enable": "Attiva ripetizione",
+        "enableOne": "Attiva ripetizione singola"
       },
-      "rewind": "Rewind {{amount}} seconds",
+      "rewind": "Riavvolgi {{amount}} secondi",
       "shuffle": {
         "disable": "Disattiva riproduzione random",
         "enable": "Attiva riproduzione random"
       },
-      "star": "Star current song",
-      "unstar": "Unstar current song",
+      "star": "Aggiungi brano ai preferiti",
+      "unstar": "Rimuovi brano dai preferiti",
       "volume": {
-        "mute": "Mute",
-        "unmute": "Unmute"
+        "mute": "Silenzia",
+        "unmute": "Riattiva audio"
       }
     }
   },
@@ -370,17 +383,17 @@
       },
       "removeSong": {
         "description": "Questa azione non può essere annullata.",
+        "title_many": "Sei sicuro di rimuovere i brani selezionata?",
         "title_one": "Sei sicuro di rimuovere il brano selezionata?",
         "title_other": "Sei sicuro di rimuovere i brani selezionata?",
         "toast": {
+          "error_many": "Impossibile rimuovere i brani!",
           "error_one": "Impossibile rimuovere il brano!",
           "error_other": "Impossibile rimuovere i brani!",
-          "success_one": "Brano rimosso con successo!",
-          "success_other": "Brani rimossi con successo!",
           "success_many": "Brani rimossi con successo!",
-          "error_many": "Impossibile rimuovere i brani!"
-        },
-        "title_many": "Sei sicuro di rimuovere i brani selezionata?"
+          "success_one": "Brano rimosso con successo!",
+          "success_other": "Brani rimossi con successo!"
+        }
       },
       "validations": {
         "nameLength": "Il nome della playlist deve essere lungo almeno 2 caratteri."
@@ -389,92 +402,92 @@
     "headline": "Playlist",
     "noSongList": "Questa playlist non contiene brani!",
     "refresh": "Aggiorna playlist",
+    "songCount_many": "{{count}} brani",
     "songCount_one": "{{count}} brano",
-    "songCount_other": "{{count}} brani",
-    "songCount_many": "{{count}} brani"
+    "songCount_other": "{{count}} brani"
   },
   "queue": {
-    "clear": "Clear queue",
-    "close": "Close queue",
-    "open": "Open queue",
-    "title": "Queue"
+    "clear": "Svuota coda",
+    "close": "Chiudi coda",
+    "open": "Apri coda",
+    "title": "Coda"
   },
   "radios": {
-    "addRadio": "Add Radio",
+    "addRadio": "Aggiungi Radio",
     "empty": {
-      "info": "Click to add your first radio station.",
-      "title": "You have no radios!"
+      "info": "Clicca per aggiungere la tua prima stazione radio.",
+      "title": "Non hai radio!"
     },
-    "error": "Unable to play the Radio, check the Stream URL!",
+    "error": "Impossibile riprodurre la radio, controlla l'URL dello stream!",
     "form": {
       "create": {
-        "button": "Save",
-        "title": "Add Radio",
+        "button": "Salva",
+        "title": "Aggiungi Radio",
         "toast": {
-          "error": "Failed to create radio!",
-          "success": "Radio created successfully!"
+          "error": "Creazione radio fallita!",
+          "success": "Radio creata con successo!"
         }
       },
       "delete": {
-        "description": "This action cannot be undone.",
-        "title": "Are you sure you want to delete this radio station?",
+        "description": "Questa azione non può essere annullata.",
+        "title": "Sei sicuro di voler eliminare questa stazione radio?",
         "toast": {
-          "error": "Failed to remove radio!",
-          "success": "Radio removed successfully!"
+          "error": "Rimozione radio fallita!",
+          "success": "Radio rimossa con successo!"
         }
       },
       "edit": {
-        "button": "Update",
-        "title": "Edit Radio",
+        "button": "Aggiorna",
+        "title": "Modifica Radio",
         "toast": {
-          "error": "Failed to update radio!",
-          "success": "Radio updated successfully!"
+          "error": "Aggiornamento radio fallito!",
+          "success": "Radio aggiornata con successo!"
         }
       },
       "validations": {
-        "homepageUrlLength": "Homepage URL must be at least 10 characters",
-        "name": "Radio name must be at least 3 characters.",
-        "streamUrlLength": "Stream URL must be at least 10 characters",
-        "url": "Please provide a valid URL."
+        "homepageUrlLength": "L'URL della home page deve contenere almeno 10 caratteri",
+        "name": "Il nome della radio deve contenere almeno 3 caratteri.",
+        "streamUrlLength": "L'URL dello stream deve contenere almeno 10 caratteri",
+        "url": "Fornisci un URL valido."
       }
     },
     "label": "Radio",
     "table": {
       "actions": {
-        "delete": "Delete radio",
-        "edit": "Edit radio"
+        "delete": "Elimina radio",
+        "edit": "Modifica radio"
       },
-      "homepage": "Homepage URL",
-      "name": "Name",
-      "pauseTooltip": "Pause {{name}} radio",
-      "playTooltip": "Play {{name}} radio",
-      "stream": "Stream URL"
+      "homepage": "URL Homepage",
+      "name": "Nome",
+      "pauseTooltip": "Metti in pausa la radio {{name}}",
+      "playTooltip": "Riproduci la radio {{name}}",
+      "stream": "URL Stream"
     }
   },
   "server": {
     "buttons": {
-      "refresh": "Refresh status",
-      "startScan": "Quick Scan"
+      "refresh": "Aggiorna stato",
+      "startScan": "Scansione rapida"
     },
-    "folderCount_one": "{{count}} folder",
-    "folderCount_other": "{{count}} folders",
+    "folderCount_one": "{{count}} cartella",
+    "folderCount_other": "{{count}} cartelle",
     "incompatible": {
-      "description": "This server uses an older version of the Subsonic protocol that is not fully supported. Please proceed with caution as you may have issues.",
-      "skip": "Continue anyway",
-      "title": "Incompatible server"
+      "description": "Questo server utilizza una versione precedente del protocollo Subsonic che non è completamente supportata. Procedi con cautela poiché potresti avere problemi.",
+      "skip": "Continua comunque",
+      "title": "Server incompatibile"
     },
-    "lastScan": "Last scan: {{date}}",
-    "management": "Server management",
-    "songCount_one": "{{count}} song",
-    "songCount_other": "{{count}} songs",
-    "status": "Status"
+    "lastScan": "Ultima scansione: {{date}}",
+    "management": "Gestione server",
+    "songCount_one": "{{count}} brano",
+    "songCount_other": "{{count}} brani",
+    "status": "Stato"
   },
   "settings": {
     "accounts": {
       "discord": {
-        "description": "Share your currently playing song with friends on Discord.",
+        "description": "Condividi la canzone in riproduzione con gli amici su Discord.",
         "enabled": {
-          "label": "Enable Integration"
+          "label": "Attiva integrazione"
         },
         "group": "Discord Rich Presence"
       }
@@ -482,245 +495,341 @@
     "appearance": {
       "colors": {
         "bigPlayer": {
-          "blurSize": "Image Blur Size",
-          "label": "Big Player"
+          "blurSize": "Dimensione sfocatura immagine",
+          "label": "Riproduttore grande"
         },
-        "description": "Select whether the app should use the dominant color from the currently playing album art as the background.",
-        "group": "Dynamic Colors",
+        "description": "Seleziona se l'app deve utilizzare il colore dominante della copertina dell'album in riproduzione come sfondo.",
+        "group": "Colori dinamici",
         "queue": {
-          "intensity": "Color Intensity Level",
-          "label": "Queue and Lyrics"
+          "intensity": "Livello intensità colore",
+          "label": "Coda e testi"
         }
       },
       "general": {
         "albumCoverForSongs": {
-          "info": "When enabled, every song artwork request uses the album cover to reduce loading time.",
-          "label": "Always use album covers"
+          "info": "Se attivato, ogni richiesta di copertina usa la copertina dell'album per ridurre i tempi di caricamento.",
+          "label": "Usa sempre le copertine degli album"
         },
-        "description": "Customize the app's look and display behaviors.",
+        "description": "Personalizza l'aspetto e i comportamenti di visualizzazione dell'app.",
         "fullscreen": {
-          "info": "If enabled, when accessing the big player, the app will automatically enter fullscreen mode.",
-          "label": "Enable automatic fullscreen"
+          "info": "Se attivato, quando si accede al riproduttore grande, l'app entrerà automaticamente in modalità schermo intero.",
+          "label": "Attiva schermo intero automatico"
         },
-        "group": "General"
+        "group": "Generale"
       }
     },
     "audio": {
       "history": {
-        "description": "Songs that play for more than 10 seconds are recorded in your play history.",
-        "group": "Play History",
+        "description": "I brani riprodotti per più di 10 secondi vengono registrati nella cronologia di riproduzione.",
+        "group": "Cronologia riproduzione",
         "maxSize": {
-          "info": "The maximum number of songs to keep in play history. Older entries are removed when the limit is exceeded.",
-          "label": "Maximum history size"
+          "info": "Il numero massimo di brani da mantenere nella cronologia di riproduzione. Le voci più vecchie vengono rimosse quando il limite viene superato.",
+          "label": "Dimensione massima cronologia"
         }
       },
       "lyrics": {
-        "description": "Customize lyrics settings.",
-        "group": "Lyrics",
+        "description": "Personalizza le impostazioni dei testi.",
+        "group": "Testi",
         "preferSynced": {
-          "info": "When enabled, synced lyrics will be prioritized over unsynced lyrics.",
-          "label": "Prefer synced lyrics"
+          "info": "Se attivato, i testi sincronizzati avranno priorità su quelli non sincronizzati.",
+          "label": "Preferisci testi sincronizzati"
         },
         "showTranslation": {
-          "info": "When available, show translated lyrics below the original lyrics.",
-          "label": "Show translation"
+          "info": "Quando disponibile, mostra i testi tradotti sotto quelli originali.",
+          "label": "Mostra traduzione"
         }
       },
       "replayGain": {
         "defaultGain": {
-          "info": "This gain level is applied to songs that do not include ReplayGain metadata, ensuring consistent audio volume. The recommended range for gain is between -10 dB and -1 dB.",
-          "label": "Default Gain (dB)"
+          "info": "Questo livello di gain viene applicato ai brani che non includono metadati ReplayGain, garantendo un volume audio uniforme. L'intervallo consigliato per il gain è tra -10 dB e -1 dB.",
+          "label": "Gain predefinito (dB)"
         },
-        "description": "Automatically normalize audio playback levels for a consistent listening experience.",
-        "enabled": "Enabled",
+        "description": "Normalizza automaticamente i livelli audio per un'esperienza di ascolto uniforme.",
+        "enabled": "Attivato",
         "error": {
-          "button": "Try again",
-          "message": "There was an error playing the track using Replay Gain."
+          "button": "Riprova",
+          "message": "Si è verificato un errore durante la riproduzione della traccia con Replay Gain."
         },
         "group": "ReplayGain",
         "mode": {
-          "album": "Album gain",
-          "label": "Mode",
-          "track": "Track gain"
+          "album": "Gain album",
+          "label": "Modalità",
+          "track": "Gain traccia"
         },
         "preAmp": "PreAmp (dB)"
       }
     },
     "content": {
       "sidebar": {
-        "description": "Manage the visibility and organization of sections displayed in the sidebar.",
-        "group": "Sidebar",
+        "description": "Gestisci la visibilità e l'organizzazione delle sezioni nella barra laterale.",
+        "group": "Barra laterale",
         "radios": {
-          "section": "Hide radios section"
+          "section": "Nascondi sezione radio"
         }
       }
     },
     "desktop": {
       "general": {
-        "description": "Customize preferences for the desktop application.",
-        "group": "General",
+        "description": "Personalizza le preferenze per l'applicazione desktop.",
+        "group": "Generale",
         "tray": {
-          "info": "When enabled, the app will minimize to the system tray instead of closing when you click the close button.",
-          "label": "Minimize to Tray"
+          "info": "Se attivato, l'app si ridurrà a icona nella tray di sistema invece di chiudersi quando fai clic sul pulsante di chiusura.",
+          "label": "Riduci a icona nella tray"
         }
       },
       "lanControl": {
         "address": {
-          "info": "Available server addresses for LAN control access.",
-          "label": "Server Addresses"
+          "info": "Indirizzi server disponibili per l'accesso LAN Control.",
+          "label": "Indirizzi server"
         },
-        "addressCopied": "Server address copied to clipboard.",
+        "addressCopied": "Indirizzo server copiato negli appunti.",
         "allowNavidromeAuth": {
-          "info": "Enable authentication using Navidrome credentials.",
-          "label": "Allow Navidrome Authentication"
+          "info": "Abilita autenticazione con credenziali Navidrome.",
+          "label": "Consenti autenticazione Navidrome"
         },
-        "copyAddress": "Copy address",
-        "copyPassword": "Copy password",
-        "description": "Manage LAN control settings for remote access.",
+        "copyAddress": "Copia indirizzo",
+        "copyPassword": "Copia password",
+        "description": "Gestisci le impostazioni LAN Control per l'accesso remoto.",
         "enable": {
-          "info": "Turn on LAN control to allow remote access to this application.",
-          "label": "Enable LAN Control"
+          "info": "Attiva LAN Control per consentire l'accesso remoto a questa applicazione.",
+          "label": "Attiva LAN Control"
         },
         "group": "LAN Control",
         "password": {
-          "info": "Set a password for secure access to the LAN control server.",
+          "info": "Imposta una password per l'accesso sicuro al server LAN Control.",
           "label": "Password"
         },
-        "passwordCopied": "Password copied to clipboard.",
-        "passwordRegenerated": "Password regenerated successfully.",
+        "passwordCopied": "Password copiata negli appunti.",
+        "passwordRegenerated": "Password rigenerata con successo.",
         "port": {
-          "info": "Specify the port number for the LAN control server.",
-          "label": "Port"
+          "info": "Specifica il numero di porta per il server LAN Control.",
+          "label": "Porta"
         },
-        "regeneratePassword": "Regenerate password",
-        "serverError": "Failed to start LAN control server.",
-        "serverStarted": "LAN control server started successfully."
+        "regeneratePassword": "Rigenera password",
+        "serverError": "Avvio del server LAN Control fallito.",
+        "serverStarted": "Server LAN Control avviato con successo."
       },
       "updates": {
-        "availableVersion": "Version {{version}} available",
+        "availableVersion": "Versione {{version}} disponibile",
         "checkNow": {
-          "info": "Manually check for available updates.",
-          "label": "Check for Updates"
+          "info": "Controlla manualmente gli aggiornamenti disponibili.",
+          "label": "Controlla aggiornamenti"
         },
-        "checking": "Checking for updates...",
-        "checkingManually": "Checking for updates...",
+        "checking": "Controllo aggiornamenti in corso...",
+        "checkingManually": "Controllo aggiornamenti in corso...",
         "currentVersion": {
-          "info": "The version of Aonsoku you are currently running.",
-          "label": "Current Version"
+          "info": "La versione di Aonsoku che stai utilizzando.",
+          "label": "Versione corrente"
         },
-        "description": "Check for and install application updates.",
-        "download": "Download Update",
-        "downloadError": "Download Failed",
-        "downloadStarted": "Download Started",
-        "downloadStartedDesc": "Update download has begun",
-        "downloading": "Downloading... {{percent}}%",
-        "group": "App Updates",
-        "installNow": "Install and Restart",
-        "readyToInstall": "Ready to install (restart required)",
+        "description": "Controlla e installa gli aggiornamenti dell'applicazione.",
+        "download": "Scarica aggiornamento",
+        "downloadError": "Download fallito",
+        "downloadStarted": "Download avviato",
+        "downloadStartedDesc": "Il download dell'aggiornamento è iniziato",
+        "downloading": "Download in corso... {{percent}}%",
+        "group": "Aggiornamenti app",
+        "installNow": "Installa e riavvia",
+        "readyToInstall": "Pronto per l'installazione (riavvio richiesto)",
         "status": {
-          "info": "The current status of application updates.",
-          "label": "Update Status"
+          "info": "Lo stato corrente degli aggiornamenti dell'applicazione.",
+          "label": "Stato aggiornamento"
         },
-        "upToDate": "You're up to date",
-        "updateAvailable": "Update Available",
-        "updateAvailableDesc": "Version {{version}} is available",
-        "updateError": "Update Check Failed",
-        "updateReady": "Update Ready",
-        "updateReadyDesc": "Update will be installed when you restart the app"
+        "upToDate": "Hai l'ultima versione",
+        "updateAvailable": "Aggiornamento disponibile",
+        "updateAvailableDesc": "Versione {{version}} disponibile",
+        "updateError": "Controllo aggiornamenti fallito",
+        "updateReady": "Aggiornamento pronto",
+        "updateReadyDesc": "L'aggiornamento verrà installato al riavvio dell'app"
       }
     },
-    "label": "Settings",
+    "label": "Impostazioni",
     "options": {
-      "accounts": "Accounts",
-      "appearance": "Appearance",
-      "audio": "Player & Audio",
-      "content": "Content",
-      "desktop": "Desktop Application",
-      "language": "Language & Region",
-      "privacy": "Privacy & Security",
+      "accounts": "Account",
+      "appearance": "Aspetto",
+      "audio": "Riproduttore e audio",
+      "content": "Contenuto",
+      "desktop": "Applicazione desktop",
+      "language": "Lingua e regione",
+      "privacy": "Privacy e sicurezza",
       "server": "Server",
-      "storage": "Local Experience"
+      "storage": "Esperienza locale"
     },
     "privacy": {
       "services": {
-        "description": "Manage the external services that Aonsoku can access.",
-        "group": "External Services",
+        "description": "Gestisci i servizi esterni a cui Aonsoku può accedere.",
+        "group": "Servizi esterni",
         "lrclib": {
-          "info": "LRCLIB is used to find song lyrics.",
+          "info": "LRCLIB viene utilizzato per trovare i testi delle canzoni.",
           "label": "LRCLIB"
         }
       }
     },
     "server": {
       "activeType": {
-        "fallback": "Fallback URL",
-        "info": "Shows whether this session is using the primary or fallback URL.",
-        "label": "Current server",
-        "none": "Not connected",
-        "primary": "Primary URL"
+        "fallback": "URL di fallback",
+        "info": "Mostra se questa sessione sta usando l'URL primario o di fallback.",
+        "label": "Server corrente",
+        "none": "Non connesso",
+        "primary": "URL primario"
       },
       "activeUrl": {
-        "empty": "No server selected",
-        "info": "The server URL currently used by this app session.",
-        "label": "Current URL"
+        "empty": "Nessun server selezionato",
+        "info": "L'URL del server attualmente utilizzato da questa sessione dell'app.",
+        "label": "URL corrente"
       },
-      "description": "Manage the primary server and optional fallback URL used at startup.",
+      "description": "Gestisci il server primario e l'URL di fallback opzionale all'avvio.",
       "fallbackUrl": {
-        "info": "Optional server URL used when the primary URL cannot be reached at startup.",
-        "label": "Fallback URL",
+        "info": "URL server opzionale utilizzato quando l'URL primario non è raggiungibile all'avvio.",
+        "label": "URL di fallback",
         "placeholder": "https://fallback-server.example.com"
       },
       "group": "Server",
-      "locked": "Server URL settings are locked by this deployment.",
+      "locked": "Le impostazioni dell'URL del server sono bloccate da questa distribuzione.",
       "primaryUrl": {
-        "info": "The server URL Aonsoku tries first when the app starts.",
-        "label": "Primary URL",
+        "info": "L'URL del server che Aonsoku prova per primo all'avvio.",
+        "label": "URL primario",
         "placeholder": "https://your-server.example.com"
       },
-      "save": "Save server URLs",
-      "saving": "Saving...",
+      "save": "Salva URL server",
+      "saving": "Salvataggio in corso...",
       "toast": {
-        "error": "Unable to reach the primary or fallback server.",
-        "success": "Server URLs saved successfully."
+        "error": "Impossibile raggiungere il server primario o di fallback.",
+        "success": "URL server salvati con successo."
       },
       "validation": {
-        "fallbackUrl": "Please enter a valid fallback URL.",
-        "primaryUrl": "Please enter a valid primary URL."
+        "fallbackUrl": "Inserisci un URL di fallback valido.",
+        "primaryUrl": "Inserisci un URL primario valido."
       }
     },
     "storage": {
       "audio": {
-        "clear": "Clear audio cache",
-        "description": "Cache audio files for instant playback on repeated listens.",
-        "enabled": "Enable audio cache",
-        "entries": "{{count}} songs cached",
-        "group": "Audio Cache",
-        "maxSize": "Maximum cache size",
-        "size": "Cache size"
+        "clear": "Cancella cache audio",
+        "description": "Memorizza nella cache i file audio per una riproduzione istantanea.",
+        "enabled": "Attiva cache audio",
+        "entries": "{{count}} brani in cache",
+        "group": "Cache audio",
+        "maxSize": "Dimensione massima cache",
+        "size": "Dimensione cache"
+      },
+      "cacheManager": {
+        "confirmDelete": {
+          "description": "Questo rimuoverà '{{name}}' dalla cache. Potrà essere scaricato nuovamente in seguito.",
+          "title": "Eliminare elemento dalla cache?"
+        },
+        "description": "Visualizza e gestisci i singoli elementi nella cache.",
+        "filter": {
+          "album": "Album",
+          "all": "Tutti",
+          "audio": "Audio",
+          "cover": "Copertina",
+          "explicit": "Espliciti",
+          "lru": "LRU",
+          "playlist": "Playlist",
+          "smart": "Intelligenti"
+        },
+        "group": "Gestore cache",
+        "list": {
+          "actions": "Azioni",
+          "cachedAt": "In cache",
+          "delete": "Elimina",
+          "empty": "Nessun elemento in cache.",
+          "name": "Nome",
+          "removedFromServer": "Rimosso dal server",
+          "size": "Dimensione",
+          "source": "Origine",
+          "total": "{{count}} elementi, {{size}} totale",
+          "type": "Tipo",
+          "type_album": "Album",
+          "type_audio": "Audio",
+          "type_cover": "Copertina",
+          "type_playlist": "Playlist"
+        }
       },
       "coverArt": {
-        "clear": "Clear cover art cache",
-        "description": "Cache album cover images for faster loading.",
-        "enabled": "Enable cover art cache",
-        "entries": "{{count}} images cached",
-        "group": "Cover Art Cache",
-        "size": "Cache size"
+        "clear": "Cancella cache copertine",
+        "description": "Memorizza nella cache le copertine degli album per un caricamento più veloce.",
+        "enabled": "Attiva cache copertine",
+        "entries": "{{count}} immagini in cache",
+        "group": "Cache copertine",
+        "size": "Dimensione cache"
+      },
+      "limits": {
+        "audioEntries": "{{count}} brani in cache",
+        "audioSize": "Cache audio",
+        "clearAll": "Cancella tutte le cache",
+        "clearAudio": "Cancella",
+        "clearCovers": "Cancella",
+        "coverEntries": "{{count}} immagini in cache",
+        "coverSize": "Cache copertine",
+        "description": "Gestisci l'archiviazione di audio e copertine in cache.",
+        "group": "Cache",
+        "imageEntries": "{{count}} immagini",
+        "maxSize": "Dimensione massima cache audio",
+        "pool": {
+          "assets": {
+            "description": "Immagini di album e artisti memorizzate nella cache per un rendering rapido della libreria.",
+            "label": "Copertine"
+          },
+          "explicit": {
+            "description": "Brani, album e playlist che hai scaricato tu stesso. Mai rimossi automaticamente.",
+            "label": "Download espliciti"
+          },
+          "lru": {
+            "description": "Memorizzati nella cache durante l'ascolto. Le voci più vecchie vengono rimosse per prime quando si supera la quota.",
+            "label": "Riprodotti di recente"
+          },
+          "smart": {
+            "description": "Scaricati automaticamente tramite regole intelligenti. Cancellati quando la regola che li ha attivati non corrisponde più.",
+            "label": "Download intelligenti"
+          }
+        },
+        "quota": "Quota",
+        "songEntries": "{{count}} brani",
+        "unlimited": "Illimitato"
       },
       "metadata": {
-        "clear": "Clear all caches",
-        "description": "Clear all cached data including metadata, cover art, and audio files.",
-        "group": "All Caches"
+        "clear": "Cancella tutte le cache",
+        "description": "Cancella tutti i dati nella cache inclusi metadati, copertine e file audio.",
+        "group": "Tutte le cache"
+      },
+      "offline": {
+        "description": "Memorizza brani, metadati e copertine localmente per l'accesso offline. Abilita la cache della libreria per sbloccare qualità di download, download intelligenti e impostazioni di sincronizzazione.",
+        "group": "Esperienza Offline"
+      },
+      "smart": {
+        "description": "Memorizza automaticamente nella cache i brani che corrispondono a qualsiasi regola attivata. Vengono rimossi nel momento in cui tutte le regole che li hanno attivati smettono di corrispondere e non hanno mai priorità sui download manuali.",
+        "enabled": "Attiva download intelligenti",
+        "group": "Download intelligenti",
+        "rule": {
+          "favoritePlaylists": "Playlist preferite",
+          "favoriteSongs": "Brani preferiti"
+        }
       },
       "sync": {
         "cancel": "Annulla",
         "clear": "Cancella dati sincronizzati",
+        "clearConfirm": {
+          "clear": "Cancella e disattiva",
+          "description": "Disattivare la cache della libreria cancellerà tutti i dati sincronizzati (artisti, album, brani, playlist, generi). Puoi riattivarla e risincronizzare in qualsiasi momento.",
+          "keep": "Mantieni attivo",
+          "title": "Disattivare cache libreria?"
+        },
+        "completed": "Completato",
         "coverArt": "Includi copertine",
+        "coverArtConcurrency": "Concorrenza copertine",
+        "coverArtConcurrencyInfo": "Numero di download paralleli per le copertine. Valori più alti accelerano la sincronizzazione ma usano più larghezza di banda. Imposta a 1 per scaricare sequenzialmente.",
+        "coverArtConcurrencyOff": "Sequenziale",
         "coverArtInfo": "Scarica tutte le immagini di album e artisti durante la sincronizzazione. Questo potrebbe richiedere molto spazio e larghezza di banda.",
         "description": "Sincronizza i metadati della libreria per la navigazione offline. I brani scaricati sono sempre disponibili offline.",
+        "downloading_one": "Scaricamento {{count}} brano",
+        "downloading_other": "Scaricamento {{count}} brani",
         "enabled": "Sincronizza libreria",
         "entries": "{{count}} elementi sincronizzati",
         "group": "Sincronizzazione Libreria",
+        "justNow": "Adesso",
         "lastSynced": "Ultima sincronizzazione",
+        "libraryCaching": "Cache libreria",
+        "libraryCachingInfo": "Se attivato, i metadati e opzionalmente i brani vengono memorizzati localmente per l'accesso offline. Quando disattivato, l'app rimane in modalità puramente online e nessuna sincronizzazione in background viene eseguita.",
         "never": "Mai",
         "phases": {
           "albums": "Sincronizzazione album…",
@@ -729,61 +838,60 @@
           "coverArt": "Sincronizzazione copertine…",
           "done": "Sincronizzazione completata",
           "error": "Sincronizzazione fallita",
+          "favorites": "Sincronizzazione preferiti…",
           "genres": "Sincronizzazione generi…",
           "idle": "Preparazione…",
           "playlists": "Sincronizzazione playlist…",
           "songs": "Sincronizzazione brani…"
         },
+        "showMore": "Mostra altri {{count}}",
         "syncNow": "Sincronizza Ora",
-        "justNow": "Adesso"
-      },
-      "offline": {
-        "group": "Esperienza Offline",
-        "description": "Memorizza brani, metadati e copertine localmente per l'accesso offline. Abilita la cache della libreria per sbloccare qualità di download, download intelligenti e impostazioni di sincronizzazione."
-      },
-      "limits": {
-        "group": "Cache",
-        "description": "Gestisci l'archiviazione di audio e copertine in cache.",
-        "maxSize": "Dimensione massima cache audio",
-        "audioSize": "Cache audio",
-        "audioEntries": "{{count}} brani in cache",
-        "coverSize": "Cache copertine",
-        "coverEntries": "{{count}} immagini in cache",
-        "clearAudio": "Cancella",
-        "clearCovers": "Cancella",
-        "clearAll": "Cancella tutte le cache"
+        "tier": {
+          "t1": {
+            "description": "Preferiti · Playlist · Generi",
+            "label": "Essenziali"
+          },
+          "t2": {
+            "description": "Artisti · Album",
+            "label": "Struttura libreria"
+          },
+          "t3": {
+            "description": "Tutti i metadati dei brani",
+            "label": "Brani completi"
+          }
+        }
       }
     }
   },
   "shortcuts": {
     "modal": {
       "description": {
-        "first": "Press",
-        "last": "to toggle this modal."
+        "first": "Premi",
+        "last": "per attivare/disattivare questa finestra."
       },
-      "title": "Keyboard Shortcuts"
+      "title": "Scorciatoie da tastiera"
     },
     "navigation": {
-      "label": "Navigation"
+      "label": "Navigazione"
     },
     "playback": {
-      "label": "Playback",
-      "lowerVolume": "Lower volume",
-      "next": "Skip to next",
-      "play": "Play / Pause",
-      "previous": "Skip to previous",
-      "raiseVolume": "Raise volume",
-      "repeat": "Repeat",
-      "shuffle": "Shuffle"
+      "label": "Riproduzione",
+      "lowerVolume": "Abbassa volume",
+      "next": "Salta alla successiva",
+      "play": "Riproduci / Pausa",
+      "previous": "Salta alla precedente",
+      "raiseVolume": "Alza volume",
+      "repeat": "Ripeti",
+      "shuffle": "Casuale"
     }
   },
   "sidebar": {
     "albums": "Album",
     "artists": "Artisti",
-    "collapse": "Collapse sidebar",
+    "collapse": "Comprimi barra laterale",
     "emptyPlaylist": "Nessuna playlist creata",
-    "expand": "Expand sidebar",
-    "favorites": "Favorites",
+    "expand": "Espandi barra laterale",
+    "favorites": "Preferiti",
     "home": "Home",
     "library": "Libreria",
     "miniSearch": "Cerca",
@@ -793,8 +901,8 @@
     "songs": "Brani"
   },
   "songInfo": {
-    "error": "Unable to retrieve song information. Please try again later.",
-    "title": "Song Details"
+    "error": "Impossibile recuperare le informazioni sul brano. Riprova più tardi.",
+    "title": "Dettagli brano"
   },
   "songs": {
     "list": {
@@ -808,9 +916,9 @@
     },
     "sort": {
       "album": "Album A-Z",
-      "artist": "Artist A-Z",
-      "lastAdded": "Last Added",
-      "title": "Song A-Z"
+      "artist": "Artista A-Z",
+      "lastAdded": "Aggiunti di recente",
+      "title": "Brano A-Z"
     }
   },
   "table": {
@@ -854,9 +962,9 @@
     },
     "lastPlayed": "{{date}} fa",
     "menu": {
+      "selectedCount_many": "{{count}} selezionati",
       "selectedCount_one": "{{count}} selezionato",
-      "selectedCount_other": "{{count}} selezionati",
-      "selectedCount_many": "{{count}} selezionati"
+      "selectedCount_other": "{{count}} selezionati"
     },
     "pagination": {
       "currentPage": "Pagina {{currentPage}} di {{totalPages}}",
@@ -888,9 +996,9 @@
     "marmalade-beaver": "Marmalade Beaver",
     "material-theme": "Tema Material",
     "modeDark": "Dark",
-    "modeLabel": "Mode",
+    "modeLabel": "Modalità",
     "modeLight": "Light",
-    "modeSystem": "System",
+    "modeSystem": "Sistema",
     "monokai-pro": "Monokai Pro",
     "night-owl-light": "Night Owl Chiaro",
     "noctis-lilac": "Noctis Lilla",
@@ -903,9 +1011,9 @@
     "vue-dark": "Vue Scuro"
   },
   "time": {
-    "days_one": "{{days}} day",
-    "days_other": "{{days}} days",
-    "hour": "{{hour}} hr",
+    "days_one": "{{days}} giorno",
+    "days_other": "{{days}} giorni",
+    "hour": "{{hour}} h",
     "minutes": "{{minutes}} min",
     "seconds": "{{seconds}} s"
   },
@@ -917,23 +1025,23 @@
   },
   "update": {
     "dialog": {
-      "install": "Install and Restart",
-      "remindLater": "Remind Me Later",
-      "title": "New Version Available!"
+      "install": "Installa e riavvia",
+      "remindLater": "Ricordamelo dopo",
+      "title": "Nuova versione disponibile!"
     },
     "sw": {
-      "error": "Update failed – Retry",
-      "refresh": "Refresh to update",
-      "updating": "Updating..."
+      "error": "Aggiornamento fallito – Riprova",
+      "refresh": "Aggiorna la pagina per installare",
+      "updating": "Aggiornamento in corso..."
     },
     "toasts": {
-      "error": "Failed to install the update. Please try downloading it directly from GitHub.",
-      "started": "The update process has started.",
-      "success": "The update has been installed! The app will now restart."
+      "error": "Installazione dell'aggiornamento fallita. Prova a scaricarlo direttamente da GitHub.",
+      "started": "Il processo di aggiornamento è iniziato.",
+      "success": "L'aggiornamento è stato installato! L'app si riavvierà."
     }
   },
   "warnings": {
-    "reload": "There is a song playing!\nAre you sure you want to reload the page?",
-    "songError": "Unable to play the song, check the Server!"
+    "reload": "C'è una canzone in riproduzione!\nSei sicuro di voler ricaricare la pagina?",
+    "songError": "Impossibile riprodurre la canzone, controlla il server!"
   }
 }
