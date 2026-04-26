@@ -514,6 +514,14 @@
       }
     },
     "audio": {
+      "hapticFeedback": {
+        "group": "震动反馈",
+        "description": "控制与应用交互时的震动反馈。",
+        "enabled": {
+          "label": "启用震动反馈",
+          "info": "启用后，在移动设备上拖动队列项目时设备将会震动。"
+        }
+      },
       "history": {
         "description": "播放超过10秒的歌曲会被记录到播放历史中。",
         "group": "播放历史",

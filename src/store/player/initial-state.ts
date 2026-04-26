@@ -118,6 +118,14 @@ export function createInitialSettings(set: SetFn): IPlayerContext["settings"] {
         useSongColor: false,
       },
     },
+    hapticFeedback: {
+      hapticFeedbackEnabled: true,
+      setHapticFeedbackEnabled: (value: boolean) => {
+        set((state) => {
+          state.settings.hapticFeedback.hapticFeedbackEnabled = value;
+        });
+      },
+    },
   };
 }
 

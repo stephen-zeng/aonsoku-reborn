@@ -633,6 +633,14 @@
       }
     },
     "audio": {
+      "hapticFeedback": {
+        "group": "Haptic Feedback",
+        "description": "Control vibration feedback when interacting with the app.",
+        "enabled": {
+          "label": "Enable haptic feedback",
+          "info": "When enabled, the device will vibrate when dragging queue items on mobile."
+        }
+      },
       "replayGain": {
         "group": "ReplayGain",
         "description": "Automatically normalize audio playback levels for a consistent listening experience.",

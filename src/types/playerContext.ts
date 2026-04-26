@@ -137,6 +137,11 @@ interface IColorsSettings {
   queue: IQueueSettings;
 }
 
+interface IHapticSettings {
+  hapticFeedbackEnabled: boolean;
+  setHapticFeedbackEnabled: (value: boolean) => void;
+}
+
 export interface IPlayerSettings {
   volume: IVolumeSettings;
   fullscreen: IFullscreen;
@@ -145,6 +150,7 @@ export interface IPlayerSettings {
   replayGain: IReplayGain;
   privacy: IPrivacySettings;
   colors: IColorsSettings;
+  hapticFeedback: IHapticSettings;
 }
 
 export interface IRemoteControlState {

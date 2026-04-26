@@ -19,6 +19,8 @@ import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
 import { QueueMenuOptions } from "./queue-menu-options";
+import { useHapticSettings } from "@/store/player.store";
+import { useWebHaptics } from "web-haptics/react";
 
 interface QueueItemRowProps {
   song: ISong;
@@ -91,6 +93,12 @@ export const QueueItemRow = forwardRef<
   ref,
 ) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { hapticFeedbackEnabled } = useHapticSettings();
+  const { trigger } = useWebHaptics();
+
+  const hapticTrigger = hapticFeedbackEnabled
+    ? () => trigger([{ duration: 1 }])
+    : undefined;
 
   const content = (
     <div
@@ -197,6 +205,8 @@ export const QueueItemRow = forwardRef<
         <span
           className="text-foreground/30 shrink-0 cursor-grab select-none py-4 px-2 -my-2 -mr-2 touch-none"
           {...dragListeners}
+          onTouchStart={hapticTrigger}
+          onTouchEnd={hapticTrigger}
         >
           <GripVertical className="w-5 h-5" />
         </span>
