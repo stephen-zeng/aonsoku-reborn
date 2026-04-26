@@ -177,7 +177,7 @@ Below is a table describing the environment variables that can be used in this p
 
 ### Recommended IDE Setup
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+- [VS Code](https://code.visualstudio.com/)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -211,7 +211,7 @@ Don't forget to give the project a star! Thanks again!
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+3. Commit your Changes (`git commit -m 'feat: some AmazingFeature'`)
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
@@ -238,8 +238,6 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 [React.js]: https://img.shields.io/badge/React-000000?style=for-the-badge&logo=react&logoColor=61DAFB
 [React-url]: https://reactjs.org/
-[Rust]: https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=F74C00
-[Rust-url]: https://www.rust-lang.org
 [Electron]: https://img.shields.io/badge/Electron-000000?style=for-the-badge&logo=electron&logoColor=24C8DB
 [Electron-url]: https://www.electronjs.org/
 [Release-badge]: https://img.shields.io/github/v/release/realtvop/aonsoku-reborn?display_name=release&style=for-the-badge&label=Download&labelColor=%23000&color=%2310B77F&logo=rocket&logoColor=%2310B77F&logoSize=auto
