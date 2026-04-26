@@ -2,17 +2,9 @@ import { repository, version } from "@/../package.json";
 
 export const appName = "Aonsoku";
 
-const globalValues = globalThis as Record<string, unknown>;
+export const buildHash: string = __BUILD_HASH__;
+export const buildTime: number = __BUILD_TIME__;
 
-export const buildHash: string =
-  typeof globalValues.__BUILD_HASH__ === "string"
-    ? (globalValues.__BUILD_HASH__ as string)
-    : "dev";
-
-export const buildTime: number =
-  typeof globalValues.__BUILD_TIME__ === "number"
-    ? (globalValues.__BUILD_TIME__ as number)
-    : 0;
 const formattedBuildTime =
   buildTime > 0 ? new Date(buildTime).toLocaleString() : "dev";
 
