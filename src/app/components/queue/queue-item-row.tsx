@@ -102,18 +102,11 @@ export const QueueItemRow = forwardRef<
       ])}
       style={style}
       {...dragAttributes}
+      {...(dragListeners && !isMobile ? dragListeners : {})}
     >
-      {dragListeners && !isMobile && (
-        <span
-          className="text-foreground/30 shrink-0 cursor-grab select-none py-2 -my-2 touch-none"
-          {...dragListeners}
-        >
-          <GripVertical className="w-4 h-4" />
-        </span>
-      )}
-
       <div
         className="group/cover relative w-10 h-10 flex-shrink-0 cursor-pointer"
+        onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
           onPlay();
@@ -175,6 +168,7 @@ export const QueueItemRow = forwardRef<
                     "data-[state=open]:opacity-100",
                     "opacity-0 group-hover/queuerow:opacity-100 transition-opacity",
                   )}
+                  onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => {
                     e.stopPropagation();
                   }}
