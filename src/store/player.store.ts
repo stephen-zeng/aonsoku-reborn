@@ -14,6 +14,7 @@ export {
   useCoverArtSettings,
   usePrivacySettings,
   useLyricsSettings,
+  useHapticSettings,
   usePlayerSettings,
   usePlayerMediaType,
   usePlayerIsPlaying,

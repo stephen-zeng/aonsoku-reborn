@@ -650,6 +650,9 @@ export const usePrivacySettings = () =>
 export const useLyricsSettings = () =>
   usePlayerStore((state) => state.settings.lyrics);
 
+export const useHapticSettings = () =>
+  usePlayerStore((state) => state.settings.hapticFeedback);
+
 export const usePlayerSettings = () =>
   usePlayerStore((state) => state.settings);
 
