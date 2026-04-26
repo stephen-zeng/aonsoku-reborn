@@ -69,7 +69,7 @@ export function useSongStarMutation({
     setIsStarred(newState);
 
     starMutation.mutate(
-      { id: songId, starred: isStarred },
+      { id: songId, starred: newState },
       {
         onSuccess: () => {
           const { mediaType } = usePlayerStore.getState().playerState;

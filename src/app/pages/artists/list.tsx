@@ -39,7 +39,7 @@ export default function ArtistsList() {
 
   const columns = artistsColumns();
   const artistColumnFilter: ColumnFilter[] | undefined = isMobile
-    ? ["index", "name", "starred"]
+    ? (["index", "name", "starred"] as ColumnFilter[])
     : undefined;
 
   const { data: artists, isLoading } = useOfflineQuery(

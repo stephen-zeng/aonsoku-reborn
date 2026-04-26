@@ -1,16 +1,18 @@
 import { Link } from "react-router-dom";
-import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { LinkWithoutTo } from "@/app/components/song/artist-link";
 import { AspectRatio } from "@/app/components/ui/aspect-ratio";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
 import { useMainDrawerState, usePlayerSonglist } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
+import { useSongCoverArtUrl } from "@/utils/coverArt";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
 
 export function CurrentSongInfo() {
   const { currentSong } = usePlayerSonglist();
   const { closeDrawer } = useMainDrawerState();
+
+  const imageUrl = useSongCoverArtUrl(currentSong ?? ({} as ISong), "700");
 
   if (!currentSong) return null;
 
@@ -20,11 +22,9 @@ export function CurrentSongInfo() {
         ratio={1 / 1}
         className="shadow-header-image rounded-md overflow-hidden bg-accent"
       >
-        <CachedImage
+        <img
           id="song-info-image"
-          coverArtId={currentSong.coverArt}
-          coverArtType="song"
-          albumId={currentSong.albumId}
+          src={imageUrl}
           alt={`${currentSong.artist} - ${currentSong.title}`}
           className="rounded-md aspect-square object-cover text-transparent w-full h-full"
         />

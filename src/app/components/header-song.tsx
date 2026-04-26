@@ -2,6 +2,7 @@ import {
   usePlayerCurrentSong,
   usePlayerCurrentSongIndex,
   useHasQueueSongs,
+  usePlayerCurrentList,
 } from "@/store/player.store";
 import { AppTitle } from "./header/app-title";
 
@@ -9,10 +10,11 @@ export function HeaderSongInfo() {
   const currentSong = usePlayerCurrentSong();
   const currentSongIndex = usePlayerCurrentSongIndex();
   const hasQueue = useHasQueueSongs();
+  const currentList = usePlayerCurrentList();
 
   function formatSongCount() {
     const currentPosition = currentSongIndex + 1;
-    const listLength = currentPosition;
+    const listLength = currentList.length;
 
     return `[${currentPosition}/${listLength}]`;
   }

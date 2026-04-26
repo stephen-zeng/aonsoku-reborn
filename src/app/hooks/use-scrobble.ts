@@ -22,7 +22,6 @@ export function useScrobble() {
 
   const isScrobbleSentRef = useRef(false);
   const isNowPlayingSentRef = useRef(false);
-  const progressTicks = useRef(0);
   const lastSongIdRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -30,7 +29,6 @@ export function useScrobble() {
       lastSongIdRef.current = currentSong?.id;
       isScrobbleSentRef.current = false;
       isNowPlayingSentRef.current = false;
-      progressTicks.current = 0;
     }
   }, [currentSong?.id]);
 
@@ -46,12 +44,13 @@ export function useScrobble() {
         isNowPlayingSentRef.current = true;
       }
     } else {
-      progressTicks.current += 1;
+      const scrobbleThreshold = Math.min(
+        currentDuration * (SCROBBLE_THRESHOLD_PERCENT / 100),
+        SCROBBLE_THRESHOLD_SECONDS,
+      );
 
       if (
-        (progressTicks.current >=
-          currentDuration / SCROBBLE_THRESHOLD_PERCENT ||
-          progressTicks.current >= SCROBBLE_THRESHOLD_SECONDS) &&
+        progress >= scrobbleThreshold &&
         !isScrobbleSentRef.current &&
         currentSong?.id
       ) {
