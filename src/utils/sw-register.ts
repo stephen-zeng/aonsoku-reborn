@@ -70,13 +70,41 @@ function bootstrapServiceWorker(): void {
     .register("/sw.js")
     .then((reg) => {
       savedReg = reg;
-      reg.update();
 
+      const handleInstalling = (worker: ServiceWorker) => {
+        worker.addEventListener("statechange", () => {
+          if (worker.state === "installed") {
+            if (navigator.serviceWorker.controller) {
+              waitingWorker = worker;
+              emitStatus("waiting");
+            } else {
+              emitStatus("idle");
+            }
+          }
+
+          if (worker.state === "redundant") {
+            if (navigator.serviceWorker.controller) {
+              emitStatus("error");
+            } else {
+              emitStatus("idle");
+            }
+          }
+        });
+      };
+
+      // 1. If there's already a waiting worker, show it
       if (reg.waiting && navigator.serviceWorker.controller) {
         waitingWorker = reg.waiting;
         emitStatus("waiting");
       }
 
+      // 2. If there's an installing worker, track it
+      if (reg.installing && navigator.serviceWorker.controller) {
+        emitStatus("installing");
+        handleInstalling(reg.installing);
+      }
+
+      // 3. Listen for future updates
       reg.addEventListener("updatefound", () => {
         const newWorker = reg.installing;
         if (!newWorker) return;
@@ -85,25 +113,11 @@ function bootstrapServiceWorker(): void {
           emitStatus("installing");
         }
 
-        newWorker.addEventListener("statechange", () => {
-          if (newWorker.state === "installed") {
-            if (navigator.serviceWorker.controller) {
-              waitingWorker = newWorker;
-              emitStatus("waiting");
-            } else {
-              emitStatus("idle");
-            }
-          }
-
-          if (newWorker.state === "redundant") {
-            if (navigator.serviceWorker.controller) {
-              emitStatus("error");
-            } else {
-              emitStatus("idle");
-            }
-          }
-        });
+        handleInstalling(newWorker);
       });
+
+      // 4. Force a check for updates on the server
+      reg.update();
     })
     .catch((err) => {
       console.error("[SW] Registration failed:", err);
