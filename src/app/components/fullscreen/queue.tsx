@@ -349,11 +349,10 @@ function UnifiedQueueView({
     reorderQueue(fromGlobal, toGlobal);
   }
 
-  const showContinueHeader =
-    loopState !== LoopState.One || userQueueSongs.length > 0;
-
   const isRepeatOne = loopState === LoopState.One;
   const isRepeatAll = loopState === LoopState.All;
+  const hasNoUpcoming =
+    upcomingContext.length === 0 && userQueueSongs.length === 0;
 
   if (useVirtualization) {
     return (
@@ -371,7 +370,7 @@ function UnifiedQueueView({
         hideRepeatIndicator={hideRepeatIndicator}
         isRepeatOne={isRepeatOne}
         isRepeatAll={isRepeatAll}
-        showContinueHeader={showContinueHeader}
+        hasNoUpcoming={hasNoUpcoming}
         scrollAreaClassName={scrollAreaClassName}
         thumbClassName={thumbClassName}
         sensors={sensors}
@@ -453,16 +452,6 @@ function UnifiedQueueView({
             className={`${FULLSCREEN_QUEUE_BG_CLASS} sticky top-0 z-10 px-2 pt-1 pb-1`}
           >
             {!hideModeButtons && <QueueModeButtons />}
-            {showContinueHeader && (
-              <div
-                className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
-              >
-                <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
-                  {t("fullscreen.queueContinue")}
-                </h3>
-              </div>
-            )}
-            <QueueSourceLabel />
           </div>
           {!hideRepeatIndicator && (
             <RepeatIndicator
@@ -495,7 +484,6 @@ function UnifiedQueueView({
             className={`${FULLSCREEN_QUEUE_BG_CLASS} sticky top-0 z-10 px-2 pt-1 pb-1`}
           >
             {!hideModeButtons && <QueueModeButtons />}
-            <QueueSourceLabel />
           </div>
           {!hideRepeatIndicator && (
             <RepeatIndicator
@@ -531,12 +519,23 @@ function UnifiedQueueView({
             </div>
           )}
 
-          <div className={FULLSCREEN_QUEUE_BG_CLASS}>
-            <div
-              className={`${FULLSCREEN_QUEUE_BG_CLASS} sticky top-0 z-10 px-2 pt-1 pb-1`}
-            >
-              {!hideModeButtons && <QueueModeButtons />}
-              {showContinueHeader && (
+          {hasNoUpcoming && !isRepeatAll ? (
+            <div className={FULLSCREEN_QUEUE_BG_CLASS}>
+              <div
+                className={`${FULLSCREEN_QUEUE_BG_CLASS} sticky top-0 z-10 px-2 pt-1 pb-1`}
+              >
+                {!hideModeButtons && <QueueModeButtons />}
+              </div>
+              <div className="flex items-center justify-center py-4">
+                <span className="text-foreground/50 text-xs">{t("fullscreen.emptyQueue")}</span>
+              </div>
+            </div>
+          ) : (
+            <div className={FULLSCREEN_QUEUE_BG_CLASS}>
+              <div
+                className={`${FULLSCREEN_QUEUE_BG_CLASS} sticky top-0 z-10 px-2 pt-1 pb-1`}
+              >
+                {!hideModeButtons && <QueueModeButtons />}
                 <div
                   className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
                 >
@@ -544,67 +543,67 @@ function UnifiedQueueView({
                     {t("fullscreen.queueContinue")}
                   </h3>
                 </div>
-              )}
-              <QueueSourceLabel />
-            </div>
+                <QueueSourceLabel />
+              </div>
 
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragStart={handleUpcomingDragStart}
-              onDragEnd={handleUpcomingDragEnd}
-            >
-              <SortableContext
-                items={upcomingSortableItems}
-                strategy={verticalListSortingStrategy}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleUpcomingDragStart}
+                onDragEnd={handleUpcomingDragEnd}
               >
-                {upcomingContext.length > 0 &&
-                  upcomingContext.map((song, idx) => {
-                    const contextIdx = contextIndex + 1 + idx;
-                    return (
-                      <SortableQueueItem
-                        key={song.id}
-                        id={song.id}
-                        song={song}
-                        isPlaying={false}
-                        isActive={false}
-                        onPlay={() => playFromQueue(contextSongs, contextIdx)}
-                        tier="context"
-                        {...queueItemProps}
-                      />
-                    );
-                  })}
-              </SortableContext>
-              {createPortal(
-                <DragOverlay>
-                  {activeItem && (
-                    <div
-                      className="rounded-md shadow-lg"
-                      style={{ background: dragOverlayBg || undefined }}
-                    >
-                      <QueueItemRow
-                        song={activeItem}
-                        isPlaying={
-                          currentSong?.id === activeItem.id && isPlaying
-                        }
-                        isActive={currentSong?.id === activeItem.id}
-                        onPlay={() => {}}
-                        {...queueItemProps}
-                      />
-                    </div>
-                  )}
-                </DragOverlay>,
-                document.body,
-              )}
-            </DndContext>
+                <SortableContext
+                  items={upcomingSortableItems}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {upcomingContext.length > 0 &&
+                    upcomingContext.map((song, idx) => {
+                      const contextIdx = contextIndex + 1 + idx;
+                      return (
+                        <SortableQueueItem
+                          key={song.id}
+                          id={song.id}
+                          song={song}
+                          isPlaying={false}
+                          isActive={false}
+                          onPlay={() => playFromQueue(contextSongs, contextIdx)}
+                          tier="context"
+                          {...queueItemProps}
+                        />
+                      );
+                    })}
+                </SortableContext>
+                {createPortal(
+                  <DragOverlay>
+                    {activeItem && (
+                      <div
+                        className="rounded-md shadow-lg"
+                        style={{ background: dragOverlayBg || undefined }}
+                      >
+                        <QueueItemRow
+                          song={activeItem}
+                          isPlaying={
+                            currentSong?.id === activeItem.id && isPlaying
+                          }
+                          isActive={currentSong?.id === activeItem.id}
+                          onPlay={() => {}}
+                          {...queueItemProps}
+                        />
+                      </div>
+                    )}
+                  </DragOverlay>,
+                  document.body,
+                )}
+              </DndContext>
 
-            {isRepeatAll && !hideRepeatIndicator && (
-              <RepeatIndicator
-                icon={Repeat}
-                label={t("fullscreen.queueRepeating")}
-              />
-            )}
-          </div>
+              {isRepeatAll && !hideRepeatIndicator && (
+                <RepeatIndicator
+                  icon={Repeat}
+                  label={t("fullscreen.queueRepeating")}
+                />
+              )}
+            </div>
+          )}
         </>
       )}
       <div ref={spacerRef} className="shrink-0" aria-hidden="true" />
@@ -626,7 +625,7 @@ function VirtualizedQueueView({
   hideRepeatIndicator,
   isRepeatOne,
   isRepeatAll,
-  showContinueHeader,
+  hasNoUpcoming,
   scrollAreaClassName,
   thumbClassName,
   sensors,
@@ -661,7 +660,7 @@ function VirtualizedQueueView({
   hideRepeatIndicator: boolean;
   isRepeatOne: boolean;
   isRepeatAll: boolean;
-  showContinueHeader: boolean;
+  hasNoUpcoming: boolean;
   scrollAreaClassName?: string;
   thumbClassName?: string;
   sensors: ReturnType<typeof useQueueDndSensors>;
@@ -703,6 +702,7 @@ function VirtualizedQueueView({
     | { type: "userQueueSong"; song: ISong; userQueueIndex: number }
     | { type: "queueDivider" }
     | { type: "continueHeader" }
+    | { type: "emptyQueueMessage" }
     | { type: "upcomingSong"; song: ISong; contextIdx: number }
     | { type: "repeatIndicator"; icon: LucideIcon; label: string };
 
@@ -745,7 +745,11 @@ function VirtualizedQueueView({
       items.push({ type: "queueDivider" });
     }
 
-    if (showContinueHeader) {
+    if (isRepeatOne) {
+      // no continue header or source label in repeat one mode
+    } else if (hasNoUpcoming && !isRepeatAll) {
+      items.push({ type: "emptyQueueMessage" });
+    } else {
       items.push({ type: "continueHeader" });
     }
 
@@ -781,7 +785,7 @@ function VirtualizedQueueView({
     upcomingContext,
     currentSong,
     contextIndex,
-    showContinueHeader,
+    hasNoUpcoming,
     isRepeatOne,
     isRepeatAll,
     t,
@@ -806,6 +810,8 @@ function VirtualizedQueueView({
           return 20;
         case "continueHeader":
           return 52;
+        case "emptyQueueMessage":
+          return 48;
         case "repeatIndicator":
           return 36;
         default:
@@ -962,6 +968,15 @@ function VirtualizedQueueView({
                               </h3>
                             </div>
                             <QueueSourceLabel />
+                          </div>
+                        )}
+
+                        {item.type === "emptyQueueMessage" && (
+                          <div>
+                            {!hideModeButtons && <QueueModeButtons />}
+                            <div className="flex items-center justify-center py-4">
+                              <span className="text-foreground/50 text-xs">{t("fullscreen.emptyQueue")}</span>
+                            </div>
                           </div>
                         )}
 
