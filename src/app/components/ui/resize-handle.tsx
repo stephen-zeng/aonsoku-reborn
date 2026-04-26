@@ -13,9 +13,7 @@ export function ResizeHandle({
 }: ResizeHandleProps) {
   return (
     <div
-      role="separator"
-      aria-orientation="vertical"
-      aria-valuenow={0}
+      role="presentation"
       onMouseDown={onMouseDown}
       onDoubleClick={onDoubleClick}
       className={cn(

@@ -2,7 +2,6 @@ import { useGrid, useVirtualizer } from "@virtual-grid/react";
 import {
   Fragment,
   ReactNode,
-  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -54,58 +53,40 @@ export function GridViewWrapper<T>({
     [gridColumnsSize, list.length],
   );
 
-  const calculateSize = useCallback(() => {
-    if (!scrollDivRef.current) {
-      return {
-        width: defaultWidth,
-        height: defaultWidth + titleHeight,
-      };
-    }
-
-    const pageWidth = scrollDivRef.current.offsetWidth;
-    const gapsDifference = (gridColumnsSize - 1) * effectiveGap;
-    const bothSidesPaddingSize = effectivePadding * 2;
-    const remainSpace = pageWidth - bothSidesPaddingSize - gapsDifference;
-
-    const width = remainSpace / gridColumnsSize;
-    const height = width + titleHeight;
-
-    return {
-      width,
-      height,
-    };
-  }, [
-    defaultWidth,
-    effectiveGap,
-    effectivePadding,
-    gridColumnsSize,
-    titleHeight,
-  ]);
-
   useLayoutEffect(() => {
     scrollDivRef.current = getMainScrollElement();
 
     const handleResize = () => {
       const width = window.innerWidth;
 
-      if (width >= 1536) {
-        setGridColumnsSize(8); // 2xl breakpoint
-      } else if (width >= 1024) {
-        setGridColumnsSize(6); // lg breakpoint
-      } else if (width >= 768) {
-        setGridColumnsSize(4); // md breakpoint
-      } else if (width >= 480) {
-        setGridColumnsSize(3); // small mobile
-      } else {
-        setGridColumnsSize(2); // very small mobile
-      }
+      const newColumns =
+        width >= 1536
+          ? 8
+          : width >= 1024
+            ? 6
+            : width >= 768
+              ? 4
+              : width >= 480
+                ? 3
+                : 2;
+      setGridColumnsSize(newColumns);
 
       const isMobileView = width < 768;
-      setEffectivePadding(isMobileView ? 16 : padding);
-      setEffectiveGap(isMobileView ? 12 : gap);
+      const newEffectivePadding = isMobileView ? 16 : padding;
+      const newEffectiveGap = isMobileView ? 12 : gap;
+      setEffectivePadding(newEffectivePadding);
+      setEffectiveGap(newEffectiveGap);
 
-      const newSize = calculateSize();
-      setSize(newSize);
+      if (scrollDivRef.current) {
+        const pageWidth = scrollDivRef.current.offsetWidth;
+        const gapsDifference = (newColumns - 1) * newEffectiveGap;
+        const bothSidesPaddingSize = newEffectivePadding * 2;
+        const remainSpace = pageWidth - bothSidesPaddingSize - gapsDifference;
+        const newWidth = remainSpace / newColumns;
+        setSize({ width: newWidth, height: newWidth + titleHeight });
+      } else {
+        setSize({ width: defaultWidth, height: defaultWidth + titleHeight });
+      }
     };
 
     let animationFrameId: number;
@@ -124,7 +105,7 @@ export function GridViewWrapper<T>({
       window.removeEventListener("resize", resizeHandler);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [calculateSize, padding, gap]);
+  }, [padding, gap, defaultWidth, titleHeight]);
 
   const grid = useGrid({
     scrollRef: scrollDivRef,

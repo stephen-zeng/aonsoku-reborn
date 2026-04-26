@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { type ComponentPropsWithoutRef, type RefAttributes } from "react";
+import { type RefAttributes } from "react";
 import { Link, LinkProps } from "react-router-dom";
 import { Dot } from "@/app/components/dot";
 import { cn } from "@/lib/utils";
@@ -23,10 +23,8 @@ export function ArtistLink({
   ...props
 }: ArtistLinkProps) {
   if (disableNavigation || !artistId) {
-    const spanProps = props as unknown as ComponentPropsWithoutRef<"span">;
-
     return (
-      <span className={cn("truncate", className)} {...spanProps}>
+      <span className={cn("truncate", className)} onClick={props.onClick} title={props.title}>
         {props.children}
       </span>
     );

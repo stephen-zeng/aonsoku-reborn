@@ -12,7 +12,7 @@ export function CurrentSongInfo() {
   const { currentSong } = usePlayerSonglist();
   const { closeDrawer } = useMainDrawerState();
 
-  const imageUrl = useSongCoverArtUrl(currentSong, "700");
+  const imageUrl = useSongCoverArtUrl(currentSong ?? ({} as ISong), "700");
 
   if (!currentSong) return null;
 

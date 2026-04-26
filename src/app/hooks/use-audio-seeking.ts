@@ -20,7 +20,7 @@ export function useAudioSeeking({ audioRef }: UseAudioSeekingOptions) {
       if (isRemoteControlActive) return;
       const audio = audioRef.current;
       if (audio) {
-        logger.info("Seeking to:", value);
+        logger.debug("Seeking to:", value);
         audio.currentTime = value;
       }
     },
@@ -34,7 +34,7 @@ export function useAudioSeeking({ audioRef }: UseAudioSeekingOptions) {
 
   const handleSeeked = useCallback(
     (amount: number) => {
-      logger.info("Seek completed:", amount);
+      logger.debug("Seek completed:", amount);
       setIsLocalSeeking(false);
       if (!isRemoteControlActive) {
         updateAudioCurrentTime(amount);
@@ -47,7 +47,7 @@ export function useAudioSeeking({ audioRef }: UseAudioSeekingOptions) {
 
   const handleSeekedFallback = useCallback(() => {
     if (isLocalSeeking) {
-      logger.info("Seek fallback triggered:", localProgress);
+      logger.debug("Seek fallback triggered:", localProgress);
       setIsLocalSeeking(false);
       if (!isRemoteControlActive) {
         updateAudioCurrentTime(localProgress);
