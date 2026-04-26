@@ -67,7 +67,6 @@ export default function FullscreenMode({
     }
   }, [open, currentSongColor, currentSongColorIntensity, theme]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: initial useEffect
   useEffect(() => {
     if (open) {
       document.body.classList.add("overflow-hidden");
