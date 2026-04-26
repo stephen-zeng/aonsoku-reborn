@@ -95,6 +95,8 @@ async function setMediaSession(
   }
 
   try {
+    ensurePlaybackStatePlaying();
+
     const { artwork } = await buildArtwork();
 
     if (sessionId !== currentSessionId) {
@@ -118,9 +120,7 @@ async function setMediaSession(
 
     navigator.mediaSession.metadata = new MediaMetadata(metadata);
 
-    if (navigator.mediaSession.playbackState !== "playing") {
-      navigator.mediaSession.playbackState = "playing";
-    }
+    ensurePlaybackStatePlaying();
 
     if (navigator.mediaSession.metadata === null) {
       logger.info("[MediaSession] Metadata was set to null unexpectedly");
@@ -144,11 +144,16 @@ async function setRadioMediaSession(label: string, radioName: string) {
     logger.info("[MediaSession] Setting radio metadata", metadata);
     navigator.mediaSession.metadata = new MediaMetadata(metadata);
 
-    if (navigator.mediaSession.playbackState !== "playing") {
-      navigator.mediaSession.playbackState = "playing";
-    }
+    ensurePlaybackStatePlaying();
   } catch (error) {
     logger.error("[MediaSession] Failed to set radio metadata:", error);
+  }
+}
+
+function ensurePlaybackStatePlaying() {
+  if (!isMediaSessionSupported()) return;
+  if (navigator.mediaSession.playbackState !== "playing") {
+    navigator.mediaSession.playbackState = "playing";
   }
 }
 
@@ -301,6 +306,7 @@ export const manageMediaSession = {
   setMediaSession,
   setRadioMediaSession,
   setPlaybackState,
+  ensurePlaybackStatePlaying,
   setPositionState,
   setHandlers,
 };

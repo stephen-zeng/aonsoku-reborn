@@ -21,6 +21,7 @@ import {
   usePlayerStore,
 } from "@/store/player.store";
 import { logger } from "@/utils/logger";
+import { manageMediaSession } from "@/utils/setMediaSession";
 import { calculateReplayGain, ReplayGainParams } from "@/utils/replayGain";
 import { perceptualToGain } from "@/utils/volume";
 
@@ -92,7 +93,7 @@ export function AudioPlayer({
       logger.info("Audio source changed", {
         src,
         useNativeAudio: shouldUseNativeAudio,
-        isRemoteControlActive,
+        isRemoteControlActive: isRemoteControlActive,
       });
       cancelRetry();
       retryCountRef.current = 0;
@@ -100,6 +101,11 @@ export function AudioPlayer({
       playPromiseRef.current = null;
       srcChangingRef.current = true;
       loadedSongIdRef.current = songId;
+
+      const state = usePlayerStore.getState();
+      if (state.playerState.isPlaying && !state.remoteControl.active) {
+        manageMediaSession.ensurePlaybackStatePlaying();
+      }
 
       setAudioSrc(src || undefined);
     }
@@ -162,6 +168,10 @@ export function AudioPlayer({
 
   const safePlay = useCallback(
     (audio: HTMLAudioElement, contextLabel: string) => {
+      const state = usePlayerStore.getState();
+      if (state.playerState.isPlaying && !state.remoteControl.active) {
+        manageMediaSession.ensurePlaybackStatePlaying();
+      }
       const playPromise = audio.play();
       const promise = playPromise ?? undefined;
       playPromiseRef.current = promise ?? null;
@@ -540,6 +550,10 @@ export function AudioPlayer({
       onPause={(e) => {
         if (srcChangingRef.current) {
           srcChangingRef.current = false;
+          const state = usePlayerStore.getState();
+          if (state.playerState.isPlaying && !state.remoteControl.active) {
+            manageMediaSession.ensurePlaybackStatePlaying();
+          }
           return;
         }
         if (effectPausingRef.current) {
