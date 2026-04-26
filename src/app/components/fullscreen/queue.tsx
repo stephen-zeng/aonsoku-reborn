@@ -235,7 +235,7 @@ function UnifiedQueueView({
     hideDownload: true as const,
     hideDuration: isMobile,
     hideDropdownButton: isMobile,
-    hideHandle: !isMobile,
+    isMobile,
   };
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -685,7 +685,7 @@ function VirtualizedQueueView({
     hideDownload: boolean;
     hideDuration: boolean;
     hideDropdownButton: boolean;
-    hideHandle: boolean;
+    isMobile: boolean;
   };
 }) {
   const parentRef = useRef<HTMLDivElement>(null);
@@ -1067,7 +1067,7 @@ function UserQueueSection({
     hideDownload: boolean;
     hideDuration: boolean;
     hideDropdownButton: boolean;
-    hideHandle: boolean;
+    isMobile: boolean;
   };
 }) {
   const filteredUserQueueSongs = userQueueSongs.filter(

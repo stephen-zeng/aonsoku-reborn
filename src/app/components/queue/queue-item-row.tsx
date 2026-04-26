@@ -30,7 +30,7 @@ interface QueueItemRowProps {
   hideDownload?: boolean;
   hideDuration?: boolean;
   hideDropdownButton?: boolean;
-  hideHandle?: boolean;
+  isMobile?: boolean;
 }
 
 export function SortableQueueItem({
@@ -86,7 +86,7 @@ export const QueueItemRow = forwardRef<
     hideDownload,
     hideDuration,
     hideDropdownButton,
-    hideHandle,
+    isMobile,
   },
   ref,
 ) {
@@ -103,6 +103,15 @@ export const QueueItemRow = forwardRef<
       style={style}
       {...dragAttributes}
     >
+      {dragListeners && !isMobile && (
+        <span
+          className="text-foreground/30 shrink-0 cursor-grab select-none py-2 -my-2 touch-none"
+          {...dragListeners}
+        >
+          <GripVertical className="w-4 h-4" />
+        </span>
+      )}
+
       <div
         className="group/cover relative w-10 h-10 flex-shrink-0 cursor-pointer"
         onClick={(e) => {
@@ -184,7 +193,7 @@ export const QueueItemRow = forwardRef<
         )}
       </div>
 
-      {dragListeners && !hideHandle && (
+      {dragListeners && isMobile && (
         <span
           className="text-foreground/30 shrink-0 cursor-grab select-none py-4 px-2 -my-2 -mr-2 touch-none"
           {...dragListeners}
