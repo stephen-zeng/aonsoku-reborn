@@ -582,4 +582,10 @@ div[data-test-id="table-row"]:hover {
 
 body {
   touch-action: pan-y;
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
+}
+
+html {
+  overscroll-behavior-y: none;
 }
