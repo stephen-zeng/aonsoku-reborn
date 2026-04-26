@@ -30,6 +30,7 @@ interface QueueItemRowProps {
   hideDownload?: boolean;
   hideDuration?: boolean;
   hideDropdownButton?: boolean;
+  hideHandle?: boolean;
 }
 
 export function SortableQueueItem({
@@ -85,6 +86,7 @@ export const QueueItemRow = forwardRef<
     hideDownload,
     hideDuration,
     hideDropdownButton,
+    hideHandle,
   },
   ref,
 ) {
@@ -182,7 +184,7 @@ export const QueueItemRow = forwardRef<
         )}
       </div>
 
-      {dragListeners && (
+      {dragListeners && !hideHandle && (
         <span
           className="text-foreground/30 shrink-0 cursor-grab select-none py-4 px-2 -my-2 -mr-2 touch-none"
           {...dragListeners}
