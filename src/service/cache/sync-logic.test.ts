@@ -151,7 +151,9 @@ describe("Song stale deletion safety threshold", () => {
       const allExistingKeys = await libraryDb.songs
         .toCollection()
         .primaryKeys();
-      allExistingKeys.filter((id) => !serverIds.has(id as string));
+      const _staleIds = allExistingKeys.filter(
+        (id) => !serverIds.has(id as string),
+      );
       expect.fail("Should not reach here with empty server songs");
     }
 
@@ -310,9 +312,9 @@ describe("Playlist details deletion safety guard", () => {
     const existingIds = await libraryDb.playlistDetails
       .toCollection()
       .primaryKeys();
-    existingIds.filter((id) => !playlistIds.has(id));
+    const _removedIds = existingIds.filter((id) => !playlistIds.has(id));
 
-    // When playlists list is truncated, 1 of 2 playlist details would be removed.
+    // removedIds.length (1) is NOT less than existingIds.length (2) —
     // it's equal, so 50% would be removed. But the guard condition
     // removedIds.length < existingIds.length is true since 1 < 2,
     // so it would still delete. Let's test the dangerous edge case:

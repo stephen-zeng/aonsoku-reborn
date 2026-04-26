@@ -2,7 +2,7 @@ import { clear as idbClear, set as idbSet } from "idb-keyval";
 import { beforeEach, describe, expect, it } from "vitest";
 import { cacheIndexStore } from "@/store/idb";
 import { _resetLibraryDbForTests, libraryDb } from "@/store/library-db";
-import { useCacheIndexStore } from "./cache-index.store";
+import { useCacheIndexStore, isAudioCached, isCoverCached, computePoolStats } from "./cache-index.store";
 
 const INDEX_KEY = "cache-index-v1";
 
@@ -310,5 +310,230 @@ describe("cache-index.store · actions", () => {
     expect(after?.lastAccessedAt).toBeGreaterThanOrEqual(
       before?.lastAccessedAt ?? 0,
     );
+  });
+});
+
+describe("cache-index.store · setRemovedFromServer", () => {
+  beforeEach(() => {
+    useCacheIndexStore.setState({ items: {}, loaded: true, downloads: {} });
+  });
+
+  it("sets removedFromServer to true", () => {
+    const { addItem } = useCacheIndexStore.getState().actions;
+    addItem("audio:s1", {
+      id: "s1",
+      type: "audio",
+      source: "explicit",
+      sizeBytes: 100,
+      cachedAt: 1,
+      lastAccessedAt: 1,
+    });
+
+    useCacheIndexStore.getState().actions.setRemovedFromServer("audio:s1", true);
+    expect(useCacheIndexStore.getState().items["audio:s1"].removedFromServer).toBe(true);
+  });
+
+  it("removes removedFromServer when set to false", () => {
+    const { addItem } = useCacheIndexStore.getState().actions;
+    addItem("audio:s2", {
+      id: "s2",
+      type: "audio",
+      source: "explicit",
+      sizeBytes: 100,
+      cachedAt: 1,
+      lastAccessedAt: 1,
+      removedFromServer: true,
+    });
+
+    useCacheIndexStore.getState().actions.setRemovedFromServer("audio:s2", false);
+    const item = useCacheIndexStore.getState().items["audio:s2"];
+    expect(item.removedFromServer).toBeUndefined();
+  });
+
+  it("no-ops for nonexistent key", () => {
+    useCacheIndexStore.getState().actions.setRemovedFromServer("audio:missing", true);
+    expect(useCacheIndexStore.getState().items["audio:missing"]).toBeUndefined();
+  });
+});
+
+describe("cache-index.store · clear", () => {
+  it("clears all items", () => {
+    useCacheIndexStore.setState({
+      items: {
+        "audio/x": {
+          id: "x",
+          type: "audio",
+          source: "explicit",
+          sizeBytes: 10,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+      },
+      loaded: true,
+    });
+
+    useCacheIndexStore.getState().actions.clear();
+    expect(useCacheIndexStore.getState().items).toEqual({});
+  });
+});
+
+describe("cache-index.store · download progress", () => {
+  it("setDownloadProgress sets a value", () => {
+    useCacheIndexStore.setState({ downloads: {} });
+    useCacheIndexStore.getState().actions.setDownloadProgress("s1", 50);
+    expect(useCacheIndexStore.getState().downloads.s1).toBe(50);
+  });
+
+  it("clearDownloadProgress removes the entry", () => {
+    useCacheIndexStore.setState({ downloads: { s1: 75 } });
+    useCacheIndexStore.getState().actions.clearDownloadProgress("s1");
+    expect(useCacheIndexStore.getState().downloads.s1).toBeUndefined();
+  });
+
+  it("setDownloadProgress with negative bytes for indeterminate progress", () => {
+    useCacheIndexStore.setState({ downloads: {} });
+    useCacheIndexStore.getState().actions.setDownloadProgress("s1", -1024);
+    expect(useCacheIndexStore.getState().downloads.s1).toBe(-1024);
+  });
+});
+
+describe("cache-index.store · helper functions", () => {
+  beforeEach(() => {
+    useCacheIndexStore.setState({ items: {}, loaded: true, downloads: {} });
+  });
+
+  it("isAudioCached returns true for existing audio key", () => {
+    useCacheIndexStore.getState().actions.addItem("audio:song-1", {
+      id: "song-1",
+      type: "audio",
+      source: "explicit",
+      sizeBytes: 100,
+      cachedAt: 1,
+      lastAccessedAt: 1,
+    });
+    expect(isAudioCached("song-1")).toBe(true);
+    expect(isAudioCached("unknown")).toBe(false);
+    expect(isCoverCached("song-1")).toBe(false);
+  });
+
+  it("isCoverCached returns true for existing cover key", () => {
+    useCacheIndexStore.getState().actions.addItem("cover:art-1", {
+      id: "art-1",
+      type: "cover",
+      source: "explicit",
+      sizeBytes: 200,
+      cachedAt: 1,
+      lastAccessedAt: 1,
+    });
+    expect(isCoverCached("art-1")).toBe(true);
+    expect(isCoverCached("missing")).toBe(false);
+    expect(isAudioCached("art-1")).toBe(false);
+  });
+});
+
+describe("cache-index.store · computePoolStats", () => {
+  it("groups audio by source and covers separately", () => {
+    useCacheIndexStore.setState({
+      items: {
+        "audio:e1": {
+          id: "e1",
+          type: "audio",
+          source: "explicit",
+          sizeBytes: 100,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+        "audio:s1": {
+          id: "s1",
+          type: "audio",
+          source: "smart",
+          triggers: ["fav"],
+          sizeBytes: 200,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+        "audio:l1": {
+          id: "l1",
+          type: "audio",
+          source: "lru",
+          sizeBytes: 300,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+        "cover:c1": {
+          id: "c1",
+          type: "cover",
+          source: "explicit",
+          sizeBytes: 400,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+      },
+      loaded: true,
+    });
+
+    const stats = computePoolStats(useCacheIndexStore.getState().items);
+    expect(stats.explicit).toEqual({ sizeBytes: 100, count: 1 });
+    expect(stats.smart).toEqual({ sizeBytes: 200, count: 1 });
+    expect(stats.lru).toEqual({ sizeBytes: 300, count: 1 });
+    expect(stats.assets).toEqual({ sizeBytes: 400, count: 1 });
+  });
+
+  it("returns empty breakdowns for empty items", () => {
+    useCacheIndexStore.setState({ items: {}, loaded: true });
+
+    const stats = computePoolStats(useCacheIndexStore.getState().items);
+    expect(stats.explicit).toEqual({ sizeBytes: 0, count: 0 });
+    expect(stats.smart).toEqual({ sizeBytes: 0, count: 0 });
+    expect(stats.lru).toEqual({ sizeBytes: 0, count: 0 });
+    expect(stats.assets).toEqual({ sizeBytes: 0, count: 0 });
+  });
+
+  it("counts album and playlist items as explicit audio in pool stats", () => {
+    useCacheIndexStore.setState({
+      items: {
+        "album:al1": {
+          id: "al1",
+          type: "album",
+          source: "explicit",
+          sizeBytes: 100,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+        "playlist:pl1": {
+          id: "pl1",
+          type: "playlist",
+          source: "explicit",
+          sizeBytes: 200,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+      },
+      loaded: true,
+    });
+
+    const stats = computePoolStats(useCacheIndexStore.getState().items);
+    expect(stats.explicit).toEqual({ sizeBytes: 300, count: 2 });
+    expect(stats.smart).toEqual({ sizeBytes: 0, count: 0 });
+    expect(stats.lru).toEqual({ sizeBytes: 0, count: 0 });
+    expect(stats.assets).toEqual({ sizeBytes: 0, count: 0 });
+  });
+});
+
+describe("cache-index.store · removeItem", () => {
+  it("removes an item from the index", () => {
+    const { addItem, removeItem } = useCacheIndexStore.getState().actions;
+    addItem("audio:rm1", {
+      id: "rm1",
+      type: "audio",
+      source: "explicit",
+      sizeBytes: 100,
+      cachedAt: 1,
+      lastAccessedAt: 1,
+    });
+    expect(useCacheIndexStore.getState().items["audio:rm1"]).toBeDefined();
+
+    removeItem("audio:rm1");
+    expect(useCacheIndexStore.getState().items["audio:rm1"]).toBeUndefined();
   });
 });
