@@ -182,6 +182,22 @@
   );
 }
 
+/* Fullscreen queue hover/active overrides — placed outside @layer to win
+   over Tailwind utility classes (hover:bg-muted, bg-accent). Uses
+   foreground-based alpha so the colour blends with any backdrop. */
+.fullscreen-queue-bg .group\/queuerow:hover {
+  background-color: hsl(var(--foreground) / 0.1);
+}
+
+.fullscreen-queue-bg .group\/queuerow.bg-accent,
+.fullscreen-queue-bg .group\/queuerow.bg-skeleton {
+  background-color: hsl(var(--foreground) / 0.15);
+}
+
+.fullscreen-queue-bg .user-dropdown-trigger[data-state="open"] > :first-child {
+  background-color: hsl(var(--foreground) / 0.15);
+}
+
 .fullscreen-drawer-surface {
   transition:
     --queue-backdrop-r 1000ms,
