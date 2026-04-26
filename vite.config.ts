@@ -46,8 +46,8 @@ function swCacheVersionPlugin(buildHash: string): Plugin {
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const buildTimestamp = Date.now();
-  const buildHash = buildTimestamp.toString(36);
+  const buildTimestamp = mode === "production" ? Date.now() : 0;
+  const buildHash = buildTimestamp > 0 ? buildTimestamp.toString(36) : "dev";
   return {
     plugins: [
       react(),
