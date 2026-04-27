@@ -21,7 +21,7 @@ import {
 import { useIsMobile } from "@/app/hooks/use-mobile";
 import { LogoutObserver } from "@/app/observers/logout-observer";
 import { ROUTES } from "@/routes/routesList";
-import { logoutKeys, settingsKeys, shortcutDialogKeys, stringifyShortcut } from "@/shortcuts";
+import { settingsKeys, shortcutDialogKeys, stringifyShortcut } from "@/shortcuts";
 import { useAppData, useAppStore, useAppSettings } from "@/store/app.store";
 import { useLanControlServerInfo } from "@/store/lanControl.store";
 import { isMacOS } from "@/utils/desktop";
@@ -75,11 +75,25 @@ export function UserDropdown() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align={alignPosition} className="min-w-64">
           <DropdownMenuLabel className="font-normal">
-            <div className="flex flex-col space-y-2">
-              <p className="text-sm font-medium leading-none">{username}</p>
-              <p className="text-xs leading-none text-muted-foreground">
-                {url}
-              </p>
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col space-y-2">
+                <p className="text-sm font-medium leading-none">{username}</p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {url}
+                </p>
+              </div>
+              {!lockUser && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLogoutDialogState(true);
+                  }}
+                  className="p-1.5 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                  title={t("menu.serverLogout")}
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
@@ -111,18 +125,6 @@ export function UserDropdown() {
             <Info className="mr-2 h-4 w-4" />
             <span>{t("menu.about")}</span>
           </DropdownMenuItem>
-          {!lockUser && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setLogoutDialogState(true)}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>{t("menu.serverLogout")}</span>
-                <DropdownMenuShortcut>
-                  {stringifyShortcut(logoutKeys)}
-                </DropdownMenuShortcut>
-              </DropdownMenuItem>
-            </>
-          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </Fragment>
