@@ -56,18 +56,30 @@ function isFullscreenHistoryState(
   );
 }
 
-function getFullscreenHistoryState(): FullscreenHistoryState | null {
-  if (!isRecord(navState.locationState)) return null;
+function getCurrentHistoryState(): unknown {
+  const historyState = window.history.state;
+  if (isRecord(historyState) && "usr" in historyState) {
+    return historyState.usr;
+  }
+  return null;
+}
 
-  const historyState = navState.locationState[FULLSCREEN_HISTORY_STATE_KEY];
+function getFullscreenHistoryState(
+  state: unknown = navState.locationState,
+): FullscreenHistoryState | null {
+  if (!isRecord(state)) return null;
+
+  const historyState = state[FULLSCREEN_HISTORY_STATE_KEY];
   return isFullscreenHistoryState(historyState) ? historyState : null;
 }
 
 function buildNavigationState(
   historyState: FullscreenHistoryState | null,
 ): Record<string, unknown> | undefined {
-  const nextState = isRecord(navState.locationState)
-    ? { ...navState.locationState }
+  const currentState =
+    getCurrentHistoryState() ?? navState.locationState;
+  const nextState = isRecord(currentState)
+    ? { ...currentState }
     : {};
 
   if (historyState) {
@@ -80,7 +92,8 @@ function buildNavigationState(
 }
 
 function buildSearch(playerTab: string | null): string {
-  const params = new URLSearchParams(navState.searchParams);
+  const currentSearch = window.location.hash.split("?")[1] ?? "";
+  const params = new URLSearchParams(currentSearch);
   if (playerTab) {
     params.set(PLAYER_SEARCH_PARAM, playerTab);
   } else {
@@ -164,7 +177,9 @@ export function setFullscreenTabWithHistory(tab: FullscreenPlayerTab) {
 
   const playerStore = usePlayerStore.getState();
   const { fullscreenPlayerTab } = playerStore.playerState;
-  const historyState = getFullscreenHistoryState();
+  const historyState =
+    getFullscreenHistoryState(getCurrentHistoryState()) ??
+    getFullscreenHistoryState();
 
   playerStore.actions.setFullscreenPlayerTab(tab);
 
@@ -217,7 +232,9 @@ export function setFullscreenTabWithHistory(tab: FullscreenPlayerTab) {
 export function closeFullscreenPlayerWithHistory() {
   if (!navState.navigate) return;
 
-  const historyState = getFullscreenHistoryState();
+  const historyState =
+    getFullscreenHistoryState(getCurrentHistoryState()) ??
+    getFullscreenHistoryState();
 
   if (historyState) {
     navState.navigate(-historyState.closeSteps);
