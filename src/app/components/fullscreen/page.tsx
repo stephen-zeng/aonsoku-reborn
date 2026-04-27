@@ -19,6 +19,7 @@ import { blendColors, hslToHex } from "@/utils/getAverageColor";
 import { setDesktopTitleBarColors, updatePwaThemeColor } from "@/utils/theme";
 import { FullscreenDragHandler } from "./drag-handler";
 import { FullscreenContent } from "./fullscreen-content";
+import { useFullscreenMouseDrawerDrag } from "./use-mouse-drawer-drag";
 
 interface FullscreenModeProps {
   children: ReactNode;
@@ -37,6 +38,12 @@ export default function FullscreenMode({
   const { enterFullscreenWindow, exitFullscreenWindow } = useAppWindow();
   const { autoFullscreenEnabled } = useFullscreenPlayerSettings();
   const backdropStyle = useBackdropStyle();
+  const drawerContentRef = useRef<HTMLDivElement>(null);
+  const mouseDrawerDragHandlers = useFullscreenMouseDrawerDrag({
+    closeAnimationMs: DRAWER_CLOSE_ANIMATION_MS,
+    drawerRef: drawerContentRef,
+    open,
+  });
 
   const { theme } = useTheme();
   const { currentSongColor, currentSongColorIntensity } = usePlayerStore(
@@ -192,13 +199,17 @@ export default function FullscreenMode({
       <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerTitle className="sr-only">Big Player</DrawerTitle>
       <DrawerContent
+        ref={drawerContentRef}
         className="fullscreen-drawer-surface mt-0 h-dvh max-h-dvh w-screen rounded-t-none border-none select-none cursor-default"
         showHandle={false}
         aria-describedby={undefined}
         style={backdropStyle}
       >
         <FullscreenDragHandler />
-        <div className="absolute inset-0 z-10 flex flex-col fullscreen-safe-area">
+        <div
+          className="absolute inset-0 z-10 flex flex-col fullscreen-safe-area"
+          {...mouseDrawerDragHandlers}
+        >
           <MemoFullscreenContent />
         </div>
       </DrawerContent>
