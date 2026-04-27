@@ -315,7 +315,32 @@ function UnifiedQueueView({
       const el = currentSongRef.current;
       const spacer = spacerRef.current;
       if (!el || !container || !spacer) return;
+      if (container.scrollTop <= 1) return;
       const containerRect = container.getBoundingClientRect();
+      const historySection = container.querySelector<HTMLElement>(
+        "[data-history-section]",
+      );
+      let visibleHistoryCount = 0;
+      if (historySection) {
+        const sectionRect = historySection.getBoundingClientRect();
+        const visibleTop = Math.max(sectionRect.top, containerRect.top);
+        const visibleBottom = Math.min(sectionRect.bottom, containerRect.bottom);
+        const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+        const headerHeight = 32;
+        const itemHeight = 64;
+        const itemsVisibleHeight = Math.max(0, visibleHeight - headerHeight);
+        visibleHistoryCount = Math.max(1, Math.ceil(itemsVisibleHeight / itemHeight));
+      }
+      if (visibleHistoryCount >= 1 && visibleHistoryCount <= 3) {
+        syncQueueCurrentSongPosition({
+          container,
+          el,
+          spacer,
+          behavior: "smooth",
+        });
+        snapHaptic?.();
+        return;
+      }
       const elRect = el.getBoundingClientRect();
       const partiallyVisible =
         elRect.top < containerRect.bottom &&
@@ -444,7 +469,7 @@ function UnifiedQueueView({
       ref={scrollContainerRef}
     >
       {playHistory.length > 0 && (
-        <div className={FULLSCREEN_QUEUE_BG_CLASS}>
+        <div className={FULLSCREEN_QUEUE_BG_CLASS} data-history-section>
           <div
             className={`${FULLSCREEN_QUEUE_BG_CLASS} sticky top-0 z-10 flex items-center justify-between px-2 py-1`}
           >
@@ -887,7 +912,35 @@ function VirtualizedQueueView({
         "[data-current-song]",
       );
       if (!currentSongEl) return;
+      if (scrollEl.scrollTop <= 1) return;
       const containerRect = scrollEl.getBoundingClientRect();
+      const containerHeight = scrollEl.clientHeight;
+      const scrollTop = scrollEl.scrollTop;
+      const visibleVirtualItems = virtualizer.getVirtualItems();
+      let visibleHistoryCount = 0;
+      for (const vItem of visibleVirtualItems) {
+        const item = virtualItems[vItem.index];
+        if (item?.type === "history") {
+          const itemTop = vItem.start;
+          const itemBottom = vItem.start + vItem.size;
+          if (
+            itemTop < scrollTop + containerHeight &&
+            itemBottom > scrollTop
+          ) {
+            visibleHistoryCount++;
+          }
+        }
+      }
+      if (visibleHistoryCount >= 1 && visibleHistoryCount <= 3) {
+        if (currentSongVirtualIndex >= 0) {
+          virtualizer.scrollToIndex(currentSongVirtualIndex, {
+            align: "start",
+            behavior: "smooth",
+          });
+          snapHaptic?.();
+        }
+        return;
+      }
       const elRect = currentSongEl.getBoundingClientRect();
       const partiallyVisible =
         elRect.top < containerRect.bottom &&
@@ -905,7 +958,7 @@ function VirtualizedQueueView({
     };
     scrollEl.addEventListener("scrollend", handleScrollEnd);
     return () => scrollEl.removeEventListener("scrollend", handleScrollEnd);
-  }, [currentSongVirtualIndex, virtualizer, getScrollElement, snapHaptic]);
+  }, [currentSongVirtualIndex, virtualizer, getScrollElement, snapHaptic, virtualItems]);
 
   if (virtualItems.length === 0) {
     return (
