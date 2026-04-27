@@ -230,6 +230,8 @@ export function setFullscreenTabWithHistory(tab: FullscreenPlayerTab) {
 export function closeFullscreenPlayerWithHistory() {
   if (!navState.navigate) return;
 
+  usePlayerStore.getState().actions.closeFullscreenPlayer();
+
   const historyState = getFullscreenHistoryState(getCurrentHistoryState());
 
   if (historyState) {
