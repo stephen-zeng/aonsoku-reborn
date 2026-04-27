@@ -38,7 +38,6 @@ import {
   usePlayerActions,
   usePlayerCurrentSong,
   usePlayerCurrentSongIndex,
-  usePlayerIsPlaying,
   usePlayerLoop,
   useUserQueue,
   useContextQueue,
@@ -238,7 +237,6 @@ function UnifiedQueueView({
   const { t } = useTranslation();
   const { playSong, playFromQueue, playFromUserQueue, reorderQueue } =
     usePlayerActions();
-  const isPlaying = usePlayerIsPlaying();
   const loopState = usePlayerLoop();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
 
@@ -429,7 +427,6 @@ function UnifiedQueueView({
         upcomingSortableItems={upcomingSortableItems}
         activeItem={activeItem}
         dragOverlayBg={dragOverlayBg}
-        isPlaying={isPlaying}
         onUserDragStart={handleUserDragStart}
         onUserDragEnd={handleUserDragEnd}
         onUpcomingDragStart={handleUpcomingDragStart}
@@ -478,7 +475,6 @@ function UnifiedQueueView({
               <QueueItemRow
                 key={`${displaySong.id}-${displayIdx}`}
                 song={displaySong}
-                isPlaying={isCurrent && isPlaying}
                 isActive={isCurrent}
                 onPlay={() => playSong(displaySong)}
                 tier="context"
@@ -526,7 +522,6 @@ function UnifiedQueueView({
             clearUserQueue={clearUserQueue}
             activeItem={activeItem}
             dragOverlayBg={dragOverlayBg}
-            isPlaying={isPlaying}
             onPlaySong={(userQueueIndex) => playFromUserQueue(userQueueIndex)}
             t={t}
             sticky
@@ -560,7 +555,6 @@ function UnifiedQueueView({
                 clearUserQueue={clearUserQueue}
                 activeItem={activeItem}
                 dragOverlayBg={dragOverlayBg}
-                isPlaying={isPlaying}
                 onPlaySong={(userQueueIndex) =>
                   playFromUserQueue(userQueueIndex)
                 }
@@ -616,7 +610,6 @@ function UnifiedQueueView({
                           key={song.id}
                           id={song.id}
                           song={song}
-                          isPlaying={false}
                           isActive={false}
                           onPlay={() => playFromQueue(contextSongs, contextIdx)}
                           tier="context"
@@ -634,9 +627,6 @@ function UnifiedQueueView({
                       >
                         <QueueItemRow
                           song={activeItem}
-                          isPlaying={
-                            currentSong?.id === activeItem.id && isPlaying
-                          }
                           isActive={currentSong?.id === activeItem.id}
                           onPlay={() => {}}
                           {...queueItemProps}
@@ -685,7 +675,6 @@ function VirtualizedQueueView({
   upcomingSortableItems,
   activeItem,
   dragOverlayBg,
-  isPlaying,
   onUserDragStart,
   onUserDragEnd,
   onUpcomingDragStart,
@@ -721,7 +710,6 @@ function VirtualizedQueueView({
   upcomingSortableItems: string[];
   activeItem: ISong | null;
   dragOverlayBg: string;
-  isPlaying: boolean;
   onUserDragStart: (e: DragStartEvent) => void;
   onUserDragEnd: (e: DragEndEvent) => void;
   onUpcomingDragStart: (e: DragStartEvent) => void;
@@ -993,9 +981,6 @@ function VirtualizedQueueView({
                         {item.type === "history" && (
                           <QueueItemRow
                             song={item.song}
-                            isPlaying={
-                              currentSong?.id === item.song.id && isPlaying
-                            }
                             isActive={currentSong?.id === item.song.id}
                             onPlay={() => playSong(item.song)}
                             tier="context"
@@ -1032,9 +1017,6 @@ function VirtualizedQueueView({
                           <SortableQueueItem
                             id={item.song.id}
                             song={item.song}
-                            isPlaying={
-                              currentSong?.id === item.song.id && isPlaying
-                            }
                             isActive={currentSong?.id === item.song.id}
                             onPlay={() =>
                               playFromUserQueue(item.userQueueIndex)
@@ -1081,7 +1063,6 @@ function VirtualizedQueueView({
                           <SortableQueueItem
                             id={item.song.id}
                             song={item.song}
-                            isPlaying={false}
                             isActive={false}
                             onPlay={() =>
                               playFromQueue(contextSongs, item.contextIdx)
@@ -1115,7 +1096,6 @@ function VirtualizedQueueView({
             >
               <QueueItemRow
                 song={activeItem}
-                isPlaying={currentSong?.id === activeItem.id && isPlaying}
                 isActive={currentSong?.id === activeItem.id}
                 onPlay={() => {}}
                 {...queueItemProps}
@@ -1156,7 +1136,6 @@ function UserQueueSection({
   clearUserQueue,
   activeItem,
   dragOverlayBg,
-  isPlaying,
   onPlaySong,
   t,
   sticky = false,
@@ -1171,7 +1150,6 @@ function UserQueueSection({
   clearUserQueue: () => void;
   activeItem: ISong | null;
   dragOverlayBg: string;
-  isPlaying: boolean;
   onPlaySong: (userQueueIndex: number) => void;
   t: (key: string) => string;
   sticky?: boolean;
@@ -1225,7 +1203,6 @@ function UserQueueSection({
                 key={song.id}
                 id={song.id}
                 song={song}
-                isPlaying={isCurrent && isPlaying}
                 isActive={isCurrent}
                 onPlay={() => onPlaySong(userQueueIndex)}
                 tier="user"
@@ -1244,7 +1221,6 @@ function UserQueueSection({
             >
               <QueueItemRow
                 song={activeItem}
-                isPlaying={currentSong?.id === activeItem.id && isPlaying}
                 isActive={currentSong?.id === activeItem.id}
                 onPlay={() => {}}
                 {...queueItemProps}

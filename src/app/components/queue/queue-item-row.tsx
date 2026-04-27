@@ -7,7 +7,6 @@ import { CSSProperties, forwardRef, useState } from "react";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { CachedIndicator } from "@/app/components/table/cached-indicator";
 import { CacheButton } from "@/app/components/table/cache-button";
-import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { Button } from "@/app/components/ui/button";
 import {
@@ -24,7 +23,6 @@ import { useWebHaptics } from "web-haptics/react";
 
 interface QueueItemRowProps {
   song: ISong;
-  isPlaying: boolean;
   isActive: boolean;
   onPlay: () => void;
   style?: CSSProperties;
@@ -78,7 +76,6 @@ export const QueueItemRow = forwardRef<
 >(function QueueItemRow(
   {
     song,
-    isPlaying,
     isActive,
     onPlay,
     style,
@@ -137,11 +134,6 @@ export const QueueItemRow = forwardRef<
             alt={`${song.title} - ${song.artist}`}
           />
         </div>
-        {isPlaying && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded">
-            <EqualizerBars size={18} className="text-white mb-0.5" />
-          </div>
-        )}
         <div
           className={clsx(
             "absolute inset-0 flex items-center justify-center bg-black/40 rounded",
