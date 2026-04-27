@@ -9,6 +9,7 @@ const SHIFT_KEY = isMacOs ? "⇧" : "Shift";
 // const ALT_KEY = isMacOs ? '⌥' : 'Alt'
 
 export const shortcutDialogKeys = [META_KEY, "/"];
+export const settingsKeys = [META_KEY, ","];
 export const logoutKeys = [SHIFT_KEY, CTRL_KEY, "Q"];
 
 export function stringifyShortcut(keys: string[]) {

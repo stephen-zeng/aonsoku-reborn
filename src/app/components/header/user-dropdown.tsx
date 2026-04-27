@@ -21,7 +21,7 @@ import {
 import { useIsMobile } from "@/app/hooks/use-mobile";
 import { LogoutObserver } from "@/app/observers/logout-observer";
 import { ROUTES } from "@/routes/routesList";
-import { logoutKeys, shortcutDialogKeys, stringifyShortcut } from "@/shortcuts";
+import { logoutKeys, settingsKeys, shortcutDialogKeys, stringifyShortcut } from "@/shortcuts";
 import { useAppData, useAppStore, useAppSettings } from "@/store/app.store";
 import { useLanControlServerInfo } from "@/store/lanControl.store";
 import { isMacOS } from "@/utils/desktop";
@@ -102,6 +102,9 @@ export function UserDropdown() {
           <DropdownMenuItem onClick={handleSettingsClick}>
             <Settings className="mr-2 h-4 w-4" />
             <span>{t("settings.label")}</span>
+            <DropdownMenuShortcut>
+              {stringifyShortcut(settingsKeys)}
+            </DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setAboutOpen(true)}>
