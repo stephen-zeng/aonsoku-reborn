@@ -5,12 +5,12 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/app/components/ui/drawer";
-import { useBackdropStyle } from "@/app/hooks/use-backdrop-bg";
 import { useAppWindow } from "@/app/hooks/use-app-window";
+import { useBackdropStyle } from "@/app/hooks/use-backdrop-bg";
 import { closeFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import {
-  usePlayerStore,
   useFullscreenPlayerSettings,
+  usePlayerStore,
 } from "@/store/player.store";
 import { useTheme } from "@/store/theme.store";
 import { enterFullscreen, exitFullscreen } from "@/utils/browser";
@@ -27,6 +27,7 @@ interface FullscreenModeProps {
 }
 
 const MemoFullscreenContent = memo(FullscreenContent);
+const DRAWER_CLOSE_ANIMATION_MS = 500;
 
 export default function FullscreenMode({
   children,
@@ -47,6 +48,8 @@ export default function FullscreenMode({
   );
 
   const atTopRef = useRef(false);
+  const scrollUnlockTimerRef = useRef<number | null>(null);
+  const wasScrollLockedRef = useRef(false);
 
   const applyThemeColor = useCallback(
     (atTop: boolean) => {
@@ -96,14 +99,50 @@ export default function FullscreenMode({
     applyThemeColor(atTopRef.current);
   }, [theme, applyThemeColor]);
 
+  const clearScrollUnlockTimer = useCallback(() => {
+    if (scrollUnlockTimerRef.current === null) return;
+
+    window.clearTimeout(scrollUnlockTimerRef.current);
+    scrollUnlockTimerRef.current = null;
+  }, []);
+
+  const removeFullscreenScrollLock = useCallback(() => {
+    clearScrollUnlockTimer();
+    document.documentElement.classList.remove("fullscreen-scroll-lock");
+    document.body.classList.remove("fullscreen-scroll-lock");
+    wasScrollLockedRef.current = false;
+  }, [clearScrollUnlockTimer]);
+
+  const addFullscreenScrollLock = useCallback(() => {
+    clearScrollUnlockTimer();
+    document.documentElement.classList.add("fullscreen-scroll-lock");
+    document.body.classList.add("fullscreen-scroll-lock");
+    wasScrollLockedRef.current = true;
+  }, [clearScrollUnlockTimer]);
+
   useEffect(() => {
     if (open) {
-      document.body.classList.add("overflow-hidden");
-      return () => {
-        document.body.classList.remove("overflow-hidden");
-      };
+      addFullscreenScrollLock();
+      return;
     }
-  }, [open]);
+
+    if (!wasScrollLockedRef.current) return;
+
+    clearScrollUnlockTimer();
+    scrollUnlockTimerRef.current = window.setTimeout(
+      removeFullscreenScrollLock,
+      DRAWER_CLOSE_ANIMATION_MS,
+    );
+  }, [
+    open,
+    addFullscreenScrollLock,
+    clearScrollUnlockTimer,
+    removeFullscreenScrollLock,
+  ]);
+
+  useEffect(() => {
+    return removeFullscreenScrollLock;
+  }, [removeFullscreenScrollLock]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: initial useEffect
   useEffect(() => {
@@ -122,7 +161,9 @@ export default function FullscreenMode({
     onOpenChange?.(open);
 
     if (!open) {
-      closeFullscreenPlayerWithHistory();
+      closeFullscreenPlayerWithHistory({
+        historyDelayMs: DRAWER_CLOSE_ANIMATION_MS,
+      });
     }
 
     if (!autoFullscreenEnabled) return;
@@ -138,6 +179,7 @@ export default function FullscreenMode({
   return (
     <Drawer
       fixed
+      shouldScaleBackground={false}
       dismissible={true}
       handleOnly={false}
       disablePreventScroll={true}

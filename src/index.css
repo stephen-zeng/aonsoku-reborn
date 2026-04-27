@@ -31,9 +31,15 @@
     @apply border-border;
   }
 
-body {
-  @apply bg-background-foreground text-foreground overflow-x-hidden;
-}
+  body {
+    @apply bg-background-foreground text-foreground overflow-x-hidden;
+  }
+
+  html.fullscreen-scroll-lock,
+  body.fullscreen-scroll-lock {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
 
   body.windows-linux {
     @apply antialiased;
