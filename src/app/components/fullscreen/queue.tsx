@@ -328,8 +328,10 @@ function UnifiedQueueView({
         const visibleHeight = Math.max(0, visibleBottom - visibleTop);
         const headerHeight = 32;
         const itemHeight = 64;
-        const itemsVisibleHeight = Math.max(0, visibleHeight - headerHeight);
-        visibleHistoryCount = Math.max(1, Math.ceil(itemsVisibleHeight / itemHeight));
+        const itemsVisibleHeight = visibleHeight - headerHeight;
+        if (itemsVisibleHeight > 0) {
+          visibleHistoryCount = Math.ceil(itemsVisibleHeight / itemHeight);
+        }
       }
       if (visibleHistoryCount >= 1 && visibleHistoryCount <= 3) {
         syncQueueCurrentSongPosition({
