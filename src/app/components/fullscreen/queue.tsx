@@ -339,23 +339,6 @@ function UnifiedQueueView({
           behavior: "smooth",
         });
         snapHaptic?.();
-        return;
-      }
-      const elRect = el.getBoundingClientRect();
-      const partiallyVisible =
-        elRect.top < containerRect.bottom &&
-        elRect.bottom > containerRect.top;
-      const fullyVisible =
-        elRect.top >= containerRect.top &&
-        elRect.bottom <= containerRect.bottom;
-      if (partiallyVisible && !fullyVisible) {
-        syncQueueCurrentSongPosition({
-          container,
-          el,
-          spacer,
-          behavior: "smooth",
-        });
-        snapHaptic?.();
       }
     };
     container.addEventListener("scrollend", handleScrollEnd);
@@ -913,7 +896,6 @@ function VirtualizedQueueView({
       );
       if (!currentSongEl) return;
       if (scrollEl.scrollTop <= 1) return;
-      const containerRect = scrollEl.getBoundingClientRect();
       const containerHeight = scrollEl.clientHeight;
       const scrollTop = scrollEl.scrollTop;
       const visibleVirtualItems = virtualizer.getVirtualItems();
@@ -939,21 +921,6 @@ function VirtualizedQueueView({
           });
           snapHaptic?.();
         }
-        return;
-      }
-      const elRect = currentSongEl.getBoundingClientRect();
-      const partiallyVisible =
-        elRect.top < containerRect.bottom &&
-        elRect.bottom > containerRect.top;
-      const fullyVisible =
-        elRect.top >= containerRect.top &&
-        elRect.bottom <= containerRect.bottom;
-      if (partiallyVisible && !fullyVisible && currentSongVirtualIndex >= 0) {
-        virtualizer.scrollToIndex(currentSongVirtualIndex, {
-          align: "start",
-          behavior: "smooth",
-        });
-        snapHaptic?.();
       }
     };
     scrollEl.addEventListener("scrollend", handleScrollEnd);
