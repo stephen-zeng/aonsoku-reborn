@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { DrawerHandle } from "@/app/components/ui/drawer";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
+import { useIsTouchPrimary } from "@/app/hooks/use-input-mode";
 import { useIsShortViewport, useIsWideViewport } from "@/app/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import {
@@ -161,6 +162,7 @@ export const MobileLayout = memo(function MobileLayout({
   const areLyricsAligned = useLyricsAlignment();
   const isShortViewport = useIsShortViewport();
   const isWideViewport = useIsWideViewport();
+  const isTouchPrimary = useIsTouchPrimary();
   const useWideCenteredPlayingLayout =
     fullscreenPlayerTab === "playing" && isWideViewport && !isShortViewport;
   const useShortCompactPlayingLayout =
@@ -201,7 +203,7 @@ export const MobileLayout = memo(function MobileLayout({
             >
               <ArtworkWithInfo
                 compact={useShortCompactPlayingLayout}
-                showTouchDragSurface
+                showTouchDragSurface={isTouchPrimary}
                 className={cn(
                   "w-full",
                   useShortCompactPlayingLayout ? "flex-1 px-4" : "min-h-0",

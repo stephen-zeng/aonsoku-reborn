@@ -5,12 +5,12 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/app/components/ui/drawer";
-import { useBackdropStyle } from "@/app/hooks/use-backdrop-bg";
 import { useAppWindow } from "@/app/hooks/use-app-window";
+import { useBackdropStyle } from "@/app/hooks/use-backdrop-bg";
 import { closeFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import {
-  usePlayerStore,
   useFullscreenPlayerSettings,
+  usePlayerStore,
 } from "@/store/player.store";
 import { useTheme } from "@/store/theme.store";
 import { enterFullscreen, exitFullscreen } from "@/utils/browser";
@@ -19,6 +19,7 @@ import { blendColors, hslToHex } from "@/utils/getAverageColor";
 import { setDesktopTitleBarColors, updatePwaThemeColor } from "@/utils/theme";
 import { FullscreenDragHandler } from "./drag-handler";
 import { FullscreenContent } from "./fullscreen-content";
+import { useFullscreenMouseDrawerDrag } from "./use-mouse-drawer-drag";
 
 interface FullscreenModeProps {
   children: ReactNode;
@@ -27,6 +28,7 @@ interface FullscreenModeProps {
 }
 
 const MemoFullscreenContent = memo(FullscreenContent);
+const DRAWER_CLOSE_ANIMATION_MS = 500;
 
 export default function FullscreenMode({
   children,
@@ -36,6 +38,12 @@ export default function FullscreenMode({
   const { enterFullscreenWindow, exitFullscreenWindow } = useAppWindow();
   const { autoFullscreenEnabled } = useFullscreenPlayerSettings();
   const backdropStyle = useBackdropStyle();
+  const drawerContentRef = useRef<HTMLDivElement>(null);
+  const mouseDrawerDragHandlers = useFullscreenMouseDrawerDrag({
+    closeAnimationMs: DRAWER_CLOSE_ANIMATION_MS,
+    drawerRef: drawerContentRef,
+    open,
+  });
 
   const { theme } = useTheme();
   const { currentSongColor, currentSongColorIntensity } = usePlayerStore(
@@ -47,6 +55,8 @@ export default function FullscreenMode({
   );
 
   const atTopRef = useRef(false);
+  const scrollUnlockTimerRef = useRef<number | null>(null);
+  const wasScrollLockedRef = useRef(false);
 
   const applyThemeColor = useCallback(
     (atTop: boolean) => {
@@ -96,14 +106,50 @@ export default function FullscreenMode({
     applyThemeColor(atTopRef.current);
   }, [theme, applyThemeColor]);
 
+  const clearScrollUnlockTimer = useCallback(() => {
+    if (scrollUnlockTimerRef.current === null) return;
+
+    window.clearTimeout(scrollUnlockTimerRef.current);
+    scrollUnlockTimerRef.current = null;
+  }, []);
+
+  const removeFullscreenScrollLock = useCallback(() => {
+    clearScrollUnlockTimer();
+    document.documentElement.classList.remove("fullscreen-scroll-lock");
+    document.body.classList.remove("fullscreen-scroll-lock");
+    wasScrollLockedRef.current = false;
+  }, [clearScrollUnlockTimer]);
+
+  const addFullscreenScrollLock = useCallback(() => {
+    clearScrollUnlockTimer();
+    document.documentElement.classList.add("fullscreen-scroll-lock");
+    document.body.classList.add("fullscreen-scroll-lock");
+    wasScrollLockedRef.current = true;
+  }, [clearScrollUnlockTimer]);
+
   useEffect(() => {
     if (open) {
-      document.body.classList.add("overflow-hidden");
-      return () => {
-        document.body.classList.remove("overflow-hidden");
-      };
+      addFullscreenScrollLock();
+      return;
     }
-  }, [open]);
+
+    if (!wasScrollLockedRef.current) return;
+
+    clearScrollUnlockTimer();
+    scrollUnlockTimerRef.current = window.setTimeout(
+      removeFullscreenScrollLock,
+      DRAWER_CLOSE_ANIMATION_MS,
+    );
+  }, [
+    open,
+    addFullscreenScrollLock,
+    clearScrollUnlockTimer,
+    removeFullscreenScrollLock,
+  ]);
+
+  useEffect(() => {
+    return removeFullscreenScrollLock;
+  }, [removeFullscreenScrollLock]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: initial useEffect
   useEffect(() => {
@@ -122,7 +168,9 @@ export default function FullscreenMode({
     onOpenChange?.(open);
 
     if (!open) {
-      closeFullscreenPlayerWithHistory();
+      closeFullscreenPlayerWithHistory({
+        historyDelayMs: DRAWER_CLOSE_ANIMATION_MS,
+      });
     }
 
     if (!autoFullscreenEnabled) return;
@@ -138,6 +186,7 @@ export default function FullscreenMode({
   return (
     <Drawer
       fixed
+      shouldScaleBackground={false}
       dismissible={true}
       handleOnly={false}
       disablePreventScroll={true}
@@ -150,13 +199,17 @@ export default function FullscreenMode({
       <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerTitle className="sr-only">Big Player</DrawerTitle>
       <DrawerContent
+        ref={drawerContentRef}
         className="fullscreen-drawer-surface mt-0 h-dvh max-h-dvh w-screen rounded-t-none border-none select-none cursor-default"
         showHandle={false}
         aria-describedby={undefined}
         style={backdropStyle}
       >
         <FullscreenDragHandler />
-        <div className="absolute inset-0 z-10 flex flex-col fullscreen-safe-area">
+        <div
+          className="absolute inset-0 z-10 flex flex-col fullscreen-safe-area"
+          {...mouseDrawerDragHandlers}
+        >
           <MemoFullscreenContent />
         </div>
       </DrawerContent>

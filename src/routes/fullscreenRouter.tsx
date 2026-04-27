@@ -36,8 +36,19 @@ const navState: FullscreenNavState = {
   locationState: null,
 };
 
+let pendingCloseNavigation: number | null = null;
+
 export function setFullscreenNavigator(navigate: NavigateFunction | null) {
+  if (!navigate) clearPendingCloseNavigation();
+
   navState.navigate = navigate;
+}
+
+function clearPendingCloseNavigation() {
+  if (pendingCloseNavigation === null) return;
+
+  window.clearTimeout(pendingCloseNavigation);
+  pendingCloseNavigation = null;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -76,11 +87,8 @@ function getFullscreenHistoryState(
 function buildNavigationState(
   historyState: FullscreenHistoryState | null,
 ): Record<string, unknown> | undefined {
-  const currentState =
-    getCurrentHistoryState() ?? navState.locationState;
-  const nextState = isRecord(currentState)
-    ? { ...currentState }
-    : {};
+  const currentState = getCurrentHistoryState() ?? navState.locationState;
+  const nextState = isRecord(currentState) ? { ...currentState } : {};
 
   if (historyState) {
     nextState[FULLSCREEN_HISTORY_STATE_KEY] = historyState;
@@ -137,6 +145,8 @@ function navigateWithSearch(
 export function openFullscreenPlayerWithHistory(tab: FullscreenPlayerTab) {
   if (!navState.navigate) return;
 
+  clearPendingCloseNavigation();
+
   const playerStore = usePlayerStore.getState();
   const { fullscreenPlayerOpen } = playerStore.playerState;
 
@@ -174,6 +184,8 @@ export function openFullscreenPlayerWithHistory(tab: FullscreenPlayerTab) {
 
 export function setFullscreenTabWithHistory(tab: FullscreenPlayerTab) {
   if (!navState.navigate) return;
+
+  clearPendingCloseNavigation();
 
   const playerStore = usePlayerStore.getState();
   const { fullscreenPlayerTab } = playerStore.playerState;
@@ -227,19 +239,56 @@ export function setFullscreenTabWithHistory(tab: FullscreenPlayerTab) {
   });
 }
 
-export function closeFullscreenPlayerWithHistory() {
+export function closeFullscreenPlayerWithHistory(options?: {
+  historyDelayMs?: number;
+}) {
   if (!navState.navigate) return;
+
+  const historyState = getFullscreenHistoryState(getCurrentHistoryState());
+  const delay = options?.historyDelayMs ?? 0;
+
+  clearPendingCloseNavigation();
 
   usePlayerStore.getState().actions.closeFullscreenPlayer();
 
-  const historyState = getFullscreenHistoryState(getCurrentHistoryState());
+  const closeRoute = () => {
+    pendingCloseNavigation = null;
 
-  if (historyState) {
-    navState.navigate(-historyState.closeSteps);
+    if (usePlayerStore.getState().playerState.fullscreenPlayerOpen) {
+      return;
+    }
+
+    if (historyState) {
+      const currentHistoryState = getFullscreenHistoryState(
+        getCurrentHistoryState(),
+      );
+
+      if (
+        !currentHistoryState ||
+        currentHistoryState.sessionId !== historyState.sessionId ||
+        currentHistoryState.step !== historyState.step
+      ) {
+        return;
+      }
+
+      navState.navigate?.(-historyState.closeSteps);
+      return;
+    }
+
+    const currentSearch = window.location.hash.split("?")[1] ?? "";
+    if (!new URLSearchParams(currentSearch).has(PLAYER_SEARCH_PARAM)) {
+      return;
+    }
+
+    navigateWithSearch(null, { replace: true });
+  };
+
+  if (delay > 0) {
+    pendingCloseNavigation = window.setTimeout(closeRoute, delay);
     return;
   }
 
-  navigateWithSearch(null, { replace: true });
+  closeRoute();
 }
 
 export function FullscreenPlayerRouter() {
