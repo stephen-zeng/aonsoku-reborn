@@ -18,6 +18,7 @@ import {
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { useWebHaptics } from "web-haptics/react";
 import {
   QueueItemRow,
   SortableQueueItem,
@@ -42,6 +43,7 @@ import {
   useUserQueue,
   useContextQueue,
   useHasQueueSongs,
+  useHapticSettings,
 } from "@/store/player.store";
 import type { ISong } from "@/types/responses/song";
 import { LoopState } from "@/types/playerContext";
@@ -144,6 +146,12 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
 
   const { clearHistory: clearPlayHistory } = usePlayHistoryActions();
 
+  const { hapticFeedbackEnabled } = useHapticSettings();
+  const { trigger } = useWebHaptics();
+  const snapHaptic = hapticFeedbackEnabled
+    ? () => trigger([{ duration: 6 }])
+    : undefined;
+
   const upcomingContext = useMemo(
     () => contextSongs.slice(contextIndex + 1),
     [contextSongs, contextIndex],
@@ -181,6 +189,7 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
       clearUserQueue={clearUserQueue}
       onCurrentSongClick={onCurrentSongClick}
       isMobile={isMobile}
+      snapHaptic={snapHaptic}
     />
   );
 });
@@ -204,6 +213,7 @@ function UnifiedQueueView({
   clearUserQueue,
   onCurrentSongClick,
   isMobile,
+  snapHaptic,
 }: {
   playHistory: ISong[];
   userQueueSongs: ISong[];
@@ -223,6 +233,7 @@ function UnifiedQueueView({
   clearUserQueue: () => void;
   onCurrentSongClick?: () => void;
   isMobile: boolean;
+  snapHaptic?: () => void;
 }) {
   const { t } = useTranslation();
   const { playSong, playFromQueue, playFromUserQueue, reorderQueue } =
@@ -295,6 +306,36 @@ function UnifiedQueueView({
       observer.disconnect();
     };
   }, [useVirtualization]);
+
+  useEffect(() => {
+    if (useVirtualization) return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const handleScrollEnd = () => {
+      const el = currentSongRef.current;
+      const spacer = spacerRef.current;
+      if (!el || !container || !spacer) return;
+      const containerRect = container.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const partiallyVisible =
+        elRect.top < containerRect.bottom &&
+        elRect.bottom > containerRect.top;
+      const fullyVisible =
+        elRect.top >= containerRect.top &&
+        elRect.bottom <= containerRect.bottom;
+      if (partiallyVisible && !fullyVisible) {
+        syncQueueCurrentSongPosition({
+          container,
+          el,
+          spacer,
+          behavior: "smooth",
+        });
+        snapHaptic?.();
+      }
+    };
+    container.addEventListener("scrollend", handleScrollEnd);
+    return () => container.removeEventListener("scrollend", handleScrollEnd);
+  }, [useVirtualization, snapHaptic]);
 
   const contextPlayedCount = contextIndex + 1;
   const userQueueStart = contextPlayedCount;
@@ -391,6 +432,7 @@ function UnifiedQueueView({
         onCurrentSongClick={onCurrentSongClick}
         t={t}
         queueItemProps={queueItemProps}
+        snapHaptic={snapHaptic}
       />
     );
   }
@@ -646,6 +688,7 @@ function VirtualizedQueueView({
   onCurrentSongClick,
   t,
   queueItemProps,
+  snapHaptic,
 }: {
   playHistory: ISong[];
   userQueueSongs: ISong[];
@@ -686,6 +729,7 @@ function VirtualizedQueueView({
     hideDropdownButton: boolean;
     isMobile: boolean;
   };
+  snapHaptic?: () => void;
 }) {
   const parentRef = useRef<HTMLDivElement>(null);
   const prevSongIdRef = useRef<string | null>(null);
@@ -835,6 +879,34 @@ function VirtualizedQueueView({
     }
   }, [currentSong?.id, currentSongVirtualIndex, virtualizer]);
 
+  useEffect(() => {
+    const scrollEl = getScrollElement();
+    if (!scrollEl) return;
+    const handleScrollEnd = () => {
+      const currentSongEl = scrollEl.querySelector<HTMLElement>(
+        "[data-current-song]",
+      );
+      if (!currentSongEl) return;
+      const containerRect = scrollEl.getBoundingClientRect();
+      const elRect = currentSongEl.getBoundingClientRect();
+      const partiallyVisible =
+        elRect.top < containerRect.bottom &&
+        elRect.bottom > containerRect.top;
+      const fullyVisible =
+        elRect.top >= containerRect.top &&
+        elRect.bottom <= containerRect.bottom;
+      if (partiallyVisible && !fullyVisible && currentSongVirtualIndex >= 0) {
+        virtualizer.scrollToIndex(currentSongVirtualIndex, {
+          align: "start",
+          behavior: "smooth",
+        });
+        snapHaptic?.();
+      }
+    };
+    scrollEl.addEventListener("scrollend", handleScrollEnd);
+    return () => scrollEl.removeEventListener("scrollend", handleScrollEnd);
+  }, [currentSongVirtualIndex, virtualizer, getScrollElement, snapHaptic]);
+
   if (virtualItems.length === 0) {
     return (
       <div className="flex flex-1 flex-col h-full min-w-0 items-center justify-center">
@@ -910,7 +982,10 @@ function VirtualizedQueueView({
                         )}
 
                         {item.type === "currentSong" && (
-                          <div className="px-0 pt-2 pb-0.5">
+                          <div
+                            data-current-song
+                            className="px-0 pt-2 pb-0.5"
+                          >
                             <QueueCurrentSong onClick={onCurrentSongClick} />
                           </div>
                         )}
