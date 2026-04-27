@@ -488,18 +488,7 @@
       }
     },
     "appearance": {
-      "colors": {
-        "bigPlayer": {
-          "blurSize": "Größe der Bildunschärfe",
-          "label": "Großer Player"
-        },
-        "description": "Auswählen, ob die App die dominante Farbe des aktuellen Albumcovers als Hintergrund verwendet werden soll.",
-        "group": "Dynamische Farben",
-        "queue": {
-          "intensity": "Farbintensität",
-          "label": "Warteschlange und Lyrics"
-        }
-      },
+
       "general": {
         "albumCoverForSongs": {
           "info": "Wenn aktiviert, verwendet jede Song-Cover-Anfrage das Albumcover, um die Ladezeit zu verkürzen.",

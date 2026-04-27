@@ -488,18 +488,7 @@
       }
     },
     "appearance": {
-      "colors": {
-        "bigPlayer": {
-          "blurSize": "이미지 흐림 정도",
-          "label": "큰 플레이어"
-        },
-        "description": "현재 재생 중인 앨범 아트로부터 앱 색상을 결정합니다.",
-        "group": "동적 색상",
-        "queue": {
-          "intensity": "색조 레벨",
-          "label": "대기열 및 가사"
-        }
-      },
+
       "general": {
         "albumCoverForSongs": {
           "info": "활성화하면 모든 곡 아트워크 요청이 앨범 커버를 사용하여 로딩 시간을 줄입니다.",

@@ -750,8 +750,6 @@ export const useSongColor = () =>
       currentSongColorIntensity:
         state.settings.colors.currentSongColorIntensity,
       setCurrentSongIntensity: state.actions.setCurrentSongIntensity,
-      useSongColorOnQueue: state.settings.colors.queue.useSongColor,
-      setUseSongColorOnQueue: state.actions.setUseSongColorOnQueue,
     }),
     shallow,
   );

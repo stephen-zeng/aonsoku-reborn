@@ -494,18 +494,7 @@
       }
     },
     "appearance": {
-      "colors": {
-        "bigPlayer": {
-          "blurSize": "Velikost rozmazání obrázku",
-          "label": "Velký přehrávač"
-        },
-        "description": "Vyberte, zda má aplikace používat dominantní barvu z právě přehrávaného obalu alba jako pozadí.",
-        "group": "Dynamické barvy",
-        "queue": {
-          "intensity": "Úroveň intenzity barev",
-          "label": "Fronta a texty"
-        }
-      },
+
       "general": {
         "albumCoverForSongs": {
           "info": "Pokud je povoleno, každý požadavek na obrázek skladby používá obal alba pro snížení doby načítání.",

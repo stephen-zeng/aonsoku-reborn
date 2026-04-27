@@ -495,18 +495,7 @@
       }
     },
     "appearance": {
-      "colors": {
-        "bigPlayer": {
-          "blurSize": "Taille du floutage des images",
-          "label": "Grand Lecteur"
-        },
-        "description": "Sélectionnez si l'application doit utiliser la couleur dominante de la pochette de l'album en cours de lecture comme arrière-plan.",
-        "group": "Couleurs dynamiques",
-        "queue": {
-          "intensity": "Niveau d'intensité des couleurs",
-          "label": "File d'attente et paroles"
-        }
-      },
+
       "general": {
         "albumCoverForSongs": {
           "info": "Lorsque activé, chaque demande d'image de piste utilise la pochette de l'album pour réduire le temps de chargement.",

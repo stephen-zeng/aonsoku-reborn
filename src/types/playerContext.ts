@@ -127,14 +127,9 @@ export interface IPrivacySettings {
   setLrcLibEnabled: (value: boolean) => void;
 }
 
-interface IQueueSettings {
-  useSongColor: boolean;
-}
-
 interface IColorsSettings {
   currentSongColor: string | null;
   currentSongColorIntensity: number;
-  queue: IQueueSettings;
 }
 
 interface IHapticSettings {
@@ -225,7 +220,6 @@ export interface IPlayerActions {
   setAreLyricsAligned: (aligned: boolean) => void;
   setCurrentSongColor: (value: string | null) => void;
   setCurrentSongIntensity: (value: number) => void;
-  setUseSongColorOnQueue: (value: boolean) => void;
   enterRemoteControl: (device: RemoteDeviceInfo | null) => void;
   exitRemoteControl: () => void;
   registerRemoteSender: (

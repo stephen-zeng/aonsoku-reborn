@@ -502,18 +502,7 @@
       }
     },
     "appearance": {
-      "colors": {
-        "bigPlayer": {
-          "blurSize": "Rozmiar Rozmycia Obrazu",
-          "label": "Duży Odtwarzacz"
-        },
-        "description": "Wybierz kiedy aplikacja powinna używać dominującego koloru z okładki aktualnie odtwarzanego albumu jako tła.",
-        "group": "Dynamiczne Kolory",
-        "queue": {
-          "intensity": "Poziom Intensywności Koloru",
-          "label": "Kolejka i Tekst"
-        }
-      },
+
       "general": {
         "albumCoverForSongs": {
           "info": "Po włączeniu każde żądanie okładki utworu używa okładki albumu, aby skrócić czas ładowania.",

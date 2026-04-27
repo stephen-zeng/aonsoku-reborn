@@ -3,7 +3,6 @@ import { ComponentPropsWithoutRef } from "react";
 import { useTranslation } from "react-i18next";
 import { FullscreenSongQueue } from "@/app/components/fullscreen/queue";
 import { LyricsTab } from "@/app/components/fullscreen/lyrics";
-import { QueueSettings } from "@/app/components/fullscreen/settings";
 import { Button } from "@/app/components/ui/button";
 import { ResizeHandle } from "@/app/components/ui/resize-handle";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
@@ -92,7 +91,6 @@ export function MainDrawerPage() {
               {t("fullscreen.lyrics")}
             </Button>
           </div>
-          <QueueSettings />
           <Button
             variant="ghost"
             className="w-8 h-8 rounded-full p-0 hover:bg-foreground/20"

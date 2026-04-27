@@ -618,18 +618,6 @@
           "label": "Always use album covers",
           "info": "When enabled, every song artwork request uses the album cover to reduce loading time."
         }
-      },
-      "colors": {
-        "group": "Dynamic Colors",
-        "description": "Select whether the app should use the dominant color from the currently playing album art as the background.",
-        "queue": {
-          "label": "Queue and Lyrics",
-          "intensity": "Color Intensity Level"
-        },
-        "bigPlayer": {
-          "label": "Big Player",
-          "blurSize": "Image Blur Size"
-        }
       }
     },
     "audio": {

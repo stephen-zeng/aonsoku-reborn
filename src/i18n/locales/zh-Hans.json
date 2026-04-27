@@ -488,18 +488,6 @@
       }
     },
     "appearance": {
-      "colors": {
-        "bigPlayer": {
-          "blurSize": "图片模糊大小",
-          "label": "大播放器"
-        },
-        "description": "选择是否将当前播放专辑封面中的主色调作为背景。",
-        "group": "动态颜色",
-        "queue": {
-          "intensity": "颜色强度等级",
-          "label": "队列和歌词"
-        }
-      },
       "general": {
         "albumCoverForSongs": {
           "info": "启用后，所有曲目的封面请求都会使用专辑封面，以减少加载时间。",

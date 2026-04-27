@@ -495,18 +495,7 @@
       }
     },
     "appearance": {
-      "colors": {
-        "bigPlayer": {
-          "blurSize": "Tanaño de Desenfoque de Imagen",
-          "label": "Reproductor Grande"
-        },
-        "description": "Selecciona si la aplicación deberia usar el color predominante de la portada del álbum en reproducción como color de fondo.",
-        "group": "Colores dinámicos",
-        "queue": {
-          "intensity": "Nivel de Intensidad del Color",
-          "label": "Cola y Letras"
-        }
-      },
+
       "general": {
         "albumCoverForSongs": {
           "info": "Cuando está activado, cada solicitud de carátula de canción usa la portada del álbum para reducir el tiempo de carga.",

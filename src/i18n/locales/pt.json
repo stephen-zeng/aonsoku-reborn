@@ -495,18 +495,7 @@
       }
     },
     "appearance": {
-      "colors": {
-        "bigPlayer": {
-          "blurSize": "Tamanho do Desfoque da Imagem",
-          "label": "Player Grande"
-        },
-        "description": "Selecione se a app usará a cor dominante da arte do álbum em reprodução como cor de fundo.",
-        "group": "Cores Dinâmicas",
-        "queue": {
-          "intensity": "Nível de Intensidade da Cor",
-          "label": "Fila de reprodução e Letra"
-        }
-      },
+
       "general": {
         "albumCoverForSongs": {
           "info": "Quando ativado, todos os pedidos de imagem de música usam a capa do álbum para reduzir o tempo de carregamento.",

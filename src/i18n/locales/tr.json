@@ -488,18 +488,7 @@
       }
     },
     "appearance": {
-      "colors": {
-        "bigPlayer": {
-          "blurSize": "Görüntü Bulanıklık Boyutu",
-          "label": "Büyük Oynatıcı"
-        },
-        "description": "Uygulamanın arka plan olarak o an çalan albüm kapağındaki baskın rengi kullanıp kullanmayacağını seçin.",
-        "group": "Dinamik Renkler",
-        "queue": {
-          "intensity": "Renk Yoğunluğu Seviyesi",
-          "label": "Kuyruk ve Şarkı Sözleri"
-        }
-      },
+
       "general": {
         "albumCoverForSongs": {
           "info": "Etkinleştirildiğinde, her şarkı albüm resmi isteği yükleme süresini azaltmak için albüm kapağını kullanır.",

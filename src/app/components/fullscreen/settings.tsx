@@ -9,7 +9,6 @@ import {
 } from "@/app/components/ui/popover";
 import { Separator } from "@/app/components/ui/separator";
 import { Slider } from "@/app/components/ui/slider";
-import { Switch } from "@/app/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useSongColor } from "@/store/player.store";
 
@@ -17,19 +16,6 @@ export function FullscreenSettings() {
   return (
     <DynamicSettingsPopover>
       <ColorIntensityOption showSeparator={false} />
-    </DynamicSettingsPopover>
-  );
-}
-
-export function QueueSettings() {
-  const { useSongColorOnQueue } = useSongColor();
-
-  return (
-    <DynamicSettingsPopover>
-      <>
-        <QueueDynamicColorOption showSeparator={false} />
-        {useSongColorOnQueue && <ColorIntensityOption />}
-      </>
     </DynamicSettingsPopover>
   );
 }
@@ -64,20 +50,6 @@ type OptionProps = Omit<
   ComponentPropsWithoutRef<typeof SettingWrapper>,
   "text"
 >;
-
-function QueueDynamicColorOption(props: OptionProps) {
-  const { t } = useTranslation();
-  const { useSongColorOnQueue, setUseSongColorOnQueue } = useSongColor();
-
-  return (
-    <SettingWrapper text={t("settings.appearance.colors.group")} {...props}>
-      <Switch
-        checked={useSongColorOnQueue}
-        onCheckedChange={() => setUseSongColorOnQueue(!useSongColorOnQueue)}
-      />
-    </SettingWrapper>
-  );
-}
 
 function ColorIntensityOption(props: OptionProps) {
   const { t } = useTranslation();

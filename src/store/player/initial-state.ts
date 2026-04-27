@@ -114,9 +114,6 @@ export function createInitialSettings(set: SetFn): IPlayerContext["settings"] {
     colors: {
       currentSongColor: null,
       currentSongColorIntensity: 0.65,
-      queue: {
-        useSongColor: false,
-      },
     },
     hapticFeedback: {
       hapticFeedbackEnabled: true,

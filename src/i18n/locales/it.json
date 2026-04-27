@@ -493,18 +493,7 @@
       }
     },
     "appearance": {
-      "colors": {
-        "bigPlayer": {
-          "blurSize": "Dimensione sfocatura immagine",
-          "label": "Riproduttore grande"
-        },
-        "description": "Seleziona se l'app deve utilizzare il colore dominante della copertina dell'album in riproduzione come sfondo.",
-        "group": "Colori dinamici",
-        "queue": {
-          "intensity": "Livello intensità colore",
-          "label": "Coda e testi"
-        }
-      },
+
       "general": {
         "albumCoverForSongs": {
           "info": "Se attivato, ogni richiesta di copertina usa la copertina dell'album per ridurre i tempi di caricamento.",

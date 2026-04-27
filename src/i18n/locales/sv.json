@@ -488,18 +488,7 @@
       }
     },
     "appearance": {
-      "colors": {
-        "bigPlayer": {
-          "blurSize": "Bildens oskärpa",
-          "label": "Stor spelare"
-        },
-        "description": "Välj om appen ska använda den dominerande färgen från det aktuella albumomslaget som bakgrund.",
-        "group": "Dynamiska färger",
-        "queue": {
-          "intensity": "Färgintensitetsnivå",
-          "label": "Kö och text"
-        }
-      },
+
       "general": {
         "albumCoverForSongs": {
           "info": "När aktiverad använder varje låtbildsförfrågan albumomslaget för att minska laddningstiden.",
