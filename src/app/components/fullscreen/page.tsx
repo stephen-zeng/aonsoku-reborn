@@ -1,4 +1,4 @@
-import { memo, ReactNode, useEffect } from "react";
+import { memo, ReactNode, useCallback, useEffect, useRef } from "react";
 import {
   Drawer,
   DrawerContent,
@@ -46,26 +46,55 @@ export default function FullscreenMode({
     }),
   );
 
+  const atTopRef = useRef(false);
+
+  const applyThemeColor = useCallback(
+    (atTop: boolean) => {
+      const bgHsl = getComputedStyle(document.documentElement)
+        .getPropertyValue("--background")
+        .trim();
+      const baseHex = hslToHex(bgHsl);
+
+      if (atTop && open) {
+        const color = currentSongColor
+          ? blendColors(baseHex, currentSongColor, currentSongColorIntensity)
+          : baseHex;
+        updatePwaThemeColor(color);
+        if (isDesktop()) setDesktopTitleBarColors(true, color);
+      } else {
+        updatePwaThemeColor();
+        if (isDesktop()) setDesktopTitleBarColors(false);
+      }
+    },
+    [open, currentSongColor, currentSongColorIntensity],
+  );
+
+  const handleDrag = useCallback(
+    (_: React.PointerEvent<HTMLDivElement>, percentageDragged: number) => {
+      const atTop = percentageDragged >= 1;
+      if (atTopRef.current !== atTop) {
+        atTopRef.current = atTop;
+        applyThemeColor(atTop);
+      }
+    },
+    [applyThemeColor],
+  );
+
+  const handleRelease = useCallback(
+    (_: React.PointerEvent<HTMLDivElement>, isOpen: boolean) => {
+      const atTop = isOpen;
+      if (atTopRef.current !== atTop) {
+        atTopRef.current = atTop;
+        applyThemeColor(atTop);
+      }
+    },
+    [applyThemeColor],
+  );
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: theme is used to trigger update when base background changes
   useEffect(() => {
-    const bgHsl = getComputedStyle(document.documentElement)
-      .getPropertyValue("--background")
-      .trim();
-    const baseHex = hslToHex(bgHsl);
-
-    const color =
-      open && currentSongColor
-        ? blendColors(baseHex, currentSongColor, currentSongColorIntensity)
-        : baseHex;
-
-    if (open) {
-      updatePwaThemeColor(color);
-      if (isDesktop()) setDesktopTitleBarColors(true, color);
-    } else {
-      updatePwaThemeColor();
-      if (isDesktop()) setDesktopTitleBarColors(false);
-    }
-  }, [open, currentSongColor, currentSongColorIntensity, theme]);
+    applyThemeColor(atTopRef.current);
+  }, [theme, applyThemeColor]);
 
   useEffect(() => {
     if (open) {
@@ -115,6 +144,8 @@ export default function FullscreenMode({
       modal={false}
       open={open}
       onOpenChange={handleFullscreen}
+      onDrag={handleDrag}
+      onRelease={handleRelease}
     >
       <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerTitle className="sr-only">Big Player</DrawerTitle>
