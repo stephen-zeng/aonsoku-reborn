@@ -177,9 +177,7 @@ export function setFullscreenTabWithHistory(tab: FullscreenPlayerTab) {
 
   const playerStore = usePlayerStore.getState();
   const { fullscreenPlayerTab } = playerStore.playerState;
-  const historyState =
-    getFullscreenHistoryState(getCurrentHistoryState()) ??
-    getFullscreenHistoryState();
+  const historyState = getFullscreenHistoryState(getCurrentHistoryState());
 
   playerStore.actions.setFullscreenPlayerTab(tab);
 
@@ -232,9 +230,7 @@ export function setFullscreenTabWithHistory(tab: FullscreenPlayerTab) {
 export function closeFullscreenPlayerWithHistory() {
   if (!navState.navigate) return;
 
-  const historyState =
-    getFullscreenHistoryState(getCurrentHistoryState()) ??
-    getFullscreenHistoryState();
+  const historyState = getFullscreenHistoryState(getCurrentHistoryState());
 
   if (historyState) {
     navState.navigate(-historyState.closeSteps);
