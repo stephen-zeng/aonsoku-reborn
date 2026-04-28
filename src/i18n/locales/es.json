@@ -495,7 +495,6 @@
       }
     },
     "appearance": {
-
       "general": {
         "albumCoverForSongs": {
           "info": "Cuando está activado, cada solicitud de carátula de canción usa la portada del álbum para reducir el tiempo de carga.",

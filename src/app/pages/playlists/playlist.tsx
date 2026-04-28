@@ -82,7 +82,11 @@ export default function Playlist() {
 
   return (
     <div className="w-full" key={playlist.id}>
-      <MobilePageHeader variant="sub" title={playlist.name} accentColor={accentColor} />
+      <MobilePageHeader
+        variant="sub"
+        title={playlist.name}
+        accentColor={accentColor}
+      />
       <ImageHeader
         type={t("playlist.headline")}
         title={playlist.name}

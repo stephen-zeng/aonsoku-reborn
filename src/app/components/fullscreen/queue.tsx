@@ -322,7 +322,10 @@ function UnifiedQueueView({
       if (historySection) {
         const sectionRect = historySection.getBoundingClientRect();
         const visibleTop = Math.max(sectionRect.top, containerRect.top);
-        const visibleBottom = Math.min(sectionRect.bottom, containerRect.bottom);
+        const visibleBottom = Math.min(
+          sectionRect.bottom,
+          containerRect.bottom,
+        );
         const visibleHeight = Math.max(0, visibleBottom - visibleTop);
         const headerHeight = 32;
         const itemHeight = 64;
@@ -573,7 +576,9 @@ function UnifiedQueueView({
                 {!hideModeButtons && <QueueModeButtons />}
               </div>
               <div className="flex items-center justify-center py-4">
-                <span className="text-foreground/50 text-xs">{t("fullscreen.emptyQueue")}</span>
+                <span className="text-foreground/50 text-xs">
+                  {t("fullscreen.emptyQueue")}
+                </span>
               </div>
             </div>
           ) : (
@@ -895,10 +900,7 @@ function VirtualizedQueueView({
         if (item?.type === "history") {
           const itemTop = vItem.start;
           const itemBottom = vItem.start + vItem.size;
-          if (
-            itemTop < scrollTop + containerHeight &&
-            itemBottom > scrollTop
-          ) {
+          if (itemTop < scrollTop + containerHeight && itemBottom > scrollTop) {
             visibleHistoryCount++;
           }
         }
@@ -915,7 +917,13 @@ function VirtualizedQueueView({
     };
     scrollEl.addEventListener("scrollend", handleScrollEnd);
     return () => scrollEl.removeEventListener("scrollend", handleScrollEnd);
-  }, [currentSongVirtualIndex, virtualizer, getScrollElement, snapHaptic, virtualItems]);
+  }, [
+    currentSongVirtualIndex,
+    virtualizer,
+    getScrollElement,
+    snapHaptic,
+    virtualItems,
+  ]);
 
   if (virtualItems.length === 0) {
     return (
@@ -989,10 +997,7 @@ function VirtualizedQueueView({
                         )}
 
                         {item.type === "currentSong" && (
-                          <div
-                            data-current-song
-                            className="px-0 pt-2 pb-0.5"
-                          >
+                          <div data-current-song className="px-0 pt-2 pb-0.5">
                             <QueueCurrentSong onClick={onCurrentSongClick} />
                           </div>
                         )}
@@ -1054,7 +1059,9 @@ function VirtualizedQueueView({
                           <div>
                             {!hideModeButtons && <QueueModeButtons />}
                             <div className="flex items-center justify-center py-4">
-                              <span className="text-foreground/50 text-xs">{t("fullscreen.emptyQueue")}</span>
+                              <span className="text-foreground/50 text-xs">
+                                {t("fullscreen.emptyQueue")}
+                              </span>
                             </div>
                           </div>
                         )}

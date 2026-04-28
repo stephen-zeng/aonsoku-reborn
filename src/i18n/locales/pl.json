@@ -502,7 +502,6 @@
       }
     },
     "appearance": {
-
       "general": {
         "albumCoverForSongs": {
           "info": "Po włączeniu każde żądanie okładki utworu używa okładki albumu, aby skrócić czas ładowania.",

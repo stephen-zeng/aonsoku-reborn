@@ -148,7 +148,11 @@ export default function Album() {
 
   return (
     <div className="w-full">
-      <MobilePageHeader variant="sub" title={album.name} accentColor={accentColor} />
+      <MobilePageHeader
+        variant="sub"
+        title={album.name}
+        accentColor={accentColor}
+      />
       <ImageHeader
         type={t("album.headline")}
         title={album.name}

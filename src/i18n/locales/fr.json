@@ -495,7 +495,6 @@
       }
     },
     "appearance": {
-
       "general": {
         "albumCoverForSongs": {
           "info": "Lorsque activé, chaque demande d'image de titre utilise la pochette de l'album pour réduire le temps de chargement.",

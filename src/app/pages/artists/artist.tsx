@@ -85,7 +85,11 @@ export default function Artist() {
 
   return (
     <div className="w-full">
-      <MobilePageHeader variant="sub" title={artist.name} accentColor={accentColor} />
+      <MobilePageHeader
+        variant="sub"
+        title={artist.name}
+        accentColor={accentColor}
+      />
       <ImageHeader
         type={t("artist.headline")}
         title={artist.name}

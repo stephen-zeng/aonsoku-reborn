@@ -488,7 +488,6 @@
       }
     },
     "appearance": {
-
       "general": {
         "albumCoverForSongs": {
           "info": "Etkinleştirildiğinde, her şarkı albüm resmi isteği yükleme süresini azaltmak için albüm kapağını kullanır.",

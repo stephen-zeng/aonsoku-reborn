@@ -499,7 +499,6 @@
       }
     },
     "appearance": {
-
       "general": {
         "albumCoverForSongs": {
           "info": "Quando ativado, todas as solicitações de imagem de música usam a capa do álbum para reduzir o tempo de carregamento.",

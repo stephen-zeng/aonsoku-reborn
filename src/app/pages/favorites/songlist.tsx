@@ -117,7 +117,11 @@ export default function SongList() {
 
   return (
     <div className="w-full">
-      <MobilePageHeader variant="sub" title={t("sidebar.favorites")} accentColor={accentColor} />
+      <MobilePageHeader
+        variant="sub"
+        title={t("sidebar.favorites")}
+        accentColor={accentColor}
+      />
       <ImageHeader
         type={t("favorites.headline")}
         title={t("sidebar.favorites")}

@@ -488,7 +488,6 @@
       }
     },
     "appearance": {
-
       "general": {
         "albumCoverForSongs": {
           "info": "활성화하면 모든 곡 아트워크 요청이 앨범 커버를 사용하여 로딩 시간을 줄입니다.",

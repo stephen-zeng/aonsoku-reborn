@@ -488,7 +488,6 @@
       }
     },
     "appearance": {
-
       "general": {
         "albumCoverForSongs": {
           "info": "Wenn aktiviert, verwendet jede Song-Cover-Anfrage das Albumcover, um die Ladezeit zu verkürzen.",

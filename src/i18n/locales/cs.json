@@ -494,7 +494,6 @@
       }
     },
     "appearance": {
-
       "general": {
         "albumCoverForSongs": {
           "info": "Pokud je povoleno, každý požadavek na obrázek skladby používá obal alba pro snížení doby načítání.",

@@ -48,10 +48,7 @@ function getSnapDuration(distance: number, velocity: number) {
 
   return Math.min(
     WHEEL_SNAP_MAX_DURATION,
-    Math.max(
-      WHEEL_SNAP_MIN_DURATION,
-      absDistance * WHEEL_SNAP_DURATION_PER_PX,
-    ),
+    Math.max(WHEEL_SNAP_MIN_DURATION, absDistance * WHEEL_SNAP_DURATION_PER_PX),
   );
 }
 
@@ -133,11 +130,7 @@ export function useEmblaWheelScroll(api: CarouselApi) {
 
         const elapsed = time - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        const easedProgress = getSnapProgress(
-          progress,
-          snapDistance,
-          velocity,
-        );
+        const easedProgress = getSnapProgress(progress, snapDistance, velocity);
         const nextDistance = snapDistance * easedProgress;
         const frameDistance = nextDistance - previousDistance;
 

@@ -30,9 +30,7 @@ export function ShadowHeader({
       )}
       style={{
         paddingLeft: fixed ? "max(1rem, var(--safe-area-left))" : undefined,
-        paddingRight: fixed
-          ? "max(1rem, var(--safe-area-right))"
-          : undefined,
+        paddingRight: fixed ? "max(1rem, var(--safe-area-right))" : undefined,
       }}
       {...rest}
     >

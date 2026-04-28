@@ -21,9 +21,7 @@ export function HapticFeedbackSettings() {
   return (
     <Root>
       <Header>
-        <HeaderTitle>
-          {t("settings.audio.hapticFeedback.group")}
-        </HeaderTitle>
+        <HeaderTitle>{t("settings.audio.hapticFeedback.group")}</HeaderTitle>
         <HeaderDescription>
           {t("settings.audio.hapticFeedback.description")}
         </HeaderDescription>

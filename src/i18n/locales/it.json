@@ -493,7 +493,6 @@
       }
     },
     "appearance": {
-
       "general": {
         "albumCoverForSongs": {
           "info": "Se attivato, ogni richiesta di copertina usa la copertina dell'album per ridurre i tempi di caricamento.",

@@ -488,7 +488,6 @@
       }
     },
     "appearance": {
-
       "general": {
         "albumCoverForSongs": {
           "info": "När aktiverad använder varje låtbildsförfrågan albumomslaget för att minska laddningstiden.",
