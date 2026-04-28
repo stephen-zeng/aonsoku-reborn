@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
+import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { useSongList } from "@/app/hooks/use-song-list";
@@ -157,7 +158,15 @@ export default function MobileSearch() {
 
   return (
     <div className="flex flex-col w-full h-full">
-      <div className="sticky top-0 z-10 bg-background border-b px-4 py-3">
+      <MobilePageHeader variant="root" title={t("sidebar.miniSearch")} />
+      <div
+        className="sticky top-0 z-10 bg-background border-b px-4 py-3"
+        style={{
+          paddingTop: "max(0.75rem, var(--safe-area-top))",
+          paddingLeft: "max(1rem, var(--safe-area-left))",
+          paddingRight: "max(1rem, var(--safe-area-right))",
+        }}
+      >
         <div className="relative flex items-center">
           <SearchIcon className="absolute left-3 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input

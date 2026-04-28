@@ -4,6 +4,7 @@ import {
   PreviewListFallback,
 } from "@/app/components/fallbacks/home-fallbacks";
 import HomeHeader from "@/app/components/home/carousel/header";
+import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import PreviewList from "@/app/components/home/preview-list";
 import {
   useGetMostPlayed,
@@ -53,6 +54,8 @@ export default function Home() {
 
   return (
     <div className="w-full px-4 sm:px-8 py-4 sm:py-6">
+      <MobilePageHeader variant="root" title={t("sidebar.home")} />
+
       {isFetching || isLoading ? (
         <HeaderFallback />
       ) : (

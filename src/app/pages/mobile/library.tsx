@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { EmptyPlaylistsMessage } from "@/app/components/playlist/empty-message";
 import { SidebarPlaylistGenerator } from "@/app/components/sidebar/sidebar-generator";
+import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import { ROUTES } from "@/routes/routesList";
 import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 import { subsonic } from "@/service/subsonic";
@@ -55,27 +56,28 @@ export default function MobileLibrary() {
   ];
 
   return (
-    <div className="w-full px-4 py-6 flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">{t("sidebar.library")}</h1>
+    <div className="w-full flex flex-col">
+      <MobilePageHeader variant="root" title={t("sidebar.library")} />
+      <div className="px-4 flex flex-col gap-6">
+        <div className="flex gap-3">
+          {quickLinks.map((item) => (
+            <LibraryCard
+              key={item.to}
+              icon={item.icon}
+              label={item.label}
+              to={item.to}
+            />
+          ))}
+        </div>
 
-      <div className="flex gap-3">
-        {quickLinks.map((item) => (
-          <LibraryCard
-            key={item.to}
-            icon={item.icon}
-            label={item.label}
-            to={item.to}
-          />
-        ))}
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold px-1">{t("sidebar.playlists")}</h2>
-        {playlists !== undefined && playlists.length > 0 ? (
-          <SidebarPlaylistGenerator playlists={playlists} />
-        ) : (
-          <EmptyPlaylistsMessage />
-        )}
+        <div className="flex flex-col gap-2">
+          <h2 className="text-lg font-semibold px-1">{t("sidebar.playlists")}</h2>
+          {playlists !== undefined && playlists.length > 0 ? (
+            <SidebarPlaylistGenerator playlists={playlists} />
+          ) : (
+            <EmptyPlaylistsMessage />
+          )}
+        </div>
       </div>
     </div>
   );

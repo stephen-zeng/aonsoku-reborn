@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import ImageHeader from "@/app/components/album/image-header";
 import { PlaylistFallback } from "@/app/components/fallbacks/playlist-fallbacks";
 import { BadgesData } from "@/app/components/header-info";
+import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import ListWrapper from "@/app/components/list-wrapper";
 import { PlaylistButtons } from "@/app/components/playlist/buttons";
 import { RemoveSongFromPlaylistDialog } from "@/app/components/playlist/remove-song-dialog";
@@ -80,6 +81,7 @@ export default function Playlist() {
 
   return (
     <div className="w-full" key={playlist.id}>
+      <MobilePageHeader variant="sub" title={playlist.name} />
       <ImageHeader
         type={t("playlist.headline")}
         title={playlist.name}

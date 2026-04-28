@@ -76,15 +76,12 @@
     );
   }
 
-  /* Mobile optimization: smaller player height + bottom nav */
+  /* Mobile optimization: no header, smaller player height + bottom nav */
   @media (max-width: 767px) {
     :root {
+      --header-bar-height: 0px;
+      --header-height: 0px;
       --player-height: 64px;
-    }
-  }
-
-  @media (max-width: 767px) {
-    :root {
       --bottom-nav-height: calc(
         var(--bottom-nav-bar-height) +
         var(--safe-area-bottom)

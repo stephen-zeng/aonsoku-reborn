@@ -8,6 +8,7 @@ import {
 } from "@/app/components/favorites/buttons";
 import { FavoritesFallback } from "@/app/components/fallbacks/song-fallbacks";
 import { BadgesData } from "@/app/components/header-info";
+import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import ListWrapper from "@/app/components/list-wrapper";
 import { DataTable } from "@/app/components/ui/data-table";
 import { useIsMobile } from "@/app/hooks/use-mobile";
@@ -115,6 +116,7 @@ export default function SongList() {
 
   return (
     <div className="w-full">
+      <MobilePageHeader variant="sub" title={t("sidebar.favorites")} />
       <ImageHeader
         type={t("favorites.headline")}
         title={t("sidebar.favorites")}

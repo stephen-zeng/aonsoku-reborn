@@ -25,6 +25,7 @@ import { SettingsOptions } from "@/app/components/settings/options";
 import { Storage } from "@/app/components/settings/pages/storage";
 import { ServerSettings } from "@/app/components/settings/pages/server";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
+import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import { isDesktop } from "@/utils/desktop";
 
 interface CategoryItem {
@@ -74,7 +75,14 @@ export default function MobileSettings() {
   if (currentPage && pages[currentPage]) {
     return (
       <div className="flex flex-col w-full h-full">
-        <div className="flex items-center gap-2 px-4 py-3 border-b">
+        <div
+          className="flex items-center gap-2 px-4 py-3 border-b"
+          style={{
+            paddingTop: "max(0.75rem, var(--safe-area-top))",
+            paddingLeft: "max(1rem, var(--safe-area-left))",
+            paddingRight: "max(1rem, var(--safe-area-right))",
+          }}
+        >
           <button
             type="button"
             onClick={goBack}
@@ -96,9 +104,7 @@ export default function MobileSettings() {
 
   return (
     <div className="flex flex-col w-full">
-      <div className="px-4 py-6">
-        <h1 className="text-2xl font-bold">{t("settings.label")}</h1>
-      </div>
+      <MobilePageHeader variant="root" title={t("settings.label")} />
       <div className="flex flex-col">
         {categories.map((item) => (
           <button

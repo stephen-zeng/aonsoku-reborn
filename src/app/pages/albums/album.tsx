@@ -8,6 +8,7 @@ import { RecordLabelsInfo } from "@/app/components/album/record-labels";
 import { AlbumFallback } from "@/app/components/fallbacks/album-fallbacks";
 import { PreviewListFallback } from "@/app/components/fallbacks/home-fallbacks";
 import { BadgesData } from "@/app/components/header-info";
+import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import PreviewList from "@/app/components/home/preview-list";
 import ListWrapper from "@/app/components/list-wrapper";
 import { DataTable } from "@/app/components/ui/data-table";
@@ -146,6 +147,7 @@ export default function Album() {
 
   return (
     <div className="w-full">
+      <MobilePageHeader variant="sub" title={album.name} />
       <ImageHeader
         type={t("album.headline")}
         title={album.name}

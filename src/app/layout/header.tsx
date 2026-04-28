@@ -1,15 +1,11 @@
 import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "react-router-dom";
 import { NavigationButtons } from "@/app/components/header/navigation-buttons";
-import { SyncProgressBar } from "@/app/components/header/sync-progress-bar";
-import { OfflineIndicator } from "@/app/components/offline-indicator";
-import { UserDropdown } from "@/app/components/header/user-dropdown";
+import { HeaderStatusItems } from "@/app/components/header/mobile-page-header";
 import { useAppWindow } from "@/app/hooks/use-app-window";
 import { useWindowControlsOverlay } from "@/app/hooks/use-window-controls-overlay";
 import { cn } from "@/lib/utils";
-import { ROUTES } from "@/routes/routesList";
 import { useSidebar } from "@/store/ui.store";
 import { isDesktop, isLinux, isMacOS, isWindows } from "@/utils/desktop";
 import { isWindowControlsOverlayAvailable } from "@/utils/pwa";
@@ -17,27 +13,17 @@ import CommandMenu from "../components/command/command-menu";
 import { SwUpdateChip } from "../components/header/sw-update-chip";
 import { Button } from "../components/ui/button";
 
-const mobileRootRoutes = [
-  ROUTES.LIBRARY.HOME,
-  ROUTES.MOBILE.LIBRARY,
-  ROUTES.MOBILE.SEARCH,
-];
+const MemoCommandMenu = memo(CommandMenu);
 
 export function Header() {
   const { t } = useTranslation();
   const { isFullscreen } = useAppWindow();
   const { isCollapsed, toggleSidebar } = useSidebar();
-  const { pathname } = useLocation();
-  const MemoCommandMenu = memo(CommandMenu);
 
-  const isMobileRootPage = mobileRootRoutes.includes(pathname);
-
-  // Check if we're in PWA mode with window controls overlay
   const hasWindowControls = isWindowControlsOverlayAvailable();
   const windowControlsOverlay = useWindowControlsOverlay();
   const isElectronApp = isDesktop();
 
-  // Calculate actual window controls width from overlay geometry
   const [controlsWidth, setControlsWidth] = useState({ left: 0, right: 0 });
 
   useEffect(() => {
@@ -46,7 +32,6 @@ export function Header() {
       windowControlsOverlay.titlebarAreaRect
     ) {
       const rect = windowControlsOverlay.titlebarAreaRect;
-      // Calculate controls width based on titlebar area position
       const leftWidth = rect.x;
       const rightWidth = window.innerWidth - (rect.x + rect.width);
 
@@ -56,43 +41,28 @@ export function Header() {
     }
   }, [windowControlsOverlay.visible, windowControlsOverlay.titlebarAreaRect]);
 
-  // Determine if we need spacing for window controls
-  // Only add spacing in these cases:
-  // 1. Electron app (not fullscreen)
-  // 2. PWA with window-controls-overlay active (hasWindowControls = true)
-  // Regular web page: no spacing
-
   const shouldAddSpacing =
     !isFullscreen && (isElectronApp || hasWindowControls);
 
-  // macOS: traffic lights on left (Electron or PWA overlay)
   const needsLeftSpacing = isMacOS && shouldAddSpacing;
 
-  // Windows/Linux/macOS: may have controls on right in PWA overlay mode
-  // In Electron: only Windows/Linux have controls on right
-  // In PWA overlay: use actual measured width (any platform)
   const needsRightSpacing =
     shouldAddSpacing &&
-    // Electron: only Windows/Linux
     ((isElectronApp && (isWindows || isLinux)) ||
-      // PWA overlay: use measured width (may exist on any platform)
       (hasWindowControls && controlsWidth.right > 0));
 
-  // Calculate actual spacing width
-  // In window-controls-overlay mode, use actual measured width
-  // In Electron mode, use default values
   const leftSpacingWidth = needsLeftSpacing
     ? hasWindowControls && controlsWidth.left > 0
       ? controlsWidth.left
-      : 80 // Electron macOS default
+      : 80
     : 0;
 
   const rightSpacingWidth = needsRightSpacing
     ? hasWindowControls && controlsWidth.right > 0
-      ? controlsWidth.right // PWA overlay: use measured width
+      ? controlsWidth.right
       : isWindows
-        ? 122 // Electron Windows default
-        : 94 // Electron Linux default
+        ? 122
+        : 94
     : 0;
   const sidebarToggleLabel = t(
     isCollapsed ? "sidebar.expand" : "sidebar.collapse",
@@ -103,31 +73,19 @@ export function Header() {
 
   return (
     <header
-      className="w-full flex justify-between items-center md:grid md:grid-cols-header h-header pt-[var(--safe-area-top)] fixed top-0 right-0 left-0 z-20 bg-background border-b electron-drag"
+      className="w-full hidden md:flex md:grid md:grid-cols-header items-center justify-between h-header pt-[var(--safe-area-top)] fixed top-0 right-0 left-0 z-20 bg-background border-b electron-drag"
       style={{
         paddingLeft: "max(1rem, var(--safe-area-left))",
         paddingRight: "max(1rem, var(--safe-area-right))",
       }}
     >
       <div className="flex items-center">
-        {/* Spacing for macOS window controls (traffic lights) on left side */}
         {leftSpacingWidth > 10 && (
           <div
             style={{ width: `${leftSpacingWidth - 10}px` }}
             className="flex-shrink-0"
           />
         )}
-        {/* <div className="w-8 h-8">
-          <Link to="/">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 rounded-md"
-            >
-              <HomeIcon className="w-4 h-4" strokeWidth={1.5} />
-            </Button>
-          </Link>
-        </div> */}
         <div className="hidden xl:block w-8 h-8">
           <Button
             variant="ghost"
@@ -141,11 +99,6 @@ export function Header() {
             <SidebarToggleIcon className="w-4 h-4" strokeWidth={1.5} />
           </Button>
         </div>
-        {!isMobileRootPage && (
-          <div className="md:hidden flex items-center gap-2">
-            <NavigationButtons />
-          </div>
-        )}
         <SwUpdateChip />
       </div>
       <div className="hidden md:flex col-span-2 items-center justify-center">
@@ -155,10 +108,7 @@ export function Header() {
         </div>
       </div>
       <div className="flex justify-end items-center gap-2">
-        <OfflineIndicator />
-        <SyncProgressBar />
-        <UserDropdown />
-        {/* Spacing for Windows/Linux window controls on right side */}
+        <HeaderStatusItems />
         {rightSpacingWidth > 10 && (
           <div
             style={{ width: `${rightSpacingWidth - 10}px` }}
