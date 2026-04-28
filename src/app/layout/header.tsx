@@ -2,7 +2,7 @@ import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NavigationButtons } from "@/app/components/header/navigation-buttons";
-import { HeaderStatusItems } from "@/app/components/header/mobile-page-header";
+import { DesktopHeaderStatusItems } from "@/app/components/header/mobile-page-header";
 import { useAppWindow } from "@/app/hooks/use-app-window";
 import { useWindowControlsOverlay } from "@/app/hooks/use-window-controls-overlay";
 import { cn } from "@/lib/utils";
@@ -108,7 +108,7 @@ export function Header() {
         </div>
       </div>
       <div className="flex justify-end items-center gap-2">
-        <HeaderStatusItems />
+        <DesktopHeaderStatusItems />
         {rightSpacingWidth > 10 && (
           <div
             style={{ width: `${rightSpacingWidth - 10}px` }}

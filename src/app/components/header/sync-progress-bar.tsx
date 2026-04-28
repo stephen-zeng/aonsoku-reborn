@@ -397,7 +397,7 @@ const DownloadSection = memo(function DownloadSection() {
   );
 });
 
-function SyncPopoverContent({
+export function SyncPopoverContent({
   syncState,
   lastSyncedAt,
 }: {

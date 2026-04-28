@@ -19,7 +19,7 @@ interface MobilePageHeaderProps {
   accentColor?: string;
 }
 
-function HeaderStatusItems() {
+function DesktopHeaderStatusItems() {
   return (
     <>
       <OfflineIndicator />
@@ -29,11 +29,19 @@ function HeaderStatusItems() {
   );
 }
 
+function MobileHeaderStatusItems() {
+  return <UserDropdown />;
+}
+
 function StickyHeader({
   title,
   onBack,
   accentColor,
-}: { title: string; onBack?: () => void; accentColor?: string }) {
+}: {
+  title: string;
+  onBack?: () => void;
+  accentColor?: string;
+}) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [titleInViewport, setTitleInViewport] = useState(true);
@@ -83,9 +91,10 @@ function StickyHeader({
     return blendColors(baseHex, accentColor, 0.35);
   }, [accentColor]);
 
-  const accentBgStyle = showFullBar && blendedColor
-    ? { backgroundColor: `${blendedColor}e6` }
-    : undefined;
+  const accentBgStyle =
+    showFullBar && blendedColor
+      ? { backgroundColor: `${blendedColor}e6` }
+      : undefined;
 
   const textColorClass = floatingOnImage
     ? "text-white"
@@ -99,7 +108,9 @@ function StickyHeader({
         className={cn(
           "fixed top-0 left-0 right-0 z-20 md:hidden flex items-center gap-1 h-11 transition-all duration-200",
           !showFullBar && "bg-transparent",
-          showFullBar && !accentColor && "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80",
+          showFullBar &&
+            !accentColor &&
+            "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80",
           showFullBar && accentColor && "backdrop-blur-sm",
           textColorClass,
         )}
@@ -156,14 +167,16 @@ export function MobilePageHeader({
         <div className="flex items-center justify-between py-4">
           <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
           <div className="flex items-center gap-1">
-            <HeaderStatusItems />
+            <MobileHeaderStatusItems />
           </div>
         </div>
       </div>
     );
   }
 
-  return <StickyHeader title={title} onBack={onBack} accentColor={accentColor} />;
+  return (
+    <StickyHeader title={title} onBack={onBack} accentColor={accentColor} />
+  );
 }
 
-export { HeaderStatusItems };
+export { DesktopHeaderStatusItems };
