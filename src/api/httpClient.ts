@@ -5,6 +5,7 @@ import type { CoverArt } from "@/types/coverArtType";
 import { AppRequestError } from "./errors";
 import {
   buildUrl,
+  buildAvatarUrl as _buildAvatarUrl,
   buildCoverArtUrl as _buildCoverArtUrl,
   buildSongStreamUrl as _buildSongStreamUrl,
   type ServerAuthConfig,
@@ -108,6 +109,10 @@ export async function httpClient<T>(
 
     throw error;
   }
+}
+
+export function getAvatarUrl(username: string, size?: string): string {
+  return _buildAvatarUrl(getAuthConfig(), username, size);
 }
 
 export function getCoverArtUrl(

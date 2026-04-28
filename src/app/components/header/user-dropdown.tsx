@@ -19,7 +19,7 @@ import { AboutDialog } from "@/app/components/about/dialog";
 import { RemoteControlDialog } from "@/app/components/remote-control/dialog";
 import { ShortcutsDialog } from "@/app/components/shortcuts/dialog";
 import { SyncPopoverContent } from "@/app/components/header/sync-progress-bar";
-import { Avatar, AvatarFallback } from "@/app/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar";
 import {
   Drawer,
   DrawerClose,
@@ -40,6 +40,7 @@ import {
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
 import { useIsMobile } from "@/app/hooks/use-mobile";
+import { useAvatarUrl } from "@/app/hooks/use-avatar-url";
 import { LogoutObserver } from "@/app/observers/logout-observer";
 import { ROUTES } from "@/routes/routesList";
 import {
@@ -132,6 +133,7 @@ function MobileSyncSection() {
 
 export function UserDropdown() {
   const { username, url, lockUser } = useAppData();
+  const avatarUrl = useAvatarUrl(username);
   const setLogoutDialogState = useAppStore(
     (state) => state.actions.setLogoutDialogState,
   );
@@ -178,6 +180,7 @@ export function UserDropdown() {
           <DrawerTrigger className="user-dropdown-trigger">
             <div className="relative w-8 h-8 rounded-full">
               <Avatar className="w-8 h-8 rounded-full cursor-pointer">
+                <AvatarImage src={avatarUrl ?? undefined} alt={username} />
                 <AvatarFallback className="text-sm bg-transparent hover:bg-accent rounded-full">
                   <User className="w-4 h-4" />
                 </AvatarFallback>
@@ -190,6 +193,7 @@ export function UserDropdown() {
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <Avatar className="w-10 h-10 rounded-full">
+                    <AvatarImage src={avatarUrl ?? undefined} alt={username} />
                     <AvatarFallback className="text-sm bg-muted">
                       <User className="w-5 h-5" />
                     </AvatarFallback>
@@ -259,7 +263,12 @@ export function UserDropdown() {
       ) : (
         <DropdownMenu>
           <DropdownMenuTrigger className="user-dropdown-trigger">
-            <Avatar className="w-8 h-8 rounded-full cursor-pointer">
+            <Avatar className="w-8 h-8 rounded-full cursor-pointer items-center justify-center">
+              <AvatarImage
+                src={avatarUrl ?? undefined}
+                alt={username}
+                className="w-6 h-6 rounded-full"
+              />
               <AvatarFallback className="text-sm bg-transparent hover:bg-accent">
                 <User className="w-4 h-4" />
               </AvatarFallback>
