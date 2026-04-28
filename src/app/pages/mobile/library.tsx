@@ -74,11 +74,6 @@ export default function MobileLibrary() {
       label: t("sidebar.favorites"),
       to: ROUTES.LIBRARY.FAVORITES,
     },
-    {
-      icon: ListMusicIcon,
-      label: t("sidebar.playlists"),
-      to: ROUTES.LIBRARY.PLAYLISTS,
-    },
     ...(hideRadiosSection
       ? []
       : [
