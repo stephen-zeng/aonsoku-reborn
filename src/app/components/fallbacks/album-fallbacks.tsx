@@ -8,6 +8,7 @@ import {
 } from "@/app/components/fallbacks/ui-fallbacks";
 import ListWrapper from "@/app/components/list-wrapper";
 import { Skeleton } from "@/app/components/ui/skeleton";
+import { songDetailColumnIds } from "@/app/tables/column-layouts";
 import { cn } from "@/lib/utils";
 
 interface HeaderContentProps {
@@ -147,7 +148,7 @@ export function AlbumFallback() {
       <ListWrapper>
         <PlayButtonsFallback />
         <AlbumInfoFallback />
-        <TableFallback variant="modern" />
+        <TableFallback variant="modern" columnIds={songDetailColumnIds} />
       </ListWrapper>
     </div>
   );

@@ -6,6 +6,7 @@ import {
   FavoritesButtons,
   FavoritesIcon,
 } from "@/app/components/favorites/buttons";
+import { FavoritesFallback } from "@/app/components/fallbacks/song-fallbacks";
 import { BadgesData } from "@/app/components/header-info";
 import ListWrapper from "@/app/components/list-wrapper";
 import { DataTable } from "@/app/components/ui/data-table";
@@ -105,7 +106,7 @@ export default function SongList() {
   const customIcon = useMemo(() => <FavoritesIcon />, []);
 
   if (isLoading) {
-    return null;
+    return <FavoritesFallback />;
   }
 
   if (isError) {

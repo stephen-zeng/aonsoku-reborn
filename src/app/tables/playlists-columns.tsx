@@ -7,6 +7,11 @@ import { CoverImage } from "@/app/components/table/cover-image";
 import PlaySongButton from "@/app/components/table/play-button";
 import { DataTableColumnHeader } from "@/app/components/ui/data-table-column-header";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
+import {
+  columnProps,
+  getLayoutMap,
+  playlistColumnLayouts,
+} from "@/app/tables/column-layouts";
 import i18n from "@/i18n";
 import { ROUTES } from "@/routes/routesList";
 import { ColumnDefType } from "@/types/react-table/columnDef";
@@ -14,14 +19,13 @@ import { Playlist } from "@/types/responses/playlist";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 
 export function playlistsColumns(): ColumnDefType<Playlist>[] {
+  const layouts = getLayoutMap(playlistColumnLayouts);
+
   return [
     {
       id: "index",
       accessorKey: "index",
-      style: {
-        width: 48,
-        minWidth: "48px",
-      },
+      ...columnProps(layouts.index),
       header: () => {
         return <div className="w-full text-center">#</div>;
       },
@@ -37,10 +41,7 @@ export function playlistsColumns(): ColumnDefType<Playlist>[] {
       accessorKey: "name",
       enableSorting: true,
       sortingFn: "customSortFn",
-      style: {
-        flex: 1,
-        minWidth: 250,
-      },
+      ...columnProps(layouts.name),
       header: ({ column, table }) => (
         <DataTableColumnHeader column={column} table={table}>
           {i18n.t("table.columns.name")}
@@ -67,12 +68,7 @@ export function playlistsColumns(): ColumnDefType<Playlist>[] {
     {
       id: "comment",
       accessorKey: "comment",
-      style: {
-        width: "25%",
-        maxWidth: "25%",
-        marginRight: "1rem",
-      },
-      className: "hidden 2xl:flex",
+      ...columnProps(layouts.comment),
       header: i18n.t("table.columns.comment"),
       cell: ({ row }) => (
         <div className="text-muted-foreground w-full truncate">
@@ -85,10 +81,7 @@ export function playlistsColumns(): ColumnDefType<Playlist>[] {
       accessorKey: "songCount",
       enableSorting: true,
       sortingFn: "basic",
-      style: {
-        width: 190,
-        maxWidth: 190,
-      },
+      ...columnProps(layouts.songCount),
       header: ({ column, table }) => (
         <DataTableColumnHeader column={column} table={table}>
           {i18n.t("table.columns.songCount")}
@@ -98,10 +91,7 @@ export function playlistsColumns(): ColumnDefType<Playlist>[] {
     {
       id: "duration",
       accessorKey: "duration",
-      style: {
-        width: 100,
-        maxWidth: 100,
-      },
+      ...columnProps(layouts.duration),
       header: () => (
         <SimpleTooltip text={i18n.t("table.columns.duration")}>
           <ClockIcon className="w-4 h-4" />
@@ -117,10 +107,7 @@ export function playlistsColumns(): ColumnDefType<Playlist>[] {
     {
       id: "public",
       accessorKey: "public",
-      style: {
-        width: 100,
-        maxWidth: 100,
-      },
+      ...columnProps(layouts.public),
       header: i18n.t("table.columns.public"),
       cell: ({ row }) => (
         <div>
@@ -135,10 +122,7 @@ export function playlistsColumns(): ColumnDefType<Playlist>[] {
     {
       id: "actions",
       accessorKey: "actions",
-      style: {
-        width: 48,
-        maxWidth: 48,
-      },
+      ...columnProps(layouts.actions),
       header: "",
       cell: ({ row }) => {
         const playlist = row.original;

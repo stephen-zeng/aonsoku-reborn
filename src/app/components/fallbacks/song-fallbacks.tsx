@@ -7,6 +7,11 @@ import {
 } from "@/app/components/fallbacks/ui-fallbacks";
 import ListWrapper from "@/app/components/list-wrapper";
 import { Skeleton } from "@/app/components/ui/skeleton";
+import { useIsMobile } from "@/app/hooks/use-mobile";
+import {
+  artistMobileColumnIds,
+  songCollectionColumnIds,
+} from "@/app/tables/column-layouts";
 
 export function InfinitySongListFallback() {
   return (
@@ -35,7 +40,7 @@ export function PlaylistsListFallback() {
       <ShadowHeaderFallback actions={<AddButtonSkeleton />} />
 
       <div className="w-full h-[calc(100%-80px)] overflow-auto">
-        <TableFallback columns="playlists" />
+        <TableFallback columns="playlists" variant="modern" type="infinity" />
       </div>
     </div>
   );
@@ -47,7 +52,12 @@ export function RadiosListFallback() {
       <ShadowHeaderFallback actions={<AddButtonSkeleton />} />
 
       <div className="w-full h-[calc(100%-80px)] overflow-auto">
-        <TableFallback columns="radios" length={5} />
+        <TableFallback
+          columns="radios"
+          variant="modern"
+          type="infinity"
+          length={5}
+        />
       </div>
     </div>
   );
@@ -84,6 +94,8 @@ export function MobileLibraryFallback() {
 }
 
 export function ArtistsTableFallback() {
+  const isMobile = useIsMobile();
+
   return (
     <div className="w-full h-content">
       <ShadowHeaderFallback
@@ -91,7 +103,12 @@ export function ArtistsTableFallback() {
       />
 
       <div className="w-full h-[calc(100%-80px)] overflow-auto">
-        <TableFallback columns="artists" />
+        <TableFallback
+          columns="artists"
+          variant="modern"
+          type="infinity"
+          columnIds={isMobile ? artistMobileColumnIds : undefined}
+        />
       </div>
     </div>
   );
@@ -113,7 +130,11 @@ export function FavoritesFallback() {
 
       <ListWrapper>
         <FavoritesButtonsFallback />
-        <TableFallback variant="modern" length={20} />
+        <TableFallback
+          variant="modern"
+          length={20}
+          columnIds={songCollectionColumnIds}
+        />
       </ListWrapper>
     </div>
   );

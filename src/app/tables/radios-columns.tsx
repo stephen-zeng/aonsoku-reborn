@@ -2,19 +2,23 @@ import { RadioActionButton } from "@/app/components/radios/action-button";
 import PlaySongButton from "@/app/components/table/play-button";
 import { TableRadioTitle } from "@/app/components/table/radio-title";
 import { DataTableColumnHeader } from "@/app/components/ui/data-table-column-header";
+import {
+  columnProps,
+  getLayoutMap,
+  radioColumnLayouts,
+} from "@/app/tables/column-layouts";
 import i18n from "@/i18n";
 import { ColumnDefType } from "@/types/react-table/columnDef";
 import { Radio } from "@/types/responses/radios";
 
 export function radiosColumns(): ColumnDefType<Radio>[] {
+  const layouts = getLayoutMap(radioColumnLayouts);
+
   return [
     {
       id: "index",
       accessorKey: "index",
-      style: {
-        width: 48,
-        minWidth: "48px",
-      },
+      ...columnProps(layouts.index),
       header: () => {
         return <div className="w-full text-center">#</div>;
       },
@@ -30,10 +34,7 @@ export function radiosColumns(): ColumnDefType<Radio>[] {
       accessorKey: "name",
       enableSorting: true,
       sortingFn: "customSortFn",
-      style: {
-        flex: 1,
-        minWidth: 250,
-      },
+      ...columnProps(layouts.name),
       header: ({ column, table }) => (
         <DataTableColumnHeader column={column} table={table}>
           {i18n.t("radios.table.name")}
@@ -44,10 +45,7 @@ export function radiosColumns(): ColumnDefType<Radio>[] {
     {
       id: "homePageUrl",
       accessorKey: "homePageUrl",
-      style: {
-        width: "25%",
-        maxWidth: "25%",
-      },
+      ...columnProps(layouts.homePageUrl),
       header: i18n.t("radios.table.homepage"),
       cell: ({ row }) => {
         const { homePageUrl } = row.original;
@@ -73,11 +71,7 @@ export function radiosColumns(): ColumnDefType<Radio>[] {
     {
       id: "streamUrl",
       accessorKey: "streamUrl",
-      style: {
-        width: "25%",
-        maxWidth: "25%",
-        marginRight: "1rem",
-      },
+      ...columnProps(layouts.streamUrl),
       header: i18n.t("radios.table.stream"),
       cell: ({ row }) => (
         <div className="truncate">
@@ -88,10 +82,7 @@ export function radiosColumns(): ColumnDefType<Radio>[] {
     {
       id: "actions",
       accessorKey: "actions",
-      style: {
-        width: 48,
-        maxWidth: 48,
-      },
+      ...columnProps(layouts.actions),
       header: "",
       cell: ({ row }) => {
         return <RadioActionButton row={row.original} />;

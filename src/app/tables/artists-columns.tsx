@@ -3,6 +3,11 @@ import { ArtistTitle } from "@/app/components/table/artist-title.tsx";
 import { TableLikeButton } from "@/app/components/table/like-button";
 import PlaySongButton from "@/app/components/table/play-button";
 import { DataTableColumnHeader } from "@/app/components/ui/data-table-column-header";
+import {
+  artistColumnLayouts,
+  columnProps,
+  getLayoutMap,
+} from "@/app/tables/column-layouts";
 import i18n from "@/i18n";
 import { ColumnDefType } from "@/types/react-table/columnDef";
 import { ISimilarArtist } from "@/types/responses/artist";
@@ -15,14 +20,13 @@ const MemoDataTableColumnHeader = memo(
 const MemoTableLikeButton = memo(TableLikeButton);
 
 export function artistsColumns(): ColumnDefType<ISimilarArtist>[] {
+  const layouts = getLayoutMap(artistColumnLayouts);
+
   return [
     {
       id: "index",
       accessorKey: "index",
-      style: {
-        width: 48,
-        minWidth: "48px",
-      },
+      ...columnProps(layouts.index),
       header: () => {
         return <div className="w-full text-center">#</div>;
       },
@@ -38,10 +42,7 @@ export function artistsColumns(): ColumnDefType<ISimilarArtist>[] {
       accessorKey: "name",
       enableSorting: true,
       sortingFn: "customSortFn",
-      style: {
-        flex: 1,
-        minWidth: 100,
-      },
+      ...columnProps(layouts.name),
       header: ({ column, table }) => (
         <MemoDataTableColumnHeader column={column} table={table}>
           {i18n.t("table.columns.name")}
@@ -54,10 +55,7 @@ export function artistsColumns(): ColumnDefType<ISimilarArtist>[] {
       accessorKey: "albumCount",
       enableSorting: true,
       sortingFn: "basic",
-      style: {
-        width: "15%",
-        maxWidth: "15%",
-      },
+      ...columnProps(layouts.albumCount),
       header: ({ column, table }) => (
         <MemoDataTableColumnHeader column={column} table={table}>
           {i18n.t("table.columns.albumCount")}
@@ -68,10 +66,7 @@ export function artistsColumns(): ColumnDefType<ISimilarArtist>[] {
       id: "starred",
       accessorKey: "starred",
       header: "",
-      style: {
-        width: 48,
-        maxWidth: 48,
-      },
+      ...columnProps(layouts.starred),
       cell: ({ row }) => {
         const { starred, id } = row.original;
 
