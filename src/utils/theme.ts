@@ -1,4 +1,4 @@
-import { isDesktop } from "./desktop";
+import { hasElectronBridge } from "./desktop";
 import { hslToHex, hslToHsla, isDarkHex } from "./getAverageColor";
 
 const DEFAULT_TITLE_BAR_COLOR = "#ff000000";
@@ -8,7 +8,7 @@ export function setDesktopTitleBarColors(
   transparent = false,
   overrideColor?: string,
 ) {
-  if (!isDesktop()) return;
+  if (!hasElectronBridge()) return;
 
   let color = DEFAULT_TITLE_BAR_COLOR;
   let symbol = DEFAULT_TITLE_BAR_SYMBOL;

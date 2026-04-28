@@ -1,7 +1,7 @@
 import { useCallback, useLayoutEffect } from "react";
 import { useThemeStore } from "@/store/theme.store";
 import { Theme, ThemeMode, isDarkTheme } from "@/types/themeContext";
-import { isDesktop } from "@/utils/desktop";
+import { hasElectronBridge } from "@/utils/desktop";
 import { setDesktopTitleBarColors, updatePwaThemeColor } from "@/utils/theme";
 
 export const appThemes: Theme[] = Object.values(Theme);
@@ -33,7 +33,7 @@ function applyTheme(theme: Theme) {
   setDesktopTitleBarColors();
   updatePwaThemeColor();
 
-  if (isDesktop()) {
+  if (hasElectronBridge()) {
     window.api.setNativeTheme(isDarkTheme(theme));
   }
 }

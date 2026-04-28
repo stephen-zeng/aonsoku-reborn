@@ -11,6 +11,7 @@ import { BadgesData } from "@/app/components/header-info";
 import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import PreviewList from "@/app/components/home/preview-list";
 import ListWrapper from "@/app/components/list-wrapper";
+import { MobileSongList } from "@/app/components/mobile/mobile-media-list";
 import { DataTable } from "@/app/components/ui/data-table";
 import {
   useGetAlbum,
@@ -180,6 +181,22 @@ export default function Album() {
               {t("album.detail.songsUnavailable")}
             </p>
           </div>
+        ) : isMobile ? (
+          <MobileSongList
+            songs={album.song}
+            onPlaySong={(index) =>
+              setSongList(
+                album.song,
+                index,
+                false,
+                { albumId: album.id },
+                album.name,
+              )
+            }
+            getIndexLabel={(song, index) =>
+              hasTrackNumbers && song.track > 0 ? song.track : index + 1
+            }
+          />
         ) : (
           <DataTable
             columns={columns}

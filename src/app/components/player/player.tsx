@@ -252,13 +252,13 @@ export function Player() {
           {isSong && <MemoPlayerProgress audioRef={getAudioRef()} />}
         </div>
         {/* Mobile Controls - Only Play/Pause and Next */}
-        <div className="flex md:hidden items-center gap-1">
+        <div className="flex md:hidden items-center gap-0.5">
           <Button
             variant="ghost"
             disabled={!song && !radio}
             onClick={togglePlayPause}
             data-testid={`player-button-${isPlaying ? "pause" : "play"}`}
-            className="size-10 p-0"
+            className="size-11 p-0"
           >
             {isPlaying ? (
               <Pause className="text-foreground fill-foreground size-5" />
@@ -273,7 +273,7 @@ export function Player() {
             }
             onClick={playNextSong}
             data-testid="player-button-next-mobile"
-            className="size-10 p-0"
+            className="size-11 p-0"
           >
             <SkipForward className="text-foreground fill-foreground size-5" />
           </Button>

@@ -2,7 +2,9 @@ import { type ReactNode, useCallback, useMemo, useRef } from "react";
 import type { Row } from "@tanstack/react-table";
 import { ShadowHeader } from "@/app/components/album/shadow-header";
 import { InfinitySongListFallback } from "@/app/components/fallbacks/song-fallbacks";
+import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import { HeaderTitle } from "@/app/components/header-title";
+import { MobileSongList } from "@/app/components/mobile/mobile-media-list";
 import { DataTableList } from "@/app/components/ui/data-table-list";
 import { useHasHover } from "@/app/hooks/use-input-mode";
 import { useIsMobile } from "@/app/hooks/use-mobile";
@@ -80,8 +82,46 @@ export function SongListLayout({
     [setSongList],
   );
 
+  const handlePlaySongIndex = useCallback(
+    (index: number) => {
+      setSongList(
+        songlistRef.current,
+        index,
+        false,
+        undefined,
+        sourceNameRef.current,
+      );
+    },
+    [setSongList],
+  );
+
   if (isLoading && !isFetchingNextPage) {
     return <InfinitySongListFallback />;
+  }
+
+  if (isMobile) {
+    return (
+      <div className="w-full">
+        <MobilePageHeader variant="root" title={title} />
+        <div className="flex flex-col gap-4 px-4">
+          <div className="flex min-h-11 flex-wrap items-center justify-between gap-2">
+            <span className="text-sm text-muted-foreground">
+              {songCountLoading ? "" : songCount}
+            </span>
+            {headerActions && (
+              <div className="flex flex-1 flex-wrap justify-end gap-2">
+                {headerActions}
+              </div>
+            )}
+          </div>
+          <MobileSongList
+            songs={songlist}
+            onPlaySong={handlePlaySongIndex}
+            emptyMessage={noRowsMessage}
+          />
+        </div>
+      </div>
+    );
   }
 
   return (

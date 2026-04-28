@@ -12,7 +12,7 @@ import {
 } from "@/types/lanControl";
 import { IPlayerContext, ISongList, LoopState } from "@/types/playerContext";
 import { ISong } from "@/types/responses/song";
-import { isDesktop } from "@/utils/desktop";
+import { hasElectronBridge } from "@/utils/desktop";
 import { discordRpc } from "@/utils/discordRpc";
 import { logger } from "@/utils/logger";
 import { get as idbGet, set as idbSet } from "idb-keyval";
@@ -527,7 +527,7 @@ usePlayerStore.subscribe(
 );
 
 function desktopStateListener() {
-  if (!isDesktop()) return;
+  if (!hasElectronBridge()) return;
 
   const {
     togglePlayPause,
@@ -549,7 +549,7 @@ function desktopStateListener() {
 desktopStateListener();
 
 function updateDesktopState() {
-  if (!isDesktop()) return;
+  if (!hasElectronBridge()) return;
 
   const { isPlaying, hasPrev, hasNext } = usePlayerStore.getState().playerState;
   const { radioList, contextQueue, userQueue } =

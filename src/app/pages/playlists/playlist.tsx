@@ -6,6 +6,7 @@ import { PlaylistFallback } from "@/app/components/fallbacks/playlist-fallbacks"
 import { BadgesData } from "@/app/components/header-info";
 import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import ListWrapper from "@/app/components/list-wrapper";
+import { MobileSongList } from "@/app/components/mobile/mobile-media-list";
 import { PlaylistButtons } from "@/app/components/playlist/buttons";
 import { RemoveSongFromPlaylistDialog } from "@/app/components/playlist/remove-song-dialog";
 import { DataTable } from "@/app/components/ui/data-table";
@@ -103,24 +104,42 @@ export default function Playlist() {
       <ListWrapper>
         <PlaylistButtons playlist={playlist} />
 
-        <DataTable
-          columns={columns}
-          data={playlist.entry ?? []}
-          handlePlaySong={(row) =>
-            setSongList(
-              playlist.entry,
-              row.index,
-              false,
-              {
-                playlistId: playlist.id,
-              },
-              playlist.name,
-            )
-          }
-          columnFilter={columnsToShow}
-          noRowsMessage={t("playlist.noSongList")}
-          variant="modern"
-        />
+        {isMobile ? (
+          <MobileSongList
+            songs={playlist.entry ?? []}
+            onPlaySong={(index) =>
+              setSongList(
+                playlist.entry,
+                index,
+                false,
+                {
+                  playlistId: playlist.id,
+                },
+                playlist.name,
+              )
+            }
+            emptyMessage={t("playlist.noSongList")}
+          />
+        ) : (
+          <DataTable
+            columns={columns}
+            data={playlist.entry ?? []}
+            handlePlaySong={(row) =>
+              setSongList(
+                playlist.entry,
+                row.index,
+                false,
+                {
+                  playlistId: playlist.id,
+                },
+                playlist.name,
+              )
+            }
+            columnFilter={columnsToShow}
+            noRowsMessage={t("playlist.noSongList")}
+            variant="modern"
+          />
+        )}
 
         <RemoveSongFromPlaylistDialog />
       </ListWrapper>

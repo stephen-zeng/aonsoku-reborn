@@ -22,7 +22,7 @@ import {
   useLanControlConfig,
   useLanControlServerInfo,
 } from "@/store/lanControl.store";
-import { isDesktop } from "@/utils/desktop";
+import { hasLanControlBridge } from "@/utils/desktop";
 
 export function LanControlSettings() {
   const { t } = useTranslation();
@@ -31,7 +31,7 @@ export function LanControlSettings() {
   const actions = useLanControlActions();
 
   useEffect(() => {
-    if (!isDesktop()) return;
+    if (!hasLanControlBridge()) return;
 
     // Get initial server info
     window.api.lanControl.getInfo().then((info) => {
@@ -75,7 +75,7 @@ export function LanControlSettings() {
     toast.success(t("settings.desktop.lanControl.passwordCopied"));
   };
 
-  if (!isDesktop()) {
+  if (!hasLanControlBridge()) {
     return null;
   }
 

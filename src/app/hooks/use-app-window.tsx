@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { isDesktop } from "@/utils/desktop";
+import { hasElectronBridge } from "@/utils/desktop";
 
 interface AppWindowType {
   isFullscreen: boolean;
@@ -16,7 +16,7 @@ export function useAppWindow(): AppWindowType {
   const [isMaximized, setIsMaximized] = useState(false);
 
   useEffect(() => {
-    if (!isDesktop()) return;
+    if (!hasElectronBridge()) return;
 
     const fetchWindowStatus = async () => {
       const [fullscreenStatus, maximizedStatus] = await Promise.all([
@@ -48,7 +48,7 @@ export function useAppWindow(): AppWindowType {
   }, []);
 
   const enterFullscreenWindow = async () => {
-    if (!isDesktop()) return;
+    if (!hasElectronBridge()) return;
 
     const fullscreen = await window.api.isFullScreen();
 
@@ -59,7 +59,7 @@ export function useAppWindow(): AppWindowType {
   };
 
   const exitFullscreenWindow = async () => {
-    if (!isDesktop()) return;
+    if (!hasElectronBridge()) return;
 
     const fullscreen = await window.api.isFullScreen();
 
@@ -70,19 +70,19 @@ export function useAppWindow(): AppWindowType {
   };
 
   const maximizeWindow = () => {
-    if (!isDesktop()) return;
+    if (!hasElectronBridge()) return;
 
     window.api.toggleMaximize(isMaximized);
   };
 
   const minimizeWindow = () => {
-    if (!isDesktop()) return;
+    if (!hasElectronBridge()) return;
 
     window.api.toggleMinimize();
   };
 
   const closeWindow = () => {
-    if (!isDesktop()) return;
+    if (!hasElectronBridge()) return;
 
     window.api.closeWindow();
   };

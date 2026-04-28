@@ -2,6 +2,7 @@ import { InfoIcon } from "lucide-react";
 import { ComponentPropsWithoutRef, ReactNode } from "react";
 import { Separator } from "@/app/components/ui/separator";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import { cn } from "@/lib/utils";
 
 type SectionComponent = ComponentPropsWithoutRef<"div">;
@@ -47,7 +48,7 @@ export function ContentItem({
 }: SectionComponent) {
   return (
     <div
-      className={cn("flex items-center space-between min-h-8", className)}
+      className={cn("flex min-h-11 items-center gap-3", className)}
       {...props}
     >
       {children}
@@ -64,17 +65,24 @@ export function ContentItemTitle({
   className,
   children,
 }: ContentItemTitleProps) {
+  const hasHover = useHasHover();
+
   return (
-    <div className="flex flex-1 items-center gap-1">
-      <span className={cn("text-sm leading-none text-foreground", className)}>
-        {children}
-      </span>
-      {info && (
-        <SimpleTooltip text={info} delay={0}>
-          <div className="hover:bg-muted-foreground/20 p-1 rounded cursor-pointer">
-            <InfoIcon className="w-3 h-3" />
-          </div>
-        </SimpleTooltip>
+    <div className="flex flex-1 flex-col gap-1">
+      <div className="flex items-center gap-1">
+        <span className={cn("text-sm leading-5 text-foreground", className)}>
+          {children}
+        </span>
+        {info && hasHover && (
+          <SimpleTooltip text={info} delay={0}>
+            <div className="rounded p-1 hover:bg-muted-foreground/20">
+              <InfoIcon className="w-3 h-3" />
+            </div>
+          </SimpleTooltip>
+        )}
+      </div>
+      {info && !hasHover && (
+        <span className="text-xs leading-4 text-muted-foreground">{info}</span>
       )}
     </div>
   );
@@ -87,7 +95,10 @@ export function ContentItemForm({
 }: SectionComponent) {
   return (
     <div
-      className={cn("w-2/5 max-w-52 flex items-center justify-end", className)}
+      className={cn(
+        "flex min-w-11 items-center justify-end sm:w-2/5 sm:max-w-52",
+        className,
+      )}
       {...props}
     >
       {children}

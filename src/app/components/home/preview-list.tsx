@@ -78,7 +78,7 @@ export default function PreviewList({
 
       <div
         {...scrollCarouselProps}
-        className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pl-4 scroll-pl-4 pr-4 scroll-pr-4 no-scrollbar"
+        className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory scroll-pl-0 scroll-pr-0 no-scrollbar sm:pl-4 sm:pr-4 sm:scroll-pl-4 sm:scroll-pr-4"
         data-testid="preview-list-carousel"
       >
         {displayList.map((album, index) => (

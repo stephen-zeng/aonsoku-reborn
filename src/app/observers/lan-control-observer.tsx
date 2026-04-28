@@ -38,7 +38,7 @@ import {
   VolumeData,
 } from "@/types/lanControl";
 import { LoopState } from "@/types/playerContext";
-import { isDesktop } from "@/utils/desktop";
+import { hasLanControlBridge } from "@/utils/desktop";
 
 function mapLoopState(loop: LoopState): PlayerStateData["repeatMode"] {
   switch (loop) {
@@ -72,7 +72,7 @@ export function LanControlObserver() {
   const currentIndex = usePlayerCurrentSongIndex();
   const latestServerInfo = useRef<LanControlServerInfo>(serverInfo);
   const previousEnabled = useRef(config.enabled);
-  const isDesktopEnv = useMemo(() => isDesktop(), []);
+  const isDesktopEnv = useMemo(() => hasLanControlBridge(), []);
 
   latestServerInfo.current = serverInfo;
 

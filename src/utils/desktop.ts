@@ -4,6 +4,18 @@ export function isDesktop(): boolean {
   return isElectron;
 }
 
+export function hasElectronBridge(): boolean {
+  return (
+    isDesktop() &&
+    typeof window !== "undefined" &&
+    typeof window.api !== "undefined"
+  );
+}
+
+export function hasLanControlBridge(): boolean {
+  return hasElectronBridge() && typeof window.api.lanControl !== "undefined";
+}
+
 /**
  * Detect operating system for both Electron and browser/PWA environments
  */

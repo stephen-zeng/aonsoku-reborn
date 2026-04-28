@@ -1,6 +1,6 @@
-import { defineConfig } from "cypress";
+const { defineConfig } = require("cypress");
 
-export default defineConfig({
+module.exports = defineConfig({
   component: {
     specPattern: "src/**/*.cy.{ts,tsx}",
     viewportWidth: 1920,
