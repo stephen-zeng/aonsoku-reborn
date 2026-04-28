@@ -1,12 +1,15 @@
 import Autoplay from "embla-carousel-autoplay";
+import { useState } from "react";
 import { HeaderItem } from "@/app/components/home/carousel/header-item";
 import {
+  type CarouselApi,
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
 } from "@/app/components/ui/carousel";
+import { useEmblaWheelScroll } from "@/app/hooks/use-embla-wheel-scroll";
 import { ISong } from "@/types/responses/song";
 
 interface HomeHeaderProps {
@@ -14,6 +17,9 @@ interface HomeHeaderProps {
 }
 
 export default function HomeHeader({ songs }: HomeHeaderProps) {
+  const [api, setApi] = useState<CarouselApi>();
+  const { onWheel } = useEmblaWheelScroll(api);
+
   if (songs.length === 0) return null;
 
   return (
@@ -27,6 +33,8 @@ export default function HomeHeader({ songs }: HomeHeaderProps) {
           delay: 10000,
         }),
       ]}
+      setApi={setApi}
+      onWheel={onWheel}
       data-testid="header-carousel"
     >
       <CarouselContent

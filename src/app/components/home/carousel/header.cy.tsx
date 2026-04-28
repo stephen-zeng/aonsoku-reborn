@@ -47,4 +47,66 @@ describe('HomeHeader Component', () => {
         .and('be.enabled')
     })
   })
+
+  it('moves the carousel with horizontal wheel input', () => {
+    cy.mockCoverArt()
+
+    cy.fixture('songs/random').then((songs: ISong[]) => {
+      cy.mount(<HomeHeader songs={songs} />)
+
+      cy.getByTestId('header-carousel')
+        .find('.transform-gpu')
+        .then(($track) => {
+          const initialTransform = $track[0].style.transform
+
+          cy.getByTestId('header-carousel').trigger('wheel', {
+            deltaX: 240,
+            deltaY: 0,
+            deltaMode: 0,
+            bubbles: true,
+            cancelable: true,
+          })
+
+          cy.wait(50)
+
+          cy.getByTestId('header-carousel')
+            .find('.transform-gpu')
+            .should(($updatedTrack) => {
+              expect($updatedTrack[0].style.transform).not.to.eq(
+                initialTransform,
+              )
+            })
+        })
+    })
+  })
+
+  it('does not move the carousel with vertical wheel input', () => {
+    cy.mockCoverArt()
+
+    cy.fixture('songs/random').then((songs: ISong[]) => {
+      cy.mount(<HomeHeader songs={songs} />)
+
+      cy.getByTestId('header-carousel')
+        .find('.transform-gpu')
+        .then(($track) => {
+          const initialTransform = $track[0].style.transform
+
+          cy.getByTestId('header-carousel').trigger('wheel', {
+            deltaX: 0,
+            deltaY: 240,
+            deltaMode: 0,
+            bubbles: true,
+            cancelable: true,
+          })
+
+          cy.wait(50)
+
+          cy.getByTestId('header-carousel')
+            .find('.transform-gpu')
+            .should(($updatedTrack) => {
+              expect($updatedTrack[0].style.transform).to.eq(initialTransform)
+            })
+        })
+    })
+  })
 })
