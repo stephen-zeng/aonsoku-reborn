@@ -94,6 +94,7 @@ interface ImageHeaderProps {
   isPlaylist?: boolean;
   showSimpleSubtitle?: boolean;
   customIcon?: ReactNode;
+  onColorExtracted?: (color: string) => void;
 }
 
 export default function ImageHeader({
@@ -111,6 +112,7 @@ export default function ImageHeader({
   isPlaylist = false,
   showSimpleSubtitle,
   customIcon,
+  onColorExtracted,
 }: ImageHeaderProps) {
   const simpleSubtitle = showSimpleSubtitle ?? isPlaylist;
 
@@ -149,6 +151,7 @@ export default function ImageHeader({
     }
 
     setBgColor(color);
+    onColorExtracted?.(color);
     setLoaded(true);
   }
 
@@ -243,6 +246,7 @@ export default function ImageHeader({
                 {type}
               </p>
               <h1
+                id="detail-page-title"
                 className={clsx(
                   "max-w-full scroll-m-20 font-bold tracking-tight antialiased drop-shadow-md break-words text-center md:text-left",
                   "line-clamp-3 md:line-clamp-2 text-xl leading-tight md:text-[2em] md:leading-none mb-2",

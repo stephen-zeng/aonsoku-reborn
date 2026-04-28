@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { AlbumComment } from "@/app/components/album/comment";
@@ -36,6 +36,7 @@ export default function Album() {
   const isMobile = useIsMobile();
   const hasHover = useHasHover();
   const isOnline = useIsOnline();
+  const [accentColor, setAccentColor] = useState("");
   const columns = useMemo(
     () =>
       songsColumns({
@@ -147,7 +148,7 @@ export default function Album() {
 
   return (
     <div className="w-full">
-      <MobilePageHeader variant="sub" title={album.name} />
+      <MobilePageHeader variant="sub" title={album.name} accentColor={accentColor} />
       <ImageHeader
         type={t("album.headline")}
         title={album.name}
@@ -160,6 +161,7 @@ export default function Album() {
         coverArtAlt={album.name}
         badges={badges}
         secondaryBadges={secondaryBadges}
+        onColorExtracted={setAccentColor}
       />
 
       <ListWrapper>

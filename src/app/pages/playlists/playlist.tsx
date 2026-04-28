@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import ImageHeader from "@/app/components/album/image-header";
@@ -28,6 +28,7 @@ export default function Playlist() {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const hasHover = useHasHover();
+  const [accentColor, setAccentColor] = useState("");
   const columns = useMemo(
     () =>
       songsColumns({
@@ -81,7 +82,7 @@ export default function Playlist() {
 
   return (
     <div className="w-full" key={playlist.id}>
-      <MobilePageHeader variant="sub" title={playlist.name} />
+      <MobilePageHeader variant="sub" title={playlist.name} accentColor={accentColor} />
       <ImageHeader
         type={t("playlist.headline")}
         title={playlist.name}
@@ -92,6 +93,7 @@ export default function Playlist() {
         coverArtAlt={playlist.name}
         badges={badges}
         isPlaylist={true}
+        onColorExtracted={setAccentColor}
       />
 
       <ListWrapper>

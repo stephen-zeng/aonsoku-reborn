@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Row } from "@tanstack/react-table";
 import ImageHeader from "@/app/components/album/image-header";
@@ -47,6 +47,7 @@ export default function SongList() {
   const isMobile = useIsMobile();
   const hasHover = useHasHover();
   const { setSongList } = usePlayerActions();
+  const [accentColor, setAccentColor] = useState("");
 
   const columns = useMemo(() => songsColumns({ hasHover }), [hasHover]);
 
@@ -116,7 +117,7 @@ export default function SongList() {
 
   return (
     <div className="w-full">
-      <MobilePageHeader variant="sub" title={t("sidebar.favorites")} />
+      <MobilePageHeader variant="sub" title={t("sidebar.favorites")} accentColor={accentColor} />
       <ImageHeader
         type={t("favorites.headline")}
         title={t("sidebar.favorites")}
@@ -126,6 +127,7 @@ export default function SongList() {
         coverArtAlt={t("sidebar.favorites")}
         customIcon={customIcon}
         showSimpleSubtitle
+        onColorExtracted={setAccentColor}
       />
 
       <ListWrapper>
