@@ -6,6 +6,10 @@ export function coverKey(coverArtId: string): string {
   return `cover:${coverArtId}`;
 }
 
+export function avatarKey(username: string): string {
+  return `avatar:${username}`;
+}
+
 export function albumKey(albumId: string): string {
   return `album:${albumId}`;
 }
@@ -20,6 +24,7 @@ export function songIdFromKey(key: string): string | null {
 }
 
 export const COVER_PREFIX = "cover:";
+export const AVATAR_PREFIX = "avatar:";
 
 export function isOldCoverKey(key: string): boolean {
   if (!key.startsWith(COVER_PREFIX)) return false;

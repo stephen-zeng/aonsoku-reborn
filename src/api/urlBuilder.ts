@@ -64,6 +64,14 @@ export function buildCoverArtUrl(
   return buildUrl("getCoverArt", config, { id, size });
 }
 
+export function buildAvatarUrl(
+  config: ServerAuthConfig,
+  username: string,
+  size?: string,
+): string {
+  return buildUrl("getAvatar", config, { username, size });
+}
+
 export function buildSongStreamUrl(
   config: ServerAuthConfig,
   id: string,

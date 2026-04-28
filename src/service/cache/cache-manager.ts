@@ -1,4 +1,4 @@
-import { getCoverArtUrl, getSongStreamUrl } from "@/api/httpClient";
+import { getCoverArtUrl, getAvatarUrl, getSongStreamUrl } from "@/api/httpClient";
 import { asyncPool } from "@/service/cache/concurrency";
 import { subsonic } from "@/service/subsonic";
 import { useCacheStore } from "@/store/cache.store";
@@ -6,6 +6,7 @@ import {
   getCacheIndexActions,
   getCacheIndexItems,
   isAudioCached,
+  isAvatarCached,
   isCoverCached,
   useCacheIndexStore,
 } from "@/store/cache-index.store";
@@ -17,6 +18,7 @@ import {
   albumKey,
   audioKey,
   COVER_PREFIX,
+  avatarKey,
   coverKey,
   isOldCoverKey,
   playlistKey,
@@ -353,6 +355,85 @@ class CacheManager {
           type: "cover" as const,
           source: "explicit" as const,
           coverSize: "700",
+          sizeBytes: blob.size,
+          cachedAt: Date.now(),
+          lastAccessedAt: Date.now(),
+        };
+        getCacheIndexActions().addItem(key, syntheticMeta);
+        persistCacheMeta(key, { key, ...syntheticMeta });
+      }
+    } else {
+      getCacheIndexActions().touchItem(key);
+    }
+
+    return URL.createObjectURL(blob);
+  }
+
+  async cacheAvatar(username: string, size = "150"): Promise<void> {
+    const key = avatarKey(username);
+    const items = getCacheIndexItems();
+    const existing = items[key];
+
+    if (existing) return;
+
+    const url = getAvatarUrl(username, size);
+    const response = await fetch(url);
+    if (!response.ok) return;
+
+    const blob = await response.blob();
+
+    await cacheStorage.put(key, blob, blob.type || "image/jpeg");
+
+    const meta: CachedItemMeta = {
+      id: username,
+      type: "cover",
+      source: "explicit",
+      coverSize: size,
+      sizeBytes: blob.size,
+      cachedAt: Date.now(),
+      lastAccessedAt: Date.now(),
+    };
+
+    getCacheIndexActions().addItem(key, meta);
+    this.scheduleStatsRefresh();
+    persistCacheMeta(key, { key, ...meta });
+  }
+
+  async getCachedAvatarUrl(username: string): Promise<string | null> {
+    const key = avatarKey(username);
+
+    const { loaded } = useCacheIndexStore.getState();
+    if (loaded && !isAvatarCached(username)) return null;
+
+    const blob = await cacheStorage.get(key);
+    if (!blob) {
+      if (isAvatarCached(username)) {
+        getCacheIndexActions().removeItem(key);
+      }
+      return null;
+    }
+
+    if (!isAvatarCached(username)) {
+      const existingRow = await libraryDb.cacheMeta.get(key);
+      if (existingRow) {
+        getCacheIndexActions().addItem(key, {
+          id: existingRow.id,
+          type: existingRow.type,
+          source: existingRow.source,
+          coverSize: (existingRow as Record<string, unknown>).coverSize as
+            | string
+            | undefined,
+          sizeBytes: existingRow.sizeBytes,
+          cachedAt: existingRow.cachedAt,
+          lastAccessedAt: Date.now(),
+          removedFromServer: existingRow.removedFromServer,
+        });
+      } else {
+        const syntheticMeta = {
+          id: username,
+          type: "cover" as const,
+          source: "explicit" as const,
+          coverSize: "150",
           sizeBytes: blob.size,
           cachedAt: Date.now(),
           lastAccessedAt: Date.now(),

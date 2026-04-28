@@ -6,6 +6,7 @@ import { createWithEqualityFn } from "zustand/traditional";
 import {
   albumKey,
   audioKey,
+  avatarKey,
   coverKey,
   playlistKey,
 } from "@/service/cache/cache-keys";
@@ -258,6 +259,10 @@ export function isCoverCached(coverArtId: string): boolean {
   return coverKey(coverArtId) in useCacheIndexStore.getState().items;
 }
 
+export function isAvatarCached(username: string): boolean {
+  return avatarKey(username) in useCacheIndexStore.getState().items;
+}
+
 export function isAlbumCached(albumId: string): boolean {
   return albumKey(albumId) in useCacheIndexStore.getState().items;
 }
@@ -285,6 +290,9 @@ export const useIsPlaylistCached = (playlistId: string) =>
 
 export const useIsCoverCached = (coverArtId: string) =>
   useCacheIndexStore((state) => coverKey(coverArtId) in state.items);
+
+export const useIsAvatarCached = (username: string) =>
+  useCacheIndexStore((state) => avatarKey(username) in state.items);
 
 export const useCacheIndexLoaded = () =>
   useCacheIndexStore((state) => state.loaded);
