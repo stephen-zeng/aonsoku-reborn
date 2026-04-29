@@ -92,11 +92,14 @@ export default function FullscreenMode({
 
   const handleRelease = useCallback(
     (_: React.PointerEvent<HTMLDivElement>, isOpen: boolean) => {
-      const atTop = isOpen;
-      if (atTopRef.current !== atTop) {
-        atTopRef.current = atTop;
-        applyThemeColor(atTop);
+      // When closing, reset theme color immediately
+      if (!isOpen && atTopRef.current !== false) {
+        atTopRef.current = false;
+        applyThemeColor(false);
       }
+      // When isOpen=true, wait for the drawer to finish its snap-back
+      // animation/transition before applying theme color. This is handled
+      // by the animationend/transitionend listeners in the open effect.
     },
     [applyThemeColor],
   );
@@ -107,19 +110,46 @@ export default function FullscreenMode({
 
     if (open) {
       if (!el) {
-        atTopRef.current = true;
-        applyThemeColor(true);
-        return;
+        const rafId = requestAnimationFrame(() => {
+          const innerEl = drawerContentRef.current;
+          if (innerEl) {
+            let applied = false;
+            const handleEnd = (e: Event) => {
+              if (applied) return;
+              if (e.type === "transitionend") {
+                const te = e as TransitionEvent;
+                if (te.propertyName !== "transform" || te.target !== innerEl) {
+                  return;
+                }
+              }
+              applied = true;
+              atTopRef.current = true;
+              applyThemeColor(true);
+            };
+            innerEl.addEventListener("animationend", handleEnd);
+            innerEl.addEventListener("transitionend", handleEnd);
+          }
+        });
+        return () => cancelAnimationFrame(rafId);
       }
 
-      const handleAnimationEnd = () => {
+      let applied = false;
+      const handleEnd = (e: Event) => {
+        if (applied) return;
+        if (e.type === "transitionend") {
+          const te = e as TransitionEvent;
+          if (te.propertyName !== "transform" || te.target !== el) return;
+        }
+        applied = true;
         atTopRef.current = true;
         applyThemeColor(true);
       };
 
-      el.addEventListener("animationend", handleAnimationEnd, { once: true });
+      el.addEventListener("animationend", handleEnd);
+      el.addEventListener("transitionend", handleEnd);
       return () => {
-        el.removeEventListener("animationend", handleAnimationEnd);
+        el.removeEventListener("animationend", handleEnd);
+        el.removeEventListener("transitionend", handleEnd);
       };
     } else {
       atTopRef.current = false;
