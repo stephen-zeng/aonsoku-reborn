@@ -43,7 +43,7 @@ function MobileResultItem({
   return (
     <button
       type="button"
-      className="flex w-full items-center gap-3 px-4 py-2 active:bg-accent/50 transition-colors text-left"
+      className="flex min-h-14 w-full items-center gap-3 px-4 py-2 active:bg-accent/50 transition-colors text-left"
       onClick={onRowClick}
     >
       <CachedImage
@@ -64,7 +64,7 @@ function MobileResultItem({
       <Button
         variant="ghost"
         size="sm"
-        className="w-8 h-8 p-0 rounded-full flex-shrink-0"
+        className="size-11 p-0 rounded-full flex-shrink-0"
         onClick={(e) => {
           e.stopPropagation();
           onPlayClick();

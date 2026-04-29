@@ -67,14 +67,14 @@ function ThemeModeSelector({
   const { t } = useTranslation();
 
   return (
-    <div className="inline-flex rounded-lg border border-border p-0.5 gap-0.5">
+    <div className="grid w-full grid-cols-3 rounded-lg border border-border p-0.5 gap-0.5 sm:inline-flex sm:w-auto">
       {themeModeItems.map(({ value, labelKey, icon: Icon }) => (
         <button
           key={value}
           type="button"
           onClick={() => onModeChange(value)}
           className={clsx(
-            "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+            "inline-flex min-h-11 items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors sm:min-h-8",
             mode === value
               ? "bg-primary text-primary-foreground"
               : "text-muted-foreground hover:text-foreground hover:bg-muted",
@@ -98,15 +98,20 @@ function ThemeGrid({
   onThemeChange: (theme: Theme) => void;
 }) {
   return (
-    <div className="w-full h-full grid grid-cols-4 gap-3">
+    <div className="w-full h-full grid grid-cols-2 gap-3 sm:grid-cols-4">
       {themes.map((theme) => {
         const isActive = theme === activeTheme;
 
         return (
-          <div key={theme} onClick={() => onThemeChange(theme)}>
+          <button
+            key={theme}
+            type="button"
+            className="text-left"
+            onClick={() => onThemeChange(theme)}
+          >
             <ThemePlaceholder theme={theme} />
             <ThemeTitle theme={theme} isActive={isActive} />
-          </div>
+          </button>
         );
       })}
     </div>

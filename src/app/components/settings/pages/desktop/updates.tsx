@@ -13,7 +13,7 @@ import {
   Root,
 } from "@/app/components/settings/section";
 import { Button } from "@/app/components/ui/button";
-import { isDesktop } from "@/utils/desktop";
+import { hasElectronBridge } from "@/utils/desktop";
 
 function UpdateSettingsContent() {
   const { t } = useTranslation();
@@ -90,7 +90,7 @@ function UpdateSettingsContent() {
 }
 
 export function UpdateSettings() {
-  if (!isDesktop()) {
+  if (!hasElectronBridge()) {
     return null;
   }
 

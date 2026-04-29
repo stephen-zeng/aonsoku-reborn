@@ -101,6 +101,20 @@ export default function FullscreenMode({
     [applyThemeColor],
   );
 
+  // Match Vaul's CSS animation duration (0.5s) before applying theme color
+  useEffect(() => {
+    if (open) {
+      const timer = window.setTimeout(() => {
+        atTopRef.current = true;
+        applyThemeColor(true);
+      }, 500);
+      return () => window.clearTimeout(timer);
+    } else {
+      atTopRef.current = false;
+      applyThemeColor(false);
+    }
+  }, [open, applyThemeColor]);
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: theme is used to trigger update when base background changes
   useEffect(() => {
     applyThemeColor(atTopRef.current);

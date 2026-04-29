@@ -13,7 +13,7 @@ import {
   IServerConfig,
   IServerUrlConfig,
 } from "@/types/serverConfig";
-import { isDesktop } from "@/utils/desktop";
+import { hasElectronBridge } from "@/utils/desktop";
 import { discordRpc } from "@/utils/discordRpc";
 import { logger } from "@/utils/logger";
 import { isValidServerUrl, normalizeServerUrl } from "@/utils/serverUrl";
@@ -594,7 +594,7 @@ useAppStore.subscribe(
 useAppStore.subscribe(
   (state) => state.desktop.data,
   (data) => {
-    if (!isDesktop()) return;
+    if (!hasElectronBridge()) return;
 
     window.api.saveAppSettings(data);
   },

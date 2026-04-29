@@ -86,7 +86,7 @@ export default function MobileSettings() {
           <button
             type="button"
             onClick={goBack}
-            className="flex items-center gap-1 text-sm text-muted-foreground active:text-foreground transition-colors"
+            className="flex min-h-11 items-center gap-1 text-sm text-muted-foreground active:text-foreground transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
             {t("settings.label")}

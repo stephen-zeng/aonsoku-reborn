@@ -15,6 +15,7 @@ import {
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
 import { useAppUpdate } from "@/store/app.store";
+import { hasElectronBridge } from "@/utils/desktop";
 import { isProd } from "@/utils/env";
 import { queryKeys } from "@/utils/queryKeys";
 
@@ -27,7 +28,7 @@ export function UpdateObserver() {
   const { data: updateInfo } = useQuery({
     queryKey: [...queryKeys.update.check],
     queryFn: async () => await window.api.checkForUpdates(),
-    enabled: !remindOnNextBoot && isProd,
+    enabled: hasElectronBridge() && !remindOnNextBoot && isProd,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     staleTime: Infinity,
@@ -41,6 +42,8 @@ export function UpdateObserver() {
   }, [setOpenDialog, updateInfo]);
 
   useEffect(() => {
+    if (!hasElectronBridge()) return;
+
     window.api.onUpdateDownloaded(() => {
       toast.update("update", {
         render: t("update.toasts.success"),
@@ -68,6 +71,7 @@ export function UpdateObserver() {
 
   const handleUpdate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!hasElectronBridge()) return;
 
     toast(t("update.toasts.started"), {
       autoClose: false,

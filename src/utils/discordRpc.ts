@@ -1,10 +1,10 @@
 import { useAppStore } from "@/store/app.store";
 import { usePlayerStore } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
-import { isDesktop } from "./desktop";
+import { hasElectronBridge } from "./desktop";
 
 function send(song: ISong, currentTime = 0, duration = 0) {
-  if (!isDesktop()) return;
+  if (!hasElectronBridge()) return;
 
   const { rpcEnabled } = useAppStore.getState().accounts.discord;
   if (!rpcEnabled) return;
@@ -30,13 +30,13 @@ function send(song: ISong, currentTime = 0, duration = 0) {
 }
 
 function clear() {
-  if (!isDesktop()) return;
+  if (!hasElectronBridge()) return;
 
   window.api.clearDiscordRpcActivity();
 }
 
 function sendCurrentSong() {
-  if (!isDesktop()) return;
+  if (!hasElectronBridge()) return;
 
   const { playerState, songlist, actions } = usePlayerStore.getState();
 

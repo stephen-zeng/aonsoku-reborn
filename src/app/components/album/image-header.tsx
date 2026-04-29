@@ -210,7 +210,7 @@ export default function ImageHeader({
           <div className="flex flex-col items-center md:flex-row md:items-center w-full gap-3 md:gap-6 lg:gap-8">
             <div
               className={cn(
-                "w-[200px] h-[200px] min-w-[200px] min-h-[200px]",
+                "w-[168px] h-[168px] min-w-[168px] min-h-[168px] sm:w-[200px] sm:h-[200px] sm:min-w-[200px] sm:min-h-[200px]",
                 "2xl:w-[250px] 2xl:h-[250px] 2xl:min-w-[250px] 2xl:min-h-[250px]",
                 "bg-skeleton aspect-square bg-cover bg-center rounded",
                 "shadow-header-image overflow-hidden",

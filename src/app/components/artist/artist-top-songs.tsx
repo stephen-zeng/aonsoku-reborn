@@ -1,8 +1,10 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { MobileSongList } from "@/app/components/mobile/mobile-media-list";
 import { DataTable } from "@/app/components/ui/data-table";
 import { useHasHover } from "@/app/hooks/use-input-mode";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import { songsColumns } from "@/app/tables/songs-columns";
 import { ROUTES } from "@/routes/routesList";
 import { usePlayerActions } from "@/store/player.store";
@@ -19,6 +21,7 @@ export default function ArtistTopSongs({ topSongs, artist }: TopSongsProps) {
   const { t } = useTranslation();
   const { setSongList } = usePlayerActions();
   const hasHover = useHasHover();
+  const isMobile = useIsMobile();
   const columns = useMemo(
     () =>
       songsColumns({
@@ -59,15 +62,24 @@ export default function ArtistTopSongs({ topSongs, artist }: TopSongsProps) {
         </Link>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={topTenSongs}
-        handlePlaySong={(row) =>
-          setSongList(topTenSongs, row.index, false, undefined, name)
-        }
-        columnFilter={columnsToShow}
-        variant="modern"
-      />
+      {isMobile ? (
+        <MobileSongList
+          songs={topTenSongs}
+          onPlaySong={(index) =>
+            setSongList(topTenSongs, index, false, undefined, name)
+          }
+        />
+      ) : (
+        <DataTable
+          columns={columns}
+          data={topTenSongs}
+          handlePlaySong={(row) =>
+            setSongList(topTenSongs, row.index, false, undefined, name)
+          }
+          columnFilter={columnsToShow}
+          variant="modern"
+        />
+      )}
     </div>
   );
 }

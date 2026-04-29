@@ -25,12 +25,28 @@ const navItems = [
   },
 ] as const;
 
+const libraryActivePrefixes = [
+  ROUTES.MOBILE.LIBRARY,
+  ROUTES.LIBRARY.ARTISTS,
+  ROUTES.LIBRARY.SONGS,
+  ROUTES.LIBRARY.ALBUMS,
+  ROUTES.LIBRARY.FAVORITES,
+  ROUTES.LIBRARY.PLAYLISTS,
+  ROUTES.LIBRARY.RADIOS,
+];
+
 export function BottomNavigation() {
   const { t } = useTranslation();
   const location = useLocation();
 
-  function isActive(route: string) {
-    return location.pathname === route;
+  function isActive(item: (typeof navItems)[number]) {
+    if (item.id === "library") {
+      return libraryActivePrefixes.some((prefix) =>
+        location.pathname.startsWith(prefix),
+      );
+    }
+
+    return location.pathname === item.route;
   }
 
   return (
@@ -48,15 +64,13 @@ export function BottomNavigation() {
             to={item.route}
             className={cn(
               "flex flex-col items-center justify-center gap-1 text-xs transition-colors",
-              isActive(item.route)
-                ? "text-foreground"
-                : "text-muted-foreground",
+              isActive(item) ? "text-foreground" : "text-muted-foreground",
             )}
           >
             <item.icon
               className={cn(
                 "w-5 h-5",
-                isActive(item.route) ? "stroke-[2]" : "stroke-[1.5]",
+                isActive(item) ? "stroke-[2]" : "stroke-[1.5]",
               )}
             />
             <span className="text-[10px] leading-none">{t(item.title)}</span>
