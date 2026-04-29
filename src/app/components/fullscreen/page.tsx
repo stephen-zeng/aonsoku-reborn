@@ -113,43 +113,41 @@ export default function FullscreenMode({
         const rafId = requestAnimationFrame(() => {
           const innerEl = drawerContentRef.current;
           if (innerEl) {
-            let applied = false;
-            const handleEnd = (e: Event) => {
-              if (applied) return;
-              if (e.type === "transitionend") {
-                const te = e as TransitionEvent;
-                if (te.propertyName !== "transform" || te.target !== innerEl) {
-                  return;
-                }
-              }
-              applied = true;
+            const handleAnimationEnd = () => {
               atTopRef.current = true;
               applyThemeColor(true);
             };
-            innerEl.addEventListener("animationend", handleEnd);
-            innerEl.addEventListener("transitionend", handleEnd);
+            const handleTransitionEnd = (e: TransitionEvent) => {
+              if (e.propertyName === "transform" && e.target === innerEl) {
+                atTopRef.current = true;
+                applyThemeColor(true);
+              }
+            };
+            innerEl.addEventListener("animationend", handleAnimationEnd, {
+              once: true,
+            });
+            innerEl.addEventListener("transitionend", handleTransitionEnd);
           }
         });
         return () => cancelAnimationFrame(rafId);
       }
 
-      let applied = false;
-      const handleEnd = (e: Event) => {
-        if (applied) return;
-        if (e.type === "transitionend") {
-          const te = e as TransitionEvent;
-          if (te.propertyName !== "transform" || te.target !== el) return;
-        }
-        applied = true;
+      const handleAnimationEnd = () => {
         atTopRef.current = true;
         applyThemeColor(true);
       };
+      const handleTransitionEnd = (e: TransitionEvent) => {
+        if (e.propertyName === "transform" && e.target === el) {
+          atTopRef.current = true;
+          applyThemeColor(true);
+        }
+      };
 
-      el.addEventListener("animationend", handleEnd);
-      el.addEventListener("transitionend", handleEnd);
+      el.addEventListener("animationend", handleAnimationEnd, { once: true });
+      el.addEventListener("transitionend", handleTransitionEnd);
       return () => {
-        el.removeEventListener("animationend", handleEnd);
-        el.removeEventListener("transitionend", handleEnd);
+        el.removeEventListener("animationend", handleAnimationEnd);
+        el.removeEventListener("transitionend", handleTransitionEnd);
       };
     } else {
       atTopRef.current = false;
