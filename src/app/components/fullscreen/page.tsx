@@ -101,14 +101,26 @@ export default function FullscreenMode({
     [applyThemeColor],
   );
 
-  // Match Vaul's CSS animation duration (0.5s) before applying theme color
+  // Only apply blended theme color when the drawer's top edge is at the page top
   useEffect(() => {
+    const el = drawerContentRef.current;
+
     if (open) {
-      const timer = window.setTimeout(() => {
+      if (!el) {
         atTopRef.current = true;
         applyThemeColor(true);
-      }, 500);
-      return () => window.clearTimeout(timer);
+        return;
+      }
+
+      const handleAnimationEnd = () => {
+        atTopRef.current = true;
+        applyThemeColor(true);
+      };
+
+      el.addEventListener("animationend", handleAnimationEnd, { once: true });
+      return () => {
+        el.removeEventListener("animationend", handleAnimationEnd);
+      };
     } else {
       atTopRef.current = false;
       applyThemeColor(false);
