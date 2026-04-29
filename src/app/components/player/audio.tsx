@@ -24,6 +24,7 @@ import { logger } from "@/utils/logger";
 import { manageMediaSession } from "@/utils/setMediaSession";
 import { calculateReplayGain, ReplayGainParams } from "@/utils/replayGain";
 import { perceptualToGain } from "@/utils/volume";
+import { isIOS } from "@/utils/platform";
 
 type AudioPlayerProps = ComponentPropsWithoutRef<"audio"> & {
   audioRef: RefObject<HTMLAudioElement>;
@@ -118,7 +119,7 @@ export function AudioPlayer({
     songId,
   ]);
 
-  const audioVolume = useMemo(() => perceptualToGain(volume), [volume]);
+  const audioVolume = useMemo(() => (isIOS() ? 1 : perceptualToGain(volume)), [volume]);
 
   const gainValue = useMemo(() => {
     if (!shouldUseWebAudioReplayGain || !replayGain) {

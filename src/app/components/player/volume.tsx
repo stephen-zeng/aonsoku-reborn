@@ -9,6 +9,7 @@ import { useMuteToggle } from "@/app/hooks/use-mute-toggle";
 import { usePlayerHotkeys } from "@/app/hooks/use-audio-hotkeys";
 import { cn } from "@/lib/utils";
 import { usePlayerVolume, useVolumeSettings } from "@/store/player.store";
+import { isIOS } from "@/utils/platform";
 import { PopoverVolume } from "./popover-volume";
 
 interface PlayerVolumeProps {
@@ -20,6 +21,7 @@ export function PlayerVolume({ disabled, audioRef }: PlayerVolumeProps) {
   const { t } = useTranslation();
   const { volume, handleVolumeWheel } = usePlayerVolume();
   const { useAudioHotkeys } = usePlayerHotkeys();
+  const ios = isIOS();
 
   useAudioHotkeys("mod+up", () => handleVolumeWheel(false));
   useAudioHotkeys("mod+down", () => handleVolumeWheel(true));
@@ -28,6 +30,15 @@ export function PlayerVolume({ disabled, audioRef }: PlayerVolumeProps) {
     volume === 0
       ? t("player.tooltips.volume.unmute")
       : t("player.tooltips.volume.mute");
+
+  if (ios) {
+    return (
+      <div className="flex items-center gap-2 pr-2 text-secondary-foreground">
+        <VolumeIcon volume={100} size={18} />
+        <span className="text-xs font-medium tabular-nums">100%</span>
+      </div>
+    );
+  }
 
   return (
     <div className={clsx(disabled && "opacity-50")}>

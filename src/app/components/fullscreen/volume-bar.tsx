@@ -5,6 +5,7 @@ import { Button } from "@/app/components/ui/button";
 import { Slider } from "@/app/components/ui/slider";
 import { useMuteToggle } from "@/app/hooks/use-mute-toggle";
 import { usePlayerVolume, useVolumeSettings } from "@/store/player.store";
+import { isIOS } from "@/utils/platform";
 
 export function VolumeBar() {
   const { volume, handleMuteClick } = useMuteToggle();
@@ -12,6 +13,7 @@ export function VolumeBar() {
   const { min, max, step } = useVolumeSettings();
   const wheelRafRef = useRef<number | null>(null);
   const { t } = useTranslation();
+  const ios = isIOS();
 
   const handleWheel = useCallback(
     (e: WheelEvent<HTMLDivElement>) => {
@@ -23,6 +25,15 @@ export function VolumeBar() {
     },
     [handleVolumeWheel],
   );
+
+  if (ios) {
+    return (
+      <div className="flex w-full min-w-0 items-center gap-2">
+        <VolumeIcon volume={100} size={16} className="text-foreground/70 shrink-0" />
+        <span className="text-xs font-medium tabular-nums text-foreground/70">100%</span>
+      </div>
+    );
+  }
 
   return (
     <div
