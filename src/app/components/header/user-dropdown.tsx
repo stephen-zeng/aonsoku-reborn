@@ -40,6 +40,7 @@ import {
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
 import { useIsMobile } from "@/app/hooks/use-mobile";
+import { useSwUpdate } from "@/app/hooks/use-sw-update";
 import { useAvatarUrl } from "@/app/hooks/use-avatar-url";
 import { LogoutObserver } from "@/app/observers/logout-observer";
 import { ROUTES } from "@/routes/routesList";
@@ -140,6 +141,7 @@ export function UserDropdown() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { status: swStatus, applyUpdate } = useSwUpdate();
   const { setOpenDialog } = useAppSettings();
   const serverInfo = useLanControlServerInfo();
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
@@ -243,6 +245,20 @@ export function UserDropdown() {
                   <span>{t("menu.about")}</span>
                 </button>
               </DrawerClose>
+              {swStatus === "waiting" && (
+                <div className="border-t my-1" />
+              )}
+              {swStatus === "waiting" && (
+                <DrawerClose asChild>
+                  <button
+                    onClick={() => applyUpdate()}
+                    className="flex items-center gap-3 rounded-md px-3 py-3 text-sm text-primary font-medium hover:bg-accent transition-colors w-full text-left"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    <span>{t("update.sw.refresh")}</span>
+                  </button>
+                </DrawerClose>
+              )}
             </div>
 
             {!lockUser && (
