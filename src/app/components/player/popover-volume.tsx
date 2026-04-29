@@ -5,14 +5,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/app/components/ui/popover";
-import { isIOS } from "@/utils/platform";
 import { VolumeSlider } from "./volume";
 
 export function PopoverVolume({ children }: { children: ReactNode }) {
-  if (isIOS()) {
-    return <>{children}</>;
-  }
-
   return (
     <Popover>
       <PopoverTrigger asChild>

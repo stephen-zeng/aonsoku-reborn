@@ -14,26 +14,18 @@ export function VolumeBar() {
   const wheelRafRef = useRef<number | null>(null);
   const { t } = useTranslation();
   const ios = isIOS();
+  const displayVolume = ios ? 100 : volume;
 
   const handleWheel = useCallback(
     (e: WheelEvent<HTMLDivElement>) => {
-      if (wheelRafRef.current !== null) return;
+      if (ios || wheelRafRef.current !== null) return;
       wheelRafRef.current = requestAnimationFrame(() => {
         handleVolumeWheel(e.deltaY > 0);
         wheelRafRef.current = null;
       });
     },
-    [handleVolumeWheel],
+    [handleVolumeWheel, ios],
   );
-
-  if (ios) {
-    return (
-      <div className="flex w-full min-w-0 items-center gap-2">
-        <VolumeIcon volume={100} size={16} className="text-foreground/70 shrink-0" />
-        <span className="text-xs font-medium tabular-nums text-foreground/70">100%</span>
-      </div>
-    );
-  }
 
   return (
     <div
@@ -46,22 +38,24 @@ export function VolumeBar() {
         size="icon"
         className="size-8 p-0 shrink-0 hover:bg-foreground/10"
         onClick={handleMuteClick}
+        disabled={ios}
         aria-label={
           volume === 0
             ? t("player.tooltips.volume.unmute")
             : t("player.tooltips.volume.mute")
         }
       >
-        <VolumeIcon volume={volume} size={16} className="text-foreground/70" />
+        <VolumeIcon volume={displayVolume} size={16} className="text-foreground/70" />
       </Button>
       <Slider
         variant="secondary"
-        value={[volume]}
+        value={[displayVolume]}
         min={min}
         max={max}
         step={step}
         className="h-3 w-full min-w-0"
         onValueChange={([value]) => setVolume(value)}
+        disabled={ios}
         aria-label={t("player.tooltips.volume.mute")}
       />
       <VolumeIcon
