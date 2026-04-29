@@ -125,7 +125,12 @@ export function MediaSessionObserver() {
     remotePlayerState,
   ]);
 
-  const lastPositionUpdateRef = useRef(0);
+  const lastPositionStateRef = useRef({
+    progress: -1,
+    timestamp: 0,
+    isPlaying: false,
+    songId: "",
+  });
 
   useEffect(() => {
     const effectiveIsPlaying = isRemoteActive
@@ -142,19 +147,49 @@ export function MediaSessionObserver() {
       return;
     }
 
-    const now = Date.now();
-    if (effectiveIsPlaying && now - lastPositionUpdateRef.current < 1000) {
-      return;
-    }
-    lastPositionUpdateRef.current = now;
-
     const effectiveProgress =
       isRemoteActive && remotePlayerState?.currentTime !== undefined
         ? remotePlayerState.currentTime
         : progress;
 
-    const clampedProgress = clampProgress(effectiveProgress, duration);
-    manageMediaSession.setPositionState(duration, clampedProgress);
+    const songId = (song as { id?: string })?.id || (song as { title: string }).title;
+    const now = Date.now();
+    const lastState = lastPositionStateRef.current;
+
+    // Determine if we need to update the position state
+    let shouldUpdate = false;
+
+    if (songId !== lastState.songId) {
+      // 1. Song changed
+      shouldUpdate = true;
+    } else if (effectiveIsPlaying !== lastState.isPlaying) {
+      // 2. Playback state toggled
+      shouldUpdate = true;
+    } else {
+      // 3. Check for seek (progress jump)
+      // Expected progress based on natural playback since last report
+      const elapsedSeconds = (now - lastState.timestamp) / 1000;
+      const expectedProgress = lastState.isPlaying
+        ? lastState.progress + elapsedSeconds
+        : lastState.progress;
+
+      // If actual progress deviates from expected by more than 2 seconds, it's a seek
+      if (Math.abs(effectiveProgress - expectedProgress) > 2) {
+        shouldUpdate = true;
+      }
+    }
+
+    if (shouldUpdate) {
+      const clampedProgress = clampProgress(effectiveProgress, duration);
+      manageMediaSession.setPositionState(duration, clampedProgress);
+
+      lastPositionStateRef.current = {
+        progress: effectiveProgress,
+        timestamp: now,
+        isPlaying: effectiveIsPlaying,
+        songId,
+      };
+    }
   }, [
     progress,
     isPlaying,

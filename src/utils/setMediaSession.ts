@@ -234,8 +234,59 @@ function setHandlers() {
   try {
     logger.info("[MediaSession] Setting up action handlers");
 
-    mediaSession.setActionHandler("seekbackward", null);
-    mediaSession.setActionHandler("seekforward", null);
+    const DEFAULT_SKIP_TIME = 10;
+
+    mediaSession.setActionHandler("seekbackward", (details) => {
+      const skipTime = details.seekOffset || DEFAULT_SKIP_TIME;
+      logger.info(`[MediaSession] Seek backward action triggered (${skipTime}s)`);
+      const state = usePlayerStore.getState();
+      const currentPos = state.playerState.progress;
+      const newPos = Math.max(0, currentPos - skipTime);
+
+      if (state.remoteControl.active && state.remoteControl.sendCommand) {
+        state.remoteControl.sendCommand(LanControlMessageType.SEEK, {
+          time: newPos,
+        });
+      } else {
+        const audioPlayerRef = state.playerState.audioPlayerRef;
+        if (audioPlayerRef) {
+          audioPlayerRef.currentTime = newPos;
+          state.actions.setProgress(Math.floor(newPos));
+        }
+      }
+    });
+
+    mediaSession.setActionHandler("seekforward", (details) => {
+      const skipTime = details.seekOffset || DEFAULT_SKIP_TIME;
+      logger.info(`[MediaSession] Seek forward action triggered (${skipTime}s)`);
+      const state = usePlayerStore.getState();
+      const currentPos = state.playerState.progress;
+      const duration = state.playerState.duration;
+      const newPos = Math.min(duration, currentPos + skipTime);
+
+      if (state.remoteControl.active && state.remoteControl.sendCommand) {
+        state.remoteControl.sendCommand(LanControlMessageType.SEEK, {
+          time: newPos,
+        });
+      } else {
+        const audioPlayerRef = state.playerState.audioPlayerRef;
+        if (audioPlayerRef) {
+          audioPlayerRef.currentTime = newPos;
+          state.actions.setProgress(Math.floor(newPos));
+        }
+      }
+    });
+
+    mediaSession.setActionHandler("stop", () => {
+      logger.info("[MediaSession] Stop action triggered");
+      const state = usePlayerStore.getState();
+      if (state.remoteControl.active && state.remoteControl.sendCommand) {
+        state.remoteControl.sendCommand(LanControlMessageType.PAUSE);
+        state.remoteControl.sendCommand(LanControlMessageType.CLEAR_QUEUE);
+      } else {
+        state.actions.clearPlayerState();
+      }
+    });
 
     mediaSession.setActionHandler("play", () => {
       logger.info("[MediaSession] Play action triggered");
