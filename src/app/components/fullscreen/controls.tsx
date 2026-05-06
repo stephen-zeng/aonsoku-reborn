@@ -49,6 +49,7 @@ function FullscreenControls() {
           style={{ ...buttonsStyle.style }}
           onClick={() => toggleShuffle()}
           disabled={isPlayingOneSong() || !hasNext}
+          unfocusable
         >
           <Shuffle className={buttonsStyle.secondaryIcon} />
         </Button>
@@ -60,6 +61,7 @@ function FullscreenControls() {
         style={{ ...buttonsStyle.style }}
         onClick={() => playPrevSong()}
         disabled={cannotSkipPrev}
+        unfocusable
       >
         <SkipBack className={buttonsStyle.secondaryIconFilled} />
       </Button>
@@ -109,6 +111,7 @@ function FullscreenControls() {
         style={{ ...buttonsStyle.style }}
         onClick={() => playNextSong()}
         disabled={cannotSkipNext}
+        unfocusable
       >
         <SkipForward className={buttonsStyle.secondaryIconFilled} />
       </Button>
@@ -123,6 +126,7 @@ function FullscreenControls() {
           )}
           onClick={() => toggleLoop()}
           style={{ ...buttonsStyle.style }}
+          unfocusable
         >
           {isLoopOff && <Repeat className={buttonsStyle.secondaryIcon} />}
           {isLoopAll && <Repeat className={buttonsStyle.secondaryIcon} />}

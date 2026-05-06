@@ -57,6 +57,7 @@ export function PlayerQueueButton({ disabled }: PlayerSongListButtonProps) {
               e.preventDefault();
               setOpenPopover(!openPopover);
             }}
+            unfocusable
           >
             <ListVideo
               className={clsx("w-4 h-4", isActive && "text-primary")}

@@ -36,7 +36,7 @@ export function LangSelect() {
           <ContentItemTitle>{t("menu.language")}</ContentItemTitle>
           <ContentItemForm>
             <Select value={langCode} onValueChange={handleValueChange}>
-              <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left">
+              <SelectTrigger className="h-8 ring-offset-transparent focus-visible:ring-0 focus-visible:ring-transparent text-left">
                 <SelectValue>
                   <ReactCountryFlag countryCode={flag} svg className="mr-2" />
                   <span className="text-sm text-foreground">

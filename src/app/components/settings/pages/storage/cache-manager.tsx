@@ -104,7 +104,7 @@ export function CacheManagerSection() {
           onValueChange={(value) => setFilter(value as CacheFilter)}
           disabled={loading || items.length === 0}
         >
-          <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left w-[140px]">
+          <SelectTrigger className="h-8 ring-offset-transparent focus-visible:ring-0 focus-visible:ring-transparent text-left w-[140px]">
             <SelectValue>
               <span className="text-sm text-foreground">
                 {t(`settings.storage.cacheManager.filter.${filter}`)}

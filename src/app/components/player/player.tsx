@@ -272,6 +272,7 @@ export function Player() {
             onClick={playNextSong}
             data-testid="player-button-next-mobile"
             className="size-11 p-0"
+            unfocusable
           >
             <SkipForward className="text-foreground fill-foreground size-5" />
           </Button>

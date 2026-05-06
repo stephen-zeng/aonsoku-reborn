@@ -76,13 +76,14 @@ export function PlayerControls({ song, radio }: PlayerControlsProps) {
   return (
     <div className="flex w-full gap-1 justify-center items-center mb-1">
       {isSong && (
-        <PlayerButton
-          className={clsx(isShuffleActive && "player-button-active")}
-          disabled={!song || isPlayingOneSong() || !hasNext}
-          onClick={toggleShuffle}
-          data-testid="player-button-shuffle"
-          tooltip={shuffleTooltip}
-        >
+      <PlayerButton
+        className={clsx(isShuffleActive && "player-button-active")}
+        disabled={!song || isPlayingOneSong() || !hasNext}
+        onClick={toggleShuffle}
+        data-testid="player-button-shuffle"
+        tooltip={shuffleTooltip}
+        unfocusable
+      >
           <Shuffle
             className={clsx(
               isShuffleActive ? "text-primary" : "text-secondary-foreground",
@@ -96,6 +97,7 @@ export function PlayerControls({ song, radio }: PlayerControlsProps) {
         onClick={playPrevSong}
         data-testid="player-button-prev"
         tooltip={previousTooltip}
+        unfocusable
       >
         <SkipBack className="text-secondary-foreground fill-secondary-foreground" />
       </PlayerButton>
@@ -119,6 +121,7 @@ export function PlayerControls({ song, radio }: PlayerControlsProps) {
         onClick={playNextSong}
         data-testid="player-button-next"
         tooltip={nextTooltip}
+        unfocusable
       >
         <SkipForward className="text-secondary-foreground fill-secondary-foreground" />
       </PlayerButton>
@@ -130,6 +133,7 @@ export function PlayerControls({ song, radio }: PlayerControlsProps) {
           onClick={toggleLoop}
           data-testid="player-button-loop"
           tooltip={repeatTooltip}
+        unfocusable
         >
           {isLoopOff && <Repeat className="text-secondary-foreground" />}
           {isLoopAll && <Repeat className="text-primary" />}

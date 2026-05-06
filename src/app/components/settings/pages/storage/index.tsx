@@ -143,7 +143,7 @@ function LibraryCachingSection() {
               }
               disabled={!libraryCaching || !syncCoverArt}
             >
-              <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left w-[130px]">
+              <SelectTrigger className="h-8 ring-offset-transparent focus-visible:ring-0 focus-visible:ring-transparent text-left w-[130px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent align="end">

@@ -93,6 +93,7 @@ export function TableLikeButton({
         e.stopPropagation();
         handleStarred();
       }}
+      unfocusable
     >
       <Heart
         className={clsx("w-4 h-4", isStarred && "text-red-500 fill-red-500")}

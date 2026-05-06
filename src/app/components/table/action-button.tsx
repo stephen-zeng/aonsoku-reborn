@@ -38,6 +38,7 @@ export function TableActionButton({
             e.stopPropagation();
             setOpen(true);
           }}
+          unfocusable
         >
           <EllipsisVertical className="w-4 h-4" />
         </Button>

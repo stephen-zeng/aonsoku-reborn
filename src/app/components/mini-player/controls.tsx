@@ -47,6 +47,7 @@ export function MiniPlayerControls() {
         style={{ ...buttonsStyle.style }}
         onClick={() => toggleShuffle()}
         disabled={isPlayingOneSong() || !hasNext}
+        unfocusable
       >
         <Shuffle size={18} />
       </Button>
@@ -61,6 +62,7 @@ export function MiniPlayerControls() {
         style={{ ...buttonsStyle.style }}
         onClick={() => playPrevSong()}
         disabled={cannotSkipPrev}
+        unfocusable
       >
         <SkipBack className={buttonsStyle.secondaryIconFilled} width={20} />
       </Button>
@@ -98,6 +100,7 @@ export function MiniPlayerControls() {
         style={{ ...buttonsStyle.style }}
         onClick={() => playNextSong()}
         disabled={cannotSkipNext}
+        unfocusable
       >
         <SkipForward className={buttonsStyle.secondaryIconFilled} size={20} />
       </Button>
@@ -112,6 +115,7 @@ export function MiniPlayerControls() {
         )}
         onClick={() => toggleLoop()}
         style={{ ...buttonsStyle.style }}
+        unfocusable
       >
         {isLoopOff && <Repeat size={18} />}
         {isLoopAll && <Repeat size={18} />}
@@ -136,6 +140,7 @@ export function MiniPlayerLikeButton() {
       )}
       onClick={starCurrentSong}
       style={{ ...buttonsStyle.style }}
+      unfocusable
     >
       <Heart
         className={clsx(isSongStarred && "text-red-500 fill-red-500")}

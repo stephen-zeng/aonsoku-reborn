@@ -36,6 +36,7 @@ export function CacheButton({
           cache();
         }
       }}
+      unfocusable
     >
       {isLoading ? (
         <DownloadingIndicator progress={progress} className="w-4 h-4" />

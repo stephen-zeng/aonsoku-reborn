@@ -102,7 +102,7 @@ export function ReplayGainConfig() {
                   setReplayGainType(value as ReplayGainType)
                 }
               >
-                <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left">
+                <SelectTrigger className="h-8 ring-offset-transparent focus-visible:ring-0 focus-visible:ring-transparent text-left">
                   <SelectValue>
                     <span className="text-sm text-foreground">
                       {t("settings.audio.replayGain.mode." + replayGainType)}
