@@ -147,7 +147,13 @@ export default function CommandMenu() {
   const showArtistGroup = Boolean(query && artists.length > 0);
   const showSongGroup = Boolean(query && songs.length > 0);
 
-  useHotkeys(["/", "mod+f", "mod+k"], () => setOpen(!open), {
+  useHotkeys(["/", "mod+f", "mod+k"], () => {
+    if (!open) {
+      handleOpen();
+    } else {
+      setOpen(false);
+    }
+  }, {
     preventDefault: true,
   });
 
