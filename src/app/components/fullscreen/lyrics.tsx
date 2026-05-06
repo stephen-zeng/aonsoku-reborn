@@ -452,6 +452,18 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
     const updateTime = () => {
       const timeMs = Math.floor((playerRef.currentTime || 0) * 1000);
       if (currentTimeRef.current !== timeMs) {
+        const delta = timeMs - currentTimeRef.current;
+        if (Math.abs(delta) > 2000) {
+          const player = getInternalLyricPlayer(lyricPlayerRef);
+          if (player) {
+            player.resetScroll();
+            player.setIsSeeking(true);
+            clearTimeout(seekingTimerRef.current);
+            seekingTimerRef.current = setTimeout(() => {
+              player.setIsSeeking(false);
+            }, 100);
+          }
+        }
         currentTimeRef.current = timeMs;
         setCurrentTime(timeMs);
       }
