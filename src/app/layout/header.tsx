@@ -79,7 +79,7 @@ export function Header() {
         paddingRight: "max(1rem, var(--safe-area-right))",
       }}
     >
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
         {leftSpacingWidth > 10 && (
           <div
             style={{ width: `${leftSpacingWidth - 10}px` }}
@@ -99,11 +99,11 @@ export function Header() {
             <SidebarToggleIcon className="w-4 h-4" strokeWidth={1.5} />
           </Button>
         </div>
+        <NavigationButtons />
         <SwUpdateChip />
       </div>
       <div className="hidden md:flex col-span-2 items-center justify-center">
         <div className="flex justify-center items-center px-4 gap-2 w-full">
-          <NavigationButtons />
           <MemoCommandMenu />
         </div>
       </div>
