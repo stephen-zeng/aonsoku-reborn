@@ -44,6 +44,7 @@ export interface ISongList {
   isInUserQueue: boolean;
   playedUserQueueHistory: ISong[];
   shuffleHistory: string[];
+  shuffleStartHistory: string[];
 }
 
 export type FullscreenPlayerTab = "queue" | "playing" | "lyrics";

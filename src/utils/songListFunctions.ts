@@ -23,13 +23,55 @@ export function shuffleSongList<T>(list: T[], index: number, isRandom = false) {
 }
 
 const MAX_SHUFFLE_HISTORY = 50;
+const MAX_SHUFFLE_START_HISTORY = 20;
 
-export { MAX_SHUFFLE_HISTORY };
+export { MAX_SHUFFLE_HISTORY, MAX_SHUFFLE_START_HISTORY };
+
+export function pushToHistory(
+  history: string[],
+  id: string,
+  maxLen: number,
+): string[] {
+  const result = history.filter((h) => h !== id);
+  result.push(id);
+  if (result.length > maxLen) {
+    return result.slice(result.length - maxLen);
+  }
+  return result;
+}
+
+export function pickRandomStartIndex(
+  songlistLength: number,
+  startIndexHistory: string[],
+  getId: (index: number) => string,
+): number {
+  if (songlistLength === 0) return 0;
+
+  const historySet = new Set(startIndexHistory);
+  const maxAttempts = Math.min(songlistLength, startIndexHistory.length + 10);
+
+  for (let i = 0; i < maxAttempts; i++) {
+    const idx = Math.floor(Math.random() * songlistLength);
+    if (!historySet.has(getId(idx))) return idx;
+  }
+
+  for (let i = 0; i < songlistLength; i++) {
+    if (!historySet.has(getId(i))) return i;
+  }
+
+  return Math.floor(Math.random() * songlistLength);
+}
 
 export function shuffleWithGapAvoidance<T extends { id: string }>(
   songs: T[],
   history: string[],
 ): T[] {
+  if (history.length === 0) {
+    const result = [...songs];
+    fisherYatesInPlace(result);
+    return result;
+  }
+
   const historyIndex = new Map(history.map((id, i) => [id, i]));
 
   const fresh: T[] = [];

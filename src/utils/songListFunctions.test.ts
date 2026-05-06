@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   addNextSongList,
   MAX_SHUFFLE_HISTORY,
+  MAX_SHUFFLE_START_HISTORY,
+  pickRandomStartIndex,
+  pushToHistory,
   shuffleSongList,
   shuffleWithGapAvoidance,
 } from "./songListFunctions";
@@ -115,5 +118,77 @@ describe("addNextSongList", () => {
 
   it("handles empty current list", () => {
     expect(addNextSongList(0, [], [10, 20])).toEqual([10, 20]);
+  });
+});
+
+describe("MAX_SHUFFLE_START_HISTORY", () => {
+  it("is 20", () => {
+    expect(MAX_SHUFFLE_START_HISTORY).toBe(20);
+  });
+});
+
+describe("pickRandomStartIndex", () => {
+  const songIds = ["s0", "s1", "s2", "s3", "s4"];
+  const getId = (i: number) => songIds[i];
+
+  it("returns 0 for empty list", () => {
+    expect(pickRandomStartIndex(0, [], getId)).toBe(0);
+  });
+
+  it("returns a valid index within range", () => {
+    for (let i = 0; i < 50; i++) {
+      const idx = pickRandomStartIndex(songIds.length, [], getId);
+      expect(idx).toBeGreaterThanOrEqual(0);
+      expect(idx).toBeLessThan(songIds.length);
+    }
+  });
+
+  it("avoids songs in start history when fresh options exist", () => {
+    const history = ["s0", "s1", "s2"];
+    for (let i = 0; i < 50; i++) {
+      const idx = pickRandomStartIndex(songIds.length, history, getId);
+      expect(idx).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("falls back to any index when all songs are in history", () => {
+    const history = [...songIds];
+    for (let i = 0; i < 50; i++) {
+      const idx = pickRandomStartIndex(songIds.length, history, getId);
+      expect(idx).toBeGreaterThanOrEqual(0);
+      expect(idx).toBeLessThan(songIds.length);
+    }
+  });
+
+  it("returns a single valid option deterministically", () => {
+    const history = ["s0", "s1", "s2", "s3"];
+    const idx = pickRandomStartIndex(songIds.length, history, getId);
+    expect(idx).toBe(4);
+  });
+
+  it("handles empty history", () => {
+    for (let i = 0; i < 50; i++) {
+      const idx = pickRandomStartIndex(songIds.length, [], getId);
+      expect(idx).toBeGreaterThanOrEqual(0);
+      expect(idx).toBeLessThan(songIds.length);
+    }
+  });
+});
+
+describe("pushToHistory", () => {
+  it("appends id to empty history", () => {
+    expect(pushToHistory([], "a", 3)).toEqual(["a"]);
+  });
+
+  it("deduplicates and moves to end", () => {
+    expect(pushToHistory(["a", "b", "c"], "a", 3)).toEqual(["b", "c", "a"]);
+  });
+
+  it("trims to max length", () => {
+    expect(pushToHistory(["a", "b", "c"], "d", 3)).toEqual(["b", "c", "d"]);
+  });
+
+  it("does not trim when under max", () => {
+    expect(pushToHistory(["a", "b"], "c", 5)).toEqual(["a", "b", "c"]);
   });
 });

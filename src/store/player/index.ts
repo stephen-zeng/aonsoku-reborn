@@ -38,6 +38,7 @@ import {
   MAX_USER_QUEUE_IDB_SIZE,
   trimQueueToWindow,
 } from "./queue-utils";
+import { MAX_SHUFFLE_START_HISTORY } from "@/utils/songListFunctions";
 
 const IDB_SONGLIST_KEY = "player_songlist";
 
@@ -313,6 +314,7 @@ function migrateLegacySonglist(value: any): ISongList | null {
     isInUserQueue: false,
     playedUserQueueHistory: [],
     shuffleHistory: [],
+    shuffleStartHistory: [],
   };
 }
 
@@ -358,6 +360,7 @@ function migrateSonglistFromIdb(value: any): ISongList {
     isInUserQueue,
     playedUserQueueHistory: value.playedUserQueueHistory ?? [],
     shuffleHistory: value.shuffleHistory ?? [],
+    shuffleStartHistory: value.shuffleStartHistory ?? [],
   };
 
   if (result.contextQueue.sourceId) {
@@ -408,6 +411,7 @@ function trimSonglistForIdb(songlist: ISongList): ISongList {
       -MAX_USER_QUEUE_IDB_SIZE,
     ),
     originalUserSongs: rest.originalUserSongs?.slice(-MAX_USER_QUEUE_IDB_SIZE),
+    shuffleStartHistory: rest.shuffleStartHistory?.slice(-MAX_SHUFFLE_START_HISTORY) ?? [],
   };
 }
 

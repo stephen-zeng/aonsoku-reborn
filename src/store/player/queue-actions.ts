@@ -13,6 +13,9 @@ import { LanControlMessageType } from "@/types/lanControl";
 import { areSongListsEqual } from "@/utils/compareSongLists";
 import {
   MAX_SHUFFLE_HISTORY,
+  MAX_SHUFFLE_START_HISTORY,
+  pickRandomStartIndex,
+  pushToHistory,
   shuffleWithGapAvoidance,
 } from "@/utils/songListFunctions";
 import {
@@ -183,20 +186,30 @@ export function createQueueActions(shared: SharedDeps) {
       }
 
       if (shuffle) {
-        const upcoming = songlist.slice(index + 1);
-        const shuffledUpcoming = shuffleWithGapAvoidance(upcoming, []);
-        const shuffledSongs = [
-          ...songlist.slice(0, index + 1),
-          ...shuffledUpcoming,
-        ];
+        const startHistory = get().songlist.shuffleStartHistory ?? [];
+        const randomIndex = pickRandomStartIndex(
+          songlist.length,
+          startHistory,
+          (i) => songlist[i].id,
+        );
+
+        const startSong = songlist[randomIndex];
+        const remaining = songlist.filter((_, i) => i !== randomIndex);
+        const shuffledRemaining = shuffleWithGapAvoidance(remaining, []);
+        shuffledRemaining.unshift(startSong);
+        const updatedStartHistory = pushToHistory(
+          startHistory,
+          startSong.id,
+          MAX_SHUFFLE_START_HISTORY,
+        );
 
         set((state) => {
           state.playerProgress.progress = 0;
           state.playerProgress.bufferedProgress = 0;
           state.songlist.contextQueue = {
             ...emptyContextQueue(),
-            songs: shuffledSongs,
-            currentIndex: index,
+            songs: shuffledRemaining,
+            currentIndex: 0,
             sourceId: normalizedId,
             sourceName:
               sourceName !== undefined
@@ -208,6 +221,7 @@ export function createQueueActions(shared: SharedDeps) {
           state.songlist.radioList = [];
           state.songlist.shuffleHistory = [];
           state.songlist.isShuffleActive = true;
+          state.songlist.shuffleStartHistory = updatedStartHistory;
           state.playerState.mediaType = "song";
           state.playerState.isPlaying = true;
         });
@@ -831,15 +845,11 @@ export function createQueueActions(shared: SharedDeps) {
           ? Math.round(song.duration)
           : 0;
         if (state.songlist.isShuffleActive && song?.id) {
-          const history = state.songlist.shuffleHistory;
-          const idx = history.indexOf(song.id);
-          if (idx !== -1) {
-            history.splice(idx, 1);
-          }
-          history.push(song.id);
-          if (history.length > MAX_SHUFFLE_HISTORY) {
-            history.splice(0, history.length - MAX_SHUFFLE_HISTORY);
-          }
+          state.songlist.shuffleHistory = pushToHistory(
+            state.songlist.shuffleHistory,
+            song.id,
+            MAX_SHUFFLE_HISTORY,
+          );
         }
       });
     },
