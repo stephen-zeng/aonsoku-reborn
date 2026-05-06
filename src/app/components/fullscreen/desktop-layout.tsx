@@ -4,6 +4,7 @@ import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 
+import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useIsTouchPrimary } from "@/app/hooks/use-input-mode";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
   const { t } = useTranslation();
   const { hasLyrics } = useHasLyrics();
   const isTouchPrimary = useIsTouchPrimary();
+  const contrast = useFullscreenContrast();
 
   const lyricsDisabled = hasLyrics === false;
 
@@ -41,6 +43,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
     <div
       className="flex h-full w-full overflow-hidden"
       data-testid="fullscreen-desktop-layout"
+      style={contrast.style}
     >
       <div
         className={`fullscreen-desktop-playing flex h-full min-w-0 shrink-0 flex-col px-8 pt-6 pb-4 transition-[width] duration-300 md:px-12 ${rightPanelView ? "w-1/2" : "w-full"}`}
@@ -49,7 +52,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
           <Button
             variant="ghost"
             size="icon"
-            className="size-10 rounded-full hover:bg-foreground/20"
+            className={`size-10 rounded-full ${contrast.hoverBg}`}
             onClick={closeFullscreenPlayerWithHistory}
             aria-label="Close"
           >
@@ -61,7 +64,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-10 rounded-full hover:bg-foreground/20"
+                className={`size-10 rounded-full ${contrast.hoverBg}`}
                 onClick={handleQueueClick}
                 aria-label={t("fullscreen.queue")}
               >
@@ -70,7 +73,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
               <Button
                 variant="ghost"
                 size="icon"
-                className={`size-10 rounded-full hover:bg-foreground/20 ${lyricsDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`size-10 rounded-full ${contrast.hoverBg} ${lyricsDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
                 onClick={handleLyricsClick}
                 disabled={lyricsDisabled}
                 aria-label={t("fullscreen.lyrics")}
@@ -108,7 +111,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
                 "gap-1.5 transition-colors",
                 rightPanelView === "queue"
                   ? "fullscreen-backdrop-layer rounded-md hover:bg-transparent"
-                  : "hover:bg-foreground/20",
+                  : contrast.hoverBg,
               )}
               onClick={handleQueueClick}
             >
@@ -123,7 +126,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
                 lyricsDisabled && "opacity-50 cursor-not-allowed",
                 rightPanelView === "lyrics"
                   ? "fullscreen-backdrop-layer rounded-md hover:bg-transparent"
-                  : "hover:bg-foreground/20",
+                  : contrast.hoverBg,
               )}
               onClick={handleLyricsClick}
               disabled={lyricsDisabled}

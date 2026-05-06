@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { VolumeIcon } from "@/app/components/icons/volume-icon";
 import { Button } from "@/app/components/ui/button";
 import { Slider } from "@/app/components/ui/slider";
+import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
 import { useMuteToggle } from "@/app/hooks/use-mute-toggle";
 import { usePlayerVolume, useVolumeSettings } from "@/store/player.store";
 import { isIOS } from "@/utils/platform";
@@ -15,6 +16,7 @@ export function VolumeBar() {
   const { t } = useTranslation();
   const ios = isIOS();
   const displayVolume = ios ? 100 : volume;
+  const { hoverBg10 } = useFullscreenContrast();
 
   const handleWheel = useCallback(
     (e: WheelEvent<HTMLDivElement>) => {
@@ -36,7 +38,7 @@ export function VolumeBar() {
       <Button
         variant="ghost"
         size="icon"
-        className="size-8 p-0 shrink-0 hover:bg-foreground/10"
+        className={`size-8 p-0 shrink-0 ${hoverBg10}`}
         onClick={handleMuteClick}
         disabled={ios}
         aria-label={

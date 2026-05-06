@@ -4,6 +4,7 @@ import { memo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { DrawerHandle } from "@/app/components/ui/drawer";
+import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useIsTouchPrimary } from "@/app/hooks/use-input-mode";
 import { useIsShortViewport, useIsWideViewport } from "@/app/hooks/use-mobile";
@@ -41,6 +42,7 @@ const MobileHeader = memo(function MobileHeader({
   compact?: boolean;
 }) {
   const { currentSongColor } = useSongColor();
+  const contrast = useFullscreenContrast();
 
   return (
     <div
@@ -52,7 +54,7 @@ const MobileHeader = memo(function MobileHeader({
       <Button
         variant="ghost"
         size="icon"
-        className="size-10 rounded-full hover:bg-foreground/20"
+        className={`size-10 rounded-full ${contrast.hoverBg}`}
         onClick={onClose}
         aria-label="Close"
       >
@@ -163,6 +165,7 @@ export const MobileLayout = memo(function MobileLayout({
   const isShortViewport = useIsShortViewport();
   const isWideViewport = useIsWideViewport();
   const isTouchPrimary = useIsTouchPrimary();
+  const contrast = useFullscreenContrast();
   const useWideCenteredPlayingLayout =
     fullscreenPlayerTab === "playing" && isWideViewport && !isShortViewport;
   const useShortCompactPlayingLayout =
@@ -177,6 +180,7 @@ export const MobileLayout = memo(function MobileLayout({
     <div
       className="flex flex-col h-full w-full"
       data-testid="fullscreen-mobile-layout"
+      style={contrast.style}
     >
       <MobileHeader
         onClose={closeFullscreenPlayerWithHistory}

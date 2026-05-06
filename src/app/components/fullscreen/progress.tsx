@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { ProgressSlider } from "@/app/components/ui/slider";
 import { useAudioSeeking } from "@/app/hooks/use-audio-seeking";
+import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
 import {
   usePlayerBufferedProgress,
   usePlayerDuration,
@@ -10,8 +11,6 @@ import {
   usePlayerRef,
 } from "@/store/player.store";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
-
-const STACKED_TIME_LABEL_CLASS = "tabular-nums text-foreground/50 text-xs";
 
 export function FullscreenProgress({
   thin = false,
@@ -26,6 +25,7 @@ export function FullscreenProgress({
   const currentDuration = usePlayerDuration();
   const isBuffering = usePlayerIsBuffering();
   const { t } = useTranslation();
+  const contrast = useFullscreenContrast();
 
   const audioRef = useMemo(
     () => ({ current: audioPlayerRef }),
@@ -64,6 +64,7 @@ export function FullscreenProgress({
     onTouchEnd: handleSeekedFallback,
     "data-vaul-no-drag": true,
     "aria-label": t("player.tooltips.progress"),
+    contrast,
   };
 
   if (stacked) {
@@ -71,8 +72,8 @@ export function FullscreenProgress({
       <div className="w-full">
         <ProgressSlider {...sliderProps} />
         <div className="flex justify-between mt-1">
-          <div className={STACKED_TIME_LABEL_CLASS}>{currentTime}</div>
-          <div className={STACKED_TIME_LABEL_CLASS}>{songDuration}</div>
+          <div className="tabular-nums text-foreground/50 text-xs">{currentTime}</div>
+          <div className="tabular-nums text-foreground/50 text-xs">{songDuration}</div>
         </div>
       </div>
     );

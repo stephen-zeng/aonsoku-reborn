@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
 import { LikeButton } from "@/app/components/fullscreen/like-button";
+import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
 import {
   usePlayerActions,
   usePlayerLoop,
@@ -29,6 +30,7 @@ export const QueueCurrentSong = memo(function QueueCurrentSong({
     (state) => state.songlist.currentSong,
     (a, b) => a?.id === b?.id,
   );
+  const { hoverBg10 } = useFullscreenContrast();
 
   if (!currentSong) return null;
 
@@ -64,7 +66,7 @@ export const QueueCurrentSong = memo(function QueueCurrentSong({
             <Button
               variant="ghost"
               size="icon"
-              className="shrink-0 size-8 rounded-full"
+              className={`shrink-0 size-8 rounded-full ${hoverBg10}`}
               onClick={(e) => e.stopPropagation()}
             >
               <EllipsisVertical className="w-4 h-4" />
@@ -84,8 +86,21 @@ export const QueueModeButtons = memo(function QueueModeButtons() {
   const loopState = usePlayerLoop();
   const { toggleShuffle, toggleLoop } = usePlayerActions();
   const { t } = useTranslation();
+  const { isBackdropDark } = useFullscreenContrast();
 
   const isRepeatActive = loopState !== LoopState.Off;
+
+  const activeBtn = clsx(
+    "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors",
+    isBackdropDark ? "bg-white/15 text-white" : "bg-foreground/15 text-foreground",
+  );
+
+  const inactiveBtn = clsx(
+    "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors",
+    isBackdropDark
+      ? "text-white/60 border border-white/30 hover:text-white hover:bg-white/10"
+      : "text-foreground/60 border border-foreground/30 hover:text-foreground hover:bg-foreground/10",
+  );
 
   return (
     <div className="flex items-center justify-center gap-2">
@@ -93,12 +108,7 @@ export const QueueModeButtons = memo(function QueueModeButtons() {
         type="button"
         onClick={toggleShuffle}
         aria-pressed={isShuffleActive}
-        className={clsx(
-          "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors",
-          isShuffleActive
-            ? "bg-foreground/15 text-foreground"
-            : "text-foreground/60 border border-foreground/30 hover:text-foreground hover:bg-foreground/10",
-        )}
+        className={isShuffleActive ? activeBtn : inactiveBtn}
       >
         <Shuffle className="w-3 h-3" />
         {isShuffleActive
@@ -109,12 +119,7 @@ export const QueueModeButtons = memo(function QueueModeButtons() {
         type="button"
         onClick={toggleLoop}
         aria-pressed={isRepeatActive}
-        className={clsx(
-          "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors",
-          isRepeatActive
-            ? "bg-foreground/15 text-foreground"
-            : "text-foreground/60 border border-foreground/30 hover:text-foreground hover:bg-foreground/10",
-        )}
+        className={isRepeatActive ? activeBtn : inactiveBtn}
       >
         {loopState === LoopState.One ? (
           <RepeatOne size={12} />

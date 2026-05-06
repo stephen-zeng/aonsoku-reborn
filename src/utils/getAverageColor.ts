@@ -54,8 +54,8 @@ export function hslToRgb(hsl: string) {
   const [h, s, l] = hsl.split(" ");
 
   const hue = parseInt(h);
-  let saturation = parseInt(s.replace("%", ""));
-  let lightness = parseInt(l.replace("%", ""));
+  let saturation = parseFloat(s.replace("%", ""));
+  let lightness = parseFloat(l.replace("%", ""));
 
   // Convert HSL to RGB
   saturation /= 100;
