@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { SearchIcon } from "lucide-react";
-import { KeyboardEvent, useCallback, useEffect, useState } from "react";
+import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import { useLocation, useParams } from "react-router-dom";
@@ -40,6 +40,8 @@ export default function CommandMenu() {
   const location = useLocation();
   const params = useParams();
   const isOnline = useIsOnline();
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [dialogStyle, setDialogStyle] = useState<React.CSSProperties>({});
 
   const [query, setQuery] = useState("");
   const [pages, setPages] = useState<CommandPages[]>(["HOME"]);
@@ -199,12 +201,28 @@ export default function CommandMenu() {
     enableQuery && !showAlbumGroup && !showArtistGroup && !showSongGroup,
   );
 
+  const handleOpen = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDialogStyle({
+        position: "fixed",
+        top: rect.top,
+        left: rect.left + rect.width / 2,
+        width: rect.width,
+        transform: "translateX(-50%)",
+        marginTop: 0,
+      });
+    }
+    setOpen(true);
+  }, [setOpen]);
+
   return (
     <>
       <Button
+        ref={buttonRef}
         variant="outline"
-        className="w-full px-2 gap-2 h-8 overflow-hidden md:relative hidden md:flex"
-        onClick={() => setOpen(true)}
+        className={`w-full px-2 gap-2 h-8 overflow-hidden md:relative hidden md:flex transition-opacity duration-200 ${open ? "opacity-0" : "opacity-100"}`}
+        onClick={handleOpen}
       >
         <SearchIcon className="h-5 w-5 text-muted-foreground" />
         <span className="inline-flex text-muted-foreground text-xs">
@@ -225,6 +243,7 @@ export default function CommandMenu() {
 
       <CommandDialog
         open={open}
+        style={dialogStyle}
         onOpenChange={(state) => {
           if (isHome) {
             setOpen(state);
