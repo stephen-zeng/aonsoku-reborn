@@ -2,9 +2,7 @@ import { ChevronLeft } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { SyncProgressBar } from "@/app/components/header/sync-progress-bar";
 import { UserDropdown } from "@/app/components/header/user-dropdown";
-import { OfflineIndicator } from "@/app/components/offline-indicator";
 import { Button } from "@/app/components/ui/button";
 import { cn } from "@/lib/utils";
 import { blendColors, hslToHex, isDarkHex } from "@/utils/getAverageColor";
@@ -20,13 +18,7 @@ interface MobilePageHeaderProps {
 }
 
 function DesktopHeaderStatusItems() {
-  return (
-    <>
-      <OfflineIndicator />
-      <SyncProgressBar />
-      <UserDropdown />
-    </>
-  );
+  return <UserDropdown />;
 }
 
 function MobileHeaderStatusItems() {

@@ -19,7 +19,11 @@ import { AboutDialog } from "@/app/components/about/dialog";
 import { RemoteControlDialog } from "@/app/components/remote-control/dialog";
 import { ShortcutsDialog } from "@/app/components/shortcuts/dialog";
 import { SyncPopoverContent } from "@/app/components/header/sync-progress-bar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/app/components/ui/avatar";
 import {
   Drawer,
   DrawerClose,
@@ -51,6 +55,7 @@ import {
 } from "@/shortcuts";
 import { useAppData, useAppStore, useAppSettings } from "@/store/app.store";
 import {
+  useCacheStore,
   useIsOnline,
   useLastSyncedAt,
   useLibraryCaching,
@@ -65,12 +70,11 @@ type SyncBadgeVariant = "offline" | "error" | "syncing" | "done" | null;
 function useSyncBadgeVariant(): SyncBadgeVariant {
   const isOnline = useIsOnline();
   const libraryCaching = useLibraryCaching();
-  const syncState = useSyncState();
+  const phase = useCacheStore((s) => s.status.syncState.phase);
+  const isSyncing = useCacheStore((s) => s.status.syncState.isSyncing);
 
   if (!isOnline) return "offline";
   if (!libraryCaching) return null;
-
-  const { phase, isSyncing } = syncState;
 
   if (phase === "error") return "error";
   if (isSyncing) return "syncing";
@@ -80,10 +84,21 @@ function useSyncBadgeVariant(): SyncBadgeVariant {
 }
 
 function SyncStatusBadge({ variant }: { variant: SyncBadgeVariant }) {
+  const { t } = useTranslation();
+
   if (!variant) return null;
+
+  const ariaLabels: Record<Exclude<SyncBadgeVariant, null>, string> = {
+    offline: t("offline.mode"),
+    error: t("settings.storage.sync.phases.error"),
+    syncing: t("settings.storage.sync.syncNow"),
+    done: t("settings.storage.sync.phases.done"),
+  };
 
   return (
     <span
+      role="status"
+      aria-label={ariaLabels[variant]}
       className={cn(
         "absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-background",
         variant === "offline" && "bg-red-500",
@@ -102,7 +117,7 @@ function SyncStatusBadge({ variant }: { variant: SyncBadgeVariant }) {
   );
 }
 
-function MobileSyncSection() {
+function SyncSection({ variant }: { variant: "mobile" | "desktop" }) {
   const isOnline = useIsOnline();
   const libraryCaching = useLibraryCaching();
   const syncState = useSyncState();
@@ -110,25 +125,52 @@ function MobileSyncSection() {
   const { t } = useTranslation();
 
   if (!isOnline) {
-    return (
-      <div className="px-4 py-3 border-t">
-        <div className="flex items-center gap-2 text-red-500">
-          <WifiOff className="h-4 w-4" />
-          <span className="text-xs font-medium">{t("offline.mode")}</span>
+    const content = (
+      <>
+        <WifiOff className="h-4 w-4" />
+        <span className="text-xs font-medium">{t("offline.mode")}</span>
+      </>
+    );
+    if (variant === "mobile") {
+      return (
+        <div className="px-4 py-3 border-t">
+          <div className="flex items-center gap-2 text-red-500">{content}</div>
+          <p className="text-[10px] text-muted-foreground mt-1">
+            {t("offline.disconnected")}
+          </p>
         </div>
-        <p className="text-[10px] text-muted-foreground mt-1">
-          {t("offline.disconnected")}
-        </p>
-      </div>
+      );
+    }
+    return (
+      <>
+        <div className="px-2 py-2">
+          <div className="flex items-center gap-2 text-red-500">{content}</div>
+          <p className="text-[10px] text-muted-foreground mt-0.5">
+            {t("offline.disconnected")}
+          </p>
+        </div>
+        <DropdownMenuSeparator />
+      </>
     );
   }
 
   if (!libraryCaching) return null;
 
+  if (variant === "mobile") {
+    return (
+      <div className="px-4 py-3 border-t">
+        <SyncPopoverContent syncState={syncState} lastSyncedAt={lastSyncedAt} />
+      </div>
+    );
+  }
+
   return (
-    <div className="px-4 py-3 border-t">
-      <SyncPopoverContent syncState={syncState} lastSyncedAt={lastSyncedAt} />
-    </div>
+    <>
+      <div className="px-2 py-2">
+        <SyncPopoverContent syncState={syncState} lastSyncedAt={lastSyncedAt} />
+      </div>
+      <DropdownMenuSeparator />
+    </>
   );
 }
 
@@ -213,7 +255,7 @@ export function UserDropdown() {
               </div>
             </DrawerHeader>
 
-            <MobileSyncSection />
+            <SyncSection variant="mobile" />
 
             <div className="flex flex-col px-4 pb-2">
               {!isServerRunning && (
@@ -245,9 +287,7 @@ export function UserDropdown() {
                   <span>{t("menu.about")}</span>
                 </button>
               </DrawerClose>
-              {swStatus === "waiting" && (
-                <div className="border-t my-1" />
-              )}
+              {swStatus === "waiting" && <div className="border-t my-1" />}
               {swStatus === "waiting" && (
                 <DrawerClose asChild>
                   <button
@@ -279,18 +319,17 @@ export function UserDropdown() {
       ) : (
         <DropdownMenu>
           <DropdownMenuTrigger className="user-dropdown-trigger">
-            <Avatar className="w-8 h-8 rounded-full cursor-pointer items-center justify-center">
-              <AvatarImage
-                src={avatarUrl ?? undefined}
-                alt={username}
-                className="w-6 h-6 rounded-full"
-              />
-              <AvatarFallback className="text-sm bg-transparent hover:bg-accent">
-                <User className="w-4 h-4" />
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative w-8 h-8 rounded-full">
+              <Avatar className="w-8 h-8 rounded-full cursor-pointer">
+                <AvatarImage src={avatarUrl ?? undefined} alt={username} />
+                <AvatarFallback className="text-sm bg-transparent hover:bg-accent">
+                  <User className="w-4 h-4" />
+                </AvatarFallback>
+              </Avatar>
+              <SyncStatusBadge variant={badgeVariant} />
+            </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align={alignPosition} className="min-w-64">
+          <DropdownMenuContent align={alignPosition} className="min-w-72">
             <DropdownMenuLabel className="font-normal">
               <div className="flex items-center justify-between">
                 <div className="flex flex-col space-y-2">
@@ -314,6 +353,7 @@ export function UserDropdown() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <SyncSection variant="desktop" />
             <DropdownMenuItem onClick={() => setShortcutsOpen(true)}>
               <Keyboard className="mr-2 h-4 w-4" />
               <span>{t("shortcuts.modal.title")}</span>
