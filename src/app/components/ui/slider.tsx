@@ -12,6 +12,12 @@ import {
 
 type Variant = "default" | "secondary";
 
+type FullscreenContrast = {
+  sliderTrackColor: string;
+  sliderRangeColor: string;
+  sliderThumbColor: string;
+} | null;
+
 type SliderProps = React.ComponentPropsWithoutRef<
   typeof SliderPrimitive.Root
 > & {
@@ -19,6 +25,7 @@ type SliderProps = React.ComponentPropsWithoutRef<
   tooltipValue?: string;
   isBuffering?: boolean;
   bufferedProgress?: number;
+  contrast?: FullscreenContrast;
 };
 
 const Slider = React.forwardRef<
@@ -32,6 +39,7 @@ const Slider = React.forwardRef<
       variant = "default",
       isBuffering = false,
       bufferedProgress = 0,
+      contrast,
       ...props
     },
     ref,
@@ -41,6 +49,30 @@ const Slider = React.forwardRef<
     };
 
     const [showTooltip, setShowTooltip] = React.useState(false);
+
+    const trackClass = clsx(
+      "relative h-1 w-full grow overflow-hidden rounded-full select-none",
+      !isBuffering && variant === "default" && "bg-secondary",
+      isBuffering && "buffer-track",
+      isBuffering && variant === "secondary" && "buffer-secondary",
+      !isBuffering && variant === "secondary" && (contrast?.sliderTrackColor ?? "bg-muted-foreground/70"),
+    );
+
+    const rangeClass = clsx(
+      "absolute h-full select-none rounded",
+      variant === "default" && "bg-primary",
+      variant === "secondary" && (contrast?.sliderRangeColor ?? "bg-secondary-foreground"),
+    );
+
+    const thumbClass = clsx(
+      "block opacity-0 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full",
+      "border-2 ring-offset-background transition-[background-color,opacity]",
+      "focus-visible:outline-none focus-visible:ring-transparent",
+      "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
+      showTooltip && "opacity-100",
+      variant === "default" && "bg-foreground border-foreground",
+      variant === "secondary" && (contrast?.sliderThumbColor ?? "bg-secondary-foreground border-secondary-foreground"),
+    );
 
     return (
       <SliderPrimitive.Root
@@ -55,13 +87,7 @@ const Slider = React.forwardRef<
         {...props}
       >
         <SliderPrimitive.Track
-          className={clsx(
-            "relative h-1 w-full grow overflow-hidden rounded-full select-none",
-            !isBuffering && variant === "default" && "bg-secondary",
-            isBuffering && "buffer-track",
-            isBuffering && variant === "secondary" && "buffer-secondary",
-            !isBuffering && variant === "secondary" && "bg-muted-foreground/70",
-          )}
+          className={trackClass}
           onContextMenu={handleContextMenu}
         >
           <BufferedProgressIndicator
@@ -69,11 +95,7 @@ const Slider = React.forwardRef<
             max={props.max ?? 100}
           />
           <SliderPrimitive.Range
-            className={clsx(
-              "absolute h-full select-none rounded",
-              variant === "default" && "bg-primary",
-              variant === "secondary" && "bg-secondary-foreground",
-            )}
+            className={rangeClass}
             onContextMenu={handleContextMenu}
           />
         </SliderPrimitive.Track>
@@ -85,16 +107,7 @@ const Slider = React.forwardRef<
           align="center"
         >
           <SliderPrimitive.Thumb
-            className={clsx(
-              "block opacity-0 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full",
-              "border-2 ring-offset-background transition-[background-color,opacity]",
-              "focus-visible:outline-none focus-visible:ring-transparent",
-              "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
-              showTooltip && "opacity-100",
-              variant === "default" && "bg-foreground border-foreground",
-              variant === "secondary" &&
-                "bg-secondary-foreground border-secondary-foreground",
-            )}
+            className={thumbClass}
             onKeyDown={(e) => e.preventDefault()}
           />
         </SliderTooltip>
@@ -190,6 +203,7 @@ type ProgressSliderProps = React.ComponentPropsWithoutRef<
   tooltipTransformer?: (value: number) => string;
   isBuffering?: boolean;
   bufferedProgress?: number;
+  contrast?: FullscreenContrast;
 };
 
 export function ProgressSlider(props: ProgressSliderProps) {
@@ -201,6 +215,7 @@ export function ProgressSlider(props: ProgressSliderProps) {
     isBuffering = false,
     bufferedProgress = 0,
     onValueChange,
+    contrast,
     ...rest
   } = props;
 
@@ -336,54 +351,53 @@ export function ProgressSlider(props: ProgressSliderProps) {
       onMouseMove={handleMouseMove}
       onValueChange={([value]) => handleValueChange(value)}
       {...rest}
-    >
-      <SliderTooltip
-        open={enableTooltip}
-        variant={variant}
-        value={formattedTooltipValue}
-        position={cursorPosition}
-        align="start"
-        sideOffset={8}
       >
-        <SliderPrimitive.Track
-          className={clsx(
-            "relative h-1 w-full grow overflow-hidden rounded-full select-none",
-            !isBuffering && variant === "default" && "bg-secondary",
-            isBuffering && "buffer-track",
-            isBuffering && variant === "secondary" && "buffer-secondary",
-            !isBuffering && variant === "secondary" && "bg-muted-foreground/70",
-          )}
-          onContextMenu={handleContextMenu}
+        <SliderTooltip
+          open={enableTooltip}
+          variant={variant}
+          value={formattedTooltipValue}
+          position={cursorPosition}
+          align="start"
+          sideOffset={8}
         >
-          <BufferedProgressIndicator
-            bufferedProgress={bufferedProgress}
-            max={maxValue}
-          />
-          <SliderPrimitive.Range
+          <SliderPrimitive.Track
             className={clsx(
-              "absolute h-full select-none transition-[border-radius]",
-              variant === "default" && "bg-primary",
-              variant === "secondary" && "bg-secondary-foreground",
-              showTooltip ? "rounded-none" : "rounded",
+              "relative h-1 w-full grow overflow-hidden rounded-full select-none",
+              !isBuffering && variant === "default" && "bg-secondary",
+              isBuffering && "buffer-track",
+              isBuffering && variant === "secondary" && "buffer-secondary",
+              !isBuffering && variant === "secondary" && (contrast?.sliderTrackColor ?? "bg-muted-foreground/70"),
             )}
             onContextMenu={handleContextMenu}
-          />
-        </SliderPrimitive.Track>
-      </SliderTooltip>
+          >
+            <BufferedProgressIndicator
+              bufferedProgress={bufferedProgress}
+              max={maxValue}
+            />
+            <SliderPrimitive.Range
+              className={clsx(
+                "absolute h-full select-none transition-[border-radius]",
+                variant === "default" && "bg-primary",
+                variant === "secondary" && (contrast?.sliderRangeColor ?? "bg-secondary-foreground"),
+                showTooltip ? "rounded-none" : "rounded",
+              )}
+              onContextMenu={handleContextMenu}
+            />
+          </SliderPrimitive.Track>
+        </SliderTooltip>
 
-      <SliderPrimitive.Thumb
-        className={clsx(
-          "block opacity-0 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full",
-          "border-2 transition-[background-color,opacity]",
-          "focus-visible:outline-none focus-visible:ring-transparent",
-          "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
-          showTooltip && "opacity-100",
-          variant === "default" && "bg-foreground border-foreground",
-          variant === "secondary" &&
-            "bg-secondary-foreground border-secondary-foreground",
-        )}
-        onKeyDown={(e) => e.preventDefault()}
-      />
+        <SliderPrimitive.Thumb
+          className={clsx(
+            "block opacity-0 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full",
+            "border-2 transition-[background-color,opacity]",
+            "focus-visible:outline-none focus-visible:ring-transparent",
+            "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
+            showTooltip && "opacity-100",
+            variant === "default" && "bg-foreground border-foreground",
+            variant === "secondary" && (contrast?.sliderThumbColor ?? "bg-secondary-foreground border-secondary-foreground"),
+          )}
+          onKeyDown={(e) => e.preventDefault()}
+        />
     </SliderPrimitive.Root>
   );
 }

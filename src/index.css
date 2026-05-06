@@ -309,6 +309,15 @@ img {
   @apply after:content-['•'] after:block after:absolute after:-bottom-1 after:text-primary;
 }
 
+.fullscreen-button-active {
+  @apply after:content-['•'] after:block after:absolute after:-bottom-1;
+  color: var(--fullscreen-active-color, hsl(var(--primary)));
+}
+
+.fullscreen-button-active::after {
+  color: var(--fullscreen-active-color, hsl(var(--primary)));
+}
+
 .mini-player-button-active {
   @apply after:content-['•'] after:block after:absolute after:-bottom-1.5 after:text-secondary-foreground !text-secondary-foreground;
 }

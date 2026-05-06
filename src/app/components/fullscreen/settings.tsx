@@ -9,6 +9,7 @@ import {
 } from "@/app/components/ui/popover";
 import { Separator } from "@/app/components/ui/separator";
 import { Slider } from "@/app/components/ui/slider";
+import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
 import { cn } from "@/lib/utils";
 import { useSongColor } from "@/store/player.store";
 
@@ -26,6 +27,7 @@ interface PopoverProps {
 
 function DynamicSettingsPopover({ children }: PopoverProps) {
   const { t } = useTranslation();
+  const { hoverBg } = useFullscreenContrast();
 
   return (
     <Popover>
@@ -33,7 +35,7 @@ function DynamicSettingsPopover({ children }: PopoverProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="size-10 rounded-full hover:bg-foreground/20 data-[state=open]:bg-foreground/20"
+          className={`size-10 rounded-full ${hoverBg}`}
           aria-label={t("settings.label")}
         >
           <SlidersHorizontal className="size-4" strokeWidth={2.5} />
