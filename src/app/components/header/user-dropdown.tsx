@@ -320,8 +320,12 @@ export function UserDropdown() {
         <DropdownMenu>
           <DropdownMenuTrigger className="user-dropdown-trigger">
             <div className="relative w-8 h-8 rounded-full">
-              <Avatar className="w-8 h-8 rounded-full cursor-pointer">
-                <AvatarImage src={avatarUrl ?? undefined} alt={username} />
+              <Avatar className="w-8 h-8 rounded-full cursor-pointer items-center justify-center">
+                <AvatarImage
+                  src={avatarUrl ?? undefined}
+                  alt={username}
+                  className="w-6 h-6 rounded-full"
+                />
                 <AvatarFallback className="text-sm bg-transparent hover:bg-accent">
                   <User className="w-4 h-4" />
                 </AvatarFallback>
