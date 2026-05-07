@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { SearchIcon } from "lucide-react";
-import { KeyboardEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import { useLocation, useParams } from "react-router-dom";
@@ -43,7 +43,7 @@ export default function CommandMenu() {
   const params = useParams();
   const isOnline = useIsOnline();
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const dialogRef = useRef<HTMLDivElement>(null);
+  const [dialogStyle, setDialogStyle] = useState<React.CSSProperties>({});
 
   const [query, setQuery] = useState("");
   const [pages, setPages] = useState<CommandPages[]>(["HOME"]);
@@ -196,29 +196,19 @@ export default function CommandMenu() {
   }, [activePage, t]);
 
   const handleOpen = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDialogStyle({
+        position: "fixed",
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+        transform: "none",
+        marginTop: 0,
+      });
+    }
     setOpen(true);
   }, [setOpen]);
-
-  useLayoutEffect(() => {
-    if (!open) return;
-
-    const updatePosition = () => {
-      if (buttonRef.current && dialogRef.current) {
-        const rect = buttonRef.current.getBoundingClientRect();
-        const el = dialogRef.current;
-        el.style.setProperty("position", "fixed", "important");
-        el.style.setProperty("top", `${rect.top}px`, "important");
-        el.style.setProperty("left", `${rect.left}px`, "important");
-        el.style.setProperty("width", `${rect.width}px`, "important");
-        el.style.setProperty("transform", "none", "important");
-        el.style.setProperty("margin-top", "0", "important");
-      }
-    };
-
-    updatePosition();
-    window.addEventListener("resize", updatePosition);
-    return () => window.removeEventListener("resize", updatePosition);
-  }, [open]);
 
   const handleClose = useCallback((state: boolean) => {
     if (isHome) {
@@ -274,7 +264,7 @@ export default function CommandMenu() {
 
       <CommandDialog
         open={open}
-        ref={dialogRef}
+        style={dialogStyle}
         onOpenChange={handleClose}
       >
         <Command shouldFilter={activePage === "PLAYLISTS"} id="main-command">
