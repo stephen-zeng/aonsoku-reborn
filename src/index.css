@@ -518,6 +518,12 @@ svg#bars .eq-bar--4 {
   mix-blend-mode: normal;
 }
 
+/* Disable all animations when seeking */
+.lrc-box[data-seeking="true"] .amll-lyric-player * {
+  transition: none !important;
+  animation: none !important;
+}
+
 .default-gradient {
   @apply bg-gradient-to-b from-background/10 to-background/40;
 }
