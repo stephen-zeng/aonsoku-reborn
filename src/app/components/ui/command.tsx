@@ -30,7 +30,7 @@ const CommandDialog = ({ children, style, ...props }: CommandDialogProps) => {
     <Dialog {...props}>
       <DialogTitle className="sr-only">Search Dialog</DialogTitle>
       <DialogContent
-        className="overflow-hidden p-0 shadow-lg bg-transparent"
+        className="overflow-hidden p-0 shadow-lg bg-transparent translate-x-0 translate-y-0"
         style={style}
         aria-describedby={undefined}
       >
@@ -46,7 +46,7 @@ const CommandInput = React.forwardRef<
 >(({ className, ...props }, ref) => (
     // eslint-disable-next-line react/no-unknown-property
     <div className="flex items-center border-b px-3 h-8 overflow-hidden" cmdk-input-wrapper="">
-      <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+      <Search className="mr-2 h-[18px] w-[18px] shrink-0 opacity-50" />
       <CommandPrimitive.Input
         ref={ref}
         className={cn(
