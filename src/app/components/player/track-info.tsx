@@ -15,8 +15,7 @@ import { Link, type LinkProps } from "react-router-dom";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { MarqueeTitle } from "@/app/components/fullscreen/marquee-title";
 import FullscreenMode from "@/app/components/fullscreen/page";
-import { Button } from "@/app/components/ui/button";
-import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
+
 import { useHasHover } from "@/app/hooks/use-input-mode";
 import { useIsMobile } from "@/app/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -181,18 +180,13 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
             if (open) openFullscreenPlayerWithHistory("playing");
           }}
         >
-          <Button
-            variant="secondary"
-            size="icon"
-            className="hidden md:block cursor-pointer w-8 h-8 shadow-md rounded-full opacity-0 md:group-hover:opacity-100 transition-opacity ease-in-out absolute top-1 right-1 focus-visible:opacity-100"
+          <div
+            className="hidden md:flex absolute inset-0 items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors cursor-pointer rounded"
+            tabIndex={-1}
             data-testid="track-fullscreen-button"
           >
-            <SimpleTooltip text={t("fullscreen.switchButton")} align="start">
-              <div className="w-full h-full flex items-center justify-center">
-                <Maximize2 className="w-4 h-4" />
-              </div>
-            </SimpleTooltip>
-          </Button>
+            <Maximize2 className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
         </FullscreenMode>
       </div>
       <div className="flex flex-col justify-center w-full overflow-hidden ml-1">
