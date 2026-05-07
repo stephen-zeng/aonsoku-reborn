@@ -69,6 +69,7 @@ export interface IPlayerState {
   hasNext: boolean;
   isBuffering: boolean;
   areLyricsAligned: boolean;
+  seekToStart: boolean;
 }
 
 export interface IPlayerProgress {

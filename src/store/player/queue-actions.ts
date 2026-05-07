@@ -633,12 +633,8 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerProgress.progress = 0;
           state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
+          state.playerState.seekToStart = true;
         });
-        const audioRef = get().playerState.audioPlayerRef;
-        if (audioRef) {
-          audioRef.currentTime = 0;
-          audioRef.play().catch(() => {});
-        }
         return;
       }
 
@@ -799,12 +795,8 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerProgress.progress = 0;
           state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
+          state.playerState.seekToStart = true;
         });
-        const audioRef = get().playerState.audioPlayerRef;
-        if (audioRef) {
-          audioRef.currentTime = 0;
-          audioRef.play().catch(() => {});
-        }
       } else {
         set((state) => {
           state.playerProgress.progress = 0;
