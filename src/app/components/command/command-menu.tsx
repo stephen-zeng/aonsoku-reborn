@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { SearchIcon } from "lucide-react";
-import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
+import { KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import { useLocation, useParams } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
 import { Keyboard } from "@/app/components/command/keyboard-key";
 import { Button } from "@/app/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Command,
   CommandDialog,
@@ -36,12 +37,13 @@ export type CommandItemProps = {
 
 export default function CommandMenu() {
   const { t } = useTranslation();
-  const { open, setOpen } = useAppStore((state) => state.command);
+  const open = useAppStore((state) => state.command.open);
+  const setOpen = useAppStore((state) => state.command.setOpen);
   const location = useLocation();
   const params = useParams();
   const isOnline = useIsOnline();
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const [dialogStyle, setDialogStyle] = useState<React.CSSProperties>({});
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const [query, setQuery] = useState("");
   const [pages, setPages] = useState<CommandPages[]>(["HOME"]);
@@ -147,15 +149,9 @@ export default function CommandMenu() {
   const showArtistGroup = Boolean(query && artists.length > 0);
   const showSongGroup = Boolean(query && songs.length > 0);
 
-  useHotkeys(["/", "mod+f", "mod+k"], () => {
-    if (!open) {
-      handleOpen();
-    } else {
-      setOpen(false);
-    }
-  }, {
-    preventDefault: true,
-  });
+  const showNotFoundMessage = Boolean(
+    enableQuery && !showAlbumGroup && !showArtistGroup && !showSongGroup,
+  );
 
   const clear = useCallback(() => {
     setQuery("");
@@ -181,53 +177,70 @@ export default function CommandMenu() {
     }
   }
 
-  function handleSearchChange(value: string) {
+  const handleSearchChange = useCallback((value: string) => {
     if (activePage === "PLAYLISTS") {
       setQuery(value);
     } else {
       debounced(value);
     }
-  }
+  }, [activePage, debounced]);
 
   const removeLastPage = useCallback(() => {
-    setPages((pages) => {
-      const tempPages = [...pages];
-      tempPages.splice(-1, 1);
-      return tempPages;
-    });
+    setPages((pages) => pages.slice(0, -1));
   }, []);
 
-  const inputPlaceholder = () => {
+  const inputPlaceholder = useMemo(() => {
     if (activePage === "PLAYLISTS") return t("options.playlist.search");
 
     return t("command.inputPlaceholder");
-  };
-
-  const showNotFoundMessage = Boolean(
-    enableQuery && !showAlbumGroup && !showArtistGroup && !showSongGroup,
-  );
+  }, [activePage, t]);
 
   const handleOpen = useCallback(() => {
-    if (buttonRef.current) {
+    if (buttonRef.current && dialogRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      setDialogStyle({
-        position: "fixed",
-        top: rect.top,
-        left: rect.left,
-        width: rect.width,
-        transform: "none",
-        marginTop: 0,
-      });
+      const el = dialogRef.current;
+      el.style.position = "fixed";
+      el.style.top = `${rect.top}px`;
+      el.style.left = `${rect.left}px`;
+      el.style.width = `${rect.width}px`;
+      el.style.transform = "none";
+      el.style.marginTop = "0";
     }
     setOpen(true);
   }, [setOpen]);
+
+  const handleClose = useCallback((state: boolean) => {
+    if (isHome) {
+      setOpen(state);
+      clear();
+    } else {
+      removeLastPage();
+    }
+  }, [isHome, setOpen, clear, removeLastPage]);
+
+  const handleMobileOpen = useCallback(() => {
+    setOpen(true);
+  }, [setOpen]);
+
+  useHotkeys(["/", "mod+f", "mod+k"], () => {
+    if (!open) {
+      handleOpen();
+    } else {
+      setOpen(false);
+    }
+  }, {
+    preventDefault: true,
+  }, [open, handleOpen, setOpen]);
 
   return (
     <>
       <Button
         ref={buttonRef}
         variant="outline"
-        className={`w-full px-2 gap-2 h-8 py-0 overflow-hidden md:relative hidden md:flex transition-opacity duration-200 ${open ? "opacity-0" : "opacity-100"}`}
+        className={cn(
+          "w-full px-2 gap-2 h-8 py-0 overflow-hidden md:relative hidden md:flex transition-opacity duration-200",
+          open && "opacity-0",
+        )}
         onClick={handleOpen}
       >
         <SearchIcon className="h-5 w-5 text-muted-foreground" />
@@ -242,41 +255,35 @@ export default function CommandMenu() {
       <Button
         variant="outline"
         className="w-full h-fit flex flex-col justify-center items-center gap-1 md:hidden"
-        onClick={() => setOpen(true)}
+        aria-label={t("command.search")}
+        onClick={handleMobileOpen}
       >
         <SearchIcon className="w-4 h-4" />
       </Button>
 
       <CommandDialog
         open={open}
-        style={dialogStyle}
-        onOpenChange={(state) => {
-          if (isHome) {
-            setOpen(state);
-            clear();
-          } else {
-            removeLastPage();
-          }
-        }}
+        ref={dialogRef}
+        onOpenChange={handleClose}
       >
         <Command shouldFilter={activePage === "PLAYLISTS"} id="main-command">
           <CommandInput
             data-testid="command-menu-input"
-            placeholder={inputPlaceholder()}
+            placeholder={inputPlaceholder}
             autoCorrect="false"
             autoCapitalize="false"
             spellCheck="false"
-            onValueChange={(value) => handleSearchChange(value)}
+            onValueChange={handleSearchChange}
             onKeyDown={handleInputKeyDown}
           />
           <ScrollArea className="max-h-[500px] 2xl:max-h-[700px]">
             <CommandList className="max-h-fit pr-1">
-              <CommandEmpty>{t("command.noResults")}</CommandEmpty>
-
-              {showNotFoundMessage && (
+              {showNotFoundMessage ? (
                 <div className="flex justify-center items-center p-4 mt-2 mx-2 bg-accent/40 rounded border border-border">
                   <p className="text-sm">{t("command.noResults")}</p>
                 </div>
+              ) : (
+                <CommandEmpty>{t("command.noResults")}</CommandEmpty>
               )}
 
               {showAlbumGroup && (

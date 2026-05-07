@@ -25,27 +25,30 @@ interface CommandDialogProps extends DialogProps {
   style?: React.CSSProperties;
 }
 
-const CommandDialog = ({ children, style, ...props }: CommandDialogProps) => {
+const CommandDialog = React.forwardRef<
+  HTMLDivElement,
+  CommandDialogProps
+>(({ children, style, ...props }, ref) => {
   return (
     <Dialog {...props}>
       <DialogTitle className="sr-only">Search Dialog</DialogTitle>
       <DialogContent
+        ref={ref}
         className="overflow-hidden p-0 shadow-lg bg-transparent translate-x-0 translate-y-0"
         style={style}
-        aria-describedby={undefined}
       >
         {children}
       </DialogContent>
     </Dialog>
   );
-};
+});
+CommandDialog.displayName = "CommandDialog";
 
 const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-    // eslint-disable-next-line react/no-unknown-property
-    <div className="flex items-center border-b px-3 h-8 overflow-hidden" cmdk-input-wrapper="">
+    <div className="flex items-center border-b px-3 h-8 overflow-hidden" data-cmdk-input-wrapper="">
       <Search className="mr-2 h-[18px] w-[18px] shrink-0 opacity-50" />
       <CommandPrimitive.Input
         ref={ref}
