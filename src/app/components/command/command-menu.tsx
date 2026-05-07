@@ -213,9 +213,9 @@ export default function CommandMenu() {
       setDialogStyle({
         position: "fixed",
         top: rect.top,
-        left: rect.left + rect.width / 2,
+        left: rect.left,
         width: rect.width,
-        transform: "translateX(-50%)",
+        transform: "none",
         marginTop: 0,
       });
     }

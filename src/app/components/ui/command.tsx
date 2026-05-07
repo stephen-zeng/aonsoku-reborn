@@ -30,7 +30,7 @@ const CommandDialog = ({ children, style, ...props }: CommandDialogProps) => {
     <Dialog {...props}>
       <DialogTitle className="sr-only">Search Dialog</DialogTitle>
       <DialogContent
-        className="overflow-hidden p-0 shadow-lg bg-transparent data-[state=open]:!slide-in-from-top-4 data-[state=closed]:!slide-out-to-top-4 data-[state=open]:!slide-in-from-left-0 data-[state=closed]:!slide-out-to-left-0"
+        className="overflow-hidden p-0 shadow-lg bg-transparent"
         style={style}
         aria-describedby={undefined}
       >
