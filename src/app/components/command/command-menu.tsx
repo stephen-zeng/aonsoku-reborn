@@ -213,7 +213,8 @@ export default function CommandMenu() {
       setDialogStyle({
         position: "fixed",
         top: rect.top,
-        left: "50%",
+        left: rect.left + rect.width / 2,
+        width: rect.width,
         transform: "translateX(-50%)",
         marginTop: 0,
       });
