@@ -294,6 +294,13 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
   const touchTapStateRef = useRef<TouchTapState | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isSeekingState, setIsSeekingState] = useState(false);
+  const isScrubbingRef = useRef(isScrubbing);
+  const scrubbingProgressRef = useRef(scrubbingProgress);
+
+  useEffect(() => {
+    isScrubbingRef.current = isScrubbing;
+    scrubbingProgressRef.current = scrubbingProgress;
+  }, [isScrubbing, scrubbingProgress]);
 
   const clearTouchScrollBlurTimer = useCallback(() => {
     clearTimeout(touchScrollBlurTimerRef.current);
@@ -455,8 +462,8 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
     if (!playerRef) return;
 
     const updateTime = () => {
-      if (isScrubbing) {
-        const timeMs = Math.floor(scrubbingProgress * 1000);
+      if (isScrubbingRef.current) {
+        const timeMs = Math.floor(scrubbingProgressRef.current * 1000);
         if (currentTimeRef.current !== timeMs) {
           currentTimeRef.current = timeMs;
           setCurrentTime(timeMs);
@@ -495,7 +502,7 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
       clearTimeout(seekingTimerRef.current);
       clearTouchScrollBlurTimer();
     };
-  }, [clearTouchScrollBlurTimer, playerRef, isScrubbing, scrubbingProgress]);
+  }, [clearTouchScrollBlurTimer, playerRef]);
 
   return (
     <div

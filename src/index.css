@@ -526,7 +526,8 @@ svg#bars .eq-bar--4 {
 
 /* Smooth but non-bouncy scrolling during scrubbing */
 .lrc-box[data-scrubbing="true"] .amll-lyric-player * {
-  transition: transform 0.15s ease-out, opacity 0.15s linear !important;
+  /* Only smooth the scroll (transform), make highlighting (color/opacity) instant */
+  transition: transform 0.1s ease-out !important;
   animation: none !important;
 }
 
