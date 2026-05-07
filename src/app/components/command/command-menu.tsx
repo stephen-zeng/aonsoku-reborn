@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { SearchIcon } from "lucide-react";
-import { KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import { useLocation, useParams } from "react-router-dom";
@@ -189,11 +189,11 @@ export default function CommandMenu() {
     setPages((pages) => pages.slice(0, -1));
   }, []);
 
-  const inputPlaceholder = useMemo(() => {
+  const inputPlaceholder = () => {
     if (activePage === "PLAYLISTS") return t("options.playlist.search");
 
     return t("command.inputPlaceholder");
-  }, [activePage, t]);
+  };
 
   const handleOpen = useCallback(() => {
     if (buttonRef.current) {
@@ -210,6 +210,30 @@ export default function CommandMenu() {
     setOpen(true);
   }, [setOpen]);
 
+  useEffect(() => {
+    if (!open) {
+      setDialogStyle({});
+      return;
+    }
+
+    const handleResize = () => {
+      if (buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setDialogStyle({
+          position: "fixed",
+          top: rect.top,
+          left: rect.left,
+          width: rect.width,
+          transform: "none",
+          marginTop: 0,
+        });
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [open]);
+
   const handleClose = useCallback((state: boolean) => {
     if (isHome) {
       setOpen(state);
@@ -218,10 +242,6 @@ export default function CommandMenu() {
       removeLastPage();
     }
   }, [isHome, setOpen, clear, removeLastPage]);
-
-  const handleMobileOpen = useCallback(() => {
-    setOpen(true);
-  }, [setOpen]);
 
   useHotkeys(["/", "mod+f", "mod+k"], () => {
     if (!open) {
@@ -240,7 +260,7 @@ export default function CommandMenu() {
         variant="outline"
         className={cn(
           "w-full px-2 gap-2 h-8 py-0 overflow-hidden md:relative hidden md:flex transition-opacity duration-200",
-          open && "opacity-0",
+          open && "opacity-0 pointer-events-none",
         )}
         onClick={handleOpen}
       >
@@ -257,7 +277,7 @@ export default function CommandMenu() {
         variant="outline"
         className="w-full h-fit flex flex-col justify-center items-center gap-1 md:hidden"
         aria-label={t("command.search")}
-        onClick={handleMobileOpen}
+        onClick={() => setOpen(true)}
       >
         <SearchIcon className="w-4 h-4" />
       </Button>
