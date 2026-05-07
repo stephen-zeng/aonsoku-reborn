@@ -289,6 +289,7 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
   } | null>(null);
   const touchTapStateRef = useRef<TouchTapState | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isSeekingState, setIsSeekingState] = useState(false);
 
   const clearTouchScrollBlurTimer = useCallback(() => {
     clearTimeout(touchScrollBlurTimerRef.current);
@@ -353,12 +354,12 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
       const player = getInternalLyricPlayer(lyricPlayerRef);
       if (player) {
         player.resetScroll();
-        player.setIsSeeking(true);
-        clearTimeout(seekingTimerRef.current);
-        seekingTimerRef.current = setTimeout(() => {
-          player.setIsSeeking(false);
-        }, 100);
       }
+      setIsSeekingState(true);
+      clearTimeout(seekingTimerRef.current);
+      seekingTimerRef.current = setTimeout(() => {
+        setIsSeekingState(false);
+      }, 200);
 
       setCurrentTime(lyricLine.startTime);
       currentTimeRef.current = lyricLine.startTime;
@@ -453,16 +454,16 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
       const timeMs = Math.floor((playerRef.currentTime || 0) * 1000);
       if (currentTimeRef.current !== timeMs) {
         const delta = timeMs - currentTimeRef.current;
-        if (Math.abs(delta) > 2000) {
+        if (Math.abs(delta) > 500) {
           const player = getInternalLyricPlayer(lyricPlayerRef);
           if (player) {
             player.resetScroll();
-            player.setIsSeeking(true);
-            clearTimeout(seekingTimerRef.current);
-            seekingTimerRef.current = setTimeout(() => {
-              player.setIsSeeking(false);
-            }, 100);
           }
+          setIsSeekingState(true);
+          clearTimeout(seekingTimerRef.current);
+          seekingTimerRef.current = setTimeout(() => {
+            setIsSeekingState(false);
+          }, 200);
         }
         currentTimeRef.current = timeMs;
         setCurrentTime(timeMs);
@@ -509,7 +510,7 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
           currentTime={currentTime}
           alignAnchor="left"
           enableBlur={!isTouchScrolling}
-          enableSpring={true}
+          enableSpring={!isSeekingState}
           onLyricLineClick={(line) => {
             if (line.lineIndex !== undefined) {
               seekToLyricLine(line.lineIndex);
