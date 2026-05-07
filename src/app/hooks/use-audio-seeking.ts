@@ -10,7 +10,8 @@ interface UseAudioSeekingOptions {
 }
 
 export function useAudioSeeking({ audioRef }: UseAudioSeekingOptions) {
-  const { setProgress } = usePlayerActions();
+  const { setProgress, setIsScrubbing, setScrubbingProgress } =
+    usePlayerActions();
   const isRemoteControlActive = useIsRemoteControlActive();
   const [localProgress, setLocalProgress] = useState(0);
   const [isLocalSeeking, setIsLocalSeeking] = useState(false);
@@ -27,28 +28,35 @@ export function useAudioSeeking({ audioRef }: UseAudioSeekingOptions) {
     [audioRef, isRemoteControlActive],
   );
 
-  const handleSeeking = useCallback((amount: number) => {
-    setIsLocalSeeking(true);
-    setLocalProgress(amount);
-  }, []);
+  const handleSeeking = useCallback(
+    (amount: number) => {
+      setIsLocalSeeking(true);
+      setLocalProgress(amount);
+      setIsScrubbing(true);
+      setScrubbingProgress(amount);
+    },
+    [setIsScrubbing, setScrubbingProgress],
+  );
 
   const handleSeeked = useCallback(
     (amount: number) => {
       logger.debug("Seek completed:", amount);
       setIsLocalSeeking(false);
+      setIsScrubbing(false);
       if (!isRemoteControlActive) {
         updateAudioCurrentTime(amount);
       }
       setProgress(amount);
       setLocalProgress(amount);
     },
-    [isRemoteControlActive, setProgress, updateAudioCurrentTime],
+    [isRemoteControlActive, setProgress, setIsScrubbing, updateAudioCurrentTime],
   );
 
   const handleSeekedFallback = useCallback(() => {
     if (isLocalSeeking) {
       logger.debug("Seek fallback triggered:", localProgress);
       setIsLocalSeeking(false);
+      setIsScrubbing(false);
       if (!isRemoteControlActive) {
         updateAudioCurrentTime(localProgress);
       }
@@ -59,6 +67,7 @@ export function useAudioSeeking({ audioRef }: UseAudioSeekingOptions) {
     isRemoteControlActive,
     localProgress,
     setProgress,
+    setIsScrubbing,
     updateAudioCurrentTime,
   ]);
 

@@ -61,6 +61,18 @@ export function createPlaybackActions(shared: SharedDeps) {
       });
     },
 
+    setIsScrubbing: (value: boolean) => {
+      set((state) => {
+        state.playerProgress.isScrubbing = value;
+      });
+    },
+
+    setScrubbingProgress: (value: number) => {
+      set((state) => {
+        state.playerProgress.scrubbingProgress = value;
+      });
+    },
+
     setVolume: (volume: number) => {
       if (isIOS()) return;
       remoteSend(LanControlMessageType.SET_VOLUME, {

@@ -26,7 +26,12 @@ export const initialPlayerState: IPlayerState = {
 
 export const initialSonglist = initSonglistState();
 
-export const initialPlayerProgress = { progress: 0, bufferedProgress: 0 };
+export const initialPlayerProgress = {
+  progress: 0,
+  bufferedProgress: 0,
+  isScrubbing: false,
+  scrubbingProgress: 0,
+};
 
 type SetFn = (fn: (state: Draft<IPlayerContext>) => void) => void;
 

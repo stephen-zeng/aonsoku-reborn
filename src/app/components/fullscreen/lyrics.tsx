@@ -24,7 +24,9 @@ import {
   useLyricsSettings,
   usePlayerActions,
   usePlayerIsPlaying,
+  usePlayerIsScrubbing,
   usePlayerRef,
+  usePlayerScrubbingProgress,
   usePlayerSonglist,
 } from "@/store/player.store";
 import type { IStructuredLyric } from "@/types/responses/song";
@@ -274,6 +276,8 @@ interface SyncedLyricsProps {
 function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
   const playerRef = usePlayerRef();
   const isPlaying = usePlayerIsPlaying();
+  const isScrubbing = usePlayerIsScrubbing();
+  const scrubbingProgress = usePlayerScrubbingProgress();
   const { setAreLyricsAligned } = usePlayerActions();
   const [currentTime, setCurrentTime] = useState(0);
   const currentTimeRef = useRef(0);
@@ -451,6 +455,16 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
     if (!playerRef) return;
 
     const updateTime = () => {
+      if (isScrubbing) {
+        const timeMs = Math.floor(scrubbingProgress * 1000);
+        if (currentTimeRef.current !== timeMs) {
+          currentTimeRef.current = timeMs;
+          setCurrentTime(timeMs);
+        }
+        animationFrameRef.current = requestAnimationFrame(updateTime);
+        return;
+      }
+
       const timeMs = Math.floor((playerRef.currentTime || 0) * 1000);
       if (currentTimeRef.current !== timeMs) {
         const delta = timeMs - currentTimeRef.current;
@@ -481,7 +495,7 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
       clearTimeout(seekingTimerRef.current);
       clearTouchScrollBlurTimer();
     };
-  }, [clearTouchScrollBlurTimer, playerRef]);
+  }, [clearTouchScrollBlurTimer, playerRef, isScrubbing, scrubbingProgress]);
 
   return (
     <div
