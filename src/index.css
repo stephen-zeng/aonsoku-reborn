@@ -524,6 +524,12 @@ svg#bars .eq-bar--4 {
   animation: none !important;
 }
 
+/* Smooth but non-bouncy scrolling during scrubbing */
+.lrc-box[data-scrubbing="true"] .amll-lyric-player * {
+  transition: transform 0.15s ease-out, opacity 0.15s linear !important;
+  animation: none !important;
+}
+
 .default-gradient {
   @apply bg-gradient-to-b from-background/10 to-background/40;
 }

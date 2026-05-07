@@ -502,7 +502,8 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
       ref={containerRef}
       className="w-full h-full text-left lrc-box"
       data-vaul-no-drag
-      data-seeking={isSeekingState || isScrubbing}
+      data-seeking={isSeekingState}
+      data-scrubbing={isScrubbing}
       onClick={(e) => e.stopPropagation()}
       onWheel={handleWheel}
       onTouchStart={handleTouchStart}
