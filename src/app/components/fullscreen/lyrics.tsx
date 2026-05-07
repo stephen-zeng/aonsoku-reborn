@@ -26,8 +26,8 @@ import {
   usePlayerIsPlaying,
   usePlayerIsScrubbing,
   usePlayerRef,
-  usePlayerScrubbingProgress,
   usePlayerSonglist,
+  usePlayerStore,
 } from "@/store/player.store";
 import type { IStructuredLyric } from "@/types/responses/song";
 import { logger } from "@/utils/logger";
@@ -277,7 +277,6 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
   const playerRef = usePlayerRef();
   const isPlaying = usePlayerIsPlaying();
   const isScrubbing = usePlayerIsScrubbing();
-  const scrubbingProgress = usePlayerScrubbingProgress();
   const { setAreLyricsAligned } = usePlayerActions();
   const [currentTime, setCurrentTime] = useState(0);
   const currentTimeRef = useRef(0);
@@ -295,12 +294,22 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isSeekingState, setIsSeekingState] = useState(false);
   const isScrubbingRef = useRef(isScrubbing);
-  const scrubbingProgressRef = useRef(scrubbingProgress);
+  const scrubbingProgressRef = useRef(
+    usePlayerStore.getState().playerProgress.scrubbingProgress,
+  );
 
   useEffect(() => {
     isScrubbingRef.current = isScrubbing;
-    scrubbingProgressRef.current = scrubbingProgress;
-  }, [isScrubbing, scrubbingProgress]);
+  }, [isScrubbing]);
+
+  useEffect(() => {
+    return usePlayerStore.subscribe(
+      (state) => state.playerProgress.scrubbingProgress,
+      (progress) => {
+        scrubbingProgressRef.current = progress;
+      },
+    );
+  }, []);
 
   const clearTouchScrollBlurTimer = useCallback(() => {
     clearTimeout(touchScrollBlurTimerRef.current);

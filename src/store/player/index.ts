@@ -617,9 +617,6 @@ export const usePlayerBufferedProgress = () =>
 export const usePlayerIsScrubbing = () =>
   usePlayerStore((state) => state.playerProgress.isScrubbing);
 
-export const usePlayerScrubbingProgress = () =>
-  usePlayerStore((state) => state.playerProgress.scrubbingProgress);
-
 export const usePlayerVolume = () =>
   usePlayerStore(
     (state) => ({

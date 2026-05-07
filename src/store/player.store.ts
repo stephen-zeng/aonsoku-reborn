@@ -7,7 +7,6 @@ export {
   usePlayerProgress,
   usePlayerBufferedProgress,
   usePlayerIsScrubbing,
-  usePlayerScrubbingProgress,
   usePlayerVolume,
   useVolumeSettings,
   useReplayGainState,

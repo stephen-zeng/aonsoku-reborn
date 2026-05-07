@@ -62,12 +62,14 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     setIsScrubbing: (value: boolean) => {
+      if (get().playerProgress.isScrubbing === value) return;
       set((state) => {
         state.playerProgress.isScrubbing = value;
       });
     },
 
     setScrubbingProgress: (value: number) => {
+      if (get().playerProgress.scrubbingProgress === value) return;
       set((state) => {
         state.playerProgress.scrubbingProgress = value;
       });
