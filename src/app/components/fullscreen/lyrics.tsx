@@ -525,7 +525,7 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
           currentTime={currentTime}
           alignAnchor="left"
           enableBlur={!isTouchScrolling}
-          enableSpring={!isSeekingState}
+          enableSpring={!isSeekingState && !isScrubbing}
           onLyricLineClick={(line) => {
             if (line.lineIndex !== undefined) {
               seekToLyricLine(line.lineIndex);
