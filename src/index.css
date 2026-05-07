@@ -338,7 +338,7 @@ img {
   @apply [&_[cmdk-group]]:px-2;
   @apply [&_[cmdk-input-wrapper]_svg]:h-5;
   @apply [&_[cmdk-input-wrapper]_svg]:w-5;
-  @apply [&_[cmdk-input]]:h-12;
+  @apply [&_[cmdk-input]]:h-8;
   @apply [&_[cmdk-item]]:px-2;
   @apply [&_[cmdk-item]]:py-3;
   @apply [&_[cmdk-item]_svg]:h-4;
