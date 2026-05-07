@@ -55,6 +55,7 @@ export function AudioPlayer({
   const { setReplayGainEnabled, setReplayGainError } = useReplayGainActions();
   const { volume } = usePlayerVolume();
   const isPlaying = usePlayerIsPlaying();
+  const seekToStart = usePlayerStore((s) => s.playerState.seekToStart);
   const isRemoteControlActive = useIsRemoteControlActive();
 
   const shouldUseWebAudioReplayGain =
@@ -69,6 +70,7 @@ export function AudioPlayer({
   const playPromiseRef = useRef<Promise<void> | null>(null);
   const effectPausingRef = useRef(false);
   const srcChangingRef = useRef(false);
+  const loopRestartingRef = useRef(false);
   const loadedSongIdRef = useRef<string | undefined>(undefined);
   const rangeFallbackRef = useRef(false);
   const MAX_RETRIES = 5;
@@ -434,6 +436,13 @@ export function AudioPlayer({
           if (songId !== loadedSongIdRef.current) {
             return;
           }
+          if (seekToStart) {
+            loopRestartingRef.current = true;
+            audio.currentTime = 0;
+            usePlayerStore.setState((state) => {
+              state.playerState.seekToStart = false;
+            });
+          }
           if (shouldUseWebAudioReplayGain) {
             await resumeContext();
           }
@@ -455,6 +464,7 @@ export function AudioPlayer({
     pauseAudio,
     resumeContext,
     safePlay,
+    seekToStart,
     shouldUseWebAudioReplayGain,
     songId,
   ]);
@@ -545,10 +555,14 @@ export function AudioPlayer({
       onDurationChange={(e) => props.onDurationChange?.(e)}
       onCanPlay={handleCanPlay}
       onPlay={(e) => {
+        loopRestartingRef.current = false;
         handlePlaySuccess();
         onPlay?.(e);
       }}
       onPause={(e) => {
+        if (loopRestartingRef.current) {
+          return;
+        }
         if (srcChangingRef.current) {
           srcChangingRef.current = false;
           const state = usePlayerStore.getState();
