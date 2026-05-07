@@ -3,8 +3,13 @@ import { Command as CommandPrimitive } from "cmdk";
 import { Search } from "lucide-react";
 import * as React from "react";
 
-import { Dialog, DialogContent, DialogTitle } from "@/app/components/ui/dialog";
+import {
+  Dialog,
+  DialogPortal,
+  DialogTitle,
+} from "@/app/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
@@ -29,14 +34,17 @@ const CommandDialog = ({ children, style, ...props }: CommandDialogProps) => {
   return (
     <Dialog {...props}>
       <DialogTitle className="sr-only">Search Dialog</DialogTitle>
-      <DialogContent
-        data-cmdk-dialog=""
-        className="overflow-hidden p-0 shadow-lg bg-transparent !max-w-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-100 data-[state=open]:zoom-in-100 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] [&>button]:hidden"
-        style={style}
-        aria-describedby={undefined}
-      >
-        {children}
-      </DialogContent>
+      <DialogPortal>
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80" />
+        <DialogPrimitive.Content
+          data-cmdk-dialog=""
+          className="fixed z-50 w-full overflow-hidden p-0 shadow-lg bg-popover text-popover-foreground rounded-md border"
+          style={style}
+          aria-describedby={undefined}
+        >
+          {children}
+        </DialogPrimitive.Content>
+      </DialogPortal>
     </Dialog>
   );
 };
@@ -45,12 +53,12 @@ const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-    <div className="flex items-center border-b px-3 h-8 overflow-hidden" data-cmdk-input-wrapper="">
-      <Search className="mr-2 h-[18px] w-[18px] shrink-0 opacity-50" />
+    <div className="relative border-b px-3 h-8" data-cmdk-input-wrapper="">
+      <Search className="absolute left-3 top-[7px] h-[18px] w-[18px] text-muted-foreground" />
       <CommandPrimitive.Input
         ref={ref}
         className={cn(
-          "flex h-8 w-full rounded-md bg-transparent py-0 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+          "h-8 w-full pl-8 rounded-md bg-transparent py-0 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
           className,
         )}
         {...props}

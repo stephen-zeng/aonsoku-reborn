@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { SearchIcon } from "lucide-react";
 import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import { useLocation, useParams } from "react-router-dom";
@@ -189,43 +190,39 @@ export default function CommandMenu() {
     setPages((pages) => pages.slice(0, -1));
   }, []);
 
-  const inputPlaceholder = () => {
-    if (activePage === "PLAYLISTS") return t("options.playlist.search");
-
-    return t("command.inputPlaceholder");
-  };
+  const inputPlaceholder =
+    activePage === "PLAYLISTS"
+      ? t("options.playlist.search")
+      : t("command.inputPlaceholder");
 
   const handleOpen = useCallback(() => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      setDialogStyle({
-        position: "fixed",
-        top: rect.top,
-        left: rect.left,
-        width: rect.width,
-        transform: "none",
-        marginTop: 0,
+      flushSync(() => {
+        setDialogStyle({
+          position: "fixed",
+          top: Math.round(rect.top),
+          left: Math.round(rect.left),
+          width: Math.round(rect.width),
+        });
       });
     }
-    setOpen(true);
+    flushSync(() => {
+      setOpen(true);
+    });
   }, [setOpen]);
 
   useEffect(() => {
-    if (!open) {
-      setDialogStyle({});
-      return;
-    }
+    if (!open) return;
 
     const handleResize = () => {
       if (buttonRef.current) {
         const rect = buttonRef.current.getBoundingClientRect();
         setDialogStyle({
           position: "fixed",
-          top: rect.top,
-          left: rect.left,
-          width: rect.width,
-          transform: "none",
-          marginTop: 0,
+          top: Math.round(rect.top),
+          left: Math.round(rect.left),
+          width: Math.round(rect.width),
         });
       }
     };
