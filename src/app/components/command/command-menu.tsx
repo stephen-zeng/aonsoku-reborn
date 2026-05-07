@@ -227,7 +227,7 @@ export default function CommandMenu() {
       <Button
         ref={buttonRef}
         variant="outline"
-        className={`w-full px-2 gap-2 h-8 overflow-hidden md:relative hidden md:flex transition-opacity duration-200 ${open ? "opacity-0" : "opacity-100"}`}
+        className={`w-full px-2 gap-2 h-8 py-0 overflow-hidden md:relative hidden md:flex transition-opacity duration-200 ${open ? "opacity-0" : "opacity-100"}`}
         onClick={handleOpen}
       >
         <SearchIcon className="h-5 w-5 text-muted-foreground" />
