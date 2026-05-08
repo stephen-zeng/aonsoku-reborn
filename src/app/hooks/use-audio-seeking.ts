@@ -41,40 +41,21 @@ export function useAudioSeeking({ audioRef }: UseAudioSeekingOptions) {
   const handleSeeked = useCallback(
     (amount: number) => {
       logger.debug("Seek completed:", amount);
+      setProgress(amount);
+      setLocalProgress(amount);
       setIsLocalSeeking(false);
       setIsScrubbing(false);
       if (!isRemoteControlActive) {
         updateAudioCurrentTime(amount);
       }
-      setProgress(amount);
-      setLocalProgress(amount);
     },
     [
       isRemoteControlActive,
-      setProgress,
       setIsScrubbing,
+      setProgress,
       updateAudioCurrentTime,
     ],
   );
-
-  const handleSeekedFallback = useCallback(() => {
-    if (isLocalSeeking) {
-      logger.debug("Seek fallback triggered:", localProgress);
-      setIsLocalSeeking(false);
-      setIsScrubbing(false);
-      if (!isRemoteControlActive) {
-        updateAudioCurrentTime(localProgress);
-      }
-      setProgress(localProgress);
-    }
-  }, [
-    isLocalSeeking,
-    isRemoteControlActive,
-    localProgress,
-    setProgress,
-    setIsScrubbing,
-    updateAudioCurrentTime,
-  ]);
 
   return {
     localProgress,
@@ -84,6 +65,5 @@ export function useAudioSeeking({ audioRef }: UseAudioSeekingOptions) {
     updateAudioCurrentTime,
     handleSeeking,
     handleSeeked,
-    handleSeekedFallback,
   };
 }

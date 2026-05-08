@@ -36,7 +36,6 @@ export function FullscreenProgress({
     isLocalSeeking: isSeeking,
     handleSeeking,
     handleSeeked,
-    handleSeekedFallback,
   } = useAudioSeeking({ audioRef });
 
   const currentTime = convertSecondsToTime(
@@ -59,9 +58,6 @@ export function FullscreenProgress({
     className: "w-full h-2 md:h-3",
     onValueChange: ([value]: [number]) => handleSeeking(value),
     onValueCommit: ([value]: [number]) => handleSeeked(value),
-    onPointerUp: handleSeekedFallback,
-    onMouseUp: handleSeekedFallback,
-    onTouchEnd: handleSeekedFallback,
     "data-vaul-no-drag": true,
     "aria-label": t("player.tooltips.progress"),
     contrast,

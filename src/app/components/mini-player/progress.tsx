@@ -17,14 +17,16 @@ export function MiniPlayerProgress() {
   const currentDuration = usePlayerDuration();
   const isBuffering = usePlayerIsBuffering();
 
-  const audioRef = { current: audioPlayerRef };
+  const audioRef = useMemo(
+    () => ({ current: audioPlayerRef }),
+    [audioPlayerRef],
+  );
 
   const {
     localProgress,
     isLocalSeeking,
     handleSeeking,
     handleSeeked,
-    handleSeekedFallback,
   } = useAudioSeeking({ audioRef });
 
   const currentTime = convertSecondsToTime(
@@ -59,8 +61,6 @@ export function MiniPlayerProgress() {
         className="w-full h-4"
         onValueChange={([value]) => handleSeeking(value)}
         onValueCommit={([value]) => handleSeeked(value)}
-        onPointerUp={handleSeekedFallback}
-        onMouseUp={handleSeekedFallback}
       />
     </div>
   );
