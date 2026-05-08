@@ -63,6 +63,7 @@ export function Player() {
     setBufferedProgress,
     setProgress,
     setPlayingState,
+    setIsScrubbing,
     handleSongEnded,
     getCurrentProgress,
     togglePlayPause,
@@ -148,6 +149,8 @@ export function Player() {
     const audio = getAudioRef().current;
     if (!audio) return;
 
+    if (usePlayerStore.getState().playerProgress.isScrubbing) return;
+
     const currentProgress = Math.floor(audio.currentTime);
     setProgress(currentProgress);
 
@@ -206,6 +209,12 @@ export function Player() {
     setStoreIsBuffering(false);
     updateAudioDuration();
   }, [setStoreIsBuffering, updateAudioDuration]);
+
+  const handleAudioSeeked = useCallback(() => {
+    if (usePlayerStore.getState().playerProgress.isScrubbing) {
+      setIsScrubbing(false);
+    }
+  }, [setIsScrubbing]);
 
   const handleAudioProgress = useCallback(
     (e: React.SyntheticEvent<HTMLAudioElement>) => {
@@ -316,6 +325,7 @@ export function Player() {
           onWaiting={handleAudioWaiting}
           onPlaying={handleAudioPlaying}
           onCanPlay={handleAudioCanPlay}
+          onSeeked={handleAudioSeeked}
           onPlaybackError={handlePlaybackError}
           onReplayGainError={handleReplayGainError}
           data-testid="player-song-audio"

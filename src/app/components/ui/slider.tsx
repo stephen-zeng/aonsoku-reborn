@@ -26,9 +26,9 @@ type SliderBaseProps = {
 	contrast?: FullscreenContrast;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-type TouchState = {
+type DragState = {
+	pointerId: number;
 	startX: number;
-	startValue: number;
 	currentValue: number;
 	isDragging: boolean;
 };
@@ -67,203 +67,85 @@ function useSlider({
 			? controlledValue[0]
 			: internalValue;
 
-	const setSliderValue = React.useCallback(
-		(rawValue: number) => {
-			const clamped = Math.min(max, Math.max(min, rawValue));
-			const stepped = Math.round(clamped / step) * step;
-			if (!isControlled) setInternalValue(stepped);
-			onValueChange?.([stepped]);
-			return stepped;
-		},
-		[min, max, step, isControlled, onValueChange],
-	);
-
-	const commitSliderValue = React.useCallback(
-		(val: number) => {
-			onValueCommit?.([val]);
-		},
-		[onValueCommit],
-	);
-
 	const trackRef = React.useRef<HTMLDivElement>(null);
-	const [isMouseDragging, setIsMouseDragging] = React.useState(false);
+	const dragStateRef = React.useRef<DragState | null>(null);
 
-	const handleMouseDown = React.useCallback(
-		(e: React.MouseEvent & MouseEvent) => {
-			if (disabled || !trackRef.current) return;
-
+	const computeValue = React.useCallback(
+		(clientX: number) => {
+			if (!trackRef.current) return currentValue;
 			const rect = trackRef.current.getBoundingClientRect();
-			const ratio = (e.clientX - rect.left) / rect.width;
-			const newValue = min + ratio * (max - min);
-			const finalValue = setSliderValue(newValue);
-			setIsMouseDragging(true);
-
-			const handleMouseMove = (e: MouseEvent) => {
-				const ratio = (e.clientX - rect.left) / rect.width;
-				const newValue = min + ratio * (max - min);
-				setSliderValue(newValue);
-			};
-
-			const handleMouseUp = () => {
-				setIsMouseDragging(false);
-				commitSliderValue(finalValue);
-				document.removeEventListener("mousemove", handleMouseMove);
-				document.removeEventListener("mouseup", handleMouseUp);
-			};
-
-			document.addEventListener("mousemove", handleMouseMove);
-			document.addEventListener("mouseup", handleMouseUp);
+			const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+			const raw = min + ratio * (max - min);
+			const clamped = Math.min(max, Math.max(min, raw));
+			return Math.round(clamped / step) * step;
 		},
-		[disabled, min, max, setSliderValue, commitSliderValue],
+		[min, max, step, currentValue],
 	);
 
-	const touchStateRef = React.useRef<TouchState | null>(null);
-	const lastCommittedValueRef = React.useRef<number | null>(null);
-	const callbacksRef = React.useRef({
-		value: controlledValue,
-		defaultValue,
-		min,
-		max,
-		step,
-		onValueChange,
-		onValueCommit,
-		disabled,
-		onTouchStateChange,
-	});
+	const handlePointerDown = React.useCallback(
+		(e: React.PointerEvent<HTMLDivElement>) => {
+			if (disabled) return;
 
-	React.useEffect(() => {
-		callbacksRef.current = {
-			value: controlledValue,
-			defaultValue,
-			min,
-			max,
-			step,
-			onValueChange,
-			onValueCommit,
-			disabled,
-			onTouchStateChange,
-		};
-	});
-
-	const bindTouchEvents = React.useCallback((el: HTMLElement | null) => {
-		if (!el) return;
-
-		const getCurrentValue = () => {
-			const {
-				value: val,
-				defaultValue: defVal,
-				min: rawMin,
-			} = callbacksRef.current;
-			if (val && val.length > 0) return val[0];
-			if (lastCommittedValueRef.current !== null)
-				return lastCommittedValueRef.current;
-			return defVal?.[0] ?? rawMin ?? 0;
-		};
-
-		const handlePointerDown = (e: PointerEvent) => {
-			if (e.pointerType !== "touch") return;
-			const { disabled: isDisabled } = callbacksRef.current;
-			if (isDisabled) return;
-
-			e.preventDefault();
-			e.stopPropagation();
-			e.stopImmediatePropagation();
-
-			touchStateRef.current = {
-				startX: e.clientX,
-				startValue: getCurrentValue(),
-				currentValue: getCurrentValue(),
-				isDragging: false,
-			};
-
-			callbacksRef.current.onTouchStateChange?.(true);
-		};
-
-		const handlePointerMove = (e: PointerEvent) => {
-			if (e.pointerType !== "touch") return;
-			if (!touchStateRef.current) return;
-
-			const state = touchStateRef.current;
-			const deltaX = e.clientX - state.startX;
-
-			if (Math.abs(deltaX) > TAP_THRESHOLD) {
-				state.isDragging = true;
+			if (e.pointerType === "touch") {
+				e.preventDefault();
+				onTouchStateChange?.(true);
 			}
 
-			if (!state.isDragging) return;
+			const newValue = computeValue(e.clientX);
+			if (!isControlled) setInternalValue(newValue);
+			onValueChange?.([newValue]);
 
-			e.preventDefault();
-			e.stopPropagation();
+			dragStateRef.current = {
+				pointerId: e.pointerId,
+				startX: e.clientX,
+				currentValue: newValue,
+				isDragging: e.pointerType !== "touch",
+			};
 
-			const {
-				min: rawMin,
-				max: rawMax,
-				step: rawStep,
-				onValueChange: onChange,
-			} = callbacksRef.current;
-			const safeMin = rawMin ?? 0;
-			const safeMax = rawMax ?? 100;
-			const safeStep = rawStep ?? 1;
+			(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+		},
+		[disabled, isControlled, computeValue, onValueChange, onTouchStateChange],
+	);
 
-			const rect = el.getBoundingClientRect();
-			const deltaRatio = deltaX / rect.width;
-			const deltaValue = deltaRatio * (safeMax - safeMin);
-			let newValue = state.startValue + deltaValue;
-			newValue = Math.min(safeMax, Math.max(safeMin, newValue));
-			newValue = Math.round(newValue / safeStep) * safeStep;
+	const handlePointerMove = React.useCallback(
+		(e: React.PointerEvent<HTMLDivElement>) => {
+			const state = dragStateRef.current;
+			if (!state || state.pointerId !== e.pointerId) return;
 
+			if (e.pointerType === "touch") {
+				const deltaX = Math.abs(e.clientX - state.startX);
+				if (deltaX > TAP_THRESHOLD) {
+					state.isDragging = true;
+				}
+				if (!state.isDragging) return;
+				e.preventDefault();
+			}
+
+			const newValue = computeValue(e.clientX);
 			if (newValue !== state.currentValue) {
 				state.currentValue = newValue;
-				onChange?.([newValue]);
+				if (!isControlled) setInternalValue(newValue);
+				onValueChange?.([newValue]);
 			}
-		};
+		},
+		[isControlled, computeValue, onValueChange],
+	);
 
-		const handlePointerUp = (e: PointerEvent) => {
-			if (e.pointerType !== "touch") return;
-			if (!touchStateRef.current) return;
+	const commitAndCleanup = React.useCallback(
+		(e: React.PointerEvent<HTMLDivElement>) => {
+			const state = dragStateRef.current;
+			if (!state || state.pointerId !== e.pointerId) return;
 
-			const state = touchStateRef.current;
-			const { onValueCommit: onCommit } = callbacksRef.current;
+			onValueCommit?.([state.currentValue]);
 
-			e.preventDefault();
-
-			if (state.isDragging) {
-				lastCommittedValueRef.current = state.currentValue;
-				onCommit?.([state.currentValue]);
+			if (e.pointerType === "touch") {
+				onTouchStateChange?.(false);
 			}
 
-			touchStateRef.current = null;
-			callbacksRef.current.onTouchStateChange?.(false);
-		};
-
-		el.addEventListener("pointerdown", handlePointerDown, {
-			capture: true,
-		});
-		el.addEventListener("pointermove", handlePointerMove, {
-			capture: true,
-		});
-		el.addEventListener("pointerup", handlePointerUp, {
-			capture: true,
-		});
-		el.addEventListener("pointercancel", handlePointerUp, {
-			capture: true,
-		});
-
-		return () => {
-			el.removeEventListener("pointerdown", handlePointerDown, {
-				capture: true,
-			});
-			el.removeEventListener("pointermove", handlePointerMove, {
-				capture: true,
-			});
-			el.removeEventListener("pointerup", handlePointerUp, {
-				capture: true,
-			});
-			el.removeEventListener("pointercancel", handlePointerUp, {
-				capture: true,
-			});
-		};
-	}, []);
+			dragStateRef.current = null;
+		},
+		[onValueCommit, onTouchStateChange],
+	);
 
 	const percentage = ((currentValue - min) / (max - min)) * 100;
 
@@ -271,11 +153,10 @@ function useSlider({
 		trackRef,
 		currentValue,
 		percentage,
-		isMouseDragging,
-		handleMouseDown,
-		bindTouchEvents,
-		setSliderValue,
-		commitSliderValue,
+		handlePointerDown,
+		handlePointerMove,
+		handlePointerUp: commitAndCleanup,
+		handlePointerCancel: commitAndCleanup,
 	};
 }
 
@@ -301,43 +182,37 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
 	) => {
 		const [isTouching, setIsTouching] = React.useState(false);
 
-		const { trackRef, percentage, handleMouseDown, bindTouchEvents } =
-			useSlider({
-				value,
-				defaultValue,
-				min,
-				max,
-				step,
-				onValueChange,
-				onValueCommit,
-				disabled,
-				onTouchStateChange: setIsTouching,
-			});
-
-		const rootRef = React.useRef<HTMLDivElement>(null);
-
-		const setRefs = React.useCallback(
-			(node: HTMLDivElement | null) => {
-				rootRef.current = node;
-				bindTouchEvents(node);
-				if (typeof ref === "function") {
-					ref(node);
-				} else if (ref) {
-					ref.current = node;
-				}
-			},
-			[ref, bindTouchEvents],
-		);
+		const {
+			trackRef,
+			percentage,
+			handlePointerDown,
+			handlePointerMove,
+			handlePointerUp,
+			handlePointerCancel,
+		} = useSlider({
+			value,
+			defaultValue,
+			min,
+			max,
+			step,
+			onValueChange,
+			onValueCommit,
+			disabled,
+			onTouchStateChange: setIsTouching,
+		});
 
 		return (
 			<div
-				ref={setRefs}
+				ref={ref}
 				aria-busy={isBuffering || undefined}
 				className={cn(
 					"group relative h-3 flex w-full touch-none select-none items-center cursor-pointer",
 					className,
 				)}
-				onMouseDown={handleMouseDown}
+				onPointerDown={handlePointerDown}
+				onPointerMove={handlePointerMove}
+				onPointerUp={handlePointerUp}
+				onPointerCancel={handlePointerCancel}
 				{...props}
 			>
 				<div
@@ -439,35 +314,36 @@ export function ProgressSlider(props: SliderBaseProps) {
 
 	const [isTouching, setIsTouching] = React.useState(false);
 
-	const { trackRef, percentage, handleMouseDown, bindTouchEvents } =
-		useSlider({
-			value,
-			defaultValue,
-			min,
-			max,
-			step,
-			onValueChange,
-			onValueCommit,
-			disabled,
-			onTouchStateChange: setIsTouching,
-		});
-
-	const setRefs = React.useCallback(
-		(node: HTMLDivElement | null) => {
-			bindTouchEvents(node);
-		},
-		[bindTouchEvents],
-	);
+	const {
+		trackRef,
+		percentage,
+		handlePointerDown,
+		handlePointerMove,
+		handlePointerUp,
+		handlePointerCancel,
+	} = useSlider({
+		value,
+		defaultValue,
+		min,
+		max,
+		step,
+		onValueChange,
+		onValueCommit,
+		disabled,
+		onTouchStateChange: setIsTouching,
+	});
 
 	return (
 		<div
-			ref={setRefs}
 			aria-busy={isBuffering || undefined}
 			className={cn(
 				"group relative h-3 flex w-full touch-none select-none items-center cursor-pointer",
 				className,
 			)}
-			onMouseDown={handleMouseDown}
+			onPointerDown={handlePointerDown}
+			onPointerMove={handlePointerMove}
+			onPointerUp={handlePointerUp}
+			onPointerCancel={handlePointerCancel}
 			{...rest}
 		>
 			<div

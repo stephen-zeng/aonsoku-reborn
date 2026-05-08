@@ -31,7 +31,6 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
     isLocalSeeking,
     handleSeeking,
     handleSeeked,
-    handleSeekedFallback,
   } = useAudioSeeking({ audioRef });
 
   const currentTime = convertSecondsToTime(
@@ -78,9 +77,6 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
           bufferedProgress={bufferedProgress}
           onValueChange={([value]) => handleSeeking(value)}
           onValueCommit={([value]) => handleSeeked(value)}
-          onPointerUp={handleSeekedFallback}
-          onMouseUp={handleSeekedFallback}
-          onTouchEnd={handleSeekedFallback}
           data-testid="player-progress-slider"
         />
       ) : (
