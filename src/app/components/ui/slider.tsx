@@ -473,8 +473,8 @@ export function ProgressSlider(props: SliderBaseProps) {
 			<div
 				ref={trackRef}
 				className={clsx(
-					"relative h-1 w-full grow overflow-hidden rounded-full select-none transition-transform duration-150 ease-out origin-center",
-					isTouching && "scale-y-[2.5]",
+					"relative w-full grow overflow-hidden rounded-full select-none transition-[height] duration-150 ease-out",
+					isTouching ? "h-[10px]" : "h-1",
 					!isBuffering && variant === "default" && "bg-secondary",
 					isBuffering && "buffer-track",
 					isBuffering &&
