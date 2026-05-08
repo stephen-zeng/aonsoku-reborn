@@ -29,6 +29,7 @@ type SliderBaseProps = {
 type DragState = {
 	pointerId: number;
 	startX: number;
+	startValue: number;
 	currentValue: number;
 	isDragging: boolean;
 };
@@ -86,7 +87,9 @@ function useSlider({
 		(e: React.PointerEvent<HTMLDivElement>) => {
 			if (disabled) return;
 
-			if (e.pointerType === "touch") {
+			const isTouch = e.pointerType === "touch";
+
+			if (isTouch) {
 				e.preventDefault();
 				onTouchStateChange?.(true);
 			}
@@ -98,8 +101,9 @@ function useSlider({
 			dragStateRef.current = {
 				pointerId: e.pointerId,
 				startX: e.clientX,
+				startValue: newValue,
 				currentValue: newValue,
-				isDragging: e.pointerType !== "touch",
+				isDragging: !isTouch,
 			};
 
 			(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -119,6 +123,21 @@ function useSlider({
 				}
 				if (!state.isDragging) return;
 				e.preventDefault();
+
+				if (!trackRef.current) return;
+				const rect = trackRef.current.getBoundingClientRect();
+				const deltaRatio = (e.clientX - state.startX) / rect.width;
+				const deltaValue = deltaRatio * (max - min);
+				let newValue = state.startValue + deltaValue;
+				newValue = Math.min(max, Math.max(min, newValue));
+				newValue = Math.round(newValue / step) * step;
+
+				if (newValue !== state.currentValue) {
+					state.currentValue = newValue;
+					if (!isControlled) setInternalValue(newValue);
+					onValueChange?.([newValue]);
+				}
+				return;
 			}
 
 			const newValue = computeValue(e.clientX);
@@ -128,7 +147,7 @@ function useSlider({
 				onValueChange?.([newValue]);
 			}
 		},
-		[isControlled, computeValue, onValueChange],
+		[isControlled, min, max, step, computeValue, onValueChange],
 	);
 
 	const commitAndCleanup = React.useCallback(
