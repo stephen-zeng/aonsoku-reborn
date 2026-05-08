@@ -90,7 +90,7 @@ export function Header() {
           <Button
             variant="ghost"
             size="sm"
-            className={cn("h-8 w-8 p-0 rounded-md transition-colors")}
+            className={cn("h-8 w-8 p-0 rounded-md")}
             title={sidebarToggleLabel}
             aria-label={sidebarToggleLabel}
             data-state={isCollapsed ? "collapsed" : "expanded"}

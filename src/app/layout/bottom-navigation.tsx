@@ -63,7 +63,7 @@ export function BottomNavigation() {
             key={item.id}
             to={item.route}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 text-xs transition-colors",
+              "flex flex-col items-center justify-center gap-1 text-xs",
               isActive(item) ? "text-foreground" : "text-muted-foreground",
             )}
           >

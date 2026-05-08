@@ -181,11 +181,11 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
           }}
         >
           <div
-            className="hidden md:flex absolute inset-0 items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors cursor-pointer rounded"
+            className="hidden md:flex absolute inset-0 items-center justify-center bg-black/0 group-hover:bg-black/40 cursor-pointer rounded"
             tabIndex={-1}
             data-testid="track-fullscreen-button"
           >
-            <Maximize2 className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Maximize2 className="w-5 h-5 text-white opacity-0 group-hover:opacity-100" />
           </div>
         </FullscreenMode>
       </div>

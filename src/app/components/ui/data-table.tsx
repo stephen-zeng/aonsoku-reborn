@@ -471,7 +471,7 @@ export function DataTable<TData, TValue>({
                       discNumberIndexes.includes(index) && (
                         <div
                           className={clsx(
-                            "w-full h-14 flex flex-row items-center transition-colors text-muted-foreground",
+                            "w-full h-14 flex flex-row items-center text-muted-foreground",
                             isClassic && "border-b",
                           )}
                           role="row"

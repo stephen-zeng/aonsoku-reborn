@@ -151,10 +151,10 @@ export function MiniPlayerLikeButton() {
 }
 
 const buttonsStyle = {
-  main: "w-9 h-9 p-0 rounded-full bg-secondary-foreground hover:scale-105 transition-transform will-change-transform",
+  main: "w-9 h-9 p-0 rounded-full bg-secondary-foreground",
   mainIcon: "text-secondary fill-secondary",
   secondary:
-    "relative w-9 h-9 p-0 rounded-full text-secondary-foreground hover:text-secondary-foreground data-[state=active]:text-primary hover:bg-transparent hover:scale-110 transition-transform will-change-transform",
+    "relative w-9 h-9 p-0 rounded-full text-secondary-foreground hover:text-secondary-foreground data-[state=active]:text-primary hover:bg-transparent",
   secondaryIconFilled: "text-secondary-foreground fill-secondary-foreground",
   activeDot: "mini-player-button-active",
   style: {

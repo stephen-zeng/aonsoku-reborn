@@ -46,7 +46,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
       style={contrast.style}
     >
       <div
-        className={`fullscreen-desktop-playing flex h-full min-w-0 shrink-0 flex-col px-8 pt-6 pb-4 transition-[width] duration-300 md:px-12 ${rightPanelView ? "w-1/2" : "w-full"}`}
+        className={`fullscreen-desktop-playing flex h-full min-w-0 shrink-0 flex-col px-8 pt-6 pb-4 md:px-12 ${rightPanelView ? "w-1/2" : "w-full"}`}
       >
         <div className="flex items-center gap-2 shrink-0">
           <Button
@@ -97,7 +97,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
       </div>
 
       <div
-        className={`shrink-0 flex h-full flex-col overflow-hidden transition-[width] duration-300 ${rightPanelView ? "w-1/2" : "w-0"}`}
+        className={`shrink-0 flex h-full flex-col overflow-hidden ${rightPanelView ? "w-1/2" : "w-0"}`}
         data-testid="fullscreen-desktop-side-panel"
         data-view={rightPanelView ?? "closed"}
         style={{ "--queue-bg-overlay": "transparent" } as React.CSSProperties}
@@ -108,7 +108,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
               variant="ghost"
               size="sm"
               className={cn(
-                "gap-1.5 transition-colors",
+                "gap-1.5",
                 rightPanelView === "queue"
                   ? "fullscreen-backdrop-layer rounded-md hover:bg-transparent"
                   : contrast.hoverBg,
@@ -122,7 +122,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
               variant="ghost"
               size="sm"
               className={cn(
-                "gap-1.5 transition-colors",
+                "gap-1.5",
                 lyricsDisabled && "opacity-50 cursor-not-allowed",
                 rightPanelView === "lyrics"
                   ? "fullscreen-backdrop-layer rounded-md hover:bg-transparent"

@@ -36,7 +36,7 @@ export const QueueCurrentSong = memo(function QueueCurrentSong({
 
   return (
     <div
-      className={clsx("pt-2 pb-0.5 px-2 rounded-lg transition-colors")}
+      className={clsx("pt-2 pb-0.5 px-2 rounded-lg")}
       onClick={onClick}
     >
       <div className="flex items-center gap-3">
@@ -91,12 +91,12 @@ export const QueueModeButtons = memo(function QueueModeButtons() {
   const isRepeatActive = loopState !== LoopState.Off;
 
   const activeBtn = clsx(
-    "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors",
+    "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium",
     isBackdropDark ? "bg-white/15 text-white" : "bg-foreground/15 text-foreground",
   );
 
   const inactiveBtn = clsx(
-    "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors",
+    "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium",
     isBackdropDark
       ? "text-white/60 border border-white/30 hover:text-white hover:bg-white/10"
       : "text-foreground/60 border border-foreground/30 hover:text-foreground hover:bg-foreground/10",

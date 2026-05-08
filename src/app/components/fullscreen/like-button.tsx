@@ -25,7 +25,7 @@ export function LikeButton({ className, onClick }: LikeButtonProps) {
       className={clsx(
         !isOverride && "relative w-11 h-11 md:w-12 md:h-12 rounded-full",
         !isOverride && hoverBg,
-        !isOverride && "text-foreground hover:scale-110 transition-transform will-change-transform",
+        !isOverride && "text-foreground",
         className,
       )}
       onClick={onClick ?? starCurrentSong}

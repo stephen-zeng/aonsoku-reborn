@@ -82,9 +82,9 @@ export function HeaderItem({ song }: { song: ISong }) {
               className="aspect-square rounded-lg object-cover bg-center absolute inset-0 z-0"
               data-testid="header-image"
             />
-            <div className="hidden sm:flex w-full h-full items-center justify-center rounded-lg bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-colors duration-300 absolute inset-0 z-10">
+            <div className="hidden sm:flex w-full h-full items-center justify-center rounded-lg bg-black bg-opacity-0 group-hover:bg-opacity-50 absolute inset-0 z-10">
               <Button
-                className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full w-14 h-14"
+                className="opacity-0 group-hover:opacity-100 rounded-full w-14 h-14"
                 variant="outline"
                 onClick={() => handlePlaySongAlbum(song)}
                 data-testid="header-play-button"

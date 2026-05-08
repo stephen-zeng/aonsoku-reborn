@@ -77,7 +77,7 @@ function FullscreenControls() {
         whileTap={{ scale: 0.9 }}
         className={clsx(
           "w-14 h-14 rounded-full flex items-center justify-center cursor-pointer",
-          "hover:scale-105 transition-transform will-change-transform",
+          "",
           playButtonBg,
         )}
         style={{ backfaceVisibility: "hidden" }}

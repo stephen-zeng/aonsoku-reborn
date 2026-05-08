@@ -256,7 +256,7 @@ export default function CommandMenu() {
         ref={buttonRef}
         variant="outline"
         className={cn(
-          "w-full px-2 gap-2 h-8 py-0 overflow-hidden md:relative hidden md:flex transition-opacity duration-200",
+          "w-full px-2 gap-2 h-8 py-0 overflow-hidden md:relative hidden md:flex transition-opacity",
           open && "opacity-0 pointer-events-none",
         )}
         onClick={handleOpen}

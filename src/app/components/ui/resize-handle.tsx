@@ -18,7 +18,6 @@ export function ResizeHandle({
       onDoubleClick={onDoubleClick}
       className={cn(
         "absolute top-0 bottom-0 z-50 w-1 cursor-col-resize",
-        "transition-colors duration-150",
         "hover:bg-primary/40 active:bg-primary/60",
         "before:absolute before:top-0 before:bottom-0 before:w-3",
         side === "right" && "right-0 before:-right-1.5",

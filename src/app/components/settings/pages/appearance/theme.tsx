@@ -74,7 +74,7 @@ function ThemeModeSelector({
           type="button"
           onClick={() => onModeChange(value)}
           className={clsx(
-            "inline-flex min-h-11 items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors sm:min-h-8",
+            "inline-flex min-h-11 items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md sm:min-h-8",
             mode === value
               ? "bg-primary text-primary-foreground"
               : "text-muted-foreground hover:text-foreground hover:bg-muted",

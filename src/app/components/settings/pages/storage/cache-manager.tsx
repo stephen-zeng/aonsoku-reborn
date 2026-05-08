@@ -250,7 +250,7 @@ function CacheList({ items, loading, onDelete }: CacheListProps) {
             return (
               <div
                 key={item.key}
-                className="absolute left-0 w-full flex flex-row items-center px-3 py-2 border-b last:border-b-0 hover:bg-muted/50 transition-colors"
+                className="absolute left-0 w-full flex flex-row items-center px-3 py-2 border-b last:border-b-0 hover:bg-muted/50"
                 style={{
                   height: `${virtualRow.size}px`,
                   transform: `translateY(${virtualRow.start}px)`,

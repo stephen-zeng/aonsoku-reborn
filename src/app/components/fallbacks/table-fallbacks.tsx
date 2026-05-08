@@ -176,7 +176,7 @@ export function TableFallback({
           <div
             key={index}
             className={cn(
-              "h-14 flex flex-row transition-colors",
+              "h-14 flex flex-row",
               isList ? "w-[calc(100%-10px)]" : "w-full",
               isClassic && !isList && "border-b last:border-b-0",
               isModern && "rounded-md",

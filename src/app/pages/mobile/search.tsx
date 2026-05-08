@@ -43,7 +43,7 @@ function MobileResultItem({
   return (
     <button
       type="button"
-      className="flex min-h-14 w-full items-center gap-3 px-4 py-2 active:bg-accent/50 transition-colors text-left"
+      className="flex min-h-14 w-full items-center gap-3 px-4 py-2 active:bg-accent/50 text-left"
       onClick={onRowClick}
     >
       <CachedImage

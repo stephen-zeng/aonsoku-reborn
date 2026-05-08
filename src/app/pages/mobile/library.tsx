@@ -30,7 +30,7 @@ function LibraryRow({ icon: Icon, label, to, active }: LibraryRowProps) {
     <Link
       to={to}
       className={cn(
-        "flex min-h-14 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors active:bg-accent/70",
+        "flex min-h-14 items-center gap-3 rounded-lg px-3 text-sm font-medium active:bg-accent/70",
         active ? "bg-secondary text-foreground" : "text-foreground/90",
       )}
     >
