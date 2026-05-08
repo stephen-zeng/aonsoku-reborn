@@ -106,7 +106,7 @@ function MobileSongRow({
       tabIndex={0}
       data-testid="mobile-song-row"
       className={cn(
-        "group flex min-h-14 w-full items-center gap-3 rounded-lg px-3 py-2 text-left active:bg-accent/70",
+        "group flex min-h-14 w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors active:bg-accent/70",
         isActive && "bg-accent",
       )}
       onClick={() => onPlaySong(index)}
