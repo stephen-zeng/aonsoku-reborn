@@ -92,23 +92,31 @@ function useSlider({
 			if (isTouch) {
 				e.preventDefault();
 				onTouchStateChange?.(true);
+
+				dragStateRef.current = {
+					pointerId: e.pointerId,
+					startX: e.clientX,
+					startValue: currentValue,
+					currentValue: currentValue,
+					isDragging: false,
+				};
+			} else {
+				const newValue = computeValue(e.clientX);
+				if (!isControlled) setInternalValue(newValue);
+				onValueChange?.([newValue]);
+
+				dragStateRef.current = {
+					pointerId: e.pointerId,
+					startX: e.clientX,
+					startValue: newValue,
+					currentValue: newValue,
+					isDragging: true,
+				};
 			}
-
-			const newValue = computeValue(e.clientX);
-			if (!isControlled) setInternalValue(newValue);
-			onValueChange?.([newValue]);
-
-			dragStateRef.current = {
-				pointerId: e.pointerId,
-				startX: e.clientX,
-				startValue: newValue,
-				currentValue: newValue,
-				isDragging: !isTouch,
-			};
 
 			(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
 		},
-		[disabled, isControlled, computeValue, onValueChange, onTouchStateChange],
+		[disabled, isControlled, currentValue, computeValue, onValueChange, onTouchStateChange],
 	);
 
 	const handlePointerMove = React.useCallback(
@@ -155,7 +163,9 @@ function useSlider({
 			const state = dragStateRef.current;
 			if (!state || state.pointerId !== e.pointerId) return;
 
-			onValueCommit?.([state.currentValue]);
+			if (state.isDragging) {
+				onValueCommit?.([state.currentValue]);
+			}
 
 			if (e.pointerType === "touch") {
 				onTouchStateChange?.(false);
