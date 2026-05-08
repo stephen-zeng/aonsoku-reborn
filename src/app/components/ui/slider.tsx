@@ -375,7 +375,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
 
 				<div
 					className={clsx(
-						"absolute top-1/2 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full border-2",
+						"absolute top-1/2 h-5 w-5 sm:h-4 sm:w-4 cursor-pointer select-none rounded-full border-2 shadow-md",
 						"ring-offset-background transition-[background-color,opacity]",
 						"focus-visible:outline-none focus-visible:ring-transparent",
 						"disabled:pointer-events-none disabled:opacity-50 transform-gpu",
@@ -505,7 +505,7 @@ export function ProgressSlider(props: SliderBaseProps) {
 
 			<div
 				className={clsx(
-					"absolute top-1/2 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full border-2",
+					"absolute top-1/2 h-5 w-5 sm:h-4 sm:w-4 cursor-pointer select-none rounded-full border-2 shadow-md",
 					"ring-offset-background transition-[background-color,opacity]",
 					"focus-visible:outline-none focus-visible:ring-transparent",
 					"disabled:pointer-events-none disabled:opacity-50 transform-gpu",
