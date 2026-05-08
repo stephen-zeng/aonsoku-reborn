@@ -44,6 +44,7 @@ type RelativeTouchSliderOptions = {
   onValueChange?: (value: number[]) => void;
   onValueCommit?: (value: number[]) => void;
   disabled?: boolean;
+  onTouchStateChange?: (isTouching: boolean) => void;
 };
 
 const TAP_THRESHOLD = 5;
@@ -57,6 +58,7 @@ function useRelativeTouchSlider({
   onValueChange,
   onValueCommit,
   disabled,
+  onTouchStateChange,
 }: RelativeTouchSliderOptions) {
   const touchState = React.useRef<TouchState | null>(null);
   const lastCommittedValue = React.useRef<number | null>(null);
@@ -69,6 +71,7 @@ function useRelativeTouchSlider({
     onValueChange,
     onValueCommit,
     disabled,
+    onTouchStateChange,
   });
 
   React.useEffect(() => {
@@ -81,6 +84,7 @@ function useRelativeTouchSlider({
       onValueChange,
       onValueCommit,
       disabled,
+      onTouchStateChange,
     };
   });
 
@@ -122,6 +126,8 @@ function useRelativeTouchSlider({
         currentValue: getCurrentValue(),
         isDragging: false,
       };
+
+      callbacksRef.current.onTouchStateChange?.(true);
     };
 
     const handlePointerMove = (e: PointerEvent) => {
@@ -179,6 +185,7 @@ function useRelativeTouchSlider({
       }
 
       touchState.current = null;
+      callbacksRef.current.onTouchStateChange?.(false);
     };
 
     el.addEventListener("pointerdown", handlePointerDown, {
@@ -227,6 +234,8 @@ const Slider = React.forwardRef<
     },
     ref,
   ) => {
+    const [isTouching, setIsTouching] = React.useState(false);
+
     const bindTouchEvents = useRelativeTouchSlider({
       value: props.value ?? [],
       defaultValue: props.defaultValue,
@@ -236,6 +245,7 @@ const Slider = React.forwardRef<
       onValueChange: props.onValueChange,
       onValueCommit: props.onValueCommit,
       disabled: props.disabled,
+      onTouchStateChange: setIsTouching,
     });
 
     const setRefs = React.useCallback(
@@ -257,7 +267,8 @@ const Slider = React.forwardRef<
     const [showTooltip, setShowTooltip] = React.useState(false);
 
     const trackClass = clsx(
-      "relative h-1 w-full grow overflow-hidden rounded-full select-none",
+      "relative h-1 w-full grow overflow-hidden rounded-full select-none transition-transform duration-150 ease-out origin-center",
+      isTouching && "scale-y-[1.75]",
       !isBuffering && variant === "default" && "bg-secondary",
       isBuffering && "buffer-track",
       isBuffering && variant === "secondary" && "buffer-secondary",
@@ -274,11 +285,11 @@ const Slider = React.forwardRef<
     );
 
     const thumbClass = clsx(
-      "block opacity-0 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full",
+      "block h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full",
       "border-2 ring-offset-background transition-[background-color,opacity]",
       "focus-visible:outline-none focus-visible:ring-transparent",
       "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
-      showTooltip && "opacity-100",
+      isTouching || showTooltip ? "opacity-100" : "opacity-0",
       variant === "default" && "bg-foreground border-foreground",
       variant === "secondary" &&
         (contrast?.sliderThumbColor ??
@@ -434,6 +445,7 @@ export function ProgressSlider(props: ProgressSliderProps) {
   const frameId = React.useRef<number | null>(null);
 
   const [showTooltip, setShowTooltip] = React.useState(false);
+  const [isTouching, setIsTouching] = React.useState(false);
   const [tooltipComputedValue, setTooltipComputedValue] = React.useState(0);
   const [cursorPosition, setCursorPosition] = React.useState(0);
 
@@ -558,6 +570,7 @@ export function ProgressSlider(props: ProgressSliderProps) {
     onValueChange: ([v]) => handleValueChange(v),
     onValueCommit: rest.onValueCommit,
     disabled: props.disabled,
+    onTouchStateChange: setIsTouching,
   });
 
   const setRefs = React.useCallback(
@@ -592,7 +605,8 @@ export function ProgressSlider(props: ProgressSliderProps) {
       >
         <SliderPrimitive.Track
           className={clsx(
-            "relative h-1 w-full grow overflow-hidden rounded-full select-none",
+            "relative h-1 w-full grow overflow-hidden rounded-full select-none transition-transform duration-150 ease-out origin-center",
+            isTouching && "scale-y-[1.75]",
             !isBuffering && variant === "default" && "bg-secondary",
             isBuffering && "buffer-track",
             isBuffering && variant === "secondary" && "buffer-secondary",
@@ -621,11 +635,11 @@ export function ProgressSlider(props: ProgressSliderProps) {
 
       <SliderPrimitive.Thumb
         className={clsx(
-          "block opacity-0 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full",
+          "block h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full",
           "border-2 transition-[background-color,opacity]",
           "focus-visible:outline-none focus-visible:ring-transparent",
           "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
-          showTooltip && "opacity-100",
+          isTouching || showTooltip ? "opacity-100" : "opacity-0",
           variant === "default" && "bg-foreground border-foreground",
           variant === "secondary" &&
             (contrast?.sliderThumbColor ??
