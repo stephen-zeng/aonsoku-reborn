@@ -70,22 +70,39 @@ function useSlider({
 
 	const trackRef = React.useRef<HTMLDivElement>(null);
 	const dragStateRef = React.useRef<DragState | null>(null);
+	const currentValueRef = React.useRef(currentValue);
+	currentValueRef.current = currentValue;
+
+	React.useEffect(() => {
+		return () => {
+			if (dragStateRef.current) {
+				onTouchStateChange?.(false);
+				dragStateRef.current = null;
+			}
+		};
+	}, [onTouchStateChange]);
+
+	const safeStep = step || 1;
+	const range = max - min;
 
 	const computeValue = React.useCallback(
 		(clientX: number) => {
-			if (!trackRef.current) return currentValue;
+			if (!trackRef.current) return min;
 			const rect = trackRef.current.getBoundingClientRect();
+			if (rect.width === 0) return min;
 			const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
 			const raw = min + ratio * (max - min);
 			const clamped = Math.min(max, Math.max(min, raw));
-			return Math.round(clamped / step) * step;
+			const stepped = Math.round(clamped / safeStep) * safeStep;
+			return Number.isFinite(stepped) ? stepped : min;
 		},
-		[min, max, step, currentValue],
+		[min, max, safeStep],
 	);
 
 	const handlePointerDown = React.useCallback(
 		(e: React.PointerEvent<HTMLDivElement>) => {
 			if (disabled) return;
+			if (dragStateRef.current) return;
 
 			const isTouch = e.pointerType === "touch";
 
@@ -93,11 +110,12 @@ function useSlider({
 				e.preventDefault();
 				onTouchStateChange?.(true);
 
+				const val = currentValueRef.current;
 				dragStateRef.current = {
 					pointerId: e.pointerId,
 					startX: e.clientX,
-					startValue: currentValue,
-					currentValue: currentValue,
+					startValue: val,
+					currentValue: val,
 					isDragging: false,
 				};
 			} else {
@@ -116,7 +134,7 @@ function useSlider({
 
 			(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
 		},
-		[disabled, isControlled, currentValue, computeValue, onValueChange, onTouchStateChange],
+		[disabled, isControlled, computeValue, onValueChange, onTouchStateChange],
 	);
 
 	const handlePointerMove = React.useCallback(
@@ -134,11 +152,13 @@ function useSlider({
 
 				if (!trackRef.current) return;
 				const rect = trackRef.current.getBoundingClientRect();
+				if (rect.width === 0) return;
 				const deltaRatio = (e.clientX - state.startX) / rect.width;
-				const deltaValue = deltaRatio * (max - min);
+				const deltaValue = deltaRatio * range;
 				let newValue = state.startValue + deltaValue;
 				newValue = Math.min(max, Math.max(min, newValue));
-				newValue = Math.round(newValue / step) * step;
+				newValue = Math.round(newValue / safeStep) * safeStep;
+				if (!Number.isFinite(newValue)) newValue = min;
 
 				if (newValue !== state.currentValue) {
 					state.currentValue = newValue;
@@ -155,7 +175,7 @@ function useSlider({
 				onValueChange?.([newValue]);
 			}
 		},
-		[isControlled, min, max, step, computeValue, onValueChange],
+		[isControlled, min, max, range, safeStep, computeValue, onValueChange],
 	);
 
 	const commitAndCleanup = React.useCallback(
@@ -163,7 +183,12 @@ function useSlider({
 			const state = dragStateRef.current;
 			if (!state || state.pointerId !== e.pointerId) return;
 
-			if (state.isDragging) {
+			if (e.pointerType === "touch" && !state.isDragging) {
+				const newValue = computeValue(e.clientX);
+				if (!isControlled) setInternalValue(newValue);
+				onValueChange?.([newValue]);
+				onValueCommit?.([newValue]);
+			} else if (state.isDragging) {
 				onValueCommit?.([state.currentValue]);
 			}
 
@@ -173,10 +198,10 @@ function useSlider({
 
 			dragStateRef.current = null;
 		},
-		[onValueCommit, onTouchStateChange],
+		[isControlled, computeValue, onValueChange, onValueCommit, onTouchStateChange],
 	);
 
-	const percentage = ((currentValue - min) / (max - min)) * 100;
+	const percentage = range === 0 ? 0 : ((currentValue - min) / range) * 100;
 
 	return {
 		trackRef,

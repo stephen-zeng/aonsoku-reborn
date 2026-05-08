@@ -44,11 +44,12 @@ export function useAudioSeeking({ audioRef }: UseAudioSeekingOptions) {
       setProgress(amount);
       setLocalProgress(amount);
       setIsLocalSeeking(false);
+      setIsScrubbing(false);
       if (!isRemoteControlActive) {
         updateAudioCurrentTime(amount);
       }
     },
-    [isRemoteControlActive, setProgress, updateAudioCurrentTime],
+    [isRemoteControlActive, setIsScrubbing, setProgress, updateAudioCurrentTime],
   );
 
   return {

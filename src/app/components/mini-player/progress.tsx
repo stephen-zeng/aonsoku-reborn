@@ -17,7 +17,10 @@ export function MiniPlayerProgress() {
   const currentDuration = usePlayerDuration();
   const isBuffering = usePlayerIsBuffering();
 
-  const audioRef = { current: audioPlayerRef };
+  const audioRef = useMemo(
+    () => ({ current: audioPlayerRef }),
+    [audioPlayerRef],
+  );
 
   const {
     localProgress,
