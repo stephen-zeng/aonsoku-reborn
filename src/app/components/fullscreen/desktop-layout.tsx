@@ -137,7 +137,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-hidden px-2 pb-4" data-vaul-no-drag>
+        <div className="flex-1 overflow-hidden pb-4" data-vaul-no-drag>
           <AnimatePresence mode="wait">
             {rightPanelView === "queue" && (
               <motion.div
