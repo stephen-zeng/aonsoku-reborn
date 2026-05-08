@@ -334,7 +334,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
 				ref={setRefs}
 				aria-busy={isBuffering || undefined}
 				className={cn(
-					"relative h-3 flex w-full touch-none select-none items-center cursor-pointer",
+					"group relative h-3 flex w-full touch-none select-none items-center cursor-pointer",
 					className,
 				)}
 				onMouseDown={handleMouseDown}
