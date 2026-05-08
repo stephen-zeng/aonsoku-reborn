@@ -49,7 +49,12 @@ export function useAudioSeeking({ audioRef }: UseAudioSeekingOptions) {
       setProgress(amount);
       setLocalProgress(amount);
     },
-    [isRemoteControlActive, setProgress, setIsScrubbing, updateAudioCurrentTime],
+    [
+      isRemoteControlActive,
+      setProgress,
+      setIsScrubbing,
+      updateAudioCurrentTime,
+    ],
   );
 
   const handleSeekedFallback = useCallback(() => {

@@ -121,7 +121,10 @@ export function AudioPlayer({
     songId,
   ]);
 
-  const audioVolume = useMemo(() => (isIOS() ? 1 : perceptualToGain(volume)), [volume]);
+  const audioVolume = useMemo(
+    () => (isIOS() ? 1 : perceptualToGain(volume)),
+    [volume],
+  );
 
   const gainValue = useMemo(() => {
     if (!shouldUseWebAudioReplayGain || !replayGain) {

@@ -178,13 +178,16 @@ export default function CommandMenu() {
     }
   }
 
-  const handleSearchChange = useCallback((value: string) => {
-    if (activePage === "PLAYLISTS") {
-      setQuery(value);
-    } else {
-      debounced(value);
-    }
-  }, [activePage, debounced]);
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      if (activePage === "PLAYLISTS") {
+        setQuery(value);
+      } else {
+        debounced(value);
+      }
+    },
+    [activePage, debounced],
+  );
 
   const removeLastPage = useCallback(() => {
     setPages((pages) => pages.slice(0, -1));
@@ -231,24 +234,32 @@ export default function CommandMenu() {
     return () => window.removeEventListener("resize", handleResize);
   }, [open]);
 
-  const handleClose = useCallback((state: boolean) => {
-    if (isHome) {
-      setOpen(state);
-      clear();
-    } else {
-      removeLastPage();
-    }
-  }, [isHome, setOpen, clear, removeLastPage]);
+  const handleClose = useCallback(
+    (state: boolean) => {
+      if (isHome) {
+        setOpen(state);
+        clear();
+      } else {
+        removeLastPage();
+      }
+    },
+    [isHome, setOpen, clear, removeLastPage],
+  );
 
-  useHotkeys(["/", "mod+f", "mod+k"], () => {
-    if (!open) {
-      handleOpen();
-    } else {
-      setOpen(false);
-    }
-  }, {
-    preventDefault: true,
-  }, [open, handleOpen, setOpen]);
+  useHotkeys(
+    ["/", "mod+f", "mod+k"],
+    () => {
+      if (!open) {
+        handleOpen();
+      } else {
+        setOpen(false);
+      }
+    },
+    {
+      preventDefault: true,
+    },
+    [open, handleOpen, setOpen],
+  );
 
   return (
     <>
@@ -279,11 +290,7 @@ export default function CommandMenu() {
         <SearchIcon className="w-4 h-4" />
       </Button>
 
-      <CommandDialog
-        open={open}
-        style={dialogStyle}
-        onOpenChange={handleClose}
-      >
+      <CommandDialog open={open} style={dialogStyle} onOpenChange={handleClose}>
         <Command shouldFilter={activePage === "PLAYLISTS"} id="main-command">
           <CommandInput
             data-testid="command-menu-input"

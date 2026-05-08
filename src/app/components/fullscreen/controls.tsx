@@ -53,7 +53,10 @@ function FullscreenControls() {
           size="icon"
           variant="ghost"
           data-state={isShuffleActive ? "active" : undefined}
-          className={clsx(secondaryBtnClass, isShuffleActive && "fullscreen-button-active")}
+          className={clsx(
+            secondaryBtnClass,
+            isShuffleActive && "fullscreen-button-active",
+          )}
           style={{ backfaceVisibility: "hidden" }}
           onClick={() => toggleShuffle()}
           disabled={isPlayingOneSong() || !hasNext}
@@ -94,7 +97,10 @@ function FullscreenControls() {
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ duration: 0.1 }}
             >
-              <Pause className={clsx("w-6 h-6", playButtonIcon)} strokeWidth={1} />
+              <Pause
+                className={clsx("w-6 h-6", playButtonIcon)}
+                strokeWidth={1}
+              />
             </motion.div>
           ) : (
             <motion.div

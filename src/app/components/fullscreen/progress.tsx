@@ -72,8 +72,12 @@ export function FullscreenProgress({
       <div className="w-full">
         <ProgressSlider {...sliderProps} />
         <div className="flex justify-between mt-1">
-          <div className="tabular-nums text-foreground/50 text-xs">{currentTime}</div>
-          <div className="tabular-nums text-foreground/50 text-xs">{songDuration}</div>
+          <div className="tabular-nums text-foreground/50 text-xs">
+            {currentTime}
+          </div>
+          <div className="tabular-nums text-foreground/50 text-xs">
+            {songDuration}
+          </div>
         </div>
       </div>
     );

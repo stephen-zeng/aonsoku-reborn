@@ -411,7 +411,8 @@ function trimSonglistForIdb(songlist: ISongList): ISongList {
       -MAX_USER_QUEUE_IDB_SIZE,
     ),
     originalUserSongs: rest.originalUserSongs?.slice(-MAX_USER_QUEUE_IDB_SIZE),
-    shuffleStartHistory: rest.shuffleStartHistory?.slice(-MAX_SHUFFLE_START_HISTORY) ?? [],
+    shuffleStartHistory:
+      rest.shuffleStartHistory?.slice(-MAX_SHUFFLE_START_HISTORY) ?? [],
   };
 }
 

@@ -446,7 +446,10 @@ function UnifiedQueueView({
 
   return (
     <div
-      className={cn("flex flex-col h-full overflow-hidden", FULLSCREEN_QUEUE_BG_CLASS)}
+      className={cn(
+        "flex flex-col h-full overflow-hidden",
+        FULLSCREEN_QUEUE_BG_CLASS,
+      )}
     >
       <div
         className="flex-1 overflow-y-auto no-scrollbar px-2"
@@ -628,7 +631,9 @@ function UnifiedQueueView({
                             id={song.id}
                             song={song}
                             isActive={false}
-                            onPlay={() => playFromQueue(contextSongs, contextIdx)}
+                            onPlay={() =>
+                              playFromQueue(contextSongs, contextIdx)
+                            }
                             tier="context"
                             {...queueItemProps}
                           />
@@ -669,7 +674,7 @@ function UnifiedQueueView({
       </div>
     </div>
   );
-  }
+}
 
 function VirtualizedQueueView({
   playHistory,

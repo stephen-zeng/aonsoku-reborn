@@ -65,10 +65,7 @@ const ScrollBar = React.forwardRef<
     {...props}
   >
     <ScrollAreaPrimitive.ScrollAreaThumb
-      className={cn(
-        "relative flex-1 rounded-full bg-border",
-        thumbClassName,
-      )}
+      className={cn("relative flex-1 rounded-full bg-border", thumbClassName)}
     />
   </ScrollAreaPrimitive.ScrollAreaScrollbar>
 ));

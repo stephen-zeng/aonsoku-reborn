@@ -35,10 +35,7 @@ export const QueueCurrentSong = memo(function QueueCurrentSong({
   if (!currentSong) return null;
 
   return (
-    <div
-      className={clsx("pt-2 pb-0.5 px-2 rounded-lg")}
-      onClick={onClick}
-    >
+    <div className={clsx("pt-2 pb-0.5 px-2 rounded-lg")} onClick={onClick}>
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded overflow-hidden shrink-0 bg-accent">
           <CachedImage
@@ -92,7 +89,9 @@ export const QueueModeButtons = memo(function QueueModeButtons() {
 
   const activeBtn = clsx(
     "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium",
-    isBackdropDark ? "bg-white/15 text-white" : "bg-foreground/15 text-foreground",
+    isBackdropDark
+      ? "bg-white/15 text-white"
+      : "bg-foreground/15 text-foreground",
   );
 
   const inactiveBtn = clsx(

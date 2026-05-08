@@ -47,7 +47,11 @@ export function VolumeBar() {
             : t("player.tooltips.volume.mute")
         }
       >
-        <VolumeIcon volume={displayVolume} size={16} className="text-foreground/70" />
+        <VolumeIcon
+          volume={displayVolume}
+          size={16}
+          className="text-foreground/70"
+        />
       </Button>
       <Slider
         variant="secondary"

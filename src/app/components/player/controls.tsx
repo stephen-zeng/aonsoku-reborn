@@ -76,14 +76,14 @@ export function PlayerControls({ song, radio }: PlayerControlsProps) {
   return (
     <div className="flex w-full gap-1 justify-center items-center mb-1">
       {isSong && (
-      <PlayerButton
-        className={clsx(isShuffleActive && "player-button-active")}
-        disabled={!song || isPlayingOneSong() || !hasNext}
-        onClick={toggleShuffle}
-        data-testid="player-button-shuffle"
-        tooltip={shuffleTooltip}
-        unfocusable
-      >
+        <PlayerButton
+          className={clsx(isShuffleActive && "player-button-active")}
+          disabled={!song || isPlayingOneSong() || !hasNext}
+          onClick={toggleShuffle}
+          data-testid="player-button-shuffle"
+          tooltip={shuffleTooltip}
+          unfocusable
+        >
           <Shuffle
             className={clsx(
               isShuffleActive ? "text-primary" : "text-secondary-foreground",
@@ -133,7 +133,7 @@ export function PlayerControls({ song, radio }: PlayerControlsProps) {
           onClick={toggleLoop}
           data-testid="player-button-loop"
           tooltip={repeatTooltip}
-        unfocusable
+          unfocusable
         >
           {isLoopOff && <Repeat className="text-secondary-foreground" />}
           {isLoopAll && <Repeat className="text-primary" />}

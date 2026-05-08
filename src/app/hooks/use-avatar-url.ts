@@ -43,11 +43,7 @@ export function useAvatarUrl(username: string | undefined): string | null {
 
       if (!cancelled) {
         setAvatarUrl(null);
-        if (
-          !isOffline &&
-          username &&
-          pendingAutoCache.current !== username
-        ) {
+        if (!isOffline && username && pendingAutoCache.current !== username) {
           pendingAutoCache.current = username;
           cacheManager.cacheAvatar(username).catch(() => {});
         }

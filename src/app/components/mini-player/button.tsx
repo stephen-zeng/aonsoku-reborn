@@ -60,7 +60,7 @@ export function MiniPlayerButton() {
             pipWindow && "text-primary hover:text-primary player-button-active",
           )}
           disabled={disabled}
-            unfocusable
+          unfocusable
         >
           <PictureInPicture2Icon className="w-4 h-4" />
         </Button>

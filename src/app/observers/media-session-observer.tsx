@@ -152,7 +152,8 @@ export function MediaSessionObserver() {
         ? remotePlayerState.currentTime
         : progress;
 
-    const songId = (song as { id?: string })?.id || (song as { title: string }).title;
+    const songId =
+      (song as { id?: string })?.id || (song as { title: string }).title;
     const now = Date.now();
     const lastState = lastPositionStateRef.current;
 

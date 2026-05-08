@@ -1,4 +1,8 @@
-import { getCoverArtUrl, getAvatarUrl, getSongStreamUrl } from "@/api/httpClient";
+import {
+  getCoverArtUrl,
+  getAvatarUrl,
+  getSongStreamUrl,
+} from "@/api/httpClient";
 import { asyncPool } from "@/service/cache/concurrency";
 import { subsonic } from "@/service/subsonic";
 import { useCacheStore } from "@/store/cache.store";

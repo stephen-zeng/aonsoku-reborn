@@ -3,11 +3,7 @@ import { Command as CommandPrimitive } from "cmdk";
 import { Search } from "lucide-react";
 import * as React from "react";
 
-import {
-  Dialog,
-  DialogPortal,
-  DialogTitle,
-} from "@/app/components/ui/dialog";
+import { Dialog, DialogPortal, DialogTitle } from "@/app/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 
@@ -53,17 +49,17 @@ const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-    <div className="relative border-b px-3 h-8" data-cmdk-input-wrapper="">
-      <Search className="absolute left-3 top-[7px] h-[18px] w-[18px] text-muted-foreground" />
-      <CommandPrimitive.Input
-        ref={ref}
-        className={cn(
-          "h-8 w-full pl-8 rounded-md bg-transparent py-0 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
-          className,
-        )}
-        {...props}
-      />
-    </div>
+  <div className="relative border-b px-3 h-8" data-cmdk-input-wrapper="">
+    <Search className="absolute left-3 top-[7px] h-[18px] w-[18px] text-muted-foreground" />
+    <CommandPrimitive.Input
+      ref={ref}
+      className={cn(
+        "h-8 w-full pl-8 rounded-md bg-transparent py-0 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+        className,
+      )}
+      {...props}
+    />
+  </div>
 ));
 
 CommandInput.displayName = CommandPrimitive.Input.displayName;
