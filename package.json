@@ -158,7 +158,7 @@
     "@vitest/coverage-v8": "4.1.5",
     "@vitest/ui": "4.1.5",
     "autoprefixer": "10.5.0",
-    "cypress": "13.17.0",
+    "cypress": "14.5.4",
     "cypress-real-events": "1.15.0",
     "electron": "39.8.9",
     "electron-vite": "3.1.0",
