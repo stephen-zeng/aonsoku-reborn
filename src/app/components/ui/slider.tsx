@@ -354,8 +354,8 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
 				<div
 					ref={trackRef}
 					className={clsx(
-						"relative h-1 w-full grow overflow-hidden rounded-full select-none transition-transform duration-150 ease-out origin-center",
-						isTouching && "scale-y-[1.75]",
+						"relative h-1 w-full grow overflow-hidden select-none transition-all duration-150 ease-out origin-center",
+						isTouching ? "scale-y-[1.75] rounded-full" : "rounded",
 						!isBuffering && variant === "default" && "bg-secondary",
 						isBuffering && "buffer-track",
 						isBuffering &&
@@ -374,7 +374,8 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
 					/>
 					<div
 						className={clsx(
-							"absolute h-full select-none rounded",
+							"absolute h-full select-none",
+							isTouching ? "rounded-full" : "rounded",
 							variant === "default" && "bg-primary",
 							variant === "secondary" &&
 								(contrast?.sliderRangeColor ??
@@ -684,8 +685,8 @@ export function ProgressSlider(props: ProgressSliderProps) {
 				<div
 					ref={trackRef}
 					className={clsx(
-						"relative h-1 w-full grow overflow-hidden rounded-full select-none transition-transform duration-150 ease-out origin-center",
-						isTouching && "scale-y-[1.75]",
+						"relative h-1 w-full grow overflow-hidden select-none transition-all duration-150 ease-out origin-center",
+						isTouching ? "scale-y-[1.75] rounded-full" : "rounded",
 						!isBuffering && variant === "default" && "bg-secondary",
 						isBuffering && "buffer-track",
 						isBuffering &&
@@ -709,7 +710,11 @@ export function ProgressSlider(props: ProgressSliderProps) {
 							variant === "secondary" &&
 								(contrast?.sliderRangeColor ??
 									"bg-secondary-foreground"),
-							showTooltip ? "rounded-none" : "rounded",
+							isTouching
+								? "rounded-full"
+								: showTooltip
+									? "rounded-none"
+									: "rounded",
 						)}
 						style={{ width: `${percentage}%` }}
 					/>
