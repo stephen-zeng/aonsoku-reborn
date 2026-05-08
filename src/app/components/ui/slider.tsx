@@ -28,6 +28,189 @@ type SliderProps = React.ComponentPropsWithoutRef<
   contrast?: FullscreenContrast;
 };
 
+type TouchState = {
+  startX: number;
+  startValue: number;
+  currentValue: number;
+  isDragging: boolean;
+};
+
+type RelativeTouchSliderOptions = {
+  value: number[];
+  defaultValue?: number[];
+  min?: number;
+  max?: number;
+  step?: number;
+  onValueChange?: (value: number[]) => void;
+  onValueCommit?: (value: number[]) => void;
+  disabled?: boolean;
+};
+
+const TAP_THRESHOLD = 5;
+
+function useRelativeTouchSlider({
+  value,
+  defaultValue,
+  min,
+  max,
+  step,
+  onValueChange,
+  onValueCommit,
+  disabled,
+}: RelativeTouchSliderOptions) {
+  const touchState = React.useRef<TouchState | null>(null);
+  const lastCommittedValue = React.useRef<number | null>(null);
+  const callbacksRef = React.useRef({
+    value,
+    defaultValue,
+    min,
+    max,
+    step,
+    onValueChange,
+    onValueCommit,
+    disabled,
+  });
+
+  React.useEffect(() => {
+    callbacksRef.current = {
+      value,
+      defaultValue,
+      min,
+      max,
+      step,
+      onValueChange,
+      onValueCommit,
+      disabled,
+    };
+  });
+
+  const cleanupRef = React.useRef<(() => void) | null>(null);
+
+  return React.useCallback((el: HTMLSpanElement | null) => {
+    if (cleanupRef.current) {
+      cleanupRef.current();
+      cleanupRef.current = null;
+    }
+
+    if (!el) return;
+
+    const getCurrentValue = () => {
+      const {
+        value: val,
+        defaultValue: defVal,
+        min: rawMin,
+      } = callbacksRef.current;
+      if (val && val.length > 0) return val[0];
+      if (lastCommittedValue.current !== null)
+        return lastCommittedValue.current;
+      return defVal?.[0] ?? rawMin ?? 0;
+    };
+
+    const handlePointerDown = (e: PointerEvent) => {
+      if (e.pointerType !== "touch") return;
+
+      const { disabled: isDisabled } = callbacksRef.current;
+      if (isDisabled) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+
+      touchState.current = {
+        startX: e.clientX,
+        startValue: getCurrentValue(),
+        currentValue: getCurrentValue(),
+        isDragging: false,
+      };
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (e.pointerType !== "touch") return;
+      if (!touchState.current) return;
+
+      const state = touchState.current;
+      const deltaX = e.clientX - state.startX;
+
+      if (Math.abs(deltaX) > TAP_THRESHOLD) {
+        state.isDragging = true;
+      }
+
+      if (!state.isDragging) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const {
+        min: rawMin,
+        max: rawMax,
+        step: rawStep,
+        onValueChange: onChange,
+      } = callbacksRef.current;
+
+      const safeMin = rawMin ?? 0;
+      const safeMax = rawMax ?? 100;
+      const safeStep = rawStep ?? 1;
+
+      const rect = el.getBoundingClientRect();
+      const deltaRatio = deltaX / rect.width;
+      const deltaValue = deltaRatio * (safeMax - safeMin);
+      let newValue = state.startValue + deltaValue;
+      newValue = Math.min(safeMax, Math.max(safeMin, newValue));
+      newValue = Math.round(newValue / safeStep) * safeStep;
+
+      if (newValue !== state.currentValue) {
+        state.currentValue = newValue;
+        onChange?.([newValue]);
+      }
+    };
+
+    const handlePointerUp = (e: PointerEvent) => {
+      if (e.pointerType !== "touch") return;
+      if (!touchState.current) return;
+
+      const state = touchState.current;
+      const { onValueCommit: onCommit } = callbacksRef.current;
+
+      e.preventDefault();
+
+      if (state.isDragging) {
+        lastCommittedValue.current = state.currentValue;
+        onCommit?.([state.currentValue]);
+      }
+
+      touchState.current = null;
+    };
+
+    el.addEventListener("pointerdown", handlePointerDown, {
+      capture: true,
+    });
+    el.addEventListener("pointermove", handlePointerMove, {
+      capture: true,
+    });
+    el.addEventListener("pointerup", handlePointerUp, {
+      capture: true,
+    });
+    el.addEventListener("pointercancel", handlePointerUp, {
+      capture: true,
+    });
+
+    cleanupRef.current = () => {
+      el.removeEventListener("pointerdown", handlePointerDown, {
+        capture: true,
+      });
+      el.removeEventListener("pointermove", handlePointerMove, {
+        capture: true,
+      });
+      el.removeEventListener("pointerup", handlePointerUp, {
+        capture: true,
+      });
+      el.removeEventListener("pointercancel", handlePointerUp, {
+        capture: true,
+      });
+    };
+  }, []);
+}
+
 const Slider = React.forwardRef<
   React.ElementRef<typeof SliderPrimitive.Root>,
   SliderProps
@@ -44,6 +227,29 @@ const Slider = React.forwardRef<
     },
     ref,
   ) => {
+    const bindTouchEvents = useRelativeTouchSlider({
+      value: props.value ?? [],
+      defaultValue: props.defaultValue,
+      min: props.min,
+      max: props.max,
+      step: props.step,
+      onValueChange: props.onValueChange,
+      onValueCommit: props.onValueCommit,
+      disabled: props.disabled,
+    });
+
+    const setRefs = React.useCallback(
+      (node: HTMLSpanElement | null) => {
+        bindTouchEvents(node);
+        if (typeof ref === "function") {
+          ref(node);
+        } else if (ref) {
+          ref.current = node;
+        }
+      },
+      [ref, bindTouchEvents],
+    );
+
     const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
       event.preventDefault();
     };
@@ -55,13 +261,16 @@ const Slider = React.forwardRef<
       !isBuffering && variant === "default" && "bg-secondary",
       isBuffering && "buffer-track",
       isBuffering && variant === "secondary" && "buffer-secondary",
-      !isBuffering && variant === "secondary" && (contrast?.sliderTrackColor ?? "bg-muted-foreground/70"),
+      !isBuffering &&
+        variant === "secondary" &&
+        (contrast?.sliderTrackColor ?? "bg-muted-foreground/70"),
     );
 
     const rangeClass = clsx(
       "absolute h-full select-none rounded",
       variant === "default" && "bg-primary",
-      variant === "secondary" && (contrast?.sliderRangeColor ?? "bg-secondary-foreground"),
+      variant === "secondary" &&
+        (contrast?.sliderRangeColor ?? "bg-secondary-foreground"),
     );
 
     const thumbClass = clsx(
@@ -71,12 +280,14 @@ const Slider = React.forwardRef<
       "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
       showTooltip && "opacity-100",
       variant === "default" && "bg-foreground border-foreground",
-      variant === "secondary" && (contrast?.sliderThumbColor ?? "bg-secondary-foreground border-secondary-foreground"),
+      variant === "secondary" &&
+        (contrast?.sliderThumbColor ??
+          "bg-secondary-foreground border-secondary-foreground"),
     );
 
     return (
       <SliderPrimitive.Root
-        ref={ref}
+        ref={setRefs}
         aria-busy={isBuffering || undefined}
         className={cn(
           "relative h-3 flex w-full touch-none select-none items-center cursor-pointer",
@@ -338,9 +549,28 @@ export function ProgressSlider(props: ProgressSliderProps) {
     event.preventDefault();
   };
 
+  const bindTouchEvents = useRelativeTouchSlider({
+    value: props.value ?? [],
+    defaultValue: props.defaultValue,
+    min: props.min,
+    max: props.max,
+    step: props.step,
+    onValueChange: ([v]) => handleValueChange(v),
+    onValueCommit: rest.onValueCommit,
+    disabled: props.disabled,
+  });
+
+  const setRefs = React.useCallback(
+    (node: HTMLSpanElement | null) => {
+      bindTouchEvents(node);
+      sliderRef.current = node;
+    },
+    [bindTouchEvents],
+  );
+
   return (
     <SliderPrimitive.Root
-      ref={sliderRef}
+      ref={setRefs}
       aria-busy={isBuffering || undefined}
       className={cn(
         "relative h-3 flex w-full touch-none select-none items-center cursor-pointer",
@@ -351,53 +581,58 @@ export function ProgressSlider(props: ProgressSliderProps) {
       onMouseMove={handleMouseMove}
       onValueChange={([value]) => handleValueChange(value)}
       {...rest}
+    >
+      <SliderTooltip
+        open={enableTooltip}
+        variant={variant}
+        value={formattedTooltipValue}
+        position={cursorPosition}
+        align="start"
+        sideOffset={8}
       >
-        <SliderTooltip
-          open={enableTooltip}
-          variant={variant}
-          value={formattedTooltipValue}
-          position={cursorPosition}
-          align="start"
-          sideOffset={8}
+        <SliderPrimitive.Track
+          className={clsx(
+            "relative h-1 w-full grow overflow-hidden rounded-full select-none",
+            !isBuffering && variant === "default" && "bg-secondary",
+            isBuffering && "buffer-track",
+            isBuffering && variant === "secondary" && "buffer-secondary",
+            !isBuffering &&
+              variant === "secondary" &&
+              (contrast?.sliderTrackColor ?? "bg-muted-foreground/70"),
+          )}
+          onContextMenu={handleContextMenu}
         >
-          <SliderPrimitive.Track
+          <BufferedProgressIndicator
+            bufferedProgress={bufferedProgress}
+            max={maxValue}
+          />
+          <SliderPrimitive.Range
             className={clsx(
-              "relative h-1 w-full grow overflow-hidden rounded-full select-none",
-              !isBuffering && variant === "default" && "bg-secondary",
-              isBuffering && "buffer-track",
-              isBuffering && variant === "secondary" && "buffer-secondary",
-              !isBuffering && variant === "secondary" && (contrast?.sliderTrackColor ?? "bg-muted-foreground/70"),
+              "absolute h-full select-none transition-[border-radius]",
+              variant === "default" && "bg-primary",
+              variant === "secondary" &&
+                (contrast?.sliderRangeColor ?? "bg-secondary-foreground"),
+              showTooltip ? "rounded-none" : "rounded",
             )}
             onContextMenu={handleContextMenu}
-          >
-            <BufferedProgressIndicator
-              bufferedProgress={bufferedProgress}
-              max={maxValue}
-            />
-            <SliderPrimitive.Range
-              className={clsx(
-                "absolute h-full select-none transition-[border-radius]",
-                variant === "default" && "bg-primary",
-                variant === "secondary" && (contrast?.sliderRangeColor ?? "bg-secondary-foreground"),
-                showTooltip ? "rounded-none" : "rounded",
-              )}
-              onContextMenu={handleContextMenu}
-            />
-          </SliderPrimitive.Track>
-        </SliderTooltip>
+          />
+        </SliderPrimitive.Track>
+      </SliderTooltip>
 
-        <SliderPrimitive.Thumb
-          className={clsx(
-            "block opacity-0 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full",
-            "border-2 transition-[background-color,opacity]",
-            "focus-visible:outline-none focus-visible:ring-transparent",
-            "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
-            showTooltip && "opacity-100",
-            variant === "default" && "bg-foreground border-foreground",
-            variant === "secondary" && (contrast?.sliderThumbColor ?? "bg-secondary-foreground border-secondary-foreground"),
-          )}
-          onKeyDown={(e) => e.preventDefault()}
-        />
+      <SliderPrimitive.Thumb
+        className={clsx(
+          "block opacity-0 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full",
+          "border-2 transition-[background-color,opacity]",
+          "focus-visible:outline-none focus-visible:ring-transparent",
+          "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
+          showTooltip && "opacity-100",
+          variant === "default" && "bg-foreground border-foreground",
+          variant === "secondary" &&
+            (contrast?.sliderThumbColor ??
+              "bg-secondary-foreground border-secondary-foreground"),
+        )}
+        onKeyDown={(e) => e.preventDefault()}
+      />
     </SliderPrimitive.Root>
   );
 }
