@@ -396,7 +396,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
 							"ring-offset-background transition-[background-color,opacity]",
 							"focus-visible:outline-none focus-visible:ring-transparent",
 							"disabled:pointer-events-none disabled:opacity-50 transform-gpu",
-						showTooltip ? "opacity-100" : "opacity-0",
+							"opacity-0 group-hover:opacity-100",
 							variant === "default" &&
 								"bg-foreground border-foreground",
 							variant === "secondary" &&
@@ -664,7 +664,7 @@ export function ProgressSlider(props: ProgressSliderProps) {
 			ref={setRefs}
 			aria-busy={isBuffering || undefined}
 			className={cn(
-				"relative h-3 flex w-full touch-none select-none items-center cursor-pointer",
+				"group relative h-3 flex w-full touch-none select-none items-center cursor-pointer",
 				className,
 			)}
 			onMouseOver={handleMouseOver}
@@ -717,18 +717,18 @@ export function ProgressSlider(props: ProgressSliderProps) {
 			</SliderTooltip>
 
 			<div
-				className={clsx(
-					"absolute top-1/2 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full border-2",
-					"ring-offset-background transition-[background-color,opacity]",
-					"focus-visible:outline-none focus-visible:ring-transparent",
-					"disabled:pointer-events-none disabled:opacity-50 transform-gpu",
-					showTooltip ? "opacity-100" : "opacity-0",
-					variant === "default" &&
-						"bg-foreground border-foreground",
-					variant === "secondary" &&
-						(contrast?.sliderThumbColor ??
-							"bg-secondary-foreground border-secondary-foreground"),
-				)}
+			className={clsx(
+				"absolute top-1/2 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full border-2",
+				"ring-offset-background transition-[background-color,opacity]",
+				"focus-visible:outline-none focus-visible:ring-transparent",
+				"disabled:pointer-events-none disabled:opacity-50 transform-gpu",
+				"opacity-0 group-hover:opacity-100",
+				variant === "default" &&
+					"bg-foreground border-foreground",
+				variant === "secondary" &&
+					(contrast?.sliderThumbColor ??
+						"bg-secondary-foreground border-secondary-foreground"),
+			)}
 				style={{
 					left: `${percentage}%`,
 					transform: "translate(-50%, -50%)",
