@@ -107,7 +107,6 @@ function MobileSongRow({
       data-testid="mobile-song-row"
       className={cn(
         "group flex min-h-14 w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors active:bg-accent/70",
-        isActive && "bg-accent",
       )}
       onClick={() => onPlaySong(index)}
       onKeyDown={handleKeyDown}

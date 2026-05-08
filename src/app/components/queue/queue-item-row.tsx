@@ -103,7 +103,6 @@ export const QueueItemRow = forwardRef<
       className={clsx([
         "group/queuerow flex items-center w-full h-16 text-sm rounded-md px-3 gap-2",
         "hover:bg-muted",
-        isActive && "bg-accent",
       ])}
       style={style}
       {...dragAttributes}

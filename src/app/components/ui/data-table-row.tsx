@@ -62,7 +62,7 @@ export function TableRow<TData>({
           isModern && !row.getIsSelected() && "rounded-md",
           "hover:bg-muted md:data-[state=selected]:bg-primary/75",
           isClassic && "border-b",
-          isRowSongActive && isModern && "row-active bg-accent",
+          isRowSongActive && isModern && "row-active",
         )}
       >
         {row.getVisibleCells().map((cell) => (
