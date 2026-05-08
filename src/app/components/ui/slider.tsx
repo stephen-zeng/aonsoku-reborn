@@ -342,19 +342,19 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
 			>
 				<div
 					ref={trackRef}
-					className={clsx(
-						"relative h-1 w-full grow overflow-hidden rounded-full select-none transition-transform duration-150 ease-out origin-center",
-						isTouching && "scale-y-[2.5]",
-						!isBuffering && variant === "default" && "bg-secondary",
-						isBuffering && "buffer-track",
-						isBuffering &&
-							variant === "secondary" &&
-							"buffer-secondary",
-						!isBuffering &&
-							variant === "secondary" &&
-							(contrast?.sliderTrackColor ??
-								"bg-muted-foreground/70"),
-					)}
+				className={clsx(
+					"relative w-full grow overflow-hidden rounded-full select-none transition-[height] duration-150 ease-out",
+					isTouching ? "h-[10px]" : "h-1",
+					!isBuffering && variant === "default" && "bg-secondary",
+					isBuffering && "buffer-track",
+					isBuffering &&
+						variant === "secondary" &&
+						"buffer-secondary",
+					!isBuffering &&
+						variant === "secondary" &&
+						(contrast?.sliderTrackColor ??
+							"bg-muted-foreground/70"),
+				)}
 					onContextMenu={(e) => e.preventDefault()}
 				>
 					<BufferedProgressIndicator
