@@ -704,14 +704,11 @@ export function ProgressSlider(props: ProgressSliderProps) {
 					/>
 					<div
 						className={clsx(
-							"absolute h-full select-none transition-[border-radius]",
+							"absolute h-full select-none rounded-full",
 							variant === "default" && "bg-primary",
 							variant === "secondary" &&
 								(contrast?.sliderRangeColor ??
 									"bg-secondary-foreground"),
-							isTouching || !showTooltip
-								? "rounded-full"
-								: "rounded-none",
 						)}
 						style={{ width: `${percentage}%` }}
 					/>
