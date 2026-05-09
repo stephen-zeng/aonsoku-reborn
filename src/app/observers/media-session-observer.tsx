@@ -4,12 +4,14 @@ import { useWakeLock } from "@/app/hooks/use-wake-lock";
 import { useLanControlClientStore } from "@/store/lanControlClient.store";
 import {
   useIsRemoteControlActive,
+  usePlayerCurrentSong,
+  usePlayerCurrentSongIndex,
   usePlayerDuration,
   usePlayerIsPlaying,
   usePlayerIsTransitioning,
   usePlayerMediaType,
   usePlayerProgress,
-  usePlayerSonglist,
+  usePlayerStore,
 } from "@/store/player.store";
 import { appName } from "@/utils/appName";
 import { clampProgress, isValidDuration } from "@/utils/duration";
@@ -22,7 +24,9 @@ export function MediaSessionObserver() {
   const isPlaying = usePlayerIsPlaying();
   const isTransitioning = usePlayerIsTransitioning();
   const { isRadio, isSong } = usePlayerMediaType();
-  const { currentList, currentSongIndex, radioList } = usePlayerSonglist();
+  const storeCurrentSong = usePlayerCurrentSong();
+  const currentSongIndex = usePlayerCurrentSongIndex();
+  const radioList = usePlayerStore((s) => s.songlist.radioList);
   const progress = usePlayerProgress();
   const currentDuration = usePlayerDuration();
   const radioLabel = t("radios.label");
@@ -48,12 +52,12 @@ export function MediaSessionObserver() {
           albumId: remoteCurrentSong.albumId,
           duration: remoteCurrentSong.duration,
         }
-      : (currentList[currentSongIndex] ?? null);
+      : storeCurrentSong;
   const radio = radioList[currentSongIndex] ?? null;
 
   const hasNothingPlaying = isRemoteActive
     ? !remoteCurrentSong || !remoteCurrentSong.id
-    : currentList.length === 0 && radioList.length === 0;
+    : !storeCurrentSong && radioList.length === 0;
 
   const resetAppTitle = useCallback(() => {
     document.title = appName;
@@ -109,7 +113,8 @@ export function MediaSessionObserver() {
       title = `${song.title} - ${song.artist} | Aonsoku`;
       metadataKey = `song:${song.id || song.title}`;
 
-      if (lastMetadataRef.current !== metadataKey) {
+      const metadataChanged = lastMetadataRef.current !== metadataKey;
+      if (metadataChanged) {
         logger.info("[MediaSession] Setting song session:", title);
         manageMediaSession.setMediaSession(song);
         lastMetadataRef.current = metadataKey;
@@ -167,24 +172,18 @@ export function MediaSessionObserver() {
     const now = Date.now();
     const lastState = lastPositionStateRef.current;
 
-    // Determine if we need to update the position state
     let shouldUpdate = false;
 
     if (songId !== lastState.songId) {
-      // 1. Song changed
       shouldUpdate = true;
     } else if (effectiveIsPlaying !== lastState.isPlaying) {
-      // 2. Playback state toggled
       shouldUpdate = true;
     } else {
-      // 3. Check for seek (progress jump)
-      // Expected progress based on natural playback since last report
       const elapsedSeconds = (now - lastState.timestamp) / 1000;
       const expectedProgress = lastState.isPlaying
         ? lastState.progress + elapsedSeconds
         : lastState.progress;
 
-      // If actual progress deviates from expected by more than 2 seconds, it's a seek
       if (Math.abs(effectiveProgress - expectedProgress) > 2) {
         shouldUpdate = true;
       }

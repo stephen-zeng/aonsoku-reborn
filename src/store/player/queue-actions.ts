@@ -615,6 +615,11 @@ export function createQueueActions(shared: SharedDeps) {
             state.playerState.isPlaying = true;
           }
           state.playerState.isTransitioning = true;
+          const nextSong = getCurrentSong(state.songlist as ISongList);
+          state.songlist.currentSong = nextSong;
+          state.playerState.currentDuration = nextSong?.duration
+            ? Math.round(nextSong.duration)
+            : 0;
         });
         return;
       }
@@ -626,6 +631,11 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
           state.playerState.isTransitioning = true;
+          const nextSong = getCurrentSong(state.songlist as ISongList);
+          state.songlist.currentSong = nextSong;
+          state.playerState.currentDuration = nextSong?.duration
+            ? Math.round(nextSong.duration)
+            : 0;
         });
         return;
       }
@@ -647,6 +657,11 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
           state.playerState.isTransitioning = true;
+          const nextSong = getCurrentSong(state.songlist as ISongList);
+          state.songlist.currentSong = nextSong;
+          state.playerState.currentDuration = nextSong?.duration
+            ? Math.round(nextSong.duration)
+            : 0;
         });
         return;
       }
@@ -661,6 +676,11 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
           state.playerState.isTransitioning = true;
+          const nextSong = getCurrentSong(state.songlist as ISongList);
+          state.songlist.currentSong = nextSong;
+          state.playerState.currentDuration = nextSong?.duration
+            ? Math.round(nextSong.duration)
+            : 0;
         });
       }
     },
@@ -714,6 +734,11 @@ export function createQueueActions(shared: SharedDeps) {
 
           state.playerState.isPlaying = true;
           state.playerState.isTransitioning = true;
+          const nextSong = getCurrentSong(state.songlist as ISongList);
+          state.songlist.currentSong = nextSong;
+          state.playerState.currentDuration = nextSong?.duration
+            ? Math.round(nextSong.duration)
+            : 0;
         });
         return;
       }
@@ -725,6 +750,11 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
           state.playerState.isTransitioning = true;
+          const nextSong = getCurrentSong(state.songlist as ISongList);
+          state.songlist.currentSong = nextSong;
+          state.playerState.currentDuration = nextSong?.duration
+            ? Math.round(nextSong.duration)
+            : 0;
         });
         return;
       }
@@ -736,6 +766,11 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
           state.playerState.isTransitioning = true;
+          const nextSong = getCurrentSong(state.songlist as ISongList);
+          state.songlist.currentSong = nextSong;
+          state.playerState.currentDuration = nextSong?.duration
+            ? Math.round(nextSong.duration)
+            : 0;
         });
       }
     },
@@ -840,6 +875,8 @@ export function createQueueActions(shared: SharedDeps) {
     setCurrentSong: () => {
       if (isRemoteActive()) return;
       const song = getCurrentSong(get().songlist);
+      const currentSongId = get().songlist.currentSong?.id;
+      if (song?.id === currentSongId && song?.id !== undefined) return;
       set((state) => {
         state.songlist.currentSong = song;
         state.playerState.currentDuration = song?.duration

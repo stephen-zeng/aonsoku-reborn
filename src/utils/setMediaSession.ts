@@ -213,6 +213,7 @@ async function setRadioMediaSession(label: string, radioName: string) {
 
 function ensurePlaybackStatePlaying() {
   if (!isMediaSessionSupported()) return;
+  cancelRemoveDebounce();
   if (navigator.mediaSession.playbackState !== "playing") {
     navigator.mediaSession.playbackState = "playing";
   }
