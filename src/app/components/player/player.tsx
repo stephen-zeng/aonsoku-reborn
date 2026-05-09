@@ -222,6 +222,11 @@ export function Player() {
   const handleAudioCanPlay = useCallback(() => {
     setStoreIsBuffering(false);
     updateAudioDuration();
+  }, [setStoreIsBuffering, updateAudioDuration]);
+
+  const handleSongCanPlay = useCallback(() => {
+    setStoreIsBuffering(false);
+    updateAudioDuration();
     setIsTransitioning(false);
   }, [setStoreIsBuffering, updateAudioDuration, setIsTransitioning]);
 
@@ -245,8 +250,9 @@ export function Player() {
 
   const handlePlaybackError = useCallback(() => {
     setBufferedProgress(0);
+    setIsTransitioning(false);
     toast.error(t("warnings.songError"));
-  }, [t, setBufferedProgress]);
+  }, [t, setBufferedProgress, setIsTransitioning]);
 
   const handleReplayGainError = useCallback(() => {
     toast.error(t("warnings.songError"));
@@ -339,7 +345,7 @@ export function Player() {
           onEnded={handleSongEnded}
           onWaiting={handleAudioWaiting}
           onPlaying={handleAudioPlaying}
-          onCanPlay={handleAudioCanPlay}
+          onCanPlay={handleSongCanPlay}
           onSeeked={handleAudioSeeked}
           onPlaybackError={handlePlaybackError}
           onReplayGainError={handleReplayGainError}

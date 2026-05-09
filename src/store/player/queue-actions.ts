@@ -809,6 +809,7 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerProgress.progress = 0;
           state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = false;
+          state.playerState.isTransitioning = false;
         });
       }
     },
@@ -819,6 +820,7 @@ export function createQueueActions(shared: SharedDeps) {
         clearSonglistState(state.songlist);
         state.playerState.mediaType = "song";
         state.playerState.isPlaying = false;
+        state.playerState.isTransitioning = false;
         state.playerState.loopState = LoopState.Off;
         state.playerState.mainDrawerState = false;
         state.playerState.queueState = false;

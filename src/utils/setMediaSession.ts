@@ -29,6 +29,8 @@ function removeMediaSession() {
     removeDebounceTimer = null;
   }
 
+  currentSessionId++;
+
   removeDebounceTimer = setTimeout(() => {
     removeDebounceTimer = null;
     try {
@@ -73,29 +75,32 @@ async function setMediaSession(
   currentSessionId++;
   const sessionId = currentSessionId;
 
-  const basicMetadata = {
-    title: song.title || "Unknown Title",
-    artist: song.artist || "Unknown Artist",
-    album: song.album || "Unknown Album",
-    artwork: [] as MediaImage[],
-  };
+  const title = song.title || "Unknown Title";
+  const artist = song.artist || "Unknown Artist";
+  const album = song.album || "Unknown Album";
 
-  try {
-    navigator.mediaSession.metadata = new MediaMetadata(basicMetadata);
-    logger.info("[MediaSession] Set basic metadata immediately", {
-      title: basicMetadata.title,
-      artist: basicMetadata.artist,
-      album: basicMetadata.album,
-    });
+  ensurePlaybackStatePlaying();
 
-    ensurePlaybackStatePlaying();
-  } catch (error) {
-    logger.error("[MediaSession] Failed to set basic metadata:", error);
+  if (!song.coverArt && !song.albumId) {
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title,
+        artist,
+        album,
+        artwork: [],
+      });
+      logger.info("[MediaSession] Set metadata (no artwork)", {
+        title,
+        artist,
+        album,
+      });
+    } catch (error) {
+      logger.error("[MediaSession] Failed to set metadata:", error);
+    }
+    return;
   }
 
-  async function buildArtwork(): Promise<{ artwork: MediaImage[] }> {
-    if (!song.coverArt && !song.albumId) return { artwork: [] };
-
+  try {
     if (lastArtworkUrl) {
       URL.revokeObjectURL(lastArtworkUrl);
       lastArtworkUrl = null;
@@ -108,6 +113,8 @@ async function setMediaSession(
       size: MEDIA_SESSION_COVER_SIZE,
     });
 
+    let artworkFromCache = false;
+
     const cacheKeys = resolveCacheKeys(song.coverArt, "song", song.albumId);
     for (const key of cacheKeys) {
       try {
@@ -115,6 +122,7 @@ async function setMediaSession(
         if (cachedUrl) {
           src = cachedUrl;
           lastArtworkUrl = cachedUrl;
+          artworkFromCache = true;
           break;
         }
       } catch {
@@ -122,7 +130,37 @@ async function setMediaSession(
       }
     }
 
-    return {
+    if (sessionId !== currentSessionId) {
+      logger.info("[MediaSession] Aborting outdated metadata update");
+      if (artworkFromCache && lastArtworkUrl === src) {
+        URL.revokeObjectURL(lastArtworkUrl);
+        lastArtworkUrl = null;
+      }
+      return;
+    }
+
+    if (!artworkFromCache) {
+      try {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title,
+          artist,
+          album,
+          artwork: [],
+        });
+        logger.info("[MediaSession] Set basic metadata (artwork loading)", {
+          title,
+          artist,
+          album,
+        });
+      } catch (error) {
+        logger.error("[MediaSession] Failed to set basic metadata:", error);
+      }
+    }
+
+    const metadata = {
+      title,
+      artist,
+      album,
       artwork: [
         {
           src,
@@ -131,28 +169,12 @@ async function setMediaSession(
         },
       ],
     };
-  }
-
-  try {
-    const { artwork } = await buildArtwork();
-
-    if (sessionId !== currentSessionId) {
-      logger.info("[MediaSession] Aborting outdated metadata update");
-      return;
-    }
-
-    const metadata = {
-      title: song.title || "Unknown Title",
-      artist: song.artist || "Unknown Artist",
-      album: song.album || "Unknown Album",
-      artwork,
-    };
 
     logger.info("[MediaSession] Setting metadata with artwork", {
       title: metadata.title,
       artist: metadata.artist,
       album: metadata.album,
-      hasArtwork: artwork.length > 0,
+      fromCache: artworkFromCache,
     });
 
     navigator.mediaSession.metadata = new MediaMetadata(metadata);

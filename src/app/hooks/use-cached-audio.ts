@@ -18,7 +18,6 @@ const INITIAL_STATE: CachedAudioState = {
 export function useCachedAudioUrl(songId?: string) {
   const [state, setState] = useState<CachedAudioState>(INITIAL_STATE);
   const blobUrlRef = useRef<string | null>(null);
-  const songIdRef = useRef<string | undefined>(undefined);
 
   const revokePreviousBlobUrl = useCallback(() => {
     if (blobUrlRef.current) {
@@ -30,12 +29,10 @@ export function useCachedAudioUrl(songId?: string) {
   useEffect(() => {
     if (!songId) {
       revokePreviousBlobUrl();
-      songIdRef.current = undefined;
       setState({ url: "", resolvedSongId: undefined, isCached: false, isLoading: false });
       return;
     }
 
-    songIdRef.current = songId;
     let cancelled = false;
 
     (async () => {
@@ -44,8 +41,6 @@ export function useCachedAudioUrl(songId?: string) {
         if (cachedUrl) URL.revokeObjectURL(cachedUrl);
         return;
       }
-
-      if (songIdRef.current !== songId) return;
 
       if (cachedUrl) {
         revokePreviousBlobUrl();
