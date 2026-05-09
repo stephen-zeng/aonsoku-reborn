@@ -85,7 +85,7 @@ export function Player() {
   const song = currentList[currentSongIndex] ?? null;
   const radio = radioList[currentSongIndex];
   const songId = song?.id;
-  const { url: audioSrc } = useCachedAudioUrl(song?.id);
+  const { url: audioSrc, resolvedSongId } = useCachedAudioUrl(song?.id);
 
   const getAudioRef = useCallback(() => {
     if (isRadio) return radioRef;
@@ -105,12 +105,6 @@ export function Player() {
     ) {
       setAudioPlayerRef(currentAudio);
     }
-
-    return () => {
-      if (currentAudio) {
-        setAudioPlayerRef(null);
-      }
-    };
   }, [
     isRemoteControlActive,
     isSong,
@@ -118,6 +112,25 @@ export function Player() {
     songId,
     setBufferedProgress,
   ]);
+
+  useEffect(() => {
+    if (!isSong || isRemoteControlActive) return;
+
+    const currentAudio = audioRef.current;
+    if (
+      currentAudio &&
+      currentAudio !== usePlayerStore.getState().playerState.audioPlayerRef
+    ) {
+      setAudioPlayerRef(currentAudio);
+    }
+
+    return () => {
+      const storedRef = usePlayerStore.getState().playerState.audioPlayerRef;
+      if (storedRef === currentAudio) {
+        setAudioPlayerRef(null);
+      }
+    };
+  }, [isRemoteControlActive, isSong, setAudioPlayerRef]);
 
   const updateAudioDuration = useCallback(() => {
     const audio = getAudioRef().current;
@@ -312,7 +325,7 @@ export function Player() {
         <MemoAudioPlayer
           replayGain={trackReplayGain}
           src={audioSrc}
-          songId={songId}
+          songId={resolvedSongId}
           autoPlay={isPlaying}
           audioRef={audioRef}
           onPlay={handleAudioPlay}

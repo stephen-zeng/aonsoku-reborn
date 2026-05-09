@@ -3,17 +3,22 @@ import { buildAudioUrl, cacheManager } from "@/service/cache";
 
 interface CachedAudioState {
   url: string;
+  resolvedSongId: string | undefined;
   isCached: boolean;
   isLoading: boolean;
 }
 
+const INITIAL_STATE: CachedAudioState = {
+  url: "",
+  resolvedSongId: undefined,
+  isCached: false,
+  isLoading: false,
+};
+
 export function useCachedAudioUrl(songId?: string) {
-  const [state, setState] = useState<CachedAudioState>({
-    url: "",
-    isCached: false,
-    isLoading: false,
-  });
+  const [state, setState] = useState<CachedAudioState>(INITIAL_STATE);
   const blobUrlRef = useRef<string | null>(null);
+  const songIdRef = useRef<string | undefined>(undefined);
 
   const revokePreviousBlobUrl = useCallback(() => {
     if (blobUrlRef.current) {
@@ -25,12 +30,13 @@ export function useCachedAudioUrl(songId?: string) {
   useEffect(() => {
     if (!songId) {
       revokePreviousBlobUrl();
-      setState({ url: "", isCached: false, isLoading: false });
+      songIdRef.current = undefined;
+      setState({ url: "", resolvedSongId: undefined, isCached: false, isLoading: false });
       return;
     }
 
+    songIdRef.current = songId;
     let cancelled = false;
-    setState({ url: "", isCached: false, isLoading: true });
 
     (async () => {
       const cachedUrl = await cacheManager.getCachedAudioUrl(songId);
@@ -39,11 +45,14 @@ export function useCachedAudioUrl(songId?: string) {
         return;
       }
 
+      if (songIdRef.current !== songId) return;
+
       if (cachedUrl) {
         revokePreviousBlobUrl();
         blobUrlRef.current = cachedUrl;
         setState({
           url: cachedUrl,
+          resolvedSongId: songId,
           isCached: true,
           isLoading: false,
         });
@@ -53,6 +62,7 @@ export function useCachedAudioUrl(songId?: string) {
       revokePreviousBlobUrl();
       setState({
         url: buildAudioUrl(songId, "stream"),
+        resolvedSongId: songId,
         isCached: false,
         isLoading: false,
       });
