@@ -25,6 +25,7 @@ import { manageMediaSession } from "@/utils/setMediaSession";
 import { calculateReplayGain, ReplayGainParams } from "@/utils/replayGain";
 import { perceptualToGain } from "@/utils/volume";
 import { isIOS } from "@/utils/platform";
+import { LoopState } from "@/types/playerContext";
 
 type AudioPlayerProps = ComponentPropsWithoutRef<"audio"> & {
   audioRef: RefObject<HTMLAudioElement>;
@@ -46,6 +47,8 @@ export function AudioPlayer({
   onProgress,
   onCanPlay,
   onPlay,
+  onPause,
+  onEnded,
   ...props
 }: AudioPlayerProps) {
   const previousGainRef = useRef(1);
@@ -585,7 +588,28 @@ export function AudioPlayer({
           logger.info("Ignoring pause event triggered by playback error");
           return;
         }
-        props.onPause?.(e);
+        onPause?.(e);
+      }}
+      onEnded={(e) => {
+        const state = usePlayerStore.getState();
+        const loopState = state.playerState.loopState;
+        const songlist = state.songlist;
+
+        const userQueueRemaining = songlist.isInUserQueue
+          ? songlist.userQueue.songs.length - 1
+          : songlist.userQueue.songs.length;
+
+        // LoopState.One means repeat the current song indefinitely;
+        // user queue songs are not advanced to in this mode.
+        const hasNext = loopState === LoopState.One ? userQueueRemaining > 0 : false;
+
+        if (!hasNext && loopState === LoopState.One) {
+          loopRestartingRef.current = true;
+          e.currentTarget.currentTime = 0;
+          safePlay(e.currentTarget, "LoopRestartSync");
+        }
+
+        onEnded?.(e);
       }}
       playsInline
       preload="auto"
