@@ -74,6 +74,7 @@ export function AudioPlayer({
   const effectPausingRef = useRef(false);
   const srcChangingRef = useRef(false);
   const loopRestartingRef = useRef(false);
+  const syncPlayHandledRef = useRef(false);
   const loadedSongIdRef = useRef<string | undefined>(undefined);
   const rangeFallbackRef = useRef(false);
   const MAX_RETRIES = 5;
@@ -452,8 +453,16 @@ export function AudioPlayer({
           if (shouldUseWebAudioReplayGain) {
             await resumeContext();
           }
+
+          if (syncPlayHandledRef.current) {
+            logger.info("Skipping redundant play call, already handled in onEnded");
+            syncPlayHandledRef.current = false;
+            return;
+          }
+
           safePlay(audio, "Song");
         } else {
+          syncPlayHandledRef.current = false;
           pauseAudio(audio);
         }
       } catch (error) {
@@ -566,7 +575,7 @@ export function AudioPlayer({
         onPlay?.(e);
       }}
       onPause={(e) => {
-        if (loopRestartingRef.current) {
+        if (loopRestartingRef.current || e.currentTarget.ended) {
           return;
         }
         if (srcChangingRef.current) {
@@ -605,8 +614,14 @@ export function AudioPlayer({
 
         if (!hasNext && loopState === LoopState.One) {
           loopRestartingRef.current = true;
+          syncPlayHandledRef.current = true;
           e.currentTarget.currentTime = 0;
           safePlay(e.currentTarget, "LoopRestartSync");
+
+          // Force refresh MediaSession metadata as some browsers clear it on ended
+          if (state.songlist.currentSong) {
+            manageMediaSession.setMediaSession(state.songlist.currentSong);
+          }
         }
 
         onEnded?.(e);
