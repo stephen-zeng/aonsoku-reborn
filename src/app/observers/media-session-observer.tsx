@@ -5,6 +5,7 @@ import {
   useIsRemoteControlActive,
   usePlayerDuration,
   usePlayerIsPlaying,
+  usePlayerIsTransitioning,
   usePlayerMediaType,
   usePlayerProgress,
   usePlayerSonglist,
@@ -17,6 +18,7 @@ import { manageMediaSession } from "@/utils/setMediaSession";
 export function MediaSessionObserver() {
   const { t } = useTranslation();
   const isPlaying = usePlayerIsPlaying();
+  const isTransitioning = usePlayerIsTransitioning();
   const { isRadio, isSong } = usePlayerMediaType();
   const { currentList, currentSongIndex, radioList } = usePlayerSonglist();
   const progress = usePlayerProgress();
@@ -64,6 +66,7 @@ export function MediaSessionObserver() {
     logger.info("[MediaSession] State update:", {
       isRemoteActive,
       isPlaying: isRemoteActive ? remotePlayerState?.isPlaying : isPlaying,
+      isTransitioning,
       hasNothingPlaying,
       hasSong: !!song,
       songTitle: song?.title,
@@ -74,9 +77,13 @@ export function MediaSessionObserver() {
       ? (remotePlayerState?.isPlaying ?? false)
       : isPlaying;
 
-    manageMediaSession.setPlaybackState(effectiveIsPlaying);
+    if (isTransitioning) {
+      manageMediaSession.ensurePlaybackStatePlaying();
+    } else {
+      manageMediaSession.setPlaybackState(effectiveIsPlaying);
+    }
 
-    if (hasNothingPlaying) {
+    if (hasNothingPlaying && !isTransitioning) {
       logger.info("[MediaSession] Nothing playing, removing session");
       manageMediaSession.removeMediaSession();
       resetAppTitle();
@@ -107,7 +114,7 @@ export function MediaSessionObserver() {
       }
     }
 
-    if (!effectiveIsPlaying) {
+    if (!effectiveIsPlaying && !isTransitioning) {
       resetAppTitle();
     } else if (title) {
       document.title = title;
@@ -117,6 +124,7 @@ export function MediaSessionObserver() {
     isPlaying,
     isRadio,
     isSong,
+    isTransitioning,
     radio,
     radioLabel,
     song,

@@ -614,6 +614,7 @@ export function createQueueActions(shared: SharedDeps) {
             }
             state.playerState.isPlaying = true;
           }
+          state.playerState.isTransitioning = true;
         });
         return;
       }
@@ -624,6 +625,7 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerProgress.progress = 0;
           state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
+          state.playerState.isTransitioning = true;
         });
         return;
       }
@@ -644,6 +646,7 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerProgress.progress = 0;
           state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
+          state.playerState.isTransitioning = true;
         });
         return;
       }
@@ -657,6 +660,7 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerProgress.progress = 0;
           state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
+          state.playerState.isTransitioning = true;
         });
       }
     },
@@ -709,6 +713,7 @@ export function createQueueActions(shared: SharedDeps) {
           }
 
           state.playerState.isPlaying = true;
+          state.playerState.isTransitioning = true;
         });
         return;
       }
@@ -719,6 +724,7 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerProgress.progress = 0;
           state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
+          state.playerState.isTransitioning = true;
         });
         return;
       }
@@ -729,6 +735,7 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerProgress.progress = 0;
           state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
+          state.playerState.isTransitioning = true;
         });
       }
     },

@@ -678,6 +678,9 @@ export const usePlayerMediaType = () => {
 export const usePlayerIsPlaying = () =>
   usePlayerStore((state) => state.playerState.isPlaying);
 
+export const usePlayerIsTransitioning = () =>
+  usePlayerStore((state) => state.playerState.isTransitioning);
+
 export const usePlayerDuration = () =>
   usePlayerStore((state) => state.playerState.currentDuration);
 

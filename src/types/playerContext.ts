@@ -70,6 +70,7 @@ export interface IPlayerState {
   isBuffering: boolean;
   areLyricsAligned: boolean;
   seekToStart: boolean;
+  isTransitioning: boolean;
 }
 
 export interface IPlayerProgress {
@@ -224,6 +225,7 @@ export interface IPlayerActions {
   resetConfig: () => void;
   updateQueueChecks: () => void;
   setAreLyricsAligned: (aligned: boolean) => void;
+  setIsTransitioning: (value: boolean) => void;
   setCurrentSongColor: (value: string | null) => void;
   setCurrentSongIntensity: (value: number) => void;
   enterRemoteControl: (device: RemoteDeviceInfo | null) => void;

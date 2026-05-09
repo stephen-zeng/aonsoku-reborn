@@ -22,6 +22,7 @@ export const initialPlayerState: IPlayerState = {
   isBuffering: false,
   areLyricsAligned: true,
   seekToStart: false,
+  isTransitioning: false,
 };
 
 export const initialSonglist = initSonglistState();

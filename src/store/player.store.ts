@@ -19,6 +19,7 @@ export {
   usePlayerSettings,
   usePlayerMediaType,
   usePlayerIsPlaying,
+  usePlayerIsTransitioning,
   usePlayerDuration,
   usePlayerSongStarred,
   usePlayerShuffle,

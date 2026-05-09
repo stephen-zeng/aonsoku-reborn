@@ -64,6 +64,7 @@ export function Player() {
     setProgress,
     setPlayingState,
     setIsScrubbing,
+    setIsTransitioning,
     handleSongEnded,
     getCurrentProgress,
     togglePlayPause,
@@ -221,7 +222,8 @@ export function Player() {
   const handleAudioCanPlay = useCallback(() => {
     setStoreIsBuffering(false);
     updateAudioDuration();
-  }, [setStoreIsBuffering, updateAudioDuration]);
+    setIsTransitioning(false);
+  }, [setStoreIsBuffering, updateAudioDuration, setIsTransitioning]);
 
   const handleAudioSeeked = useCallback(() => {
     if (usePlayerStore.getState().playerProgress.isScrubbing) {

@@ -132,6 +132,12 @@ export function createPlaybackActions(shared: SharedDeps) {
       });
     },
 
+    setIsTransitioning: (value: boolean) => {
+      set((state) => {
+        state.playerState.isTransitioning = value;
+      });
+    },
+
     getCurrentProgress: () => {
       return get().playerProgress.progress;
     },
