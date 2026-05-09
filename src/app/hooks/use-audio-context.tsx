@@ -22,6 +22,7 @@ export function useAudioContext(
   const audioContextRef = useRef<IAudioContext | null>(null);
   const sourceNodeRef = useRef<IAudioSource | null>(null);
   const gainNodeRef = useRef<IGainNode<IAudioContext> | null>(null);
+  const resumeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const resetRefs = useCallback(() => {
     if (sourceNodeRef.current) {
@@ -60,6 +61,34 @@ export function useAudioContext(
     try {
       if (!audioContextRef.current) {
         audioContextRef.current = new AudioContext();
+
+        // Proactively resume AudioContext when suspended (e.g. by browser after
+        // screen-off or backgrounding). A debounce prevents resume-suspend
+        // loops that some browsers trigger when the page is backgrounded.
+        audioContextRef.current.onstatechange = async () => {
+          const ctx = audioContextRef.current;
+          if (!ctx) return;
+
+          if (ctx.state === "suspended") {
+            if (resumeDebounceRef.current) return;
+
+            resumeDebounceRef.current = setTimeout(() => {
+              resumeDebounceRef.current = null;
+            }, 1000);
+
+            try {
+              await ctx.resume();
+              logger.info(
+                "AudioContext proactively resumed after suspension",
+              );
+            } catch (error) {
+              logger.error(
+                "Failed to proactively resume AudioContext",
+                error,
+              );
+            }
+          }
+        };
       }
 
       const audioContext = audioContextRef.current;
@@ -178,7 +207,12 @@ export function useAudioContext(
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: clear state after unmount
   useEffect(() => {
-    return () => resetRefs();
+    return () => {
+      if (resumeDebounceRef.current) {
+        clearTimeout(resumeDebounceRef.current);
+      }
+      resetRefs();
+    };
   }, []);
 
   return {
