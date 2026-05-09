@@ -33,7 +33,7 @@ export function useWakeLock() {
     } finally {
       isRequestingRef.current = false;
     }
-  }, [isSupported]);
+  }, [isSupported, isPlaying]);
 
   const releaseWakeLock = useCallback(async () => {
     const sentinel = sentinelRef.current;

@@ -115,8 +115,6 @@ export function AudioPlayer({
   }, [
     audioSrc,
     cancelRetry,
-    isRemoteControlActive,
-    shouldUseNativeAudio,
     src,
     songId,
   ]);
@@ -336,6 +334,7 @@ export function AudioPlayer({
     cancelRetry,
     handleReplayGainSetupError,
     isRadio,
+    isSong,
     onPlaybackError,
     scheduleRetry,
     shouldUseWebAudioReplayGain,
