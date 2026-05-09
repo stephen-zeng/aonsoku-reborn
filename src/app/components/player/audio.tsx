@@ -607,7 +607,12 @@ export function AudioPlayer({
         logger.info(`[onPause] currentTime=${audio.currentTime.toFixed(2)} | duration=${audio.duration?.toFixed(2)} | paused=${audio.paused} | ended=${audio.ended} | loopRestarting=${loopRestartingRef.current} | srcChanging=${srcChangingRef.current} | effectPausing=${effectPausingRef.current} | isPlaying_store=${storeState.playerState.isPlaying} | audioError=${!!audio.error} | error=${audio.error?.code}`);
 
         if (loopRestartingRef.current || audio.ended) {
-          logger.info(`[onPause:SKIP] reason=${loopRestartingRef.current ? 'loopRestarting' : 'ended'} | currentTime=${audio.currentTime.toFixed(2)}`);
+          if (srcChangingRef.current) {
+            logger.info(`[onPause:SKIP] reason=${loopRestartingRef.current ? 'loopRestarting' : 'ended'} | clearing srcChangingRef | currentTime=${audio.currentTime.toFixed(2)}`);
+            srcChangingRef.current = false;
+          } else {
+            logger.info(`[onPause:SKIP] reason=${loopRestartingRef.current ? 'loopRestarting' : 'ended'} | currentTime=${audio.currentTime.toFixed(2)}`);
+          }
           return;
         }
         if (srcChangingRef.current) {
