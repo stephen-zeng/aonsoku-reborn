@@ -295,6 +295,10 @@ function setHandlers() {
   try {
     logger.info("[MediaSession] Setting up action handlers");
 
+    // Disabled intentionally: on iOS, these handlers override the track
+    // skip buttons (previoustrack/nexttrack) on lock screen and Control
+    // Center, making it impossible to skip tracks. Leave as null to
+    // preserve skip functionality.
     mediaSession.setActionHandler("seekbackward", null);
     mediaSession.setActionHandler("seekforward", null);
 
