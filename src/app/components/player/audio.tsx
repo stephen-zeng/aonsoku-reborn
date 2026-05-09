@@ -473,6 +473,10 @@ export function AudioPlayer({
             usePlayerStore.setState((state) => {
               state.playerState.seekToStart = false;
             });
+          } else if (audio.ended && songId === loadedSongIdRef.current) {
+            logger.info(`[PlayEffect:endedRestart] songId=${songId} | setting currentTime=0`);
+            loopRestartingRef.current = true;
+            audio.currentTime = 0;
           }
           if (shouldUseWebAudioReplayGain) {
             await resumeContext();
