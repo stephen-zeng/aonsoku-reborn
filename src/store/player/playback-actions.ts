@@ -3,6 +3,7 @@ import clamp from "lodash/clamp";
 import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
 import { LanControlMessageType } from "@/types/lanControl";
 import { isIOS } from "@/utils/platform";
+import { logger } from "@/utils/logger";
 
 interface SharedDeps {
   set: (fn: (state: Draft<IPlayerContext>) => void) => void;
@@ -16,6 +17,8 @@ export function createPlaybackActions(shared: SharedDeps) {
 
   return {
     setPlayingState: (status: boolean) => {
+      const prev = get().playerState.isPlaying;
+      logger.info(`[setPlayingState] ${prev} → ${status} | isRemote=${!!isRemoteActive()}`);
       if (isRemoteActive()) {
         remoteSend(
           status ? LanControlMessageType.PLAY : LanControlMessageType.PAUSE,
@@ -28,6 +31,7 @@ export function createPlaybackActions(shared: SharedDeps) {
 
     togglePlayPause: () => {
       const prev = get().playerState.isPlaying;
+      logger.info(`[togglePlayPause] isPlaying: ${prev} → ${!prev}`);
       remoteSend(LanControlMessageType.PLAY_PAUSE);
       set((state) => {
         state.playerState.isPlaying = !prev;
@@ -133,6 +137,8 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     setIsTransitioning: (value: boolean) => {
+      const prev = get().playerState.isTransitioning;
+      logger.info(`[setIsTransitioning] ${prev} → ${value}`);
       set((state) => {
         state.playerState.isTransitioning = value;
       });

@@ -64,33 +64,26 @@ export function MediaSessionObserver() {
   }, []);
 
   useEffect(() => {
-    logger.info("[MediaSession] Remote control state changed:", isRemoteActive);
+    logger.info(`[MediaSessionObserver] handlers | remoteControl=${isRemoteActive}`);
     manageMediaSession.setHandlers();
   }, [isRemoteActive]);
 
   useEffect(() => {
-    logger.info("[MediaSession] State update:", {
-      isRemoteActive,
-      isPlaying: isRemoteActive ? remotePlayerState?.isPlaying : isPlaying,
-      isTransitioning,
-      hasNothingPlaying,
-      hasSong: !!song,
-      songTitle: song?.title,
-      songArtist: song?.artist,
-    });
+    logger.info(`[MediaSessionObserver] isPlaying=${isPlaying} | isTransitioning=${isTransitioning} | isSong=${isSong} | isRadio=${isRadio} | songId=${song?.id} | isRemote=${isRemoteActive} | hasNothingPlaying=${hasNothingPlaying}`);
 
     const effectiveIsPlaying = isRemoteActive
       ? (remotePlayerState?.isPlaying ?? false)
       : isPlaying;
 
     if (isTransitioning) {
+      logger.info("[MediaSessionObserver → transitioning] | calling ensurePlaybackStatePlaying");
       manageMediaSession.ensurePlaybackStatePlaying();
     } else {
       manageMediaSession.setPlaybackState(effectiveIsPlaying);
     }
 
     if (hasNothingPlaying && !isTransitioning) {
-      logger.info("[MediaSession] Nothing playing, removing session");
+      logger.info("[MediaSessionObserver → nothingPlaying] | calling removeMediaSession");
       manageMediaSession.removeMediaSession();
       resetAppTitle();
       lastMetadataRef.current = "";
@@ -105,7 +98,7 @@ export function MediaSessionObserver() {
       metadataKey = `radio:${radio.name}`;
 
       if (lastMetadataRef.current !== metadataKey) {
-        logger.info("[MediaSession] Setting radio session:", title);
+        logger.info(`[MediaSessionObserver → setRadioMediaSession] | name=${radio.name}`);
         manageMediaSession.setRadioMediaSession(radioLabel, radio.name);
         lastMetadataRef.current = metadataKey;
       }
@@ -115,9 +108,11 @@ export function MediaSessionObserver() {
 
       const metadataChanged = lastMetadataRef.current !== metadataKey;
       if (metadataChanged) {
-        logger.info("[MediaSession] Setting song session:", title);
+        logger.info(`[MediaSessionObserver → setMediaSession] | songId=${song.id} | title="${song.title}"`);
         manageMediaSession.setMediaSession(song);
         lastMetadataRef.current = metadataKey;
+      } else {
+        logger.info(`[MediaSessionObserver → metadataUnchanged] | songId=${song.id}`);
       }
     }
 
@@ -191,6 +186,7 @@ export function MediaSessionObserver() {
 
     if (shouldUpdate) {
       const clampedProgress = clampProgress(effectiveProgress, duration);
+      logger.info(`[MediaSessionObserver.positionState] songId=${songId} | duration=${duration} | position=${effectiveProgress} | isPlaying=${effectiveIsPlaying} | updateReason=${songId !== lastState.songId ? 'songChanged' : effectiveIsPlaying !== lastState.isPlaying ? 'playStateChanged' : 'drift>2s'}`);
       manageMediaSession.setPositionState(duration, clampedProgress);
 
       lastPositionStateRef.current = {

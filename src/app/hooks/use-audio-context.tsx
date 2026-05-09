@@ -68,6 +68,7 @@ export function useAudioContext(
         audioContextRef.current.onstatechange = async () => {
           const ctx = audioContextRef.current;
           if (!ctx) return;
+          logger.info(`[AudioContext:stateChange] state=${ctx.state}`);
 
           if (ctx.state === "suspended") {
             if (resumeDebounceRef.current) return;
@@ -78,9 +79,7 @@ export function useAudioContext(
 
             try {
               await ctx.resume();
-              logger.info(
-                "AudioContext proactively resumed after suspension",
-              );
+              logger.info("[AudioContext:proactiveResume] resumed successfully");
             } catch (error) {
               logger.error(
                 "Failed to proactively resume AudioContext",
@@ -125,12 +124,12 @@ export function useAudioContext(
     const audioContext = audioContextRef.current;
     if (!audioContext) return;
 
-    logger.info("AudioContext State", { state: audioContext.state });
+    logger.info(`[AudioContext:resumeContext] state=${audioContext.state}`);
 
     if (audioContext.state === "suspended") {
       try {
         await audioContext.resume();
-        logger.info("AudioContext resumed successfully");
+        logger.info(`[AudioContext:resumeResult] state=${audioContext.state} | success=true`);
       } catch (error) {
         logger.error("Failed to resume AudioContext", error);
       }
@@ -184,15 +183,13 @@ export function useAudioContext(
       if (!audioContext) return;
 
       // When page becomes visible again, resume the context if suspended
-      if (!document.hidden && audioContext.state === "suspended") {
-        try {
-          await audioContext.resume();
-          logger.info("AudioContext resumed after visibility change");
-        } catch (error) {
-          logger.error(
-            "Failed to resume AudioContext on visibility change",
-            error,
-          );
+    if (!document.hidden && audioContext.state === "suspended") {
+      logger.info(`[AudioContext:visibilityResume] visibilityState=${document.visibilityState} | state=${audioContext.state}`);
+      try {
+        await audioContext.resume();
+        logger.info("[AudioContext:visibilityResume] resumed successfully");
+      } catch (error) {
+        logger.error("[AudioContext:visibilityResume] failed", error);
         }
       }
     };

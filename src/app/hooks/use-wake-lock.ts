@@ -19,16 +19,16 @@ export function useWakeLock() {
       const sentinel = await navigator.wakeLock.request("screen");
       sentinelRef.current = sentinel;
 
-      logger.info("[WakeLock] Acquired screen wake lock");
+      logger.info(`[WakeLock:acquire] isPlaying=${isPlaying} | type=screen`);
 
       sentinel.addEventListener("release", () => {
-        logger.info("[WakeLock] Screen wake lock released");
+        logger.info("[WakeLock:release] reason=systemReleased");
         if (sentinelRef.current === sentinel) {
           sentinelRef.current = null;
         }
       });
     } catch (error) {
-      logger.error("[WakeLock] Failed to acquire wake lock:", error);
+      logger.error(`[WakeLock:error] ${error instanceof Error ? error.message : String(error)}`);
       sentinelRef.current = null;
     } finally {
       isRequestingRef.current = false;
@@ -41,9 +41,9 @@ export function useWakeLock() {
 
     try {
       await sentinel.release();
-      logger.info("[WakeLock] Released screen wake lock");
+      logger.info("[WakeLock:release] reason=manualRelease");
     } catch (error) {
-      logger.error("[WakeLock] Failed to release wake lock:", error);
+      logger.error(`[WakeLock:error] ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       sentinelRef.current = null;
     }
@@ -52,10 +52,12 @@ export function useWakeLock() {
   useEffect(() => {
     if (!isSupported) return;
 
-    if (isPlaying) {
-      requestWakeLock();
-    } else {
-      releaseWakeLock();
+      if (isPlaying) {
+        logger.info("[WakeLock:acquire] isPlaying=true | type=screen");
+        requestWakeLock();
+      } else {
+        logger.info("[WakeLock:release] reason=isPlayingChanged | isPlaying=false");
+        releaseWakeLock();
     }
 
     return () => {
@@ -75,7 +77,7 @@ export function useWakeLock() {
       const sentinel = sentinelRef.current;
       if (sentinel && !sentinel.released) return;
 
-      logger.info("[WakeLock] Page visible again, re-acquiring wake lock");
+      logger.info("[WakeLock:reacquire] visibilityState=visible | isPlayingNow=" + isPlayingNow);
       await requestWakeLock();
     };
 

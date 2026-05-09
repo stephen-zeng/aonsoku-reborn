@@ -26,6 +26,7 @@ import { LoopState } from "@/types/playerContext";
 import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import { hasPiPSupport } from "@/utils/browser";
 import { isValidDuration } from "@/utils/duration";
+import { logger } from "@/utils/logger";
 import {
   resolveReplayGainParams,
   type ReplayGainParams,
@@ -224,11 +225,14 @@ export function Player() {
     updateAudioDuration();
   }, [setStoreIsBuffering, updateAudioDuration]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: songId and audioRef needed for debug logging
   const handleSongCanPlay = useCallback(() => {
+    const audio = audioRef.current;
+    logger.info(`[onCanPlay] songId=${songId} | duration=${audio?.duration?.toFixed(2)} | isTransitioning=${usePlayerStore.getState().playerState.isTransitioning} | isPlaying=${usePlayerStore.getState().playerState.isPlaying} | audio.paused=${audio?.paused}`);
     setStoreIsBuffering(false);
     updateAudioDuration();
     setIsTransitioning(false);
-  }, [setStoreIsBuffering, updateAudioDuration, setIsTransitioning]);
+  }, [setStoreIsBuffering, updateAudioDuration, setIsTransitioning, songId, audioRef]);
 
   const handleAudioSeeked = useCallback(() => {
     if (usePlayerStore.getState().playerProgress.isScrubbing) {

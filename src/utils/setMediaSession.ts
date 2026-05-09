@@ -24,6 +24,9 @@ let removeDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 function removeMediaSession() {
   if (!isMediaSessionSupported()) return;
 
+  const callStack = new Error().stack?.split("\n").slice(1, 4).join(" | ");
+  logger.info(`[MediaSession.remove] sessionId=${currentSessionId} | stackTrace=${callStack}`);
+
   if (removeDebounceTimer) {
     clearTimeout(removeDebounceTimer);
     removeDebounceTimer = null;
@@ -74,6 +77,7 @@ async function setMediaSession(
 
   currentSessionId++;
   const sessionId = currentSessionId;
+  logger.info(`[MediaSession.set] songId=${(song as { id?: string }).id ?? song.title} | title="${song.title}" | artist="${song.artist}" | sessionId=${sessionId}`);
 
   const title = song.title || "Unknown Title";
   const artist = song.artist || "Unknown Artist";
@@ -213,10 +217,13 @@ async function setRadioMediaSession(label: string, radioName: string) {
 
 function ensurePlaybackStatePlaying() {
   if (!isMediaSessionSupported()) return;
+  const prevState = navigator.mediaSession.playbackState;
+  const hadPendingRemove = !!removeDebounceTimer;
   cancelRemoveDebounce();
-  if (navigator.mediaSession.playbackState !== "playing") {
+  if (prevState !== "playing") {
     navigator.mediaSession.playbackState = "playing";
   }
+  logger.info(`[MediaSession.ensurePlaying] prevState=${prevState} → playing | cancelledRemove=${hadPendingRemove} | sessionId=${currentSessionId}`);
 }
 
 function setPlaybackState(state: boolean | null) {
@@ -232,7 +239,8 @@ function setPlaybackState(state: boolean | null) {
       newState = "paused";
     }
 
-    logger.info("[MediaSession] Setting playback state", newState);
+    const prevState = navigator.mediaSession.playbackState;
+    logger.info(`[MediaSession.setPlaybackState] isPlaying=${state} | prevState=${prevState} → newState=${newState}`);
     navigator.mediaSession.playbackState = newState;
 
     if (navigator.mediaSession.playbackState !== newState) {
@@ -275,13 +283,9 @@ function setPositionState(
       playbackRate: playbackRate,
       position: position,
     });
-    logger.info("[MediaSession] Set position state", {
-      duration,
-      position,
-      playbackRate,
-    });
+    logger.info(`[MediaSession.setPosition] duration=${duration} | position=${position} | playbackRate=${playbackRate} | clamped=${position > duration ? duration : position}`);
   } catch (error) {
-    logger.info("[MediaSession] Failed to set position state:", error);
+    logger.info(`[MediaSession.setPosition:ERROR] ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -292,6 +296,8 @@ function setHandlers() {
   }
 
   const { mediaSession } = navigator;
+  const isRemote = usePlayerStore.getState().remoteControl.active;
+  logger.info(`[MediaSession.setHandlers] remoteControl=${isRemote}`);
 
   try {
     logger.info("[MediaSession] Setting up action handlers");
@@ -304,7 +310,7 @@ function setHandlers() {
     mediaSession.setActionHandler("seekforward", null);
 
     mediaSession.setActionHandler("stop", () => {
-      logger.info("[MediaSession] Stop action triggered");
+      logger.info("[MediaSession.handler] action=stop");
       const state = usePlayerStore.getState();
       if (state.remoteControl.active && state.remoteControl.sendCommand) {
         state.remoteControl.sendCommand(LanControlMessageType.PAUSE);
@@ -315,7 +321,7 @@ function setHandlers() {
     });
 
     mediaSession.setActionHandler("play", () => {
-      logger.info("[MediaSession] Play action triggered");
+      logger.info("[MediaSession.handler] action=play | isRemote=false→toggle");
       const state = usePlayerStore.getState();
       if (state.remoteControl.active && state.remoteControl.sendCommand) {
         state.remoteControl.sendCommand(LanControlMessageType.PLAY);
@@ -325,7 +331,7 @@ function setHandlers() {
     });
 
     mediaSession.setActionHandler("pause", () => {
-      logger.info("[MediaSession] Pause action triggered");
+      logger.info("[MediaSession.handler] action=pause | isRemote=false→toggle");
       const state = usePlayerStore.getState();
       if (state.remoteControl.active && state.remoteControl.sendCommand) {
         state.remoteControl.sendCommand(LanControlMessageType.PAUSE);
@@ -335,7 +341,7 @@ function setHandlers() {
     });
 
     mediaSession.setActionHandler("previoustrack", () => {
-      logger.info("[MediaSession] Previous track action triggered");
+      logger.info("[MediaSession.handler] action=previoustrack");
       const state = usePlayerStore.getState();
       if (state.remoteControl.active && state.remoteControl.sendCommand) {
         state.remoteControl.sendCommand(LanControlMessageType.PREVIOUS);
@@ -345,7 +351,7 @@ function setHandlers() {
     });
 
     mediaSession.setActionHandler("nexttrack", () => {
-      logger.info("[MediaSession] Next track action triggered");
+      logger.info("[MediaSession.handler] action=nexttrack");
       const state = usePlayerStore.getState();
       if (state.remoteControl.active && state.remoteControl.sendCommand) {
         state.remoteControl.sendCommand(LanControlMessageType.NEXT);
@@ -355,7 +361,7 @@ function setHandlers() {
     });
 
     mediaSession.setActionHandler("seekto", (details) => {
-      logger.info("[MediaSession] Seek action triggered:", details);
+      logger.info(`[MediaSession.handler] action=seekto | seekTime=${details.seekTime}`);
       if (details.seekTime !== undefined) {
         const state = usePlayerStore.getState();
         if (state.remoteControl.active && state.remoteControl.sendCommand) {

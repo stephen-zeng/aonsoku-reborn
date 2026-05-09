@@ -34,6 +34,7 @@ import {
   setNextOnUserQueue,
   trimQueueToWindow,
 } from "./queue-utils";
+import { logger } from "@/utils/logger";
 
 interface SharedDeps {
   set: (fn: (state: Draft<IPlayerContext>) => void) => void;
@@ -584,9 +585,14 @@ export function createQueueActions(shared: SharedDeps) {
       const { loopState } = get().playerState;
       const songlist = get().songlist;
 
-      if (!hasNextEffectiveSong(songlist, loopState)) return;
+      if (!hasNextEffectiveSong(songlist, loopState)) {
+        logger.info(`[playNextSong] no next song | loopState=${loopState}`);
+        return;
+      }
 
       const { isInUserQueue, userQueue, contextQueue } = songlist;
+      const currentSongId = getCurrentSong(songlist)?.id;
+      logger.info(`[playNextSong] loopState=${loopState} | currentIndex=${contextQueue.currentIndex} | hasUserQueue=${!!userQueue.songs.length} | isInUserQueue=${isInUserQueue} | currentSongId=${currentSongId}`);
 
       if (isInUserQueue) {
         const consumed = userQueue.songs[0];
@@ -641,6 +647,7 @@ export function createQueueActions(shared: SharedDeps) {
       }
 
       if (loopState === LoopState.One) {
+        logger.info(`[playNextSong:LoopOne] seekToStart=true | songId=${getCurrentSong(get().songlist)?.id}`);
         set((state) => {
           state.playerProgress.progress = 0;
           state.playerProgress.bufferedProgress = 0;
@@ -651,6 +658,7 @@ export function createQueueActions(shared: SharedDeps) {
       }
 
       if (contextQueue.currentIndex < contextQueue.songs.length - 1) {
+        logger.info(`[playNextSong:advance] newIndex=${contextQueue.currentIndex + 1} | songId=${contextQueue.songs[contextQueue.currentIndex + 1]?.id}`);
         set((state) => {
           state.songlist.contextQueue.currentIndex += 1;
           state.playerProgress.progress = 0;
@@ -667,6 +675,7 @@ export function createQueueActions(shared: SharedDeps) {
       }
 
       if (loopState === LoopState.All) {
+        logger.info(`[playNextSong:LoopAllWrap] wrapping to index 0`);
         const lastPlayedSongId =
           songlist.contextQueue.songs[songlist.contextQueue.currentIndex]?.id;
         set((state) => {
@@ -692,6 +701,8 @@ export function createQueueActions(shared: SharedDeps) {
 
       const currentSong = getCurrentSong(get().songlist);
       const progress = get().playerProgress.progress;
+      const willSeekToStart = !!(currentSong && progress > PREV_SEEK_THRESHOLD);
+      logger.info(`[playPrevSong] progress=${progress} | willSeekToStart=${willSeekToStart} | hasPrev=${hasPrevEffectiveSong(get().songlist)} | songId=${currentSong?.id}`);
 
       if (currentSong && progress > PREV_SEEK_THRESHOLD) {
         set((state) => {
@@ -823,16 +834,19 @@ export function createQueueActions(shared: SharedDeps) {
       const userQueueRemaining = songlist.isInUserQueue
         ? songlist.userQueue.songs.length - 1
         : songlist.userQueue.songs.length;
-      // LoopState.One means repeat the current song indefinitely;
-      // user queue songs are not advanced to in this mode.
       const hasNext =
         loopState === LoopState.One
           ? userQueueRemaining > 0
           : hasNextEffectiveSong(songlist, loopState);
 
+      const currentSongId = getCurrentSong(songlist)?.id;
+      logger.info(`[handleSongEnded] loopState=${loopState} | hasNext=${hasNext} | currentSongId=${currentSongId} | isRemote=${isRemoteActive()}`);
+
       if (hasNext) {
+        logger.info(`[handleSongEnded → playNextSong] | songId=${currentSongId}`);
         get().actions.playNextSong();
       } else if (loopState === LoopState.One) {
+        logger.info(`[handleSongEnded → loopOneRestart] | seekToStart=true | isPlaying=true | songId=${currentSongId}`);
         set((state) => {
           state.playerProgress.progress = 0;
           state.playerProgress.bufferedProgress = 0;
@@ -840,6 +854,7 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerState.seekToStart = true;
         });
       } else {
+        logger.info(`[handleSongEnded → stop] | isPlaying=false | isTransitioning=false | songId=${currentSongId}`);
         set((state) => {
           state.playerProgress.progress = 0;
           state.playerProgress.bufferedProgress = 0;
