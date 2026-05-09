@@ -675,7 +675,6 @@ export function createQueueActions(shared: SharedDeps) {
       }
 
       if (loopState === LoopState.All) {
-        logger.info(`[playNextSong:LoopAllWrap] wrapping to index 0`);
         const lastPlayedSongId =
           songlist.contextQueue.songs[songlist.contextQueue.currentIndex]?.id;
         set((state) => {
@@ -683,13 +682,20 @@ export function createQueueActions(shared: SharedDeps) {
           reshuffleContextForWrap(state.songlist, lastPlayedSongId);
           state.playerProgress.progress = 0;
           state.playerProgress.bufferedProgress = 0;
-          state.playerState.isPlaying = true;
-          state.playerState.isTransitioning = true;
           const nextSong = getCurrentSong(state.songlist as ISongList);
           state.songlist.currentSong = nextSong;
           state.playerState.currentDuration = nextSong?.duration
             ? Math.round(nextSong.duration)
             : 0;
+          if (nextSong?.id === lastPlayedSongId) {
+            logger.info(`[playNextSong:LoopAllWrap] same song, seekToStart=true | songId=${nextSong?.id}`);
+            state.playerState.isPlaying = true;
+            state.playerState.seekToStart = true;
+          } else {
+            logger.info(`[playNextSong:LoopAllWrap] wrapping to index 0 | songId=${nextSong?.id}`);
+            state.playerState.isPlaying = true;
+            state.playerState.isTransitioning = true;
+          }
         });
       }
     },
