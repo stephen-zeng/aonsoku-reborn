@@ -670,6 +670,9 @@ export function AudioPlayer({
             manageMediaSession.setMediaSession(state.songlist.currentSong);
           }
         } else {
+          if (state.songlist.currentSong) {
+            manageMediaSession.setMediaSession(state.songlist.currentSong);
+          }
           logger.info(`[onEnded → forward] reason=${hasNext ? 'hasNext' : 'notLoopOne'} | calling handleSongEnded`);
         }
 
