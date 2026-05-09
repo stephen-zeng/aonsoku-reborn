@@ -15,6 +15,7 @@ import {
   useIsRemoteControlActive,
   usePlayerActions,
   usePlayerIsPlaying,
+  usePlayerIsTransitioning,
   usePlayerLoop,
   usePlayerMediaType,
   usePlayerPrevAndNext,
@@ -83,6 +84,20 @@ export function Player() {
   usePlayHistory();
   useScrobble();
   usePreloadAudio();
+
+  const isTransitioning = usePlayerIsTransitioning();
+
+  useEffect(() => {
+    if (!isTransitioning) return;
+    const timeout = setTimeout(() => {
+      const current = usePlayerStore.getState().playerState.isTransitioning;
+      if (current) {
+        logger.info(`[isTransitioning] timeout fallback, clearing isTransitioning`);
+        setIsTransitioning(false);
+      }
+    }, 5000);
+    return () => clearTimeout(timeout);
+  }, [isTransitioning, setIsTransitioning]);
 
   const song = currentList[currentSongIndex] ?? null;
   const radio = radioList[currentSongIndex];
