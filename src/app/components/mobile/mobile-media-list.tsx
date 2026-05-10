@@ -1,8 +1,7 @@
 import { Disc2Icon, EllipsisVertical } from "lucide-react";
 import { type KeyboardEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { CachedImage } from "@/app/components/cover-image/cached-image";
-import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
+import { CoverImage } from "@/app/components/table/cover-image";
 import { SongMenuOptions } from "@/app/components/song/menu-options";
 import { TableArtists } from "@/app/components/table/song-title";
 import { Button } from "@/app/components/ui/button";
@@ -12,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { usePlayerCurrentSong, usePlayerIsPlaying } from "@/store/player.store";
+import { useIsCurrentPlaying } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 
 interface MobileMediaListProps<TItem> {
@@ -120,9 +119,7 @@ function MobileSongRow({
   indexLabel,
   onPlaySong,
 }: MobileSongRowProps) {
-  const currentSong = usePlayerCurrentSong();
-  const isPlaying = usePlayerIsPlaying();
-  const isActive = currentSong?.id === song.id;
+  const isCurrentPlaying = useIsCurrentPlaying(song.id);
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key !== "Enter" && event.key !== " ") return;
@@ -142,22 +139,14 @@ function MobileSongRow({
       onClick={() => onPlaySong(index)}
       onKeyDown={handleKeyDown}
     >
-      <div className="relative size-10 shrink-0 overflow-hidden rounded bg-skeleton">
-        <CachedImage
-          coverArtId={song.coverArt}
-          coverArtType="song"
-          albumId={song.albumId}
-          alt={`${song.artist} - ${song.title}`}
-          width={40}
-          height={40}
-          className="h-full w-full object-cover"
-        />
-        {isActive && isPlaying && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-100 transition-opacity">
-            <EqualizerBars size={16} className="mb-1" />
-          </div>
-        )}
-      </div>
+      <CoverImage
+        coverArt={song.coverArt}
+        coverArtType="song"
+        albumId={song.albumId}
+        altText={`${song.artist} - ${song.title}`}
+        size={40}
+        isCurrentPlaying={isCurrentPlaying}
+      />
 
       <div className="flex min-w-0 flex-1 flex-col justify-center">
         <span className="truncate text-sm font-medium">{song.title}</span>

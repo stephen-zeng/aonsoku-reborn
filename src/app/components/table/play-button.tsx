@@ -1,7 +1,5 @@
-import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
 import {
   usePlayerActions,
-  usePlayerIsPlaying,
   usePlayerMediaType,
   usePlayerSonglist,
 } from "@/store/player.store";
@@ -20,7 +18,6 @@ export default function PlaySongButton({
 }: PlaySongButtonProps) {
   const { checkActiveSong } = usePlayerActions();
   const { isSong, isRadio } = usePlayerMediaType();
-  const isPlaying = usePlayerIsPlaying();
   const { radioList, currentSongIndex } = usePlayerSonglist();
 
   const isCurrentSongPlaying = () => {
@@ -44,13 +41,9 @@ export default function PlaySongButton({
       )}
     >
       <div className="w-8 h-8 flex items-center justify-center">
-        {isActive && isPlaying && !disabled ? (
-          <EqualizerBars size={18} className="mb-1" />
-        ) : (
-          <span className={isActive && !disabled ? "text-primary" : ""}>
-            {trackNumber}
-          </span>
-        )}
+        <span className={isActive && !disabled ? "text-primary" : ""}>
+          {trackNumber}
+        </span>
       </div>
     </div>
   );
