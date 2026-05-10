@@ -1,5 +1,8 @@
 import { CachedImage } from "@/app/components/cover-image/cached-image";
+import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import { cn } from "@/lib/utils";
+import { Pause, PlayIcon } from "lucide-react";
 import { CoverArt } from "@/types/coverArtType";
 
 interface CoverImageProps {
@@ -9,6 +12,8 @@ interface CoverImageProps {
   coverArtSize?: number;
   size?: number;
   altText: string;
+  onPlayPause?: () => void;
+  isCurrentPlaying?: boolean;
 }
 
 export function CoverImage({
@@ -18,33 +23,102 @@ export function CoverImage({
   coverArtSize = 100,
   size = 40,
   altText,
+  onPlayPause,
+  isCurrentPlaying = false,
 }: CoverImageProps) {
-  function setSizes() {
-    return [
-      `w-[${size}px] h-[${size}px]`,
-      `max-w-[${size}px] max-h-[${size}px]`,
-      `min-w-[${size}px] min-h-[${size}px]`,
-    ].join(" ");
+  const hasHover = useHasHover();
+
+  const showOverlay = !!onPlayPause && hasHover;
+  const iconSize = Math.round(size * 0.4);
+
+  const image = (
+    <CachedImage
+      coverArtId={coverArt}
+      coverArtType={coverArtType}
+      albumId={albumId}
+      coverArtSize={coverArtSize.toString()}
+      alt={altText}
+      effect="opacity"
+      width={size}
+      height={size}
+      className="aspect-square object-cover bg-center"
+    />
+  );
+
+  if (showOverlay) {
+    return (
+      <div
+        className="bg-skeleton overflow-hidden rounded shadow aspect-square group/cover relative cursor-pointer"
+        style={{
+          width: size,
+          height: size,
+          maxWidth: size,
+          maxHeight: size,
+          minWidth: size,
+          minHeight: size,
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onPlayPause();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            e.stopPropagation();
+            onPlayPause();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label={isCurrentPlaying ? "Pause" : "Play"}
+      >
+        {image}
+        <div
+          className={cn(
+            "absolute inset-0 flex items-center justify-center bg-black/40 rounded transition-opacity",
+            isCurrentPlaying
+              ? "opacity-100 group-hover/cover:opacity-100"
+              : "opacity-0 group-hover/cover:opacity-100",
+          )}
+        >
+          {isCurrentPlaying ? (
+            <Pause
+              size={iconSize}
+              className="text-white fill-white opacity-100 group-hover/cover:opacity-100"
+            />
+          ) : (
+            <PlayIcon
+              size={iconSize}
+              className="text-white fill-white"
+            />
+          )}
+        </div>
+      </div>
+    );
   }
 
   return (
     <div
-      className={cn(
-        "bg-skeleton overflow-hidden rounded shadow aspect-square",
-        setSizes(),
-      )}
+      className="bg-skeleton overflow-hidden rounded shadow aspect-square relative"
+      style={{
+        width: size,
+        height: size,
+        maxWidth: size,
+        maxHeight: size,
+        minWidth: size,
+        minHeight: size,
+      }}
     >
-      <CachedImage
-        coverArtId={coverArt}
-        coverArtType={coverArtType}
-        albumId={albumId}
-        coverArtSize={coverArtSize.toString()}
-        alt={altText}
-        effect="opacity"
-        width={size}
-        height={size}
-        className="aspect-square object-cover bg-center"
-      />
+      {image}
+      {isCurrentPlaying && (
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-black/40 rounded"
+          role="status"
+          aria-label="Currently playing"
+        >
+          <EqualizerBars size={iconSize} className="text-white" />
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { ArtistLink, ArtistsLinks } from "@/app/components/song/artist-link";
 import { CoverImage } from "@/app/components/table/cover-image";
-import { useMainDrawerState } from "@/store/player.store";
+import { useIsCurrentPlaying, useMainDrawerState, usePlayerStore } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 
 export function TableSongTitle({
@@ -11,6 +11,15 @@ export function TableSongTitle({
   onPlay?: () => void;
 }) {
   const { mainDrawerState, closeDrawer } = useMainDrawerState();
+  const isCurrentPlaying = useIsCurrentPlaying(song.id);
+
+  function handleCoverPlayPause() {
+    if (isCurrentPlaying) {
+      usePlayerStore.getState().actions.togglePlayPause();
+    } else {
+      onPlay?.();
+    }
+  }
 
   function handleArtistLinkClick() {
     if (mainDrawerState) closeDrawer();
@@ -23,6 +32,8 @@ export function TableSongTitle({
         coverArtType="song"
         albumId={song.albumId}
         altText={song.title}
+        onPlayPause={onPlay ? handleCoverPlayPause : undefined}
+        isCurrentPlaying={isCurrentPlaying}
       />
       <div className="flex flex-col w-full justify-center truncate">
         <span className="font-medium truncate">{song.title}</span>

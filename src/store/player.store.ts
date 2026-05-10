@@ -42,4 +42,5 @@ export {
   useLyricsAlignment,
   useHasQueueSongs,
   useHasRemainingUserQueue,
+  useIsCurrentPlaying,
 } from "./player/index";

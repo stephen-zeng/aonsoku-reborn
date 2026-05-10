@@ -813,3 +813,18 @@ export const usePlayerIsBuffering = () =>
 
 export const useLyricsAlignment = () =>
   usePlayerStore((state) => state.playerState.areLyricsAligned);
+
+export function useIsCurrentPlaying(songId: string): boolean {
+  return usePlayerStore((state) => {
+    if (!state.playerState.isPlaying) return false;
+    const mediaType = state.playerState.mediaType;
+    if (mediaType === "song") {
+      return state.actions.checkActiveSong(songId);
+    }
+    if (mediaType === "radio") {
+      const idx = getEffectiveIndex(state.songlist);
+      return state.songlist.radioList[idx]?.id === songId;
+    }
+    return false;
+  });
+}
