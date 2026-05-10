@@ -48,7 +48,7 @@ export function CoverImage({
   if (showOverlay) {
     return (
       <div
-        className="bg-skeleton overflow-hidden rounded shadow aspect-square group/cover relative cursor-pointer"
+        className="bg-skeleton overflow-hidden rounded shadow aspect-square relative"
         style={{
           width: size,
           height: size,
@@ -77,14 +77,14 @@ export function CoverImage({
           className={cn(
             "absolute inset-0 flex items-center justify-center bg-black/40 rounded transition-opacity",
             isCurrentPlaying
-              ? "opacity-100 group-hover/cover:opacity-100"
-              : "opacity-0 group-hover/cover:opacity-100",
+              ? "opacity-100 group-hover/tablerow:opacity-100"
+              : "opacity-0 group-hover/tablerow:opacity-100",
           )}
         >
           {isCurrentPlaying ? (
             <Pause
               size={iconSize}
-              className="text-white fill-white opacity-100 group-hover/cover:opacity-100"
+              className="text-white fill-white opacity-100 group-hover/tablerow:opacity-100"
             />
           ) : (
             <PlayIcon
