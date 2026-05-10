@@ -63,18 +63,27 @@ export function CoverImage({
         }}
       >
         {image}
+        {isCurrentPlaying && (
+          <div
+            className="absolute inset-0 flex items-center justify-center bg-black/40 rounded transition-opacity opacity-100 group-hover/tablerow:opacity-0"
+            role="status"
+            aria-label="Currently playing"
+          >
+            <EqualizerBars size={iconSize} className="text-white" />
+          </div>
+        )}
         <div
           className={cn(
             "absolute inset-0 flex items-center justify-center bg-black/40 rounded transition-opacity",
             isCurrentPlaying
-              ? "opacity-100 group-hover/tablerow:opacity-100"
+              ? "opacity-0 group-hover/tablerow:opacity-100"
               : "opacity-0 group-hover/tablerow:opacity-100",
           )}
         >
           {isCurrentPlaying ? (
             <Pause
               size={iconSize}
-              className="text-white fill-white opacity-100 group-hover/tablerow:opacity-100"
+              className="text-white fill-white"
             />
           ) : (
             <PlayIcon
