@@ -1,5 +1,6 @@
-import { EllipsisVertical } from "lucide-react";
+import { Disc2Icon, EllipsisVertical } from "lucide-react";
 import { type KeyboardEvent, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
 import { SongMenuOptions } from "@/app/components/song/menu-options";
@@ -48,6 +49,7 @@ interface MobileSongListProps {
   emptyMessage?: string;
   className?: string;
   getIndexLabel?: (song: ISong, index: number) => number;
+  showDiscNumber?: boolean;
 }
 
 export function MobileSongList({
@@ -56,23 +58,52 @@ export function MobileSongList({
   emptyMessage,
   className,
   getIndexLabel = (_song, index) => index + 1,
+  showDiscNumber = false,
 }: MobileSongListProps) {
+  const { t } = useTranslation();
+
+  const discNumbers = new Set(songs.map((s) => s.discNumber ?? 1));
+  const hasMultipleDiscs = discNumbers.size > 1;
+
+  if (songs.length === 0 && emptyMessage) {
+    return (
+      <div className="flex min-h-24 items-center justify-center px-4 text-sm text-muted-foreground">
+        {emptyMessage}
+      </div>
+    );
+  }
+
   return (
-    <MobileMediaList
-      items={songs}
-      emptyMessage={emptyMessage}
-      className={className}
-    >
-      {(song, index) => (
-        <MobileSongRow
-          key={`${song.id}-${index}`}
-          song={song}
-          index={index}
-          indexLabel={getIndexLabel(song, index)}
-          onPlaySong={onPlaySong}
-        />
-      )}
-    </MobileMediaList>
+    <div className={cn("flex flex-col gap-1", className)}>
+      {songs.map((song, index) => {
+        const discNum = song.discNumber ?? 1;
+        const isFirstOfDisc =
+          showDiscNumber &&
+          hasMultipleDiscs &&
+          (!songs[index - 1] || (songs[index - 1].discNumber ?? 1) !== discNum);
+
+        return (
+          <div key={`${song.id}-${index}`}>
+            {isFirstOfDisc && (
+              <div className="flex h-10 items-center text-muted-foreground">
+                <div className="w-10 flex items-center justify-center">
+                  <Disc2Icon strokeWidth={1.75} className="size-4" />
+                </div>
+                <span className="font-medium ml-[7px]">
+                  {t("album.table.discNumber", { number: discNum })}
+                </span>
+              </div>
+            )}
+            <MobileSongRow
+              song={song}
+              index={index}
+              indexLabel={getIndexLabel(song, index)}
+              onPlaySong={onPlaySong}
+            />
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

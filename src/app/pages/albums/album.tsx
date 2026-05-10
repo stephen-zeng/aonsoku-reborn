@@ -196,6 +196,7 @@ export default function Album() {
             getIndexLabel={(song, index) =>
               hasTrackNumbers && song.track > 0 ? song.track : index + 1
             }
+            showDiscNumber={true}
           />
         ) : (
           <DataTable
