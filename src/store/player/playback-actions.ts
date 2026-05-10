@@ -136,6 +136,12 @@ export function createPlaybackActions(shared: SharedDeps) {
       });
     },
 
+    setRadioPlayerRef: (radioPlayer: HTMLAudioElement | null) => {
+      set((state) => {
+        state.playerState.radioPlayerRef = radioPlayer;
+      });
+    },
+
     setIsTransitioning: (value: boolean) => {
       const prev = get().playerState.isTransitioning;
       logger.info(`[setIsTransitioning] ${prev} → ${value}`);

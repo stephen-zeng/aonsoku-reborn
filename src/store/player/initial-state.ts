@@ -11,6 +11,7 @@ export const initialPlayerState: IPlayerState = {
   currentDuration: 0,
   mediaType: "song",
   audioPlayerRef: null,
+  radioPlayerRef: null,
   mainDrawerState: false,
   queueState: false,
   lyricsState: false,

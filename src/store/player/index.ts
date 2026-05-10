@@ -231,6 +231,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
             "playerState.isPlaying",
             "playerState.isBuffering",
             "playerState.audioPlayerRef",
+            "playerState.radioPlayerRef",
             "playerState.mainDrawerState",
             "playerState.queueState",
             "playerState.lyricsState",
@@ -704,6 +705,9 @@ export const usePlayerPrevAndNext = () =>
 
 export const usePlayerRef = () =>
   usePlayerStore((state) => state.playerState.audioPlayerRef);
+
+export const useRadioPlayerRef = () =>
+  usePlayerStore((state) => state.playerState.radioPlayerRef);
 
 export const getVolume = () => usePlayerStore.getState().playerState.volume;
 

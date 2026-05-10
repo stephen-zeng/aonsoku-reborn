@@ -92,12 +92,15 @@ export function createRemoteControlActions(shared: SharedDeps) {
   return {
     enterRemoteControl: (device: RemoteDeviceInfo | null) => {
       const audioRef = get().playerState.audioPlayerRef;
-      if (audioRef) {
-        try {
-          audioRef.pause();
-        } catch (error) {
-          if (error instanceof DOMException && error.name !== "AbortError") {
-            console.error("[RemoteControl] Failed to pause audio", error);
+      const radioRef = get().playerState.radioPlayerRef;
+      for (const ref of [audioRef, radioRef]) {
+        if (ref) {
+          try {
+            ref.pause();
+          } catch (error) {
+            if (error instanceof DOMException && error.name !== "AbortError") {
+              console.error("[RemoteControl] Failed to pause audio", error);
+            }
           }
         }
       }

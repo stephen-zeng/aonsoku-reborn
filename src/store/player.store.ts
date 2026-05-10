@@ -26,6 +26,7 @@ export {
   usePlayerLoop,
   usePlayerPrevAndNext,
   usePlayerRef,
+  useRadioPlayerRef,
   getVolume,
   useMainDrawerState,
   useQueueState,

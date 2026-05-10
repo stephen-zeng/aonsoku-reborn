@@ -70,7 +70,7 @@ export function useAudioContext(
           if (!ctx) return;
           logger.info(`[AudioContext:stateChange] state=${ctx.state}`);
 
-          if (ctx.state === "suspended") {
+          if (ctx.state === "suspended" && !document.hidden) {
             if (resumeDebounceRef.current) return;
 
             resumeDebounceRef.current = setTimeout(() => {

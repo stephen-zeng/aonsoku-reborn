@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useWakeLock } from "@/app/hooks/use-wake-lock";
+import { useBackgroundPlayback } from "@/app/hooks/use-background-playback";
 import { useLanControlClientStore } from "@/store/lanControlClient.store";
 import {
   useIsRemoteControlActive,
@@ -20,7 +20,7 @@ import { manageMediaSession } from "@/utils/setMediaSession";
 
 export function MediaSessionObserver() {
   const { t } = useTranslation();
-  useWakeLock();
+  useBackgroundPlayback();
   const isPlaying = usePlayerIsPlaying();
   const isTransitioning = usePlayerIsTransitioning();
   const { isRadio, isSong } = usePlayerMediaType();

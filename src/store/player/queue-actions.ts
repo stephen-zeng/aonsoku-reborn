@@ -883,6 +883,7 @@ export function createQueueActions(shared: SharedDeps) {
         state.playerState.lyricsState = false;
         state.playerState.currentDuration = 0;
         state.playerState.audioPlayerRef = null;
+        state.playerState.radioPlayerRef = null;
         state.playerState.isBuffering = false;
         state.settings.colors.currentSongColor = null;
       });

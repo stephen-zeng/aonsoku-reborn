@@ -395,45 +395,6 @@ export function AudioPlayer({
     return unsubscribe;
   }, [audioRef, safePlay]);
 
-  // When the page becomes visible again after being backgrounded (e.g. Android
-  // screen-off), the browser may have paused the <audio> element without the
-  // pause event reaching React. If the app thinks it's playing but the audio
-  // is actually paused, resume playback automatically. A short delay ensures
-  // any queued pause events from the browser are processed first.
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) return;
-
-      const resumeIfNecessary = () => {
-        const audio = audioRef.current;
-        if (!audio || !isSong) return;
-
-        const { isPlaying: shouldBePlaying, remoteControl } =
-          usePlayerStore.getState();
-
-        logger.info(`[visibilitychange] state=visible | shouldBePlaying=${shouldBePlaying} | remoteControl=${remoteControl.active} | audio.paused=${audio.paused} | audio.ended=${audio.ended} | audio.currentTime=${audio.currentTime.toFixed(2)} | loopRestarting=${loopRestartingRef.current}`);
-
-        if (
-          shouldBePlaying &&
-          !remoteControl.active &&
-          audio.paused &&
-          !audio.ended &&
-          audio.src
-        ) {
-          logger.info(`[visibilitychange → resume] delay=100ms | src=${audio.src?.slice(-60)}`);
-          safePlay(audio, "VisibilityResume");
-        }
-      };
-
-      setTimeout(resumeIfNecessary, 100);
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [audioRef, isSong, safePlay]);
-
   const handlePlaySuccess = useCallback(() => {
     retryCountRef.current = 0;
     rangeFallbackRef.current = false;

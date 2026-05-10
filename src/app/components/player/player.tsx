@@ -60,6 +60,7 @@ export function Player() {
   const isMobile = usePlayerBreakpoint();
   const {
     setAudioPlayerRef,
+    setRadioPlayerRef,
     setCurrentDuration,
     setIsBuffering: setStoreIsBuffering,
     setBufferedProgress,
@@ -148,6 +149,25 @@ export function Player() {
       }
     };
   }, [isRemoteControlActive, isSong, setAudioPlayerRef]);
+
+  useEffect(() => {
+    if (!isRadio || isRemoteControlActive) return;
+
+    const currentRadio = radioRef.current;
+    if (
+      currentRadio &&
+      currentRadio !== usePlayerStore.getState().playerState.radioPlayerRef
+    ) {
+      setRadioPlayerRef(currentRadio);
+    }
+
+    return () => {
+      const storedRef = usePlayerStore.getState().playerState.radioPlayerRef;
+      if (storedRef === currentRadio) {
+        setRadioPlayerRef(null);
+      }
+    };
+  }, [isRemoteControlActive, isRadio, setRadioPlayerRef]);
 
   const updateAudioDuration = useCallback(() => {
     const audio = getAudioRef().current;
