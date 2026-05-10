@@ -1017,7 +1017,7 @@
     },
     "sw": {
       "error": "Güncelleme başarısız – Tekrar dene",
-      "refresh": "Güncellemek için yenile",
+      "refresh": "Güncelle",
       "updating": "Güncelleniyor..."
     },
     "toasts": {

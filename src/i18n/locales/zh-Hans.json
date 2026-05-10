@@ -1026,7 +1026,7 @@
     },
     "sw": {
       "error": "更新失败 - 重试",
-      "refresh": "刷新以更新",
+      "refresh": "更新",
       "updating": "更新中..."
     },
     "toasts": {

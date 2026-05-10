@@ -1025,7 +1025,7 @@
     },
     "sw": {
       "error": "Aktualizace selhala – Zkusit znovu",
-      "refresh": "Obnovit pro aktualizaci",
+      "refresh": "Aktualizovat",
       "updating": "Aktualizace…"
     },
     "toasts": {

@@ -1017,7 +1017,7 @@
     },
     "sw": {
       "error": "Update failed – Retry",
-      "refresh": "Refresh to update",
+      "refresh": "Aktualisieren",
       "updating": "Updating..."
     },
     "toasts": {

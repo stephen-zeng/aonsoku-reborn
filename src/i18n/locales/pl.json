@@ -1035,7 +1035,7 @@
     },
     "sw": {
       "error": "Aktualizacja nie powiodła się – spróbuj ponownie",
-      "refresh": "Odśwież, aby zaktualizować",
+      "refresh": "Aktualizuj",
       "updating": "Aktualizowanie..."
     },
     "toasts": {
