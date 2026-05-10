@@ -121,18 +121,11 @@ function MobileSongRow({
           height={40}
           className="h-full w-full object-cover"
         />
-        <div
-          className={cn(
-            "absolute inset-0 flex items-center justify-center bg-black/45 text-xs font-medium text-white opacity-0 transition-opacity",
-            isActive && "opacity-100",
-          )}
-        >
-          {isActive && isPlaying ? (
+        {isActive && isPlaying && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-100 transition-opacity">
             <EqualizerBars size={16} className="mb-1" />
-          ) : (
-            indexLabel
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col justify-center">
