@@ -48,7 +48,7 @@ export function CoverImage({
   if (showOverlay) {
     return (
       <div
-        className="bg-skeleton overflow-hidden rounded shadow aspect-square relative cursor-default"
+        className="bg-skeleton overflow-hidden rounded shadow aspect-square relative"
         style={{
           width: size,
           height: size,
@@ -61,16 +61,6 @@ export function CoverImage({
           e.stopPropagation();
           onPlayPause();
         }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            e.stopPropagation();
-            onPlayPause();
-          }
-        }}
-        role="button"
-        tabIndex={0}
-        aria-label={isCurrentPlaying ? "Pause" : "Play"}
       >
         {image}
         <div
