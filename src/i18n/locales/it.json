@@ -1023,7 +1023,7 @@
     },
     "sw": {
       "error": "Aggiornamento fallito – Riprova",
-      "refresh": "Aggiorna la pagina per installare",
+      "refresh": "Aggiorna",
       "updating": "Aggiornamento in corso..."
     },
     "toasts": {

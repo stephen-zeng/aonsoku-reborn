@@ -1017,7 +1017,7 @@
     },
     "sw": {
       "error": "Uppdatering misslyckades – Försök igen",
-      "refresh": "Uppdatera för att uppdatera",
+      "refresh": "Uppdatera",
       "updating": "Uppdaterar..."
     },
     "toasts": {

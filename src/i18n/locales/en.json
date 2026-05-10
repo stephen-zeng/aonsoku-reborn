@@ -537,7 +537,7 @@
     },
     "sw": {
       "updating": "Updating...",
-      "refresh": "Refresh to update",
+      "refresh": "Update",
       "error": "Update failed – Retry"
     }
   },

@@ -1026,7 +1026,7 @@
     },
     "sw": {
       "error": "Atualização falhou – Tentar novamente",
-      "refresh": "Recarregar para atualizar",
+      "refresh": "Atualizar",
       "updating": "A atualizar..."
     },
     "toasts": {
