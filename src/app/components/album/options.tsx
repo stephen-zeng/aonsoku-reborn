@@ -5,6 +5,8 @@ import {
   DropdownMenuSeparator,
 } from "@/app/components/ui/dropdown-menu";
 import { useOptions } from "@/app/hooks/use-options";
+import { cacheManager } from "@/service/cache";
+import { usePlayerStore } from "@/store/player.store";
 import { SingleAlbum } from "@/types/responses/album";
 
 interface AlbumOptionsProps {
@@ -12,13 +14,10 @@ interface AlbumOptionsProps {
 }
 
 export function AlbumOptions({ album }: AlbumOptionsProps) {
-  const {
-    playNext,
-    playLast,
-    startDownload,
-    addToPlaylist,
-    createNewPlaylist,
-  } = useOptions();
+  const { playNext, playLast, addToPlaylist, createNewPlaylist } = useOptions();
+  const isUserQueueEmpty = usePlayerStore(
+    (state) => state.songlist.userQueue.songs.length === 0,
+  );
 
   function handlePlayNext() {
     playNext(album.song, { albumId: album.id });
@@ -26,10 +25,6 @@ export function AlbumOptions({ album }: AlbumOptionsProps) {
 
   function handlePlayLast() {
     playLast(album.song, { albumId: album.id });
-  }
-
-  function handleDownload() {
-    startDownload(album.id);
   }
 
   function handleAddToPlaylist(id: string) {
@@ -48,7 +43,10 @@ export function AlbumOptions({ album }: AlbumOptionsProps) {
     <>
       <DropdownMenuGroup>
         <OptionsButtons.PlayNext onClick={handlePlayNext} />
-        <OptionsButtons.PlayLast onClick={handlePlayLast} />
+        <OptionsButtons.PlayLast
+          onClick={handlePlayLast}
+          disabled={isUserQueueEmpty}
+        />
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
       <OptionsButtons.AddToPlaylistOption variant="dropdown">
@@ -60,7 +58,9 @@ export function AlbumOptions({ album }: AlbumOptionsProps) {
       </OptionsButtons.AddToPlaylistOption>
       <DropdownMenuSeparator />
       <DropdownMenuGroup>
-        <OptionsButtons.Download onClick={handleDownload} />
+        <OptionsButtons.DownloadAlbum
+          onClick={() => cacheManager.cacheAlbum(album.id)}
+        />
       </DropdownMenuGroup>
     </>
   );

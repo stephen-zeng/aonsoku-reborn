@@ -1,7 +1,7 @@
 {
   "about": {
     "apiVersion": "Версия API",
-    "buildTime": "Build Time",
+    "buildTime": "Время сборки",
     "client": "Клиент",
     "server": "Сервер",
     "toasts": {
@@ -14,6 +14,10 @@
     "buttons": {
       "dislike": "Убрать лайк с {{name}}",
       "like": "Лайкнуть {{name}}"
+    },
+    "detail": {
+      "songsUnavailable": "Список треков недоступен офлайн. Синхронизируйте библиотеку, чтобы сделать треки доступными.",
+      "songsUnavailableTitle": "Треки недоступны"
     },
     "headline": "Альбом",
     "info": {
@@ -70,8 +74,10 @@
     },
     "headline": "Исполнитель",
     "info": {
+      "albumsCount_few": "{{count}} альбома",
+      "albumsCount_many": "{{count}} альбомов",
       "albumsCount_one": "{{count}} альбом",
-      "albumsCount_other": "{{count}} albums"
+      "albumsCount_other": "{{count}} альбомов"
     },
     "recentAlbums": "Недавние альбомы",
     "relatedArtists": "Похожие исполнители",
@@ -104,13 +110,8 @@
       "yy": "%d лет"
     }
   },
-  "downloads": {
-    "completed": "Ваш файл скачан.",
-    "failed": "Произошла ошибка при скачивании вашего файла.",
-    "started": "Скачивание начато."
-  },
   "error": {
-    "notFound": "Not found"
+    "notFound": "Не найдено"
   },
   "favorites": {
     "buttons": {
@@ -124,21 +125,21 @@
     "songCount_other": "{{count}} песен"
   },
   "fullscreen": {
-    "emptyQueue": "No songs in queue",
+    "emptyQueue": "Нет песен в очереди",
     "loadingLyrics": "Поиск текста трека…",
     "lyrics": "Текст",
     "noLyrics": "Текст трека не найден",
     "playing": "Сейчас играет",
     "queue": "Очередь",
-    "queueContinue": "Continue Playing",
-    "queueFromSource": "From {{source}}",
-    "queueHistory": "History",
-    "queueRepeating": "Repeating",
+    "queueContinue": "Продолжить воспроизведение",
+    "queueFromSource": "Из {{source}}",
+    "queueHistory": "История",
+    "queueRepeating": "Повтор",
     "switchButton": "Перейти в полноэкранный режим"
   },
   "generic": {
     "beta": "Бета",
-    "clear": "Clear",
+    "clear": "Очистить",
     "hideDetails": "Скрыть детали",
     "loading": "Загрузка…",
     "seeMore": "Еще",
@@ -161,67 +162,67 @@
   "lanControl": {
     "remote": {
       "actions": {
-        "connect": "Connect",
-        "connecting": "Connecting...",
-        "disconnect": "Disconnect",
-        "refresh": "Refresh state"
+        "connect": "Подключиться",
+        "connecting": "Подключение…",
+        "disconnect": "Отключиться",
+        "refresh": "Обновить состояние"
       },
-      "address": "Server address",
-      "autoConnectFailed": "Failed to connect to remote device, entering local playback mode",
-      "clickToPlay": "Click to play",
+      "address": "Адрес сервера",
+      "autoConnectFailed": "Не удалось подключиться к удалённому устройству, переходим в режим локального воспроизведения",
+      "clickToPlay": "Нажмите, чтобы воспроизвести",
       "controls": {
-        "next": "Next",
-        "pause": "Pause",
-        "play": "Play",
-        "previous": "Previous",
-        "repeat": "Toggle repeat",
-        "shuffle": "Toggle shuffle"
+        "next": "Далее",
+        "pause": "Пауза",
+        "play": "Воспроизвести",
+        "previous": "Назад",
+        "repeat": "Переключить повтор",
+        "shuffle": "Переключить перемешивание"
       },
-      "currentlyPlaying": "Currently playing",
-      "description": "Connect to a LAN control server and manage playback remotely.",
-      "emptyArtist": "Unknown artist",
-      "emptyTitle": "No track playing",
-      "ip": "IP Address",
-      "items": "items",
+      "currentlyPlaying": "Сейчас играет",
+      "description": "Подключитесь к серверу LAN Control и управляйте воспроизведением удалённо.",
+      "emptyArtist": "Неизвестный исполнитель",
+      "emptyTitle": "Трек не играет",
+      "ip": "IP-адрес",
+      "items": "элементов",
       "library": {
-        "albums": "Albums",
-        "back": "Back",
-        "loading": "Loading...",
-        "noAlbums": "No albums available",
-        "noPlaylists": "No playlists available",
-        "noResults": "No results found",
-        "playlists": "Playlists",
-        "search": "Search",
-        "searchButton": "Search",
-        "searchPlaceholder": "Search songs, albums...",
-        "searching": "Searching...",
-        "songs": "Songs"
+        "albums": "Альбомы",
+        "back": "Назад",
+        "loading": "Загрузка…",
+        "noAlbums": "Нет доступных альбомов",
+        "noPlaylists": "Нет доступных плейлистов",
+        "noResults": "Результаты не найдены",
+        "playlists": "Плейлисты",
+        "search": "Поиск",
+        "searchButton": "Поиск",
+        "searchPlaceholder": "Поиск песен, альбомов…",
+        "searching": "Поиск…",
+        "songs": "Песни"
       },
-      "loadingSong": "Loading...",
-      "menu": "Control other devices",
-      "nowPlaying": "Now playing",
-      "password": "Access code",
-      "playing": "Playing",
-      "port": "Port",
-      "queue": "Playback queue",
-      "queueEmpty": "Queue is empty",
-      "serverRunning": "This device is currently running as a LAN Control server. You cannot control other devices while this device is in server mode.",
+      "loadingSong": "Загрузка…",
+      "menu": "Управление другими устройствами",
+      "nowPlaying": "Сейчас играет",
+      "password": "Код доступа",
+      "playing": "Воспроизводится",
+      "port": "Порт",
+      "queue": "Очередь воспроизведения",
+      "queueEmpty": "Очередь пуста",
+      "serverRunning": "Это устройство работает как сервер LAN Control. Вы не можете управлять другими устройствами, пока устройство в режиме сервера.",
       "status": {
-        "authenticating": "Authenticating",
-        "connected": "Connected",
-        "connecting": "Connecting",
-        "disconnected": "Disconnected",
-        "error": "Error",
-        "label": "Status"
+        "authenticating": "Аутентификация",
+        "connected": "Подключено",
+        "connecting": "Подключение",
+        "disconnected": "Отключено",
+        "error": "Ошибка",
+        "label": "Статус"
       },
       "tabs": {
-        "control": "Control",
-        "library": "Library"
+        "control": "Управление",
+        "library": "Библиотека"
       },
-      "title": "Control other devices",
-      "unknownDevice": "Unknown device",
+      "title": "Управление другими устройствами",
+      "unknownDevice": "Неизвестное устройство",
       "version": "v{{version}}",
-      "volume": "Volume: {{volume}}%"
+      "volume": "Громкость: {{volume}}%"
     }
   },
   "login": {
@@ -264,23 +265,35 @@
     "unsupported_message": "{{app_name}} несовместимо с мобильными телефонами."
   },
   "offline": {
-    "disconnected": "Server unreachable. Entering offline mode.",
-    "mode": "Offline",
-    "reconnectFailed": "Could not reconnect. Continuing in offline mode.",
-    "reconnected": "Reconnected to server",
-    "reconnecting": "Reconnecting…",
-    "searchUnavailable": "Search requires an offline library sync.",
-    "songUnavailable": "This song is not available offline"
+    "badge": {
+      "cloud": "Требуется сеть",
+      "downloaded": "Загружено",
+      "downloading": "Загрузка…",
+      "orphan": "Удалено с сервера (всё ещё доступно офлайн)",
+      "smart": "Сохранено правилом умной загрузки"
+    },
+    "disconnected": "Сервер недоступен",
+    "metered": "Лимитировано",
+    "meteredTooltip": "У вас медленное или лимитированное соединение. Фоновая синхронизация и умные загрузки приостановлены — нажмите кнопку загрузки, чтобы переопределить.",
+    "mode": "Офлайн",
+    "reconnectFailed": "Не удалось переподключиться. Продолжение в офлайн-режиме.",
+    "reconnected": "Переподключено к серверу",
+    "reconnecting": "Переподключение…",
+    "searchUnavailable": "Для поиска требуется синхронизация офлайн-библиотеки.",
+    "songUnavailable": "Этот трек недоступен офлайн"
   },
   "options": {
-    "addLast": "Добавить в очередь",
+    "addLast": "Добавить последним",
     "download": "Скачать",
+    "downloadAlbum": "Скачать альбом",
+    "downloadArtist": "Скачать исполнителя",
+    "downloadPlaylist": "Скачать плейлист",
     "goto": {
       "album": "Перейти к альбому",
       "artist": "Перейти к исполнителю"
     },
     "info": "Информация",
-    "like": "Like",
+    "like": "Лайкнуть",
     "play": "Воспроизвести",
     "playNext": "Воспроизвести следующим",
     "playlist": {
@@ -292,8 +305,9 @@
       "removeSong": "Удалить из плейлиста",
       "search": "Найти плейлист"
     },
-    "removeFromQueue": "Remove from queue",
-    "unlike": "Unlike"
+    "removeDownload": "Удалить загрузку",
+    "removeFromQueue": "Убрать из очереди",
+    "unlike": "Убрать лайк"
   },
   "player": {
     "noRadioPlaying": "Сейчас радио не играет",
@@ -310,7 +324,7 @@
       "pause": "Пауза",
       "play": "Воспроизвести",
       "previous": "Предыдущий",
-      "progress": "Seek",
+      "progress": "Перемотка",
       "repeat": {
         "disable": "Выключить повтор",
         "enable": "Включить повтор",
@@ -321,8 +335,8 @@
         "disable": "Выключить перемешивание",
         "enable": "Включить перемешивание"
       },
-      "star": "Star current song",
-      "unstar": "Unstar current song",
+      "star": "Добавить текущий трек в избранное",
+      "unstar": "Убрать текущий трек из избранного",
       "volume": {
         "mute": "Заглушить",
         "unmute": "Разглушить"
@@ -370,13 +384,19 @@
       },
       "removeSong": {
         "description": "Это действие не может быть отменено.",
+        "title_few": "Вы уверены, что хотите удалить выбранные треки?",
+        "title_many": "Вы уверены, что хотите удалить выбранные треки?",
         "title_one": "Вы уверены, что хотите удалить выбранный трек?",
-        "title_other": "Are you sure you want to remove the selected songs?",
+        "title_other": "Вы уверены, что хотите удалить выбранные треки?",
         "toast": {
+          "error_few": "Не удалось удалить треки!",
+          "error_many": "Не удалось удалить треки!",
           "error_one": "Не удалось удалить трек!",
-          "error_other": "Failed to remove the songs!",
+          "error_other": "Не удалось удалить треки!",
+          "success_few": "Треки удалены!",
+          "success_many": "Треки удалены!",
           "success_one": "Трек удален!",
-          "success_other": "Songs removed successfully!"
+          "success_other": "Треки удалены!"
         }
       },
       "validations": {
@@ -386,8 +406,10 @@
     "headline": "Плейлист",
     "noSongList": "Этот плейлист не содержит треков!",
     "refresh": "Обновить плейлисты",
+    "songCount_few": "{{count}} трека",
+    "songCount_many": "{{count}} треков",
     "songCount_one": "{{count}} трек",
-    "songCount_other": "{{count}} songs"
+    "songCount_other": "{{count}} треков"
   },
   "queue": {
     "clear": "Очистить очередь",
@@ -452,8 +474,10 @@
       "refresh": "Перезагрузить статус",
       "startScan": "Быстрое сканирование"
     },
+    "folderCount_few": "{{count}} папки",
+    "folderCount_many": "{{count}} папок",
     "folderCount_one": "{{count}} папка",
-    "folderCount_other": "{{count}} folders",
+    "folderCount_other": "{{count}} папок",
     "incompatible": {
       "description": "Этот сервер использует более старую версию протокола Subsonic, которая поддерживается не полностью. Это может привести к проблемам, поэтому, пожалуйста, действуйте с осторожностью.",
       "skip": "Продолжить в любом случае",
@@ -461,37 +485,27 @@
     },
     "lastScan": "Последнее сканирование: {{date}}",
     "management": "Управление сервером",
+    "songCount_few": "{{count}} трека",
+    "songCount_many": "{{count}} треков",
     "songCount_one": "{{count}} трек",
-    "songCount_other": "{{count}} songs",
+    "songCount_other": "{{count}} треков",
     "status": "Статус"
   },
   "settings": {
     "accounts": {
       "discord": {
-        "description": "Share your currently playing song with friends on Discord.",
+        "description": "Делитесь текущим треком с друзьями в Discord.",
         "enabled": {
-          "label": "Enable Integration"
+          "label": "Включить интеграцию"
         },
         "group": "Discord Rich Presence"
       }
     },
     "appearance": {
-      "colors": {
-        "bigPlayer": {
-          "blurSize": "Степень Размытия",
-          "label": "Большой проигрыватель"
-        },
-        "description": "Выберите, должно ли приложение использовать в качестве фона основной цвет из обложки текущего альбома.",
-        "group": "Динамические цвета",
-        "queue": {
-          "intensity": "Интенсивность цвета",
-          "label": "Очередь и текст"
-        }
-      },
       "general": {
         "albumCoverForSongs": {
-          "info": "When enabled, every song artwork request uses the album cover to reduce loading time.",
-          "label": "Always use album covers"
+          "info": "При включении каждый запрос обложки трека использует обложку альбома для ускорения загрузки.",
+          "label": "Всегда использовать обложки альбомов"
         },
         "description": "Настроить параметры отображения и внешний вид приложения.",
         "fullscreen": {
@@ -503,11 +517,11 @@
     },
     "audio": {
       "history": {
-        "description": "Songs that play for more than 10 seconds are recorded in your play history.",
-        "group": "Play History",
+        "description": "Песни, воспроизводимые более 10 секунд, записываются в историю.",
+        "group": "История воспроизведения",
         "maxSize": {
-          "info": "The maximum number of songs to keep in play history. Older entries are removed when the limit is exceeded.",
-          "label": "Maximum history size"
+          "info": "Максимальное количество песен, сохраняемых в истории. Более старые записи удаляются при превышении лимита.",
+          "label": "Максимальный размер истории"
         }
       },
       "lyrics": {
@@ -518,8 +532,8 @@
           "label": "Приоритизировать синхронизированный текст песни"
         },
         "showTranslation": {
-          "info": "When available, show translated lyrics below the original lyrics.",
-          "label": "Show translation"
+          "info": "Если доступно, показывать перевод текста под оригинальным текстом песни.",
+          "label": "Показать перевод"
         }
       },
       "replayGain": {
@@ -553,89 +567,89 @@
     },
     "desktop": {
       "general": {
-        "description": "Customize preferences for the desktop application.",
-        "group": "General",
+        "description": "Настройте параметры для настольного приложения.",
+        "group": "Общие",
         "tray": {
-          "info": "When enabled, the app will minimize to the system tray instead of closing when you click the close button.",
-          "label": "Minimize to Tray"
+          "info": "При включении приложение будет сворачиваться в системный трей вместо закрытия при нажатии кнопки закрытия.",
+          "label": "Сворачивать в трей"
         }
       },
       "lanControl": {
         "address": {
-          "info": "Available server addresses for LAN control access.",
-          "label": "Server Addresses"
+          "info": "Доступные адреса сервера для доступа к LAN Control.",
+          "label": "Адреса сервера"
         },
-        "addressCopied": "Server address copied to clipboard.",
+        "addressCopied": "Адрес сервера скопирован в буфер обмена.",
         "allowNavidromeAuth": {
-          "info": "Enable authentication using Navidrome credentials.",
-          "label": "Allow Navidrome Authentication"
+          "info": "Включить аутентификацию с помощью учётных данных Navidrome.",
+          "label": "Разрешить аутентификацию Navidrome"
         },
-        "copyAddress": "Copy address",
-        "copyPassword": "Copy password",
-        "description": "Manage LAN control settings for remote access.",
+        "copyAddress": "Копировать адрес",
+        "copyPassword": "Копировать пароль",
+        "description": "Управление настройками LAN Control для удалённого доступа.",
         "enable": {
-          "info": "Turn on LAN control to allow remote access to this application.",
-          "label": "Enable LAN Control"
+          "info": "Включите LAN Control, чтобы разрешить удалённый доступ к этому приложению.",
+          "label": "Включить LAN Control"
         },
         "group": "LAN Control",
         "password": {
-          "info": "Set a password for secure access to the LAN control server.",
-          "label": "Password"
+          "info": "Установите пароль для безопасного доступа к серверу LAN Control.",
+          "label": "Пароль"
         },
-        "passwordCopied": "Password copied to clipboard.",
-        "passwordRegenerated": "Password regenerated successfully.",
+        "passwordCopied": "Пароль скопирован в буфер обмена.",
+        "passwordRegenerated": "Пароль успешно перегенерирован.",
         "port": {
-          "info": "Specify the port number for the LAN control server.",
-          "label": "Port"
+          "info": "Укажите номер порта для сервера LAN Control.",
+          "label": "Порт"
         },
-        "regeneratePassword": "Regenerate password",
-        "serverError": "Failed to start LAN control server.",
-        "serverStarted": "LAN control server started successfully."
+        "regeneratePassword": "Перегенерировать пароль",
+        "serverError": "Не удалось запустить сервер LAN Control.",
+        "serverStarted": "Сервер LAN Control успешно запущен."
       },
       "updates": {
-        "availableVersion": "Version {{version}} available",
+        "availableVersion": "Доступна версия {{version}}",
         "checkNow": {
-          "info": "Manually check for available updates.",
-          "label": "Check for Updates"
+          "info": "Проверить наличие обновлений вручную.",
+          "label": "Проверить обновления"
         },
-        "checking": "Checking for updates...",
-        "checkingManually": "Checking for updates...",
+        "checking": "Проверка обновлений…",
+        "checkingManually": "Проверка обновлений…",
         "currentVersion": {
-          "info": "The version of Aonsoku you are currently running.",
-          "label": "Current Version"
+          "info": "Версия Aonsoku, которую вы используете.",
+          "label": "Текущая версия"
         },
-        "description": "Check for and install application updates.",
-        "download": "Download Update",
-        "downloadError": "Download Failed",
-        "downloadStarted": "Download Started",
-        "downloadStartedDesc": "Update download has begun",
-        "downloading": "Downloading... {{percent}}%",
-        "group": "App Updates",
-        "installNow": "Install and Restart",
-        "readyToInstall": "Ready to install (restart required)",
+        "description": "Проверка и установка обновлений приложения.",
+        "download": "Загрузить обновление",
+        "downloadError": "Ошибка загрузки",
+        "downloadStarted": "Загрузка начата",
+        "downloadStartedDesc": "Загрузка обновления началась",
+        "downloading": "Загрузка… {{percent}}%",
+        "group": "Обновления приложения",
+        "installNow": "Установить и перезапустить",
+        "readyToInstall": "Готово к установке (требуется перезапуск)",
         "status": {
-          "info": "The current status of application updates.",
-          "label": "Update Status"
+          "info": "Текущий статус обновлений приложения.",
+          "label": "Статус обновлений"
         },
-        "upToDate": "You're up to date",
-        "updateAvailable": "Update Available",
-        "updateAvailableDesc": "Version {{version}} is available",
-        "updateError": "Update Check Failed",
-        "updateReady": "Update Ready",
-        "updateReadyDesc": "Update will be installed when you restart the app"
+        "upToDate": "У вас актуальная версия",
+        "updateAvailable": "Доступно обновление",
+        "updateAvailableDesc": "Версия {{version}} доступна",
+        "updateError": "Ошибка проверки обновлений",
+        "updateReady": "Обновление готово",
+        "updateReadyDesc": "Обновление будет установлено при перезапуске приложения"
       }
     },
     "label": "Настройки",
     "options": {
-      "accounts": "Accounts",
+      "accounts": "Аккаунты",
       "appearance": "Внешний вид",
       "audio": "Проигрыватель и Звук",
       "content": "Содержимое",
-      "desktop": "Desktop Application",
+      "desktop": "Настольное приложение",
       "language": "Язык и Регион",
       "privacy": "Безопасность и Приватность",
-      "server": "Server",
-      "storage": "Storage"
+      "server": "Сервер",
+      "storage": "Автономная работа"
     },
     "privacy": {
       "services": {
@@ -649,88 +663,204 @@
     },
     "server": {
       "activeType": {
-        "fallback": "Fallback URL",
-        "info": "Shows whether this session is using the primary or fallback URL.",
-        "label": "Current server",
-        "none": "Not connected",
-        "primary": "Primary URL"
+        "fallback": "Резервный URL",
+        "info": "Показывает, использует ли эта сессия основной или резервный URL.",
+        "label": "Текущий сервер",
+        "none": "Не подключено",
+        "primary": "Основной URL"
       },
       "activeUrl": {
-        "empty": "No server selected",
-        "info": "The server URL currently used by this app session.",
-        "label": "Current URL"
+        "empty": "Сервер не выбран",
+        "info": "URL сервера, используемый в данный момент в этой сессии.",
+        "label": "Текущий URL"
       },
-      "description": "Manage the primary server and optional fallback URL used at startup.",
+      "description": "Управление основным сервером и опциональным резервным URL, используемым при запуске.",
       "fallbackUrl": {
-        "info": "Optional server URL used when the primary URL cannot be reached at startup.",
-        "label": "Fallback URL",
+        "info": "Необязательный URL сервера, используемый, если основной URL недоступен при запуске.",
+        "label": "Резервный URL",
         "placeholder": "https://fallback-server.example.com"
       },
-      "group": "Server",
-      "locked": "Server URL settings are locked by this deployment.",
+      "group": "Сервер",
+      "locked": "Настройки URL сервера заблокированы этим развёртыванием.",
       "primaryUrl": {
-        "info": "The server URL Aonsoku tries first when the app starts.",
-        "label": "Primary URL",
+        "info": "URL сервера, который Aonsoku пытается использовать в первую очередь при запуске.",
+        "label": "Основной URL",
         "placeholder": "https://your-server.example.com"
       },
-      "save": "Save server URLs",
-      "saving": "Saving...",
+      "save": "Сохранить URL сервера",
+      "saving": "Сохранение…",
       "toast": {
-        "error": "Unable to reach the primary or fallback server.",
-        "success": "Server URLs saved successfully."
+        "error": "Не удалось подключиться к основному или резервному серверу.",
+        "success": "URL сервера успешно сохранены."
       },
       "validation": {
-        "fallbackUrl": "Please enter a valid fallback URL.",
-        "primaryUrl": "Please enter a valid primary URL."
+        "fallbackUrl": "Пожалуйста, введите корректный резервный URL.",
+        "primaryUrl": "Пожалуйста, введите корректный основной URL."
       }
     },
     "storage": {
       "audio": {
-        "clear": "Clear audio cache",
-        "description": "Cache audio files for instant playback on repeated listens.",
-        "enabled": "Enable audio cache",
-        "entries": "{{count}} songs cached",
-        "group": "Audio Cache",
-        "maxSize": "Maximum cache size",
-        "size": "Cache size"
+        "clear": "Очистить аудио-кэш",
+        "description": "Кэшировать аудиофайлы для мгновенного воспроизведения при повторном прослушивании.",
+        "enabled": "Включить аудио-кэш",
+        "entries": "{{count}} песен в кэше",
+        "group": "Аудио-кэш",
+        "maxSize": "Максимальный размер кэша",
+        "size": "Размер кэша"
+      },
+      "cacheManager": {
+        "confirmDelete": {
+          "description": "Это удалит «{{name}}» из кэша. Его можно будет загрузить снова.",
+          "title": "Удалить из кэша?"
+        },
+        "description": "Просмотр и управление отдельными кэшированными элементами.",
+        "filter": {
+          "album": "Альбом",
+          "all": "Все",
+          "audio": "Аудио",
+          "cover": "Обложки",
+          "explicit": "Явные",
+          "lru": "LRU",
+          "playlist": "Плейлист",
+          "smart": "Умные"
+        },
+        "group": "Менеджер кэша",
+        "list": {
+          "actions": "Действия",
+          "cachedAt": "Кэширован",
+          "delete": "Удалить",
+          "empty": "Нет кэшированных элементов.",
+          "name": "Имя",
+          "removedFromServer": "Удалено с сервера",
+          "size": "Размер",
+          "source": "Источник",
+          "total": "{{count}} элементов, всего {{size}}",
+          "type": "Тип",
+          "type_album": "Альбом",
+          "type_audio": "Аудио",
+          "type_cover": "Обложка",
+          "type_playlist": "Плейлист"
+        }
       },
       "coverArt": {
-        "clear": "Clear cover art cache",
-        "description": "Cache album cover images for faster loading.",
-        "enabled": "Enable cover art cache",
-        "entries": "{{count}} images cached",
-        "group": "Cover Art Cache",
-        "size": "Cache size"
+        "clear": "Очистить кэш обложек",
+        "description": "Кэшировать обложки альбомов для более быстрой загрузки.",
+        "enabled": "Включить кэш обложек",
+        "entries": "{{count}} изображений в кэше",
+        "group": "Кэш обложек",
+        "size": "Размер кэша"
+      },
+      "limits": {
+        "audioEntries": "{{count}} треков в кэше",
+        "audioSize": "Аудио-кэш",
+        "clearAll": "Очистить все кэши",
+        "clearAudio": "Очистить",
+        "clearCovers": "Очистить",
+        "coverEntries": "{{count}} изображений в кэше",
+        "coverSize": "Кэш обложек",
+        "description": "Управление кэшированным аудио и хранением обложек.",
+        "group": "Хранилище кэша",
+        "imageEntries": "{{count}} изображений",
+        "maxSize": "Максимальный размер аудио-кэша",
+        "pool": {
+          "assets": {
+            "description": "Изображения альбомов и исполнителей, кэшированные для быстрой загрузки библиотеки.",
+            "label": "Обложки"
+          },
+          "explicit": {
+            "description": "Песни, альбомы и плейлисты, скачанные вами вручную. Никогда не удаляются автоматически.",
+            "label": "Явные загрузки"
+          },
+          "lru": {
+            "description": "Попутно кэшируются во время прослушивания. Старые записи удаляются первыми при превышении квоты.",
+            "label": "Недавно воспроизведённые"
+          },
+          "smart": {
+            "description": "Автоматически загружаются по правилам. Удаляются, когда триггерное правило перестаёт действовать.",
+            "label": "Умные загрузки"
+          }
+        },
+        "quota": "Квота",
+        "songEntries": "{{count}} песен",
+        "unlimited": "Безлимитно"
       },
       "metadata": {
-        "clear": "Clear all caches",
-        "description": "Clear all cached data including metadata, cover art, and audio files.",
-        "group": "All Caches"
+        "clear": "Очистить все кэши",
+        "description": "Очистить все кэшированные данные, включая метаданные, обложки и аудиофайлы.",
+        "group": "Все кэши"
+      },
+      "offline": {
+        "description": "Кэшировать песни, метаданные и обложки локально для офлайн-доступа. Включите кэширование библиотеки, чтобы разблокировать настройки качества загрузки, умных загрузок и синхронизации.",
+        "group": "Офлайн-режим"
+      },
+      "smart": {
+        "description": "Автоматически кэшировать песни, соответствующие любому включённому правилу. Они удаляются, как только все триггерные правила перестают действовать, и никогда не имеют приоритета над ручными загрузками.",
+        "enabled": "Включить умные загрузки",
+        "group": "Умные загрузки",
+        "rule": {
+          "favoritePlaylists": "Избранные плейлисты",
+          "favoriteSongs": "Избранные песни"
+        }
       },
       "sync": {
-        "cancel": "Cancel",
-        "clear": "Clear",
-        "coverArt": "Include cover art",
-        "coverArtInfo": "Download all album and artist images during sync. This may use significant storage and bandwidth.",
-        "description": "Cache all metadata on every app launch for offline browsing. Audio files are never synced.",
-        "enabled": "Enable sync on launch",
-        "entries": "{{count}} items synced",
-        "group": "Sync on Launch",
-        "lastSynced": "Last synced",
-        "never": "Never",
-        "phases": {
-          "albums": "Syncing albums…",
-          "artists": "Syncing artists…",
-          "cancelled": "Sync cancelled",
-          "coverArt": "Syncing cover art…",
-          "done": "Sync complete",
-          "error": "Sync failed",
-          "genres": "Syncing genres…",
-          "idle": "Preparing…",
-          "playlists": "Syncing playlists…",
-          "songs": "Syncing songs…"
+        "cancel": "Отмена",
+        "clear": "Очистить синхронизированные данные",
+        "clearConfirm": {
+          "clear": "Очистить и отключить",
+          "description": "Отключение кэширования библиотеки удалит все синхронизированные данные (исполнители, альбомы, песни, плейлисты, жанры). Вы можете снова включить его и повторно синхронизироваться в любое время.",
+          "keep": "Оставить включённым",
+          "title": "Отключить кэширование библиотеки?"
         },
-        "syncNow": "Sync Now"
+        "completed": "Готово",
+        "coverArt": "Включить обложки",
+        "coverArtConcurrency": "Параллельность загрузки обложек",
+        "coverArtConcurrencyInfo": "Количество параллельных загрузок обложек. Большие значения ускоряют синхронизацию, но используют больше трафика. Установите 1 для последовательной загрузки.",
+        "coverArtConcurrencyOff": "Последовательно",
+        "coverArtInfo": "Загрузить все обложки альбомов и изображения исполнителей при синхронизации. Это может потребовать значительного объёма хранилища и пропускной способности.",
+        "description": "Синхронизировать метаданные библиотеки для автономного просмотра. Загруженные песни всегда доступны офлайн.",
+        "downloading_one": "Загрузка {{count}} песни",
+        "downloading_other": "Загрузка {{count}} песен",
+        "enabled": "Синхронизировать библиотеку",
+        "entries": "{{count}} элементов синхронизировано",
+        "group": "Синхронизация библиотеки",
+        "justNow": "Только что",
+        "lastSynced": "Последняя синхронизация",
+        "libraryCaching": "Кэширование библиотеки",
+        "libraryCachingInfo": "При включении метаданные и, опционально, песни кэшируются локально для офлайн-доступа. При отключении приложение работает только в онлайн-режиме, фоновая синхронизация не выполняется.",
+        "never": "Никогда",
+        "phases": {
+          "albums": "Синхронизация альбомов…",
+          "artists": "Синхронизация исполнителей…",
+          "cancelled": "Синхронизация отменена",
+          "coverArt": "Синхронизация обложек…",
+          "done": "Синхронизация завершена",
+          "error": "Синхронизация не удалась",
+          "favorites": "Синхронизация избранного…",
+          "genres": "Синхронизация жанров…",
+          "idle": "Подготовка…",
+          "playlists": "Синхронизация плейлистов…",
+          "songs": "Синхронизация треков…"
+        },
+        "showMore": "Показать ещё {{count}}",
+        "syncNow": "Синхронизировать",
+        "tier": {
+          "t1": {
+            "description": "Избранное · Плейлисты · Жанры",
+            "label": "Основное"
+          },
+          "t2": {
+            "description": "Исполнители · Альбомы",
+            "label": "Скелет библиотеки"
+          },
+          "t3": {
+            "description": "Метаданные всех песен",
+            "label": "Все треки"
+          },
+          "coverArt": {
+            "label": "Обложки",
+            "description": "Изображения альбомов · исполнителей · плейлистов"
+          }
+        }
       }
     }
   },
@@ -786,10 +916,10 @@
       }
     },
     "sort": {
-      "album": "Album A-Z",
-      "artist": "Artist A-Z",
-      "lastAdded": "Last Added",
-      "title": "Song A-Z"
+      "album": "Альбом А-Я",
+      "artist": "Исполнитель А-Я",
+      "lastAdded": "Недавно добавленные",
+      "title": "Название А-Я"
     }
   },
   "table": {
@@ -833,8 +963,10 @@
     },
     "lastPlayed": "{{date}} назад",
     "menu": {
+      "selectedCount_few": "{{count}} выбрано",
+      "selectedCount_many": "{{count}} выбрано",
       "selectedCount_one": "{{count}} выбран",
-      "selectedCount_other": "{{count}} selected"
+      "selectedCount_other": "{{count}} выбрано"
     },
     "pagination": {
       "currentPage": "Страница {{currentPage}} из {{totalPages}}",
@@ -865,6 +997,10 @@
     "light": "Светлая",
     "marmalade-beaver": "Marmalade Beaver",
     "material-theme": "Material Theme",
+    "modeDark": "Dark",
+    "modeLabel": "Mode",
+    "modeLight": "Light",
+    "modeSystem": "System",
     "monokai-pro": "Monokai Pro",
     "night-owl-light": "Night Owl Light",
     "noctis-lilac": "Noctis Lilac",
@@ -877,8 +1013,10 @@
     "vue-dark": "Vue Dark"
   },
   "time": {
+    "days_few": "{{days}} дня",
+    "days_many": "{{days}} дней",
     "days_one": "{{days}} день",
-    "days_other": "{{days}} days",
+    "days_other": "{{days}} дней",
     "hour": "{{hour}} час",
     "minutes": "{{minutes}} минут",
     "seconds": "{{seconds}} с"
@@ -896,9 +1034,9 @@
       "title": "Доступна новая версия!"
     },
     "sw": {
-      "error": "Update failed – Retry",
-      "refresh": "Refresh to update",
-      "updating": "Updating..."
+      "error": "Ошибка обновления — Повторить",
+      "refresh": "Обновить",
+      "updating": "Обновление…"
     },
     "toasts": {
       "error": "Не удалось установить обновление. Попробуйте загрузить его напрямую с GitHub.",

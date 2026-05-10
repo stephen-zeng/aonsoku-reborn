@@ -163,6 +163,25 @@ function getLyricsCacheKey(
 async function getStructuredLyrics(
   songId: string,
 ): Promise<IStructuredLyric[] | null> {
+  // IDB-first (P7.2): explicit/smart downloads prefetch structured
+  // lyrics into libraryDb.lyrics alongside the audio so offline
+  // playback has them immediately.
+  try {
+    const { libraryDb } = await import("@/store/library-db");
+    const stored = await libraryDb.lyrics.get(songId);
+    if (stored?.content) {
+      const parsed = JSON.parse(stored.content) as IStructuredLyric[];
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        libraryDb.lyrics
+          .update(songId, { lastAccessedAt: Date.now() })
+          .catch(() => {});
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.warn("[lyrics] libraryDb lookup failed, falling back:", err);
+  }
+
   const cacheKey = `lyrics-structured:${songId}`;
 
   const cached = await get(cacheKey);

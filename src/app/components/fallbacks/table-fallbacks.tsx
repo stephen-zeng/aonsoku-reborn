@@ -1,3 +1,12 @@
+import type { ReactNode } from "react";
+import {
+  getColumnLayouts,
+  topSongsColumnIds,
+  type TableColumnId,
+  type TableColumnLayout,
+  type TableKind,
+} from "@/app/tables/column-layouts";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/app/components/ui/skeleton";
 
@@ -5,137 +14,115 @@ interface TableFallbackProps {
   variant?: "classic" | "modern";
   type?: "regular" | "infinity";
   length?: number;
-  columns?: "songs" | "playlists" | "radios" | "artists";
+  columns?: TableKind;
+  columnIds?: readonly TableColumnId[];
 }
 
-function SongsHeaderCells() {
+interface FallbackCellProps {
+  children?: ReactNode;
+  isHeader?: boolean;
+  isList?: boolean;
+  layout: TableColumnLayout;
+}
+
+function FallbackCell({
+  children,
+  isHeader = false,
+  isList = false,
+  layout,
+}: FallbackCellProps) {
   return (
-    <>
-      <Skeleton className="w-5 h-5 ml-2" />
-      <Skeleton className="w-36 h-5" />
-      <Skeleton className="w-16 h-5 hidden lg:block" />
-      <Skeleton className="w-12 h-5 hidden md:block" />
-      <Skeleton className="w-12 h-5 hidden lg:block" />
-      <Skeleton className="w-16 h-5 hidden 2xl:block" />
-      <Skeleton className="w-14 h-5 rounded-full hidden 2xl:block" />
-      <Skeleton className="w-5 h-5 ml-auto mr-2" />
-    </>
+    <div
+      className={cn(
+        "p-2 flex flex-row items-center justify-start min-w-0",
+        isHeader && (isList ? "h-10" : "h-12"),
+        layout.className,
+      )}
+      style={layout.style}
+    >
+      {children}
+    </div>
   );
 }
 
-function SongsRowCells() {
+function TextSkeleton({
+  className,
+  size = "sm",
+}: {
+  className: string;
+  size?: "xs" | "sm" | "badge";
+}) {
   return (
-    <>
-      <Skeleton className="w-5 h-5 ml-2" />
-      <div className="flex items-center gap-2">
-        <Skeleton className="w-10 h-10" />
-        <Skeleton className="w-36 h-5" />
-      </div>
-      <Skeleton className="w-36 h-5 hidden lg:block" />
-      <Skeleton className="w-12 h-5 hidden md:block" />
-      <Skeleton className="w-6 h-5 hidden lg:block" />
-      <Skeleton className="w-20 h-5 hidden 2xl:block" />
-      <Skeleton className="w-14 h-5 rounded-full hidden 2xl:block" />
-      <div className="flex items-center justify-end gap-4 w-full">
-        <Skeleton className="w-5 h-5 mr-2" />
-      </div>
-    </>
+    <Skeleton
+      className={cn(
+        "rounded",
+        size === "xs" && "h-3",
+        size === "sm" && "h-3.5",
+        size === "badge" && "h-[22px] rounded-full",
+        className,
+      )}
+    />
   );
 }
 
-function PlaylistsHeaderCells() {
-  return (
-    <>
-      <Skeleton className="w-5 h-5 ml-2" />
-      <Skeleton className="w-20 h-5" />
-      <Skeleton className="w-20 h-5 hidden 2xl:block" />
-      <Skeleton className="w-20 h-5" />
-      <Skeleton className="w-12 h-5" />
-      <Skeleton className="w-12 h-5" />
-      <Skeleton className="w-5 h-5 ml-auto mr-2" />
-    </>
-  );
-}
+function HeaderSkeleton({ layout }: { layout: TableColumnLayout }) {
+  const skeleton = layout.headerSkeleton ?? layout.skeleton;
 
-function PlaylistsRowCells() {
-  return (
-    <>
-      <Skeleton className="w-5 h-5 ml-2" />
-      <div className="flex items-center gap-2">
-        <Skeleton className="w-10 h-10 rounded" />
-        <Skeleton className="w-36 h-5" />
-      </div>
-      <Skeleton className="w-16 h-5 hidden 2xl:block" />
-      <Skeleton className="w-12 h-5" />
-      <Skeleton className="w-12 h-5" />
-      <Skeleton className="w-12 h-5" />
-      <div className="flex justify-end">
-        <Skeleton className="w-5 h-5 mr-2" />
-      </div>
-    </>
-  );
-}
-
-function RadiosHeaderCells() {
-  return (
-    <>
-      <Skeleton className="w-5 h-5 ml-2" />
-      <Skeleton className="w-20 h-5" />
-      <Skeleton className="w-16 h-5" />
-      <Skeleton className="w-12 h-5" />
-      <Skeleton className="w-5 h-5 ml-auto mr-2" />
-    </>
-  );
-}
-
-function RadiosRowCells() {
-  return (
-    <>
-      <Skeleton className="w-5 h-5 ml-2" />
-      <Skeleton className="w-28 h-5" />
-      <Skeleton className="w-24 h-5" />
-      <Skeleton className="w-20 h-5" />
-      <div className="flex justify-end">
-        <Skeleton className="w-5 h-5 mr-2" />
-      </div>
-    </>
-  );
-}
-
-function ArtistsHeaderCells() {
-  return (
-    <>
-      <Skeleton className="w-5 h-5 ml-2" />
-      <Skeleton className="w-20 h-5" />
-      <Skeleton className="w-20 h-5 hidden md:block" />
-      <Skeleton className="w-5 h-5 ml-auto mr-2" />
-    </>
-  );
-}
-
-function ArtistsRowCells() {
-  return (
-    <>
-      <Skeleton className="w-5 h-5 ml-2" />
-      <Skeleton className="w-28 h-5" />
-      <Skeleton className="w-12 h-5 hidden md:block" />
-      <div className="flex justify-end">
-        <Skeleton className="w-5 h-5 mr-2" />
-      </div>
-    </>
-  );
-}
-
-function getGridCols(columns: string) {
-  switch (columns) {
-    case "playlists":
-      return "grid-cols-playlist-fallback";
-    case "radios":
-      return "grid-cols-radio-fallback";
-    case "artists":
-      return "grid-cols-artist-fallback";
+  switch (skeleton) {
+    case "index":
+      return <TextSkeleton className={layout.headerWidth ?? "w-3"} />;
+    case "icon":
+      return <Skeleton className="w-4 h-4 rounded" />;
+    case "badge":
+      return (
+        <TextSkeleton className={layout.headerWidth ?? "w-14"} size="badge" />
+      );
+    case "action":
+      return <Skeleton className="w-4 h-4 ml-auto mr-2 rounded" />;
+    case "empty":
+      return null;
     default:
-      return "grid-cols-table-fallback";
+      return <TextSkeleton className={layout.headerWidth ?? "w-16"} />;
+  }
+}
+
+function MediaTitleSkeleton({ width }: { width?: string }) {
+  return (
+    <div className="flex items-center gap-2 min-w-0 w-full">
+      <Skeleton className="w-10 h-10 rounded" />
+      <TextSkeleton className={width ?? "w-32 max-w-[70%]"} />
+    </div>
+  );
+}
+
+function RowSkeleton({ layout }: { layout: TableColumnLayout }) {
+  switch (layout.skeleton) {
+    case "index":
+      return <Skeleton className="w-5 h-5 rounded" />;
+    case "songTitle":
+      return (
+        <div className="flex items-center gap-2 min-w-0 w-full">
+          <Skeleton className="w-10 h-10 rounded" />
+          <div className="flex flex-col gap-1 min-w-0 flex-1">
+            <TextSkeleton className="w-36 max-w-[70%]" />
+            <TextSkeleton className="w-24 max-w-[50%]" size="xs" />
+          </div>
+        </div>
+      );
+    case "mediaTitle":
+      return <MediaTitleSkeleton width={layout.rowWidth} />;
+    case "icon":
+      return <Skeleton className="w-5 h-5 rounded" />;
+    case "badge":
+      return (
+        <TextSkeleton className={layout.rowWidth ?? "w-14"} size="badge" />
+      );
+    case "action":
+      return <Skeleton className="w-5 h-5 ml-auto mr-2 rounded" />;
+    case "empty":
+      return null;
+    default:
+      return <TextSkeleton className={layout.rowWidth ?? "w-20"} />;
   }
 }
 
@@ -144,62 +131,62 @@ export function TableFallback({
   type = "regular",
   length = 10,
   columns = "songs",
+  columnIds,
 }: TableFallbackProps) {
+  const hasHover = useHasHover();
   const isClassic = variant === "classic";
   const isModern = variant === "modern";
   const isRegular = type === "regular";
-
-  const gridCols = getGridCols(columns);
-
-  const HeaderCells =
-    columns === "playlists"
-      ? PlaylistsHeaderCells
-      : columns === "radios"
-        ? RadiosHeaderCells
-        : columns === "artists"
-          ? ArtistsHeaderCells
-          : SongsHeaderCells;
-
-  const RowCells =
-    columns === "playlists"
-      ? PlaylistsRowCells
-      : columns === "radios"
-        ? RadiosRowCells
-        : columns === "artists"
-          ? ArtistsRowCells
-          : SongsRowCells;
+  const isList = type === "infinity";
+  const layouts = getColumnLayouts({
+    columnIds,
+    hasHover,
+    kind: columns,
+  });
 
   return (
     <div
       className={cn(
         "w-full",
-        isClassic && "rounded-md bg-background border",
+        isClassic && !isList && "rounded-md bg-background border",
         isModern && "bg-transparent",
       )}
     >
       <div
         className={cn(
-          gridCols,
-          "px-2 items-center grid",
-          isModern && "border-b border-foreground/20",
+          "w-full flex flex-row border-b",
+          isList && "pr-[10px] bg-muted",
+          isModern && !isList && "border-foreground/20",
           isModern && isRegular && "mb-2",
-          isRegular ? "h-12" : "h-[41px]",
         )}
       >
-        <HeaderCells />
+        {layouts.map((layout) => (
+          <FallbackCell
+            key={layout.id}
+            isHeader={true}
+            isList={isList}
+            layout={layout}
+          >
+            <HeaderSkeleton layout={layout} />
+          </FallbackCell>
+        ))}
       </div>
       <div className={cn(isModern && "rounded-md")}>
         {Array.from({ length }).map((_, index) => (
           <div
             key={index}
             className={cn(
-              gridCols,
-              "p-2 items-center grid",
-              isClassic && "border-b last:border-b-0",
-              isModern && "rounded-md mb-1",
+              "h-14 flex flex-row",
+              isList ? "w-[calc(100%-10px)]" : "w-full",
+              isClassic && !isList && "border-b last:border-b-0",
+              isModern && "rounded-md",
             )}
           >
-            <RowCells />
+            {layouts.map((layout) => (
+              <FallbackCell key={layout.id} layout={layout}>
+                <RowSkeleton layout={layout} />
+              </FallbackCell>
+            ))}
           </div>
         ))}
       </div>
@@ -215,7 +202,7 @@ export function TopSongsTableFallback() {
         <Skeleton className="w-16 h-5 rounded" />
       </div>
 
-      <TableFallback variant="modern" />
+      <TableFallback variant="modern" columnIds={topSongsColumnIds} />
     </div>
   );
 }

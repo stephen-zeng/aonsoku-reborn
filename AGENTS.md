@@ -23,9 +23,8 @@ pnpm run lint             # Check only
 pnpm run lint:fix         # Auto-fix issues
 pnpm run lint:format      # Format files
 
-# Tests (Cypress component tests)
-pnpm run test             # Headless run
-pnpm run cy:open          # Interactive test runner
+# Tests (Vitest)
+pnpm run test:unit
 ```
 
 ## Architecture
@@ -41,6 +40,15 @@ pnpm run cy:open          # Interactive test runner
 Two complementary systems:
 - **Zustand** (`src/store/`) — client state with `immer`, `persist`, `subscribeWithSelector` middleware. The player store (`player.store.ts`) is the most complex (~55KB). Persistent data (queue, song lists) goes through `idb.ts` (IndexedDB).
 - **TanStack React Query** (`src/queries/`) — server state, caching, and invalidation. Query client configured in `src/lib/queryClient.ts` (refetch-on-window-focus disabled).
+
+### Sync Architecture
+
+Metadata sync runs in a **Web Worker** (`src/service/cache/sync.worker.ts`) to avoid blocking the main thread. Communication with the main thread uses **Comlink**:
+
+- `sync-worker-adapter.ts` creates the Worker, sets up Comlink callbacks, and bridges Zustand/queryClient updates back to the main thread.
+- Auth config is injected via `initAuth`/`updateAuth` and automatically synced from `useAppStore`.
+- Worker opens its own Dexie instance to the same IndexedDB database.
+- If Workers are unavailable, falls back to `metadata-sync.ts` (deprecated, main-thread).
 
 ### Data Flow
 
@@ -78,3 +86,20 @@ Manual chunk strategy defined in `src/manual-chunks.ts` — update this when add
 - **Linter/formatter**: Biome 2.0.6 — double quotes, trailing commas, 80-char line width, no unused vars/imports
 - **TypeScript**: strict mode, path alias `@/` → `src/`
 - **Git hooks**: Husky is configured (`.husky/`)
+
+## Commit Message Format
+
+`<type>(<scope>): <subject>`
+
+- **type** (required): feat, fix, refactor, test, chore, i18n
+- **scope** (optional): A parenthesized area of the codebase, e.g. (queue), (cache), (i18n), (fullscreen), (settings), (header), (user-dropdown)
+- **subject**: A concise, lowercase imperative description without a trailing period. For fix commits, it often explains the problem solved; for feat, what was added.
+
+Examples:
+- feat(cache): add global AudioCacheQueue with priority scheduling
+- fix: robust service worker update detection
+- refactor(user-dropdown): reorder menu and remove sync controls
+- test: add and improve vitest tests for sync/cache modules
+- chore: bump to v0.30.0
+
+The scope is omitted when the change is cross-cutting or doesn't fit a specific area. This follows the Conventional Commits convention.

@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { ScrollingTitle } from "./scrolling-title";
 
 const LONG_TEXT =
@@ -25,6 +25,33 @@ function ConstrainedTitle({
   return (
     <div className="w-[240px] overflow-x-auto" data-testid={containerTestId}>
       <ScrollingTitle>{children}</ScrollingTitle>
+    </div>
+  );
+}
+
+function ResizableTitle({
+  children,
+  containerTestId,
+}: {
+  children: ReactNode;
+  containerTestId: string;
+}) {
+  const [wide, setWide] = useState(false);
+  return (
+    <div data-testid={containerTestId}>
+      <button
+        data-testid="toggle-width"
+        type="button"
+        onClick={() => setWide((v) => !v)}
+      >
+        Toggle
+      </button>
+      <div
+        className={wide ? "w-[800px]" : "w-[120px]"}
+        style={{ transition: "width 0.3s" }}
+      >
+        <ScrollingTitle>{children}</ScrollingTitle>
+      </div>
     </div>
   );
 }
@@ -98,5 +125,30 @@ describe("ScrollingTitle", () => {
     );
 
     assertNoHorizontalOverflow("fullscreen-shell");
+  });
+
+  it("resets text position when container grows enough to stop overflowing", () => {
+    cy.mount(
+      <ResizableTitle containerTestId="resizable-title">
+        <p className="text-sm text-foreground/70 whitespace-nowrap">
+          A moderately long title text for resize testing
+        </p>
+      </ResizableTitle>,
+    );
+
+    cy.getByTestId("scrolling-title").should("have.css", "position", "relative");
+
+    cy.get("button[data-testid='toggle-width']").click();
+
+    cy.getByTestId("scrolling-title").should(($el) => {
+      const inner = $el[0].querySelector("[style*='margin-left']");
+      if (inner) {
+        const transform = (inner as HTMLElement).style.transform;
+        expect(transform).to.not.include("translate");
+      }
+    });
+
+    cy.getByTestId("scrolling-title").should("have.css", "position", "static");
+    assertNoHorizontalOverflow("resizable-title");
   });
 });

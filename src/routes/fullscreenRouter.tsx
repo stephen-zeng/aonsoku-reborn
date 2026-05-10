@@ -36,8 +36,19 @@ const navState: FullscreenNavState = {
   locationState: null,
 };
 
+let pendingCloseNavigation: number | null = null;
+
 export function setFullscreenNavigator(navigate: NavigateFunction | null) {
+  if (!navigate) clearPendingCloseNavigation();
+
   navState.navigate = navigate;
+}
+
+function clearPendingCloseNavigation() {
+  if (pendingCloseNavigation === null) return;
+
+  window.clearTimeout(pendingCloseNavigation);
+  pendingCloseNavigation = null;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -56,19 +67,28 @@ function isFullscreenHistoryState(
   );
 }
 
-function getFullscreenHistoryState(): FullscreenHistoryState | null {
-  if (!isRecord(navState.locationState)) return null;
+function getCurrentHistoryState(): unknown {
+  const historyState = window.history.state;
+  if (isRecord(historyState) && "usr" in historyState) {
+    return historyState.usr;
+  }
+  return null;
+}
 
-  const historyState = navState.locationState[FULLSCREEN_HISTORY_STATE_KEY];
+function getFullscreenHistoryState(
+  state: unknown = navState.locationState,
+): FullscreenHistoryState | null {
+  if (!isRecord(state)) return null;
+
+  const historyState = state[FULLSCREEN_HISTORY_STATE_KEY];
   return isFullscreenHistoryState(historyState) ? historyState : null;
 }
 
 function buildNavigationState(
   historyState: FullscreenHistoryState | null,
 ): Record<string, unknown> | undefined {
-  const nextState = isRecord(navState.locationState)
-    ? { ...navState.locationState }
-    : {};
+  const currentState = getCurrentHistoryState() ?? navState.locationState;
+  const nextState = isRecord(currentState) ? { ...currentState } : {};
 
   if (historyState) {
     nextState[FULLSCREEN_HISTORY_STATE_KEY] = historyState;
@@ -80,7 +100,8 @@ function buildNavigationState(
 }
 
 function buildSearch(playerTab: string | null): string {
-  const params = new URLSearchParams(navState.searchParams);
+  const currentSearch = window.location.hash.split("?")[1] ?? "";
+  const params = new URLSearchParams(currentSearch);
   if (playerTab) {
     params.set(PLAYER_SEARCH_PARAM, playerTab);
   } else {
@@ -124,6 +145,8 @@ function navigateWithSearch(
 export function openFullscreenPlayerWithHistory(tab: FullscreenPlayerTab) {
   if (!navState.navigate) return;
 
+  clearPendingCloseNavigation();
+
   const playerStore = usePlayerStore.getState();
   const { fullscreenPlayerOpen } = playerStore.playerState;
 
@@ -162,9 +185,11 @@ export function openFullscreenPlayerWithHistory(tab: FullscreenPlayerTab) {
 export function setFullscreenTabWithHistory(tab: FullscreenPlayerTab) {
   if (!navState.navigate) return;
 
+  clearPendingCloseNavigation();
+
   const playerStore = usePlayerStore.getState();
   const { fullscreenPlayerTab } = playerStore.playerState;
-  const historyState = getFullscreenHistoryState();
+  const historyState = getFullscreenHistoryState(getCurrentHistoryState());
 
   playerStore.actions.setFullscreenPlayerTab(tab);
 
@@ -214,17 +239,56 @@ export function setFullscreenTabWithHistory(tab: FullscreenPlayerTab) {
   });
 }
 
-export function closeFullscreenPlayerWithHistory() {
+export function closeFullscreenPlayerWithHistory(options?: {
+  historyDelayMs?: number;
+}) {
   if (!navState.navigate) return;
 
-  const historyState = getFullscreenHistoryState();
+  const historyState = getFullscreenHistoryState(getCurrentHistoryState());
+  const delay = options?.historyDelayMs ?? 0;
 
-  if (historyState) {
-    navState.navigate(-historyState.closeSteps);
+  clearPendingCloseNavigation();
+
+  usePlayerStore.getState().actions.closeFullscreenPlayer();
+
+  const closeRoute = () => {
+    pendingCloseNavigation = null;
+
+    if (usePlayerStore.getState().playerState.fullscreenPlayerOpen) {
+      return;
+    }
+
+    if (historyState) {
+      const currentHistoryState = getFullscreenHistoryState(
+        getCurrentHistoryState(),
+      );
+
+      if (
+        !currentHistoryState ||
+        currentHistoryState.sessionId !== historyState.sessionId ||
+        currentHistoryState.step !== historyState.step
+      ) {
+        return;
+      }
+
+      navState.navigate?.(-historyState.closeSteps);
+      return;
+    }
+
+    const currentSearch = window.location.hash.split("?")[1] ?? "";
+    if (!new URLSearchParams(currentSearch).has(PLAYER_SEARCH_PARAM)) {
+      return;
+    }
+
+    navigateWithSearch(null, { replace: true });
+  };
+
+  if (delay > 0) {
+    pendingCloseNavigation = window.setTimeout(closeRoute, delay);
     return;
   }
 
-  navigateWithSearch(null, { replace: true });
+  closeRoute();
 }
 
 export function FullscreenPlayerRouter() {

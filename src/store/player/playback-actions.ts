@@ -2,6 +2,8 @@ import type { Draft } from "immer";
 import clamp from "lodash/clamp";
 import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
 import { LanControlMessageType } from "@/types/lanControl";
+import { isIOS } from "@/utils/platform";
+import { logger } from "@/utils/logger";
 
 interface SharedDeps {
   set: (fn: (state: Draft<IPlayerContext>) => void) => void;
@@ -15,6 +17,8 @@ export function createPlaybackActions(shared: SharedDeps) {
 
   return {
     setPlayingState: (status: boolean) => {
+      const prev = get().playerState.isPlaying;
+      logger.info(`[setPlayingState] ${prev} → ${status} | isRemote=${!!isRemoteActive()}`);
       if (isRemoteActive()) {
         remoteSend(
           status ? LanControlMessageType.PLAY : LanControlMessageType.PAUSE,
@@ -27,6 +31,7 @@ export function createPlaybackActions(shared: SharedDeps) {
 
     togglePlayPause: () => {
       const prev = get().playerState.isPlaying;
+      logger.info(`[togglePlayPause] isPlaying: ${prev} → ${!prev}`);
       remoteSend(LanControlMessageType.PLAY_PAUSE);
       set((state) => {
         state.playerState.isPlaying = !prev;
@@ -47,6 +52,7 @@ export function createPlaybackActions(shared: SharedDeps) {
       if (isRemoteActive()) return;
       set((state) => {
         state.playerProgress.progress = 0;
+        state.playerProgress.bufferedProgress = 0;
       });
     },
 
@@ -59,7 +65,22 @@ export function createPlaybackActions(shared: SharedDeps) {
       });
     },
 
+    setIsScrubbing: (value: boolean) => {
+      if (get().playerProgress.isScrubbing === value) return;
+      set((state) => {
+        state.playerProgress.isScrubbing = value;
+      });
+    },
+
+    setScrubbingProgress: (value: number) => {
+      if (get().playerProgress.scrubbingProgress === value) return;
+      set((state) => {
+        state.playerProgress.scrubbingProgress = value;
+      });
+    },
+
     setVolume: (volume: number) => {
+      if (isIOS()) return;
       remoteSend(LanControlMessageType.SET_VOLUME, {
         volume,
       });
@@ -69,6 +90,7 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     handleVolumeWheel: (isScrollingDown: boolean) => {
+      if (isIOS()) return;
       if (isRemoteActive()) return;
       const { min, max, wheelStep } = get().settings.volume;
       const { volume } = get().playerState;
@@ -99,9 +121,32 @@ export function createPlaybackActions(shared: SharedDeps) {
       });
     },
 
+    setBufferedProgress: (value: number) => {
+      if (isRemoteActive()) return;
+      const prev = get().playerProgress.bufferedProgress;
+      if (prev === value) return;
+      set((state) => {
+        state.playerProgress.bufferedProgress = value;
+      });
+    },
+
     setAudioPlayerRef: (audioPlayer: HTMLAudioElement | null) => {
       set((state) => {
         state.playerState.audioPlayerRef = audioPlayer;
+      });
+    },
+
+    setRadioPlayerRef: (radioPlayer: HTMLAudioElement | null) => {
+      set((state) => {
+        state.playerState.radioPlayerRef = radioPlayer;
+      });
+    },
+
+    setIsTransitioning: (value: boolean) => {
+      const prev = get().playerState.isTransitioning;
+      logger.info(`[setIsTransitioning] ${prev} → ${value}`);
+      set((state) => {
+        state.playerState.isTransitioning = value;
       });
     },
 

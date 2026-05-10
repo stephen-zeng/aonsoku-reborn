@@ -90,3 +90,33 @@ export function useCoverArtUrlFromSongPreference({
 
   return getCoverArtUrl(id, coverArtType, size);
 }
+
+export function getDefaultArtUrl(coverArtType: CoverArt | undefined): string {
+  const type = coverArtType === "artist" ? "artist" : "album";
+  return `/default_${type}_art.png`;
+}
+
+export function resolveCacheKeys(
+  coverArtId: string | undefined,
+  coverArtType: CoverArt | undefined,
+  albumId: string | undefined,
+): string[] {
+  if (coverArtType === "song" && albumId) {
+    const useAlbumCoverForSongs =
+      usePlayerStore.getState().settings.coverArt.useAlbumCoverForSongs;
+
+    if (useAlbumCoverForSongs) {
+      const alternateId =
+        coverArtId && coverArtId !== albumId ? coverArtId : undefined;
+      return alternateId ? [albumId, alternateId] : [albumId];
+    }
+
+    // When off, prefer song cover but always fallback to album cover
+    const preferredId = coverArtId || albumId;
+    const alternateId =
+      coverArtId && coverArtId !== albumId ? albumId : undefined;
+    return alternateId ? [preferredId, alternateId] : [preferredId];
+  }
+  if (!coverArtId) return [];
+  return [coverArtId];
+}

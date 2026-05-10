@@ -3,6 +3,7 @@ import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
 import { LanControlConfig, LanControlServerInfo } from "@/types/lanControl";
+import { toHex, decodeStoredPassword } from "@/utils/salt";
 
 interface ILanControlContext {
   config: LanControlConfig;
@@ -17,7 +18,6 @@ interface ILanControlContext {
   };
 }
 
-// Generate random 6-character alphanumeric password
 function generateRandomPassword(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let password = "";
@@ -28,6 +28,29 @@ function generateRandomPassword(): string {
 }
 
 const DEFAULT_PORT = 5299;
+
+function encodeConfig(config: LanControlConfig) {
+  return {
+    ...config,
+    password: toHex(config.password),
+  };
+}
+
+function decodeConfig(config: Record<string, unknown>): LanControlConfig {
+  const password =
+    typeof config.password === "string"
+      ? decodeStoredPassword(config.password)
+      : "";
+  return {
+    enabled: typeof config.enabled === "boolean" ? config.enabled : false,
+    port: typeof config.port === "number" ? config.port : DEFAULT_PORT,
+    password,
+    allowNavidromeAuth:
+      typeof config.allowNavidromeAuth === "boolean"
+        ? config.allowNavidromeAuth
+        : true,
+  };
+}
 
 export const useLanControlStore = createWithEqualityFn<ILanControlContext>()(
   subscribeWithSelector(
@@ -85,10 +108,20 @@ export const useLanControlStore = createWithEqualityFn<ILanControlContext>()(
       ),
       {
         name: "lan_control_store",
-        version: 1,
+        version: 2,
         partialize: (state) => ({
-          config: state.config,
+          config: encodeConfig(state.config),
         }),
+        merge: (persisted, current) => {
+          const raw = persisted as Record<string, unknown> | null;
+          if (!raw) return current;
+          const rawConfig = raw.config as Record<string, unknown> | undefined;
+          if (!rawConfig) return current;
+          return {
+            ...current,
+            config: decodeConfig(rawConfig),
+          };
+        },
       },
     ),
   ),

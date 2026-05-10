@@ -1,6 +1,5 @@
 import { ClockIcon, HeartIcon } from "lucide-react";
 import { memo } from "react";
-import { Link } from "react-router-dom";
 
 import { ArtistLink, ArtistsLinks } from "@/app/components/song/artist-link";
 import PlaySongButton from "@/app/components/table/play-button";
@@ -9,8 +8,12 @@ import { TableSongTitle } from "@/app/components/table/song-title";
 import { Badge } from "@/app/components/ui/badge";
 import { DataTableColumnHeader } from "@/app/components/ui/data-table-column-header";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
+import {
+  columnProps,
+  getLayoutMap,
+  getSongColumnLayouts,
+} from "@/app/tables/column-layouts";
 import i18n from "@/i18n";
-import { ROUTES } from "@/routes/routesList";
 import { ColumnDefType } from "@/types/react-table/columnDef";
 import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
@@ -20,29 +23,25 @@ const MemoSimpleTooltip = memo(SimpleTooltip);
 const MemoBadge = memo(Badge);
 const MemoPlaySongButton = memo(PlaySongButton);
 const MemoTableSongTitle = memo(TableSongTitle);
-const MemoLink = memo(Link);
 const MemoSongTableActions = memo(SongTableActions);
 const MemoDataTableColumnHeader = memo(
   DataTableColumnHeader,
 ) as typeof DataTableColumnHeader;
 
 type SongsColumnsOptions = {
-  disableTextNavigation?: boolean;
   hasHover?: boolean;
 };
 
 export function songsColumns({
-  disableTextNavigation = false,
   hasHover = true,
 }: SongsColumnsOptions = {}): ColumnDefType<ISong>[] {
+  const layouts = getLayoutMap(getSongColumnLayouts({ hasHover }));
+
   return [
     {
       id: "index",
       accessorKey: "index",
-      style: {
-        width: 48,
-        minWidth: "48px",
-      },
+      ...columnProps(layouts.index),
       header: () => {
         return <div className="w-full text-center">#</div>;
       },
@@ -58,10 +57,7 @@ export function songsColumns({
     {
       id: "trackNumber",
       accessorKey: "track",
-      style: {
-        width: 48,
-        minWidth: "48px",
-      },
+      ...columnProps(layouts.trackNumber),
       header: () => {
         return <div className="w-full text-center">#</div>;
       },
@@ -77,10 +73,7 @@ export function songsColumns({
     {
       id: "title",
       accessorKey: "title",
-      style: {
-        flex: 1,
-        minWidth: 120,
-      },
+      ...columnProps(layouts.title),
       enableSorting: true,
       sortingFn: "customSortFn",
       header: ({ column, table }) => (
@@ -90,7 +83,6 @@ export function songsColumns({
       ),
       cell: ({ row, table }) => (
         <MemoTableSongTitle
-          disableTextNavigation={disableTextNavigation}
           song={row.original}
           onPlay={() => table.options.meta?.handlePlaySong?.(row)}
         />
@@ -99,10 +91,7 @@ export function songsColumns({
     {
       id: "artist",
       accessorKey: "artist",
-      style: {
-        width: "20%",
-        maxWidth: "20%",
-      },
+      ...columnProps(layouts.artist),
       enableSorting: true,
       sortingFn: "customSortFn",
       header: ({ column, table }) => (
@@ -114,21 +103,13 @@ export function songsColumns({
         const { artist, artistId, artists } = row.original;
 
         if (artists && artists.length > 1) {
-          return (
-            <ArtistsLinks
-              artists={artists}
-              disableNavigation={disableTextNavigation}
-            />
-          );
+          return <ArtistsLinks artists={artists} disableNavigation={true} />;
         }
 
         if (!artistId) return artist;
 
         return (
-          <ArtistLink
-            artistId={artistId}
-            disableNavigation={disableTextNavigation}
-          >
+          <ArtistLink artistId={artistId} disableNavigation={true}>
             {artist}
           </ArtistLink>
         );
@@ -137,12 +118,7 @@ export function songsColumns({
     {
       id: "album",
       accessorKey: "album",
-      style: {
-        width: "24%",
-        minWidth: "14%",
-        maxWidth: "24%",
-      },
-      className: "hidden lg:flex",
+      ...columnProps(layouts.album),
       enableSorting: true,
       sortingFn: "customSortFn",
       header: ({ column, table }) => (
@@ -151,44 +127,19 @@ export function songsColumns({
         </MemoDataTableColumnHeader>
       ),
       cell: ({ row }) => {
-        if (disableTextNavigation) {
-          return (
-            <span className="truncate text-foreground/70">
-              {row.original.album}
-            </span>
-          );
-        }
-        return (
-          <MemoLink
-            to={ROUTES.ALBUM.PAGE(row.original.albumId)}
-            className="hover:underline truncate text-foreground/70 hover:text-foreground"
-            onContextMenu={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-            }}
-          >
-            {row.original.album}
-          </MemoLink>
-        );
+        return <span className="truncate">{row.original.album}</span>;
       },
     },
     {
       id: "year",
       accessorKey: "year",
       header: i18n.t("table.columns.year"),
-      style: {
-        width: 80,
-        maxWidth: 80,
-      },
+      ...columnProps(layouts.year),
     },
     {
       id: "duration",
       accessorKey: "duration",
-      style: {
-        width: 80,
-        maxWidth: 80,
-      },
-      className: "hidden md:flex",
+      ...columnProps(layouts.duration),
       enableSorting: true,
       sortingFn: "basic",
       header: ({ column, table }) => (
@@ -210,11 +161,7 @@ export function songsColumns({
     {
       id: "playCount",
       accessorKey: "playCount",
-      style: {
-        width: 140,
-        maxWidth: 140,
-      },
-      className: "hidden lg:flex",
+      ...columnProps(layouts.playCount),
       enableSorting: true,
       sortingFn: "basic",
       sortUndefined: -1,
@@ -229,11 +176,7 @@ export function songsColumns({
       id: "played",
       accessorKey: "played",
       header: i18n.t("table.columns.lastPlayed"),
-      style: {
-        width: 180,
-        maxWidth: 180,
-      },
-      className: "hidden 2xl:flex",
+      ...columnProps(layouts.played),
       cell: ({ row }) => {
         const { played } = row.original;
 
@@ -249,20 +192,13 @@ export function songsColumns({
       id: "bpm",
       accessorKey: "bpm",
       header: i18n.t("table.columns.bpm"),
-      style: {
-        width: 80,
-        maxWidth: 80,
-      },
+      ...columnProps(layouts.bpm),
     },
     {
       id: "bitRate",
       accessorKey: "bitRate",
       header: i18n.t("table.columns.bitrate"),
-      style: {
-        width: 140,
-        maxWidth: 140,
-      },
-      className: "hidden 2xl:flex",
+      ...columnProps(layouts.bitRate),
       cell: ({ row }) => {
         return `${row.original.bitRate} kbps`;
       },
@@ -271,11 +207,7 @@ export function songsColumns({
       id: "contentType",
       accessorKey: "contentType",
       header: i18n.t("table.columns.quality"),
-      style: {
-        width: 100,
-        maxWidth: 110,
-      },
-      className: "hidden 2xl:flex",
+      ...columnProps(layouts.contentType),
       cell: ({ row }) => {
         const { suffix, bitRate, size } = row.original;
         const tooltipContent = `
@@ -298,11 +230,7 @@ export function songsColumns({
     },
     {
       id: "select",
-      style: {
-        width: hasHover ? 120 : 48,
-        maxWidth: hasHover ? 120 : 48,
-        justifyContent: "end",
-      },
+      ...columnProps(layouts.select),
       header: () =>
         hasHover ? (
           <MemoSimpleTooltip text={i18n.t("table.columns.favorite")}>

@@ -4,6 +4,18 @@ export function isDesktop(): boolean {
   return isElectron;
 }
 
+export function hasElectronBridge(): boolean {
+  return (
+    isDesktop() &&
+    typeof window !== "undefined" &&
+    typeof window.api !== "undefined"
+  );
+}
+
+export function hasLanControlBridge(): boolean {
+  return hasElectronBridge() && typeof window.api.lanControl !== "undefined";
+}
+
 /**
  * Detect operating system for both Electron and browser/PWA environments
  */
@@ -14,6 +26,16 @@ function detectOS(): { isMac: boolean; isWin: boolean; isLinux: boolean } {
       isMac: osName === "Mac OS",
       isWin: osName === "Windows",
       isLinux: osName === "Linux",
+    };
+  }
+
+  // When running in Node (SSR, tests), rely on process.platform
+  if (typeof window === "undefined" || !window.navigator) {
+    const platform = typeof process !== "undefined" ? process.platform : "";
+    return {
+      isMac: platform === "darwin",
+      isWin: platform === "win32",
+      isLinux: platform === "linux",
     };
   }
 

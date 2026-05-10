@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { AlbumComment } from "@/app/components/album/comment";
@@ -8,8 +8,10 @@ import { RecordLabelsInfo } from "@/app/components/album/record-labels";
 import { AlbumFallback } from "@/app/components/fallbacks/album-fallbacks";
 import { PreviewListFallback } from "@/app/components/fallbacks/home-fallbacks";
 import { BadgesData } from "@/app/components/header-info";
+import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import PreviewList from "@/app/components/home/preview-list";
 import ListWrapper from "@/app/components/list-wrapper";
+import { MobileSongList } from "@/app/components/mobile/mobile-media-list";
 import { DataTable } from "@/app/components/ui/data-table";
 import {
   useGetAlbum,
@@ -18,6 +20,7 @@ import {
 } from "@/app/hooks/use-album";
 import { useHasHover } from "@/app/hooks/use-input-mode";
 import { useIsMobile } from "@/app/hooks/use-mobile";
+import { useIsOnline } from "@/store/cache.store";
 import ErrorPage from "@/app/pages/error-page";
 import { songsColumns } from "@/app/tables/songs-columns";
 import { ROUTES } from "@/routes/routesList";
@@ -33,10 +36,11 @@ export default function Album() {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const hasHover = useHasHover();
+  const isOnline = useIsOnline();
+  const [accentColor, setAccentColor] = useState("");
   const columns = useMemo(
     () =>
       songsColumns({
-        disableTextNavigation: true,
         hasHover,
       }),
     [hasHover],
@@ -46,6 +50,7 @@ export default function Album() {
     data: album,
     isLoading: albumIsLoading,
     isFetched,
+    error: albumError,
   } = useGetAlbum(albumId);
   const { data: artist, isLoading: moreAlbumsIsLoading } = useGetArtistAlbums(
     album?.artistId || "",
@@ -57,7 +62,12 @@ export default function Album() {
 
   if (albumIsLoading) return <AlbumFallback />;
   if (isFetched && !album) {
-    return <ErrorPage status={404} statusText={t("error.notFound")} />;
+    return (
+      <ErrorPage
+        status={albumError ? 500 : 404}
+        statusText={t("error.notFound")}
+      />
+    );
   }
   if (!album) return <AlbumFallback />;
 
@@ -139,6 +149,11 @@ export default function Album() {
 
   return (
     <div className="w-full">
+      <MobilePageHeader
+        variant="sub"
+        title={album.name}
+        accentColor={accentColor}
+      />
       <ImageHeader
         type={t("album.headline")}
         title={album.name}
@@ -151,27 +166,56 @@ export default function Album() {
         coverArtAlt={album.name}
         badges={badges}
         secondaryBadges={secondaryBadges}
+        onColorExtracted={setAccentColor}
       />
 
       <ListWrapper>
         <AlbumInfo album={album} />
 
-        <DataTable
-          columns={columns}
-          data={album.song}
-          handlePlaySong={(row) =>
-            setSongList(
-              album.song,
-              row.index,
-              false,
-              { albumId: album.id },
-              album.name,
-            )
-          }
-          columnFilter={columnsToShow}
-          showDiscNumber={true}
-          variant="modern"
-        />
+        {album.songsUnavailable && !isOnline ? (
+          <div className="rounded-md border border-border bg-muted/50 p-4 my-2">
+            <h4 className="text-sm font-semibold">
+              {t("album.detail.songsUnavailableTitle")}
+            </h4>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t("album.detail.songsUnavailable")}
+            </p>
+          </div>
+        ) : isMobile ? (
+          <MobileSongList
+            songs={album.song}
+            onPlaySong={(index) =>
+              setSongList(
+                album.song,
+                index,
+                false,
+                { albumId: album.id },
+                album.name,
+              )
+            }
+            getIndexLabel={(song, index) =>
+              hasTrackNumbers && song.track > 0 ? song.track : index + 1
+            }
+            showDiscNumber={true}
+          />
+        ) : (
+          <DataTable
+            columns={columns}
+            data={album.song}
+            handlePlaySong={(row) =>
+              setSongList(
+                album.song,
+                row.index,
+                false,
+                { albumId: album.id },
+                album.name,
+              )
+            }
+            columnFilter={columnsToShow}
+            showDiscNumber={true}
+            variant="modern"
+          />
+        )}
 
         {albumComment && <AlbumComment comment={albumComment} />}
 

@@ -1,7 +1,7 @@
 {
   "about": {
     "apiVersion": "API Sürümü",
-    "buildTime": "Build Time",
+    "buildTime": "Derleme Zamanı",
     "client": "İstemci",
     "server": "Sunucu",
     "toasts": {
@@ -14,6 +14,10 @@
     "buttons": {
       "dislike": "{{name}} beğenmekten vazgeç",
       "like": "{{name}} beğen"
+    },
+    "detail": {
+      "songsUnavailable": "Çevrimdışıyken parça listesi kullanılamaz. Parçaları kullanılabilir hale getirmek için kitaplığınızı senkronize edin.",
+      "songsUnavailableTitle": "Parçalar Kullanılamıyor"
     },
     "headline": "Albüm",
     "info": {
@@ -104,13 +108,8 @@
       "yy": "%d yıl"
     }
   },
-  "downloads": {
-    "completed": "Dosyanız indirildi.",
-    "failed": "Dosyanız indirilirken bir hata oluştu.",
-    "started": "İndirme başlatıldı."
-  },
   "error": {
-    "notFound": "Not found"
+    "notFound": "Bulunamadı"
   },
   "favorites": {
     "buttons": {
@@ -124,21 +123,21 @@
     "songCount_other": "{{count}} şarkı"
   },
   "fullscreen": {
-    "emptyQueue": "No songs in queue",
+    "emptyQueue": "Kuyrukta şarkı yok",
     "loadingLyrics": "Şarkı sözleri aranıyor…",
     "lyrics": "Şarkı Sözleri",
     "noLyrics": "Şarkı sözü bulunamadı",
     "playing": "Şu an çalıyor",
     "queue": "Kuyruk",
-    "queueContinue": "Continue Playing",
-    "queueFromSource": "From {{source}}",
-    "queueHistory": "History",
-    "queueRepeating": "Repeating",
+    "queueContinue": "Çalmaya Devam Et",
+    "queueFromSource": "{{source}} kaynağından",
+    "queueHistory": "Geçmiş",
+    "queueRepeating": "Tekrarlanıyor",
     "switchButton": "Büyük Oynatıcıya geç"
   },
   "generic": {
     "beta": "Beta",
-    "clear": "Clear",
+    "clear": "Temizle",
     "hideDetails": "Detayları gizle",
     "loading": "Yükleniyor…",
     "seeMore": "Daha fazla gör",
@@ -161,67 +160,67 @@
   "lanControl": {
     "remote": {
       "actions": {
-        "connect": "Connect",
-        "connecting": "Connecting...",
-        "disconnect": "Disconnect",
-        "refresh": "Refresh state"
+        "connect": "Bağlan",
+        "connecting": "Bağlanıyor...",
+        "disconnect": "Bağlantıyı Kes",
+        "refresh": "Durumu yenile"
       },
-      "address": "Server address",
-      "autoConnectFailed": "Failed to connect to remote device, entering local playback mode",
-      "clickToPlay": "Click to play",
+      "address": "Sunucu adresi",
+      "autoConnectFailed": "Uzaktaki cihaza bağlanılamadı, yerel oynatma moduna geçiliyor",
+      "clickToPlay": "Oynatmak için tıklayın",
       "controls": {
-        "next": "Next",
-        "pause": "Pause",
-        "play": "Play",
-        "previous": "Previous",
-        "repeat": "Toggle repeat",
-        "shuffle": "Toggle shuffle"
+        "next": "Sonraki",
+        "pause": "Duraklat",
+        "play": "Oynat",
+        "previous": "Önceki",
+        "repeat": "Tekrarı aç/kapat",
+        "shuffle": "Karıştırmayı aç/kapat"
       },
-      "currentlyPlaying": "Currently playing",
-      "description": "Connect to a LAN control server and manage playback remotely.",
-      "emptyArtist": "Unknown artist",
-      "emptyTitle": "No track playing",
-      "ip": "IP Address",
-      "items": "items",
+      "currentlyPlaying": "Şu an çalıyor",
+      "description": "Bir LAN kontrol sunucusuna bağlanın ve oynatmayı uzaktan yönetin.",
+      "emptyArtist": "Bilinmeyen sanatçı",
+      "emptyTitle": "Çalan parça yok",
+      "ip": "IP Adresi",
+      "items": "öğe",
       "library": {
-        "albums": "Albums",
-        "back": "Back",
-        "loading": "Loading...",
-        "noAlbums": "No albums available",
-        "noPlaylists": "No playlists available",
-        "noResults": "No results found",
-        "playlists": "Playlists",
-        "search": "Search",
-        "searchButton": "Search",
-        "searchPlaceholder": "Search songs, albums...",
-        "searching": "Searching...",
-        "songs": "Songs"
+        "albums": "Albümler",
+        "back": "Geri",
+        "loading": "Yükleniyor...",
+        "noAlbums": "Kullanılabilir albüm yok",
+        "noPlaylists": "Kullanılabilir çalma listesi yok",
+        "noResults": "Sonuç bulunamadı",
+        "playlists": "Çalma Listeleri",
+        "search": "Ara",
+        "searchButton": "Ara",
+        "searchPlaceholder": "Şarkı, albüm ara...",
+        "searching": "Aranıyor...",
+        "songs": "Şarkılar"
       },
-      "loadingSong": "Loading...",
-      "menu": "Control other devices",
-      "nowPlaying": "Now playing",
-      "password": "Access code",
-      "playing": "Playing",
+      "loadingSong": "Yükleniyor...",
+      "menu": "Diğer cihazları kontrol et",
+      "nowPlaying": "Şu an çalıyor",
+      "password": "Erişim kodu",
+      "playing": "Oynatılıyor",
       "port": "Port",
-      "queue": "Playback queue",
-      "queueEmpty": "Queue is empty",
-      "serverRunning": "This device is currently running as a LAN Control server. You cannot control other devices while this device is in server mode.",
+      "queue": "Oynatma kuyruğu",
+      "queueEmpty": "Kuyruk boş",
+      "serverRunning": "Bu cihaz şu anda bir LAN Kontrol sunucusu olarak çalışıyor. Bu cihaz sunucu modundayken diğer cihazları kontrol edemezsiniz.",
       "status": {
-        "authenticating": "Authenticating",
-        "connected": "Connected",
-        "connecting": "Connecting",
-        "disconnected": "Disconnected",
-        "error": "Error",
-        "label": "Status"
+        "authenticating": "Kimlik doğrulanıyor",
+        "connected": "Bağlandı",
+        "connecting": "Bağlanıyor",
+        "disconnected": "Bağlantı kesildi",
+        "error": "Hata",
+        "label": "Durum"
       },
       "tabs": {
-        "control": "Control",
-        "library": "Library"
+        "control": "Kontrol",
+        "library": "Kitaplık"
       },
-      "title": "Control other devices",
-      "unknownDevice": "Unknown device",
+      "title": "Diğer cihazları kontrol et",
+      "unknownDevice": "Bilinmeyen cihaz",
       "version": "v{{version}}",
-      "volume": "Volume: {{volume}}%"
+      "volume": "Ses: {{volume}}%"
     }
   },
   "login": {
@@ -264,23 +263,35 @@
     "unsupported_message": "{{app_name}} cep telefonlarıyla uyumlu değildir."
   },
   "offline": {
-    "disconnected": "Server unreachable. Entering offline mode.",
-    "mode": "Offline",
-    "reconnectFailed": "Could not reconnect. Continuing in offline mode.",
-    "reconnected": "Reconnected to server",
+    "badge": {
+      "cloud": "Ağ gerekli",
+      "downloaded": "İndirildi",
+      "downloading": "İndiriliyor…",
+      "orphan": "Sunucudan kaldırıldı (çevrimdışı oynatılabilir)",
+      "smart": "Akıllı indirme kuralıyla kaydedildi"
+    },
+    "disconnected": "Server unreachable",
+    "metered": "Sınırlı",
+    "meteredTooltip": "Yavaş veya sınırlı bir bağlantıdasınız. Arka plan senkronizasyonu ve akıllı indirmeler duraklatıldı — geçersiz kılmak için bir indirme düğmesine dokunun.",
+    "mode": "Çevrimdışı",
+    "reconnectFailed": "Yeniden bağlanılamadı. Çevrimdışı modda devam ediliyor.",
+    "reconnected": "Sunucuya yeniden bağlanıldı",
     "reconnecting": "Reconnecting…",
-    "searchUnavailable": "Search requires an offline library sync.",
-    "songUnavailable": "This song is not available offline"
+    "searchUnavailable": "Arama, çevrimdışı kitaplık senkronizasyonu gerektirir.",
+    "songUnavailable": "Bu şarkı çevrimdışı olarak kullanılamıyor"
   },
   "options": {
-    "addLast": "Kuyruğa ekle",
+    "addLast": "Sona ekle",
     "download": "İndir",
+    "downloadAlbum": "Albümü indir",
+    "downloadArtist": "Sanatçıyı indir",
+    "downloadPlaylist": "Çalma listesini indir",
     "goto": {
       "album": "Albüme git",
       "artist": "Sanatçıya git"
     },
     "info": "Bilgi al",
-    "like": "Like",
+    "like": "Beğen",
     "play": "Oynat",
     "playNext": "Sıradakini oynat",
     "playlist": {
@@ -292,8 +303,9 @@
       "removeSong": "Çalma listesinden kaldır",
       "search": "Çalma listesi bul"
     },
-    "removeFromQueue": "Remove from queue",
-    "unlike": "Unlike"
+    "removeDownload": "İndirmeyi kaldır",
+    "removeFromQueue": "Kuyruktan kaldır",
+    "unlike": "Beğenmekten vazgeç"
   },
   "player": {
     "noRadioPlaying": "Çalan radyo yok",
@@ -310,7 +322,7 @@
       "pause": "Duraklat",
       "play": "Oynat",
       "previous": "Önceki",
-      "progress": "Seek",
+      "progress": "İlerle",
       "repeat": {
         "disable": "Tekrarı kapat",
         "enable": "Tekrarı aç",
@@ -321,8 +333,8 @@
         "disable": "Karışık çalmayı kapat",
         "enable": "Karışık çalmayı aç"
       },
-      "star": "Star current song",
-      "unstar": "Unstar current song",
+      "star": "Mevcut şarkıyı yıldızla",
+      "unstar": "Mevcut şarkının yıldızını kaldır",
       "volume": {
         "mute": "Sessiz",
         "unmute": "Sesi aç"
@@ -476,22 +488,10 @@
       }
     },
     "appearance": {
-      "colors": {
-        "bigPlayer": {
-          "blurSize": "Görüntü Bulanıklık Boyutu",
-          "label": "Büyük Oynatıcı"
-        },
-        "description": "Uygulamanın arka plan olarak o an çalan albüm kapağındaki baskın rengi kullanıp kullanmayacağını seçin.",
-        "group": "Dinamik Renkler",
-        "queue": {
-          "intensity": "Renk Yoğunluğu Seviyesi",
-          "label": "Kuyruk ve Şarkı Sözleri"
-        }
-      },
       "general": {
         "albumCoverForSongs": {
-          "info": "When enabled, every song artwork request uses the album cover to reduce loading time.",
-          "label": "Always use album covers"
+          "info": "Etkinleştirildiğinde, her şarkı albüm resmi isteği yükleme süresini azaltmak için albüm kapağını kullanır.",
+          "label": "Her zaman albüm kapaklarını kullan"
         },
         "description": "Uygulamanın görünümünü ve görüntüleme davranışlarını özelleştirin.",
         "fullscreen": {
@@ -503,11 +503,11 @@
     },
     "audio": {
       "history": {
-        "description": "Songs that play for more than 10 seconds are recorded in your play history.",
-        "group": "Play History",
+        "description": "10 saniyeden uzun süre çalan şarkılar oynatma geçmişinize kaydedilir.",
+        "group": "Oynatma Geçmişi",
         "maxSize": {
-          "info": "The maximum number of songs to keep in play history. Older entries are removed when the limit is exceeded.",
-          "label": "Maximum history size"
+          "info": "Oynatma geçmişinde tutulacak maksimum şarkı sayısı. Limit aşıldığında eski girişler kaldırılır.",
+          "label": "Maksimum geçmiş boyutu"
         }
       },
       "lyrics": {
@@ -518,8 +518,8 @@
           "label": "Senkronize şarkı sözlerini tercih et"
         },
         "showTranslation": {
-          "info": "When available, show translated lyrics below the original lyrics.",
-          "label": "Show translation"
+          "info": "Mevcut olduğunda, çevrilmiş şarkı sözlerini orijinal şarkı sözlerinin altında göster.",
+          "label": "Çeviriyi göster"
         }
       },
       "replayGain": {
@@ -562,67 +562,67 @@
       },
       "lanControl": {
         "address": {
-          "info": "Available server addresses for LAN control access.",
-          "label": "Server Addresses"
+          "info": "LAN kontrol erişimi için kullanılabilir sunucu adresleri.",
+          "label": "Sunucu Adresleri"
         },
-        "addressCopied": "Server address copied to clipboard.",
+        "addressCopied": "Sunucu adresi panoya kopyalandı.",
         "allowNavidromeAuth": {
-          "info": "Enable authentication using Navidrome credentials.",
-          "label": "Allow Navidrome Authentication"
+          "info": "Navidrome kimlik bilgilerini kullanarak kimlik doğrulamayı etkinleştirin.",
+          "label": "Navidrome Kimlik Doğrulamasına İzin Ver"
         },
-        "copyAddress": "Copy address",
-        "copyPassword": "Copy password",
-        "description": "Manage LAN control settings for remote access.",
+        "copyAddress": "Adresi kopyala",
+        "copyPassword": "Şifreyi kopyala",
+        "description": "Uzaktan erişim için LAN kontrol ayarlarını yönetin.",
         "enable": {
-          "info": "Turn on LAN control to allow remote access to this application.",
-          "label": "Enable LAN Control"
+          "info": "Bu uygulamaya uzaktan erişime izin vermek için LAN kontrolünü etkinleştirin.",
+          "label": "LAN Kontrolünü Etkinleştir"
         },
-        "group": "LAN Control",
+        "group": "LAN Kontrolü",
         "password": {
-          "info": "Set a password for secure access to the LAN control server.",
-          "label": "Password"
+          "info": "LAN kontrol sunucusuna güvenli erişim için bir şifre belirleyin.",
+          "label": "Şifre"
         },
-        "passwordCopied": "Password copied to clipboard.",
-        "passwordRegenerated": "Password regenerated successfully.",
+        "passwordCopied": "Şifre panoya kopyalandı.",
+        "passwordRegenerated": "Şifre başarıyla yeniden oluşturuldu.",
         "port": {
-          "info": "Specify the port number for the LAN control server.",
+          "info": "LAN kontrol sunucusu için port numarasını belirtin.",
           "label": "Port"
         },
-        "regeneratePassword": "Regenerate password",
-        "serverError": "Failed to start LAN control server.",
-        "serverStarted": "LAN control server started successfully."
+        "regeneratePassword": "Şifreyi yeniden oluştur",
+        "serverError": "LAN kontrol sunucusu başlatılamadı.",
+        "serverStarted": "LAN kontrol sunucusu başarıyla başlatıldı."
       },
       "updates": {
-        "availableVersion": "Version {{version}} available",
+        "availableVersion": "Sürüm {{version}} mevcut",
         "checkNow": {
-          "info": "Manually check for available updates.",
-          "label": "Check for Updates"
+          "info": "Kullanılabilir güncellemeleri manuel olarak kontrol edin.",
+          "label": "Güncellemeleri Kontrol Et"
         },
-        "checking": "Checking for updates...",
-        "checkingManually": "Checking for updates...",
+        "checking": "Güncellemeler kontrol ediliyor...",
+        "checkingManually": "Güncellemeler kontrol ediliyor...",
         "currentVersion": {
-          "info": "The version of Aonsoku you are currently running.",
-          "label": "Current Version"
+          "info": "Şu anda çalıştırdığınız Aonsoku sürümü.",
+          "label": "Mevcut Sürüm"
         },
-        "description": "Check for and install application updates.",
-        "download": "Download Update",
-        "downloadError": "Download Failed",
-        "downloadStarted": "Download Started",
-        "downloadStartedDesc": "Update download has begun",
-        "downloading": "Downloading... {{percent}}%",
-        "group": "App Updates",
-        "installNow": "Install and Restart",
-        "readyToInstall": "Ready to install (restart required)",
+        "description": "Uygulama güncellemelerini kontrol edin ve yükleyin.",
+        "download": "Güncellemeyi İndir",
+        "downloadError": "İndirme Başarısız",
+        "downloadStarted": "İndirme Başladı",
+        "downloadStartedDesc": "Güncelleme indirmesi başladı",
+        "downloading": "İndiriliyor... {{percent}}%",
+        "group": "Uygulama Güncellemeleri",
+        "installNow": "Yükle ve Yeniden Başlat",
+        "readyToInstall": "Yüklenmeye hazır (yeniden başlatma gerekli)",
         "status": {
-          "info": "The current status of application updates.",
-          "label": "Update Status"
+          "info": "Uygulama güncellemelerinin mevcut durumu.",
+          "label": "Güncelleme Durumu"
         },
-        "upToDate": "You're up to date",
-        "updateAvailable": "Update Available",
-        "updateAvailableDesc": "Version {{version}} is available",
-        "updateError": "Update Check Failed",
-        "updateReady": "Update Ready",
-        "updateReadyDesc": "Update will be installed when you restart the app"
+        "upToDate": "Güncelsiniz",
+        "updateAvailable": "Güncelleme Mevcut",
+        "updateAvailableDesc": "Sürüm {{version}} mevcut",
+        "updateError": "Güncelleme Kontrolü Başarısız",
+        "updateReady": "Güncelleme Hazır",
+        "updateReadyDesc": "Güncelleme, uygulamayı yeniden başlattığınızda yüklenecek"
       }
     },
     "label": "Ayarlar",
@@ -634,8 +634,8 @@
       "desktop": "Masaüstü Uygulaması",
       "language": "Dil ve Bölge",
       "privacy": "Gizlilik ve Güvenlik",
-      "server": "Server",
-      "storage": "Storage"
+      "server": "Sunucu",
+      "storage": "Çevrimdışı Deneyim"
     },
     "privacy": {
       "services": {
@@ -649,88 +649,204 @@
     },
     "server": {
       "activeType": {
-        "fallback": "Fallback URL",
-        "info": "Shows whether this session is using the primary or fallback URL.",
-        "label": "Current server",
-        "none": "Not connected",
-        "primary": "Primary URL"
+        "fallback": "Yedek URL",
+        "info": "Bu oturumun birincil veya yedek URL kullanıp kullanmadığını gösterir.",
+        "label": "Mevcut sunucu",
+        "none": "Bağlı değil",
+        "primary": "Birincil URL"
       },
       "activeUrl": {
-        "empty": "No server selected",
-        "info": "The server URL currently used by this app session.",
-        "label": "Current URL"
+        "empty": "Sunucu seçilmedi",
+        "info": "Bu uygulama oturumu tarafından şu anda kullanılan sunucu URL'si.",
+        "label": "Mevcut URL"
       },
-      "description": "Manage the primary server and optional fallback URL used at startup.",
+      "description": "Başlangıçta kullanılan birincil sunucuyu ve isteğe bağlı yedek URL'yi yönetin.",
       "fallbackUrl": {
-        "info": "Optional server URL used when the primary URL cannot be reached at startup.",
-        "label": "Fallback URL",
+        "info": "Başlangıçta birincil URL'ye erişilemediğinde kullanılan isteğe bağlı sunucu URL'si.",
+        "label": "Yedek URL",
         "placeholder": "https://fallback-server.example.com"
       },
-      "group": "Server",
-      "locked": "Server URL settings are locked by this deployment.",
+      "group": "Sunucu",
+      "locked": "Sunucu URL ayarları bu dağıtım tarafından kilitlenmiştir.",
       "primaryUrl": {
-        "info": "The server URL Aonsoku tries first when the app starts.",
-        "label": "Primary URL",
+        "info": "Aonsoku'nun uygulama başladığında ilk denediği sunucu URL'si.",
+        "label": "Birincil URL",
         "placeholder": "https://your-server.example.com"
       },
-      "save": "Save server URLs",
-      "saving": "Saving...",
+      "save": "Sunucu URL'lerini kaydet",
+      "saving": "Kaydediliyor...",
       "toast": {
-        "error": "Unable to reach the primary or fallback server.",
-        "success": "Server URLs saved successfully."
+        "error": "Birincil veya yedek sunucuya ulaşılamıyor.",
+        "success": "Sunucu URL'leri başarıyla kaydedildi."
       },
       "validation": {
-        "fallbackUrl": "Please enter a valid fallback URL.",
-        "primaryUrl": "Please enter a valid primary URL."
+        "fallbackUrl": "Lütfen geçerli bir yedek URL girin.",
+        "primaryUrl": "Lütfen geçerli bir birincil URL girin."
       }
     },
     "storage": {
       "audio": {
-        "clear": "Clear audio cache",
-        "description": "Cache audio files for instant playback on repeated listens.",
-        "enabled": "Enable audio cache",
-        "entries": "{{count}} songs cached",
-        "group": "Audio Cache",
-        "maxSize": "Maximum cache size",
-        "size": "Cache size"
+        "clear": "Ses önbelleğini temizle",
+        "description": "Tekrarlanan dinlemelerde anında oynatma için ses dosyalarını önbelleğe al.",
+        "enabled": "Ses önbelleğini etkinleştir",
+        "entries": "{{count}} şarkı önbelleğe alındı",
+        "group": "Ses Önbelleği",
+        "maxSize": "Maksimum önbellek boyutu",
+        "size": "Önbellek boyutu"
+      },
+      "cacheManager": {
+        "confirmDelete": {
+          "description": "Bu, '{{name}}' öğesini önbellekten kaldıracak. Daha sonra yeniden indirilebilir.",
+          "title": "Önbelleğe alınmış öğe silinsin mi?"
+        },
+        "description": "Bireysel önbelleğe alınmış öğeleri görüntüleyin ve yönetin.",
+        "filter": {
+          "album": "Albüm",
+          "all": "Tümü",
+          "audio": "Ses",
+          "cover": "Kapak Resmi",
+          "explicit": "Açık",
+          "lru": "LRU",
+          "playlist": "Çalma Listesi",
+          "smart": "Akıllı"
+        },
+        "group": "Önbellek Yöneticisi",
+        "list": {
+          "actions": "İşlemler",
+          "cachedAt": "Önbelleklenme",
+          "delete": "Sil",
+          "empty": "Önbelleğe alınmış öğe yok.",
+          "name": "İsim",
+          "removedFromServer": "Sunucudan kaldırıldı",
+          "size": "Boyut",
+          "source": "Kaynak",
+          "total": "{{count}} öğe, toplam {{size}}",
+          "type": "Tür",
+          "type_album": "Albüm",
+          "type_audio": "Ses",
+          "type_cover": "Kapak",
+          "type_playlist": "Çalma Listesi"
+        }
       },
       "coverArt": {
-        "clear": "Clear cover art cache",
-        "description": "Cache album cover images for faster loading.",
-        "enabled": "Enable cover art cache",
-        "entries": "{{count}} images cached",
-        "group": "Cover Art Cache",
-        "size": "Cache size"
+        "clear": "Kapak resmi önbelleğini temizle",
+        "description": "Daha hızlı yükleme için albüm kapak resimlerini önbelleğe al.",
+        "enabled": "Kapak resmi önbelleğini etkinleştir",
+        "entries": "{{count}} resim önbelleğe alındı",
+        "group": "Kapak Resmi Önbelleği",
+        "size": "Önbellek boyutu"
+      },
+      "limits": {
+        "audioEntries": "{{count}} şarkı önbelleğe alındı",
+        "audioSize": "Ses önbelleği",
+        "clearAll": "Tüm önbellekleri temizle",
+        "clearAudio": "Temizle",
+        "clearCovers": "Temizle",
+        "coverEntries": "{{count}} resim önbelleğe alındı",
+        "coverSize": "Kapak resmi önbelleği",
+        "description": "Önbelleğe alınmış ses ve kapak resmi depolamasını yönetin.",
+        "group": "Önbellek Depolama",
+        "imageEntries": "{{count}} resim",
+        "maxSize": "Maksimum ses önbellek boyutu",
+        "pool": {
+          "assets": {
+            "description": "Hızlı kitaplık oluşturma için önbelleğe alınan albüm ve sanatçı resimleri.",
+            "label": "Kapak resmi"
+          },
+          "explicit": {
+            "description": "Kendinizin indirdiği şarkılar, albümler ve çalma listeleri. Asla otomatik olarak çıkarılmaz.",
+            "label": "Açık indirmeler"
+          },
+          "lru": {
+            "description": "Dinlerken fırsat buldukça önbelleğe alınır. Kota aşıldığında en eski girişler önce çıkarılır.",
+            "label": "Son çalınanlar"
+          },
+          "smart": {
+            "description": "Akıllı kurallarla eşleşerek otomatik indirilir. Tetikleyici kural eşleşmeyi durdurduğunda temizlenir.",
+            "label": "Akıllı indirmeler"
+          }
+        },
+        "quota": "Kota",
+        "songEntries": "{{count}} şarkı",
+        "unlimited": "Sınırsız"
       },
       "metadata": {
-        "clear": "Clear all caches",
-        "description": "Clear all cached data including metadata, cover art, and audio files.",
-        "group": "All Caches"
+        "clear": "Tüm önbellekleri temizle",
+        "description": "Meta veriler, kapak resimleri ve ses dosyaları dahil tüm önbelleğe alınmış verileri temizleyin.",
+        "group": "Tüm Önbellekler"
+      },
+      "offline": {
+        "description": "Çevrimdışı erişim için şarkıları, meta verileri ve kapak resimlerini yerel olarak önbelleğe al. İndirme kalitesi, akıllı indirmeler ve senkronizasyon ayarlarını açmak için kitaplık önbelleğe almayı etkinleştirin.",
+        "group": "Çevrimdışı Deneyim"
+      },
+      "smart": {
+        "description": "Etkinleştirilmiş herhangi bir kuralla eşleşen şarkıları otomatik olarak önbelleğe al. Her tetikleyici kural eşleşmeyi durdurduğu anda çıkarılırlar ve asla manuel indirmelere göre öncelik almazlar.",
+        "enabled": "Akıllı indirmeleri etkinleştir",
+        "group": "Akıllı İndirmeler",
+        "rule": {
+          "favoritePlaylists": "Favori çalma listeleri",
+          "favoriteSongs": "Favori şarkılar"
+        }
       },
       "sync": {
-        "cancel": "Cancel",
-        "clear": "Clear",
-        "coverArt": "Include cover art",
-        "coverArtInfo": "Download all album and artist images during sync. This may use significant storage and bandwidth.",
-        "description": "Cache all metadata on every app launch for offline browsing. Audio files are never synced.",
-        "enabled": "Enable sync on launch",
-        "entries": "{{count}} items synced",
-        "group": "Sync on Launch",
-        "lastSynced": "Last synced",
-        "never": "Never",
-        "phases": {
-          "albums": "Syncing albums…",
-          "artists": "Syncing artists…",
-          "cancelled": "Sync cancelled",
-          "coverArt": "Syncing cover art…",
-          "done": "Sync complete",
-          "error": "Sync failed",
-          "genres": "Syncing genres…",
-          "idle": "Preparing…",
-          "playlists": "Syncing playlists…",
-          "songs": "Syncing songs…"
+        "cancel": "İptal",
+        "clear": "Senkronize verileri temizle",
+        "clearConfirm": {
+          "clear": "Temizle ve devre dışı bırak",
+          "description": "Kitaplık önbelleğe almayı devre dışı bırakmak, tüm senkronize kitaplık verilerini (sanatçılar, albümler, şarkılar, çalma listeleri, türler) temizleyecektir. İstediğiniz zaman yeniden etkinleştirebilir ve yeniden senkronize edebilirsiniz.",
+          "keep": "Etkin bırak",
+          "title": "Kitaplık önbelleğe alma devre dışı bırakılsın mı?"
         },
-        "syncNow": "Sync Now"
+        "completed": "Tamamlandı",
+        "coverArt": "Kapak resmini dahil et",
+        "coverArtConcurrency": "Kapak resmi eşzamanlılığı",
+        "coverArtConcurrencyInfo": "Kapak resmi için paralel indirme sayısı. Daha yüksek değerler senkronizasyonu hızlandırır ancak daha fazla bant genişliği kullanır. Sıralı indirme için 1 olarak ayarlayın.",
+        "coverArtConcurrencyOff": "Sıralı",
+        "coverArtInfo": "Senkronizasyon sırasında tüm albüm ve sanatçı resimlerini indirin. Bu önemli depolama ve bant genişliği kullanabilir.",
+        "description": "Çevrimdışı gezinme için kitaplık meta verilerini senkronize edin. İndirilen şarkılar her zaman çevrimdışı olarak kullanılabilir.",
+        "downloading_one": "{{count}} şarkı indiriliyor",
+        "downloading_other": "{{count}} şarkı indiriliyor",
+        "enabled": "Kitaplığı senkronize et",
+        "entries": "{{count}} öğe senkronize edildi",
+        "group": "Kitaplık Senkronizasyonu",
+        "justNow": "Az önce",
+        "lastSynced": "Son senkronize edilen",
+        "libraryCaching": "Kitaplık önbelleğe alma",
+        "libraryCachingInfo": "Etkinleştirildiğinde, meta veriler ve isteğe bağlı olarak şarkılar çevrimdışı erişim için yerel olarak önbelleğe alınır. Devre dışı bırakıldığında, uygulama tam çevrimiçi modda kalır ve hiçbir arka plan senkronizasyonu çalışmaz.",
+        "never": "Hiçbir zaman",
+        "phases": {
+          "albums": "Albümler senkronize ediliyor…",
+          "artists": "Sanatçılar senkronize ediliyor…",
+          "cancelled": "Senkronizasyon iptal edildi",
+          "coverArt": "Kapak resimleri senkronize ediliyor…",
+          "done": "Senkronizasyon tamamlandı",
+          "error": "Senkronizasyon başarısız",
+          "favorites": "Favoriler senkronize ediliyor…",
+          "genres": "Türler senkronize ediliyor…",
+          "idle": "Hazırlanıyor…",
+          "playlists": "Çalma listeleri senkronize ediliyor…",
+          "songs": "Şarkılar senkronize ediliyor…"
+        },
+        "showMore": "{{count}} tane daha göster",
+        "syncNow": "Şimdi Senkronize Et",
+        "tier": {
+          "t1": {
+            "description": "Favoriler · Çalma Listeleri · Türler",
+            "label": "Temeller"
+          },
+          "t2": {
+            "description": "Sanatçılar · Albümler",
+            "label": "Kitaplık İskeleti"
+          },
+          "t3": {
+            "description": "Tüm şarkı meta verileri",
+            "label": "Tüm Şarkılar"
+          },
+          "coverArt": {
+            "label": "Kapak Görselleri",
+            "description": "Albüm · Sanatçı · Çalma listesi görselleri"
+          }
+        }
       }
     }
   },
@@ -759,10 +875,10 @@
   "sidebar": {
     "albums": "Albümler",
     "artists": "Sanatçılar",
-    "collapse": "Collapse sidebar",
+    "collapse": "Kenar çubuğunu daralt",
     "emptyPlaylist": "Henüz çalma listesi oluşturulmadı",
-    "expand": "Expand sidebar",
-    "favorites": "Favorites",
+    "expand": "Kenar çubuğunu genişlet",
+    "favorites": "Favoriler",
     "home": "Ana Sayfa",
     "library": "Kitaplık",
     "miniSearch": "Ara",
@@ -786,10 +902,10 @@
       }
     },
     "sort": {
-      "album": "Album A-Z",
-      "artist": "Artist A-Z",
-      "lastAdded": "Last Added",
-      "title": "Song A-Z"
+      "album": "Albüm A-Z",
+      "artist": "Sanatçı A-Z",
+      "lastAdded": "Son Eklenenler",
+      "title": "Şarkı A-Z"
     }
   },
   "table": {
@@ -865,6 +981,10 @@
     "light": "Açık",
     "marmalade-beaver": "Marmalade Beaver",
     "material-theme": "Material Theme",
+    "modeDark": "Dark",
+    "modeLabel": "Mode",
+    "modeLight": "Light",
+    "modeSystem": "System",
     "monokai-pro": "Monokai Pro",
     "night-owl-light": "Night Owl Light",
     "noctis-lilac": "Noctis Lilac",
@@ -896,9 +1016,9 @@
       "title": "Yeni Sürüm Mevcut!"
     },
     "sw": {
-      "error": "Update failed – Retry",
-      "refresh": "Refresh to update",
-      "updating": "Updating..."
+      "error": "Güncelleme başarısız – Tekrar dene",
+      "refresh": "Güncelle",
+      "updating": "Güncelleniyor..."
     },
     "toasts": {
       "error": "Güncelleme yüklenemedi. Lütfen doğrudan GitHub'dan indirmeyi deneyin.",

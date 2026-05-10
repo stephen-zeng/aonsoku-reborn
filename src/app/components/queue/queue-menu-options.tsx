@@ -4,7 +4,7 @@ import { AddToPlaylistSubMenu } from "@/app/components/song/add-to-playlist";
 import { ContextMenuSeparator } from "@/app/components/ui/context-menu";
 import { useOptions } from "@/app/hooks/use-options";
 import { ROUTES } from "@/routes/routesList";
-import { usePlayerActions } from "@/store/player.store";
+import { usePlayerActions, usePlayerStore } from "@/store/player.store";
 import { type QueueTier } from "@/types/playerContext";
 import { ISong } from "@/types/responses/song";
 
@@ -21,14 +21,11 @@ export function QueueMenuOptions({
 }: QueueMenuOptionsProps) {
   const navigate = useNavigate();
   const { removeSongFromQueue } = usePlayerActions();
-  const {
-    playNext,
-    playLast,
-    createNewPlaylist,
-    addToPlaylist,
-    startDownload,
-    openSongInfo,
-  } = useOptions();
+  const { playNext, playLast, createNewPlaylist, addToPlaylist, openSongInfo } =
+    useOptions();
+  const isUserQueueEmpty = usePlayerStore(
+    (state) => state.songlist.userQueue.songs.length === 0,
+  );
 
   return (
     <>
@@ -51,6 +48,7 @@ export function QueueMenuOptions({
           />
           <OptionsButtons.PlayLast
             variant={variant}
+            disabled={isUserQueueEmpty}
             onClick={(e) => {
               e.stopPropagation();
               playLast([song]);
@@ -90,14 +88,7 @@ export function QueueMenuOptions({
           <ContextMenuSeparator />
         </>
       )}
-      <OptionsButtons.Download
-        variant={variant}
-        onClick={(e) => {
-          e.stopPropagation();
-          startDownload(song.id);
-        }}
-      />
-      <ContextMenuSeparator />
+
       <OptionsButtons.SongInfo
         variant={variant}
         onClick={(e) => {

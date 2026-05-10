@@ -2,6 +2,7 @@ import { memo, useEffect } from "react";
 import { MainDrawerPage } from "@/app/components/drawer/page";
 import { Player } from "@/app/components/player/player";
 import { RemovePlaylistDialog } from "@/app/components/playlist/remove-dialog";
+import { SettingsHotkeyProvider } from "@/app/components/settings/hotkey-provider";
 import { SongInfoDialog } from "@/app/components/song/info-dialog";
 import { BottomNavigation } from "@/app/layout/bottom-navigation";
 import { Header } from "@/app/layout/header";
@@ -43,8 +44,9 @@ function CSSVariableSync() {
 
 export default function BaseLayout() {
   return (
-    <div className="h-screen w-screen overflow-hidden">
+    <div className="min-h-screen w-screen">
       <CSSVariableSync />
+      <SettingsHotkeyProvider />
       <MemoHeader />
       <MemoMiniSidebar />
       <MemoSidebar />

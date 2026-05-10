@@ -21,6 +21,7 @@ export function PlayerClearQueueButton({
         className="rounded-full w-10 h-10 p-2 text-secondary-foreground"
         disabled={disabled}
         onClick={clearPlayerState}
+        unfocusable
       >
         <ListXIcon className="w-4 h-4" />
       </Button>

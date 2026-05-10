@@ -15,6 +15,10 @@
       "dislike": "取消对 {{name}} 的喜欢",
       "like": "喜欢 {{name}}"
     },
+    "detail": {
+      "songsUnavailable": "曲目列表在离线时不可用。同步你的资料库以离线使用曲目。",
+      "songsUnavailableTitle": "曲目不可用"
+    },
     "headline": "专辑",
     "info": {
       "about": "关于 {{name}}",
@@ -70,7 +74,7 @@
     },
     "headline": "艺术家",
     "info": {
-      "albumsCount_one": "{{count}} album",
+      "albumsCount_one": "{{count}} 张专辑",
       "albumsCount_other": "{{count}} 张专辑"
     },
     "recentAlbums": "最新专辑",
@@ -104,13 +108,8 @@
       "yy": "%d 年"
     }
   },
-  "downloads": {
-    "completed": "你的文件已经被成功下载。",
-    "failed": "下载你的文件时出现了一个错误。",
-    "started": "下载已经开始。"
-  },
   "error": {
-    "notFound": "Not found"
+    "notFound": "未找到"
   },
   "favorites": {
     "buttons": {
@@ -120,8 +119,8 @@
     "duration": "约 {{duration}}",
     "headline": "收藏夹",
     "noSongs": "还没有收藏的歌曲！",
-    "songCount_one": "{{count}} song",
-    "songCount_other": "{{count}} songs"
+    "songCount_one": "{{count}} 首歌曲",
+    "songCount_other": "{{count}} 首歌曲"
   },
   "fullscreen": {
     "emptyQueue": "队列中没有歌曲",
@@ -264,7 +263,16 @@
     "unsupported_message": "{{app_name}} 不支持手机。"
   },
   "offline": {
-    "disconnected": "无法连接服务器，进入离线模式",
+    "badge": {
+      "cloud": "需要网络",
+      "downloaded": "已下载",
+      "downloading": "正在下载…",
+      "orphan": "已从服务器移除（仍可离线播放）",
+      "smart": "已通过智能下载规则保存"
+    },
+    "disconnected": "无法连接服务器",
+    "metered": "受限",
+    "meteredTooltip": "当前为慢速或按量计费连接。后台同步和智能下载已暂停 — 点击下载按钮可覆盖此行为。",
     "mode": "离线",
     "reconnectFailed": "无法重新连接，继续使用离线模式",
     "reconnected": "已重新连接到服务器",
@@ -273,14 +281,17 @@
     "songUnavailable": "此歌曲不可离线播放"
   },
   "options": {
-    "addLast": "添加到队列",
+    "addLast": "添加到队列末尾",
     "download": "下载",
+    "downloadAlbum": "下载专辑",
+    "downloadArtist": "下载艺术家",
+    "downloadPlaylist": "下载播放列表",
     "goto": {
       "album": "前往专辑",
       "artist": "前往艺人"
     },
     "info": "获取信息",
-    "like": "Like",
+    "like": "喜欢",
     "play": "播放",
     "playNext": "从下一首开始播放",
     "playlist": {
@@ -292,8 +303,9 @@
       "removeSong": "从播放列表中删除",
       "search": "查找一个播放列表"
     },
+    "removeDownload": "移除下载",
     "removeFromQueue": "从队列中移除",
-    "unlike": "Unlike"
+    "unlike": "取消喜欢"
   },
   "player": {
     "noRadioPlaying": "没有正在播放的电台",
@@ -370,12 +382,12 @@
       },
       "removeSong": {
         "description": "这个操作不能被撤销。",
-        "title_one": "Are you sure you want to remove the selected song?",
+        "title_one": "确定要移除选中的歌曲吗？",
         "title_other": "你确定要删除选择的歌曲吗？",
         "toast": {
-          "error_one": "Failed to remove the song!",
+          "error_one": "歌曲移除失败！",
           "error_other": "歌曲删除失败！",
-          "success_one": "Song removed successfully!",
+          "success_one": "歌曲移除成功！",
           "success_other": "歌曲删除成功！"
         }
       },
@@ -386,7 +398,7 @@
     "headline": "播放列表",
     "noSongList": "这个播放列表没有任何歌曲！",
     "refresh": "刷新播放列表",
-    "songCount_one": "{{count}} song",
+    "songCount_one": "{{count}} 首歌曲",
     "songCount_other": "{{count}} 首歌曲"
   },
   "queue": {
@@ -452,7 +464,7 @@
       "refresh": "刷新状态",
       "startScan": "快速刷新"
     },
-    "folderCount_one": "{{count}} folder",
+    "folderCount_one": "{{count}} 个文件夹",
     "folderCount_other": "{{count}} 个文件夹",
     "incompatible": {
       "description": "此服务器使用的是较旧的 Subsonic 协议版本，该版本不被完全支持。请在操作时谨慎行事，您可能会遇到问题。",
@@ -461,33 +473,21 @@
     },
     "lastScan": "上次扫描：{{date}}",
     "management": "服务器管理",
-    "songCount_one": "{{count}} song",
+    "songCount_one": "{{count}} 首歌曲",
     "songCount_other": "{{count}} 首歌曲",
     "status": "状态"
   },
   "settings": {
     "accounts": {
       "discord": {
-        "description": "Share your currently playing song with friends on Discord.",
+        "description": "与 Discord 上的好友分享你正在播放的歌曲。",
         "enabled": {
-          "label": "Enable Integration"
+          "label": "启用集成"
         },
-        "group": "Discord Rich Presence"
+        "group": "Discord 状态同步"
       }
     },
     "appearance": {
-      "colors": {
-        "bigPlayer": {
-          "blurSize": "图片模糊大小",
-          "label": "大播放器"
-        },
-        "description": "选择是否将当前播放专辑封面中的主色调作为背景。",
-        "group": "动态颜色",
-        "queue": {
-          "intensity": "颜色强度等级",
-          "label": "队列和歌词"
-        }
-      },
       "general": {
         "albumCoverForSongs": {
           "info": "启用后，所有曲目的封面请求都会使用专辑封面，以减少加载时间。",
@@ -502,6 +502,14 @@
       }
     },
     "audio": {
+      "hapticFeedback": {
+        "group": "震动反馈",
+        "description": "控制与应用交互时的震动反馈。",
+        "enabled": {
+          "label": "启用震动反馈",
+          "info": "启用后，在移动设备上拖动队列项目时设备将会震动。"
+        }
+      },
       "history": {
         "description": "播放超过10秒的歌曲会被记录到播放历史中。",
         "group": "播放历史",
@@ -570,8 +578,8 @@
           "info": "启用使用 Navidrome 凭据进行身份验证。",
           "label": "允许 Navidrome 身份验证"
         },
-        "copyAddress": "Copy address",
-        "copyPassword": "Copy password",
+        "copyAddress": "复制地址",
+        "copyPassword": "复制密码",
         "description": "管理 LAN 控制设置以进行远程访问。",
         "enable": {
           "info": "启用 LAN 控制以允许对此应用的远程访问。",
@@ -588,7 +596,7 @@
           "info": "指定 LAN 控制服务器的端口号。",
           "label": "端口"
         },
-        "regeneratePassword": "Regenerate password",
+        "regeneratePassword": "重新生成密码",
         "serverError": "启动 LAN 控制服务器失败。",
         "serverStarted": "LAN 控制服务器启动成功。"
       },
@@ -599,7 +607,7 @@
           "label": "检查更新"
         },
         "checking": "正在检查更新...",
-        "checkingManually": "Checking for updates...",
+        "checkingManually": "正在检查更新…",
         "currentVersion": {
           "info": "您当前运行的 Aonsoku 版本。",
           "label": "当前版本"
@@ -627,15 +635,15 @@
     },
     "label": "设置",
     "options": {
-      "accounts": "Accounts",
+      "accounts": "账户",
       "appearance": "外观",
       "audio": "播放器和音频",
       "content": "内容",
-      "desktop": "Desktop Application",
+      "desktop": "桌面应用",
       "language": "语言和地区",
       "privacy": "隐私和安全",
       "server": "服务器",
-      "storage": "存储"
+      "storage": "离线体验"
     },
     "privacy": {
       "services": {
@@ -694,6 +702,40 @@
         "maxSize": "最大缓存大小",
         "size": "缓存大小"
       },
+      "cacheManager": {
+        "confirmDelete": {
+          "description": "这将从缓存中移除「{{name}}」。之后可以重新下载。",
+          "title": "删除缓存项？"
+        },
+        "description": "查看并管理单个缓存项。",
+        "filter": {
+          "album": "专辑",
+          "all": "全部",
+          "audio": "音频",
+          "cover": "封面图",
+          "explicit": "手动下载",
+          "lru": "自动缓存",
+          "playlist": "播放列表",
+          "smart": "智能下载"
+        },
+        "group": "缓存管理器",
+        "list": {
+          "actions": "操作",
+          "cachedAt": "缓存时间",
+          "delete": "删除",
+          "empty": "没有缓存项。",
+          "name": "名称",
+          "removedFromServer": "已从服务器移除",
+          "size": "大小",
+          "source": "来源",
+          "total": "共 {{count}} 项，{{size}}",
+          "type": "类型",
+          "type_album": "专辑",
+          "type_audio": "音频",
+          "type_cover": "封面",
+          "type_playlist": "播放列表"
+        }
+      },
       "coverArt": {
         "clear": "清除封面图缓存",
         "description": "缓存专辑封面图以加快加载速度。",
@@ -702,21 +744,84 @@
         "group": "封面图缓存",
         "size": "缓存大小"
       },
+      "limits": {
+        "audioEntries": "已缓存 {{count}} 首歌曲",
+        "audioSize": "音频缓存",
+        "clearAll": "清除所有缓存",
+        "clearAudio": "清除",
+        "clearCovers": "清除",
+        "coverEntries": "已缓存 {{count}} 张图片",
+        "coverSize": "封面图缓存",
+        "description": "管理已缓存的音频和封面图存储。",
+        "group": "缓存存储",
+        "imageEntries": "{{count}} 张图片",
+        "maxSize": "最大音频缓存大小",
+        "pool": {
+          "assets": {
+            "description": "为快速渲染资料库而缓存的专辑和艺术家图片。",
+            "label": "封面图"
+          },
+          "explicit": {
+            "description": "你手动下载的歌曲、专辑和播放列表。永远不会被自动清除。",
+            "label": "手动下载"
+          },
+          "lru": {
+            "description": "在收听时按机会缓存的条目。超出配额时优先清除最早的条目。",
+            "label": "最近播放"
+          },
+          "smart": {
+            "description": "通过匹配智能规则自动下载。当触发规则不再匹配时被清除。",
+            "label": "智能下载"
+          }
+        },
+        "quota": "配额",
+        "songEntries": "{{count}} 首歌曲",
+        "unlimited": "无限制"
+      },
       "metadata": {
         "clear": "清除所有缓存",
         "description": "清除所有缓存数据，包括元数据、封面图和音频文件。",
         "group": "所有缓存"
       },
+      "offline": {
+        "description": "在本地缓存歌曲、元数据和封面图以供离线访问。启用资源库缓存后可设置下载质量、智能下载和同步选项。",
+        "group": "离线体验"
+      },
+      "smart": {
+        "description": "自动缓存匹配任何已启用规则的歌曲。当所有触发规则停止匹配时，它们会被清除，且绝不会优先于手动下载。",
+        "enabled": "启用智能下载",
+        "group": "智能下载",
+        "rule": {
+          "favoritePlaylists": "收藏的播放列表",
+          "favoriteSongs": "收藏的歌曲"
+        }
+      },
       "sync": {
         "cancel": "取消",
-        "clear": "清除",
+        "clear": "清除同步数据",
+        "clearConfirm": {
+          "clear": "清除并关闭",
+          "description": "关闭资源库缓存将清除所有已同步的资源库数据（艺术家、专辑、歌曲、播放列表、流派）。您可以随时重新启用并重新同步。",
+          "keep": "保持开启",
+          "title": "关闭资源库缓存？"
+        },
+        "completed": "完成",
         "coverArt": "包含封面图",
+        "coverArtConcurrency": "封面图并发数",
+        "coverArtConcurrencyInfo": "封面图并行下载数量。数值越大同步越快，但会占用更多带宽。设为 1 表示顺序下载。",
+        "coverArtConcurrencyOff": "顺序",
         "coverArtInfo": "同步时下载所有专辑和艺术家图片。这可能占用大量存储空间和带宽。",
-        "description": "每次启动应用时缓存所有元数据，以便离线浏览。音频文件不会被同步。",
-        "enabled": "启用启动时同步",
+        "description": "同步音乐库元数据以供离线浏览。下载的歌曲始终可离线使用。",
+        "downloading": "正在下载 {{count}} 首歌曲",
+        "downloading_one": "正在下载 {{count}} 首歌曲",
+        "downloading_other": "正在下载 {{count}} 首歌曲",
+        "enabled": "同步音乐库",
         "entries": "已同步 {{count}} 项",
-        "group": "启动时同步",
+        "group": "音乐库同步",
+        "justNow": "刚刚",
         "lastSynced": "上次同步",
+        "libraryCaching": "资源库缓存",
+        "libraryCachingInfo": "启用后，元数据和歌曲将缓存到本地以供离线访问。禁用后，应用将保持纯在线模式，不会进行后台同步。",
         "never": "从未同步",
         "phases": {
           "albums": "正在同步专辑…",
@@ -725,12 +830,32 @@
           "coverArt": "正在同步封面图…",
           "done": "同步完成",
           "error": "同步失败",
+          "favorites": "正在同步收藏…",
           "genres": "正在同步流派…",
           "idle": "准备中…",
           "playlists": "正在同步播放列表…",
           "songs": "正在同步歌曲…"
         },
-        "syncNow": "立即同步"
+        "showMore": "显示另外 {{count}} 首",
+        "syncNow": "立即同步",
+        "tier": {
+          "t1": {
+            "description": "收藏 · 播放列表 · 流派",
+            "label": "基础数据"
+          },
+          "t2": {
+            "description": "艺术家 · 专辑",
+            "label": "库骨架"
+          },
+          "t3": {
+            "description": "全部歌曲元数据",
+            "label": "完整歌曲"
+          },
+          "coverArt": {
+            "label": "封面图",
+            "description": "专辑 · 艺术家 · 播放列表图片"
+          }
+        }
       }
     }
   },
@@ -786,10 +911,10 @@
       }
     },
     "sort": {
-      "album": "Album A-Z",
-      "artist": "Artist A-Z",
-      "lastAdded": "Last Added",
-      "title": "Song A-Z"
+      "album": "专辑 A-Z",
+      "artist": "艺术家 A-Z",
+      "lastAdded": "最近添加",
+      "title": "歌曲 A-Z"
     }
   },
   "table": {
@@ -833,7 +958,7 @@
     },
     "lastPlayed": "{{date}}前",
     "menu": {
-      "selectedCount_one": "{{count}} selected",
+      "selectedCount_one": "已选 {{count}} 项",
       "selectedCount_other": "{{count}} 个被选中"
     },
     "pagination": {
@@ -865,6 +990,10 @@
     "light": "浅色",
     "marmalade-beaver": "Marmalade Beaver",
     "material-theme": "Material Theme",
+    "modeDark": "深色",
+    "modeLabel": "模式",
+    "modeLight": "浅色",
+    "modeSystem": "跟随系统",
     "monokai-pro": "Monokai Pro",
     "night-owl-light": "Night Owl Light",
     "noctis-lilac": "Noctis Lilac",
@@ -877,7 +1006,7 @@
     "vue-dark": "Vue Dark"
   },
   "time": {
-    "days_one": "{{days}} day",
+    "days_one": "{{days}} 天",
     "days_other": "{{days}} 天",
     "hour": "{{hour}} 小时",
     "minutes": "{{minutes}} 分钟",
@@ -897,7 +1026,7 @@
     },
     "sw": {
       "error": "更新失败 - 重试",
-      "refresh": "刷新以更新",
+      "refresh": "更新",
       "updating": "更新中..."
     },
     "toasts": {

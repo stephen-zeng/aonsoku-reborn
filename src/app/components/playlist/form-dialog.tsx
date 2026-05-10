@@ -75,7 +75,7 @@ export function CreatePlaylistDialog() {
     mutationFn: subsonic.playlists.createWithDetails,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.playlist.all],
+        queryKey: queryKeys.playlist.all,
       });
       toast.success(t("playlist.form.create.toast.success"));
     },
@@ -89,10 +89,10 @@ export function CreatePlaylistDialog() {
     onSuccess: () => {
       Promise.all([
         queryClient.invalidateQueries({
-          queryKey: [queryKeys.playlist.all],
+          queryKey: queryKeys.playlist.all,
         }),
         queryClient.invalidateQueries({
-          queryKey: [queryKeys.playlist.single, data.id],
+          queryKey: [...queryKeys.playlist.single, data.id],
         }),
       ]);
       toast.success(t("playlist.form.edit.toast.success"));

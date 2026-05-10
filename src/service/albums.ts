@@ -1,4 +1,5 @@
 import { httpClient } from "@/api/httpClient";
+import { libraryDb, withPlayedAt, withStarredAt } from "@/store/library-db";
 import {
   AlbumInfoResponse,
   AlbumListResponse,
@@ -53,7 +54,25 @@ async function getOne(id: string): Promise<SingleAlbum | undefined> {
     },
   });
 
-  return response.data.album;
+  const album = response.data.album;
+
+  try {
+    if (album) {
+      const { song, ...summary } = album;
+      await Promise.all([
+        libraryDb.albums.put(withStarredAt(summary)),
+        song.length > 0
+          ? libraryDb.songs.bulkPut(
+              song.map((item) => withPlayedAt(withStarredAt(item))),
+            )
+          : Promise.resolve(),
+      ]);
+    }
+  } catch (err) {
+    console.warn(`[albums] failed to persist album ${id}:`, err);
+  }
+
+  return album;
 }
 
 async function getInfo(id: string): Promise<IAlbumInfo | null> {

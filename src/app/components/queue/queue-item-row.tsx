@@ -4,7 +4,9 @@ import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
 import { EllipsisVertical, GripVertical, PlayIcon } from "lucide-react";
 import { CSSProperties, forwardRef, useState } from "react";
-import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
+import { CachedImage } from "@/app/components/cover-image/cached-image";
+import { CachedIndicator } from "@/app/components/table/cached-indicator";
+import { CacheButton } from "@/app/components/table/cache-button";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { Button } from "@/app/components/ui/button";
 import {
@@ -14,17 +16,21 @@ import {
 } from "@/app/components/ui/dropdown-menu";
 import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
-import { useSongCoverArtUrl } from "@/utils/coverArt";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
 import { QueueMenuOptions } from "./queue-menu-options";
+import { useHapticSettings } from "@/store/player.store";
+import { useWebHaptics } from "web-haptics/react";
 
 interface QueueItemRowProps {
   song: ISong;
-  isPlaying: boolean;
   isActive: boolean;
   onPlay: () => void;
   style?: CSSProperties;
   tier?: "context" | "user";
+  hideDownload?: boolean;
+  hideDuration?: boolean;
+  hideDropdownButton?: boolean;
+  isMobile?: boolean;
 }
 
 export function SortableQueueItem({
@@ -70,74 +76,82 @@ export const QueueItemRow = forwardRef<
 >(function QueueItemRow(
   {
     song,
-    isPlaying,
     isActive,
     onPlay,
     style,
     dragAttributes,
     dragListeners,
     tier,
+    hideDownload,
+    hideDuration,
+    hideDropdownButton,
+    isMobile,
   },
   ref,
 ) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const coverArtUrl = useSongCoverArtUrl(song, "100");
+  const { hapticFeedbackEnabled } = useHapticSettings();
+  const { trigger } = useWebHaptics();
 
-  return (
-    <ContextMenuProvider
-      options={<QueueMenuOptions variant="context" song={song} tier={tier} />}
+  const hapticTrigger = hapticFeedbackEnabled
+    ? () => trigger([{ duration: 1 }])
+    : undefined;
+
+  const content = (
+    <div
+      ref={ref}
+      className={clsx([
+        "group/queuerow flex items-center w-full h-16 text-sm rounded-md px-3 gap-2",
+        "hover:bg-muted",
+      ])}
+      style={style}
+      {...dragAttributes}
     >
-      <div
-        ref={ref}
-        className={clsx([
-          "group/queuerow flex items-center w-full h-16 text-sm rounded-md px-3 gap-2",
-          "hover:bg-muted",
-          isActive && "bg-accent",
-        ])}
-        style={style}
-        {...dragAttributes}
-      >
+      {dragListeners && !isMobile && (
         <span
           className="text-foreground/30 shrink-0 cursor-grab select-none py-2 -my-2 touch-none"
           {...dragListeners}
         >
           <GripVertical className="w-4 h-4" />
         </span>
+      )}
+
+      <div
+        className="group/cover relative w-10 h-10 flex-shrink-0 cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation();
+          onPlay();
+        }}
+      >
+        <div className="w-10 h-10 bg-accent rounded overflow-hidden">
+          <CachedImage
+            coverArtId={song.coverArt}
+            coverArtType="song"
+            albumId={song.albumId}
+            coverArtSize="100"
+            className="w-10 h-10 rounded text-transparent object-cover"
+            alt={`${song.title} - ${song.artist}`}
+          />
+        </div>
         <div
-          className="group/cover relative w-10 h-10 flex-shrink-0 cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation();
-            onPlay();
-          }}
-        >
-          <div className="w-10 h-10 bg-accent rounded overflow-hidden">
-            <img
-              src={coverArtUrl}
-              className="w-10 h-10 rounded text-transparent object-cover"
-              alt={`${song.title} - ${song.artist}`}
-            />
-          </div>
-          {isPlaying && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded">
-              <EqualizerBars size={18} className="text-white mb-0.5" />
-            </div>
+          className={clsx(
+            "absolute inset-0 flex items-center justify-center bg-black/40 rounded",
+            "opacity-0 group-hover/cover:opacity-100 transition-opacity",
           )}
-          <div
-            className={clsx(
-              "absolute inset-0 flex items-center justify-center bg-black/40 rounded",
-              "opacity-0 group-hover/cover:opacity-100 transition-opacity",
-            )}
-          >
-            <PlayIcon size={16} className="text-white fill-white" />
-          </div>
+        >
+          <PlayIcon size={16} className="text-white fill-white" />
         </div>
+      </div>
 
-        <div className="flex flex-col min-w-0 flex-1">
-          <span className="font-semibold truncate text-sm">{song.title}</span>
-          <QueueArtists song={song} />
-        </div>
+      <div className="flex flex-col min-w-0 flex-1">
+        <span className="font-semibold truncate text-sm">{song.title}</span>
+        <QueueArtists song={song} />
+      </div>
 
-        <div className="relative w-[60px] flex-shrink-0 flex items-center justify-end">
+      <div className="relative flex-shrink-0 flex items-center justify-end gap-1">
+        {!hideDownload && <CachedIndicator songId={song.id} />}
+        {!hideDownload && <CacheButton songId={song.id} groupName="queuerow" />}
+        {!hideDuration && (
           <span
             className={clsx(
               "text-xs transition-opacity",
@@ -147,6 +161,8 @@ export const QueueItemRow = forwardRef<
           >
             {convertSecondsToTime(song.duration)}
           </span>
+        )}
+        {!hideDropdownButton && (
           <div className="absolute inset-0 flex items-center justify-end">
             <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
               <DropdownMenuTrigger asChild>
@@ -173,8 +189,27 @@ export const QueueItemRow = forwardRef<
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </div>
+        )}
       </div>
+
+      {dragListeners && isMobile && (
+        <span
+          className="text-foreground/30 shrink-0 cursor-grab select-none py-4 px-2 -my-2 -mr-2 touch-none"
+          {...dragListeners}
+          onTouchStart={hapticTrigger}
+          onTouchEnd={hapticTrigger}
+        >
+          <GripVertical className="w-5 h-5" />
+        </span>
+      )}
+    </div>
+  );
+
+  return (
+    <ContextMenuProvider
+      options={<QueueMenuOptions variant="context" song={song} tier={tier} />}
+    >
+      {content}
     </ContextMenuProvider>
   );
 });

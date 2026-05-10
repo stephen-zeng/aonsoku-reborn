@@ -11,6 +11,7 @@ export const initialPlayerState: IPlayerState = {
   currentDuration: 0,
   mediaType: "song",
   audioPlayerRef: null,
+  radioPlayerRef: null,
   mainDrawerState: false,
   queueState: false,
   lyricsState: false,
@@ -21,11 +22,18 @@ export const initialPlayerState: IPlayerState = {
   hasNext: false,
   isBuffering: false,
   areLyricsAligned: true,
+  seekToStart: false,
+  isTransitioning: false,
 };
 
 export const initialSonglist = initSonglistState();
 
-export const initialPlayerProgress = { progress: 0 };
+export const initialPlayerProgress = {
+  progress: 0,
+  bufferedProgress: 0,
+  isScrubbing: false,
+  scrubbingProgress: 0,
+};
 
 type SetFn = (fn: (state: Draft<IPlayerContext>) => void) => void;
 
@@ -114,8 +122,13 @@ export function createInitialSettings(set: SetFn): IPlayerContext["settings"] {
     colors: {
       currentSongColor: null,
       currentSongColorIntensity: 0.65,
-      queue: {
-        useSongColor: false,
+    },
+    hapticFeedback: {
+      hapticFeedbackEnabled: true,
+      setHapticFeedbackEnabled: (value: boolean) => {
+        set((state) => {
+          state.settings.hapticFeedback.hapticFeedbackEnabled = value;
+        });
       },
     },
   };

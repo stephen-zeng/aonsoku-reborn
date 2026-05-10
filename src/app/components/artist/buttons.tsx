@@ -38,7 +38,7 @@ export function ArtistButtons({
     mutationFn: subsonic.star.handleStarItem,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.artist.single, artist.id],
+        queryKey: [...queryKeys.artist.single, artist.id],
       });
     },
   });

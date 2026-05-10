@@ -47,6 +47,7 @@ export function MiniPlayerControls() {
         style={{ ...buttonsStyle.style }}
         onClick={() => toggleShuffle()}
         disabled={isPlayingOneSong() || !hasNext}
+        unfocusable
       >
         <Shuffle size={18} />
       </Button>
@@ -61,6 +62,7 @@ export function MiniPlayerControls() {
         style={{ ...buttonsStyle.style }}
         onClick={() => playPrevSong()}
         disabled={cannotSkipPrev}
+        unfocusable
       >
         <SkipBack className={buttonsStyle.secondaryIconFilled} width={20} />
       </Button>
@@ -98,6 +100,7 @@ export function MiniPlayerControls() {
         style={{ ...buttonsStyle.style }}
         onClick={() => playNextSong()}
         disabled={cannotSkipNext}
+        unfocusable
       >
         <SkipForward className={buttonsStyle.secondaryIconFilled} size={20} />
       </Button>
@@ -112,6 +115,7 @@ export function MiniPlayerControls() {
         )}
         onClick={() => toggleLoop()}
         style={{ ...buttonsStyle.style }}
+        unfocusable
       >
         {isLoopOff && <Repeat size={18} />}
         {isLoopAll && <Repeat size={18} />}
@@ -136,6 +140,7 @@ export function MiniPlayerLikeButton() {
       )}
       onClick={starCurrentSong}
       style={{ ...buttonsStyle.style }}
+      unfocusable
     >
       <Heart
         className={clsx(isSongStarred && "text-red-500 fill-red-500")}
@@ -146,10 +151,10 @@ export function MiniPlayerLikeButton() {
 }
 
 const buttonsStyle = {
-  main: "w-9 h-9 p-0 rounded-full bg-secondary-foreground hover:scale-105 transition-transform will-change-transform",
+  main: "w-9 h-9 p-0 rounded-full bg-secondary-foreground",
   mainIcon: "text-secondary fill-secondary",
   secondary:
-    "relative w-9 h-9 p-0 rounded-full text-secondary-foreground hover:text-secondary-foreground data-[state=active]:text-primary hover:bg-transparent hover:scale-110 transition-transform will-change-transform",
+    "relative w-9 h-9 p-0 rounded-full text-secondary-foreground hover:text-secondary-foreground data-[state=active]:text-primary hover:bg-transparent",
   secondaryIconFilled: "text-secondary-foreground fill-secondary-foreground",
   activeDot: "mini-player-button-active",
   style: {

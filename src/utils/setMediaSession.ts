@@ -1,11 +1,13 @@
 import { usePlayerStore } from "@/store/player.store";
 import { LanControlMessageType } from "@/types/lanControl";
 import { ISong } from "@/types/responses/song";
-import { getCoverArtUrlFromSongPreference } from "./coverArt";
+import { cacheManager } from "@/service/cache";
+import { getCoverArtUrlFromSongPreference, resolveCacheKeys } from "./coverArt";
 import { isValidDuration } from "./duration";
 import { logger } from "./logger";
 
 const MEDIA_SESSION_COVER_SIZE = "300";
+const REMOVE_DEBOUNCE_MS = 500;
 
 function isMediaSessionSupported(): boolean {
   return (
@@ -15,18 +17,46 @@ function isMediaSessionSupported(): boolean {
   );
 }
 
+let lastArtworkUrl: string | null = null;
+let currentSessionId = 0;
+let removeDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
 function removeMediaSession() {
   if (!isMediaSessionSupported()) return;
 
-  try {
-    navigator.mediaSession.metadata = null;
-    logger.info("[MediaSession] Removed metadata");
-  } catch (error) {
-    logger.error("[MediaSession] Failed to remove metadata:", error);
+  const callStack = new Error().stack?.split("\n").slice(1, 4).join(" | ");
+  logger.info(`[MediaSession.remove] sessionId=${currentSessionId} | stackTrace=${callStack}`);
+
+  if (removeDebounceTimer) {
+    clearTimeout(removeDebounceTimer);
+    removeDebounceTimer = null;
+  }
+
+  currentSessionId++;
+
+  removeDebounceTimer = setTimeout(() => {
+    removeDebounceTimer = null;
+    try {
+      navigator.mediaSession.metadata = null;
+      if (lastArtworkUrl) {
+        URL.revokeObjectURL(lastArtworkUrl);
+        lastArtworkUrl = null;
+      }
+      logger.info("[MediaSession] Removed metadata (debounced)");
+    } catch (error) {
+      logger.error("[MediaSession] Failed to remove metadata:", error);
+    }
+  }, REMOVE_DEBOUNCE_MS);
+}
+
+function cancelRemoveDebounce() {
+  if (removeDebounceTimer) {
+    clearTimeout(removeDebounceTimer);
+    removeDebounceTimer = null;
   }
 }
 
-function setMediaSession(
+async function setMediaSession(
   song:
     | ISong
     | {
@@ -43,17 +73,98 @@ function setMediaSession(
     return;
   }
 
-  function buildArtwork(): { artwork: MediaImage[] } {
-    if (!song.coverArt && !song.albumId) return { artwork: [] };
+  cancelRemoveDebounce();
 
-    const src = getCoverArtUrlFromSongPreference({
+  currentSessionId++;
+  const sessionId = currentSessionId;
+  logger.info(`[MediaSession.set] songId=${(song as { id?: string }).id ?? song.title} | title="${song.title}" | artist="${song.artist}" | sessionId=${sessionId}`);
+
+  const title = song.title || "Unknown Title";
+  const artist = song.artist || "Unknown Artist";
+  const album = song.album || "Unknown Album";
+
+  ensurePlaybackStatePlaying();
+
+  if (!song.coverArt && !song.albumId) {
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title,
+        artist,
+        album,
+        artwork: [],
+      });
+      logger.info("[MediaSession] Set metadata (no artwork)", {
+        title,
+        artist,
+        album,
+      });
+    } catch (error) {
+      logger.error("[MediaSession] Failed to set metadata:", error);
+    }
+    return;
+  }
+
+  try {
+    if (lastArtworkUrl) {
+      URL.revokeObjectURL(lastArtworkUrl);
+      lastArtworkUrl = null;
+    }
+
+    let src = getCoverArtUrlFromSongPreference({
       coverArt: song.coverArt,
       coverArtType: "song",
       albumId: song.albumId,
       size: MEDIA_SESSION_COVER_SIZE,
     });
 
-    return {
+    let artworkFromCache = false;
+
+    const cacheKeys = resolveCacheKeys(song.coverArt, "song", song.albumId);
+    for (const key of cacheKeys) {
+      try {
+        const cachedUrl = await cacheManager.getCachedCoverUrl(key);
+        if (cachedUrl) {
+          src = cachedUrl;
+          lastArtworkUrl = cachedUrl;
+          artworkFromCache = true;
+          break;
+        }
+      } catch {
+        // ignore and try next key
+      }
+    }
+
+    if (sessionId !== currentSessionId) {
+      logger.info("[MediaSession] Aborting outdated metadata update");
+      if (artworkFromCache && lastArtworkUrl === src) {
+        URL.revokeObjectURL(lastArtworkUrl);
+        lastArtworkUrl = null;
+      }
+      return;
+    }
+
+    if (!artworkFromCache) {
+      try {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title,
+          artist,
+          album,
+          artwork: [],
+        });
+        logger.info("[MediaSession] Set basic metadata (artwork loading)", {
+          title,
+          artist,
+          album,
+        });
+      } catch (error) {
+        logger.error("[MediaSession] Failed to set basic metadata:", error);
+      }
+    }
+
+    const metadata = {
+      title,
+      artist,
+      album,
       artwork: [
         {
           src,
@@ -62,25 +173,17 @@ function setMediaSession(
         },
       ],
     };
-  }
 
-  try {
-    const { artwork } = buildArtwork();
-    const metadata = {
-      title: song.title || "Unknown Title",
-      artist: song.artist || "Unknown Artist",
-      album: song.album || "Unknown Album",
-      artwork,
-    };
-
-    logger.info("[MediaSession] Setting metadata", {
+    logger.info("[MediaSession] Setting metadata with artwork", {
       title: metadata.title,
       artist: metadata.artist,
       album: metadata.album,
-      hasArtwork: artwork.length > 0,
+      fromCache: artworkFromCache,
     });
 
     navigator.mediaSession.metadata = new MediaMetadata(metadata);
+
+    ensurePlaybackStatePlaying();
 
     if (navigator.mediaSession.metadata === null) {
       logger.info("[MediaSession] Metadata was set to null unexpectedly");
@@ -93,6 +196,8 @@ function setMediaSession(
 async function setRadioMediaSession(label: string, radioName: string) {
   if (!isMediaSessionSupported()) return;
 
+  cancelRemoveDebounce();
+
   try {
     const metadata = {
       title: radioName || "Unknown Radio",
@@ -103,9 +208,22 @@ async function setRadioMediaSession(label: string, radioName: string) {
 
     logger.info("[MediaSession] Setting radio metadata", metadata);
     navigator.mediaSession.metadata = new MediaMetadata(metadata);
+
+    ensurePlaybackStatePlaying();
   } catch (error) {
     logger.error("[MediaSession] Failed to set radio metadata:", error);
   }
+}
+
+function ensurePlaybackStatePlaying() {
+  if (!isMediaSessionSupported()) return;
+  const prevState = navigator.mediaSession.playbackState;
+  const hadPendingRemove = !!removeDebounceTimer;
+  cancelRemoveDebounce();
+  if (prevState !== "playing") {
+    navigator.mediaSession.playbackState = "playing";
+  }
+  logger.info(`[MediaSession.ensurePlaying] prevState=${prevState} → playing | cancelledRemove=${hadPendingRemove} | sessionId=${currentSessionId}`);
 }
 
 function setPlaybackState(state: boolean | null) {
@@ -121,7 +239,8 @@ function setPlaybackState(state: boolean | null) {
       newState = "paused";
     }
 
-    logger.info("[MediaSession] Setting playback state", newState);
+    const prevState = navigator.mediaSession.playbackState;
+    logger.info(`[MediaSession.setPlaybackState] isPlaying=${state} | prevState=${prevState} → newState=${newState}`);
     navigator.mediaSession.playbackState = newState;
 
     if (navigator.mediaSession.playbackState !== newState) {
@@ -164,13 +283,9 @@ function setPositionState(
       playbackRate: playbackRate,
       position: position,
     });
-    logger.info("[MediaSession] Set position state", {
-      duration,
-      position,
-      playbackRate,
-    });
+    logger.info(`[MediaSession.setPosition] duration=${duration} | position=${position} | playbackRate=${playbackRate} | clamped=${position > duration ? duration : position}`);
   } catch (error) {
-    logger.info("[MediaSession] Failed to set position state:", error);
+    logger.info(`[MediaSession.setPosition:ERROR] ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -181,70 +296,83 @@ function setHandlers() {
   }
 
   const { mediaSession } = navigator;
+  const isRemote = usePlayerStore.getState().remoteControl.active;
+  logger.info(`[MediaSession.setHandlers] remoteControl=${isRemote}`);
 
   try {
-    const state = usePlayerStore.getState();
-    const { togglePlayPause, playNextSong, playPrevSong, setProgress } =
-      state.actions;
-    const isRemoteActive = state.remoteControl.active;
-    const remoteSender = state.remoteControl.sendCommand;
+    logger.info("[MediaSession] Setting up action handlers");
 
-    logger.info("[MediaSession] Setting up action handlers", {
-      isRemoteActive,
-      hasRemoteSender: !!remoteSender,
-    });
-
+    // Disabled intentionally: on iOS, these handlers override the track
+    // skip buttons (previoustrack/nexttrack) on lock screen and Control
+    // Center, making it impossible to skip tracks. Leave as null to
+    // preserve skip functionality.
     mediaSession.setActionHandler("seekbackward", null);
     mediaSession.setActionHandler("seekforward", null);
 
-    mediaSession.setActionHandler("play", () => {
-      logger.info("[MediaSession] Play action triggered");
-      if (isRemoteActive && remoteSender) {
-        remoteSender(LanControlMessageType.PLAY);
+    mediaSession.setActionHandler("stop", () => {
+      logger.info("[MediaSession.handler] action=stop");
+      const state = usePlayerStore.getState();
+      if (state.remoteControl.active && state.remoteControl.sendCommand) {
+        state.remoteControl.sendCommand(LanControlMessageType.PAUSE);
+        state.remoteControl.sendCommand(LanControlMessageType.CLEAR_QUEUE);
       } else {
-        togglePlayPause();
+        state.actions.clearPlayerState();
+      }
+    });
+
+    mediaSession.setActionHandler("play", () => {
+      logger.info("[MediaSession.handler] action=play | isRemote=false→toggle");
+      const state = usePlayerStore.getState();
+      if (state.remoteControl.active && state.remoteControl.sendCommand) {
+        state.remoteControl.sendCommand(LanControlMessageType.PLAY);
+      } else {
+        state.actions.togglePlayPause();
       }
     });
 
     mediaSession.setActionHandler("pause", () => {
-      logger.info("[MediaSession] Pause action triggered");
-      if (isRemoteActive && remoteSender) {
-        remoteSender(LanControlMessageType.PAUSE);
+      logger.info("[MediaSession.handler] action=pause | isRemote=false→toggle");
+      const state = usePlayerStore.getState();
+      if (state.remoteControl.active && state.remoteControl.sendCommand) {
+        state.remoteControl.sendCommand(LanControlMessageType.PAUSE);
       } else {
-        togglePlayPause();
+        state.actions.togglePlayPause();
       }
     });
 
     mediaSession.setActionHandler("previoustrack", () => {
-      logger.info("[MediaSession] Previous track action triggered");
-      if (isRemoteActive && remoteSender) {
-        remoteSender(LanControlMessageType.PREVIOUS);
+      logger.info("[MediaSession.handler] action=previoustrack");
+      const state = usePlayerStore.getState();
+      if (state.remoteControl.active && state.remoteControl.sendCommand) {
+        state.remoteControl.sendCommand(LanControlMessageType.PREVIOUS);
       } else {
-        playPrevSong();
+        state.actions.playPrevSong();
       }
     });
 
     mediaSession.setActionHandler("nexttrack", () => {
-      logger.info("[MediaSession] Next track action triggered");
-      if (isRemoteActive && remoteSender) {
-        remoteSender(LanControlMessageType.NEXT);
+      logger.info("[MediaSession.handler] action=nexttrack");
+      const state = usePlayerStore.getState();
+      if (state.remoteControl.active && state.remoteControl.sendCommand) {
+        state.remoteControl.sendCommand(LanControlMessageType.NEXT);
       } else {
-        playNextSong();
+        state.actions.playNextSong();
       }
     });
 
     mediaSession.setActionHandler("seekto", (details) => {
-      logger.info("[MediaSession] Seek action triggered:", details);
+      logger.info(`[MediaSession.handler] action=seekto | seekTime=${details.seekTime}`);
       if (details.seekTime !== undefined) {
-        if (isRemoteActive && remoteSender) {
-          remoteSender(LanControlMessageType.SEEK, {
+        const state = usePlayerStore.getState();
+        if (state.remoteControl.active && state.remoteControl.sendCommand) {
+          state.remoteControl.sendCommand(LanControlMessageType.SEEK, {
             time: details.seekTime,
           });
         } else {
           const audioPlayerRef = state.playerState.audioPlayerRef;
           if (audioPlayerRef) {
             audioPlayerRef.currentTime = details.seekTime;
-            setProgress(Math.floor(details.seekTime));
+            state.actions.setProgress(Math.floor(details.seekTime));
           }
         }
       }
@@ -261,6 +389,7 @@ export const manageMediaSession = {
   setMediaSession,
   setRadioMediaSession,
   setPlaybackState,
+  ensurePlaybackStatePlaying,
   setPositionState,
   setHandlers,
 };

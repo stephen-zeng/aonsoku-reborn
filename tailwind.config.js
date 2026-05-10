@@ -111,11 +111,6 @@ module.exports = {
       gridTemplateColumns: {
         player:
           "minmax(250px, 1fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(250px, 1fr)",
-        "table-fallback":
-          "minmax(40px, 50px) minmax(0px, 3fr) minmax(0px, 2fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(60px, 70px) minmax(100px, 120px)",
-        "playlist-fallback": "48px 1fr 25% 190px 100px 100px 48px",
-        "radio-fallback": "48px 1fr 25% 25% 48px",
-        "artist-fallback": "48px 1fr 15% 48px",
         header:
           "minmax(180px, 1fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(180px, 1fr)",
         "mid-player-info": "minmax(40px, 70px) minmax(168px, 1fr)",

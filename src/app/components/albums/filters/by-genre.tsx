@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,6 +18,7 @@ import {
 } from "@/app/components/ui/popover";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 import { subsonic } from "@/service/subsonic";
 import { AlbumsSearchParams } from "@/utils/albumsFilter";
 import { queryKeys } from "@/utils/queryKeys";
@@ -31,10 +31,11 @@ export function AlbumsFilterByGenre() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { getSearchParam } = new SearchParamsHandler(searchParams);
 
-  const { data: genres, isLoading } = useQuery({
-    queryKey: [queryKeys.genre],
-    queryFn: subsonic.genres.get,
-  });
+  const { data: genres, isLoading } = useOfflineQuery(
+    [...queryKeys.genre],
+    subsonic.genres.get,
+    { offlineFn: offlineData.genres },
+  );
 
   const genre = getSearchParam<string>(AlbumsSearchParams.Genre, "");
 

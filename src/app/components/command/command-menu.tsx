@@ -1,12 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { SearchIcon } from "lucide-react";
-import { KeyboardEvent, useCallback, useEffect, useState } from "react";
+import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import { useLocation, useParams } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
 import { Keyboard } from "@/app/components/command/keyboard-key";
 import { Button } from "@/app/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Command,
   CommandDialog,
@@ -17,6 +19,7 @@ import {
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
+import { useIsOnline } from "@/store/cache.store";
 import { byteLength } from "@/utils/byteLength";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
@@ -35,9 +38,13 @@ export type CommandItemProps = {
 
 export default function CommandMenu() {
   const { t } = useTranslation();
-  const { open, setOpen } = useAppStore((state) => state.command);
+  const open = useAppStore((state) => state.command.open);
+  const setOpen = useAppStore((state) => state.command.setOpen);
   const location = useLocation();
   const params = useParams();
+  const isOnline = useIsOnline();
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [dialogStyle, setDialogStyle] = useState<React.CSSProperties>({});
 
   const [query, setQuery] = useState("");
   const [pages, setPages] = useState<CommandPages[]>(["HOME"]);
@@ -51,23 +58,23 @@ export default function CommandMenu() {
   );
 
   const { data: albumData } = useQuery({
-    queryKey: [queryKeys.album.single, params.albumId],
+    queryKey: [...queryKeys.album.single, "preview", params.albumId],
     queryFn: () => subsonic.albums.getOne(params.albumId!),
-    enabled: Boolean(params.albumId),
+    enabled: Boolean(params.albumId) && isOnline,
     staleTime: convertMinutesToMs(5),
   });
 
   const { data: artistData } = useQuery({
-    queryKey: [queryKeys.artist.single, params.artistId],
+    queryKey: [...queryKeys.artist.single, params.artistId],
     queryFn: () => subsonic.artists.getOne(params.artistId!),
-    enabled: Boolean(params.artistId),
+    enabled: Boolean(params.artistId) && isOnline,
     staleTime: convertMinutesToMs(5),
   });
 
   const { data: playlistData } = useQuery({
-    queryKey: [queryKeys.playlist.single, params.playlistId],
+    queryKey: [...queryKeys.playlist.single, params.playlistId],
     queryFn: () => subsonic.playlists.getOne(params.playlistId!),
-    enabled: Boolean(params.playlistId),
+    enabled: Boolean(params.playlistId) && isOnline,
     staleTime: convertMinutesToMs(5),
   });
 
@@ -123,7 +130,7 @@ export default function CommandMenu() {
   }, [location.pathname, albumData, artistData, playlistData, t]);
 
   const { data: searchResult } = useQuery({
-    queryKey: [queryKeys.search, query],
+    queryKey: [...queryKeys.search, query],
     queryFn: () =>
       subsonic.search.get({
         query,
@@ -131,7 +138,7 @@ export default function CommandMenu() {
         artistCount: 4,
         songCount: 4,
       }),
-    enabled: enableQuery,
+    enabled: enableQuery && isOnline,
     staleTime: convertMinutesToMs(5),
   });
 
@@ -143,9 +150,9 @@ export default function CommandMenu() {
   const showArtistGroup = Boolean(query && artists.length > 0);
   const showSongGroup = Boolean(query && songs.length > 0);
 
-  useHotkeys(["/", "mod+f", "mod+k"], () => setOpen(!open), {
-    preventDefault: true,
-  });
+  const showNotFoundMessage = Boolean(
+    enableQuery && !showAlbumGroup && !showArtistGroup && !showSongGroup,
+  );
 
   const clear = useCallback(() => {
     setQuery("");
@@ -171,38 +178,99 @@ export default function CommandMenu() {
     }
   }
 
-  function handleSearchChange(value: string) {
-    if (activePage === "PLAYLISTS") {
-      setQuery(value);
-    } else {
-      debounced(value);
-    }
-  }
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      if (activePage === "PLAYLISTS") {
+        setQuery(value);
+      } else {
+        debounced(value);
+      }
+    },
+    [activePage, debounced],
+  );
 
   const removeLastPage = useCallback(() => {
-    setPages((pages) => {
-      const tempPages = [...pages];
-      tempPages.splice(-1, 1);
-      return tempPages;
-    });
+    setPages((pages) => pages.slice(0, -1));
   }, []);
 
-  const inputPlaceholder = () => {
-    if (activePage === "PLAYLISTS") return t("options.playlist.search");
+  const inputPlaceholder =
+    activePage === "PLAYLISTS"
+      ? t("options.playlist.search")
+      : t("command.inputPlaceholder");
 
-    return t("command.inputPlaceholder");
-  };
+  const handleOpen = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      flushSync(() => {
+        setDialogStyle({
+          position: "fixed",
+          top: Math.round(rect.top),
+          left: Math.round(rect.left),
+          width: Math.round(rect.width),
+        });
+      });
+    }
+    flushSync(() => {
+      setOpen(true);
+    });
+  }, [setOpen]);
 
-  const showNotFoundMessage = Boolean(
-    enableQuery && !showAlbumGroup && !showArtistGroup && !showSongGroup,
+  useEffect(() => {
+    if (!open) return;
+
+    const handleResize = () => {
+      if (buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setDialogStyle({
+          position: "fixed",
+          top: Math.round(rect.top),
+          left: Math.round(rect.left),
+          width: Math.round(rect.width),
+        });
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [open]);
+
+  const handleClose = useCallback(
+    (state: boolean) => {
+      if (isHome) {
+        setOpen(state);
+        clear();
+      } else {
+        removeLastPage();
+      }
+    },
+    [isHome, setOpen, clear, removeLastPage],
+  );
+
+  useHotkeys(
+    ["/", "mod+f", "mod+k"],
+    () => {
+      if (!open) {
+        handleOpen();
+      } else {
+        setOpen(false);
+      }
+    },
+    {
+      preventDefault: true,
+    },
+    [open, handleOpen, setOpen],
   );
 
   return (
     <>
       <Button
+        ref={buttonRef}
         variant="outline"
-        className="w-full px-2 gap-2 h-8 overflow-hidden md:relative hidden md:flex"
-        onClick={() => setOpen(true)}
+        className={cn(
+          "w-full px-2 gap-2 h-8 py-0 overflow-hidden md:relative hidden md:flex transition-opacity",
+          open && "opacity-0 pointer-events-none",
+        )}
+        onClick={handleOpen}
       >
         <SearchIcon className="h-5 w-5 text-muted-foreground" />
         <span className="inline-flex text-muted-foreground text-xs">
@@ -216,40 +284,31 @@ export default function CommandMenu() {
       <Button
         variant="outline"
         className="w-full h-fit flex flex-col justify-center items-center gap-1 md:hidden"
+        aria-label={t("command.search")}
         onClick={() => setOpen(true)}
       >
         <SearchIcon className="w-4 h-4" />
       </Button>
 
-      <CommandDialog
-        open={open}
-        onOpenChange={(state) => {
-          if (isHome) {
-            setOpen(state);
-            clear();
-          } else {
-            removeLastPage();
-          }
-        }}
-      >
+      <CommandDialog open={open} style={dialogStyle} onOpenChange={handleClose}>
         <Command shouldFilter={activePage === "PLAYLISTS"} id="main-command">
           <CommandInput
             data-testid="command-menu-input"
-            placeholder={inputPlaceholder()}
+            placeholder={inputPlaceholder}
             autoCorrect="false"
             autoCapitalize="false"
             spellCheck="false"
-            onValueChange={(value) => handleSearchChange(value)}
+            onValueChange={handleSearchChange}
             onKeyDown={handleInputKeyDown}
           />
           <ScrollArea className="max-h-[500px] 2xl:max-h-[700px]">
             <CommandList className="max-h-fit pr-1">
-              <CommandEmpty>{t("command.noResults")}</CommandEmpty>
-
-              {showNotFoundMessage && (
+              {showNotFoundMessage ? (
                 <div className="flex justify-center items-center p-4 mt-2 mx-2 bg-accent/40 rounded border border-border">
                   <p className="text-sm">{t("command.noResults")}</p>
                 </div>
+              ) : (
+                <CommandEmpty>{t("command.noResults")}</CommandEmpty>
               )}
 
               {showAlbumGroup && (

@@ -64,6 +64,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
+      sourcemap: true,
       minify: "terser",
       rollupOptions: {
         external: ["bufferutil", "utf-8-validate"],

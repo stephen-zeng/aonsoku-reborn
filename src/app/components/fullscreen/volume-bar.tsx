@@ -3,8 +3,10 @@ import { useTranslation } from "react-i18next";
 import { VolumeIcon } from "@/app/components/icons/volume-icon";
 import { Button } from "@/app/components/ui/button";
 import { Slider } from "@/app/components/ui/slider";
+import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
 import { useMuteToggle } from "@/app/hooks/use-mute-toggle";
 import { usePlayerVolume, useVolumeSettings } from "@/store/player.store";
+import { isIOS } from "@/utils/platform";
 
 export function VolumeBar() {
   const { volume, handleMuteClick } = useMuteToggle();
@@ -12,16 +14,19 @@ export function VolumeBar() {
   const { min, max, step } = useVolumeSettings();
   const wheelRafRef = useRef<number | null>(null);
   const { t } = useTranslation();
+  const ios = isIOS();
+  const displayVolume = ios ? 100 : volume;
+  const { hoverBg10 } = useFullscreenContrast();
 
   const handleWheel = useCallback(
     (e: WheelEvent<HTMLDivElement>) => {
-      if (wheelRafRef.current !== null) return;
+      if (ios || wheelRafRef.current !== null) return;
       wheelRafRef.current = requestAnimationFrame(() => {
         handleVolumeWheel(e.deltaY > 0);
         wheelRafRef.current = null;
       });
     },
-    [handleVolumeWheel],
+    [handleVolumeWheel, ios],
   );
 
   return (
@@ -33,24 +38,30 @@ export function VolumeBar() {
       <Button
         variant="ghost"
         size="icon"
-        className="size-8 p-0 shrink-0 hover:bg-foreground/10"
+        className={`size-8 p-0 shrink-0 ${hoverBg10}`}
         onClick={handleMuteClick}
+        disabled={ios}
         aria-label={
           volume === 0
             ? t("player.tooltips.volume.unmute")
             : t("player.tooltips.volume.mute")
         }
       >
-        <VolumeIcon volume={volume} size={16} className="text-foreground/70" />
+        <VolumeIcon
+          volume={displayVolume}
+          size={16}
+          className="text-foreground/70"
+        />
       </Button>
       <Slider
         variant="secondary"
-        value={[volume]}
+        value={[displayVolume]}
         min={min}
         max={max}
         step={step}
         className="h-3 w-full min-w-0"
         onValueChange={([value]) => setVolume(value)}
+        disabled={ios}
         aria-label={t("player.tooltips.volume.mute")}
       />
       <VolumeIcon

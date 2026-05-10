@@ -3,6 +3,7 @@ import { RefObject, useMemo } from "react";
 import { ProgressSlider } from "@/app/components/ui/slider";
 import { useAudioSeeking } from "@/app/hooks/use-audio-seeking";
 import {
+  usePlayerBufferedProgress,
   usePlayerDuration,
   usePlayerIsBuffering,
   usePlayerMediaType,
@@ -17,6 +18,7 @@ interface PlayerProgressProps {
 
 export function PlayerProgress({ audioRef }: PlayerProgressProps) {
   const progress = usePlayerProgress();
+  const bufferedProgress = usePlayerBufferedProgress();
   const currentDuration = usePlayerDuration();
   const isBuffering = usePlayerIsBuffering();
   const hasQueueSongs = useHasQueueSongs();
@@ -29,7 +31,6 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
     isLocalSeeking,
     handleSeeking,
     handleSeeked,
-    handleSeekedFallback,
   } = useAudioSeeking({ audioRef });
 
   const currentTime = convertSecondsToTime(
@@ -73,11 +74,9 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
           step={1}
           className="cursor-pointer w-[32rem]"
           isBuffering={isBuffering}
+          bufferedProgress={bufferedProgress}
           onValueChange={([value]) => handleSeeking(value)}
           onValueCommit={([value]) => handleSeeked(value)}
-          onPointerUp={handleSeekedFallback}
-          onMouseUp={handleSeekedFallback}
-          onTouchEnd={handleSeekedFallback}
           data-testid="player-progress-slider"
         />
       ) : (

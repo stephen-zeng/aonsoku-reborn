@@ -1,0 +1,11 @@
+allowBuilds:
+  '@applemusic-like-lyrics/core': true
+  '@applemusic-like-lyrics/lyric': true
+  '@applemusic-like-lyrics/react': true
+  bufferutil: true
+  cypress: true
+  electron: true
+  electron-winstaller: true
+  esbuild: true
+  register-scheme: true
+  utf-8-validate: true

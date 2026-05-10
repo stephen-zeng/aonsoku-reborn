@@ -440,6 +440,13 @@ export function DataTable<TData, TValue>({
                         )}
                         style={columnDef.style}
                         role="columnheader"
+                        onClick={(e) => {
+                          const target = e.target as HTMLElement;
+                          if (target.closest("button")) return;
+                          if (selectedRows.length > 0) {
+                            setRowSelection({});
+                          }
+                        }}
                       >
                         {header.isPlaceholder
                           ? null
@@ -464,10 +471,15 @@ export function DataTable<TData, TValue>({
                       discNumberIndexes.includes(index) && (
                         <div
                           className={clsx(
-                            "w-full h-14 flex flex-row items-center transition-colors text-muted-foreground",
+                            "w-full h-14 flex flex-row items-center text-muted-foreground",
                             isClassic && "border-b",
                           )}
                           role="row"
+                          onClick={() => {
+                            if (selectedRows.length > 0) {
+                              setRowSelection({});
+                            }
+                          }}
                         >
                           <div className="w-12 flex items-center justify-center">
                             <Disc2Icon strokeWidth={1.75} />

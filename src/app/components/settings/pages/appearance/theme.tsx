@@ -2,29 +2,118 @@ import clsx from "clsx";
 import { Check, Minus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ContentItemTitle } from "@/app/components/settings/section";
-import { appThemes } from "@/app/observers/theme-observer";
 import { useTheme } from "@/store/theme.store";
-import { Theme } from "@/types/themeContext";
+import {
+  Theme,
+  ThemeMode,
+  darkThemes,
+  lightThemes,
+  themeGroups,
+  themeModeItems,
+} from "@/types/themeContext";
 
 export function ThemeSettingsPicker() {
   const { t } = useTranslation();
-  const { theme: currentTheme, setTheme } = useTheme();
+  const {
+    themeMode,
+    lightTheme,
+    darkTheme,
+    setThemeMode,
+    setLightTheme,
+    setDarkTheme,
+  } = useTheme();
 
   return (
     <div className="h-full space-y-4">
       <ContentItemTitle>{t("theme.label")}</ContentItemTitle>
-      <div className="w-full h-full grid grid-cols-4 gap-3">
-        {appThemes.map((theme) => {
-          const isActive = theme === currentTheme;
-
-          return (
-            <div key={theme} onClick={() => setTheme(theme)}>
-              <ThemePlaceholder theme={theme} />
-              <ThemeTitle theme={theme} isActive={isActive} />
+      <ThemeModeSelector mode={themeMode} onModeChange={setThemeMode} />
+      {themeMode === ThemeMode.System ? (
+        <div className="space-y-4">
+          {themeGroups.map((group) => (
+            <div key={group.key}>
+              <p className="text-xs font-medium text-muted-foreground mb-2">
+                {t(group.label)}
+              </p>
+              <ThemeGrid
+                themes={group.themes}
+                activeTheme={group.key === "light" ? lightTheme : darkTheme}
+                onThemeChange={
+                  group.key === "light" ? setLightTheme : setDarkTheme
+                }
+              />
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <ThemeGrid
+          themes={themeMode === ThemeMode.Light ? lightThemes : darkThemes}
+          activeTheme={themeMode === ThemeMode.Light ? lightTheme : darkTheme}
+          onThemeChange={
+            themeMode === ThemeMode.Light ? setLightTheme : setDarkTheme
+          }
+        />
+      )}
+    </div>
+  );
+}
+
+function ThemeModeSelector({
+  mode,
+  onModeChange,
+}: {
+  mode: ThemeMode;
+  onModeChange: (mode: ThemeMode) => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="grid w-full grid-cols-3 rounded-lg border border-border p-0.5 gap-0.5 sm:inline-flex sm:w-auto">
+      {themeModeItems.map(({ value, labelKey, icon: Icon }) => (
+        <button
+          key={value}
+          type="button"
+          onClick={() => onModeChange(value)}
+          className={clsx(
+            "inline-flex min-h-11 items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md sm:min-h-8",
+            mode === value
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted",
+          )}
+        >
+          <Icon size={14} />
+          {t(labelKey)}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ThemeGrid({
+  themes,
+  activeTheme,
+  onThemeChange,
+}: {
+  themes: Theme[];
+  activeTheme: Theme;
+  onThemeChange: (theme: Theme) => void;
+}) {
+  return (
+    <div className="w-full h-full grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {themes.map((theme) => {
+        const isActive = theme === activeTheme;
+
+        return (
+          <button
+            key={theme}
+            type="button"
+            className="text-left"
+            onClick={() => onThemeChange(theme)}
+          >
+            <ThemePlaceholder theme={theme} />
+            <ThemeTitle theme={theme} isActive={isActive} />
+          </button>
+        );
+      })}
     </div>
   );
 }

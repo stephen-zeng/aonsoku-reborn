@@ -1,7 +1,7 @@
 {
   "about": {
     "apiVersion": "API version",
-    "buildTime": "Build Time",
+    "buildTime": "Byggtid",
     "client": "Klient",
     "server": "Server",
     "toasts": {
@@ -14,6 +14,10 @@
     "buttons": {
       "dislike": "Ta bort like från {{name}}",
       "like": "Gilla {{name}}"
+    },
+    "detail": {
+      "songsUnavailable": "Låtlistan är inte tillgänglig offline. Synkronisera ditt bibliotek för att göra låtar tillgängliga.",
+      "songsUnavailableTitle": "Låtar inte tillgängliga"
     },
     "headline": "Album",
     "info": {
@@ -104,13 +108,8 @@
       "yy": "%d år"
     }
   },
-  "downloads": {
-    "completed": "Din fil har laddats ner.",
-    "failed": "Det uppstod ett fel vid nedladdningen av din fil.",
-    "started": "Nedladdning startad."
-  },
   "error": {
-    "notFound": "Not found"
+    "notFound": "Hittades inte"
   },
   "favorites": {
     "buttons": {
@@ -124,31 +123,31 @@
     "songCount_other": "{{count}} låtar"
   },
   "fullscreen": {
-    "emptyQueue": "No songs in queue",
+    "emptyQueue": "Inga låtar i kön",
     "loadingLyrics": "Letar efter texter…",
     "lyrics": "Text",
     "noLyrics": "Ingen låttext hittades",
     "playing": "Spelar nu",
     "queue": "Kö",
-    "queueContinue": "Continue Playing",
-    "queueFromSource": "From {{source}}",
-    "queueHistory": "History",
-    "queueRepeating": "Repeating",
+    "queueContinue": "Fortsätt spela",
+    "queueFromSource": "Från {{source}}",
+    "queueHistory": "Historik",
+    "queueRepeating": "Upprepar",
     "switchButton": "Byt till storspelare"
   },
   "generic": {
     "beta": "Beta",
-    "clear": "Clear",
+    "clear": "Rensa",
     "hideDetails": "Göm detaljer",
     "loading": "Laddar…",
     "seeMore": "Se mer",
     "showDetails": "Visa detaljer",
     "viewAll": "Visa allt",
     "viewMode": {
-      "label": "View Mode",
+      "label": "Visningsläge",
       "modes": {
-        "list": "List",
-        "poster": "Poster"
+        "list": "Lista",
+        "poster": "Affisch"
       }
     }
   },
@@ -161,67 +160,67 @@
   "lanControl": {
     "remote": {
       "actions": {
-        "connect": "Connect",
-        "connecting": "Connecting...",
-        "disconnect": "Disconnect",
-        "refresh": "Refresh state"
+        "connect": "Anslut",
+        "connecting": "Ansluter...",
+        "disconnect": "Koppla från",
+        "refresh": "Uppdatera status"
       },
-      "address": "Server address",
-      "autoConnectFailed": "Failed to connect to remote device, entering local playback mode",
-      "clickToPlay": "Click to play",
+      "address": "Serveradress",
+      "autoConnectFailed": "Misslyckades att ansluta till fjärrenheten, går in i lokalt uppspelningsläge",
+      "clickToPlay": "Klicka för att spela",
       "controls": {
-        "next": "Next",
-        "pause": "Pause",
-        "play": "Play",
-        "previous": "Previous",
-        "repeat": "Toggle repeat",
-        "shuffle": "Toggle shuffle"
+        "next": "Nästa",
+        "pause": "Pausa",
+        "play": "Spela",
+        "previous": "Föregående",
+        "repeat": "Växla repetition",
+        "shuffle": "Växla shuffle-läge"
       },
-      "currentlyPlaying": "Currently playing",
-      "description": "Connect to a LAN control server and manage playback remotely.",
-      "emptyArtist": "Unknown artist",
-      "emptyTitle": "No track playing",
-      "ip": "IP Address",
-      "items": "items",
+      "currentlyPlaying": "Spelar just nu",
+      "description": "Anslut till en LAN-kontrollserver och hantera uppspelning på distans.",
+      "emptyArtist": "Okänd artist",
+      "emptyTitle": "Ingen låt spelas",
+      "ip": "IP-adress",
+      "items": "objekt",
       "library": {
-        "albums": "Albums",
-        "back": "Back",
-        "loading": "Loading...",
-        "noAlbums": "No albums available",
-        "noPlaylists": "No playlists available",
-        "noResults": "No results found",
-        "playlists": "Playlists",
-        "search": "Search",
-        "searchButton": "Search",
-        "searchPlaceholder": "Search songs, albums...",
-        "searching": "Searching...",
-        "songs": "Songs"
+        "albums": "Album",
+        "back": "Tillbaka",
+        "loading": "Laddar...",
+        "noAlbums": "Inga album tillgängliga",
+        "noPlaylists": "Inga spellistor tillgängliga",
+        "noResults": "Inga resultat hittades",
+        "playlists": "Spellistor",
+        "search": "Sök",
+        "searchButton": "Sök",
+        "searchPlaceholder": "Sök låtar, album...",
+        "searching": "Söker...",
+        "songs": "Låtar"
       },
-      "loadingSong": "Loading...",
-      "menu": "Control other devices",
-      "nowPlaying": "Now playing",
-      "password": "Access code",
-      "playing": "Playing",
+      "loadingSong": "Laddar...",
+      "menu": "Styr andra enheter",
+      "nowPlaying": "Spelar nu",
+      "password": "Åtkomstkod",
+      "playing": "Spelar",
       "port": "Port",
-      "queue": "Playback queue",
-      "queueEmpty": "Queue is empty",
-      "serverRunning": "This device is currently running as a LAN Control server. You cannot control other devices while this device is in server mode.",
+      "queue": "Uppspelningskö",
+      "queueEmpty": "Kön är tom",
+      "serverRunning": "Denna enhet körs för närvarande som en LAN-kontrollserver. Du kan inte styra andra enheter medan denna enhet är i serverläge.",
       "status": {
-        "authenticating": "Authenticating",
-        "connected": "Connected",
-        "connecting": "Connecting",
-        "disconnected": "Disconnected",
-        "error": "Error",
+        "authenticating": "Autentiserar",
+        "connected": "Ansluten",
+        "connecting": "Ansluter",
+        "disconnected": "Frånkopplad",
+        "error": "Fel",
         "label": "Status"
       },
       "tabs": {
-        "control": "Control",
-        "library": "Library"
+        "control": "Kontroll",
+        "library": "Bibliotek"
       },
-      "title": "Control other devices",
-      "unknownDevice": "Unknown device",
+      "title": "Styr andra enheter",
+      "unknownDevice": "Okänd enhet",
       "version": "v{{version}}",
-      "volume": "Volume: {{volume}}%"
+      "volume": "Volym: {{volume}}%"
     }
   },
   "login": {
@@ -264,23 +263,35 @@
     "unsupported_message": "{{app_name}} är inte kompatibel med mobiltelefoner."
   },
   "offline": {
-    "disconnected": "Server unreachable. Entering offline mode.",
-    "mode": "Offline",
-    "reconnectFailed": "Could not reconnect. Continuing in offline mode.",
-    "reconnected": "Reconnected to server",
-    "reconnecting": "Reconnecting…",
-    "searchUnavailable": "Search requires an offline library sync.",
-    "songUnavailable": "This song is not available offline"
+    "badge": {
+      "cloud": "Behöver nätverk",
+      "downloaded": "Nedladdad",
+      "downloading": "Laddar ner…",
+      "orphan": "Borttagen från servern (fortfarande spelbar offline)",
+      "smart": "Sparad av en smart nedladdningsregel"
+    },
+    "disconnected": "Servern nås inte",
+    "metered": "Begränsad",
+    "meteredTooltip": "Du har en långsam eller begränsad uppkoppling. Bakgrundssynkronisering och smarta nedladdningar är pausade — tryck på en nedladdningsknapp för att åsidosätta.",
+    "mode": "Offline-läge",
+    "reconnectFailed": "Kunde inte återansluta. Fortsätter i offlineläge.",
+    "reconnected": "Återansluten till servern",
+    "reconnecting": "Återansluter…",
+    "searchUnavailable": "Sökning kräver en offline-synkronisering av biblioteket.",
+    "songUnavailable": "Den här låten är inte tillgänglig offline"
   },
   "options": {
-    "addLast": "Lägg till i kön",
+    "addLast": "Sätt in sist",
     "download": "Ladda ner",
+    "downloadAlbum": "Ladda ner album",
+    "downloadArtist": "Ladda ner artist",
+    "downloadPlaylist": "Ladda ner spellista",
     "goto": {
-      "album": "Go to album",
-      "artist": "Go to artist"
+      "album": "Gå till album",
+      "artist": "Gå till artist"
     },
     "info": "Få info",
-    "like": "Like",
+    "like": "Gilla",
     "play": "Spela",
     "playNext": "Spela nästa",
     "playlist": {
@@ -292,40 +303,41 @@
       "removeSong": "Ta bort från spellista",
       "search": "Sök efter en spellista"
     },
-    "removeFromQueue": "Remove from queue",
-    "unlike": "Unlike"
+    "removeDownload": "Ta bort nedladdning",
+    "removeFromQueue": "Ta bort från kön",
+    "unlike": "Ta bort like"
   },
   "player": {
     "noRadioPlaying": "Ingen radio spelar",
     "noSongPlaying": "Ingen låt spelas",
     "tooltips": {
       "dislike": "Ta bort like från {{song}} av {{artist}}",
-      "forward": "Forward {{amount}} seconds",
+      "forward": "Spola fram {{amount}} sekunder",
       "like": "Gilla {{song}} från {{artist}}",
       "miniPlayer": {
-        "close": "Close Miniplayer",
-        "open": "Open Miniplayer"
+        "close": "Stäng minispelaren",
+        "open": "Öppna minispelaren"
       },
       "next": "Nästa",
       "pause": "Pausa",
       "play": "Spela",
       "previous": "Föregående",
-      "progress": "Seek",
+      "progress": "Sök",
       "repeat": {
         "disable": "Inaktivera repetition",
         "enable": "Aktivera repetition",
         "enableOne": "Aktivera repetition ett"
       },
-      "rewind": "Rewind {{amount}} seconds",
+      "rewind": "Spola tillbaka {{amount}} sekunder",
       "shuffle": {
         "disable": "Inaktivera shuffle-läge",
         "enable": "Aktivera shuffle-läge"
       },
-      "star": "Star current song",
-      "unstar": "Unstar current song",
+      "star": "Stjärnmarkera aktuell låt",
+      "unstar": "Avstjärnmarkera aktuell låt",
       "volume": {
-        "mute": "Mute",
-        "unmute": "Unmute"
+        "mute": "Tysta",
+        "unmute": "Återställ ljud"
       }
     }
   },
@@ -391,8 +403,8 @@
   },
   "queue": {
     "clear": "Rensa kö",
-    "close": "Close queue",
-    "open": "Open queue",
+    "close": "Stäng kö",
+    "open": "Öppna kö",
     "title": "Kö"
   },
   "radios": {
@@ -468,30 +480,18 @@
   "settings": {
     "accounts": {
       "discord": {
-        "description": "Share your currently playing song with friends on Discord.",
+        "description": "Dela din aktuella låt med vänner på Discord.",
         "enabled": {
-          "label": "Enable Integration"
+          "label": "Aktivera integration"
         },
         "group": "Discord Rich Presence"
       }
     },
     "appearance": {
-      "colors": {
-        "bigPlayer": {
-          "blurSize": "Image Blur Size",
-          "label": "Big Player"
-        },
-        "description": "Select whether the app should use the dominant color from the currently playing album art as the background.",
-        "group": "Dynamic Colors",
-        "queue": {
-          "intensity": "Color Intensity Level",
-          "label": "Queue and Lyrics"
-        }
-      },
       "general": {
         "albumCoverForSongs": {
-          "info": "When enabled, every song artwork request uses the album cover to reduce loading time.",
-          "label": "Always use album covers"
+          "info": "När aktiverad använder varje låtbildsförfrågan albumomslaget för att minska laddningstiden.",
+          "label": "Använd alltid albumomslag"
         },
         "description": "Anpassa appens utseende och visningsbeteenden.",
         "fullscreen": {
@@ -503,11 +503,11 @@
     },
     "audio": {
       "history": {
-        "description": "Songs that play for more than 10 seconds are recorded in your play history.",
-        "group": "Play History",
+        "description": "Låtar som spelas i mer än 10 sekunder registreras i din spelhistorik.",
+        "group": "Spelhistorik",
         "maxSize": {
-          "info": "The maximum number of songs to keep in play history. Older entries are removed when the limit is exceeded.",
-          "label": "Maximum history size"
+          "info": "Maximalt antal låtar att behålla i spelhistoriken. Äldre poster tas bort när gränsen överskrids.",
+          "label": "Maximal historikstorlek"
         }
       },
       "lyrics": {
@@ -518,8 +518,8 @@
           "label": "Föredra synkroniserade texter"
         },
         "showTranslation": {
-          "info": "When available, show translated lyrics below the original lyrics.",
-          "label": "Show translation"
+          "info": "När tillgängligt, visa översatta texter under originaltexten.",
+          "label": "Visa översättning"
         }
       },
       "replayGain": {
@@ -530,8 +530,8 @@
         "description": "Normaliserar automatiskt uppspelningsnivåerna för ljud för en konsekvent lyssningsupplevelse.",
         "enabled": "Aktiverad",
         "error": {
-          "button": "Try again",
-          "message": "There was an error playing the track using Replay Gain."
+          "button": "Försök igen",
+          "message": "Ett fel uppstod vid uppspelning av låten med Replay Gain."
         },
         "group": "ReplayGain",
         "mode": {
@@ -553,184 +553,300 @@
     },
     "desktop": {
       "general": {
-        "description": "Customize preferences for the desktop application.",
-        "group": "General",
+        "description": "Anpassa inställningar för skrivbordsprogrammet.",
+        "group": "Allmänt",
         "tray": {
-          "info": "When enabled, the app will minimize to the system tray instead of closing when you click the close button.",
-          "label": "Minimize to Tray"
+          "info": "När aktiverad minimeras appen till systemfältet istället för att stängas när du klickar på stängningsknappen.",
+          "label": "Minimera till systemfältet"
         }
       },
       "lanControl": {
         "address": {
-          "info": "Available server addresses for LAN control access.",
-          "label": "Server Addresses"
+          "info": "Tillgängliga serveradresser för LAN-kontrollåtkomst.",
+          "label": "Serveradresser"
         },
-        "addressCopied": "Server address copied to clipboard.",
+        "addressCopied": "Serveradressen kopierad till urklipp.",
         "allowNavidromeAuth": {
-          "info": "Enable authentication using Navidrome credentials.",
-          "label": "Allow Navidrome Authentication"
+          "info": "Aktivera autentisering med Navidrome-inloggningsuppgifter.",
+          "label": "Tillåt Navidrome-autentisering"
         },
-        "copyAddress": "Copy address",
-        "copyPassword": "Copy password",
-        "description": "Manage LAN control settings for remote access.",
+        "copyAddress": "Kopiera adress",
+        "copyPassword": "Kopiera lösenord",
+        "description": "Hantera LAN-kontrollinställningar för fjärråtkomst.",
         "enable": {
-          "info": "Turn on LAN control to allow remote access to this application.",
-          "label": "Enable LAN Control"
+          "info": "Slå på LAN-kontroll för att tillåta fjärråtkomst till denna applikation.",
+          "label": "Aktivera LAN-kontroll"
         },
-        "group": "LAN Control",
+        "group": "LAN-kontroll",
         "password": {
-          "info": "Set a password for secure access to the LAN control server.",
-          "label": "Password"
+          "info": "Ange ett lösenord för säker åtkomst till LAN-kontrollservern.",
+          "label": "Lösenord"
         },
-        "passwordCopied": "Password copied to clipboard.",
-        "passwordRegenerated": "Password regenerated successfully.",
+        "passwordCopied": "Lösenordet kopierat till urklipp.",
+        "passwordRegenerated": "Lösenordet återskapat framgångsrikt.",
         "port": {
-          "info": "Specify the port number for the LAN control server.",
+          "info": "Ange portnumret för LAN-kontrollservern.",
           "label": "Port"
         },
-        "regeneratePassword": "Regenerate password",
-        "serverError": "Failed to start LAN control server.",
-        "serverStarted": "LAN control server started successfully."
+        "regeneratePassword": "Återskapa lösenord",
+        "serverError": "Misslyckades att starta LAN-kontrollservern.",
+        "serverStarted": "LAN-kontrollservern startades framgångsrikt."
       },
       "updates": {
-        "availableVersion": "Version {{version}} available",
+        "availableVersion": "Version {{version}} tillgänglig",
         "checkNow": {
-          "info": "Manually check for available updates.",
-          "label": "Check for Updates"
+          "info": "Sök manuellt efter tillgängliga uppdateringar.",
+          "label": "Sök efter uppdateringar"
         },
-        "checking": "Checking for updates...",
-        "checkingManually": "Checking for updates...",
+        "checking": "Söker efter uppdateringar...",
+        "checkingManually": "Söker efter uppdateringar...",
         "currentVersion": {
-          "info": "The version of Aonsoku you are currently running.",
-          "label": "Current Version"
+          "info": "Versionen av Aonsoku du kör för närvarande.",
+          "label": "Aktuell version"
         },
-        "description": "Check for and install application updates.",
-        "download": "Download Update",
-        "downloadError": "Download Failed",
-        "downloadStarted": "Download Started",
-        "downloadStartedDesc": "Update download has begun",
-        "downloading": "Downloading... {{percent}}%",
-        "group": "App Updates",
-        "installNow": "Install and Restart",
-        "readyToInstall": "Ready to install (restart required)",
+        "description": "Sök efter och installera appuppdateringar.",
+        "download": "Ladda ner uppdatering",
+        "downloadError": "Nedladdning misslyckades",
+        "downloadStarted": "Nedladdning startad",
+        "downloadStartedDesc": "Nedladdning av uppdatering har påbörjats",
+        "downloading": "Laddar ner... {{percent}}%",
+        "group": "Appuppdateringar",
+        "installNow": "Installera och starta om",
+        "readyToInstall": "Redo att installera (omstart krävs)",
         "status": {
-          "info": "The current status of application updates.",
-          "label": "Update Status"
+          "info": "Aktuell status för appuppdateringar.",
+          "label": "Uppdateringsstatus"
         },
-        "upToDate": "You're up to date",
-        "updateAvailable": "Update Available",
-        "updateAvailableDesc": "Version {{version}} is available",
-        "updateError": "Update Check Failed",
-        "updateReady": "Update Ready",
-        "updateReadyDesc": "Update will be installed when you restart the app"
+        "upToDate": "Du är uppdaterad",
+        "updateAvailable": "Uppdatering tillgänglig",
+        "updateAvailableDesc": "Version {{version}} är tillgänglig",
+        "updateError": "Uppdateringskontroll misslyckades",
+        "updateReady": "Uppdatering redo",
+        "updateReadyDesc": "Uppdateringen kommer att installeras när du startar om appen"
       }
     },
     "label": "Inställningar",
     "options": {
-      "accounts": "Accounts",
+      "accounts": "Konton",
       "appearance": "Utseende",
       "audio": "Spelare & ljud",
       "content": "Innehåll",
-      "desktop": "Desktop Application",
+      "desktop": "Skrivbordsprogram",
       "language": "Språk och region",
-      "privacy": "Privacy & Security",
+      "privacy": "Integritet & säkerhet",
       "server": "Server",
-      "storage": "Storage"
+      "storage": "Offline upplevelse"
     },
     "privacy": {
       "services": {
-        "description": "Manage the external services that Aonsoku can access.",
-        "group": "External Services",
+        "description": "Hantera de externa tjänster som Aonsoku kan komma åt.",
+        "group": "Externa tjänster",
         "lrclib": {
-          "info": "LRCLIB is used to find song lyrics.",
+          "info": "LRCLIB används för att hitta låttexter.",
           "label": "LRCLIB"
         }
       }
     },
     "server": {
       "activeType": {
-        "fallback": "Fallback URL",
-        "info": "Shows whether this session is using the primary or fallback URL.",
-        "label": "Current server",
-        "none": "Not connected",
-        "primary": "Primary URL"
+        "fallback": "Reserv-URL",
+        "info": "Visar om denna session använder den primära eller reserv-URL:en.",
+        "label": "Aktuell server",
+        "none": "Inte ansluten",
+        "primary": "Primär URL"
       },
       "activeUrl": {
-        "empty": "No server selected",
-        "info": "The server URL currently used by this app session.",
-        "label": "Current URL"
+        "empty": "Ingen server vald",
+        "info": "Server-URL:en som används av denna appsession.",
+        "label": "Aktuell URL"
       },
-      "description": "Manage the primary server and optional fallback URL used at startup.",
+      "description": "Hantera den primära servern och valfri reserv-URL som används vid start.",
       "fallbackUrl": {
-        "info": "Optional server URL used when the primary URL cannot be reached at startup.",
-        "label": "Fallback URL",
+        "info": "Valfri server-URL som används när den primära URL:en inte kan nås vid start.",
+        "label": "Reserv-URL",
         "placeholder": "https://fallback-server.example.com"
       },
       "group": "Server",
-      "locked": "Server URL settings are locked by this deployment.",
+      "locked": "Server-URL-inställningarna är låsta av denna distribution.",
       "primaryUrl": {
-        "info": "The server URL Aonsoku tries first when the app starts.",
-        "label": "Primary URL",
+        "info": "Server-URL:en Aonsoku försöker först när appen startar.",
+        "label": "Primär URL",
         "placeholder": "https://your-server.example.com"
       },
-      "save": "Save server URLs",
-      "saving": "Saving...",
+      "save": "Spara server-URL:er",
+      "saving": "Sparar...",
       "toast": {
-        "error": "Unable to reach the primary or fallback server.",
-        "success": "Server URLs saved successfully."
+        "error": "Kan inte nå den primära servern eller reservservern.",
+        "success": "Server-URL:er sparade framgångsrikt."
       },
       "validation": {
-        "fallbackUrl": "Please enter a valid fallback URL.",
-        "primaryUrl": "Please enter a valid primary URL."
+        "fallbackUrl": "Ange en giltig reserv-URL.",
+        "primaryUrl": "Ange en giltig primär URL."
       }
     },
     "storage": {
       "audio": {
-        "clear": "Clear audio cache",
-        "description": "Cache audio files for instant playback on repeated listens.",
-        "enabled": "Enable audio cache",
-        "entries": "{{count}} songs cached",
-        "group": "Audio Cache",
-        "maxSize": "Maximum cache size",
-        "size": "Cache size"
+        "clear": "Rensa ljudcache",
+        "description": "Cacha ljudfiler för omedelbar uppspelning vid upprepad lyssning.",
+        "enabled": "Aktivera ljudcache",
+        "entries": "{{count}} låtar cachade",
+        "group": "Ljudcache",
+        "maxSize": "Maximal cachestorlek",
+        "size": "Cachestorlek"
+      },
+      "cacheManager": {
+        "confirmDelete": {
+          "description": "Detta kommer att ta bort '{{name}}' från cachen. Den kan laddas ner igen senare.",
+          "title": "Ta bort cachat objekt?"
+        },
+        "description": "Visa och hantera enskilda cachade objekt.",
+        "filter": {
+          "album": "Album",
+          "all": "Alla",
+          "audio": "Ljud",
+          "cover": "Omslagsbild",
+          "explicit": "Explicit",
+          "lru": "LRU",
+          "playlist": "Spellista",
+          "smart": "Smart"
+        },
+        "group": "Cachehanterare",
+        "list": {
+          "actions": "Åtgärder",
+          "cachedAt": "Cachad",
+          "delete": "Ta bort",
+          "empty": "Inga cachade objekt.",
+          "name": "Namn",
+          "removedFromServer": "Borttagen från servern",
+          "size": "Storlek",
+          "source": "Källa",
+          "total": "{{count}} objekt, {{size}} totalt",
+          "type": "Typ",
+          "type_album": "Album",
+          "type_audio": "Ljud",
+          "type_cover": "Omslag",
+          "type_playlist": "Spellista"
+        }
       },
       "coverArt": {
-        "clear": "Clear cover art cache",
-        "description": "Cache album cover images for faster loading.",
-        "enabled": "Enable cover art cache",
-        "entries": "{{count}} images cached",
-        "group": "Cover Art Cache",
-        "size": "Cache size"
+        "clear": "Rensa omslagsbildscache",
+        "description": "Cacha albumomslagsbilder för snabbare laddning.",
+        "enabled": "Aktivera omslagsbildscache",
+        "entries": "{{count}} bilder cachade",
+        "group": "Omslagsbildscache",
+        "size": "Cachestorlek"
+      },
+      "limits": {
+        "audioEntries": "{{count}} låtar cachelagrade",
+        "audioSize": "Ljudcache",
+        "clearAll": "Rensa alla cachar",
+        "clearAudio": "Rensa",
+        "clearCovers": "Rensa",
+        "coverEntries": "{{count}} bilder cachelagrade",
+        "coverSize": "Omslagsbildscache",
+        "description": "Hantera cachelagrat ljud och omslagsbildslagring.",
+        "group": "Cachelagring",
+        "imageEntries": "{{count}} bilder",
+        "maxSize": "Maximal storlek för ljudcache",
+        "pool": {
+          "assets": {
+            "description": "Album- och artistbilder cachade för snabb biblioteksrendering.",
+            "label": "Omslagsbilder"
+          },
+          "explicit": {
+            "description": "Låtar, album och spellistor du laddat ner själv. Avlägsnas aldrig automatiskt.",
+            "label": "Explicita nedladdningar"
+          },
+          "lru": {
+            "description": "Cachas opportunistiskt medan du lyssnar. Äldsta posterna avlägsnas först när kvoten överskrids.",
+            "label": "Nyligen spelade"
+          },
+          "smart": {
+            "description": "Automatiskt nedladdade genom matchande smarta regler. Rensas när den utlösande regeln slutar matcha.",
+            "label": "Smarta nedladdningar"
+          }
+        },
+        "quota": "Kvot",
+        "songEntries": "{{count}} låtar",
+        "unlimited": "Obegränsat"
       },
       "metadata": {
-        "clear": "Clear all caches",
-        "description": "Clear all cached data including metadata, cover art, and audio files.",
-        "group": "All Caches"
+        "clear": "Rensa alla cachar",
+        "description": "Rensa all cachad data inklusive metadata, omslagsbilder och ljudfiler.",
+        "group": "Alla cachar"
+      },
+      "offline": {
+        "description": "Cacha låtar, metadata och omslagsbilder lokalt för offlineåtkomst. Aktivera bibliotekscache för att låsa upp nedladdningskvalitet, smarta nedladdningar och synkroniseringsinställningar.",
+        "group": "Offlineupplevelse"
+      },
+      "smart": {
+        "description": "Cacha automatiskt låtar som matchar någon aktiverad regel. De avlägsnas så snart alla utlösande regler slutar matcha, och prioriteras aldrig över manuella nedladdningar.",
+        "enabled": "Aktivera smarta nedladdningar",
+        "group": "Smarta nedladdningar",
+        "rule": {
+          "favoritePlaylists": "Favoritspellistor",
+          "favoriteSongs": "Favoritlåtar"
+        }
       },
       "sync": {
-        "cancel": "Cancel",
-        "clear": "Clear",
-        "coverArt": "Include cover art",
-        "coverArtInfo": "Download all album and artist images during sync. This may use significant storage and bandwidth.",
-        "description": "Cache all metadata on every app launch for offline browsing. Audio files are never synced.",
-        "enabled": "Enable sync on launch",
-        "entries": "{{count}} items synced",
-        "group": "Sync on Launch",
-        "lastSynced": "Last synced",
-        "never": "Never",
-        "phases": {
-          "albums": "Syncing albums…",
-          "artists": "Syncing artists…",
-          "cancelled": "Sync cancelled",
-          "coverArt": "Syncing cover art…",
-          "done": "Sync complete",
-          "error": "Sync failed",
-          "genres": "Syncing genres…",
-          "idle": "Preparing…",
-          "playlists": "Syncing playlists…",
-          "songs": "Syncing songs…"
+        "cancel": "Avbryt",
+        "clear": "Rensa synkroniserad data",
+        "clearConfirm": {
+          "clear": "Rensa och inaktivera",
+          "description": "Om du inaktiverar bibliotekscachning kommer all synkroniserad biblioteksdata (artister, album, låtar, spellistor, genrer) att rensas. Du kan återaktivera det och synkronisera igen när som helst.",
+          "keep": "Behåll aktiverat",
+          "title": "Inaktivera bibliotekscachning?"
         },
-        "syncNow": "Sync Now"
+        "completed": "Klar",
+        "coverArt": "Inkludera omslagsbilder",
+        "coverArtConcurrency": "Samtidiga omslagsbilder",
+        "coverArtConcurrencyInfo": "Antal parallella nedladdningar för omslagsbilder. Högre värden snabbar upp synkroniseringen men använder mer bandbredd. Ställ in på 1 för sekventiell nedladdning.",
+        "coverArtConcurrencyOff": "Sekventiell",
+        "coverArtInfo": "Ladda ner alla album- och artistbilder under synkronisering. Detta kan använda betydande lagringsutrymme och bandbredd.",
+        "description": "Synkronisera biblioteksmetadata för offlinenavigering. Nedladdade låtar är alltid tillgängliga offline.",
+        "downloading_one": "Laddar ner {{count}} låt",
+        "downloading_other": "Laddar ner {{count}} låtar",
+        "enabled": "Synkronisera bibliotek",
+        "entries": "{{count}} objekt synkroniserade",
+        "group": "Bibliotekssynkronisering",
+        "justNow": "Just nu",
+        "lastSynced": "Senast synkroniserad",
+        "libraryCaching": "Bibliotekscachning",
+        "libraryCachingInfo": "När aktiverad cachas metadata och eventuellt låtar lokalt för offlineåtkomst. När inaktiverad är appen i rent onlineläge och ingen bakgrundssynkronisering körs.",
+        "never": "Aldrig",
+        "phases": {
+          "albums": "Synkroniserar album…",
+          "artists": "Synkroniserar artister…",
+          "cancelled": "Synkronisering avbruten",
+          "coverArt": "Synkroniserar omslagsbilder…",
+          "done": "Synkronisering klar",
+          "error": "Synkronisering misslyckades",
+          "favorites": "Synkroniserar favoriter…",
+          "genres": "Synkroniserar genrer…",
+          "idle": "Förbereder…",
+          "playlists": "Synkroniserar spellistor…",
+          "songs": "Synkroniserar låtar…"
+        },
+        "showMore": "Visa {{count}} fler",
+        "syncNow": "Synkronisera nu",
+        "tier": {
+          "t1": {
+            "description": "Favoriter · Spellistor · Genrer",
+            "label": "Grundläggande"
+          },
+          "t2": {
+            "description": "Artister · Album",
+            "label": "Biblioteksskelett"
+          },
+          "t3": {
+            "description": "All låtmetadata",
+            "label": "Fullständiga låtar"
+          },
+          "coverArt": {
+            "label": "Omslagsbilder",
+            "description": "Album- · artist- · spellistebilder"
+          }
+        }
       }
     }
   },
@@ -747,11 +863,11 @@
     },
     "playback": {
       "label": "Uppspelning",
-      "lowerVolume": "Lower volume",
+      "lowerVolume": "Sänk volymen",
       "next": "Hoppa till nästa",
       "play": "Spela / Pausa",
       "previous": "Hoppa till föregående",
-      "raiseVolume": "Raise volume",
+      "raiseVolume": "Höj volymen",
       "repeat": "Upprepa",
       "shuffle": "Shuffle-läge"
     }
@@ -786,10 +902,10 @@
       }
     },
     "sort": {
-      "album": "Album A-Z",
-      "artist": "Artist A-Z",
-      "lastAdded": "Last Added",
-      "title": "Song A-Z"
+      "album": "Album A-Ö",
+      "artist": "Artist A-Ö",
+      "lastAdded": "Senast tillagd",
+      "title": "Låt A-Ö"
     }
   },
   "table": {
@@ -799,18 +915,18 @@
     },
     "columns": {
       "album": "Album",
-      "albumArtist": "Album artist",
+      "albumArtist": "Albumartist",
       "albumCount": "Antal album",
       "albumGain": "Albumförstärkning",
       "albumPeak": "Albumtopp",
       "artist": "Artist",
-      "bitDepth": "Bit depth",
+      "bitDepth": "Bitdjup",
       "bitrate": "Bithastighet",
       "bpm": "BPM",
-      "channelCount": "Channel count",
+      "channelCount": "Kanalantal",
       "codec": "Codec",
       "comment": "Kommentar",
-      "contributors": "Contributors",
+      "contributors": "Medverkande",
       "discNumber": "Skivnummer",
       "duration": "Längd",
       "favorite": "Favorit",
@@ -821,12 +937,12 @@
       "plays": "Spelar",
       "public": "Publik",
       "quality": "Kvalitet",
-      "recordLabel": "Record label",
-      "samplingRate": "Sampling rate",
+      "recordLabel": "Skivbolag",
+      "samplingRate": "Samplingsfrekvens",
       "size": "Storlek",
       "songCount": "Antal låtar",
       "title": "Titel",
-      "track": "Track",
+      "track": "Spår",
       "trackGain": "Spårförstärkning",
       "trackPeak": "Spårtopp",
       "year": "År"
@@ -865,6 +981,10 @@
     "light": "Ljusläge",
     "marmalade-beaver": "Marmalade Beaver",
     "material-theme": "Material Tema",
+    "modeDark": "Dark",
+    "modeLabel": "Mode",
+    "modeLight": "Light",
+    "modeSystem": "System",
     "monokai-pro": "Monokai Pro",
     "night-owl-light": "Nattuggla Ljus",
     "noctis-lilac": "Noctis Lila",
@@ -896,9 +1016,9 @@
       "title": "Ny version tillgänglig!"
     },
     "sw": {
-      "error": "Update failed – Retry",
-      "refresh": "Refresh to update",
-      "updating": "Updating..."
+      "error": "Uppdatering misslyckades – Försök igen",
+      "refresh": "Uppdatera",
+      "updating": "Uppdaterar..."
     },
     "toasts": {
       "error": "Misslyckades med att installera uppdateringen. Försök att ladda ner den direkt från GitHub.",

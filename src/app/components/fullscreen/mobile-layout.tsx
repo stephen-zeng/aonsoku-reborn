@@ -4,7 +4,9 @@ import { memo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { DrawerHandle } from "@/app/components/ui/drawer";
+import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
+import { useIsTouchPrimary } from "@/app/hooks/use-input-mode";
 import { useIsShortViewport, useIsWideViewport } from "@/app/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import {
@@ -17,7 +19,7 @@ import {
   useSongColor,
 } from "@/store/player.store";
 import { ArtworkWithInfo } from "./artwork-with-info";
-import { PANEL_MAX_WIDTH } from "./constants";
+import { FULLSCREEN_QUEUE_BG_CLASS, PANEL_MAX_WIDTH } from "./constants";
 import { FullscreenControlPanel } from "./control-panel";
 import { LyricsTab } from "./lyrics";
 import { FullscreenSongQueue } from "./queue";
@@ -40,6 +42,7 @@ const MobileHeader = memo(function MobileHeader({
   compact?: boolean;
 }) {
   const { currentSongColor } = useSongColor();
+  const contrast = useFullscreenContrast();
 
   return (
     <div
@@ -51,7 +54,7 @@ const MobileHeader = memo(function MobileHeader({
       <Button
         variant="ghost"
         size="icon"
-        className="size-10 rounded-full hover:bg-foreground/20"
+        className={`size-10 rounded-full ${contrast.hoverBg}`}
         onClick={onClose}
         aria-label="Close"
       >
@@ -161,6 +164,8 @@ export const MobileLayout = memo(function MobileLayout({
   const areLyricsAligned = useLyricsAlignment();
   const isShortViewport = useIsShortViewport();
   const isWideViewport = useIsWideViewport();
+  const isTouchPrimary = useIsTouchPrimary();
+  const contrast = useFullscreenContrast();
   const useWideCenteredPlayingLayout =
     fullscreenPlayerTab === "playing" && isWideViewport && !isShortViewport;
   const useShortCompactPlayingLayout =
@@ -175,6 +180,7 @@ export const MobileLayout = memo(function MobileLayout({
     <div
       className="flex flex-col h-full w-full"
       data-testid="fullscreen-mobile-layout"
+      style={contrast.style}
     >
       <MobileHeader
         onClose={closeFullscreenPlayerWithHistory}
@@ -194,13 +200,14 @@ export const MobileLayout = memo(function MobileLayout({
               data-testid="fullscreen-playing-view"
               data-layout={playingViewLayout}
               className={cn(
-                "flex min-h-0 flex-1 flex-col items-center overflow-hidden",
+                "flex min-h-0 flex-1 flex-col items-center overflow-hidden overflow-clip",
                 useWideCenteredPlayingLayout && "justify-center",
                 useShortCompactPlayingLayout && "justify-between",
               )}
             >
               <ArtworkWithInfo
                 compact={useShortCompactPlayingLayout}
+                showTouchDragSurface={isTouchPrimary}
                 className={cn(
                   "w-full",
                   useShortCompactPlayingLayout ? "flex-1 px-4" : "min-h-0",
@@ -257,7 +264,11 @@ export const MobileLayout = memo(function MobileLayout({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={VIEW_TRANSITION}
-              className={`flex-1 overflow-hidden min-h-0 mx-auto w-full ${PANEL_MAX_WIDTH}`}
+              className={cn(
+                "flex-1 overflow-hidden min-h-0 mx-auto w-full",
+                PANEL_MAX_WIDTH,
+                FULLSCREEN_QUEUE_BG_CLASS,
+              )}
               data-vaul-no-drag
               onClick={(e) => e.stopPropagation()}
               style={

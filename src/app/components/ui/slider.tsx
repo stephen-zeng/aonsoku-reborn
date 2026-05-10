@@ -1,357 +1,455 @@
-import * as SliderPrimitive from "@radix-ui/react-slider";
 import { clsx } from "clsx";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "./tooltip";
 
 type Variant = "default" | "secondary";
 
-type SliderProps = React.ComponentPropsWithoutRef<
-  typeof SliderPrimitive.Root
-> & {
+type FullscreenContrast = {
+  sliderTrackColor: string;
+  sliderRangeColor: string;
+  sliderThumbColor: string;
+} | null;
+
+type SliderBaseProps = {
+  value?: number[];
+  defaultValue?: number[];
+  min?: number;
+  max?: number;
+  step?: number;
+  onValueChange?: (value: number[]) => void;
+  onValueCommit?: (value: number[]) => void;
+  disabled?: boolean;
   variant?: Variant;
-  tooltipValue?: string;
   isBuffering?: boolean;
+  bufferedProgress?: number;
+  contrast?: FullscreenContrast;
+} & React.HTMLAttributes<HTMLDivElement>;
+
+type DragState = {
+  pointerId: number;
+  startX: number;
+  startValue: number;
+  currentValue: number;
+  isDragging: boolean;
 };
 
-const Slider = React.forwardRef<
-  React.ElementRef<typeof SliderPrimitive.Root>,
-  SliderProps
->(
+const TAP_THRESHOLD = 5;
+
+function useSlider({
+  value: controlledValue,
+  defaultValue,
+  min = 0,
+  max = 100,
+  step = 1,
+  onValueChange,
+  onValueCommit,
+  disabled,
+  onTouchStateChange,
+}: {
+  value?: number[];
+  defaultValue?: number[];
+  min?: number;
+  max?: number;
+  step?: number;
+  onValueChange?: (value: number[]) => void;
+  onValueCommit?: (value: number[]) => void;
+  disabled?: boolean;
+  onTouchStateChange?: (isTouching: boolean) => void;
+}) {
+  const isControlled = controlledValue !== undefined;
+  const [internalValue, setInternalValue] = React.useState(() => {
+    if (defaultValue && defaultValue.length > 0) return defaultValue[0];
+    return min;
+  });
+
+  const currentValue =
+    isControlled && controlledValue.length > 0
+      ? controlledValue[0]
+      : internalValue;
+
+  const trackRef = React.useRef<HTMLDivElement>(null);
+  const dragStateRef = React.useRef<DragState | null>(null);
+  const currentValueRef = React.useRef(currentValue);
+  currentValueRef.current = currentValue;
+
+  React.useEffect(() => {
+    return () => {
+      if (dragStateRef.current) {
+        onTouchStateChange?.(false);
+        dragStateRef.current = null;
+      }
+    };
+  }, [onTouchStateChange]);
+
+  const safeStep = step || 1;
+  const range = max - min;
+
+  const computeValue = React.useCallback(
+    (clientX: number) => {
+      if (!trackRef.current) return min;
+      const rect = trackRef.current.getBoundingClientRect();
+      if (rect.width === 0) return min;
+      const ratio = Math.max(
+        0,
+        Math.min(1, (clientX - rect.left) / rect.width),
+      );
+      const raw = min + ratio * (max - min);
+      const clamped = Math.min(max, Math.max(min, raw));
+      const stepped = Math.round(clamped / safeStep) * safeStep;
+      return Number.isFinite(stepped) ? stepped : min;
+    },
+    [min, max, safeStep],
+  );
+
+  const handlePointerDown = React.useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (disabled) return;
+      if (dragStateRef.current) return;
+
+      const isTouch = e.pointerType === "touch";
+
+      if (isTouch) {
+        e.preventDefault();
+        onTouchStateChange?.(true);
+
+        const val = currentValueRef.current;
+        dragStateRef.current = {
+          pointerId: e.pointerId,
+          startX: e.clientX,
+          startValue: val,
+          currentValue: val,
+          isDragging: false,
+        };
+      } else {
+        const newValue = computeValue(e.clientX);
+        if (!isControlled) setInternalValue(newValue);
+        onValueChange?.([newValue]);
+
+        dragStateRef.current = {
+          pointerId: e.pointerId,
+          startX: e.clientX,
+          startValue: newValue,
+          currentValue: newValue,
+          isDragging: true,
+        };
+      }
+
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    },
+    [disabled, isControlled, computeValue, onValueChange, onTouchStateChange],
+  );
+
+  const handlePointerMove = React.useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const state = dragStateRef.current;
+      if (!state || state.pointerId !== e.pointerId) return;
+
+      if (e.pointerType === "touch") {
+        const deltaX = Math.abs(e.clientX - state.startX);
+        if (deltaX > TAP_THRESHOLD) {
+          state.isDragging = true;
+        }
+        if (!state.isDragging) return;
+        e.preventDefault();
+
+        if (!trackRef.current) return;
+        const rect = trackRef.current.getBoundingClientRect();
+        if (rect.width === 0) return;
+        const deltaRatio = (e.clientX - state.startX) / rect.width;
+        const deltaValue = deltaRatio * range;
+        let newValue = state.startValue + deltaValue;
+        newValue = Math.min(max, Math.max(min, newValue));
+        newValue = Math.round(newValue / safeStep) * safeStep;
+        if (!Number.isFinite(newValue)) newValue = min;
+
+        if (newValue !== state.currentValue) {
+          state.currentValue = newValue;
+          if (!isControlled) setInternalValue(newValue);
+          onValueChange?.([newValue]);
+        }
+        return;
+      }
+
+      const newValue = computeValue(e.clientX);
+      if (newValue !== state.currentValue) {
+        state.currentValue = newValue;
+        if (!isControlled) setInternalValue(newValue);
+        onValueChange?.([newValue]);
+      }
+    },
+    [isControlled, min, max, range, safeStep, computeValue, onValueChange],
+  );
+
+  const commitAndCleanup = React.useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const state = dragStateRef.current;
+      if (!state || state.pointerId !== e.pointerId) return;
+
+      if (e.pointerType === "touch" && !state.isDragging) {
+        const newValue = computeValue(e.clientX);
+        if (!isControlled) setInternalValue(newValue);
+        onValueChange?.([newValue]);
+        onValueCommit?.([newValue]);
+      } else if (state.isDragging) {
+        onValueCommit?.([state.currentValue]);
+      }
+
+      if (e.pointerType === "touch") {
+        onTouchStateChange?.(false);
+      }
+
+      dragStateRef.current = null;
+    },
+    [
+      isControlled,
+      computeValue,
+      onValueChange,
+      onValueCommit,
+      onTouchStateChange,
+    ],
+  );
+
+  const percentage = range === 0 ? 0 : ((currentValue - min) / range) * 100;
+
+  return {
+    trackRef,
+    currentValue,
+    percentage,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp: commitAndCleanup,
+    handlePointerCancel: commitAndCleanup,
+  };
+}
+
+const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
   (
     {
       className,
-      tooltipValue,
       variant = "default",
       isBuffering = false,
+      bufferedProgress = 0,
+      contrast,
+      value,
+      defaultValue,
+      min,
+      max,
+      step,
+      onValueChange,
+      onValueCommit,
+      disabled,
       ...props
     },
     ref,
   ) => {
-    const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
-      event.preventDefault();
-    };
+    const [isTouching, setIsTouching] = React.useState(false);
 
-    const [showTooltip, setShowTooltip] = React.useState(false);
+    const {
+      trackRef,
+      percentage,
+      handlePointerDown,
+      handlePointerMove,
+      handlePointerUp,
+      handlePointerCancel,
+    } = useSlider({
+      value,
+      defaultValue,
+      min,
+      max,
+      step,
+      onValueChange,
+      onValueCommit,
+      disabled,
+      onTouchStateChange: setIsTouching,
+    });
 
     return (
-      <SliderPrimitive.Root
+      <div
         ref={ref}
         aria-busy={isBuffering || undefined}
         className={cn(
-          "relative h-3 flex w-full touch-none select-none items-center cursor-pointer",
+          "group relative h-3 flex w-full touch-none select-none items-center cursor-pointer",
           className,
         )}
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
         {...props}
       >
-        <SliderPrimitive.Track
+        <div
+          ref={trackRef}
           className={clsx(
-            "relative h-1 w-full grow overflow-hidden rounded-full select-none",
+            "relative w-full grow overflow-hidden rounded-full select-none transition-[height] duration-150 ease-out",
+            isTouching ? "h-[10px]" : "h-1",
             !isBuffering && variant === "default" && "bg-secondary",
             isBuffering && "buffer-track",
             isBuffering && variant === "secondary" && "buffer-secondary",
-            !isBuffering && variant === "secondary" && "bg-muted-foreground/70",
-          )}
-          onContextMenu={handleContextMenu}
-        >
-          <SliderPrimitive.Range
-            className={clsx(
-              "absolute h-full select-none rounded",
-              variant === "default" && "bg-primary",
-              variant === "secondary" && "bg-secondary-foreground",
-            )}
-            onContextMenu={handleContextMenu}
-          />
-        </SliderPrimitive.Track>
-
-        <SliderTooltip
-          open={showTooltip && tooltipValue !== undefined}
-          variant={variant}
-          value={tooltipValue ?? ""}
-          align="center"
-        >
-          <SliderPrimitive.Thumb
-            className={clsx(
-              "block opacity-0 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full",
-              "border-2 ring-offset-background transition-[background-color,opacity]",
-              "focus-visible:outline-none focus-visible:ring-transparent",
-              "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
-              showTooltip && "opacity-100",
-              variant === "default" && "bg-foreground border-foreground",
+            !isBuffering &&
               variant === "secondary" &&
-                "bg-secondary-foreground border-secondary-foreground",
-            )}
-            onKeyDown={(e) => e.preventDefault()}
+              (contrast?.sliderTrackColor ?? "bg-muted-foreground/70"),
+          )}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <BufferedProgressIndicator
+            bufferedProgress={bufferedProgress}
+            max={max ?? 100}
           />
-        </SliderTooltip>
-      </SliderPrimitive.Root>
+          <div
+            className={clsx(
+              "absolute h-full select-none rounded-full",
+              variant === "default" && "bg-primary",
+              variant === "secondary" &&
+                (contrast?.sliderRangeColor ?? "bg-secondary-foreground"),
+            )}
+            style={{ width: `${percentage}%` }}
+          />
+        </div>
+
+        <div
+          className={clsx(
+            "absolute top-1/2 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full border-2 shadow-md",
+            "ring-offset-background transition-[background-color,opacity]",
+            "focus-visible:outline-none focus-visible:ring-transparent",
+            "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
+            "opacity-0 group-hover:opacity-100",
+            variant === "default" && "bg-foreground border-foreground",
+            variant === "secondary" &&
+              (contrast?.sliderThumbColor ??
+                "bg-secondary-foreground border-secondary-foreground"),
+          )}
+          style={{
+            left: `${percentage}%`,
+            transform: "translate(-50%, -50%)",
+          }}
+        />
+      </div>
     );
   },
 );
-Slider.displayName = SliderPrimitive.Root.displayName;
+Slider.displayName = "Slider";
 
-export { Slider };
-
-type SliderTooltipProps = React.ComponentPropsWithoutRef<
-  typeof TooltipContent
-> & {
-  open: boolean;
-  value: string;
-  variant: Variant;
-  position?: number;
-};
-
-function SliderTooltip({
-  open,
-  value,
-  variant,
-  children,
-  position,
-  ...props
-}: SliderTooltipProps) {
-  const contentRef = React.useRef<HTMLDivElement | null>(null);
-
-  const alignOffset = React.useMemo(() => {
-    if (!position || !contentRef.current) return undefined;
-
-    const contentWidth = contentRef.current.getBoundingClientRect().width;
-    return position - contentWidth / 2;
-  }, [position]);
+function BufferedProgressIndicator({
+  bufferedProgress,
+  max,
+}: {
+  bufferedProgress: number;
+  max: number;
+}) {
+  const safeMax = Number.isFinite(max) && max > 0 ? max : 100;
+  const percentage = Math.min((bufferedProgress / safeMax) * 100, 100);
 
   return (
-    <TooltipProvider delayDuration={0}>
-      <Tooltip open={open}>
-        <TooltipTrigger asChild>{children}</TooltipTrigger>
-        <TooltipContent
-          ref={contentRef}
-          className={clsx(
-            "px-2 py-1",
-            variant === "default" && "bg-background",
-            variant === "secondary" &&
-              "bg-secondary-foreground border-muted-foreground/50 text-secondary font-semibold text-base",
-          )}
-          sticky="always"
-          hideWhenDetached={true}
-          onClick={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.stopPropagation()}
-          onMouseUp={(e) => e.stopPropagation()}
-          onPointerDown={(e) => e.stopPropagation()}
-          onPointerUp={(e) => e.stopPropagation()}
-          style={{ cursor: "default" }}
-          alignOffset={alignOffset}
-          {...props}
-        >
-          <p>{value}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <div
+      className="absolute h-full bg-muted-foreground/30 rounded-full"
+      style={{ width: `${percentage}%` }}
+      aria-hidden="true"
+      data-buffered-progress
+    />
   );
 }
 
-type ProgressSliderProps = React.ComponentPropsWithoutRef<
-  typeof SliderPrimitive.Root
-> & {
-  variant?: Variant;
-  tooltipValue?: string;
-  tooltipTransformer?: (value: number) => string;
-  isBuffering?: boolean;
-};
+export { Slider };
 
-export function ProgressSlider(props: ProgressSliderProps) {
+export function ProgressSlider(props: SliderBaseProps) {
   const {
     className,
-    tooltipValue,
-    tooltipTransformer,
     variant = "default",
     isBuffering = false,
+    bufferedProgress = 0,
+    contrast,
+    value,
+    defaultValue,
+    min,
+    max,
+    step,
     onValueChange,
+    onValueCommit,
+    disabled,
     ...rest
   } = props;
 
-  const sliderRef = React.useRef<HTMLSpanElement | null>(null);
-  const frameId = React.useRef<number | null>(null);
+  const [isTouching, setIsTouching] = React.useState(false);
 
-  const [showTooltip, setShowTooltip] = React.useState(false);
-  const [tooltipComputedValue, setTooltipComputedValue] = React.useState(0);
-  const [cursorPosition, setCursorPosition] = React.useState(0);
-
-  const maxValue = props.max ?? 0;
-
-  const enableTooltip = React.useMemo(() => {
-    const hasAnyTooltipProps =
-      tooltipValue !== undefined || tooltipTransformer !== undefined;
-
-    return showTooltip && hasAnyTooltipProps;
-  }, [showTooltip, tooltipTransformer, tooltipValue]);
-
-  const formattedTooltipValue = React.useMemo(() => {
-    if (typeof tooltipTransformer === "undefined" && tooltipValue) {
-      return tooltipValue;
-    }
-
-    if (tooltipTransformer) {
-      return tooltipTransformer(tooltipComputedValue);
-    }
-
-    return "";
-  }, [tooltipComputedValue, tooltipTransformer, tooltipValue]);
-
-  const updateTooltip = (mouseX: number, width: number) => {
-    const rawTime = (mouseX / width) * maxValue;
-    const time = Math.max(0, Math.round(rawTime));
-
-    const position = Math.max(0, Math.round(mouseX)) + 1;
-    setCursorPosition(position);
-    setTooltipComputedValue(time);
-
-    frameId.current = null;
-  };
-
-  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!sliderRef.current) return;
-
-    const sliderRect = sliderRef.current.getBoundingClientRect();
-    const mouseX = event.clientX - sliderRect.left;
-    const sliderWidth = sliderRect.width;
-
-    if (!frameId.current) {
-      frameId.current = requestAnimationFrame(() =>
-        updateTooltip(mouseX, sliderWidth),
-      );
-    }
-  };
-
-  const computeBoundaries = (mouseX: number, mouseY: number) => {
-    if (!sliderRef.current) return undefined;
-
-    const sliderRect = sliderRef.current.getBoundingClientRect();
-    const { right, left, top, bottom } = {
-      left: sliderRect.left - 2,
-      right: sliderRect.right,
-      top: sliderRect.top - 1.5,
-      bottom: sliderRect.bottom + 1,
-    };
-
-    const xLimits = mouseX >= left && mouseX <= right;
-    const yLimits = mouseY >= top && mouseY <= bottom;
-    const isInside = xLimits && yLimits;
-
-    return {
-      isInside,
-      left,
-      right,
-      top,
-      bottom,
-      width: sliderRect.width,
-    };
-  };
-
-  const handleMouseOver = (event: React.MouseEvent<HTMLDivElement>) => {
-    const [mouseX, mouseY] = [event.clientX, event.clientY];
-
-    const bounds = computeBoundaries(mouseX, mouseY);
-    if (!bounds) return;
-
-    const { isInside, left, width } = bounds;
-
-    if (isInside) {
-      if (!frameId.current) {
-        frameId.current = requestAnimationFrame(() =>
-          updateTooltip(mouseX - left, width),
-        );
-      }
-
-      setShowTooltip(true);
-    }
-  };
-
-  const computeCurrentValuePosition = (value: number) => {
-    if (!sliderRef.current) return;
-
-    const { width } = sliderRef.current.getBoundingClientRect();
-
-    const percentage = (value / maxValue) * 100;
-    const mousePosition = (percentage / 100) * width;
-    const positionWithLimits = Math.max(0, mousePosition) + 1;
-
-    setCursorPosition(positionWithLimits);
-  };
-
-  const handleValueChange = (value: number) => {
-    if (onValueChange) onValueChange([value]);
-    setTooltipComputedValue(value);
-    computeCurrentValuePosition(value);
-  };
-
-  const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
-    event.preventDefault();
-  };
+  const {
+    trackRef,
+    percentage,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handlePointerCancel,
+  } = useSlider({
+    value,
+    defaultValue,
+    min,
+    max,
+    step,
+    onValueChange,
+    onValueCommit,
+    disabled,
+    onTouchStateChange: setIsTouching,
+  });
 
   return (
-    <SliderPrimitive.Root
-      ref={sliderRef}
+    <div
       aria-busy={isBuffering || undefined}
       className={cn(
-        "relative h-3 flex w-full touch-none select-none items-center cursor-pointer",
+        "group relative h-3 flex w-full touch-none select-none items-center cursor-pointer",
         className,
       )}
-      onMouseOver={handleMouseOver}
-      onMouseOut={() => setShowTooltip(false)}
-      onMouseMove={handleMouseMove}
-      onValueChange={([value]) => handleValueChange(value)}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
       {...rest}
     >
-      <SliderTooltip
-        open={enableTooltip}
-        variant={variant}
-        value={formattedTooltipValue}
-        position={cursorPosition}
-        align="start"
-        sideOffset={8}
-      >
-        <SliderPrimitive.Track
-          className={clsx(
-            "relative h-1 w-full grow overflow-hidden rounded-full select-none",
-            !isBuffering && variant === "default" && "bg-secondary",
-            isBuffering && "buffer-track",
-            isBuffering && variant === "secondary" && "buffer-secondary",
-            !isBuffering && variant === "secondary" && "bg-muted-foreground/70",
-          )}
-          onContextMenu={handleContextMenu}
-        >
-          <SliderPrimitive.Range
-            className={clsx(
-              "absolute h-full select-none transition-[border-radius]",
-              variant === "default" && "bg-primary",
-              variant === "secondary" && "bg-secondary-foreground",
-              showTooltip ? "rounded-none" : "rounded",
-            )}
-            onContextMenu={handleContextMenu}
-          />
-        </SliderPrimitive.Track>
-      </SliderTooltip>
-
-      <SliderPrimitive.Thumb
+      <div
+        ref={trackRef}
         className={clsx(
-          "block opacity-0 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full",
-          "border-2 transition-[background-color,opacity]",
+          "relative w-full grow overflow-hidden rounded-full select-none transition-[height] duration-150 ease-out",
+          isTouching ? "h-[10px]" : "h-1",
+          !isBuffering && variant === "default" && "bg-secondary",
+          isBuffering && "buffer-track",
+          isBuffering && variant === "secondary" && "buffer-secondary",
+          !isBuffering &&
+            variant === "secondary" &&
+            (contrast?.sliderTrackColor ?? "bg-muted-foreground/70"),
+        )}
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        <BufferedProgressIndicator
+          bufferedProgress={bufferedProgress}
+          max={max ?? 100}
+        />
+        <div
+          className={clsx(
+            "absolute h-full select-none rounded-full",
+            variant === "default" && "bg-primary",
+            variant === "secondary" &&
+              (contrast?.sliderRangeColor ?? "bg-secondary-foreground"),
+          )}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+
+      <div
+        className={clsx(
+          "absolute top-1/2 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full border-2 shadow-md",
+          "ring-offset-background transition-[background-color,opacity]",
           "focus-visible:outline-none focus-visible:ring-transparent",
           "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
-          showTooltip && "opacity-100",
+          "opacity-0 group-hover:opacity-100",
           variant === "default" && "bg-foreground border-foreground",
           variant === "secondary" &&
-            "bg-secondary-foreground border-secondary-foreground",
+            (contrast?.sliderThumbColor ??
+              "bg-secondary-foreground border-secondary-foreground"),
         )}
-        onKeyDown={(e) => e.preventDefault()}
+        style={{
+          left: `${percentage}%`,
+          transform: "translate(-50%, -50%)",
+        }}
       />
-    </SliderPrimitive.Root>
+    </div>
   );
 }

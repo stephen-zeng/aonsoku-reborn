@@ -12,11 +12,11 @@ export function createSettingsActions(shared: SharedDeps) {
   return {
     resetConfig: () => {
       set((state) => {
-        state.settings.colors.queue.useSongColor = false;
         state.settings.colors.currentSongColorIntensity = 0.65;
         state.settings.fullscreen.autoFullscreenEnabled = false;
         state.settings.coverArt.useAlbumCoverForSongs = false;
         state.settings.lyrics.preferSyncedLyrics = false;
+        state.settings.hapticFeedback.hapticFeedbackEnabled = true;
         state.settings.replayGain.values = {
           enabled: false,
           type: "track",
@@ -36,12 +36,6 @@ export function createSettingsActions(shared: SharedDeps) {
     setCurrentSongIntensity: (value: number) => {
       set((state) => {
         state.settings.colors.currentSongColorIntensity = value;
-      });
-    },
-
-    setUseSongColorOnQueue: (value: boolean) => {
-      set((state) => {
-        state.settings.colors.queue.useSongColor = value;
       });
     },
   } satisfies Partial<IPlayerActions>;

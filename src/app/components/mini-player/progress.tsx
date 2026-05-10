@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Slider } from "@/app/components/ui/slider";
 import { useAudioSeeking } from "@/app/hooks/use-audio-seeking";
 import {
+  usePlayerBufferedProgress,
   usePlayerDuration,
   usePlayerIsBuffering,
   usePlayerProgress,
@@ -11,18 +12,21 @@ import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 
 export function MiniPlayerProgress() {
   const progress = usePlayerProgress();
+  const bufferedProgress = usePlayerBufferedProgress();
   const audioPlayerRef = usePlayerRef();
   const currentDuration = usePlayerDuration();
   const isBuffering = usePlayerIsBuffering();
 
-  const audioRef = { current: audioPlayerRef };
+  const audioRef = useMemo(
+    () => ({ current: audioPlayerRef }),
+    [audioPlayerRef],
+  );
 
   const {
     localProgress,
     isLocalSeeking,
     handleSeeking,
     handleSeeked,
-    handleSeekedFallback,
   } = useAudioSeeking({ audioRef });
 
   const currentTime = convertSecondsToTime(
@@ -49,6 +53,7 @@ export function MiniPlayerProgress() {
       <Slider
         variant="secondary"
         isBuffering={isBuffering}
+        bufferedProgress={bufferedProgress}
         defaultValue={[0]}
         value={isLocalSeeking ? [localProgress] : [progress]}
         max={currentDuration}
@@ -56,8 +61,6 @@ export function MiniPlayerProgress() {
         className="w-full h-4"
         onValueChange={([value]) => handleSeeking(value)}
         onValueCommit={([value]) => handleSeeked(value)}
-        onPointerUp={handleSeekedFallback}
-        onMouseUp={handleSeekedFallback}
       />
     </div>
   );

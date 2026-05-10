@@ -2,7 +2,10 @@ import randomCSSHexColor from "@chriscodesthings/random-css-hex-color";
 import clsx from "clsx";
 import { type ReactNode, useState } from "react";
 import { getCoverArtUrl } from "@/api/httpClient";
-import { CachedImage } from "@/app/components/cover-image/cached-image";
+import {
+  CachedImage,
+  useCachedCoverUrl,
+} from "@/app/components/cover-image/cached-image";
 import { AlbumHeaderFallback } from "@/app/components/fallbacks/album-fallbacks";
 import { BadgesData, HeaderInfoGenerator } from "@/app/components/header-info";
 import { CustomLightBox } from "@/app/components/lightbox";
@@ -84,13 +87,14 @@ interface ImageHeaderProps {
   artists?: IFeaturedArtist[];
   coverArtId?: string;
   coverArtType: CoverArt;
-  coverArtSize: string;
+  coverArtSize?: string;
   coverArtAlt: string;
   badges: BadgesData;
   secondaryBadges?: BadgesData;
   isPlaylist?: boolean;
   showSimpleSubtitle?: boolean;
   customIcon?: ReactNode;
+  onColorExtracted?: (color: string) => void;
 }
 
 export default function ImageHeader({
@@ -101,13 +105,14 @@ export default function ImageHeader({
   artists,
   coverArtId,
   coverArtType,
-  coverArtSize,
+  coverArtSize = "300",
   coverArtAlt,
   badges,
   secondaryBadges,
   isPlaylist = false,
   showSimpleSubtitle,
   customIcon,
+  onColorExtracted,
 }: ImageHeaderProps) {
   const simpleSubtitle = showSimpleSubtitle ?? isPlaylist;
 
@@ -115,9 +120,17 @@ export default function ImageHeader({
   const [open, setOpen] = useState(false);
   const [bgColor, setBgColor] = useState(customIcon ? "var(--background)" : "");
 
-  const lightboxSrc = !customIcon
+  const lightboxFallback = !customIcon
     ? getCoverArtUrl(coverArtId, coverArtType, "700")
     : "";
+  const cachedLightboxUrl = useCachedCoverUrl(
+    customIcon ? undefined : coverArtId,
+    coverArtType,
+    undefined,
+    lightboxFallback,
+    "700",
+  );
+  const lightboxSrc = !customIcon ? cachedLightboxUrl : "";
 
   function getImage() {
     return document.getElementById("cover-art-image") as HTMLImageElement;
@@ -138,6 +151,7 @@ export default function ImageHeader({
     }
 
     setBgColor(color);
+    onColorExtracted?.(color);
     setLoaded(true);
   }
 
@@ -196,7 +210,7 @@ export default function ImageHeader({
           <div className="flex flex-col items-center md:flex-row md:items-center w-full gap-3 md:gap-6 lg:gap-8">
             <div
               className={cn(
-                "w-[200px] h-[200px] min-w-[200px] min-h-[200px]",
+                "w-[168px] h-[168px] min-w-[168px] min-h-[168px] sm:w-[200px] sm:h-[200px] sm:min-w-[200px] sm:min-h-[200px]",
                 "2xl:w-[250px] 2xl:h-[250px] 2xl:min-w-[250px] 2xl:min-h-[250px]",
                 "bg-skeleton aspect-square bg-cover bg-center rounded",
                 "shadow-header-image overflow-hidden",
@@ -232,6 +246,7 @@ export default function ImageHeader({
                 {type}
               </p>
               <h1
+                id="detail-page-title"
                 className={clsx(
                   "max-w-full scroll-m-20 font-bold tracking-tight antialiased drop-shadow-md break-words text-center md:text-left",
                   "line-clamp-3 md:line-clamp-2 text-xl leading-tight md:text-[2em] md:leading-none mb-2",

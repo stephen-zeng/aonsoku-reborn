@@ -44,3 +44,10 @@ export function isSafari(): boolean {
   const userAgent = window.navigator.userAgent.toLowerCase();
   return /safari/.test(userAgent) && !/chrome/.test(userAgent);
 }
+
+/**
+ * Detect if the current device is running Android
+ */
+export function isAndroid(): boolean {
+  return /android/i.test(window.navigator.userAgent);
+}

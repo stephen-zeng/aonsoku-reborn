@@ -9,7 +9,7 @@ import {
 } from "@/app/components/ui/popover";
 import { Separator } from "@/app/components/ui/separator";
 import { Slider } from "@/app/components/ui/slider";
-import { Switch } from "@/app/components/ui/switch";
+import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
 import { cn } from "@/lib/utils";
 import { useSongColor } from "@/store/player.store";
 
@@ -21,25 +21,13 @@ export function FullscreenSettings() {
   );
 }
 
-export function QueueSettings() {
-  const { useSongColorOnQueue } = useSongColor();
-
-  return (
-    <DynamicSettingsPopover>
-      <>
-        <QueueDynamicColorOption showSeparator={false} />
-        {useSongColorOnQueue && <ColorIntensityOption />}
-      </>
-    </DynamicSettingsPopover>
-  );
-}
-
 interface PopoverProps {
   children: ReactNode;
 }
 
 function DynamicSettingsPopover({ children }: PopoverProps) {
   const { t } = useTranslation();
+  const { hoverBg } = useFullscreenContrast();
 
   return (
     <Popover>
@@ -47,7 +35,7 @@ function DynamicSettingsPopover({ children }: PopoverProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="size-10 rounded-full hover:bg-foreground/20 data-[state=open]:bg-foreground/20"
+          className={`size-10 rounded-full ${hoverBg}`}
           aria-label={t("settings.label")}
         >
           <SlidersHorizontal className="size-4" strokeWidth={2.5} />
@@ -64,20 +52,6 @@ type OptionProps = Omit<
   ComponentPropsWithoutRef<typeof SettingWrapper>,
   "text"
 >;
-
-function QueueDynamicColorOption(props: OptionProps) {
-  const { t } = useTranslation();
-  const { useSongColorOnQueue, setUseSongColorOnQueue } = useSongColor();
-
-  return (
-    <SettingWrapper text={t("settings.appearance.colors.group")} {...props}>
-      <Switch
-        checked={useSongColorOnQueue}
-        onCheckedChange={() => setUseSongColorOnQueue(!useSongColorOnQueue)}
-      />
-    </SettingWrapper>
-  );
-}
 
 function ColorIntensityOption(props: OptionProps) {
   const { t } = useTranslation();

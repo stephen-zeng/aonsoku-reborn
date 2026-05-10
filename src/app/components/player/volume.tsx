@@ -9,6 +9,7 @@ import { useMuteToggle } from "@/app/hooks/use-mute-toggle";
 import { usePlayerHotkeys } from "@/app/hooks/use-audio-hotkeys";
 import { cn } from "@/lib/utils";
 import { usePlayerVolume, useVolumeSettings } from "@/store/player.store";
+import { isIOS } from "@/utils/platform";
 import { PopoverVolume } from "./popover-volume";
 
 interface PlayerVolumeProps {
@@ -20,6 +21,9 @@ export function PlayerVolume({ disabled, audioRef }: PlayerVolumeProps) {
   const { t } = useTranslation();
   const { volume, handleVolumeWheel } = usePlayerVolume();
   const { useAudioHotkeys } = usePlayerHotkeys();
+  const ios = isIOS();
+  const displayVolume = ios ? 100 : volume;
+  const isDisabled = ios || disabled;
 
   useAudioHotkeys("mod+up", () => handleVolumeWheel(false));
   useAudioHotkeys("mod+down", () => handleVolumeWheel(true));
@@ -30,24 +34,24 @@ export function PlayerVolume({ disabled, audioRef }: PlayerVolumeProps) {
       : t("player.tooltips.volume.mute");
 
   return (
-    <div className={clsx(disabled && "opacity-50")}>
+    <div className={clsx(isDisabled && "opacity-50")}>
       <div className="flex 2xl:hidden">
         <PopoverVolume>
-          <VolumeIcon volume={volume} size={18} />
+          <VolumeIcon volume={displayVolume} size={18} />
         </PopoverVolume>
       </div>
 
       <div className="hidden 2xl:flex gap-2 pr-2 items-center">
-        <SimpleTooltip text={tooltipText} disabled={disabled}>
+        <SimpleTooltip text={tooltipText} disabled={isDisabled}>
           <div className="h-10 flex items-center">
-            <MuteButton disabled={disabled}>
+            <MuteButton disabled={isDisabled}>
               <div className="text-secondary-foreground">
-                <VolumeIcon volume={volume} size={18} />
+                <VolumeIcon volume={displayVolume} size={18} />
               </div>
             </MuteButton>
           </div>
         </SimpleTooltip>
-        <VolumeSlider disabled={disabled} />
+        <VolumeSlider disabled={isDisabled} />
       </div>
     </div>
   );
@@ -71,6 +75,7 @@ export function MuteButton({ className, ...props }: MuteButtonProps) {
       className={cn("p-1 w-7 h-7 hover:bg-transparent", className)}
       onClick={handleMuteClick}
       onWheel={handleWheel}
+      unfocusable
     />
   );
 }
@@ -84,6 +89,9 @@ export function VolumeSlider({
 }: VolumeSliderProps) {
   const { volume, setVolume, handleVolumeWheel } = usePlayerVolume();
   const { min, max, step } = useVolumeSettings();
+  const ios = isIOS();
+  const displayVolume = ios ? 100 : volume;
+  const isDisabled = ios || disabled;
 
   function handleWheel(e: WheelEvent) {
     handleVolumeWheel(e.deltaY > 0);
@@ -94,15 +102,15 @@ export function VolumeSlider({
       className={cn(
         "cursor-pointer w-32",
         className,
-        disabled && "pointer-events-none opacity-50",
+        isDisabled && "pointer-events-none opacity-50",
       )}
       data-testid="player-volume-slider"
       {...props}
-      value={[volume]}
+      value={[displayVolume]}
       min={min}
       max={max}
       step={step}
-      disabled={disabled}
+      disabled={isDisabled}
       onValueChange={([value]) => setVolume(value)}
       onWheel={handleWheel}
     />

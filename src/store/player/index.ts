@@ -12,7 +12,7 @@ import {
 } from "@/types/lanControl";
 import { IPlayerContext, ISongList, LoopState } from "@/types/playerContext";
 import { ISong } from "@/types/responses/song";
-import { isDesktop } from "@/utils/desktop";
+import { hasElectronBridge } from "@/utils/desktop";
 import { discordRpc } from "@/utils/discordRpc";
 import { logger } from "@/utils/logger";
 import { get as idbGet, set as idbSet } from "idb-keyval";
@@ -38,6 +38,7 @@ import {
   MAX_USER_QUEUE_IDB_SIZE,
   trimQueueToWindow,
 } from "./queue-utils";
+import { MAX_SHUFFLE_START_HISTORY } from "@/utils/songListFunctions";
 
 const IDB_SONGLIST_KEY = "player_songlist";
 
@@ -230,6 +231,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
             "playerState.isPlaying",
             "playerState.isBuffering",
             "playerState.audioPlayerRef",
+            "playerState.radioPlayerRef",
             "playerState.mainDrawerState",
             "playerState.queueState",
             "playerState.lyricsState",
@@ -238,6 +240,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
             "playerState.desktopFullscreenPanelView",
             "playerState.hasPrev",
             "playerState.hasNext",
+            "playerProgress.bufferedProgress",
             "remoteControl",
           ]);
 
@@ -312,6 +315,7 @@ function migrateLegacySonglist(value: any): ISongList | null {
     isInUserQueue: false,
     playedUserQueueHistory: [],
     shuffleHistory: [],
+    shuffleStartHistory: [],
   };
 }
 
@@ -357,6 +361,7 @@ function migrateSonglistFromIdb(value: any): ISongList {
     isInUserQueue,
     playedUserQueueHistory: value.playedUserQueueHistory ?? [],
     shuffleHistory: value.shuffleHistory ?? [],
+    shuffleStartHistory: value.shuffleStartHistory ?? [],
   };
 
   if (result.contextQueue.sourceId) {
@@ -407,6 +412,8 @@ function trimSonglistForIdb(songlist: ISongList): ISongList {
       -MAX_USER_QUEUE_IDB_SIZE,
     ),
     originalUserSongs: rest.originalUserSongs?.slice(-MAX_USER_QUEUE_IDB_SIZE),
+    shuffleStartHistory:
+      rest.shuffleStartHistory?.slice(-MAX_SHUFFLE_START_HISTORY) ?? [],
   };
 }
 
@@ -448,6 +455,8 @@ export function cleanupPlayerStore() {
 }
 
 function registerIdbEventListeners() {
+  if (typeof document === "undefined" || typeof window === "undefined") return;
+
   const handleVisibilityChange = () => {
     if (document.hidden && songlistHydrated.value) flushIdbSonglistWrite();
   };
@@ -524,7 +533,7 @@ usePlayerStore.subscribe(
 );
 
 function desktopStateListener() {
-  if (!isDesktop()) return;
+  if (!hasElectronBridge()) return;
 
   const {
     togglePlayPause,
@@ -546,7 +555,7 @@ function desktopStateListener() {
 desktopStateListener();
 
 function updateDesktopState() {
-  if (!isDesktop()) return;
+  if (!hasElectronBridge()) return;
 
   const { isPlaying, hasPrev, hasNext } = usePlayerStore.getState().playerState;
   const { radioList, contextQueue, userQueue } =
@@ -604,6 +613,12 @@ export const usePlayerCurrentSongIndex = () =>
 export const usePlayerProgress = () =>
   usePlayerStore((state) => state.playerProgress.progress);
 
+export const usePlayerBufferedProgress = () =>
+  usePlayerStore((state) => state.playerProgress.bufferedProgress);
+
+export const usePlayerIsScrubbing = () =>
+  usePlayerStore((state) => state.playerProgress.isScrubbing);
+
 export const usePlayerVolume = () =>
   usePlayerStore(
     (state) => ({
@@ -644,6 +659,9 @@ export const usePrivacySettings = () =>
 export const useLyricsSettings = () =>
   usePlayerStore((state) => state.settings.lyrics);
 
+export const useHapticSettings = () =>
+  usePlayerStore((state) => state.settings.hapticFeedback);
+
 export const usePlayerSettings = () =>
   usePlayerStore((state) => state.settings);
 
@@ -660,6 +678,9 @@ export const usePlayerMediaType = () => {
 
 export const usePlayerIsPlaying = () =>
   usePlayerStore((state) => state.playerState.isPlaying);
+
+export const usePlayerIsTransitioning = () =>
+  usePlayerStore((state) => state.playerState.isTransitioning);
 
 export const usePlayerDuration = () =>
   usePlayerStore((state) => state.playerState.currentDuration);
@@ -684,6 +705,9 @@ export const usePlayerPrevAndNext = () =>
 
 export const usePlayerRef = () =>
   usePlayerStore((state) => state.playerState.audioPlayerRef);
+
+export const useRadioPlayerRef = () =>
+  usePlayerStore((state) => state.playerState.radioPlayerRef);
 
 export const getVolume = () => usePlayerStore.getState().playerState.volume;
 
@@ -741,8 +765,6 @@ export const useSongColor = () =>
       currentSongColorIntensity:
         state.settings.colors.currentSongColorIntensity,
       setCurrentSongIntensity: state.actions.setCurrentSongIntensity,
-      useSongColorOnQueue: state.settings.colors.queue.useSongColor,
-      setUseSongColorOnQueue: state.actions.setUseSongColorOnQueue,
     }),
     shallow,
   );
@@ -795,3 +817,18 @@ export const usePlayerIsBuffering = () =>
 
 export const useLyricsAlignment = () =>
   usePlayerStore((state) => state.playerState.areLyricsAligned);
+
+export function useIsCurrentPlaying(songId: string): boolean {
+  return usePlayerStore((state) => {
+    if (!state.playerState.isPlaying) return false;
+    const mediaType = state.playerState.mediaType;
+    if (mediaType === "song") {
+      return state.actions.checkActiveSong(songId);
+    }
+    if (mediaType === "radio") {
+      const idx = getEffectiveIndex(state.songlist);
+      return state.songlist.radioList[idx]?.id === songId;
+    }
+    return false;
+  });
+}

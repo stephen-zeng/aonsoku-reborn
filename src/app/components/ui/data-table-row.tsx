@@ -50,7 +50,7 @@ export function TableRow<TData>({
         data-test-id="table-row"
         data-state={row.getIsSelected() && "selected"}
         className={clsx(
-          "group/tablerow w-full flex flex-row transition-colors",
+          "group/tablerow w-full flex flex-row",
           isModern &&
             row.getIsSelected() &&
             !isPrevRowSelected(index) &&
@@ -62,7 +62,7 @@ export function TableRow<TData>({
           isModern && !row.getIsSelected() && "rounded-md",
           "hover:bg-muted md:data-[state=selected]:bg-primary/75",
           isClassic && "border-b",
-          isRowSongActive && isModern && "row-active bg-accent",
+          isRowSongActive && isModern && "row-active",
         )}
       >
         {row.getVisibleCells().map((cell) => (

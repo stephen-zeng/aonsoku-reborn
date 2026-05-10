@@ -44,6 +44,7 @@ export interface ISongList {
   isInUserQueue: boolean;
   playedUserQueueHistory: ISong[];
   shuffleHistory: string[];
+  shuffleStartHistory: string[];
 }
 
 export type FullscreenPlayerTab = "queue" | "playing" | "lyrics";
@@ -58,6 +59,7 @@ export interface IPlayerState {
   currentDuration: number;
   mediaType: "song" | "radio";
   audioPlayerRef: HTMLAudioElement | null;
+  radioPlayerRef: HTMLAudioElement | null;
   mainDrawerState: boolean;
   queueState: boolean;
   lyricsState: boolean;
@@ -68,10 +70,15 @@ export interface IPlayerState {
   hasNext: boolean;
   isBuffering: boolean;
   areLyricsAligned: boolean;
+  seekToStart: boolean;
+  isTransitioning: boolean;
 }
 
 export interface IPlayerProgress {
   progress: number;
+  bufferedProgress: number;
+  isScrubbing: boolean;
+  scrubbingProgress: number;
 }
 
 export interface IVolumeSettings {
@@ -126,14 +133,14 @@ export interface IPrivacySettings {
   setLrcLibEnabled: (value: boolean) => void;
 }
 
-interface IQueueSettings {
-  useSongColor: boolean;
-}
-
 interface IColorsSettings {
   currentSongColor: string | null;
   currentSongColorIntensity: number;
-  queue: IQueueSettings;
+}
+
+interface IHapticSettings {
+  hapticFeedbackEnabled: boolean;
+  setHapticFeedbackEnabled: (value: boolean) => void;
 }
 
 export interface IPlayerSettings {
@@ -144,6 +151,7 @@ export interface IPlayerSettings {
   replayGain: IReplayGain;
   privacy: IPrivacySettings;
   colors: IColorsSettings;
+  hapticFeedback: IHapticSettings;
 }
 
 export interface IRemoteControlState {
@@ -181,12 +189,16 @@ export interface IPlayerActions {
   clearUserQueue: () => void;
   resetProgress: () => void;
   setProgress: (progress: number) => void;
+  setIsScrubbing: (value: boolean) => void;
+  setScrubbingProgress: (value: number) => void;
   setVolume: (volume: number) => void;
   handleVolumeWheel: (isScrollingDown: boolean) => void;
   setCurrentDuration: (duration: number) => void;
   setIsBuffering: (value: boolean) => void;
+  setBufferedProgress: (value: number) => void;
   setPlayRadio: (list: Radio[], index: number) => void;
-  setAudioPlayerRef: (ref: HTMLAudioElement) => void;
+  setAudioPlayerRef: (ref: HTMLAudioElement | null) => void;
+  setRadioPlayerRef: (ref: HTMLAudioElement | null) => void;
   setNextOnQueue: (
     songlist: ISong[],
     sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
@@ -215,9 +227,9 @@ export interface IPlayerActions {
   resetConfig: () => void;
   updateQueueChecks: () => void;
   setAreLyricsAligned: (aligned: boolean) => void;
+  setIsTransitioning: (value: boolean) => void;
   setCurrentSongColor: (value: string | null) => void;
   setCurrentSongIntensity: (value: number) => void;
-  setUseSongColorOnQueue: (value: boolean) => void;
   enterRemoteControl: (device: RemoteDeviceInfo | null) => void;
   exitRemoteControl: () => void;
   registerRemoteSender: (

@@ -47,6 +47,10 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System",
+    "modeLabel": "Mode",
+    "modeLight": "Light",
+    "modeDark": "Dark",
+    "modeSystem": "System",
     "black": "Black and White",
     "one-dark": "One Dark",
     "night-owl-light": "Night Owl Light",
@@ -204,6 +208,10 @@
     },
     "table": {
       "discNumber": "Disc {{number}}"
+    },
+    "detail": {
+      "songsUnavailable": "Track list unavailable offline. Sync your library to make tracks available.",
+      "songsUnavailableTitle": "Tracks Unavailable"
     }
   },
   "artist": {
@@ -379,7 +387,7 @@
   "options": {
     "play": "Play",
     "playNext": "Play next",
-    "addLast": "Add to queue",
+    "addLast": "Add last",
     "download": "Download",
     "like": "Like",
     "unlike": "Unlike",
@@ -397,7 +405,11 @@
     "goto": {
       "artist": "Go to artist",
       "album": "Go to album"
-    }
+    },
+    "downloadAlbum": "Download album",
+    "downloadPlaylist": "Download playlist",
+    "downloadArtist": "Download artist",
+    "removeDownload": "Remove download"
   },
   "radios": {
     "label": "Radio",
@@ -476,11 +488,6 @@
       "startScan": "Quick Scan"
     }
   },
-  "downloads": {
-    "started": "Download started.",
-    "failed": "There was an error downloading your file.",
-    "completed": "Your file has been downloaded."
-  },
   "queue": {
     "title": "Queue",
     "clear": "Clear queue",
@@ -530,7 +537,7 @@
     },
     "sw": {
       "updating": "Updating...",
-      "refresh": "Refresh to update",
+      "refresh": "Update",
       "error": "Update failed – Retry"
     }
   },
@@ -560,7 +567,7 @@
       "desktop": "Desktop Application",
       "server": "Server",
       "privacy": "Privacy & Security",
-      "storage": "Storage"
+      "storage": "Offline Experience"
     },
     "server": {
       "group": "Server",
@@ -611,21 +618,17 @@
           "label": "Always use album covers",
           "info": "When enabled, every song artwork request uses the album cover to reduce loading time."
         }
-      },
-      "colors": {
-        "group": "Dynamic Colors",
-        "description": "Select whether the app should use the dominant color from the currently playing album art as the background.",
-        "queue": {
-          "label": "Queue and Lyrics",
-          "intensity": "Color Intensity Level"
-        },
-        "bigPlayer": {
-          "label": "Big Player",
-          "blurSize": "Image Blur Size"
-        }
       }
     },
     "audio": {
+      "hapticFeedback": {
+        "group": "Haptic Feedback",
+        "description": "Control vibration feedback when interacting with the app.",
+        "enabled": {
+          "label": "Enable haptic feedback",
+          "info": "When enabled, the device will vibrate when dragging queue items on mobile."
+        }
+      },
       "replayGain": {
         "group": "ReplayGain",
         "description": "Automatically normalize audio playback levels for a consistent listening experience.",
@@ -700,16 +703,21 @@
         "clear": "Clear all caches"
       },
       "sync": {
-        "group": "Sync on Launch",
-        "description": "Cache all metadata on every app launch for offline browsing. Audio files are never synced.",
-        "enabled": "Enable sync on launch",
+        "group": "Library Sync",
+        "description": "Sync library metadata for offline browsing. Downloaded songs are always available offline.",
+        "libraryCaching": "Library caching",
+        "libraryCachingInfo": "When enabled, metadata and optionally songs are cached locally for offline access. When disabled, the app stays in pure online mode and no background sync runs.",
+        "enabled": "Sync library",
         "coverArt": "Include cover art",
         "coverArtInfo": "Download all album and artist images during sync. This may use significant storage and bandwidth.",
+        "coverArtConcurrency": "Cover art concurrency",
+        "coverArtConcurrencyInfo": "Number of parallel downloads for cover art. Higher values speed up sync but use more bandwidth. Set to 1 to download sequentially.",
+        "coverArtConcurrencyOff": "Sequential",
         "lastSynced": "Last synced",
         "never": "Never",
         "syncNow": "Sync Now",
         "cancel": "Cancel",
-        "clear": "Clear",
+        "clear": "Clear synced data",
         "entries": "{{count}} items synced",
         "phases": {
           "idle": "Preparing…",
@@ -718,10 +726,121 @@
           "playlists": "Syncing playlists…",
           "albums": "Syncing albums…",
           "songs": "Syncing songs…",
+          "favorites": "Syncing favorites…",
           "coverArt": "Syncing cover art…",
           "done": "Sync complete",
           "error": "Sync failed",
           "cancelled": "Sync cancelled"
+        },
+        "tier": {
+          "t1": {
+            "label": "Essentials",
+            "description": "Favorites · Playlists · Genres"
+          },
+          "t2": {
+            "label": "Library Skeleton",
+            "description": "Artists · Albums"
+          },
+          "t3": {
+            "label": "Full Songs",
+            "description": "All song metadata"
+          },
+          "coverArt": {
+            "label": "Cover Art",
+            "description": "Album · Artist · Playlist images"
+          }
+        },
+        "justNow": "Just now",
+        "downloading_one": "Downloading {{count}} song",
+        "downloading_other": "Downloading {{count}} songs",
+        "completed": "Done",
+        "showMore": "Show {{count}} more",
+        "clearConfirm": {
+          "title": "Disable library caching?",
+          "description": "Disabling library caching will clear all synced library data (artists, albums, songs, playlists, genres). You can re-enable it and re-sync at any time.",
+          "keep": "Keep enabled",
+          "clear": "Clear and disable"
+        }
+      },
+      "offline": {
+        "group": "Offline Experience",
+        "description": "Cache songs, metadata, and artwork locally for offline access. Enable library caching to unlock download quality, smart downloads, and sync settings."
+      },
+      "limits": {
+        "group": "Cache Storage",
+        "description": "Each download source has its own quota. Explicit downloads are never auto-evicted.",
+        "maxSize": "Maximum audio cache size",
+        "audioSize": "Audio cache",
+        "audioEntries": "{{count}} songs cached",
+        "coverSize": "Cover art cache",
+        "coverEntries": "{{count}} images cached",
+        "clearAudio": "Clear",
+        "clearCovers": "Clear",
+        "clearAll": "Clear all caches",
+        "quota": "Quota",
+        "unlimited": "Unlimited",
+        "songEntries": "{{count}} songs",
+        "imageEntries": "{{count}} images",
+        "pool": {
+          "explicit": {
+            "label": "Explicit downloads",
+            "description": "Songs, albums, and playlists you downloaded yourself. Never evicted automatically."
+          },
+          "smart": {
+            "label": "Smart downloads",
+            "description": "Auto-downloaded by matching smart rules. Cleared when the triggering rule stops matching."
+          },
+          "lru": {
+            "label": "Recently played",
+            "description": "Opportunistically cached while you listen. Oldest entries evicted first when over quota."
+          },
+          "assets": {
+            "label": "Cover art",
+            "description": "Album and artist images cached for fast library rendering."
+          }
+        }
+      },
+      "cacheManager": {
+        "group": "Cache Manager",
+        "description": "View and manage individual cached items.",
+        "filter": {
+          "all": "All",
+          "audio": "Audio",
+          "cover": "Cover Art",
+          "album": "Album",
+          "playlist": "Playlist",
+          "explicit": "Explicit",
+          "smart": "Smart",
+          "lru": "LRU"
+        },
+        "list": {
+          "name": "Name",
+          "type": "Type",
+          "source": "Source",
+          "size": "Size",
+          "cachedAt": "Cached",
+          "actions": "Actions",
+          "delete": "Delete",
+          "empty": "No cached items.",
+          "total": "{{count}} items, {{size}} total",
+          "type_audio": "Audio",
+          "type_cover": "Cover",
+          "type_album": "Album",
+          "type_playlist": "Playlist",
+          "removedFromServer": "Removed from server"
+        },
+        "confirmDelete": {
+          "title": "Delete cached item?",
+          "description": "This will remove '{{name}}' from the cache. It can be re-downloaded later."
+        }
+      },
+      "smart": {
+        "group": "Smart Downloads",
+        "description": "Automatically cache songs matching any enabled rule. They're evicted the moment every triggering rule stops matching, and never take priority over manual downloads.",
+        "enabled": "Enable smart downloads",
+        "rule": {
+          "favoriteSongs": "Favorite songs",
+          "favoritePlaylists": "Favorite playlists"
         }
       }
     },
@@ -907,7 +1026,16 @@
     "reconnected": "Reconnected to server",
     "reconnectFailed": "Could not reconnect. Continuing in offline mode.",
     "songUnavailable": "This song is not available offline",
-    "disconnected": "Server unreachable. Entering offline mode.",
-    "searchUnavailable": "Search requires an offline library sync."
+    "disconnected": "Server unreachable",
+    "searchUnavailable": "Search requires an offline library sync.",
+    "metered": "Limited",
+    "meteredTooltip": "You're on a slow or metered connection. Background sync and smart downloads are paused — tap a download button to override.",
+    "badge": {
+      "downloaded": "Downloaded",
+      "smart": "Saved by a smart-download rule",
+      "downloading": "Downloading…",
+      "cloud": "Needs network",
+      "orphan": "Removed from server (still playable offline)"
+    }
   }
 }

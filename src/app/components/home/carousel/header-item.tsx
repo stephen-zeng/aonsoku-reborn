@@ -2,7 +2,10 @@ import clsx from "clsx";
 import { Play } from "lucide-react";
 import { isFirefox } from "react-device-detect";
 import { Link } from "react-router-dom";
-import { CachedImage } from "@/app/components/cover-image/cached-image";
+import {
+  CachedImage,
+  useCachedCoverUrl,
+} from "@/app/components/cover-image/cached-image";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
 import { useIsMobile } from "@/app/hooks/use-mobile";
@@ -16,7 +19,13 @@ import { useSongCoverArtUrl } from "@/utils/coverArt";
 export function HeaderItem({ song }: { song: ISong }) {
   const isMobile = useIsMobile();
   const { setSongList } = usePlayerActions();
-  const coverArtUrl = useSongCoverArtUrl(song, "300");
+  const coverArtFallback = useSongCoverArtUrl(song, "300");
+  const coverArtUrl = useCachedCoverUrl(
+    song.coverArt,
+    "song",
+    song.albumId,
+    coverArtFallback,
+  );
 
   async function handlePlaySongAlbum(song: ISong) {
     const album = await subsonic.albums.getOne(song.albumId);
@@ -66,7 +75,6 @@ export function HeaderItem({ song }: { song: ISong }) {
               coverArtId={song.coverArt}
               coverArtType="song"
               albumId={song.albumId}
-              coverArtSize="300"
               alt={song.title}
               effect="opacity"
               width="100%"
@@ -74,9 +82,9 @@ export function HeaderItem({ song }: { song: ISong }) {
               className="aspect-square rounded-lg object-cover bg-center absolute inset-0 z-0"
               data-testid="header-image"
             />
-            <div className="hidden sm:flex w-full h-full items-center justify-center rounded-lg bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-colors duration-300 absolute inset-0 z-10">
+            <div className="hidden sm:flex w-full h-full items-center justify-center rounded-lg bg-black bg-opacity-0 group-hover:bg-opacity-50 absolute inset-0 z-10">
               <Button
-                className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full w-14 h-14"
+                className="opacity-0 group-hover:opacity-100 rounded-full w-14 h-14"
                 variant="outline"
                 onClick={() => handlePlaySongAlbum(song)}
                 data-testid="header-play-button"

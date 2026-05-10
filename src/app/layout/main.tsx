@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { Location, Outlet, useLocation } from "react-router-dom";
-import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { useIsXl } from "@/app/hooks/use-is-xl";
 import { cn } from "@/lib/utils";
 import { useMainDrawerState } from "@/store/player.store";
@@ -27,17 +26,14 @@ export function MainRoutes() {
   return (
     <main
       className={cn(
-        "flex h-full pl-0 md:pl-mini-sidebar pt-header pb-[calc(var(--player-height)+var(--bottom-nav-height))] transition-[padding] duration-300",
+        "min-h-screen pl-0 md:pl-mini-sidebar pt-0 md:pt-header pb-[calc(var(--player-height)+var(--bottom-nav-height))]",
         isCollapsed ? "xl:pl-mini-sidebar" : "xl:pl-sidebar",
         mainDrawerState && "lg:pr-right-panel",
       )}
     >
-      <ScrollArea
-        id="main-scroll-area"
-        className="w-full bg-background-foreground"
-      >
+      <div className="w-full">
         <Outlet />
-      </ScrollArea>
+      </div>
     </main>
   );
 }

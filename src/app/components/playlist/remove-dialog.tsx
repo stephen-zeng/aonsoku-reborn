@@ -31,7 +31,7 @@ export function RemovePlaylistDialog() {
     mutationFn: subsonic.playlists.remove,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.playlist.all],
+        queryKey: queryKeys.playlist.all,
       });
       toast.success(t("playlist.form.delete.toast.success"));
       setConfirmDialogState(false);

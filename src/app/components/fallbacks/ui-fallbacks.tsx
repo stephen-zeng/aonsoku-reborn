@@ -50,9 +50,9 @@ export function CardSkeleton() {
   return (
     <div className="cursor-pointer">
       <Skeleton className="aspect-square rounded overflow-hidden" />
-      <div className="flex flex-col cursor-default">
-        <Skeleton className="h-7 w-11/12" />
-        <Skeleton className="h-5 w-1/2 -mt-1" />
+      <div className="flex flex-col cursor-default pt-2 gap-1.5">
+        <Skeleton className="h-3.5 w-11/12" />
+        <Skeleton className="h-3 w-1/2" />
       </div>
     </div>
   );

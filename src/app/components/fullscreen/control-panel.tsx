@@ -42,7 +42,7 @@ export const FullscreenControlPanel = memo(function FullscreenControlPanel({
             ? "shrink-0 gap-4"
             : expanded
               ? "flex-1 min-h-0 min-h-[48px] gap-6"
-              : "gap-6 sm:gap-3",
+              : "gap-6 md:gap-3",
         )}
       >
         <MemoFullscreenControls />

@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { PlusIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +8,7 @@ import { EmptyPlaylistsPage } from "@/app/components/playlist/empty-page";
 import { Button } from "@/app/components/ui/button";
 import { DataTableList } from "@/app/components/ui/data-table-list";
 import { playlistsColumns } from "@/app/tables/playlists-columns";
+import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { usePlaylists } from "@/store/playlists.store";
@@ -18,10 +18,11 @@ export default function PlaylistsPage() {
   const { setPlaylistDialogState } = usePlaylists();
   const { t } = useTranslation();
 
-  const { data: playlists, isLoading } = useQuery({
-    queryKey: [queryKeys.playlist.all],
-    queryFn: subsonic.playlists.getAll,
-  });
+  const { data: playlists, isLoading } = useOfflineQuery(
+    [...queryKeys.playlist.all],
+    subsonic.playlists.getAll,
+    { offlineFn: offlineData.playlists },
+  );
 
   const columns = playlistsColumns();
   const navigate = useNavigate();
@@ -43,17 +44,17 @@ export default function PlaylistsPage() {
             title={t("sidebar.playlists")}
             count={playlists.length}
           />
-        </div>
 
-        <Button
-          size="sm"
-          variant="default"
-          className="px-4"
-          onClick={() => setPlaylistDialogState(true)}
-        >
-          <PlusIcon className="w-5 h-5 -ml-[3px]" />
-          <span className="ml-2">{t("playlist.form.create.title")}</span>
-        </Button>
+          <Button
+            size="sm"
+            variant="default"
+            className="px-4"
+            onClick={() => setPlaylistDialogState(true)}
+          >
+            <PlusIcon className="w-5 h-5 -ml-[3px]" />
+            <span className="ml-2">{t("playlist.form.create.title")}</span>
+          </Button>
+        </div>
       </ShadowHeader>
 
       {!showTable && <EmptyPlaylistsPage />}

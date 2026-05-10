@@ -8,7 +8,11 @@ import type {
 import { LoopState } from "@/types/playerContext";
 import { LanControlMessageType } from "@/types/lanControl";
 import type { ISong } from "@/types/responses/song";
-import { shuffleWithGapAvoidance } from "@/utils/songListFunctions";
+import {
+  MAX_SHUFFLE_START_HISTORY,
+  pushToHistory,
+  shuffleWithGapAvoidance,
+} from "@/utils/songListFunctions";
 
 export const MAX_QUEUE_SIZE = 500;
 export const MAX_USER_QUEUE_IDB_SIZE = 100;
@@ -105,6 +109,15 @@ export function applyShuffleOn(state: Draft<ISongList>): void {
 
   state.originalContextSongs = [...contextQueue.songs];
 
+  const currentSong = getCurrentSong(state as ISongList);
+  if (currentSong?.id) {
+    state.shuffleStartHistory = pushToHistory(
+      state.shuffleStartHistory,
+      currentSong.id,
+      MAX_SHUFFLE_START_HISTORY,
+    );
+  }
+
   const upcoming = contextQueue.songs.slice(contextQueue.currentIndex + 1);
   if (upcoming.length > 0) {
     const shuffledUpcoming = shuffleWithGapAvoidance(
@@ -179,6 +192,7 @@ export function clearSonglistState(state: Draft<ISongList>): void {
   state.isInUserQueue = false;
   state.playedUserQueueHistory = [];
   state.shuffleHistory = [];
+  state.shuffleStartHistory = [];
 }
 
 export function initSonglistState(): ISongList {
@@ -192,6 +206,7 @@ export function initSonglistState(): ISongList {
     isInUserQueue: false,
     playedUserQueueHistory: [],
     shuffleHistory: [],
+    shuffleStartHistory: [],
   };
 }
 
@@ -225,9 +240,11 @@ export function resetPlaybackState(state: Draft<IPlayerContext>): void {
   state.playerState.isPlaying = false;
   state.playerState.isBuffering = false;
   state.playerProgress.progress = 0;
+  state.playerProgress.bufferedProgress = 0;
   state.playerState.currentDuration = 0;
   state.songlist.isShuffleActive = false;
   state.songlist.shuffleHistory = [];
+  state.songlist.shuffleStartHistory = [];
   state.playerState.loopState = LoopState.Off;
   state.playerState.hasPrev = false;
   state.playerState.hasNext = false;

@@ -1,116 +1,115 @@
 {
   "about": {
-    "apiVersion": "API Version",
-    "buildTime": "Build Time",
-    "client": "Client",
-    "server": "Server",
+    "apiVersion": "API പതിപ്പ്",
+    "buildTime": "നിർമ്മാണ സമയം",
+    "client": "ക്ലയന്റ്",
+    "server": "സെർവർ",
     "toasts": {
-      "copy": "Link copied to clipboard!"
+      "copy": "ലിങ്ക് ക്ലിപ്പ്ബോർഡിലേക്ക് പകർത്തി!"
     },
-    "type": "Type",
-    "version": "Version"
+    "type": "തരം",
+    "version": "പതിപ്പ്"
   },
   "album": {
     "buttons": {
-      "dislike": "Remove like from {{name}}",
-      "like": "Like {{name}}"
+      "dislike": "{{name}} ഇഷ്ടപ്പെടൽ നീക്കം ചെയ്യുക",
+      "like": "{{name}} ഇഷ്ടപ്പെടുക"
     },
-    "headline": "Album",
+    "detail": {
+      "songsUnavailable": "ട്രാക്ക് ലിസ്റ്റ് ഓഫ്‌ലൈനിൽ ലഭ്യമല്ല. ട്രാക്കുകൾ ലഭ്യമാക്കാൻ നിങ്ങളുടെ ലൈബ്രറി സമന്വയിപ്പിക്കുക.",
+      "songsUnavailableTitle": "ട്രാക്കുകൾ ലഭ്യമല്ല"
+    },
+    "headline": "ആൽബം",
     "info": {
-      "about": "About {{name}}",
-      "lastfm": "Open in Last.fm",
-      "musicbrainz": "Open in MusicBrainz"
+      "about": "{{name}} നെ കുറിച്ച്",
+      "lastfm": "Last.fm-ൽ തുറക്കുക",
+      "musicbrainz": "MusicBrainz-ൽ തുറക്കുക"
     },
     "list": {
       "empty": {
-        "action": "Maybe try tweaking the filters?",
-        "info": "Looks like there are no albums with the current filter.",
-        "title": "Oops, no albums here!"
+        "action": "ഫിൽട്ടറുകൾ ക്രമീകരിച്ചുനോക്കൂ?",
+        "info": "നിലവിലെ ഫിൽട്ടറിൽ ആൽബങ്ങളൊന്നും കണ്ടെത്തിയില്ല.",
+        "title": "ക്ഷമിക്കണം, ഇവിടെ ആൽബങ്ങളൊന്നുമില്ല!"
       },
       "filter": {
-        "artist": "Artist",
-        "discography": "Discography",
-        "favorites": "Favorites",
-        "genre": "Genre",
-        "mostPlayed": "Most played",
-        "name": "Name",
-        "random": "Random",
-        "recentlyAdded": "Recently added",
-        "recentlyPlayed": "Recently played",
-        "releaseYear": "Release Year",
-        "search": "Search"
+        "artist": "കലാകാരൻ",
+        "discography": "ഡിസ്കോഗ്രഫി",
+        "favorites": "പ്രിയപ്പെട്ടവ",
+        "genre": "വിഭാഗം",
+        "mostPlayed": "കൂടുതൽ തവണ പ്ലേ ചെയ്തവ",
+        "name": "പേര്",
+        "random": "ക്രമരഹിതം",
+        "recentlyAdded": "അടുത്തിടെ ചേർത്തത്",
+        "recentlyPlayed": "അടുത്തിടെ പ്ലേ ചെയ്തവ",
+        "releaseYear": "റിലീസ് വർഷം",
+        "search": "തിരയുക"
       },
       "genre": {
-        "label": "Select a genre…",
-        "loading": "Loading genres…",
-        "notFound": "No genre found.",
-        "search": "Find a genre…"
+        "label": "ഒരു വിഭാഗം തിരഞ്ഞെടുക്കുക…",
+        "loading": "വിഭാഗങ്ങൾ ലോഡ് ചെയ്യുന്നു…",
+        "notFound": "വിഭാഗം കണ്ടെത്തിയില്ല.",
+        "search": "ഒരു വിഭാഗം തിരയുക…"
       },
       "header": {
-        "albumsByArtist": "Albums by {{artist}}"
+        "albumsByArtist": "{{artist}} ന്റെ ആൽബങ്ങൾ"
       },
       "search": {
-        "placeholder": "Search albums…"
+        "placeholder": "ആൽബങ്ങൾ തിരയുക…"
       }
     },
     "more": {
-      "discography": "Artist Discography",
-      "genreTitle": "More from {{genre}}",
-      "listTitle": "More from this artist"
+      "discography": "കലാകാരന്റെ ഡിസ്കോഗ്രഫി",
+      "genreTitle": "{{genre}} ൽ നിന്ന് കൂടുതൽ",
+      "listTitle": "ഈ കലാകാരനിൽ നിന്ന് കൂടുതൽ"
     },
     "table": {
-      "discNumber": "Disc {{number}}"
+      "discNumber": "ഡിസ്ക് {{number}}"
     }
   },
   "artist": {
     "buttons": {
-      "options": "More options for {{artist}}",
-      "play": "Play {{artist}} radio",
-      "shuffle": "Play {{artist}} radio in shuffle mode"
+      "options": "{{artist}} നായുള്ള കൂടുതൽ ഓപ്ഷനുകൾ",
+      "play": "{{artist}} റേഡിയോ പ്ലേ ചെയ്യുക",
+      "shuffle": "{{artist}} റേഡിയോ ഷഫിൽ മോഡിൽ പ്ലേ ചെയ്യുക"
     },
-    "headline": "Artist",
+    "headline": "കലാകാരൻ",
     "info": {
-      "albumsCount_one": "{{count}} album",
-      "albumsCount_other": "{{count}} albums"
+      "albumsCount_one": "{{count}} ആൽബം",
+      "albumsCount_other": "{{count}} ആൽബങ്ങൾ"
     },
-    "recentAlbums": "Recent albums",
-    "relatedArtists": "Related artists",
-    "topSongs": "Popular"
+    "recentAlbums": "സമീപകാല ആൽബങ്ങൾ",
+    "relatedArtists": "ബന്ധപ്പെട്ട കലാകാരന്മാർ",
+    "topSongs": "ജനപ്രിയം"
   },
   "command": {
     "commands": {
-      "heading": "Commands",
-      "pages": "Go to page",
-      "theme": "Change theme"
+      "heading": "കമാൻഡുകൾ",
+      "pages": "പേജിലേക്ക് പോകുക",
+      "theme": "തീം മാറ്റുക"
     },
-    "inputPlaceholder": "Search for an album, artist or song",
-    "noResults": "No results found.",
-    "pages": "Pages"
+    "inputPlaceholder": "ആൽബം, കലാകാരൻ അല്ലെങ്കിൽ ഗാനത്തിനായി തിരയുക",
+    "noResults": "ഫലങ്ങളൊന്നും കണ്ടെത്തിയില്ല.",
+    "pages": "പേജുകൾ"
   },
   "dayjs": {
     "relativeTime": {
-      "M": "1 month",
-      "MM": "%d months",
-      "d": "1 day",
-      "dd": "%d days",
-      "future": "in %s",
-      "h": "1 hour",
-      "hh": "%d hours",
-      "m": "1 minute",
-      "mm": "%d minutes",
-      "past": "%s ago",
-      "s": "a few seconds",
-      "y": "1 year",
-      "yy": "%d years"
+      "M": "1 മാസം",
+      "MM": "%d മാസം",
+      "d": "1 ദിവസം",
+      "dd": "%d ദിവസം",
+      "future": "ഇനി %s",
+      "h": "1 മണിക്കൂർ",
+      "hh": "%d മണിക്കൂർ",
+      "m": "1 മിനിറ്റ്",
+      "mm": "%d മിനിറ്റ്",
+      "past": "%s മുമ്പ്",
+      "s": "ഏതാനും നിമിഷങ്ങൾ",
+      "y": "1 വർഷം",
+      "yy": "%d വർഷം"
     }
   },
-  "downloads": {
-    "completed": "Your file has been downloaded.",
-    "failed": "There was an error downloading your file.",
-    "started": "Download started."
-  },
   "error": {
-    "notFound": "Not found"
+    "notFound": "കണ്ടെത്തിയില്ല"
   },
   "favorites": {
     "buttons": {
@@ -124,732 +123,849 @@
     "songCount_other": "{{count}} ഗാനങ്ങൾ"
   },
   "fullscreen": {
-    "emptyQueue": "No songs in queue",
-    "loadingLyrics": "Searching for lyrics…",
-    "lyrics": "Lyrics",
-    "noLyrics": "No lyrics found",
-    "playing": "Playing now",
-    "queue": "Queue",
-    "queueContinue": "Continue Playing",
-    "queueFromSource": "From {{source}}",
-    "queueHistory": "History",
-    "queueRepeating": "Repeating",
-    "switchButton": "Switch to Big Player"
+    "emptyQueue": "ക്യൂവിൽ ഗാനങ്ങളില്ല",
+    "loadingLyrics": "വരികൾ തിരയുന്നു…",
+    "lyrics": "വരികൾ",
+    "noLyrics": "വരികളൊന്നും കണ്ടെത്തിയില്ല",
+    "playing": "ഇപ്പോൾ പ്ലേ ചെയ്യുന്നു",
+    "queue": "ക്യൂ",
+    "queueContinue": "പ്ലേ ചെയ്യുന്നത് തുടരുക",
+    "queueFromSource": "{{source}} ൽ നിന്ന്",
+    "queueHistory": "ചരിത്രം",
+    "queueRepeating": "ആവർത്തിക്കുന്നു",
+    "switchButton": "ബിഗ് പ്ലെയറിലേക്ക് മാറുക"
   },
   "generic": {
-    "beta": "Beta",
-    "clear": "Clear",
-    "hideDetails": "Hide details",
-    "loading": "Loading…",
-    "seeMore": "See more",
-    "showDetails": "Show details",
-    "viewAll": "View all",
+    "beta": "ബീറ്റ",
+    "clear": "മായ്ക്കുക",
+    "hideDetails": "വിശദാംശങ്ങൾ മറയ്ക്കുക",
+    "loading": "ലോഡ് ചെയ്യുന്നു…",
+    "seeMore": "കൂടുതൽ കാണുക",
+    "showDetails": "വിശദാംശങ്ങൾ കാണിക്കുക",
+    "viewAll": "എല്ലാം കാണുക",
     "viewMode": {
-      "label": "View Mode",
+      "label": "കാഴ്ച മോഡ്",
       "modes": {
-        "list": "List",
-        "poster": "Poster"
+        "list": "ലിസ്റ്റ്",
+        "poster": "പോസ്റ്റർ"
       }
     }
   },
   "home": {
-    "explore": "Explore",
-    "mostPlayed": "Most played",
+    "explore": "പര്യവേക്ഷണം ചെയ്യുക",
+    "mostPlayed": "കൂടുതൽ തവണ പ്ലേ ചെയ്തവ",
     "recentlyAdded": "അടുത്തിടെ ചേർത്തത്",
-    "recentlyPlayed": "Recently played"
+    "recentlyPlayed": "അടുത്തിടെ പ്ലേ ചെയ്തവ"
   },
   "lanControl": {
     "remote": {
       "actions": {
-        "connect": "Connect",
-        "connecting": "Connecting...",
-        "disconnect": "Disconnect",
-        "refresh": "Refresh state"
+        "connect": "ബന്ധിപ്പിക്കുക",
+        "connecting": "ബന്ധിപ്പിക്കുന്നു...",
+        "disconnect": "വിച്ഛേദിക്കുക",
+        "refresh": "അവസ്ഥ പുതുക്കുക"
       },
-      "address": "Server address",
-      "autoConnectFailed": "Failed to connect to remote device, entering local playback mode",
-      "clickToPlay": "Click to play",
+      "address": "സെർവർ വിലാസം",
+      "autoConnectFailed": "റിമോട്ട് ഉപകരണത്തിലേക്ക് ബന്ധിപ്പിക്കുന്നതിൽ പരാജയപ്പെട്ടു, പ്രാദേശിക പ്ലേബാക്ക് മോഡിലേക്ക് പ്രവേശിക്കുന്നു",
+      "clickToPlay": "പ്ലേ ചെയ്യാൻ ക്ലിക്ക് ചെയ്യുക",
       "controls": {
-        "next": "Next",
-        "pause": "Pause",
-        "play": "Play",
-        "previous": "Previous",
-        "repeat": "Toggle repeat",
-        "shuffle": "Toggle shuffle"
+        "next": "അടുത്തത്",
+        "pause": "താൽക്കാലികമായി നിർത്തുക",
+        "play": "പ്ലേ ചെയ്യുക",
+        "previous": "മുമ്പത്തേത്",
+        "repeat": "ആവർത്തനം ടോഗിൾ ചെയ്യുക",
+        "shuffle": "ഷഫിൾ ടോഗിൾ ചെയ്യുക"
       },
-      "currentlyPlaying": "Currently playing",
-      "description": "Connect to a LAN control server and manage playback remotely.",
-      "emptyArtist": "Unknown artist",
-      "emptyTitle": "No track playing",
-      "ip": "IP Address",
-      "items": "items",
+      "currentlyPlaying": "ഇപ്പോൾ പ്ലേ ചെയ്യുന്നു",
+      "description": "ഒരു LAN കൺട്രോൾ സെർവറിലേക്ക് ബന്ധിപ്പിച്ച് റിമോട്ട് ആയി പ്ലേബാക്ക് നിയന്ത്രിക്കുക.",
+      "emptyArtist": "അജ്ഞാത കലാകാരൻ",
+      "emptyTitle": "ഒരു ട്രാക്കും പ്ലേ ചെയ്യുന്നില്ല",
+      "ip": "IP വിലാസം",
+      "items": "ഇനങ്ങൾ",
       "library": {
-        "albums": "Albums",
-        "back": "Back",
-        "loading": "Loading...",
-        "noAlbums": "No albums available",
-        "noPlaylists": "No playlists available",
-        "noResults": "No results found",
-        "playlists": "Playlists",
-        "search": "Search",
-        "searchButton": "Search",
-        "searchPlaceholder": "Search songs, albums...",
-        "searching": "Searching...",
-        "songs": "Songs"
+        "albums": "ആൽബങ്ങൾ",
+        "back": "പിന്നിലേക്ക്",
+        "loading": "ലോഡ് ചെയ്യുന്നു...",
+        "noAlbums": "ആൽബങ്ങളൊന്നും ലഭ്യമല്ല",
+        "noPlaylists": "പ്ലേലിസ്റ്റുകളൊന്നും ലഭ്യമല്ല",
+        "noResults": "ഫലങ്ങളൊന്നും കണ്ടെത്തിയില്ല",
+        "playlists": "പ്ലേലിസ്റ്റുകൾ",
+        "search": "തിരയുക",
+        "searchButton": "തിരയുക",
+        "searchPlaceholder": "ഗാനങ്ങൾ, ആൽബങ്ങൾ തിരയുക...",
+        "searching": "തിരയുന്നു...",
+        "songs": "ഗാനങ്ങൾ"
       },
-      "loadingSong": "Loading...",
-      "menu": "Control other devices",
-      "nowPlaying": "Now playing",
-      "password": "Access code",
-      "playing": "Playing",
-      "port": "Port",
-      "queue": "Playback queue",
-      "queueEmpty": "Queue is empty",
-      "serverRunning": "This device is currently running as a LAN Control server. You cannot control other devices while this device is in server mode.",
+      "loadingSong": "ലോഡ് ചെയ്യുന്നു...",
+      "menu": "മറ്റ് ഉപകരണങ്ങൾ നിയന്ത്രിക്കുക",
+      "nowPlaying": "ഇപ്പോൾ പ്ലേ ചെയ്യുന്നു",
+      "password": "ആക്സസ് കോഡ്",
+      "playing": "പ്ലേ ചെയ്യുന്നു",
+      "port": "പോർട്ട്",
+      "queue": "പ്ലേബാക്ക് ക്യൂ",
+      "queueEmpty": "ക്യൂ ശൂന്യമാണ്",
+      "serverRunning": "ഈ ഉപകരണം നിലവിൽ LAN കൺട്രോൾ സെർവറായി പ്രവർത്തിക്കുന്നു. ഈ ഉപകരണം സെർവർ മോഡിൽ ആയിരിക്കുമ്പോൾ നിങ്ങൾക്ക് മറ്റ് ഉപകരണങ്ങൾ നിയന്ത്രിക്കാൻ കഴിയില്ല.",
       "status": {
-        "authenticating": "Authenticating",
-        "connected": "Connected",
-        "connecting": "Connecting",
-        "disconnected": "Disconnected",
-        "error": "Error",
-        "label": "Status"
+        "authenticating": "പ്രാമാണീകരിക്കുന്നു",
+        "connected": "ബന്ധിപ്പിച്ചു",
+        "connecting": "ബന്ധിപ്പിക്കുന്നു",
+        "disconnected": "വിച്ഛേദിച്ചു",
+        "error": "പിശക്",
+        "label": "നില"
       },
       "tabs": {
-        "control": "Control",
-        "library": "Library"
+        "control": "നിയന്ത്രണം",
+        "library": "ലൈബ്രറി"
       },
-      "title": "Control other devices",
-      "unknownDevice": "Unknown device",
+      "title": "മറ്റ് ഉപകരണങ്ങൾ നിയന്ത്രിക്കുക",
+      "unknownDevice": "അജ്ഞാത ഉപകരണം",
       "version": "v{{version}}",
-      "volume": "Volume: {{volume}}%"
+      "volume": "വോളിയം: {{volume}}%"
     }
   },
   "login": {
     "form": {
-      "connect": "Connect",
-      "connecting": "Connecting…",
-      "description": "Connect to your Subsonic server.",
-      "password": "Password",
-      "server": "Server",
+      "connect": "ബന്ധിപ്പിക്കുക",
+      "connecting": "ബന്ധിപ്പിക്കുന്നു…",
+      "description": "നിങ്ങളുടെ Subsonic സെർവറിലേക്ക് ബന്ധിപ്പിക്കുക.",
+      "password": "പാസ്‌വേഡ്",
+      "server": "സെർവർ",
       "url": "URL",
-      "urlDescription": "This is your server URL",
-      "username": "Username",
-      "usernamePlaceholder": "Your username",
+      "urlDescription": "ഇത് നിങ്ങളുടെ സെർവർ URL ആണ്",
+      "username": "ഉപയോക്തൃനാമം",
+      "usernamePlaceholder": "നിങ്ങളുടെ ഉപയോക്തൃനാമം",
       "validations": {
-        "password": "Please provide a password",
-        "passwordLength": "Password must be at least 2 characters.",
-        "protocol": "URL must start with http:// or https://",
-        "url": "Please enter a valid URL.",
-        "username": "Please provide a username",
-        "usernameLength": "Username must be at least 2 characters."
+        "password": "ദയവായി ഒരു പാസ്‌വേഡ് നൽകുക",
+        "passwordLength": "പാസ്‌വേഡ് കുറഞ്ഞത് 2 അക്ഷരങ്ങൾ ആയിരിക്കണം.",
+        "protocol": "URL http:// അല്ലെങ്കിൽ https:// എന്നിവയിൽ ആരംഭിക്കണം",
+        "url": "ദയവായി സാധുവായ ഒരു URL നൽകുക.",
+        "username": "ദയവായി ഒരു ഉപയോക്തൃനാമം നൽകുക",
+        "usernameLength": "ഉപയോക്തൃനാമം കുറഞ്ഞത് 2 അക്ഷരങ്ങൾ ആയിരിക്കണം."
       }
     }
   },
   "logout": {
     "dialog": {
-      "cancel": "Cancel",
-      "confirm": "Continue",
-      "description": "Confirm to logout.",
-      "title": "Ready to say goodbye for now?"
+      "cancel": "റദ്ദാക്കുക",
+      "confirm": "തുടരുക",
+      "description": "ലോഗൗട്ട് ചെയ്യാൻ സ്ഥിരീകരിക്കുക.",
+      "title": "ഇപ്പോൾ വിടവാങ്ങാൻ തയ്യാറാണോ?"
     }
   },
   "menu": {
-    "about": "About",
-    "language": "Language",
-    "server": "Server",
-    "serverLogout": "Logout"
+    "about": "കുറിച്ച്",
+    "language": "ഭാഷ",
+    "server": "സെർവർ",
+    "serverLogout": "ലോഗൗട്ട്"
   },
   "mobile": {
-    "access_recommendation": "Please access it from a computer or tablet.",
-    "unsupported_message": "{{app_name}} isn't compatible with mobile phones."
+    "access_recommendation": "ദയവായി ഇത് ഒരു കമ്പ്യൂട്ടറിൽ നിന്നോ ടാബ്ലെറ്റിൽ നിന്നോ ആക്സസ് ചെയ്യുക.",
+    "unsupported_message": "{{app_name}} മൊബൈൽ ഫോണുകളുമായി അനുയോജ്യമല്ല."
   },
   "offline": {
-    "disconnected": "Server unreachable. Entering offline mode.",
-    "mode": "Offline",
-    "reconnectFailed": "Could not reconnect. Continuing in offline mode.",
-    "reconnected": "Reconnected to server",
-    "reconnecting": "Reconnecting…",
-    "searchUnavailable": "Search requires an offline library sync.",
-    "songUnavailable": "This song is not available offline"
+    "badge": {
+      "cloud": "നെറ്റ്‌വർക്ക് ആവശ്യമാണ്",
+      "downloaded": "ഡൗൺലോഡ് ചെയ്തു",
+      "downloading": "ഡൗൺലോഡ് ചെയ്യുന്നു…",
+      "orphan": "സെർവറിൽ നിന്ന് നീക്കം ചെയ്തു (ഓഫ്‌ലൈനിൽ പ്ലേ ചെയ്യാവുന്നത്)",
+      "smart": "സ്മാർട്ട് ഡൗൺലോഡ് റൂൾ പ്രകാരം സംരക്ഷിച്ചത്"
+    },
+    "disconnected": "സെർവറിലേക്ക് ബന്ധിപ്പിക്കാൻ കഴിയുന്നില്ല",
+    "metered": "പരിമിതം",
+    "meteredTooltip": "നിങ്ങൾ ഒരു സ്ലോ അല്ലെങ്കിൽ പരിമിത കണക്ഷനിലാണ്. ബാക്ക്‌ഗ്രൗണ്ട് സമന്വയവും സ്മാർട്ട് ഡൗൺലോഡുകളും താൽക്കാലികമായി നിർത്തിയിരിക്കുന്നു — ഓവർറൈഡ് ചെയ്യാൻ ഡൗൺലോഡ് ബട്ടണിൽ ടാപ്പ് ചെയ്യുക.",
+    "mode": "ഓഫ്‌ലൈൻ",
+    "reconnectFailed": "വീണ്ടും ബന്ധിപ്പിക്കാൻ കഴിഞ്ഞില്ല. ഓഫ്‌ലൈൻ മോഡിൽ തുടരുന്നു.",
+    "reconnected": "സെർവറിലേക്ക് വീണ്ടും ബന്ധിപ്പിച്ചു",
+    "reconnecting": "വീണ്ടും ബന്ധിപ്പിക്കുന്നു…",
+    "searchUnavailable": "തിരയലിന് ഒരു ഓഫ്‌ലൈൻ ലൈബ്രറി സമന്വയം ആവശ്യമാണ്.",
+    "songUnavailable": "ഈ ഗാനം ഓഫ്‌ലൈനിൽ ലഭ്യമല്ല"
   },
   "options": {
-    "addLast": "Add to queue",
-    "download": "Download",
+    "addLast": "അവസാനം ചേർക്കുക",
+    "download": "ഡൗൺലോഡ് ചെയ്യുക",
+    "downloadAlbum": "ആൽബം ഡൗൺലോഡ് ചെയ്യുക",
+    "downloadArtist": "ആർട്ടിസ്റ്റ് ഡൗൺലോഡ് ചെയ്യുക",
+    "downloadPlaylist": "പ്ലേലിസ്റ്റ് ഡൗൺലോഡ് ചെയ്യുക",
     "goto": {
-      "album": "Go to album",
-      "artist": "Go to artist"
+      "album": "ആൽബത്തിലേക്ക് പോകുക",
+      "artist": "കലാകാരനിലേക്ക് പോകുക"
     },
-    "info": "Get info",
-    "like": "Like",
-    "play": "Play",
-    "playNext": "Play next",
+    "info": "വിവരം നേടുക",
+    "like": "ഇഷ്ടപ്പെടുക",
+    "play": "പ്ലേ ചെയ്യുക",
+    "playNext": "അടുത്തതായി പ്ലേ ചെയ്യുക",
     "playlist": {
-      "add": "Add to playlist",
-      "create": "New playlist",
-      "delete": "Delete playlist",
-      "edit": "Edit playlist",
-      "notFound": "No playlist found",
-      "removeSong": "Remove from playlist",
-      "search": "Find a playlist"
+      "add": "പ്ലേലിസ്റ്റിലേക്ക് ചേർക്കുക",
+      "create": "പുതിയ പ്ലേലിസ്റ്റ്",
+      "delete": "പ്ലേലിസ്റ്റ് ഇല്ലാതാക്കുക",
+      "edit": "പ്ലേലിസ്റ്റ് എഡിറ്റ് ചെയ്യുക",
+      "notFound": "പ്ലേലിസ്റ്റ് കണ്ടെത്തിയില്ല",
+      "removeSong": "പ്ലേലിസ്റ്റിൽ നിന്ന് നീക്കം ചെയ്യുക",
+      "search": "ഒരു പ്ലേലിസ്റ്റ് തിരയുക"
     },
-    "removeFromQueue": "Remove from queue",
-    "unlike": "Unlike"
+    "removeDownload": "ഡൗൺലോഡ് നീക്കം ചെയ്യുക",
+    "removeFromQueue": "ക്യൂവിൽ നിന്ന് നീക്കം ചെയ്യുക",
+    "unlike": "ഇഷ്ടപ്പെടൽ നീക്കം ചെയ്യുക"
   },
   "player": {
-    "noRadioPlaying": "No radio playing",
-    "noSongPlaying": "No song playing",
+    "noRadioPlaying": "റേഡിയോ ഒന്നും പ്ലേ ചെയ്യുന്നില്ല",
+    "noSongPlaying": "ഗാനം ഒന്നും പ്ലേ ചെയ്യുന്നില്ല",
     "tooltips": {
-      "dislike": "Remove like from {{song}} by {{artist}}",
-      "forward": "Forward {{amount}} seconds",
-      "like": "Like {{song}} by {{artist}}",
+      "dislike": "{{artist}} ന്റെ {{song}} ഇഷ്ടപ്പെടൽ നീക്കം ചെയ്യുക",
+      "forward": "{{amount}} സെക്കൻഡ് മുന്നോട്ട്",
+      "like": "{{artist}} ന്റെ {{song}} ഇഷ്ടപ്പെടുക",
       "miniPlayer": {
-        "close": "Close Miniplayer",
-        "open": "Open Miniplayer"
+        "close": "മിനിപ്ലെയർ അടയ്ക്കുക",
+        "open": "മിനിപ്ലെയർ തുറക്കുക"
       },
-      "next": "Next",
-      "pause": "Pause",
-      "play": "Play",
-      "previous": "Previous",
-      "progress": "Seek",
+      "next": "അടുത്തത്",
+      "pause": "താൽക്കാലികമായി നിർത്തുക",
+      "play": "പ്ലേ ചെയ്യുക",
+      "previous": "മുമ്പത്തേത്",
+      "progress": "തിരയുക",
       "repeat": {
-        "disable": "Disable repeat",
-        "enable": "Enable repeat",
-        "enableOne": "Enable repeat one"
+        "disable": "ആവർത്തനം പ്രവർത്തനരഹിതമാക്കുക",
+        "enable": "ആവർത്തനം പ്രവർത്തനക്ഷമമാക്കുക",
+        "enableOne": "ഒന്ന് ആവർത്തിക്കുക പ്രവർത്തനക്ഷമമാക്കുക"
       },
-      "rewind": "Rewind {{amount}} seconds",
+      "rewind": "{{amount}} സെക്കൻഡ് പിന്നോട്ട്",
       "shuffle": {
-        "disable": "Disable shuffle",
-        "enable": "Enable shuffle"
+        "disable": "ഷഫിൾ പ്രവർത്തനരഹിതമാക്കുക",
+        "enable": "ഷഫിൾ പ്രവർത്തനക്ഷമമാക്കുക"
       },
-      "star": "Star current song",
-      "unstar": "Unstar current song",
+      "star": "നിലവിലെ ഗാനം നക്ഷത്രമിടുക",
+      "unstar": "നിലവിലെ ഗാനത്തിന്റെ നക്ഷത്രം നീക്കം ചെയ്യുക",
       "volume": {
-        "mute": "Mute",
-        "unmute": "Unmute"
+        "mute": "നിശബ്ദമാക്കുക",
+        "unmute": "നിശബ്ദത നീക്കുക"
       }
     }
   },
   "playlist": {
     "buttons": {
-      "options": "More options for {{name}}",
-      "play": "Play {{name}}",
-      "shuffle": "Play {{name}} in shuffle mode"
+      "options": "{{name}} നായുള്ള കൂടുതൽ ഓപ്ഷനുകൾ",
+      "play": "{{name}} പ്ലേ ചെയ്യുക",
+      "shuffle": "{{name}} ഷഫിൽ മോഡിൽ പ്ലേ ചെയ്യുക"
     },
     "duration": "~ {{duration}}",
     "form": {
       "create": {
-        "button": "Create",
-        "title": "Create Playlist",
+        "button": "സൃഷ്ടിക്കുക",
+        "title": "പ്ലേലിസ്റ്റ് സൃഷ്ടിക്കുക",
         "toast": {
-          "error": "Failed to create playlist!",
-          "success": "Playlist created successfully!"
+          "error": "പ്ലേലിസ്റ്റ് സൃഷ്ടിക്കുന്നതിൽ പരാജയപ്പെട്ടു!",
+          "success": "പ്ലേലിസ്റ്റ് വിജയകരമായി സൃഷ്ടിച്ചു!"
         }
       },
       "delete": {
-        "description": "This action cannot be undone.",
-        "title": "Are you sure you want to delete this playlist?",
+        "description": "ഈ പ്രവർത്തനം പഴയപടിയാക്കാൻ കഴിയില്ല.",
+        "title": "ഈ പ്ലേലിസ്റ്റ് ഇല്ലാതാക്കണമെന്ന് ഉറപ്പാണോ?",
         "toast": {
-          "error": "Failed to remove playlist!",
-          "success": "Playlist removed successfully!"
+          "error": "പ്ലേലിസ്റ്റ് നീക്കം ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു!",
+          "success": "പ്ലേലിസ്റ്റ് വിജയകരമായി നീക്കം ചെയ്തു!"
         }
       },
       "edit": {
-        "button": "Update",
-        "title": "Edit Playlist",
+        "button": "അപ്ഡേറ്റ് ചെയ്യുക",
+        "title": "പ്ലേലിസ്റ്റ് എഡിറ്റ് ചെയ്യുക",
         "toast": {
-          "error": "Failed to update playlist!",
-          "success": "Playlist updated successfully!"
+          "error": "പ്ലേലിസ്റ്റ് അപ്ഡേറ്റ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു!",
+          "success": "പ്ലേലിസ്റ്റ് വിജയകരമായി അപ്ഡേറ്റ് ചെയ്തു!"
         }
       },
       "labels": {
-        "comment": "Comment",
-        "commentDescription": "Write a short description of this playlist",
-        "isPublic": "Public",
-        "isPublicDescription": "Select this option to make the playlist public. This will allow other users to view and access your playlist.",
-        "name": "Name"
+        "comment": "കമന്റ്",
+        "commentDescription": "ഈ പ്ലേലിസ്റ്റിന്റെ ഒരു ഹ്രസ്വ വിവരണം എഴുതുക",
+        "isPublic": "പബ്ലിക്",
+        "isPublicDescription": "പ്ലേലിസ്റ്റ് പബ്ലിക് ആക്കാൻ ഈ ഓപ്ഷൻ തിരഞ്ഞെടുക്കുക. ഇത് മറ്റ് ഉപയോക്താക്കളെ നിങ്ങളുടെ പ്ലേലിസ്റ്റ് കാണാനും ആക്സസ് ചെയ്യാനും അനുവദിക്കും.",
+        "name": "പേര്"
       },
       "removeSong": {
-        "description": "This action cannot be undone.",
-        "title_one": "Are you sure you want to remove the selected song?",
-        "title_other": "Are you sure you want to remove the selected songs?",
+        "description": "ഈ പ്രവർത്തനം പഴയപടിയാക്കാൻ കഴിയില്ല.",
+        "title_one": "തിരഞ്ഞെടുത്ത ഗാനം നീക്കം ചെയ്യണമെന്ന് ഉറപ്പാണോ?",
+        "title_other": "തിരഞ്ഞെടുത്ത ഗാനങ്ങൾ നീക്കം ചെയ്യണമെന്ന് ഉറപ്പാണോ?",
         "toast": {
-          "error_one": "Failed to remove the song!",
-          "error_other": "Failed to remove the songs!",
-          "success_one": "Song removed successfully!",
-          "success_other": "Songs removed successfully!"
+          "error_one": "ഗാനം നീക്കം ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു!",
+          "error_other": "ഗാനങ്ങൾ നീക്കം ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു!",
+          "success_one": "ഗാനം വിജയകരമായി നീക്കം ചെയ്തു!",
+          "success_other": "ഗാനങ്ങൾ വിജയകരമായി നീക്കം ചെയ്തു!"
         }
       },
       "validations": {
-        "nameLength": "Playlist name must be at least 2 characters."
+        "nameLength": "പ്ലേലിസ്റ്റിന്റെ പേര് കുറഞ്ഞത് 2 അക്ഷരങ്ങൾ ആയിരിക്കണം."
       }
     },
-    "headline": "Playlist",
-    "noSongList": "This playlist does not have any songs!",
-    "refresh": "Refresh playlists",
-    "songCount_one": "{{count}} song",
-    "songCount_other": "{{count}} songs"
+    "headline": "പ്ലേലിസ്റ്റ്",
+    "noSongList": "ഈ പ്ലേലിസ്റ്റിൽ ഗാനങ്ങളൊന്നുമില്ല!",
+    "refresh": "പ്ലേലിസ്റ്റുകൾ പുതുക്കുക",
+    "songCount_one": "{{count}} ഗാനം",
+    "songCount_other": "{{count}} ഗാനങ്ങൾ"
   },
   "queue": {
-    "clear": "Clear queue",
-    "close": "Close queue",
-    "open": "Open queue",
-    "title": "Queue"
+    "clear": "ക്യൂ മായ്ക്കുക",
+    "close": "ക്യൂ അടയ്ക്കുക",
+    "open": "ക്യൂ തുറക്കുക",
+    "title": "ക്യൂ"
   },
   "radios": {
-    "addRadio": "Add Radio",
+    "addRadio": "റേഡിയോ ചേർക്കുക",
     "empty": {
-      "info": "Click to add your first radio station.",
-      "title": "You have no radios!"
+      "info": "നിങ്ങളുടെ ആദ്യ റേഡിയോ സ്റ്റേഷൻ ചേർക്കാൻ ക്ലിക്ക് ചെയ്യുക.",
+      "title": "നിങ്ങൾക്ക് റേഡിയോകളൊന്നുമില്ല!"
     },
-    "error": "Unable to play the Radio, check the Stream URL!",
+    "error": "റേഡിയോ പ്ലേ ചെയ്യാൻ കഴിയുന്നില്ല, സ്ട്രീം URL പരിശോധിക്കുക!",
     "form": {
       "create": {
-        "button": "Save",
-        "title": "Add Radio",
+        "button": "സംരക്ഷിക്കുക",
+        "title": "റേഡിയോ ചേർക്കുക",
         "toast": {
-          "error": "Failed to create radio!",
-          "success": "Radio created successfully!"
+          "error": "റേഡിയോ സൃഷ്ടിക്കുന്നതിൽ പരാജയപ്പെട്ടു!",
+          "success": "റേഡിയോ വിജയകരമായി സൃഷ്ടിച്ചു!"
         }
       },
       "delete": {
-        "description": "This action cannot be undone.",
-        "title": "Are you sure you want to delete this radio station?",
+        "description": "ഈ പ്രവർത്തനം പഴയപടിയാക്കാൻ കഴിയില്ല.",
+        "title": "ഈ റേഡിയോ സ്റ്റേഷൻ ഇല്ലാതാക്കണമെന്ന് ഉറപ്പാണോ?",
         "toast": {
-          "error": "Failed to remove radio!",
-          "success": "Radio removed successfully!"
+          "error": "റേഡിയോ നീക്കം ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു!",
+          "success": "റേഡിയോ വിജയകരമായി നീക്കം ചെയ്തു!"
         }
       },
       "edit": {
-        "button": "Update",
-        "title": "Edit Radio",
+        "button": "അപ്ഡേറ്റ് ചെയ്യുക",
+        "title": "റേഡിയോ എഡിറ്റ് ചെയ്യുക",
         "toast": {
-          "error": "Failed to update radio!",
-          "success": "Radio updated successfully!"
+          "error": "റേഡിയോ അപ്ഡേറ്റ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു!",
+          "success": "റേഡിയോ വിജയകരമായി അപ്ഡേറ്റ് ചെയ്തു!"
         }
       },
       "validations": {
-        "homepageUrlLength": "Homepage URL must be at least 10 characters",
-        "name": "Radio name must be at least 3 characters.",
-        "streamUrlLength": "Stream URL must be at least 10 characters",
-        "url": "Please provide a valid URL."
+        "homepageUrlLength": "ഹോംപേജ് URL കുറഞ്ഞത് 10 അക്ഷരങ്ങൾ ആയിരിക്കണം",
+        "name": "റേഡിയോയുടെ പേര് കുറഞ്ഞത് 3 അക്ഷരങ്ങൾ ആയിരിക്കണം.",
+        "streamUrlLength": "സ്ട്രീം URL കുറഞ്ഞത് 10 അക്ഷരങ്ങൾ ആയിരിക്കണം",
+        "url": "ദയവായി സാധുവായ ഒരു URL നൽകുക."
       }
     },
-    "label": "Radio",
+    "label": "റേഡിയോ",
     "table": {
       "actions": {
-        "delete": "Delete radio",
-        "edit": "Edit radio"
+        "delete": "റേഡിയോ ഇല്ലാതാക്കുക",
+        "edit": "റേഡിയോ എഡിറ്റ് ചെയ്യുക"
       },
-      "homepage": "Homepage URL",
-      "name": "Name",
-      "pauseTooltip": "Pause {{name}} radio",
-      "playTooltip": "Play {{name}} radio",
-      "stream": "Stream URL"
+      "homepage": "ഹോംപേജ് URL",
+      "name": "പേര്",
+      "pauseTooltip": "{{name}} റേഡിയോ താൽക്കാലികമായി നിർത്തുക",
+      "playTooltip": "{{name}} റേഡിയോ പ്ലേ ചെയ്യുക",
+      "stream": "സ്ട്രീം URL"
     }
   },
   "server": {
     "buttons": {
-      "refresh": "Refresh status",
-      "startScan": "Quick Scan"
+      "refresh": "നില പുതുക്കുക",
+      "startScan": "ദ്രുത സ്കാൻ"
     },
-    "folderCount_one": "{{count}} folder",
-    "folderCount_other": "{{count}} folders",
+    "folderCount_one": "{{count}} ഫോൾഡർ",
+    "folderCount_other": "{{count}} ഫോൾഡറുകൾ",
     "incompatible": {
-      "description": "This server uses an older version of the Subsonic protocol that is not fully supported. Please proceed with caution as you may have issues.",
-      "skip": "Continue anyway",
-      "title": "Incompatible server"
+      "description": "ഈ സെർവർ Subsonic പ്രോട്ടോക്കോളിന്റെ പഴയ പതിപ്പാണ് ഉപയോഗിക്കുന്നത്, ഇത് പൂർണ്ണമായി പിന്തുണയ്ക്കുന്നില്ല. നിങ്ങൾക്ക് പ്രശ്നങ്ങൾ ഉണ്ടായേക്കാം, അതിനാൽ ജാഗ്രതയോടെ തുടരുക.",
+      "skip": "എന്തായാലും തുടരുക",
+      "title": "അനുയോജ്യമല്ലാത്ത സെർവർ"
     },
-    "lastScan": "Last scan: {{date}}",
-    "management": "Server management",
-    "songCount_one": "{{count}} song",
-    "songCount_other": "{{count}} songs",
-    "status": "Status"
+    "lastScan": "അവസാന സ്കാൻ: {{date}}",
+    "management": "സെർവർ മാനേജ്മെന്റ്",
+    "songCount_one": "{{count}} ഗാനം",
+    "songCount_other": "{{count}} ഗാനങ്ങൾ",
+    "status": "നില"
   },
   "settings": {
     "accounts": {
       "discord": {
-        "description": "Share your currently playing song with friends on Discord.",
+        "description": "നിങ്ങൾ നിലവിൽ പ്ലേ ചെയ്യുന്ന ഗാനം Discord-ലെ സുഹൃത്തുക്കളുമായി പങ്കിടുക.",
         "enabled": {
-          "label": "Enable Integration"
+          "label": "സംയോജനം പ്രവർത്തനക്ഷമമാക്കുക"
         },
-        "group": "Discord Rich Presence"
+        "group": "Discord റിച്ച് പ്രെസൻസ്"
       }
     },
     "appearance": {
-      "colors": {
-        "bigPlayer": {
-          "blurSize": "Image Blur Size",
-          "label": "Big Player"
-        },
-        "description": "Select whether the app should use the dominant color from the currently playing album art as the background.",
-        "group": "Dynamic Colors",
-        "queue": {
-          "intensity": "Color Intensity Level",
-          "label": "Queue and Lyrics"
-        }
-      },
       "general": {
         "albumCoverForSongs": {
-          "info": "When enabled, every song artwork request uses the album cover to reduce loading time.",
-          "label": "Always use album covers"
+          "info": "പ്രവർത്തനക്ഷമമാക്കുമ്പോൾ, ഓരോ ഗാനത്തിന്റെയും ആർട്ട്‌വർക്ക് അഭ്യർത്ഥന ലോഡിംഗ് സമയം കുറയ്ക്കുന്നതിന് ആൽബം കവർ ഉപയോഗിക്കുന്നു.",
+          "label": "എപ്പോഴും ആൽബം കവറുകൾ ഉപയോഗിക്കുക"
         },
-        "description": "Customize the app's look and display behaviors.",
+        "description": "ആപ്പിന്റെ രൂപവും ഡിസ്പ്ലേ സ്വഭാവങ്ങളും ഇഷ്ടാനുസൃതമാക്കുക.",
         "fullscreen": {
-          "info": "If enabled, when accessing the big player, the app will automatically enter fullscreen mode.",
-          "label": "Enable automatic fullscreen"
+          "info": "പ്രവർത്തനക്ഷമമാക്കിയാൽ, ബിഗ് പ്ലെയർ ആക്സസ് ചെയ്യുമ്പോൾ ആപ്പ് യാന്ത്രികമായി ഫുൾസ്ക്രീൻ മോഡിൽ പ്രവേശിക്കും.",
+          "label": "ഓട്ടോമാറ്റിക് ഫുൾസ്ക്രീൻ പ്രവർത്തനക്ഷമമാക്കുക"
         },
-        "group": "General"
+        "group": "പൊതുവായത്"
       }
     },
     "audio": {
       "history": {
-        "description": "Songs that play for more than 10 seconds are recorded in your play history.",
-        "group": "Play History",
+        "description": "10 സെക്കൻഡിൽ കൂടുതൽ സമയം പ്ലേ ചെയ്യുന്ന ഗാനങ്ങൾ നിങ്ങളുടെ പ്ലേ ചരിത്രത്തിൽ രേഖപ്പെടുത്തും.",
+        "group": "പ്ലേ ചരിത്രം",
         "maxSize": {
-          "info": "The maximum number of songs to keep in play history. Older entries are removed when the limit is exceeded.",
-          "label": "Maximum history size"
+          "info": "പ്ലേ ചരിത്രത്തിൽ സൂക്ഷിക്കേണ്ട പരമാവധി ഗാനങ്ങളുടെ എണ്ണം. പരിധി കവിയുമ്പോൾ പഴയ എൻട്രികൾ നീക്കംചെയ്യും.",
+          "label": "പരമാവധി ചരിത്ര വലുപ്പം"
         }
       },
       "lyrics": {
-        "description": "Customize lyrics settings.",
-        "group": "Lyrics",
+        "description": "വരി ക്രമീകരണങ്ങൾ ഇഷ്ടാനുസൃതമാക്കുക.",
+        "group": "വരികൾ",
         "preferSynced": {
-          "info": "When enabled, synced lyrics will be prioritized over unsynced lyrics.",
-          "label": "Prefer synced lyrics"
+          "info": "പ്രവർത്തനക്ഷമമാക്കുമ്പോൾ, സമന്വയിപ്പിച്ച വരികൾക്ക് മുൻഗണന നൽകും.",
+          "label": "സമന്വയിപ്പിച്ച വരികൾക്ക് മുൻഗണന നൽകുക"
         },
         "showTranslation": {
-          "info": "When available, show translated lyrics below the original lyrics.",
-          "label": "Show translation"
+          "info": "ലഭ്യമാകുമ്പോൾ, യഥാർത്ഥ വരികൾക്ക് താഴെ വിവർത്തനം ചെയ്ത വരികൾ കാണിക്കുക.",
+          "label": "വിവർത്തനം കാണിക്കുക"
         }
       },
       "replayGain": {
         "defaultGain": {
-          "info": "This gain level is applied to songs that do not include ReplayGain metadata, ensuring consistent audio volume. The recommended range for gain is between -10 dB and -1 dB.",
-          "label": "Default Gain (dB)"
+          "info": "ReplayGain മെറ്റാഡാറ്റ ഇല്ലാത്ത ഗാനങ്ങൾക്ക് ഈ ഗെയ്ൻ ലെവൽ പ്രയോഗിക്കുന്നു, സ്ഥിരമായ ഓഡിയോ വോളിയം ഉറപ്പാക്കുന്നു. ശുപാർശ ചെയ്യുന്ന ഗെയ്ൻ പരിധി -10 dB മുതൽ -1 dB വരെയാണ്.",
+          "label": "ഡിഫോൾട്ട് ഗെയ്ൻ (dB)"
         },
-        "description": "Automatically normalize audio playback levels for a consistent listening experience.",
-        "enabled": "Enabled",
+        "description": "സ്ഥിരമായ ശ്രവണ അനുഭവത്തിനായി ഓഡിയോ പ്ലേബാക്ക് ലെവലുകൾ യാന്ത്രികമായി നോർമലൈസ് ചെയ്യുക.",
+        "enabled": "പ്രവർത്തനക്ഷമമാക്കി",
         "error": {
-          "button": "Try again",
-          "message": "There was an error playing the track using Replay Gain."
+          "button": "വീണ്ടും ശ്രമിക്കുക",
+          "message": "Replay Gain ഉപയോഗിച്ച് ട്രാക്ക് പ്ലേ ചെയ്യുന്നതിൽ ഒരു പിശക് സംഭവിച്ചു."
         },
         "group": "ReplayGain",
         "mode": {
-          "album": "Album gain",
-          "label": "Mode",
-          "track": "Track gain"
+          "album": "ആൽബം ഗെയ്ൻ",
+          "label": "മോഡ്",
+          "track": "ട്രാക്ക് ഗെയ്ൻ"
         },
         "preAmp": "PreAmp (dB)"
       }
     },
     "content": {
       "sidebar": {
-        "description": "Manage the visibility and organization of sections displayed in the sidebar.",
-        "group": "Sidebar",
+        "description": "സൈഡ്ബാറിൽ പ്രദർശിപ്പിച്ചിരിക്കുന്ന വിഭാഗങ്ങളുടെ ദൃശ്യപരതയും ഓർഗനൈസേഷനും നിയന്ത്രിക്കുക.",
+        "group": "സൈഡ്ബാർ",
         "radios": {
-          "section": "Hide radios section"
+          "section": "റേഡിയോ വിഭാഗം മറയ്ക്കുക"
         }
       }
     },
     "desktop": {
       "general": {
-        "description": "Customize preferences for the desktop application.",
-        "group": "General",
+        "description": "ഡെസ്ക്ടോപ്പ് ആപ്ലിക്കേഷനുള്ള മുൻഗണനകൾ ഇഷ്ടാനുസൃതമാക്കുക.",
+        "group": "പൊതുവായത്",
         "tray": {
-          "info": "When enabled, the app will minimize to the system tray instead of closing when you click the close button.",
-          "label": "Minimize to Tray"
+          "info": "പ്രവർത്തനക്ഷമമാക്കുമ്പോൾ, ക്ലോസ് ബട്ടൺ ക്ലിക്ക് ചെയ്യുമ്പോൾ ആപ്പ് പൂർണ്ണമായും അടയ്ക്കുന്നതിന് പകരം സിസ്റ്റം ട്രേയിലേക്ക് ചെറുതാക്കപ്പെടും.",
+          "label": "ട്രേയിലേക്ക് ചെറുതാക്കുക"
         }
       },
       "lanControl": {
         "address": {
-          "info": "Available server addresses for LAN control access.",
-          "label": "Server Addresses"
+          "info": "LAN കൺട്രോൾ ആക്സസിനുള്ള ലഭ്യമായ സെർവർ വിലാസങ്ങൾ.",
+          "label": "സെർവർ വിലാസങ്ങൾ"
         },
-        "addressCopied": "Server address copied to clipboard.",
+        "addressCopied": "സെർവർ വിലാസം ക്ലിപ്പ്ബോർഡിലേക്ക് പകർത്തി.",
         "allowNavidromeAuth": {
-          "info": "Enable authentication using Navidrome credentials.",
-          "label": "Allow Navidrome Authentication"
+          "info": "Navidrome ക്രെഡൻഷ്യലുകൾ ഉപയോഗിച്ച് പ്രാമാണീകരണം പ്രവർത്തനക്ഷമമാക്കുക.",
+          "label": "Navidrome പ്രാമാണീകരണം അനുവദിക്കുക"
         },
-        "copyAddress": "Copy address",
-        "copyPassword": "Copy password",
-        "description": "Manage LAN control settings for remote access.",
+        "copyAddress": "വിലാസം പകർത്തുക",
+        "copyPassword": "പാസ്‌വേഡ് പകർത്തുക",
+        "description": "റിമോട്ട് ആക്സസിനായി LAN കൺട്രോൾ ക്രമീകരണങ്ങൾ നിയന്ത്രിക്കുക.",
         "enable": {
-          "info": "Turn on LAN control to allow remote access to this application.",
-          "label": "Enable LAN Control"
+          "info": "ഈ ആപ്ലിക്കേഷനിലേക്ക് റിമോട്ട് ആക്സസ് അനുവദിക്കുന്നതിന് LAN കൺട്രോൾ ഓണാക്കുക.",
+          "label": "LAN കൺട്രോൾ പ്രവർത്തനക്ഷമമാക്കുക"
         },
-        "group": "LAN Control",
+        "group": "LAN കൺട്രോൾ",
         "password": {
-          "info": "Set a password for secure access to the LAN control server.",
-          "label": "Password"
+          "info": "LAN കൺട്രോൾ സെർവറിലേക്ക് സുരക്ഷിത ആക്സസിനായി ഒരു പാസ്‌വേഡ് സജ്ജമാക്കുക.",
+          "label": "പാസ്‌വേഡ്"
         },
-        "passwordCopied": "Password copied to clipboard.",
-        "passwordRegenerated": "Password regenerated successfully.",
+        "passwordCopied": "പാസ്‌വേഡ് ക്ലിപ്പ്ബോർഡിലേക്ക് പകർത്തി.",
+        "passwordRegenerated": "പാസ്‌വേഡ് വിജയകരമായി പുനഃസൃഷ്ടിച്ചു.",
         "port": {
-          "info": "Specify the port number for the LAN control server.",
-          "label": "Port"
+          "info": "LAN കൺട്രോൾ സെർവറിനായുള്ള പോർട്ട് നമ്പർ വ്യക്തമാക്കുക.",
+          "label": "പോർട്ട്"
         },
-        "regeneratePassword": "Regenerate password",
-        "serverError": "Failed to start LAN control server.",
-        "serverStarted": "LAN control server started successfully."
+        "regeneratePassword": "പാസ്‌വേഡ് പുനഃസൃഷ്ടിക്കുക",
+        "serverError": "LAN കൺട്രോൾ സെർവർ ആരംഭിക്കുന്നതിൽ പരാജയപ്പെട്ടു.",
+        "serverStarted": "LAN കൺട്രോൾ സെർവർ വിജയകരമായി ആരംഭിച്ചു."
       },
       "updates": {
-        "availableVersion": "Version {{version}} available",
+        "availableVersion": "പതിപ്പ് {{version}} ലഭ്യമാണ്",
         "checkNow": {
-          "info": "Manually check for available updates.",
-          "label": "Check for Updates"
+          "info": "ലഭ്യമായ അപ്ഡേറ്റുകൾക്കായി സ്വമേധയാ പരിശോധിക്കുക.",
+          "label": "അപ്ഡേറ്റുകൾക്കായി പരിശോധിക്കുക"
         },
-        "checking": "Checking for updates...",
-        "checkingManually": "Checking for updates...",
+        "checking": "അപ്ഡേറ്റുകൾക്കായി പരിശോധിക്കുന്നു...",
+        "checkingManually": "അപ്ഡേറ്റുകൾക്കായി പരിശോധിക്കുന്നു...",
         "currentVersion": {
-          "info": "The version of Aonsoku you are currently running.",
-          "label": "Current Version"
+          "info": "നിങ്ങൾ നിലവിൽ പ്രവർത്തിപ്പിക്കുന്ന Aonsoku- ന്റെ പതിപ്പ്.",
+          "label": "നിലവിലെ പതിപ്പ്"
         },
-        "description": "Check for and install application updates.",
-        "download": "Download Update",
-        "downloadError": "Download Failed",
-        "downloadStarted": "Download Started",
-        "downloadStartedDesc": "Update download has begun",
-        "downloading": "Downloading... {{percent}}%",
-        "group": "App Updates",
-        "installNow": "Install and Restart",
-        "readyToInstall": "Ready to install (restart required)",
+        "description": "ആപ്ലിക്കേഷൻ അപ്ഡേറ്റുകൾക്കായി പരിശോധിച്ച് ഇൻസ്റ്റാൾ ചെയ്യുക.",
+        "download": "അപ്ഡേറ്റ് ഡൗൺലോഡ് ചെയ്യുക",
+        "downloadError": "ഡൗൺലോഡ് പരാജയപ്പെട്ടു",
+        "downloadStarted": "ഡൗൺലോഡ് ആരംഭിച്ചു",
+        "downloadStartedDesc": "അപ്ഡേറ്റ് ഡൗൺലോഡ് ആരംഭിച്ചു",
+        "downloading": "ഡൗൺലോഡ് ചെയ്യുന്നു... {{percent}}%",
+        "group": "ആപ്പ് അപ്ഡേറ്റുകൾ",
+        "installNow": "ഇൻസ്റ്റാൾ ചെയ്ത് റീസ്റ്റാർട്ട് ചെയ്യുക",
+        "readyToInstall": "ഇൻസ്റ്റാൾ ചെയ്യാൻ തയ്യാറാണ് (റീസ്റ്റാർട്ട് ആവശ്യമാണ്)",
         "status": {
-          "info": "The current status of application updates.",
-          "label": "Update Status"
+          "info": "ആപ്ലിക്കേഷൻ അപ്ഡേറ്റുകളുടെ നിലവിലെ നില.",
+          "label": "അപ്ഡേറ്റ് നില"
         },
-        "upToDate": "You're up to date",
-        "updateAvailable": "Update Available",
-        "updateAvailableDesc": "Version {{version}} is available",
-        "updateError": "Update Check Failed",
-        "updateReady": "Update Ready",
-        "updateReadyDesc": "Update will be installed when you restart the app"
+        "upToDate": "നിങ്ങൾ അപ്‌ഡേറ്റ് ആണ്",
+        "updateAvailable": "അപ്ഡേറ്റ് ലഭ്യമാണ്",
+        "updateAvailableDesc": "പതിപ്പ് {{version}} ലഭ്യമാണ്",
+        "updateError": "അപ്ഡേറ്റ് പരിശോധന പരാജയപ്പെട്ടു",
+        "updateReady": "അപ്ഡേറ്റ് തയ്യാറാണ്",
+        "updateReadyDesc": "നിങ്ങൾ ആപ്പ് റീസ്റ്റാർട്ട് ചെയ്യുമ്പോൾ അപ്ഡേറ്റ് ഇൻസ്റ്റാൾ ചെയ്യും"
       }
     },
-    "label": "Settings",
+    "label": "ക്രമീകരണങ്ങൾ",
     "options": {
-      "accounts": "Accounts",
-      "appearance": "Appearance",
-      "audio": "Player & Audio",
-      "content": "Content",
-      "desktop": "Desktop Application",
-      "language": "Language & Region",
-      "privacy": "Privacy & Security",
-      "server": "Server",
-      "storage": "Storage"
+      "accounts": "അക്കൗണ്ടുകൾ",
+      "appearance": "രൂപം",
+      "audio": "പ്ലെയറും ഓഡിയോയും",
+      "content": "ഉള്ളടക്കം",
+      "desktop": "ഡെസ്ക്ടോപ്പ് ആപ്ലിക്കേഷൻ",
+      "language": "ഭാഷയും പ്രദേശവും",
+      "privacy": "സ്വകാര്യതയും സുരക്ഷയും",
+      "server": "സെർവർ",
+      "storage": "ഓഫ്‌ലൈൻ അനുഭവം"
     },
     "privacy": {
       "services": {
-        "description": "Manage the external services that Aonsoku can access.",
-        "group": "External Services",
+        "description": "Aonsoku-ന് ആക്സസ് ചെയ്യാൻ കഴിയുന്ന ബാഹ്യ സേവനങ്ങൾ നിയന്ത്രിക്കുക.",
+        "group": "ബാഹ്യ സേവനങ്ങൾ",
         "lrclib": {
-          "info": "LRCLIB is used to find song lyrics.",
+          "info": "ഗാനങ്ങളുടെ വരികൾ കണ്ടെത്തുന്നതിന് LRCLIB ഉപയോഗിക്കുന്നു.",
           "label": "LRCLIB"
         }
       }
     },
     "server": {
       "activeType": {
-        "fallback": "Fallback URL",
-        "info": "Shows whether this session is using the primary or fallback URL.",
-        "label": "Current server",
-        "none": "Not connected",
-        "primary": "Primary URL"
+        "fallback": "ഫാൾബാക്ക് URL",
+        "info": "ഈ സെഷൻ പ്രാഥമിക അല്ലെങ്കിൽ ഫാൾബാക്ക് URL ഉപയോഗിക്കുന്നുണ്ടോ എന്ന് കാണിക്കുന്നു.",
+        "label": "നിലവിലെ സെർവർ",
+        "none": "ബന്ധിപ്പിച്ചിട്ടില്ല",
+        "primary": "പ്രാഥമിക URL"
       },
       "activeUrl": {
-        "empty": "No server selected",
-        "info": "The server URL currently used by this app session.",
-        "label": "Current URL"
+        "empty": "സെർവർ തിരഞ്ഞെടുത്തിട്ടില്ല",
+        "info": "ഈ ആപ്പ് സെഷൻ നിലവിൽ ഉപയോഗിക്കുന്ന സെർവർ URL.",
+        "label": "നിലവിലെ URL"
       },
-      "description": "Manage the primary server and optional fallback URL used at startup.",
+      "description": "സ്റ്റാർട്ടപ്പിൽ ഉപയോഗിക്കുന്ന പ്രാഥമിക സെർവറും ഓപ്ഷണൽ ഫാൾബാക്ക് URL-ഉം നിയന്ത്രിക്കുക.",
       "fallbackUrl": {
-        "info": "Optional server URL used when the primary URL cannot be reached at startup.",
-        "label": "Fallback URL",
+        "info": "സ്റ്റാർട്ടപ്പിൽ പ്രാഥമിക URL-ലേക്ക് ബന്ധിപ്പിക്കാൻ കഴിയാത്തപ്പോൾ ഉപയോഗിക്കുന്ന ഓപ്ഷണൽ സെർവർ URL.",
+        "label": "ഫാൾബാക്ക് URL",
         "placeholder": "https://fallback-server.example.com"
       },
-      "group": "Server",
-      "locked": "Server URL settings are locked by this deployment.",
+      "group": "സെർവർ",
+      "locked": "ഈ വിന്യാസം മുഖേന സെർവർ URL ക്രമീകരണങ്ങൾ ലോക്ക് ചെയ്തിരിക്കുന്നു.",
       "primaryUrl": {
-        "info": "The server URL Aonsoku tries first when the app starts.",
-        "label": "Primary URL",
+        "info": "ആപ്പ് ആരംഭിക്കുമ്പോൾ Aonsoku ആദ്യം ശ്രമിക്കുന്ന സെർവർ URL.",
+        "label": "പ്രാഥമിക URL",
         "placeholder": "https://your-server.example.com"
       },
-      "save": "Save server URLs",
-      "saving": "Saving...",
+      "save": "സെർവർ URL-കൾ സംരക്ഷിക്കുക",
+      "saving": "സംരക്ഷിക്കുന്നു...",
       "toast": {
-        "error": "Unable to reach the primary or fallback server.",
-        "success": "Server URLs saved successfully."
+        "error": "പ്രാഥമിക അല്ലെങ്കിൽ ഫാൾബാക്ക് സെർവറിലേക്ക് ബന്ധിപ്പിക്കാൻ കഴിയുന്നില്ല.",
+        "success": "സെർവർ URL-കൾ വിജയകരമായി സംരക്ഷിച്ചു."
       },
       "validation": {
-        "fallbackUrl": "Please enter a valid fallback URL.",
-        "primaryUrl": "Please enter a valid primary URL."
+        "fallbackUrl": "ദയവായി സാധുവായ ഒരു ഫാൾബാക്ക് URL നൽകുക.",
+        "primaryUrl": "ദയവായി സാധുവായ ഒരു പ്രാഥമിക URL നൽകുക."
       }
     },
     "storage": {
       "audio": {
-        "clear": "Clear audio cache",
-        "description": "Cache audio files for instant playback on repeated listens.",
-        "enabled": "Enable audio cache",
-        "entries": "{{count}} songs cached",
-        "group": "Audio Cache",
-        "maxSize": "Maximum cache size",
-        "size": "Cache size"
+        "clear": "ഓഡിയോ കാഷ് മായ്ക്കുക",
+        "description": "ആവർത്തിച്ചുള്ള ശ്രവണത്തിനായി ഓഡിയോ ഫയലുകൾ കാഷ് ചെയ്യുക.",
+        "enabled": "ഓഡിയോ കാഷ് പ്രവർത്തനക്ഷമമാക്കുക",
+        "entries": "{{count}} ഗാനങ്ങൾ കാഷ് ചെയ്തു",
+        "group": "ഓഡിയോ കാഷ്",
+        "maxSize": "പരമാവധി കാഷ് വലുപ്പം",
+        "size": "കാഷ് വലുപ്പം"
+      },
+      "cacheManager": {
+        "confirmDelete": {
+          "description": "ഇത് '{{name}}' കാഷിൽ നിന്ന് നീക്കം ചെയ്യും. ഇത് പിന്നീട് വീണ്ടും ഡൗൺലോഡ് ചെയ്യാവുന്നതാണ്.",
+          "title": "കാഷ് ചെയ്ത ഇനം ഇല്ലാതാക്കണോ?"
+        },
+        "description": "വ്യക്തിഗത കാഷ് ചെയ്ത ഇനങ്ങൾ കാണുകയും നിയന്ത്രിക്കുകയും ചെയ്യുക.",
+        "filter": {
+          "album": "ആൽബം",
+          "all": "എല്ലാം",
+          "audio": "ഓഡിയോ",
+          "cover": "കവർ ആർട്ട്",
+          "explicit": "എക്സ്പ്ലിസിറ്റ്",
+          "lru": "LRU",
+          "playlist": "പ്ലേലിസ്റ്റ്",
+          "smart": "സ്മാർട്ട്"
+        },
+        "group": "കാഷ് മാനേജർ",
+        "list": {
+          "actions": "പ്രവർത്തനങ്ങൾ",
+          "cachedAt": "കാഷ് ചെയ്തത്",
+          "delete": "ഇല്ലാതാക്കുക",
+          "empty": "കാഷ് ചെയ്ത ഇനങ്ങളൊന്നുമില്ല.",
+          "name": "പേര്",
+          "removedFromServer": "സെർവറിൽ നിന്ന് നീക്കം ചെയ്തു",
+          "size": "വലുപ്പം",
+          "source": "ഉറവിടം",
+          "total": "{{count}} ഇനങ്ങൾ, ആകെ {{size}}",
+          "type": "തരം",
+          "type_album": "ആൽബം",
+          "type_audio": "ഓഡിയോ",
+          "type_cover": "കവർ",
+          "type_playlist": "പ്ലേലിസ്റ്റ്"
+        }
       },
       "coverArt": {
-        "clear": "Clear cover art cache",
-        "description": "Cache album cover images for faster loading.",
-        "enabled": "Enable cover art cache",
-        "entries": "{{count}} images cached",
-        "group": "Cover Art Cache",
-        "size": "Cache size"
+        "clear": "കവർ ആർട്ട് കാഷ് മായ്ക്കുക",
+        "description": "വേഗത്തിലുള്ള ലോഡിംഗിനായി ആൽബം കവർ ഇമേജുകൾ കാഷ് ചെയ്യുക.",
+        "enabled": "കവർ ആർട്ട് കാഷ് പ്രവർത്തനക്ഷമമാക്കുക",
+        "entries": "{{count}} ഇമേജുകൾ കാഷ് ചെയ്തു",
+        "group": "കവർ ആർട്ട് കാഷ്",
+        "size": "കാഷ് വലുപ്പം"
+      },
+      "limits": {
+        "audioEntries": "{{count}} ഗാനങ്ങൾ കാഷ് ചെയ്തു",
+        "audioSize": "ഓഡിയോ കാഷ്",
+        "clearAll": "എല്ലാ കാഷുകളും മായ്ക്കുക",
+        "clearAudio": "മായ്ക്കുക",
+        "clearCovers": "മായ്ക്കുക",
+        "coverEntries": "{{count}} ഇമേജുകൾ കാഷ് ചെയ്തു",
+        "coverSize": "കവർ ആർട്ട് കാഷ്",
+        "description": "ഓരോ ഡൗൺലോഡ് ഉറവിടത്തിനും അതിന്റേതായ ക്വാട്ട ഉണ്ട്. എക്സ്പ്ലിസിറ്റ് ഡൗൺലോഡുകൾ ഒരിക്കലും ഓട്ടോമാറ്റിക്കായി ഒഴിപ്പിക്കപ്പെടുന്നില്ല.",
+        "group": "കാഷ് സ്റ്റോറേജ്",
+        "imageEntries": "{{count}} ഇമേജുകൾ",
+        "maxSize": "പരമാവധി ഓഡിയോ കാഷ് വലുപ്പം",
+        "pool": {
+          "assets": {
+            "description": "വേഗത്തിലുള്ള ലൈബ്രറി റെൻഡറിംഗിനായി കാഷ് ചെയ്ത ആൽബം, കലാകാരൻ ഇമേജുകൾ.",
+            "label": "കവർ ആർട്ട്"
+          },
+          "explicit": {
+            "description": "നിങ്ങൾ സ്വയം ഡൗൺലോഡ് ചെയ്ത ഗാനങ്ങൾ, ആൽബങ്ങൾ, പ്ലേലിസ്റ്റുകൾ. ഒരിക്കലും ഓട്ടോമാറ്റിക്കായി ഒഴിപ്പിക്കപ്പെടുന്നില്ല.",
+            "label": "എക്സ്പ്ലിസിറ്റ് ഡൗൺലോഡുകൾ"
+          },
+          "lru": {
+            "description": "നിങ്ങൾ കേൾക്കുമ്പോൾ അവസരോചിതമായി കാഷ് ചെയ്യുന്നു. ക്വാട്ട കവിയുമ്പോൾ ഏറ്റവും പഴയ എൻട്രികൾ ആദ്യം ഒഴിപ്പിക്കപ്പെടും.",
+            "label": "സമീപകാലത്ത് പ്ലേ ചെയ്തവ"
+          },
+          "smart": {
+            "description": "സ്മാർട്ട് റൂളുകൾ പൊരുത്തപ്പെടുത്തി ഓട്ടോമാറ്റിക്കായി ഡൗൺലോഡ് ചെയ്തത്. ട്രിഗർ ചെയ്യുന്ന റൂൾ പൊരുത്തപ്പെടുന്നത് നിർത്തുമ്പോൾ മായ്ക്കപ്പെടും.",
+            "label": "സ്മാർട്ട് ഡൗൺലോഡുകൾ"
+          }
+        },
+        "quota": "ക്വാട്ട",
+        "songEntries": "{{count}} ഗാനങ്ങൾ",
+        "unlimited": "പരിധിയില്ലാത്തത്"
       },
       "metadata": {
-        "clear": "Clear all caches",
-        "description": "Clear all cached data including metadata, cover art, and audio files.",
-        "group": "All Caches"
+        "clear": "എല്ലാ കാഷുകളും മായ്ക്കുക",
+        "description": "മെറ്റാഡാറ്റ, കവർ ആർട്ട്, ഓഡിയോ ഫയലുകൾ എന്നിവയുൾപ്പെടെ എല്ലാ കാഷ് ചെയ്ത ഡാറ്റയും മായ്ക്കുക.",
+        "group": "എല്ലാ കാഷുകളും"
+      },
+      "offline": {
+        "description": "ഓഫ്‌ലൈൻ ആക്സസിനായി ഗാനങ്ങൾ, മെറ്റാഡാറ്റ, ആർട്‌വർക്ക് എന്നിവ പ്രാദേശികമായി കാഷ് ചെയ്യുക. ഡൗൺലോഡ് നിലവാരം, സ്മാർട്ട് ഡൗൺലോഡുകൾ, സമന്വയ ക്രമീകരണങ്ങൾ എന്നിവ അൺലോക്ക് ചെയ്യാൻ ലൈബ്രറി കാഷിംഗ് പ്രവർത്തനക്ഷമമാക്കുക.",
+        "group": "ഓഫ്‌ലൈൻ അനുഭവം"
+      },
+      "smart": {
+        "description": "പ്രവർത്തനക്ഷമമാക്കിയ ഏതെങ്കിലും റൂളുമായി പൊരുത്തപ്പെടുന്ന ഗാനങ്ങൾ യാന്ത്രികമായി കാഷ് ചെയ്യുക. എല്ലാ ട്രിഗർ ചെയ്യുന്ന റൂളുകളും പൊരുത്തപ്പെടുന്നത് നിർത്തിയ നിമിഷം അവ ഒഴിപ്പിക്കപ്പെടും, ഒരിക്കലും മാനുവൽ ഡൗൺലോഡുകൾക്ക് മുൻഗണന നൽകില്ല.",
+        "enabled": "സ്മാർട്ട് ഡൗൺലോഡുകൾ പ്രവർത്തനക്ഷമമാക്കുക",
+        "group": "സ്മാർട്ട് ഡൗൺലോഡുകൾ",
+        "rule": {
+          "favoritePlaylists": "പ്രിയപ്പെട്ട പ്ലേലിസ്റ്റുകൾ",
+          "favoriteSongs": "പ്രിയപ്പെട്ട ഗാനങ്ങൾ"
+        }
       },
       "sync": {
-        "cancel": "Cancel",
-        "clear": "Clear",
-        "coverArt": "Include cover art",
-        "coverArtInfo": "Download all album and artist images during sync. This may use significant storage and bandwidth.",
-        "description": "Cache all metadata on every app launch for offline browsing. Audio files are never synced.",
-        "enabled": "Enable sync on launch",
-        "entries": "{{count}} items synced",
-        "group": "Sync on Launch",
-        "lastSynced": "Last synced",
-        "never": "Never",
-        "phases": {
-          "albums": "Syncing albums…",
-          "artists": "Syncing artists…",
-          "cancelled": "Sync cancelled",
-          "coverArt": "Syncing cover art…",
-          "done": "Sync complete",
-          "error": "Sync failed",
-          "genres": "Syncing genres…",
-          "idle": "Preparing…",
-          "playlists": "Syncing playlists…",
-          "songs": "Syncing songs…"
+        "cancel": "റദ്ദാക്കുക",
+        "clear": "മായ്ക്കുക",
+        "clearConfirm": {
+          "clear": "മായ്ച്ച് പ്രവർത്തനരഹിതമാക്കുക",
+          "description": "ലൈബ്രറി കാഷിംഗ് പ്രവർത്തനരഹിതമാക്കുന്നത് എല്ലാ സമന്വയിപ്പിച്ച ലൈബ്രറി ഡാറ്റയും (കലാകാരന്മാർ, ആൽബങ്ങൾ, ഗാനങ്ങൾ, പ്ലേലിസ്റ്റുകൾ, വിഭാഗങ്ങൾ) മായ്ക്കും. നിങ്ങൾക്ക് എപ്പോൾ വേണമെങ്കിലും ഇത് വീണ്ടും പ്രവർത്തനക്ഷമമാക്കാനും വീണ്ടും സമന്വയിപ്പിക്കാനും കഴിയും.",
+          "keep": "പ്രവർത്തനക്ഷമമായി സൂക്ഷിക്കുക",
+          "title": "ലൈബ്രറി കാഷിംഗ് പ്രവർത്തനരഹിതമാക്കണോ?"
         },
-        "syncNow": "Sync Now"
+        "completed": "പൂർത്തിയായി",
+        "coverArt": "കവർ ആർട്ട് ഉൾപ്പെടുത്തുക",
+        "coverArtConcurrency": "കവർ ആർട്ട് കൺകറൻസി",
+        "coverArtConcurrencyInfo": "കവർ ആർട്ടിനുള്ള സമാന്തര ഡൗൺലോഡുകളുടെ എണ്ണം. ഉയർന്ന മൂല്യങ്ങൾ സമന്വയം വേഗത്തിലാക്കുന്നു എന്നാൽ കൂടുതൽ ബാൻഡ്വിഡ്ത്ത് ഉപയോഗിക്കുന്നു. തുടർച്ചയായി ഡൗൺലോഡ് ചെയ്യാൻ 1 ആയി സജ്ജമാക്കുക.",
+        "coverArtConcurrencyOff": "തുടർച്ചയായി",
+        "coverArtInfo": "സമന്വയ സമയത്ത് എല്ലാ ആൽബം, കലാകാരൻ ഇമേജുകളും ഡൗൺലോഡ് ചെയ്യുക. ഇത് ഗണ്യമായ സംഭരണവും ബാൻഡ്വിഡ്ത്തും ഉപയോഗിച്ചേക്കാം.",
+        "description": "ഓഫ്‌ലൈൻ ബ്രൗസിംഗിനായി ലൈബ്രറി മെറ്റാഡാറ്റ സമന്വയിപ്പിക്കുക. ഡൗൺലോഡ് ചെയ്ത ഗാനങ്ങൾ എപ്പോഴും ഓഫ്‌ലൈനിൽ ലഭ്യമാണ്.",
+        "downloading_one": "{{count}} ഗാനം ഡൗൺലോഡ് ചെയ്യുന്നു",
+        "downloading_other": "{{count}} ഗാനങ്ങൾ ഡൗൺലോഡ് ചെയ്യുന്നു",
+        "enabled": "ലൈബ്രറി സമന്വയിപ്പിക്കുക",
+        "entries": "{{count}} ഇനങ്ങൾ സമന്വയിപ്പിച്ചു",
+        "group": "ലൈബ്രറി സമന്വയം",
+        "justNow": "ഇപ്പോൾ മാത്രം",
+        "lastSynced": "അവസാനമായി സമന്വയിപ്പിച്ചത്",
+        "libraryCaching": "ലൈബ്രറി കാഷിംഗ്",
+        "libraryCachingInfo": "പ്രവർത്തനക്ഷമമാക്കുമ്പോൾ, മെറ്റാഡാറ്റയും ഓപ്ഷണലായി ഗാനങ്ങളും ഓഫ്‌ലൈൻ ആക്സസിനായി പ്രാദേശികമായി കാഷ് ചെയ്യും. പ്രവർത്തനരഹിതമാക്കുമ്പോൾ, ആപ്പ് പൂർണ്ണ ഓൺലൈൻ മോഡിൽ തുടരുകയും ബാക്ക്‌ഗ്രൗണ്ട് സമന്വയം ഒന്നും പ്രവർത്തിക്കുകയും ചെയ്യില്ല.",
+        "never": "ഒരിക്കലും",
+        "phases": {
+          "albums": "ആൽബങ്ങൾ സമന്വയിപ്പിക്കുന്നു…",
+          "artists": "കലാകാരന്മാരെ സമന്വയിപ്പിക്കുന്നു…",
+          "cancelled": "സമന്വയം റദ്ദാക്കി",
+          "coverArt": "കവർ ആർട്ട് സമന്വയിപ്പിക്കുന്നു…",
+          "done": "സമന്വയം പൂർത്തിയായി",
+          "error": "സമന്വയം പരാജയപ്പെട്ടു",
+          "favorites": "പ്രിയപ്പെട്ടവ സമന്വയിപ്പിക്കുന്നു…",
+          "genres": "വിഭാഗങ്ങൾ സമന്വയിപ്പിക്കുന്നു…",
+          "idle": "തയ്യാറാക്കുന്നു…",
+          "playlists": "പ്ലേലിസ്റ്റുകൾ സമന്വയിപ്പിക്കുന്നു…",
+          "songs": "ഗാനങ്ങൾ സമന്വയിപ്പിക്കുന്നു…"
+        },
+        "showMore": "{{count}} കൂടുതൽ കാണിക്കുക",
+        "syncNow": "ഇപ്പോൾ സമന്വയിപ്പിക്കുക",
+        "tier": {
+          "t1": {
+            "description": "പ്രിയപ്പെട്ടവ · പ്ലേലിസ്റ്റുകൾ · വിഭാഗങ്ങൾ",
+            "label": "അവശ്യം"
+          },
+          "t2": {
+            "description": "കലാകാരന്മാർ · ആൽബങ്ങൾ",
+            "label": "ലൈബ്രറി അസ്ഥികൂടം"
+          },
+          "t3": {
+            "description": "എല്ലാ ഗാന മെറ്റാഡാറ്റ",
+            "label": "പൂർണ്ണ ഗാനങ്ങൾ"
+          },
+          "coverArt": {
+            "label": "Cover Art",
+            "description": "ആൽബം · കലാകാരൻ · പ്ലേലിസ്റ്റ് ചിത്രങ്ങൾ"
+          }
+        }
       }
     }
   },
   "shortcuts": {
     "modal": {
       "description": {
-        "first": "Press",
-        "last": "to toggle this modal."
+        "first": "അമർത്തുക",
+        "last": "ഈ മോഡൽ ടോഗിൾ ചെയ്യാൻ."
       },
-      "title": "Keyboard Shortcuts"
+      "title": "കീബോർഡ് കുറുക്കുവഴികൾ"
     },
     "navigation": {
-      "label": "Navigation"
+      "label": "നാവിഗേഷൻ"
     },
     "playback": {
-      "label": "Playback",
-      "lowerVolume": "Lower volume",
-      "next": "Skip to next",
-      "play": "Play / Pause",
-      "previous": "Skip to previous",
-      "raiseVolume": "Raise volume",
-      "repeat": "Repeat",
-      "shuffle": "Shuffle"
+      "label": "പ്ലേബാക്ക്",
+      "lowerVolume": "ശബ്ദം കുറയ്ക്കുക",
+      "next": "അടുത്തതിലേക്ക് പോകുക",
+      "play": "പ്ലേ ചെയ്യുക / താൽക്കാലികമായി നിർത്തുക",
+      "previous": "മുമ്പത്തേതിലേക്ക് പോകുക",
+      "raiseVolume": "ശബ്ദം വർദ്ധിപ്പിക്കുക",
+      "repeat": "ആവർത്തിക്കുക",
+      "shuffle": "ഷഫിൾ"
     }
   },
   "sidebar": {
     "albums": "ആൽബങ്ങൾ",
-    "artists": "Artists",
-    "collapse": "Collapse sidebar",
-    "emptyPlaylist": "No playlists created yet",
-    "expand": "Expand sidebar",
-    "favorites": "Favorites",
-    "home": "Home",
-    "library": "Library",
+    "artists": "കലാകാരന്മാർ",
+    "collapse": "സൈഡ്ബാർ ചുരുക്കുക",
+    "emptyPlaylist": "ഇതുവരെ പ്ലേലിസ്റ്റുകളൊന്നും സൃഷ്ടിച്ചിട്ടില്ല",
+    "expand": "സൈഡ്ബാർ വികസിപ്പിക്കുക",
+    "favorites": "പ്രിയപ്പെട്ടവ",
+    "home": "ഹോം",
+    "library": "ലൈബ്രറി",
     "miniSearch": "തിരയുക",
     "playlists": "പ്ലേലിസ്റ്റുകൾ",
-    "radios": "Radios",
+    "radios": "റേഡിയോകൾ",
     "search": "തിരയുക…",
     "songs": "ഗാനങ്ങൾ"
   },
   "songInfo": {
-    "error": "Unable to retrieve song information. Please try again later.",
-    "title": "Song Details"
+    "error": "ഗാന വിവരം ലഭ്യമാക്കാൻ കഴിയുന്നില്ല. ദയവായി പിന്നീട് വീണ്ടും ശ്രമിക്കുക.",
+    "title": "ഗാന വിശദാംശങ്ങൾ"
   },
   "songs": {
     "list": {
-      "byArtist": "Songs by {{artist}}",
+      "byArtist": "{{artist}} ന്റെ ഗാനങ്ങൾ",
       "filter": {
-        "clear": "Clear filter"
+        "clear": "ഫിൽട്ടർ മായ്ക്കുക"
       },
       "search": {
-        "placeholder": "Search songs…"
+        "placeholder": "ഗാനങ്ങൾ തിരയുക…"
       }
     },
     "sort": {
-      "album": "Album A-Z",
-      "artist": "Artist A-Z",
-      "lastAdded": "Last Added",
-      "title": "Song A-Z"
+      "album": "ആൽബം എ-ഇ",
+      "artist": "കലാകാരൻ എ-ഇ",
+      "lastAdded": "അവസാനമായി ചേർത്തത്",
+      "title": "ഗാനം എ-ഇ"
     }
   },
   "table": {
     "buttons": {
-      "pause": "Pause {{title}} by {{artist}}",
-      "play": "Play {{title}} by {{artist}}"
+      "pause": "{{artist}} ന്റെ {{title}} താൽക്കാലികമായി നിർത്തുക",
+      "play": "{{artist}} ന്റെ {{title}} പ്ലേ ചെയ്യുക"
     },
     "columns": {
-      "album": "Album",
-      "albumArtist": "Album artist",
-      "albumCount": "Album count",
-      "albumGain": "Album gain",
-      "albumPeak": "Album peak",
-      "artist": "Artist",
-      "bitDepth": "Bit depth",
-      "bitrate": "Bitrate",
+      "album": "ആൽബം",
+      "albumArtist": "ആൽബം കലാകാരൻ",
+      "albumCount": "ആൽബം എണ്ണം",
+      "albumGain": "ആൽബം ഗെയ്ൻ",
+      "albumPeak": "ആൽബം പീക്ക്",
+      "artist": "കലാകാരൻ",
+      "bitDepth": "ബിറ്റ് ഡെപ്ത്",
+      "bitrate": "ബിറ്റ്റേറ്റ്",
       "bpm": "BPM",
-      "channelCount": "Channel count",
-      "codec": "Codec",
-      "comment": "Comment",
-      "contributors": "Contributors",
-      "discNumber": "Disc number",
-      "duration": "Duration",
-      "favorite": "Favorite",
-      "genres": "Genres",
-      "lastPlayed": "Last played",
-      "name": "Name",
-      "path": "Path",
-      "plays": "Plays",
-      "public": "Public",
-      "quality": "Quality",
-      "recordLabel": "Record label",
-      "samplingRate": "Sampling rate",
-      "size": "Size",
-      "songCount": "Song count",
-      "title": "Title",
-      "track": "Track",
-      "trackGain": "Track gain",
-      "trackPeak": "Track peak",
-      "year": "Year"
+      "channelCount": "ചാനൽ എണ്ണം",
+      "codec": "കോഡെക്",
+      "comment": "കമന്റ്",
+      "contributors": "സംഭാവകർ",
+      "discNumber": "ഡിസ്ക് നമ്പർ",
+      "duration": "ദൈർഘ്യം",
+      "favorite": "പ്രിയപ്പെട്ടത്",
+      "genres": "വിഭാഗങ്ങൾ",
+      "lastPlayed": "അവസാനമായി പ്ലേ ചെയ്തത്",
+      "name": "പേര്",
+      "path": "പാത്ത്",
+      "plays": "പ്ലേകൾ",
+      "public": "പബ്ലിക്",
+      "quality": "ഗുണനിലവാരം",
+      "recordLabel": "റെക്കോർഡ് ലേബൽ",
+      "samplingRate": "സാമ്പിൾ റേറ്റ്",
+      "size": "വലുപ്പം",
+      "songCount": "ഗാനങ്ങളുടെ എണ്ണം",
+      "title": "ശീർഷകം",
+      "track": "ട്രാക്ക്",
+      "trackGain": "ട്രാക്ക് ഗെയ്ൻ",
+      "trackPeak": "ട്രാക്ക് പീക്ക്",
+      "year": "വർഷം"
     },
-    "lastPlayed": "{{date}} ago",
+    "lastPlayed": "{{date}} മുമ്പ്",
     "menu": {
-      "selectedCount_one": "{{count}} selected",
-      "selectedCount_other": "{{count}} selected"
+      "selectedCount_one": "{{count}} തിരഞ്ഞെടുത്തു",
+      "selectedCount_other": "{{count}} തിരഞ്ഞെടുത്തു"
     },
     "pagination": {
-      "currentPage": "Page {{currentPage}} of {{totalPages}}",
-      "rowsPerPage": "Rows per page",
+      "currentPage": "പേജ് {{currentPage}} / {{totalPages}}",
+      "rowsPerPage": "ഓരോ പേജിലും വരികൾ",
       "screenReader": {
-        "firstPage": "Go to first page",
-        "lastPage": "Go to last page",
-        "nextPage": "Go to next page",
-        "previousPage": "Go to previous page"
+        "firstPage": "ആദ്യ പേജിലേക്ക് പോകുക",
+        "lastPage": "അവസാന പേജിലേക്ക് പോകുക",
+        "nextPage": "അടുത്ത പേജിലേക്ക് പോകുക",
+        "previousPage": "മുമ്പത്തെ പേജിലേക്ക് പോകുക"
       }
     },
     "sort": {
-      "asc": "Ascending",
-      "desc": "Descending",
-      "reset": "Reset"
+      "asc": "ആരോഹണം",
+      "desc": "അവരോഹണം",
+      "reset": "പുനഃസജ്ജമാക്കുക"
     }
   },
   "theme": {
@@ -861,53 +977,57 @@
     "discord": "Discord",
     "dracula": "Dracula",
     "github-dark": "Github Dark",
-    "label": "Theme",
+    "label": "തീം",
     "light": "Light",
     "marmalade-beaver": "Marmalade Beaver",
     "material-theme": "Material Theme",
+    "modeDark": "ഇരുണ്ടത്",
+    "modeLabel": "മോഡ്",
+    "modeLight": "ഇളം",
+    "modeSystem": "സിസ്റ്റം",
     "monokai-pro": "Monokai Pro",
     "night-owl-light": "Night Owl Light",
     "noctis-lilac": "Noctis Lilac",
     "nuclear-dark": "Nuclear Dark",
     "one-dark": "One Dark",
     "shades-of-purple": "Shades Of Purple",
-    "system": "System",
+    "system": "സിസ്റ്റം",
     "tinacious-design": "Tinacious Design",
     "vim-dark-soft": "Vim Dark Soft",
     "vue-dark": "Vue Dark"
   },
   "time": {
-    "days_one": "{{days}} day",
-    "days_other": "{{days}} days",
-    "hour": "{{hour}} hr",
-    "minutes": "{{minutes}} min",
-    "seconds": "{{seconds}} s"
+    "days_one": "{{days}} ദിവസം",
+    "days_other": "{{days}} ദിവസങ്ങൾ",
+    "hour": "{{hour}} മ",
+    "minutes": "{{minutes}} മിനി",
+    "seconds": "{{seconds}} സെ"
   },
   "toast": {
     "server": {
-      "error": "Server communication failed!",
-      "success": "Server was saved successfully!"
+      "error": "സെർവർ ആശയവിനിമയം പരാജയപ്പെട്ടു!",
+      "success": "സെർവർ വിജയകരമായി സംരക്ഷിച്ചു!"
     }
   },
   "update": {
     "dialog": {
-      "install": "Install and Restart",
-      "remindLater": "Remind Me Later",
-      "title": "New Version Available!"
+      "install": "ഇൻസ്റ്റാൾ ചെയ്ത് റീസ്റ്റാർട്ട് ചെയ്യുക",
+      "remindLater": "പിന്നീട് ഓർമ്മിപ്പിക്കുക",
+      "title": "പുതിയ പതിപ്പ് ലഭ്യമാണ്!"
     },
     "sw": {
-      "error": "Update failed – Retry",
-      "refresh": "Refresh to update",
-      "updating": "Updating..."
+      "error": "അപ്ഡേറ്റ് പരാജയപ്പെട്ടു – വീണ്ടും ശ്രമിക്കുക",
+      "refresh": "അപ്ഡേറ്റ്",
+      "updating": "അപ്ഡേറ്റ് ചെയ്യുന്നു..."
     },
     "toasts": {
-      "error": "Failed to install the update. Please try downloading it directly from GitHub.",
-      "started": "The update process has started.",
-      "success": "The update has been installed! The app will now restart."
+      "error": "അപ്ഡേറ്റ് ഇൻസ്റ്റാൾ ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു. ദയവായി GitHub-ൽ നിന്ന് നേരിട്ട് ഡൗൺലോഡ് ചെയ്യാൻ ശ്രമിക്കുക.",
+      "started": "അപ്ഡേറ്റ് പ്രക്രിയ ആരംഭിച്ചു.",
+      "success": "അപ്ഡേറ്റ് ഇൻസ്റ്റാൾ ചെയ്തു! ആപ്പ് ഇപ്പോൾ റീസ്റ്റാർട്ട് ചെയ്യും."
     }
   },
   "warnings": {
-    "reload": "There is a song playing!\nAre you sure you want to reload the page?",
-    "songError": "Unable to play the song, check the Server!"
+    "reload": "ഒരു ഗാനം പ്ലേ ചെയ്യുന്നു!\nപേജ് റീലോഡ് ചെയ്യണമെന്ന് ഉറപ്പാണോ?",
+    "songError": "ഗാനം പ്ലേ ചെയ്യാൻ കഴിയുന്നില്ല, സെർവർ പരിശോധിക്കുക!"
   }
 }

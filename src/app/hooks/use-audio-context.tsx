@@ -22,6 +22,7 @@ export function useAudioContext(
   const audioContextRef = useRef<IAudioContext | null>(null);
   const sourceNodeRef = useRef<IAudioSource | null>(null);
   const gainNodeRef = useRef<IGainNode<IAudioContext> | null>(null);
+  const resumeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const resetRefs = useCallback(() => {
     if (sourceNodeRef.current) {
@@ -60,6 +61,33 @@ export function useAudioContext(
     try {
       if (!audioContextRef.current) {
         audioContextRef.current = new AudioContext();
+
+        // Proactively resume AudioContext when suspended (e.g. by browser after
+        // screen-off or backgrounding). A debounce prevents resume-suspend
+        // loops that some browsers trigger when the page is backgrounded.
+        audioContextRef.current.onstatechange = async () => {
+          const ctx = audioContextRef.current;
+          if (!ctx) return;
+          logger.info(`[AudioContext:stateChange] state=${ctx.state}`);
+
+          if (ctx.state === "suspended" && !document.hidden) {
+            if (resumeDebounceRef.current) return;
+
+            resumeDebounceRef.current = setTimeout(() => {
+              resumeDebounceRef.current = null;
+            }, 1000);
+
+            try {
+              await ctx.resume();
+              logger.info("[AudioContext:proactiveResume] resumed successfully");
+            } catch (error) {
+              logger.error(
+                "Failed to proactively resume AudioContext",
+                error,
+              );
+            }
+          }
+        };
       }
 
       const audioContext = audioContextRef.current;
@@ -96,12 +124,12 @@ export function useAudioContext(
     const audioContext = audioContextRef.current;
     if (!audioContext) return;
 
-    logger.info("AudioContext State", { state: audioContext.state });
+    logger.info(`[AudioContext:resumeContext] state=${audioContext.state}`);
 
     if (audioContext.state === "suspended") {
       try {
         await audioContext.resume();
-        logger.info("AudioContext resumed successfully");
+        logger.info(`[AudioContext:resumeResult] state=${audioContext.state} | success=true`);
       } catch (error) {
         logger.error("Failed to resume AudioContext", error);
       }
@@ -155,15 +183,13 @@ export function useAudioContext(
       if (!audioContext) return;
 
       // When page becomes visible again, resume the context if suspended
-      if (!document.hidden && audioContext.state === "suspended") {
-        try {
-          await audioContext.resume();
-          logger.info("AudioContext resumed after visibility change");
-        } catch (error) {
-          logger.error(
-            "Failed to resume AudioContext on visibility change",
-            error,
-          );
+    if (!document.hidden && audioContext.state === "suspended") {
+      logger.info(`[AudioContext:visibilityResume] visibilityState=${document.visibilityState} | state=${audioContext.state}`);
+      try {
+        await audioContext.resume();
+        logger.info("[AudioContext:visibilityResume] resumed successfully");
+      } catch (error) {
+        logger.error("[AudioContext:visibilityResume] failed", error);
         }
       }
     };
@@ -178,7 +204,12 @@ export function useAudioContext(
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: clear state after unmount
   useEffect(() => {
-    return () => resetRefs();
+    return () => {
+      if (resumeDebounceRef.current) {
+        clearTimeout(resumeDebounceRef.current);
+      }
+      resetRefs();
+    };
   }, []);
 
   return {

@@ -32,8 +32,7 @@ env-config.js
 .env
 .env.local
 
-out/
-
-# Electron Forge build artifacts
+# Build output
 out/
 dist/
+coverage/

@@ -1,8 +1,10 @@
 import { OptionsButtons } from "@/app/components/options/buttons";
 import { DropdownMenuSeparator } from "@/app/components/ui/dropdown-menu";
 import { useOptions } from "@/app/hooks/use-options";
+import { cacheManager } from "@/service/cache";
 import { subsonic } from "@/service/subsonic";
 import { usePlaylists, useRemovePlaylist } from "@/store/playlists.store";
+import { usePlayerStore } from "@/store/player.store";
 import { Playlist, PlaylistWithEntries } from "@/types/responses/playlist";
 import { ISong } from "@/types/responses/song";
 
@@ -12,7 +14,6 @@ interface PlaylistOptionsProps {
   showPlay?: boolean;
   disablePlayNext?: boolean;
   disableAddLast?: boolean;
-  disableDownload?: boolean;
   disableEdit?: boolean;
   disableDelete?: boolean;
 }
@@ -23,13 +24,16 @@ export function PlaylistOptions({
   showPlay = false,
   disablePlayNext = false,
   disableAddLast = false,
-  disableDownload = false,
   disableEdit = false,
   disableDelete = false,
 }: PlaylistOptionsProps) {
   const { setPlaylistDialogState, setData } = usePlaylists();
-  const { play, playNext, playLast, startDownload } = useOptions();
+  const { play, playNext, playLast } = useOptions();
   const { setPlaylistId, setConfirmDialogState } = useRemovePlaylist();
+  const isUserQueueEmpty = usePlayerStore(
+    (state) => state.songlist.userQueue.songs.length === 0,
+  );
+  const isAddLastDisabled = disableAddLast || isUserQueueEmpty;
 
   function handleEdit() {
     setData({
@@ -76,10 +80,6 @@ export function PlaylistOptions({
     }
   }
 
-  function handleDownload() {
-    startDownload(playlist.id);
-  }
-
   return (
     <>
       {variant === "context" && (
@@ -111,19 +111,18 @@ export function PlaylistOptions({
       />
       <OptionsButtons.PlayLast
         variant={variant}
-        disabled={disableAddLast}
+        disabled={isAddLastDisabled}
         onClick={(e) => {
           e.stopPropagation();
           handlePlayLast();
         }}
       />
       <DropdownMenuSeparator />
-      <OptionsButtons.Download
+      <OptionsButtons.DownloadPlaylist
         variant={variant}
-        disabled={disableDownload}
         onClick={(e) => {
           e.stopPropagation();
-          handleDownload();
+          cacheManager.cachePlaylist(playlist.id);
         }}
       />
       <DropdownMenuSeparator />

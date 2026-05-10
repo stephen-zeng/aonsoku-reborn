@@ -5,8 +5,10 @@ import { Badge } from "@/app/components/ui/badge";
 import { CommandGroup, CommandItem } from "@/app/components/ui/command";
 import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
+import { useIsOnline } from "@/store/cache.store";
 import dateTime from "@/utils/dateTime";
 import { checkServerType } from "@/utils/servers";
+import { queryKeys } from "@/utils/queryKeys";
 
 async function delayedFn<T>(callback: () => T): Promise<T> {
   await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -24,6 +26,7 @@ const startScan = async () => {
 export function CommandServer() {
   const { t } = useTranslation();
   const { isLms } = checkServerType();
+  const isOnline = useIsOnline();
 
   const {
     data: scanStatus,
@@ -31,8 +34,9 @@ export function CommandServer() {
     isFetching,
     refetch,
   } = useQuery({
-    queryKey: ["server-get-scan-status"],
+    queryKey: [...queryKeys.server.scanStatus],
     queryFn: getScanStatus,
+    enabled: isOnline,
   });
 
   const lastScanDate = scanStatus
@@ -40,7 +44,7 @@ export function CommandServer() {
     : "";
 
   const { mutateAsync, isPending } = useMutation({
-    mutationKey: ["server-start-scan"],
+    mutationKey: [...queryKeys.server.startScan],
     mutationFn: startScan,
     onSuccess: async () => {
       useAppStore.setState((state) => {

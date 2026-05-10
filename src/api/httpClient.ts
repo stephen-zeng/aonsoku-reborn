@@ -1,9 +1,17 @@
 import omit from "lodash/omit";
+import { markServerUnreachable } from "@/app/hooks/use-network-status";
 import { useAppStore } from "@/store/app.store";
-import { CoverArt } from "@/types/coverArtType";
-import { appName } from "@/utils/appName";
-import { authQueryParams } from "./auth";
+import type { CoverArt } from "@/types/coverArtType";
 import { AppRequestError } from "./errors";
+import {
+  buildUrl,
+  buildAvatarUrl as _buildAvatarUrl,
+  buildCoverArtUrl as _buildCoverArtUrl,
+  buildSongStreamUrl as _buildSongStreamUrl,
+  type ServerAuthConfig,
+} from "./urlBuilder";
+
+export type { ServerAuthConfig } from "./urlBuilder";
 
 export type QueryType = Record<string, string | number | undefined>;
 
@@ -11,39 +19,10 @@ export interface FetchOptions extends RequestInit {
   query?: QueryType;
 }
 
-function queryParams() {
-  const { username, password, authType, protocolVersion } =
+function getAuthConfig(): ServerAuthConfig {
+  const { url, username, password, authType, protocolVersion } =
     useAppStore.getState().data;
-
-  return {
-    ...authQueryParams(username, password, authType),
-    v: protocolVersion || "1.16.0",
-    c: appName,
-    f: "json",
-  };
-}
-
-function getUrl(path: string, options?: QueryType) {
-  const serverUrl = useAppStore.getState().data.url;
-  const params = new URLSearchParams(queryParams());
-
-  if (options) {
-    Object.keys(options).forEach((key) => {
-      const query = options[key];
-
-      if (query !== undefined) {
-        params.append(key, query.toString());
-      }
-    });
-  }
-
-  const queries = params.toString();
-  const pathWithoutSlash = path.startsWith("/") ? path.substring(1) : path;
-  let url = `${serverUrl}/rest/${pathWithoutSlash}`;
-  url += path.includes("?") ? "&" : "?";
-  url += queries;
-
-  return url;
+  return { url, username, password, authType, protocolVersion };
 }
 
 async function browserFetch<T>(url: string, options: RequestInit) {
@@ -61,7 +40,7 @@ async function browserFetch<T>(url: string, options: RequestInit) {
 
     try {
       data = (await response.json()) as Record<string, unknown>;
-    } catch (_error) {
+    } catch {
       throw new AppRequestError("parse_error", "Failed to parse response", {
         url,
       });
@@ -97,6 +76,7 @@ async function browserFetch<T>(url: string, options: RequestInit) {
     }
 
     if (error instanceof TypeError) {
+      markServerUnreachable();
       throw new AppRequestError(
         "network_unreachable",
         "The configured server is unreachable",
@@ -114,7 +94,11 @@ export async function httpClient<T>(
   path: string,
   options: FetchOptions,
 ): Promise<{ count: number; data: T }> {
-  const url = getUrl(path, options.query);
+  const url = buildUrl(
+    path,
+    getAuthConfig(),
+    options.query as Record<string, string | number | undefined>,
+  );
 
   try {
     const init = omit(options, "query");
@@ -127,20 +111,16 @@ export async function httpClient<T>(
   }
 }
 
+export function getAvatarUrl(username: string, size?: string): string {
+  return _buildAvatarUrl(getAuthConfig(), username, size);
+}
+
 export function getCoverArtUrl(
   id?: string,
   type: CoverArt = "album",
   size = "300",
 ): string {
-  if (!id) {
-    // everything except artists uses the same default cover art
-    type = type === "artist" ? "artist" : "album";
-    return `/default_${type}_art.png`;
-  }
-  return getUrl("getCoverArt", {
-    id,
-    size,
-  });
+  return _buildCoverArtUrl(getAuthConfig(), id, type, size);
 }
 
 export function getSongStreamUrl(
@@ -148,18 +128,5 @@ export function getSongStreamUrl(
   maxBitRate?: string,
   format?: string,
 ) {
-  return getUrl("stream", {
-    id,
-    maxBitRate,
-    format,
-    estimateContentLength: "true",
-  });
-}
-
-export function getDownloadUrl(id: string, maxBitRate = "0", format = "raw") {
-  return getUrl("download", {
-    id,
-    maxBitRate,
-    format,
-  });
+  return _buildSongStreamUrl(getAuthConfig(), id, maxBitRate, format);
 }

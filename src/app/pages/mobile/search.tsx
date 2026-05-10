@@ -1,13 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
 import { Play, SearchIcon } from "lucide-react";
-import { type MouseEvent, type TouchEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
-import Image from "@/app/components/image";
+import { CachedImage } from "@/app/components/cover-image/cached-image";
+import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { useSongList } from "@/app/hooks/use-song-list";
+import { useOfflineQuery } from "@/lib/offlineQueryClient";
+import { getOfflineSearchResults } from "@/lib/offlineQueryClient";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
@@ -17,7 +19,6 @@ import { ISimilarArtist } from "@/types/responses/artist";
 import { ISong } from "@/types/responses/song";
 import { byteLength } from "@/utils/byteLength";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
-import { useCoverArtUrlFromSongPreference } from "@/utils/coverArt";
 import { queryKeys } from "@/utils/queryKeys";
 
 interface MobileResultItemProps {
@@ -28,7 +29,6 @@ interface MobileResultItemProps {
   subtitle: string;
   onRowClick: () => void;
   onPlayClick: () => void;
-  disableTextNavigation?: boolean;
 }
 
 function MobileResultItem({
@@ -39,39 +39,23 @@ function MobileResultItem({
   subtitle,
   onRowClick,
   onPlayClick,
-  disableTextNavigation = false,
 }: MobileResultItemProps) {
-  const src = useCoverArtUrlFromSongPreference({
-    coverArt,
-    coverArtType,
-    albumId,
-    size: "100",
-  });
-
-  function handleTextClick(
-    e: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>,
-  ) {
-    e.stopPropagation();
-  }
-
   return (
     <button
       type="button"
-      className="flex w-full items-center gap-3 px-4 py-2 active:bg-accent/50 transition-colors text-left"
+      className="flex min-h-14 w-full items-center gap-3 px-4 py-2 active:bg-accent/50 text-left"
       onClick={onRowClick}
     >
-      <Image
-        src={src}
+      <CachedImage
+        coverArtId={coverArt}
+        coverArtType={coverArtType}
+        albumId={albumId}
+        alt={`${subtitle} - ${title}`}
         width={44}
         height={44}
         className="aspect-square object-cover rounded shadow flex-shrink-0"
-        alt={`${subtitle} - ${title}`}
       />
-      <div
-        className="flex flex-col justify-center flex-1 min-w-0"
-        onClick={disableTextNavigation ? handleTextClick : undefined}
-        onTouchEnd={disableTextNavigation ? handleTextClick : undefined}
-      >
+      <div className="flex flex-col justify-center flex-1 min-w-0">
         <span className="font-medium text-sm truncate">{title}</span>
         <span className="text-xs text-muted-foreground truncate">
           {subtitle}
@@ -80,7 +64,7 @@ function MobileResultItem({
       <Button
         variant="ghost"
         size="sm"
-        className="w-8 h-8 p-0 rounded-full flex-shrink-0"
+        className="size-11 p-0 rounded-full flex-shrink-0"
         onClick={(e) => {
           e.stopPropagation();
           onPlayClick();
@@ -130,13 +114,20 @@ export default function MobileSearch() {
 
   const enableQuery = byteLength(query) >= 3;
 
-  const { data: searchResult } = useQuery({
-    queryKey: [queryKeys.search, query],
-    queryFn: () =>
+  const { data: searchResult } = useOfflineQuery({
+    queryKey: [...queryKeys.search, query],
+    onlineFn: () =>
       subsonic.search.get({
         query,
         albumCount: 6,
         artistCount: 6,
+        songCount: 6,
+      }),
+    offlineFn: () =>
+      getOfflineSearchResults({
+        query,
+        artistCount: 6,
+        albumCount: 6,
         songCount: 6,
       }),
     enabled: enableQuery,
@@ -167,7 +158,15 @@ export default function MobileSearch() {
 
   return (
     <div className="flex flex-col w-full h-full">
-      <div className="sticky top-0 z-10 bg-background border-b px-4 py-3">
+      <MobilePageHeader variant="root" title={t("sidebar.miniSearch")} />
+      <div
+        className="sticky top-0 z-10 bg-background border-b px-4 py-3"
+        style={{
+          paddingTop: "max(0.75rem, var(--safe-area-top))",
+          paddingLeft: "max(1rem, var(--safe-area-left))",
+          paddingRight: "max(1rem, var(--safe-area-right))",
+        }}
+      >
         <div className="relative flex items-center">
           <SearchIcon className="absolute left-3 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input
@@ -224,7 +223,6 @@ export default function MobileSearch() {
                 albumId={song.albumId}
                 title={song.title}
                 subtitle={song.artist}
-                disableTextNavigation={true}
                 onRowClick={() => navigate(ROUTES.ALBUM.PAGE(song.albumId))}
                 onPlayClick={() => playSong(song)}
               />

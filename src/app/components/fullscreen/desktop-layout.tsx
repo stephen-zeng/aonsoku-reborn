@@ -4,6 +4,7 @@ import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 
+import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useIsTouchPrimary } from "@/app/hooks/use-input-mode";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
   const { t } = useTranslation();
   const { hasLyrics } = useHasLyrics();
   const isTouchPrimary = useIsTouchPrimary();
+  const contrast = useFullscreenContrast();
 
   const lyricsDisabled = hasLyrics === false;
 
@@ -41,15 +43,16 @@ export const DesktopLayout = memo(function DesktopLayout() {
     <div
       className="flex h-full w-full overflow-hidden"
       data-testid="fullscreen-desktop-layout"
+      style={contrast.style}
     >
       <div
-        className={`fullscreen-desktop-playing flex h-full min-w-0 shrink-0 flex-col px-8 pt-6 pb-4 transition-[width] duration-300 sm:px-12 ${rightPanelView ? "w-1/2" : "w-full"}`}
+        className={`fullscreen-desktop-playing flex h-full min-w-0 shrink-0 flex-col px-8 pt-6 pb-4 md:px-12 ${rightPanelView ? "w-1/2" : "w-full"}`}
       >
         <div className="flex items-center gap-2 shrink-0">
           <Button
             variant="ghost"
             size="icon"
-            className="size-10 rounded-full hover:bg-foreground/20"
+            className={`size-10 rounded-full ${contrast.hoverBg}`}
             onClick={closeFullscreenPlayerWithHistory}
             aria-label="Close"
           >
@@ -61,7 +64,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-10 rounded-full hover:bg-foreground/20"
+                className={`size-10 rounded-full ${contrast.hoverBg}`}
                 onClick={handleQueueClick}
                 aria-label={t("fullscreen.queue")}
               >
@@ -70,7 +73,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
               <Button
                 variant="ghost"
                 size="icon"
-                className={`size-10 rounded-full hover:bg-foreground/20 ${lyricsDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`size-10 rounded-full ${contrast.hoverBg} ${lyricsDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
                 onClick={handleLyricsClick}
                 disabled={lyricsDisabled}
                 aria-label={t("fullscreen.lyrics")}
@@ -83,7 +86,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col items-center justify-center min-h-0">
-          <div className="flex w-full min-w-0 flex-col items-center max-h-full overflow-y-hidden">
+          <div className="flex w-full min-w-0 flex-col items-center max-h-full overflow-y-hidden overflow-y-clip">
             <ArtworkWithInfo
               className="flex-1 min-h-0"
               showTouchDragSurface={isTouchPrimary}
@@ -94,7 +97,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
       </div>
 
       <div
-        className={`shrink-0 flex h-full flex-col overflow-hidden transition-[width] duration-300 ${rightPanelView ? "w-1/2" : "w-0"}`}
+        className={`shrink-0 flex h-full flex-col overflow-hidden ${rightPanelView ? "w-1/2" : "w-0"}`}
         data-testid="fullscreen-desktop-side-panel"
         data-view={rightPanelView ?? "closed"}
         style={{ "--queue-bg-overlay": "transparent" } as React.CSSProperties}
@@ -105,10 +108,10 @@ export const DesktopLayout = memo(function DesktopLayout() {
               variant="ghost"
               size="sm"
               className={cn(
-                "gap-1.5 transition-colors",
+                "gap-1.5",
                 rightPanelView === "queue"
                   ? "fullscreen-backdrop-layer rounded-md hover:bg-transparent"
-                  : "hover:bg-foreground/20",
+                  : contrast.hoverBg,
               )}
               onClick={handleQueueClick}
             >
@@ -119,11 +122,11 @@ export const DesktopLayout = memo(function DesktopLayout() {
               variant="ghost"
               size="sm"
               className={cn(
-                "gap-1.5 transition-colors",
+                "gap-1.5",
                 lyricsDisabled && "opacity-50 cursor-not-allowed",
                 rightPanelView === "lyrics"
                   ? "fullscreen-backdrop-layer rounded-md hover:bg-transparent"
-                  : "hover:bg-foreground/20",
+                  : contrast.hoverBg,
               )}
               onClick={handleLyricsClick}
               disabled={lyricsDisabled}
@@ -134,7 +137,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-hidden px-2 pb-4" data-vaul-no-drag>
+        <div className="flex-1 overflow-hidden pb-4" data-vaul-no-drag>
           <AnimatePresence mode="wait">
             {rightPanelView === "queue" && (
               <motion.div

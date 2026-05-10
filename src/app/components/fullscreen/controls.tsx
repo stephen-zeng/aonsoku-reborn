@@ -11,6 +11,7 @@ import {
 import { memo } from "react";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { Button } from "@/app/components/ui/button";
+import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
 import { useIsPortraitViewport } from "@/app/hooks/use-mobile";
 import { usePlaybackControls } from "@/app/hooks/use-playback-controls";
 import { LoopState } from "@/types/playerContext";
@@ -34,6 +35,16 @@ function FullscreenControls() {
     hasNext,
   } = usePlaybackControls();
   const isPortraitViewport = useIsPortraitViewport();
+  const { isBackdropDark, playButtonBg, playButtonIcon } =
+    useFullscreenContrast();
+
+  const secondaryBtnClass = clsx(
+    "relative w-11 h-11 md:w-12 md:h-12 rounded-full text-foreground",
+    isBackdropDark
+      ? "data-[state=active]:text-white"
+      : "data-[state=active]:text-primary",
+    "hover:bg-transparent hover:scale-110 transition-transform will-change-transform",
+  );
 
   return (
     <>
@@ -41,34 +52,36 @@ function FullscreenControls() {
         <Button
           size="icon"
           variant="ghost"
-          data-state={isShuffleActive && "active"}
+          data-state={isShuffleActive ? "active" : undefined}
           className={clsx(
-            buttonsStyle.secondary,
-            isShuffleActive && buttonsStyle.activeDot,
+            secondaryBtnClass,
+            isShuffleActive && "fullscreen-button-active",
           )}
-          style={{ ...buttonsStyle.style }}
+          style={{ backfaceVisibility: "hidden" }}
           onClick={() => toggleShuffle()}
           disabled={isPlayingOneSong() || !hasNext}
+          unfocusable
         >
-          <Shuffle className={buttonsStyle.secondaryIcon} />
+          <Shuffle className="w-5 h-5 md:w-6 md:h-6" />
         </Button>
       )}
       <Button
         size="icon"
         variant="ghost"
-        className={buttonsStyle.secondary}
-        style={{ ...buttonsStyle.style }}
+        className={secondaryBtnClass}
+        style={{ backfaceVisibility: "hidden" }}
         onClick={() => playPrevSong()}
         disabled={cannotSkipPrev}
+        unfocusable
       >
-        <SkipBack className={buttonsStyle.secondaryIconFilled} />
+        <SkipBack className="w-5 h-5 md:w-6 md:h-6 text-secondary-foreground fill-secondary-foreground" />
       </Button>
       <motion.button
         whileTap={{ scale: 0.9 }}
         className={clsx(
-          "w-14 h-14 rounded-full bg-secondary-foreground",
-          "flex items-center justify-center cursor-pointer",
-          "hover:scale-105 transition-transform will-change-transform",
+          "w-14 h-14 rounded-full flex items-center justify-center cursor-pointer",
+          "",
+          playButtonBg,
         )}
         style={{ backfaceVisibility: "hidden" }}
         onClick={() => togglePlayPause()}
@@ -85,7 +98,7 @@ function FullscreenControls() {
               transition={{ duration: 0.1 }}
             >
               <Pause
-                className="w-6 h-6 text-secondary fill-secondary"
+                className={clsx("w-6 h-6", playButtonIcon)}
                 strokeWidth={1}
               />
             </motion.div>
@@ -97,7 +110,7 @@ function FullscreenControls() {
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ duration: 0.1 }}
             >
-              <Play className="w-6 h-6 text-secondary fill-secondary" />
+              <Play className={clsx("w-6 h-6", playButtonIcon)} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -105,28 +118,30 @@ function FullscreenControls() {
       <Button
         size="icon"
         variant="ghost"
-        className={buttonsStyle.secondary}
-        style={{ ...buttonsStyle.style }}
+        className={secondaryBtnClass}
+        style={{ backfaceVisibility: "hidden" }}
         onClick={() => playNextSong()}
         disabled={cannotSkipNext}
+        unfocusable
       >
-        <SkipForward className={buttonsStyle.secondaryIconFilled} />
+        <SkipForward className="w-5 h-5 md:w-6 md:h-6 text-secondary-foreground fill-secondary-foreground" />
       </Button>
       {!isPortraitViewport && (
         <Button
           size="icon"
           variant="ghost"
-          data-state={loopState !== LoopState.Off && "active"}
+          data-state={loopState !== LoopState.Off ? "active" : undefined}
           className={clsx(
-            buttonsStyle.secondary,
-            loopState !== LoopState.Off && buttonsStyle.activeDot,
+            secondaryBtnClass,
+            loopState !== LoopState.Off && "fullscreen-button-active",
           )}
           onClick={() => toggleLoop()}
-          style={{ ...buttonsStyle.style }}
+          style={{ backfaceVisibility: "hidden" }}
+          unfocusable
         >
-          {isLoopOff && <Repeat className={buttonsStyle.secondaryIcon} />}
-          {isLoopAll && <Repeat className={buttonsStyle.secondaryIcon} />}
-          {isLoopOne && <RepeatOne className={buttonsStyle.secondaryIcon} />}
+          {isLoopOff && <Repeat className="w-5 h-5 md:w-6 md:h-6" />}
+          {isLoopAll && <Repeat className="w-5 h-5 md:w-6 md:h-6" />}
+          {isLoopOne && <RepeatOne className="w-5 h-5 md:w-6 md:h-6" />}
         </Button>
       )}
     </>
@@ -134,15 +149,3 @@ function FullscreenControls() {
 }
 
 export const MemoFullscreenControls = memo(FullscreenControls);
-
-export const buttonsStyle = {
-  secondary:
-    "relative w-11 h-11 sm:w-12 sm:h-12 rounded-full text-secondary-foreground hover:text-secondary-foreground data-[state=active]:text-primary hover:bg-transparent hover:scale-110 transition-transform will-change-transform",
-  secondaryIcon: "w-5 h-5 sm:w-6 sm:h-6",
-  secondaryIconFilled:
-    "w-5 h-5 sm:w-6 sm:h-6 text-secondary-foreground fill-secondary-foreground",
-  activeDot: "player-button-active",
-  style: {
-    backfaceVisibility: "hidden" as const,
-  },
-};

@@ -92,10 +92,10 @@ export function TableListRow<TData>({
         onTouchCancel={handleTouchCancel}
         onContextMenu={(e) => handleClicks(e, row)}
         className={clsx(
-          "group/tablerow w-[calc(100%-10px)] flex flex-row transition-colors",
+          "group/tablerow w-[calc(100%-10px)] flex flex-row",
           "md:data-[state=selected]:bg-primary/75 hover:bg-muted",
           isQueue && "rounded-md",
-          isRowSongActive && "row-active bg-accent",
+          isRowSongActive && "row-active",
         )}
         style={{
           height: `${virtualRow.size}px`,

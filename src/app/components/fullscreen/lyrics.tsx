@@ -13,19 +13,24 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ScrollArea,
   scrollAreaViewportSelector,
 } from "@/app/components/ui/scroll-area";
 import { subsonic } from "@/service/subsonic";
+import { useIsOnline } from "@/store/cache.store";
 import {
   useLyricsSettings,
   usePlayerActions,
   usePlayerIsPlaying,
+  usePlayerIsScrubbing,
   usePlayerRef,
   usePlayerSonglist,
+  usePlayerStore,
 } from "@/store/player.store";
 import type { IStructuredLyric } from "@/types/responses/song";
+import { logger } from "@/utils/logger";
 import {
   areLyricsSynced,
   convertLrcToAMLL,
@@ -33,9 +38,7 @@ import {
   LRC_METADATA_REGEX,
   LRC_TIMESTAMP_REGEX,
 } from "@/utils/lrc-converter";
-import { logger } from "@/utils/logger";
 import { queryKeys } from "@/utils/queryKeys";
-import { useTranslation } from "react-i18next";
 
 const LyricPlayer = lazy(() =>
   import("@applemusic-like-lyrics/react").then((m) => ({
@@ -157,21 +160,24 @@ export function LyricsTab() {
 
   const { id: songId, artist, title, duration } = currentSong || {};
   const songDurationMs = duration ? duration * 1000 : undefined;
+  const isOnline = useIsOnline();
 
   const { data: lyrics, isLoading: isLoadingLyrics } = useQuery({
-    queryKey: [queryKeys.lyrics.plain, artist, title, duration],
+    queryKey: [...queryKeys.lyrics.plain, artist, title, duration],
     queryFn: () =>
       artist && title
         ? subsonic.lyrics.getLyrics({ artist, title, duration })
         : Promise.resolve(null),
-    enabled: !!artist && !!title,
+    enabled: isOnline && !!artist && !!title,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: structuredLyrics, isLoading: isLoadingStructured } = useQuery({
-    queryKey: [queryKeys.lyrics.structured, songId],
+    queryKey: [...queryKeys.lyrics.structured, songId],
     queryFn: () =>
-      songId ? subsonic.lyrics.getStructuredLyrics(songId) : Promise.resolve([]),
+      songId
+        ? subsonic.lyrics.getStructuredLyrics(songId)
+        : Promise.resolve([]),
     enabled: !!songId,
     staleTime: 5 * 60 * 1000,
   });
@@ -233,13 +239,7 @@ export function LyricsTab() {
     }
 
     return null;
-  }, [
-    structuredLyrics,
-    lyrics,
-    showTranslation,
-    songDurationMs,
-    currentSong,
-  ]);
+  }, [structuredLyrics, lyrics, showTranslation, songDurationMs, currentSong]);
 
   const noLyricsFound = t("fullscreen.noLyrics");
   const loadingLyrics = t("fullscreen.loadingLyrics");
@@ -276,6 +276,7 @@ interface SyncedLyricsProps {
 function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
   const playerRef = usePlayerRef();
   const isPlaying = usePlayerIsPlaying();
+  const isScrubbing = usePlayerIsScrubbing();
   const { setAreLyricsAligned } = usePlayerActions();
   const [currentTime, setCurrentTime] = useState(0);
   const currentTimeRef = useRef(0);
@@ -291,6 +292,24 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
   } | null>(null);
   const touchTapStateRef = useRef<TouchTapState | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isSeekingState, setIsSeekingState] = useState(false);
+  const isScrubbingRef = useRef(isScrubbing);
+  const scrubbingProgressRef = useRef(
+    usePlayerStore.getState().playerProgress.scrubbingProgress,
+  );
+
+  useEffect(() => {
+    isScrubbingRef.current = isScrubbing;
+  }, [isScrubbing]);
+
+  useEffect(() => {
+    return usePlayerStore.subscribe(
+      (state) => state.playerProgress.scrubbingProgress,
+      (progress) => {
+        scrubbingProgressRef.current = progress;
+      },
+    );
+  }, []);
 
   const clearTouchScrollBlurTimer = useCallback(() => {
     clearTimeout(touchScrollBlurTimerRef.current);
@@ -355,12 +374,12 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
       const player = getInternalLyricPlayer(lyricPlayerRef);
       if (player) {
         player.resetScroll();
-        player.setIsSeeking(true);
-        clearTimeout(seekingTimerRef.current);
-        seekingTimerRef.current = setTimeout(() => {
-          player.setIsSeeking(false);
-        }, 100);
       }
+      setIsSeekingState(true);
+      clearTimeout(seekingTimerRef.current);
+      seekingTimerRef.current = setTimeout(() => {
+        setIsSeekingState(false);
+      }, 200);
 
       setCurrentTime(lyricLine.startTime);
       currentTimeRef.current = lyricLine.startTime;
@@ -452,8 +471,30 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
     if (!playerRef) return;
 
     const updateTime = () => {
+      if (isScrubbingRef.current) {
+        const timeMs = Math.floor(scrubbingProgressRef.current * 1000);
+        if (currentTimeRef.current !== timeMs) {
+          currentTimeRef.current = timeMs;
+          setCurrentTime(timeMs);
+        }
+        animationFrameRef.current = requestAnimationFrame(updateTime);
+        return;
+      }
+
       const timeMs = Math.floor((playerRef.currentTime || 0) * 1000);
       if (currentTimeRef.current !== timeMs) {
+        const delta = timeMs - currentTimeRef.current;
+        if (Math.abs(delta) > 500) {
+          const player = getInternalLyricPlayer(lyricPlayerRef);
+          if (player) {
+            player.resetScroll();
+          }
+          setIsSeekingState(true);
+          clearTimeout(seekingTimerRef.current);
+          seekingTimerRef.current = setTimeout(() => {
+            setIsSeekingState(false);
+          }, 200);
+        }
         currentTimeRef.current = timeMs;
         setCurrentTime(timeMs);
       }
@@ -477,6 +518,8 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
       ref={containerRef}
       className="w-full h-full text-left lrc-box"
       data-vaul-no-drag
+      data-seeking={isSeekingState}
+      data-scrubbing={isScrubbing}
       onClick={(e) => e.stopPropagation()}
       onWheel={handleWheel}
       onTouchStart={handleTouchStart}
@@ -499,7 +542,7 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
           currentTime={currentTime}
           alignAnchor="left"
           enableBlur={!isTouchScrolling}
-          enableSpring={true}
+          enableSpring={!isSeekingState && !isScrubbing}
           onLyricLineClick={(line) => {
             if (line.lineIndex !== undefined) {
               seekToLyricLine(line.lineIndex);

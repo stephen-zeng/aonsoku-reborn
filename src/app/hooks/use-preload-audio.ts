@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef } from "react";
-import { getSongStreamUrl } from "@/api/httpClient";
+import { buildAudioUrl, cacheManager } from "@/service/cache";
 import {
   usePlayerCurrentList,
   usePlayerCurrentSongIndex,
-  usePlayerMediaType,
   usePlayerLoop,
+  usePlayerMediaType,
   usePlayerShuffle,
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
@@ -12,6 +12,7 @@ import { LoopState } from "@/types/playerContext";
 export function usePreloadAudio() {
   const preloadRef = useRef<HTMLAudioElement | null>(null);
   const preloadedSongIdRef = useRef<string | null>(null);
+  const preloadBlobUrlRef = useRef<string | null>(null);
   const { isSong } = usePlayerMediaType();
   const isShuffleActive = usePlayerShuffle();
   const loopState = usePlayerLoop();
@@ -40,10 +41,19 @@ export function usePreloadAudio() {
         preloadRef.current = null;
         preloadedSongIdRef.current = null;
       }
+      if (preloadBlobUrlRef.current) {
+        URL.revokeObjectURL(preloadBlobUrlRef.current);
+        preloadBlobUrlRef.current = null;
+      }
       return;
     }
 
     if (preloadedSongIdRef.current === nextSongId) return;
+
+    if (preloadBlobUrlRef.current) {
+      URL.revokeObjectURL(preloadBlobUrlRef.current);
+      preloadBlobUrlRef.current = null;
+    }
 
     if (preloadRef.current) {
       preloadRef.current.removeAttribute("src");
@@ -55,8 +65,31 @@ export function usePreloadAudio() {
       preloadRef.current.preload = "auto";
     }
 
-    preloadRef.current.src = getSongStreamUrl(nextSongId);
-    preloadedSongIdRef.current = nextSongId;
+    let cancelled = false;
+
+    (async () => {
+      const cachedUrl = await cacheManager.getCachedAudioUrl(nextSongId);
+      if (cancelled) {
+        if (cachedUrl) URL.revokeObjectURL(cachedUrl);
+        return;
+      }
+
+      if (cachedUrl) {
+        if (preloadRef.current) {
+          preloadRef.current.src = cachedUrl;
+        }
+        preloadBlobUrlRef.current = cachedUrl;
+      } else {
+        if (preloadRef.current) {
+          preloadRef.current.src = buildAudioUrl(nextSongId, "stream");
+        }
+      }
+      preloadedSongIdRef.current = nextSongId;
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [nextSongId]);
 
   useEffect(() => {
@@ -65,6 +98,10 @@ export function usePreloadAudio() {
         preloadRef.current.removeAttribute("src");
         preloadRef.current.load();
         preloadRef.current = null;
+      }
+      if (preloadBlobUrlRef.current) {
+        URL.revokeObjectURL(preloadBlobUrlRef.current);
+        preloadBlobUrlRef.current = null;
       }
     };
   }, []);

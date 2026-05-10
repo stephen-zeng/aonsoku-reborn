@@ -11,7 +11,7 @@ export function MiniSidebar() {
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col items-center justify-start gap-1 min-w-mini-sidebar max-w-mini-sidebar border-r fixed top-header left-0 bottom-0 pb-player bg-background z-10 py-2 pr-2",
+        "hidden md:flex flex-col items-center justify-start gap-1 min-w-mini-sidebar max-w-mini-sidebar border-r fixed top-header left-0 bottom-0 pb-player bg-background z-30 py-2 pr-2",
         isCollapsed ? "xl:flex" : "xl:hidden",
       )}
       style={{ paddingLeft: "calc(var(--safe-area-left) + 0.5rem)" }}

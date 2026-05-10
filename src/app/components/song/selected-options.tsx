@@ -8,9 +8,13 @@ import {
   ContextMenuSeparator,
 } from "@/app/components/ui/context-menu";
 import { useOptions } from "@/app/hooks/use-options";
+import { audioKey, cacheManager } from "@/service/cache";
+import { useCacheIndexStore } from "@/store/cache-index.store";
 import { ROUTES } from "@/routes/routesList";
 import { ISong } from "@/types/responses/song";
 import { AddToPlaylistSubMenu } from "./add-to-playlist";
+import { usePlayerStore } from "@/store/player.store";
+import { useLibraryCaching } from "@/store/cache.store";
 
 interface SelectedSongsProps {
   table: Table<ISong>;
@@ -20,6 +24,10 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const songOptions = useOptions();
+  const libraryCaching = useLibraryCaching();
+  const isUserQueueEmpty = usePlayerStore(
+    (state) => state.songlist.userQueue.songs.length === 0,
+  );
 
   const { rows } = table.getFilteredSelectedRowModel();
   const isSingleSelected = rows.length === 1;
@@ -39,11 +47,37 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
     reset(() => songOptions.playLast(songs));
   }
 
-  async function handleDownload() {
-    if (!isSingleSelected) return;
-
-    reset(() => songOptions.startDownload(firstSong.id));
+  async function handleCacheSongs() {
+    const uncached = songs.filter(
+      (s) => !(audioKey(s.id) in useCacheIndexStore.getState().items),
+    );
+    await Promise.all(
+      uncached.map((s) =>
+        cacheManager.cacheSong(s.id).catch(() => {
+          // Best-effort: skip songs that fail to cache
+        }),
+      ),
+    );
+    reset(() => {});
   }
+
+  async function handleRemoveCachedSongs() {
+    for (const song of songs) {
+      const key = audioKey(song.id);
+      const isCached = key in useCacheIndexStore.getState().items;
+      if (isCached) {
+        await cacheManager.evictItem(key);
+      }
+    }
+    reset(() => {});
+  }
+
+  const hasUncached = songs.some(
+    (s) => !(audioKey(s.id) in useCacheIndexStore.getState().items),
+  );
+  const hasCached = songs.some(
+    (s) => audioKey(s.id) in useCacheIndexStore.getState().items,
+  );
 
   async function handleAddToPlaylist(id: string) {
     const songIdToAdd = songs.map((s) => s.id);
@@ -80,6 +114,7 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
       />
       <OptionsButtons.PlayLast
         variant="context"
+        disabled={isUserQueueEmpty}
         onClick={(e) => {
           e.stopPropagation();
           handlePlayLast();
@@ -125,16 +160,8 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
                   }}
                 />
               )}
-              <ContextMenuSeparator />
             </>
           )}
-          <OptionsButtons.Download
-            variant="context"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDownload();
-            }}
-          />
           <ContextMenuSeparator />
           <OptionsButtons.SongInfo
             variant="context"
@@ -145,10 +172,37 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
           />
         </>
       )}
-      <ContextMenuSeparator />
-      <ContextMenuItem disabled inset>
-        {t("table.menu.selectedCount", { count: rows.length })}
-      </ContextMenuItem>
+      {libraryCaching && (
+        <>
+          <ContextMenuSeparator />
+          {hasUncached && (
+            <OptionsButtons.DownloadSong
+              variant="context"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCacheSongs();
+              }}
+            />
+          )}
+          {hasCached && (
+            <OptionsButtons.RemoveDownload
+              variant="context"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRemoveCachedSongs();
+              }}
+            />
+          )}
+        </>
+      )}
+      {rows.length > 1 && (
+        <>
+          <ContextMenuSeparator />
+          <ContextMenuItem disabled inset>
+            {t("table.menu.selectedCount", { count: rows.length })}
+          </ContextMenuItem>
+        </>
+      )}
     </>
   );
 }

@@ -3,11 +3,48 @@
 const CACHE_VERSION = "__SW_CACHE_VERSION__";
 const CACHE_NAME = `aonsoku-cache-v${CACHE_VERSION}`;
 const CACHE_PREFIX = "aonsoku-cache-v";
+const API_CACHE_NAME = `aonsoku-api-v${CACHE_VERSION}`;
 
 // Replaced at build time with a JSON array of asset URLs.
 // In dev, stays as a string — Array.isArray() skips precaching.
 const PRECACHE_MANIFEST = "__SW_PRECACHE_MANIFEST__";
 const CRITICAL_URLS = ["/index.html"];
+
+// API paths that are safe to cache with StaleWhileRevalidate
+const CACHEABLE_API_PREFIXES = [
+  "/rest/getGenres",
+  "/rest/getArtists",
+  "/rest/getAlbumList",
+  "/rest/getAlbumList2",
+  "/rest/getAlbum",
+  "/rest/getArtist",
+  "/rest/getArtistInfo",
+  "/rest/getArtistInfo2",
+  "/rest/getSong",
+  "/rest/getPlaylist",
+  "/rest/getPlaylists",
+  "/rest/getMusicDirectory",
+  "/rest/getIndexes",
+  "/rest/getMusicFolders",
+  "/rest/getTopSongs",
+  "/rest/getLyrics",
+  "/rest/search",
+  "/rest/search2",
+  "/rest/search3",
+];
+
+// Maximum age (ms) for stale-while-revalidate API responses.
+// Entries older than this are served from network instead of cache.
+const MAX_STALE_AGE_MS = 30 * 60 * 1000; // 30 minutes
+
+function isApiGetRequest(request) {
+  return (
+    request.method === "GET" &&
+    CACHEABLE_API_PREFIXES.some((prefix) =>
+      new URL(request.url).pathname.startsWith(prefix),
+    )
+  );
+}
 
 // Check by pathname — caller already parsed the URL
 function isCacheablePathname(pathname) {
@@ -65,6 +102,9 @@ self.addEventListener("install", (event) => {
           );
         }
       }
+
+      // 3. Open API cache
+      await caches.open(API_CACHE_NAME);
     }),
   );
 });
@@ -76,7 +116,11 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+            .filter(
+              (key) =>
+                (key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME) ||
+                (key.startsWith("aonsoku-api-") && key !== API_CACHE_NAME),
+            )
             .map((key) => caches.delete(key)),
         ),
       )
@@ -89,6 +133,53 @@ function cacheResponse(key, response) {
     .open(CACHE_NAME)
     .then((cache) => cache.put(key, response))
     .catch((err) => console.warn("[SW] Cache write failed:", err));
+}
+
+// Stale-while-revalidate for API responses, with a max-stale age.
+// If the cached response is older than MAX_STALE_AGE_MS, skip the cache
+// and go network-first. Falls back to stale cache if network is offline.
+function staleWhileRevalidate(event) {
+  const { request } = event;
+
+  event.respondWith(
+    caches.open(API_CACHE_NAME).then((cache) =>
+      cache.match(request).then((cached) => {
+        const fetchPromise = fetch(request)
+          .then((response) => {
+            if (response.ok) {
+              event.waitUntil(cache.put(request, response.clone()));
+            }
+            return response;
+          })
+          .catch(() => undefined);
+
+        if (cached) {
+          const dateHeader = cached.headers.get("date");
+          const cachedAge = dateHeader
+            ? Date.now() - new Date(dateHeader).getTime()
+            : Infinity;
+
+          if (Number.isFinite(cachedAge) && cachedAge < MAX_STALE_AGE_MS) {
+            // Fresh enough — serve stale, revalidate in background
+            return cached;
+          }
+          // Stale entry is too old or Date header missing — try network first
+        }
+
+        // No cache or stale entry too old — must wait for network
+        return fetchPromise.then(
+          (response) =>
+            response ||
+            // Network failed — serve stale cache as last resort, or 503
+            cached ||
+            new Response("", {
+              status: 503,
+              statusText: "Service Unavailable",
+            }),
+        );
+      }),
+    ),
+  );
 }
 
 self.addEventListener("fetch", (event) => {
@@ -132,7 +223,40 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Everything else (API calls, etc.): network-only pass-through
+  // Cacheable API GET requests: stale-while-revalidate
+  if (isApiGetRequest(request)) {
+    staleWhileRevalidate(event);
+    return;
+  }
+
+  // Audio stream/download requests — intercept 416 Range Not Satisfiable.
+  // Some Subsonic-compatible servers return 416 when the browser sends a
+  // Range request that the server cannot satisfy (e.g. transcoded streams,
+  // incorrect Content-Length with estimateContentLength=true, or resuming
+  // a closed connection). When that happens, strip the Range header and
+  // retry so the server sends the full response from byte 0.
+  if (url.pathname === "/rest/stream" || url.pathname === "/rest/download") {
+    event.respondWith(
+      fetch(request).then((response) => {
+        if (response.status === 416 && request.headers.has("Range")) {
+          const headers = new Headers(request.headers);
+          headers.delete("range");
+          const newRequest = new Request(request.url, {
+            method: request.method,
+            headers,
+            credentials: request.credentials,
+            mode: request.mode,
+            cache: request.cache,
+          });
+          return fetch(newRequest);
+        }
+        return response;
+      }),
+    );
+    return;
+  }
+
+  // Everything else (API mutations, non-cacheable calls): network-only pass-through
 });
 
 self.addEventListener("message", (event) => {

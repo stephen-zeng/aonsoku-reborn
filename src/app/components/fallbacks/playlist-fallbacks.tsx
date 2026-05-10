@@ -3,6 +3,7 @@ import { TableFallback } from "@/app/components/fallbacks/table-fallbacks";
 import { ButtonsBarFallback } from "@/app/components/fallbacks/ui-fallbacks";
 import ListWrapper from "@/app/components/list-wrapper";
 import { Skeleton } from "@/app/components/ui/skeleton";
+import { songCollectionColumnIds } from "@/app/tables/column-layouts";
 
 function PlaylistButtonsFallback() {
   return (
@@ -21,7 +22,7 @@ export function PlaylistFallback() {
 
       <ListWrapper>
         <PlaylistButtonsFallback />
-        <TableFallback variant="modern" columns="playlists" />
+        <TableFallback variant="modern" columnIds={songCollectionColumnIds} />
       </ListWrapper>
     </div>
   );

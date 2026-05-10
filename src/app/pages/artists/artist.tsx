@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import ImageHeader from "@/app/components/album/image-header";
@@ -8,6 +9,7 @@ import { ArtistFallback } from "@/app/components/fallbacks/artists";
 import { PreviewListFallback } from "@/app/components/fallbacks/home-fallbacks";
 import { TopSongsTableFallback } from "@/app/components/fallbacks/table-fallbacks";
 import { BadgesData } from "@/app/components/header-info";
+import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import PreviewList from "@/app/components/home/preview-list";
 import ListWrapper from "@/app/components/list-wrapper";
 import {
@@ -22,6 +24,7 @@ import { sortRecentAlbums } from "@/utils/album";
 export default function Artist() {
   const { t } = useTranslation();
   const { artistId } = useParams() as { artistId: string };
+  const [accentColor, setAccentColor] = useState("");
 
   const {
     data: artist,
@@ -82,6 +85,11 @@ export default function Artist() {
 
   return (
     <div className="w-full">
+      <MobilePageHeader
+        variant="sub"
+        title={artist.name}
+        accentColor={accentColor}
+      />
       <ImageHeader
         type={t("artist.headline")}
         title={artist.name}
@@ -90,6 +98,7 @@ export default function Artist() {
         coverArtSize="700"
         coverArtAlt={artist.name}
         badges={badges}
+        onColorExtracted={setAccentColor}
       />
 
       <ListWrapper>

@@ -31,6 +31,7 @@ export function PlayerLikeButton({ disabled }: PlayerLikeButtonProps) {
         disabled={disabled}
         onClick={starCurrentSong}
         data-testid="player-like-button"
+        unfocusable
       >
         <Heart
           className={clsx(

@@ -4,6 +4,7 @@ export const appName = "Aonsoku";
 
 export const buildHash: string = __BUILD_HASH__;
 export const buildTime: number = __BUILD_TIME__;
+
 const formattedBuildTime =
   buildTime > 0 ? new Date(buildTime).toLocaleString() : "dev";
 

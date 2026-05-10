@@ -3,8 +3,16 @@ import { AuthType } from "@/types/serverConfig";
 
 export const saltWord = "40n50kuPl4y3r";
 
-const { SERVER_URL, HIDE_SERVER, APP_USER, APP_PASSWORD, APP_AUTH_TYPE } =
-  window;
+const configSource =
+  typeof window !== "undefined"
+    ? (window as Record<string, unknown>)
+    : ({} as Record<string, unknown>);
+
+const SERVER_URL = configSource.SERVER_URL as string | undefined;
+const HIDE_SERVER = configSource.HIDE_SERVER as string | boolean | undefined;
+const APP_USER = configSource.APP_USER as string | undefined;
+const APP_PASSWORD = configSource.APP_PASSWORD as string | undefined;
+const APP_AUTH_TYPE = configSource.APP_AUTH_TYPE as string | undefined;
 
 export const hasValidConfig = Boolean(
   SERVER_URL && HIDE_SERVER && APP_USER && APP_PASSWORD && APP_AUTH_TYPE,
@@ -48,6 +56,22 @@ export function genEncodedPassword(password: string) {
 export function toHex(s: string) {
   return s
     .split("")
-    .map((c) => c.charCodeAt(0).toString(16))
+    .map((c) => c.charCodeAt(0).toString(16).padStart(2, "0"))
     .join("");
+}
+
+export function fromHex(hex: string) {
+  const result = new Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    result[i >> 1] = String.fromCharCode(parseInt(hex.substring(i, i + 2), 16));
+  }
+  return result.join("");
+}
+
+function isHexString(value: string): boolean {
+  return value.length % 2 === 0 && /^[0-9a-fA-F]+$/.test(value);
+}
+
+export function decodeStoredPassword(raw: string): string {
+  return isHexString(raw) ? fromHex(raw) : raw;
 }

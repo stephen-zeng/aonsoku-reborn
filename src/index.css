@@ -32,7 +32,13 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background-foreground text-foreground overflow-x-hidden;
+  }
+
+  html.fullscreen-scroll-lock,
+  body.fullscreen-scroll-lock {
+    overflow: hidden;
+    overscroll-behavior: none;
   }
 
   body.windows-linux {
@@ -70,15 +76,12 @@
     );
   }
 
-  /* Mobile optimization: smaller player height + bottom nav */
-  @media (max-width: 640px) {
-    :root {
-      --player-height: 64px;
-    }
-  }
-
+  /* Mobile optimization: no header, smaller player height + bottom nav */
   @media (max-width: 767px) {
     :root {
+      --header-bar-height: 0px;
+      --header-height: 0px;
+      --player-height: 64px;
       --bottom-nav-height: calc(
         var(--bottom-nav-bar-height) +
         var(--safe-area-bottom)
@@ -180,6 +183,22 @@
       var(--queue-backdrop-b, 0) /
     var(--queue-backdrop-alpha, 0)
   );
+}
+
+/* Fullscreen queue hover/active overrides — placed outside @layer to win
+   over Tailwind utility classes (hover:bg-muted, bg-accent). Uses
+   foreground-based alpha so the colour blends with any backdrop. */
+.fullscreen-queue-bg .group\/queuerow:hover {
+  background-color: hsl(var(--foreground) / 0.1);
+}
+
+.fullscreen-queue-bg .group\/queuerow.bg-accent,
+.fullscreen-queue-bg .group\/queuerow.bg-skeleton {
+  background-color: hsl(var(--foreground) / 0.15);
+}
+
+.fullscreen-queue-bg .user-dropdown-trigger[data-state="open"] > :first-child {
+  background-color: hsl(var(--foreground) / 0.15);
 }
 
 .fullscreen-drawer-surface {
@@ -290,6 +309,15 @@ img {
   @apply after:content-['•'] after:block after:absolute after:-bottom-1 after:text-primary;
 }
 
+.fullscreen-button-active {
+  @apply after:content-['•'] after:block after:absolute after:-bottom-1;
+  color: var(--fullscreen-active-color, hsl(var(--primary)));
+}
+
+.fullscreen-button-active::after {
+  color: var(--fullscreen-active-color, hsl(var(--primary)));
+}
+
 .mini-player-button-active {
   @apply after:content-['•'] after:block after:absolute after:-bottom-1.5 after:text-secondary-foreground !text-secondary-foreground;
 }
@@ -308,9 +336,6 @@ img {
   @apply [&_[cmdk-group-heading]]:text-muted-foreground;
   @apply [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0;
   @apply [&_[cmdk-group]]:px-2;
-  @apply [&_[cmdk-input-wrapper]_svg]:h-5;
-  @apply [&_[cmdk-input-wrapper]_svg]:w-5;
-  @apply [&_[cmdk-input]]:h-12;
   @apply [&_[cmdk-item]]:px-2;
   @apply [&_[cmdk-item]]:py-3;
   @apply [&_[cmdk-item]_svg]:h-4;
@@ -493,6 +518,19 @@ svg#bars .eq-bar--4 {
   mix-blend-mode: normal;
 }
 
+/* Disable all animations when seeking */
+.lrc-box[data-seeking="true"] .amll-lyric-player * {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Smooth but non-bouncy scrolling during scrubbing */
+.lrc-box[data-scrubbing="true"] .amll-lyric-player * {
+  /* Only smooth the scroll (transform), make highlighting (color/opacity) instant */
+  transition: transform 0.1s ease-out !important;
+  animation: none !important;
+}
+
 .default-gradient {
   @apply bg-gradient-to-b from-background/10 to-background/40;
 }
@@ -565,5 +603,12 @@ div[data-test-id="table-row"]:hover {
 }
 
 body {
-  touch-action: pan-x pan-y;
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
+}
+
+html {
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
 }

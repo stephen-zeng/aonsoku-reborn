@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useBackgroundPlayback } from "@/app/hooks/use-background-playback";
 import { useLanControlClientStore } from "@/store/lanControlClient.store";
 import {
   useIsRemoteControlActive,
+  usePlayerCurrentSong,
+  usePlayerCurrentSongIndex,
   usePlayerDuration,
   usePlayerIsPlaying,
+  usePlayerIsTransitioning,
   usePlayerMediaType,
   usePlayerProgress,
-  usePlayerSonglist,
+  usePlayerStore,
 } from "@/store/player.store";
 import { appName } from "@/utils/appName";
 import { clampProgress, isValidDuration } from "@/utils/duration";
@@ -16,9 +20,13 @@ import { manageMediaSession } from "@/utils/setMediaSession";
 
 export function MediaSessionObserver() {
   const { t } = useTranslation();
+  useBackgroundPlayback();
   const isPlaying = usePlayerIsPlaying();
+  const isTransitioning = usePlayerIsTransitioning();
   const { isRadio, isSong } = usePlayerMediaType();
-  const { currentList, currentSongIndex, radioList } = usePlayerSonglist();
+  const storeCurrentSong = usePlayerCurrentSong();
+  const currentSongIndex = usePlayerCurrentSongIndex();
+  const radioList = usePlayerStore((s) => s.songlist.radioList);
   const progress = usePlayerProgress();
   const currentDuration = usePlayerDuration();
   const radioLabel = t("radios.label");
@@ -44,48 +52,42 @@ export function MediaSessionObserver() {
           albumId: remoteCurrentSong.albumId,
           duration: remoteCurrentSong.duration,
         }
-      : (currentList[currentSongIndex] ?? null);
+      : storeCurrentSong;
   const radio = radioList[currentSongIndex] ?? null;
 
   const hasNothingPlaying = isRemoteActive
     ? !remoteCurrentSong || !remoteCurrentSong.id
-    : currentList.length === 0 && radioList.length === 0;
+    : !storeCurrentSong && radioList.length === 0;
 
   const resetAppTitle = useCallback(() => {
     document.title = appName;
   }, []);
 
   useEffect(() => {
-    logger.info("[MediaSession] Remote control state changed:", isRemoteActive);
+    logger.info(`[MediaSessionObserver] handlers | remoteControl=${isRemoteActive}`);
     manageMediaSession.setHandlers();
   }, [isRemoteActive]);
 
   useEffect(() => {
-    logger.info("[MediaSession] State update:", {
-      isRemoteActive,
-      isPlaying: isRemoteActive ? remotePlayerState?.isPlaying : isPlaying,
-      hasNothingPlaying,
-      hasSong: !!song,
-      songTitle: song?.title,
-      songArtist: song?.artist,
-    });
+    logger.info(`[MediaSessionObserver] isPlaying=${isPlaying} | isTransitioning=${isTransitioning} | isSong=${isSong} | isRadio=${isRadio} | songId=${song?.id} | isRemote=${isRemoteActive} | hasNothingPlaying=${hasNothingPlaying}`);
 
     const effectiveIsPlaying = isRemoteActive
       ? (remotePlayerState?.isPlaying ?? false)
       : isPlaying;
 
-    manageMediaSession.setPlaybackState(effectiveIsPlaying);
-
-    if (hasNothingPlaying) {
-      logger.info("[MediaSession] Nothing playing, removing session");
-      manageMediaSession.removeMediaSession();
-      resetAppTitle();
-      lastMetadataRef.current = "";
+    if (isTransitioning) {
+      logger.info("[MediaSessionObserver → transitioning] | keeping existing metadata, only updating playback state");
+      manageMediaSession.ensurePlaybackStatePlaying();
       return;
     }
 
-    if (!effectiveIsPlaying) {
+    manageMediaSession.setPlaybackState(effectiveIsPlaying);
+
+    if (hasNothingPlaying) {
+      logger.info("[MediaSessionObserver → nothingPlaying] | calling removeMediaSession");
+      manageMediaSession.removeMediaSession();
       resetAppTitle();
+      lastMetadataRef.current = "";
       return;
     }
 
@@ -97,27 +99,37 @@ export function MediaSessionObserver() {
       metadataKey = `radio:${radio.name}`;
 
       if (lastMetadataRef.current !== metadataKey) {
-        logger.info("[MediaSession] Setting radio session:", title);
+        logger.info(`[MediaSessionObserver → setRadioMediaSession] | name=${radio.name}`);
         manageMediaSession.setRadioMediaSession(radioLabel, radio.name);
         lastMetadataRef.current = metadataKey;
+      } else {
+        logger.info(`[MediaSessionObserver → metadataUnchanged] | name=${radio.name}`);
       }
     } else if (isSong && song) {
       title = `${song.title} - ${song.artist} | Aonsoku`;
       metadataKey = `song:${song.id || song.title}`;
 
-      if (lastMetadataRef.current !== metadataKey) {
-        logger.info("[MediaSession] Setting song session:", title);
+      const metadataChanged = lastMetadataRef.current !== metadataKey;
+      if (metadataChanged) {
+        logger.info(`[MediaSessionObserver → setMediaSession] | songId=${song.id} | title="${song.title}"`);
         manageMediaSession.setMediaSession(song);
         lastMetadataRef.current = metadataKey;
+      } else {
+        logger.info(`[MediaSessionObserver → metadataUnchanged] | songId=${song.id}`);
       }
     }
 
-    document.title = title;
+    if (!effectiveIsPlaying) {
+      resetAppTitle();
+    } else if (title) {
+      document.title = title;
+    }
   }, [
     hasNothingPlaying,
     isPlaying,
     isRadio,
     isSong,
+    isTransitioning,
     radio,
     radioLabel,
     song,
@@ -126,14 +138,19 @@ export function MediaSessionObserver() {
     remotePlayerState,
   ]);
 
-  const lastPositionUpdateRef = useRef(0);
+  const lastPositionStateRef = useRef({
+    progress: -1,
+    timestamp: 0,
+    isPlaying: false,
+    songId: "",
+  });
 
   useEffect(() => {
     const effectiveIsPlaying = isRemoteActive
       ? (remotePlayerState?.isPlaying ?? false)
       : isPlaying;
 
-    if (!effectiveIsPlaying || hasNothingPlaying || !song) {
+    if (hasNothingPlaying || !song) {
       return;
     }
 
@@ -143,19 +160,45 @@ export function MediaSessionObserver() {
       return;
     }
 
-    const now = Date.now();
-    if (now - lastPositionUpdateRef.current < 1000) {
-      return;
-    }
-    lastPositionUpdateRef.current = now;
-
     const effectiveProgress =
       isRemoteActive && remotePlayerState?.currentTime !== undefined
         ? remotePlayerState.currentTime
         : progress;
 
-    const clampedProgress = clampProgress(effectiveProgress, duration);
-    manageMediaSession.setPositionState(duration, clampedProgress);
+    const songId =
+      (song as { id?: string })?.id || (song as { title: string }).title;
+    const now = Date.now();
+    const lastState = lastPositionStateRef.current;
+
+    let shouldUpdate = false;
+
+    if (songId !== lastState.songId) {
+      shouldUpdate = true;
+    } else if (effectiveIsPlaying !== lastState.isPlaying) {
+      shouldUpdate = true;
+    } else {
+      const elapsedSeconds = (now - lastState.timestamp) / 1000;
+      const expectedProgress = lastState.isPlaying
+        ? lastState.progress + elapsedSeconds
+        : lastState.progress;
+
+      if (Math.abs(effectiveProgress - expectedProgress) > 2) {
+        shouldUpdate = true;
+      }
+    }
+
+    if (shouldUpdate) {
+      const clampedProgress = clampProgress(effectiveProgress, duration);
+      logger.info(`[MediaSessionObserver.positionState] songId=${songId} | duration=${duration} | position=${effectiveProgress} | isPlaying=${effectiveIsPlaying} | updateReason=${songId !== lastState.songId ? 'songChanged' : effectiveIsPlaying !== lastState.isPlaying ? 'playStateChanged' : 'drift>2s'}`);
+      manageMediaSession.setPositionState(duration, clampedProgress);
+
+      lastPositionStateRef.current = {
+        progress: effectiveProgress,
+        timestamp: now,
+        isPlaying: effectiveIsPlaying,
+        songId,
+      };
+    }
   }, [
     progress,
     isPlaying,

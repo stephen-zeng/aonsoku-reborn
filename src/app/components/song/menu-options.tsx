@@ -4,11 +4,15 @@ import { OptionsButtons } from "@/app/components/options/buttons";
 import { ContextMenuSeparator } from "@/app/components/ui/context-menu";
 import { useOptions } from "@/app/hooks/use-options";
 import { useSongStarMutation } from "@/app/hooks/use-song-star-mutation";
+import { cacheManager, audioKey } from "@/service/cache";
 import { ROUTES } from "@/routes/routesList";
 import {
   usePlayerCurrentSong,
   usePlayerSongStarred,
+  usePlayerStore,
 } from "@/store/player.store";
+import { useIsAudioCached } from "@/store/cache-index.store";
+import { useLibraryCaching } from "@/store/cache.store";
 import { ISong } from "@/types/responses/song";
 import { AddToPlaylistSubMenu } from "./add-to-playlist";
 
@@ -22,6 +26,7 @@ function MenuLikeButton({ variant, song }: MenuLikeButtonProps) {
     songId: song.id,
     initialStarred: typeof song.starred === "string",
     albumId: song.albumId,
+    song,
   });
 
   const currentSong = usePlayerCurrentSong();
@@ -68,11 +73,15 @@ export function SongMenuOptions({
     createNewPlaylist,
     addToPlaylist,
     removeSongFromPlaylist,
-    startDownload,
     openSongInfo,
     isOnPlaylistPage,
   } = useOptions();
   const songIndexes = [index.toString()];
+  const isCached = useIsAudioCached(song.id);
+  const libraryCaching = useLibraryCaching();
+  const isUserQueueEmpty = usePlayerStore(
+    (state) => state.songlist.userQueue.songs.length === 0,
+  );
 
   return (
     <>
@@ -86,6 +95,7 @@ export function SongMenuOptions({
       />
       <OptionsButtons.PlayLast
         variant={variant}
+        disabled={isUserQueueEmpty}
         onClick={(e) => {
           e.stopPropagation();
           playLast([song]);
@@ -132,14 +142,25 @@ export function SongMenuOptions({
           <ContextMenuSeparator />
         </>
       )}
-      <OptionsButtons.Download
-        variant={variant}
-        onClick={(e) => {
-          e.stopPropagation();
-          startDownload(song.id);
-        }}
-      />
-      <ContextMenuSeparator />
+      {libraryCaching &&
+        (isCached ? (
+          <OptionsButtons.RemoveDownload
+            variant={variant}
+            onClick={(e) => {
+              e.stopPropagation();
+              cacheManager.evictItem(audioKey(song.id));
+            }}
+          />
+        ) : (
+          <OptionsButtons.DownloadSong
+            variant={variant}
+            onClick={(e) => {
+              e.stopPropagation();
+              cacheManager.cacheSong(song.id);
+            }}
+          />
+        ))}
+      {libraryCaching && <ContextMenuSeparator />}
       <OptionsButtons.SongInfo
         variant={variant}
         onClick={(e) => {

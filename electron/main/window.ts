@@ -4,7 +4,6 @@ import { join } from "path";
 import { electron } from "../../package.json";
 import { defaultHeight, defaultWidth } from "./config";
 import { colorsState } from "./core/colors";
-import { setupDownloads } from "./core/downloads";
 import { setupEvents, setupIpcEvents } from "./core/events";
 import { appIcon } from "./core/icon";
 import { titleBarOverlay } from "./core/titleBarOverlay";
@@ -43,7 +42,6 @@ export function createWindow(): void {
   createTray();
   setupEvents(mainWindow);
   setupIpcEvents(mainWindow);
-  setupDownloads(mainWindow);
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.

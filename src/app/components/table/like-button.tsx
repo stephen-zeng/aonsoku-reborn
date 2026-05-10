@@ -10,6 +10,7 @@ import {
   usePlayerCurrentSong,
   usePlayerSongStarred,
 } from "@/store/player.store";
+import type { ISong } from "@/types/responses/song";
 import { queryKeys } from "@/utils/queryKeys";
 
 interface TableLikeButtonProps {
@@ -17,6 +18,7 @@ interface TableLikeButtonProps {
   starred: boolean;
   entityId: string;
   albumId?: string;
+  song?: ISong;
 }
 
 export function TableLikeButton({
@@ -24,11 +26,13 @@ export function TableLikeButton({
   starred,
   type,
   albumId,
+  song,
 }: TableLikeButtonProps) {
   const songStar = useSongStarMutation({
     songId: entityId,
     initialStarred: starred,
     albumId,
+    song,
   });
 
   const currentSong = usePlayerCurrentSong();
@@ -47,10 +51,10 @@ export function TableLikeButton({
     mutationFn: subsonic.star.handleStarItem,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.artist.single, entityId],
+        queryKey: [...queryKeys.artist.single, entityId],
       });
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.favorites.count],
+        queryKey: queryKeys.favorites.count,
       });
     },
   });
@@ -66,7 +70,7 @@ export function TableLikeButton({
       {
         onError: () => {
           queryClient.invalidateQueries({
-            queryKey: [queryKeys.artist.single, entityId],
+            queryKey: [...queryKeys.artist.single, entityId],
           });
         },
       },
@@ -89,6 +93,7 @@ export function TableLikeButton({
         e.stopPropagation();
         handleStarred();
       }}
+      unfocusable
     >
       <Heart
         className={clsx("w-4 h-4", isStarred && "text-red-500 fill-red-500")}

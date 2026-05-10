@@ -4,12 +4,19 @@ import { RouterProvider } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Linux } from "@/app/components/controls/linux";
 import { SettingsDialog } from "@/app/components/settings/dialog";
+import { useNetworkStatusObserver } from "@/app/hooks/use-network-status";
 import { LanControlObserver } from "@/app/observers/lan-control-observer";
 import { LangObserver } from "@/app/observers/lang-observer";
+import { LibraryMigrationObserver } from "@/app/observers/library-migration-observer";
 import { MediaSessionObserver } from "@/app/observers/media-session-observer";
+import { MetadataSyncObserver } from "@/app/observers/metadata-sync-observer";
+import { NetworkMonitorObserver } from "@/app/observers/network-monitor";
+import { SmartDownloadObserver } from "@/app/observers/smart-download-observer";
 import { ThemeObserver } from "@/app/observers/theme-observer";
 import { ToastContainer } from "@/app/observers/toast-container";
 import { router } from "@/routes/router";
+import { useCacheIndexActions } from "@/store/cache-index.store";
+import { cacheManager } from "@/service/cache";
 import {
   tryAutoConnect,
   useLanControlClientStore,
@@ -19,6 +26,17 @@ import { isDesktop, isLinux } from "@/utils/desktop";
 function App() {
   const { t } = useTranslation();
   const status = useLanControlClientStore((state) => state.status);
+  const { loadFromIDB } = useCacheIndexActions();
+
+  useEffect(() => {
+    loadFromIDB().then(() => {
+      cacheManager.migrateCoverCacheKeys().catch((err) => {
+        console.error("[migration] migrateCoverCacheKeys failed:", err);
+      });
+    });
+  }, [loadFromIDB]);
+
+  useNetworkStatusObserver();
 
   // Try to auto-connect on mount
   useEffect(() => {
@@ -46,6 +64,10 @@ function App() {
       <LangObserver />
       <ThemeObserver />
       <LanControlObserver />
+      <LibraryMigrationObserver />
+      <NetworkMonitorObserver />
+      <MetadataSyncObserver />
+      <SmartDownloadObserver />
       <SettingsDialog />
       <RouterProvider router={router} />
       <ToastContainer />

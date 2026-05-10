@@ -4,7 +4,7 @@ export function AlbumComment({ comment }: { comment: string }) {
   const parsedComment = linkifyText(comment);
 
   return (
-    <div className="mt-8 text-sm text-muted-foreground p-4 bg-muted rounded-md border border-border">
+    <div className="mt-8 text-sm text-muted-foreground p-4 bg-muted rounded-md border border-border break-words [&_a]:break-all">
       <p
         className="html whitespace-pre-line"
         dangerouslySetInnerHTML={{ __html: parsedComment }}

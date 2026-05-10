@@ -105,7 +105,14 @@ export function LoginForm() {
     });
 
     if (status) {
-      await queryClient.invalidateQueries();
+      await queryClient.invalidateQueries({ queryKey: ["albums"] });
+      await queryClient.invalidateQueries({ queryKey: ["artists"] });
+      await queryClient.invalidateQueries({ queryKey: ["songs"] });
+      await queryClient.invalidateQueries({ queryKey: ["playlists"] });
+      await queryClient.invalidateQueries({ queryKey: ["favorites"] });
+      await queryClient.invalidateQueries({ queryKey: ["genres"] });
+      await queryClient.invalidateQueries({ queryKey: ["radios"] });
+      await queryClient.invalidateQueries({ queryKey: ["search"] });
       toast.success(t("toast.server.success"));
       navigate(ROUTES.LIBRARY.HOME, { replace: true });
     } else {

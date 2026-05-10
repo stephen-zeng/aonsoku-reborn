@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { subsonic } from "@/service/subsonic";
+import { useIsOnline } from "@/store/cache.store";
 import { usePlayerSonglist } from "@/store/player.store";
 import { areLyricsSynced } from "@/utils/lrc-converter";
 import { queryKeys } from "@/utils/queryKeys";
@@ -10,22 +11,26 @@ const STALE_TIME = 5 * 60 * 1000;
 export function useHasLyrics() {
   const { currentSong } = usePlayerSonglist();
 
+  const isOnline = useIsOnline();
+
   const { id: songId, artist, title, duration } = currentSong || {};
 
   const { data: lyrics, isLoading: isLoadingLyrics } = useQuery({
-    queryKey: [queryKeys.lyrics.plain, artist, title, duration],
+    queryKey: [...queryKeys.lyrics.plain, artist, title, duration],
     queryFn: () =>
       artist && title
         ? subsonic.lyrics.getLyrics({ artist, title, duration })
         : Promise.resolve(null),
-    enabled: !!artist && !!title,
+    enabled: isOnline && !!artist && !!title,
     staleTime: STALE_TIME,
   });
 
   const { data: structuredLyrics, isLoading: isLoadingStructured } = useQuery({
-    queryKey: [queryKeys.lyrics.structured, songId],
+    queryKey: [...queryKeys.lyrics.structured, songId],
     queryFn: () =>
-      songId ? subsonic.lyrics.getStructuredLyrics(songId) : Promise.resolve([]),
+      songId
+        ? subsonic.lyrics.getStructuredLyrics(songId)
+        : Promise.resolve([]),
     enabled: !!songId,
     staleTime: STALE_TIME,
   });

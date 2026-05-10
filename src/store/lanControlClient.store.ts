@@ -9,6 +9,8 @@ import {
   QueueData,
   RemoteDeviceInfo,
 } from "@/types/lanControl";
+import { toHex } from "@/utils/salt";
+import { decodeStoredPassword } from "@/utils/salt";
 import { usePlayerStore } from "./player.store";
 
 type ConnectionStatus =
@@ -83,6 +85,7 @@ function loadSavedConnection() {
     const ip = localStorage.getItem(STORAGE_KEY_IP);
     const port = localStorage.getItem(STORAGE_KEY_PORT);
     const password = localStorage.getItem(STORAGE_KEY_PASSWORD);
+    const decodedPassword = password ? decodeStoredPassword(password) : "";
     const autoConnect =
       localStorage.getItem(STORAGE_KEY_AUTO_CONNECT) === "true";
     return {
@@ -96,7 +99,7 @@ function loadSavedConnection() {
         : !location.hostname.endsWith("aonsoku.realtvop.top") && location.port
           ? parseInt(location.port, 10)
           : 5299,
-      password: password || "",
+      password: decodedPassword || "",
       autoConnect,
     };
   } catch (error) {
@@ -123,7 +126,7 @@ function saveConnection(ip: string, port: number, password: string) {
   try {
     localStorage.setItem(STORAGE_KEY_IP, ip);
     localStorage.setItem(STORAGE_KEY_PORT, port.toString());
-    localStorage.setItem(STORAGE_KEY_PASSWORD, password);
+    localStorage.setItem(STORAGE_KEY_PASSWORD, toHex(password));
     localStorage.setItem(STORAGE_KEY_AUTO_CONNECT, "true");
   } catch (error) {
     console.error("[LAN Control Client] Failed to save connection", error);

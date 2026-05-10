@@ -78,7 +78,7 @@ function Dropdown({ tooltip, options }: DropdownProps) {
     <DropdownMenu>
       <DropdownMenuTrigger
         asChild
-        className="outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus:ring-transparent"
+        className="outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:ring-transparent"
       >
         <ComponentButton
           className={clsx(

@@ -1,18 +1,20 @@
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
 import type { Row } from "@tanstack/react-table";
 import ImageHeader from "@/app/components/album/image-header";
 import {
   FavoritesButtons,
   FavoritesIcon,
 } from "@/app/components/favorites/buttons";
+import { FavoritesFallback } from "@/app/components/fallbacks/song-fallbacks";
 import { BadgesData } from "@/app/components/header-info";
+import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import ListWrapper from "@/app/components/list-wrapper";
 import { DataTable } from "@/app/components/ui/data-table";
 import { useIsMobile } from "@/app/hooks/use-mobile";
 import { useHasHover } from "@/app/hooks/use-input-mode";
 import { songsColumns } from "@/app/tables/songs-columns";
+import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
 import { ColumnFilter } from "@/types/columnFilter";
@@ -30,27 +32,32 @@ const COLUMNS_DESKTOP: ColumnFilter[] = [
 ];
 const COLUMNS_MOBILE: ColumnFilter[] = ["title", "select"];
 
+async function fetchFavoriteSongs() {
+  const response = await subsonic.songs.getFavoriteSongs();
+  return response?.song ?? [];
+}
+
+async function fetchOfflineFavoriteSongs() {
+  const songs = await offlineData.songs();
+  return songs.filter((song) => song.starred != null);
+}
+
 export default function SongList() {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const hasHover = useHasHover();
   const { setSongList } = usePlayerActions();
+  const [accentColor, setAccentColor] = useState("");
 
-  const columns = useMemo(
-    () => songsColumns({ disableTextNavigation: true, hasHover }),
-    [hasHover],
-  );
+  const columns = useMemo(() => songsColumns({ hasHover }), [hasHover]);
 
   const {
     data: songs,
     isLoading,
     isError,
-  } = useQuery({
-    queryKey: [queryKeys.favorites.list],
-    queryFn: async () => {
-      const response = await subsonic.songs.getFavoriteSongs();
-      return response?.song ?? [];
-    },
+  } = useOfflineQuery([...queryKeys.favorites.list], fetchFavoriteSongs, {
+    offlineFn: fetchOfflineFavoriteSongs,
+    staleTime: 5 * 60 * 1000,
   });
 
   const songlist = useMemo(() => songs ?? [], [songs]);
@@ -101,7 +108,7 @@ export default function SongList() {
   const customIcon = useMemo(() => <FavoritesIcon />, []);
 
   if (isLoading) {
-    return null;
+    return <FavoritesFallback />;
   }
 
   if (isError) {
@@ -110,6 +117,11 @@ export default function SongList() {
 
   return (
     <div className="w-full">
+      <MobilePageHeader
+        variant="sub"
+        title={t("sidebar.favorites")}
+        accentColor={accentColor}
+      />
       <ImageHeader
         type={t("favorites.headline")}
         title={t("sidebar.favorites")}
@@ -119,6 +131,7 @@ export default function SongList() {
         coverArtAlt={t("sidebar.favorites")}
         customIcon={customIcon}
         showSimpleSubtitle
+        onColorExtracted={setAccentColor}
       />
 
       <ListWrapper>

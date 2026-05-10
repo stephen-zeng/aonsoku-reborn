@@ -8,9 +8,9 @@ export function RadioInfo({ radio }: { radio: Radio | undefined }) {
 
   return (
     <Fragment>
-      <div className="w-12 h-12 sm:w-[70px] sm:h-[70px] flex justify-center items-center bg-foreground/20 rounded">
+      <div className="w-12 h-12 md:w-[70px] md:h-[70px] flex justify-center items-center bg-foreground/20 rounded">
         <RadioIcon
-          className="w-7 h-7 sm:w-12 sm:h-12"
+          className="w-7 h-7 md:w-12 md:h-12"
           strokeWidth={1}
           data-testid="radio-icon"
         />
@@ -19,13 +19,13 @@ export function RadioInfo({ radio }: { radio: Radio | undefined }) {
         {radio ? (
           <Fragment>
             <span
-              className="text-xs sm:text-sm font-medium"
+              className="text-xs md:text-sm font-medium"
               data-testid="radio-name"
             >
               {radio.name}
             </span>
             <span
-              className="text-[10px] sm:text-xs font-light text-muted-foreground"
+              className="text-[10px] md:text-xs font-light text-muted-foreground"
               data-testid="radio-label"
             >
               {t("radios.label")}
@@ -33,7 +33,7 @@ export function RadioInfo({ radio }: { radio: Radio | undefined }) {
           </Fragment>
         ) : (
           <span
-            className="text-xs sm:text-sm font-medium"
+            className="text-xs md:text-sm font-medium"
             data-testid="radio-no-playing"
           >
             {t("player.noRadioPlaying")}

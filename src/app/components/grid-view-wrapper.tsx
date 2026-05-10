@@ -34,7 +34,8 @@ export function GridViewWrapper<T>({
   defaultWidth = 181,
   type,
 }: GridViewWrapperProps<T>) {
-  const scrollDivRef = useRef<HTMLDivElement | null>(null);
+  const gridWrapperRef = useRef<HTMLDivElement | null>(null);
+  const scrollDivRef = useRef<HTMLElement | null>(null);
   const [gridColumnsSize, setGridColumnsSize] = useState(4);
   const [effectivePadding, setEffectivePadding] = useState(padding);
   const [effectiveGap, setEffectiveGap] = useState(gap);
@@ -57,32 +58,32 @@ export function GridViewWrapper<T>({
     scrollDivRef.current = getMainScrollElement();
 
     const handleResize = () => {
-      const width = window.innerWidth;
+      const viewportWidth = window.innerWidth;
 
       const newColumns =
-        width >= 1536
+        viewportWidth >= 1536
           ? 8
-          : width >= 1024
+          : viewportWidth >= 1024
             ? 6
-            : width >= 768
+            : viewportWidth >= 768
               ? 4
-              : width >= 480
+              : viewportWidth >= 480
                 ? 3
                 : 2;
       setGridColumnsSize(newColumns);
 
-      const isMobileView = width < 768;
+      const isMobileView = viewportWidth < 768;
       const newEffectivePadding = isMobileView ? 16 : padding;
       const newEffectiveGap = isMobileView ? 12 : gap;
       setEffectivePadding(newEffectivePadding);
       setEffectiveGap(newEffectiveGap);
 
-      if (scrollDivRef.current) {
-        const pageWidth = scrollDivRef.current.offsetWidth;
+      if (gridWrapperRef.current) {
+        const pageWidth = gridWrapperRef.current.clientWidth;
         const gapsDifference = (newColumns - 1) * newEffectiveGap;
         const bothSidesPaddingSize = newEffectivePadding * 2;
         const remainSpace = pageWidth - bothSidesPaddingSize - gapsDifference;
-        const newWidth = remainSpace / newColumns;
+        const newWidth = Math.max(0, remainSpace) / newColumns;
         setSize({ width: newWidth, height: newWidth + titleHeight });
       } else {
         setSize({ width: defaultWidth, height: defaultWidth + titleHeight });
@@ -101,8 +102,15 @@ export function GridViewWrapper<T>({
     handleResize();
     window.addEventListener("resize", resizeHandler);
 
+    const resizeObserver =
+      "ResizeObserver" in window ? new ResizeObserver(resizeHandler) : null;
+    if (gridWrapperRef.current) {
+      resizeObserver?.observe(gridWrapperRef.current);
+    }
+
     return () => {
       window.removeEventListener("resize", resizeHandler);
+      resizeObserver?.disconnect();
       cancelAnimationFrame(animationFrameId);
     };
   }, [padding, gap, defaultWidth, titleHeight]);
@@ -186,33 +194,35 @@ export function GridViewWrapper<T>({
   }, [routeKey, rowVirtualizer.scrollOffset, type]);
 
   return (
-    <div
-      style={{
-        width: columnVirtualizer.getTotalSize(),
-        height: rowVirtualizer.getTotalSize(),
-        position: "relative",
-      }}
-    >
-      {rowVirtualizer.getVirtualItems().map((virtualRow) => (
-        <Fragment key={virtualRow.key}>
-          {columnVirtualizer.getVirtualItems().map((virtualColumn) => {
-            const item = grid.getVirtualItem({
-              row: virtualRow,
-              column: virtualColumn,
-            });
+    <div ref={gridWrapperRef} className="w-full overflow-hidden relative">
+      <div
+        style={{
+          width: columnVirtualizer.getTotalSize(),
+          height: rowVirtualizer.getTotalSize(),
+          position: "relative",
+        }}
+      >
+        {rowVirtualizer.getVirtualItems().map((virtualRow) => (
+          <Fragment key={virtualRow.key}>
+            {columnVirtualizer.getVirtualItems().map((virtualColumn) => {
+              const item = grid.getVirtualItem({
+                row: virtualRow,
+                column: virtualColumn,
+              });
 
-            if (!item) return null;
+              if (!item) return null;
 
-            const child = list[item.index];
+              const child = list[item.index];
 
-            return (
-              <div key={virtualColumn.key} style={item.style}>
-                {children(child)}
-              </div>
-            );
-          })}
-        </Fragment>
-      ))}
+              return (
+                <div key={virtualColumn.key} style={item.style}>
+                  {children(child)}
+                </div>
+              );
+            })}
+          </Fragment>
+        ))}
+      </div>
     </div>
   );
 }

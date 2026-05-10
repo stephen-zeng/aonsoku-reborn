@@ -1,55 +1,60 @@
 const playlist = {
-  all: "get-all-playlists",
-  single: "get-playlist",
+  all: ["playlists"] as const,
+  single: ["playlists", "single"] as const,
 };
 
 const album = {
-  all: "get-all-albums",
-  single: "get-album",
-  info: "get-album-info",
-  moreAlbums: "get-artist-albums",
-  genreAlbums: "get-genre-random-albums",
-  recentlyAdded: "get-recently-added-albums",
-  mostPlayed: "get-most-played-albums",
-  recentlyPlayed: "get-recently-played-albums",
-  random: "get-random-albums",
+  all: ["albums"] as const,
+  single: ["albums", "single"] as const,
+  info: ["albums", "info"] as const,
+  moreAlbums: ["albums", "artist-albums"] as const,
+  genreAlbums: ["albums", "genre"] as const,
+  recentlyAdded: ["albums", "recently-added"] as const,
+  mostPlayed: ["albums", "most-played"] as const,
+  recentlyPlayed: ["albums", "recently-played"] as const,
+  random: ["albums", "random"] as const,
 };
 
 const artist = {
-  all: "get-all-artists",
-  single: "get-artist",
-  info: "get-artist-info",
-  topSongs: "get-artist-top-songs",
+  all: ["artists"] as const,
+  single: ["artists", "single"] as const,
+  info: ["artists", "info"] as const,
+  topSongs: ["artists", "top-songs"] as const,
 };
 
 const favorites = {
-  count: "get-favorite-count",
-  list: "get-favorite-songs",
+  count: ["favorites", "count"] as const,
+  list: ["favorites", "list"] as const,
 };
 
 const song = {
-  all: "get-all-songs",
-  random: "get-random-songs",
-  info: "get-song-info",
-  count: "get-song-count",
+  all: ["songs"] as const,
+  random: ["songs", "random"] as const,
+  info: ["songs", "info"] as const,
+  count: ["songs", "count"] as const,
 };
 
 const radio = {
-  all: "get-all-radios",
+  all: ["radios"] as const,
 };
 
-const search = "search-key";
+const search = ["search"] as const;
 
-const genre = "get-all-genres";
+const genre = ["genres"] as const;
 
 const lyrics = {
-  plain: "get-lyrics",
-  structured: "get-structured-lyrics",
+  plain: ["lyrics", "plain"] as const,
+  structured: ["lyrics", "structured"] as const,
+};
+
+const server = {
+  scanStatus: ["server", "scan-status"] as const,
+  startScan: ["server", "start-scan"] as const,
 };
 
 const update = {
-  serverInfo: "get-server-info",
-  check: "check-for-updates",
+  serverInfo: ["update", "server-info"] as const,
+  check: ["update", "check"] as const,
 };
 
 export const queryKeys = {
@@ -62,5 +67,6 @@ export const queryKeys = {
   search,
   genre,
   lyrics,
+  server,
   update,
 };

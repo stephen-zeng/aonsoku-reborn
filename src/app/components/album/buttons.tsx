@@ -31,7 +31,7 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
     mutationFn: subsonic.star.handleStarItem,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.album.single, album.id],
+        queryKey: [...queryKeys.album.single, album.id],
       });
     },
   });

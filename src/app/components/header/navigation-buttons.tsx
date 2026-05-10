@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import useNavigationHistory from "@/app/hooks/use-navigation-history";
 
@@ -16,7 +16,7 @@ export function NavigationButtons() {
           disabled={!canGoBack}
           onClick={goBack}
         >
-          <ChevronLeft className="w-6 h-6" strokeWidth={1.5} />
+          <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
         </Button>
       </div>
       <div
@@ -32,7 +32,7 @@ export function NavigationButtons() {
           disabled={!canGoForward}
           onClick={goForward}
         >
-          <ChevronRight className="w-6 h-6" strokeWidth={1.5} />
+          <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
         </Button>
       </div>
     </div>

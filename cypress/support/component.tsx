@@ -22,7 +22,7 @@ import './commands'
 // require('./commands')
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { mount } from 'cypress/react18'
+import { mount } from 'cypress/react'
 import { MemoryRouter } from 'react-router-dom'
 import { useAppStore } from '@/store/app.store'
 import { AuthType } from '@/types/serverConfig'

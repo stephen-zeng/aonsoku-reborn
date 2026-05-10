@@ -9,6 +9,7 @@ import {
 import roundedIcon from "@/assets/icon.svg";
 import githubIcon from "@/assets/icons/github-mark-white.svg";
 import { subsonic } from "@/service/subsonic";
+import { useIsOnline } from "@/store/cache.store";
 import { getAppInfo } from "@/utils/appName";
 import { queryKeys } from "@/utils/queryKeys";
 
@@ -20,10 +21,12 @@ interface AboutDialogProps {
 export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
   const { t } = useTranslation();
   const { name, version, buildHash, buildTime, url } = getAppInfo();
+  const isOnline = useIsOnline();
 
   const { data: server, isLoading } = useQuery({
-    queryKey: [queryKeys.update.serverInfo],
+    queryKey: [...queryKeys.update.serverInfo],
     queryFn: subsonic.ping.pingInfo,
+    enabled: isOnline,
   });
 
   return (
@@ -44,12 +47,12 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
           </div>
         </DialogHeader>
 
-        <div className="w-full h-full p-6 gap-6 grid grid-cols-4">
-          <div className="flex flex-col gap-6 col-span-3 border-r">
+        <div className="w-full h-full p-4 md:p-6 gap-4 md:gap-6 grid grid-cols-1 md:grid-cols-4">
+          <div className="flex flex-col gap-4 md:gap-6 md:col-span-3 md:border-r md:pr-6">
             <div className="flex flex-col gap-2 h-full text-sm">
               <span className="font-medium">{t("about.client")}</span>
               <div className="flex flex-col gap-1 justify-center text-muted-foreground">
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <p>{t("about.version")}</p>
                   <div className="text-xs font-medium bg-primary/60 text-foreground px-2 rounded-full border border-primary flex items-center justify-center">
                     {version}
@@ -58,7 +61,7 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
                     {buildHash}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <p>{t("about.buildTime")}</p>
                   <div className="text-xs font-medium bg-muted text-muted-foreground px-2 rounded-full border flex items-center justify-center font-mono">
                     {buildTime}
@@ -72,19 +75,19 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
               {isLoading && <p>{t("generic.loading")}</p>}
               {server && !isLoading && (
                 <div className="flex flex-col gap-1 justify-center text-muted-foreground">
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <div>{t("about.type")}</div>
                     <div className="text-xs font-medium bg-primary/60 text-foreground px-2 rounded-full border border-primary flex items-center justify-center">
                       {server.type}
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <div>{t("about.version")}</div>
                     <div className="text-xs font-medium bg-primary/60 text-foreground px-2 rounded-full border border-primary flex items-center justify-center">
                       {server.serverVersion}
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <div>{t("about.apiVersion")}</div>
                     <div className="text-xs font-medium bg-primary/60 text-foreground px-2 rounded-full border border-primary flex items-center justify-center">
                       {server.version}
@@ -95,9 +98,9 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
             </div>
           </div>
 
-          <div>
+          <div className="md:flex md:items-start md:justify-center">
             <a
-              className="w-full px-2 py-1 rounded-md bg-primary/60 hover:bg-primary/50 border border-primary text-sm font-medium flex items-center justify-center"
+              className="w-full md:w-auto px-2 py-1 rounded-md bg-primary/60 hover:bg-primary/50 border border-primary text-sm font-medium flex items-center justify-center"
               href={url}
               target="_blank"
               rel="nofollow noreferrer"

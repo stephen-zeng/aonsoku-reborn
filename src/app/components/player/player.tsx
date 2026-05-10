@@ -2,11 +2,11 @@ import { Pause, Play, SkipForward } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { getSongStreamUrl } from "@/api/httpClient";
 import { MiniPlayerButton } from "@/app/components/mini-player/button";
 import { RadioInfo } from "@/app/components/player/radio-info";
 import { TrackInfo } from "@/app/components/player/track-info";
 import { Button } from "@/app/components/ui/button";
+import { useCachedAudioUrl } from "@/app/hooks/use-cached-audio";
 import { usePlayHistory } from "@/app/hooks/use-play-history";
 import { useScrobble } from "@/app/hooks/use-scrobble";
 import { usePreloadAudio } from "@/app/hooks/use-preload-audio";
@@ -15,18 +15,19 @@ import {
   useIsRemoteControlActive,
   usePlayerActions,
   usePlayerIsPlaying,
+  usePlayerIsTransitioning,
   usePlayerLoop,
   usePlayerMediaType,
   usePlayerPrevAndNext,
   usePlayerSonglist,
   usePlayerStore,
-  useHasRemainingUserQueue,
   useReplayGainState,
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
 import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import { hasPiPSupport } from "@/utils/browser";
 import { isValidDuration } from "@/utils/duration";
+import { logger } from "@/utils/logger";
 import {
   resolveReplayGainParams,
   type ReplayGainParams,
@@ -59,10 +60,14 @@ export function Player() {
   const isMobile = usePlayerBreakpoint();
   const {
     setAudioPlayerRef,
+    setRadioPlayerRef,
     setCurrentDuration,
     setIsBuffering: setStoreIsBuffering,
+    setBufferedProgress,
     setProgress,
     setPlayingState,
+    setIsScrubbing,
+    setIsTransitioning,
     handleSongEnded,
     getCurrentProgress,
     togglePlayPause,
@@ -72,7 +77,6 @@ export function Player() {
   const isPlaying = usePlayerIsPlaying();
   const { isSong, isRadio } = usePlayerMediaType();
   const loopState = usePlayerLoop();
-  const hasUserQueue = useHasRemainingUserQueue();
   const isRemoteControlActive = useIsRemoteControlActive();
   const { replayGainType, replayGainPreAmp, replayGainDefaultGain } =
     useReplayGainState();
@@ -82,10 +86,24 @@ export function Player() {
   useScrobble();
   usePreloadAudio();
 
+  const isTransitioning = usePlayerIsTransitioning();
+
+  useEffect(() => {
+    if (!isTransitioning) return;
+    const timeout = setTimeout(() => {
+      const current = usePlayerStore.getState().playerState.isTransitioning;
+      if (current) {
+        logger.info(`[isTransitioning] timeout fallback, clearing isTransitioning`);
+        setIsTransitioning(false);
+      }
+    }, 5000);
+    return () => clearTimeout(timeout);
+  }, [isTransitioning, setIsTransitioning]);
+
   const song = currentList[currentSongIndex] ?? null;
   const radio = radioList[currentSongIndex];
   const songId = song?.id;
-  const audioSrc = song?.id ? getSongStreamUrl(song.id) : "";
+  const { url: audioSrc, resolvedSongId } = useCachedAudioUrl(song?.id);
 
   const getAudioRef = useCallback(() => {
     if (isRadio) return radioRef;
@@ -96,6 +114,25 @@ export function Player() {
   useEffect(() => {
     if (!isSong || !songId) return;
     if (isRemoteControlActive) return;
+    setBufferedProgress(0);
+
+    const currentAudio = audioRef.current;
+    if (
+      currentAudio &&
+      currentAudio !== usePlayerStore.getState().playerState.audioPlayerRef
+    ) {
+      setAudioPlayerRef(currentAudio);
+    }
+  }, [
+    isRemoteControlActive,
+    isSong,
+    setAudioPlayerRef,
+    songId,
+    setBufferedProgress,
+  ]);
+
+  useEffect(() => {
+    if (!isSong || isRemoteControlActive) return;
 
     const currentAudio = audioRef.current;
     if (
@@ -106,11 +143,31 @@ export function Player() {
     }
 
     return () => {
-      if (currentAudio) {
+      const storedRef = usePlayerStore.getState().playerState.audioPlayerRef;
+      if (storedRef === currentAudio) {
         setAudioPlayerRef(null);
       }
     };
-  }, [isRemoteControlActive, isSong, setAudioPlayerRef, songId]);
+  }, [isRemoteControlActive, isSong, setAudioPlayerRef]);
+
+  useEffect(() => {
+    if (!isRadio || isRemoteControlActive) return;
+
+    const currentRadio = radioRef.current;
+    if (
+      currentRadio &&
+      currentRadio !== usePlayerStore.getState().playerState.radioPlayerRef
+    ) {
+      setRadioPlayerRef(currentRadio);
+    }
+
+    return () => {
+      const storedRef = usePlayerStore.getState().playerState.radioPlayerRef;
+      if (storedRef === currentRadio) {
+        setRadioPlayerRef(null);
+      }
+    };
+  }, [isRemoteControlActive, isRadio, setRadioPlayerRef]);
 
   const updateAudioDuration = useCallback(() => {
     const audio = getAudioRef().current;
@@ -142,9 +199,17 @@ export function Player() {
     const audio = getAudioRef().current;
     if (!audio) return;
 
+    if (usePlayerStore.getState().playerProgress.isScrubbing) return;
+
     const currentProgress = Math.floor(audio.currentTime);
     setProgress(currentProgress);
-  }, [getAudioRef, setProgress]);
+
+    if (audio.buffered.length > 0) {
+      const bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
+      const clamped = Math.min(bufferedEnd, audio.duration || 0);
+      setBufferedProgress(clamped);
+    }
+  }, [getAudioRef, setProgress, setBufferedProgress]);
 
   const trackReplayGain = useMemo(
     (): ReplayGainParams =>
@@ -159,7 +224,7 @@ export function Player() {
 
   const handleFooterClick = useCallback(
     (event: React.MouseEvent) => {
-      if (!isMobile || window.innerWidth >= 640) return;
+      if (!isMobile || window.innerWidth >= 768) return;
 
       // Check if the click target is a control button or interactive element
       const target = event.target as HTMLElement;
@@ -195,9 +260,38 @@ export function Player() {
     updateAudioDuration();
   }, [setStoreIsBuffering, updateAudioDuration]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: songId and audioRef needed for debug logging
+  const handleSongCanPlay = useCallback(() => {
+    const audio = audioRef.current;
+    logger.info(`[onCanPlay] songId=${songId} | duration=${audio?.duration?.toFixed(2)} | isTransitioning=${usePlayerStore.getState().playerState.isTransitioning} | isPlaying=${usePlayerStore.getState().playerState.isPlaying} | audio.paused=${audio?.paused}`);
+    setStoreIsBuffering(false);
+    updateAudioDuration();
+    setIsTransitioning(false);
+  }, [setStoreIsBuffering, updateAudioDuration, setIsTransitioning, songId, audioRef]);
+
+  const handleAudioSeeked = useCallback(() => {
+    if (usePlayerStore.getState().playerProgress.isScrubbing) {
+      setIsScrubbing(false);
+    }
+  }, [setIsScrubbing]);
+
+  const handleAudioProgress = useCallback(
+    (e: React.SyntheticEvent<HTMLAudioElement>) => {
+      const audio = e.currentTarget;
+      if (audio.buffered.length > 0) {
+        const bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
+        const clamped = Math.min(bufferedEnd, audio.duration || 0);
+        setBufferedProgress(clamped);
+      }
+    },
+    [setBufferedProgress],
+  );
+
   const handlePlaybackError = useCallback(() => {
+    setBufferedProgress(0);
+    setIsTransitioning(false);
     toast.error(t("warnings.songError"));
-  }, [t]);
+  }, [t, setBufferedProgress, setIsTransitioning]);
 
   const handleReplayGainError = useCallback(() => {
     toast.error(t("warnings.songError"));
@@ -212,26 +306,26 @@ export function Player() {
       }}
       onClick={handleFooterClick}
     >
-      <div className="w-full h-full grid grid-cols-[1fr_auto] gap-3 px-3 sm:grid-cols-player sm:gap-2 sm:px-4">
+      <div className="w-full h-full grid grid-cols-[1fr_auto] gap-3 px-3 md:grid-cols-player md:gap-2 md:px-4">
         {/* Track Info */}
-        <div className="flex items-center gap-1 w-full sm:gap-2">
+        <div className="flex items-center gap-1 w-full md:gap-2">
           {isSong && <MemoTrackInfo song={song} />}
           {isRadio && <MemoRadioInfo radio={radio} />}
         </div>
         {/* Main Controls */}
-        <div className="hidden sm:col-span-2 sm:flex flex-col justify-center items-center px-4 gap-1">
+        <div className="hidden md:col-span-2 md:flex flex-col justify-center items-center px-4 gap-1">
           <MemoPlayerControls song={song} radio={radio} />
 
           {isSong && <MemoPlayerProgress audioRef={getAudioRef()} />}
         </div>
         {/* Mobile Controls - Only Play/Pause and Next */}
-        <div className="flex sm:hidden items-center gap-1">
+        <div className="flex md:hidden items-center gap-0.5">
           <Button
             variant="ghost"
             disabled={!song && !radio}
             onClick={togglePlayPause}
             data-testid={`player-button-${isPlaying ? "pause" : "play"}`}
-            className="size-10 p-0"
+            className="size-11 p-0"
           >
             {isPlaying ? (
               <Pause className="text-foreground fill-foreground size-5" />
@@ -246,13 +340,14 @@ export function Player() {
             }
             onClick={playNextSong}
             data-testid="player-button-next-mobile"
-            className="size-10 p-0"
+            className="size-11 p-0"
+            unfocusable
           >
             <SkipForward className="text-foreground fill-foreground size-5" />
           </Button>
         </div>
         {/* Remain Controls and Volume */}
-        <div className="hidden sm:flex items-center w-full justify-end">
+        <div className="hidden md:flex items-center w-full justify-end">
           <div className="flex items-center gap-1">
             {isSong && (
               <>
@@ -277,18 +372,20 @@ export function Player() {
         <MemoAudioPlayer
           replayGain={trackReplayGain}
           src={audioSrc}
+          songId={resolvedSongId}
           autoPlay={isPlaying}
           audioRef={audioRef}
-          loop={loopState === LoopState.One && !hasUserQueue}
           onPlay={handleAudioPlay}
           onPause={handleAudioPause}
           onLoadedMetadata={setupDuration}
           onDurationChange={updateAudioDuration}
           onTimeUpdate={setupProgress}
+          onProgress={handleAudioProgress}
           onEnded={handleSongEnded}
           onWaiting={handleAudioWaiting}
           onPlaying={handleAudioPlaying}
-          onCanPlay={handleAudioCanPlay}
+          onCanPlay={handleSongCanPlay}
+          onSeeked={handleAudioSeeked}
           onPlaybackError={handlePlaybackError}
           onReplayGainError={handleReplayGainError}
           data-testid="player-song-audio"

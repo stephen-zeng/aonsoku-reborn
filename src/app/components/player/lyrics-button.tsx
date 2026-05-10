@@ -43,6 +43,7 @@ export function PlayerLyricsButton({ disabled }: PlayerLyricsButtonProps) {
         )}
         onClick={handleClick}
         disabled={isLyricsDisabled}
+        unfocusable
       >
         <MicVocalIcon className={clsx("w-4 h-4", isActive && "text-primary")} />
       </Button>

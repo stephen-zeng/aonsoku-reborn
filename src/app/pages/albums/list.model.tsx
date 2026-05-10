@@ -1,12 +1,16 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
 import debounce from "lodash/debounce";
 import { useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
+import {
+  getOfflineAlbumsList,
+  useOfflineInfiniteQuery,
+} from "@/lib/offlineQueryClient";
 import {
   albumSearch,
   getAlbumList,
   getArtistDiscography,
 } from "@/queries/albums";
+import { useIsOnline } from "@/store/cache.store";
 import { AlbumListType } from "@/types/responses/album";
 import {
   AlbumsFilters,
@@ -26,6 +30,7 @@ export function useAlbumsListModel() {
   const currentYear = new Date().getFullYear().toString();
 
   const scrollDivRef = useRef<HTMLDivElement | null>(null);
+  const isOnline = useIsOnline();
 
   const currentFilter = getSearchParam<AlbumListType>(
     AlbumsSearchParams.MainFilter,
@@ -82,13 +87,38 @@ export function useAlbumsListModel() {
     return true;
   }
 
-  const { data, fetchNextPage, hasNextPage, isLoading } = useInfiniteQuery({
-    queryKey: [queryKeys.album.all, currentFilter, yearFilter, genre, query],
-    queryFn: fetchAlbums,
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => lastPage.nextOffset,
-    enabled: enableMainQuery(),
-  });
+  const { data, fetchNextPage, hasNextPage, isLoading } =
+    useOfflineInfiniteQuery(
+      [
+        ...queryKeys.album.all,
+        currentFilter,
+        yearFilter,
+        genre,
+        artistId,
+        query,
+      ],
+      ({ pageParam }) => fetchAlbums({ pageParam }),
+      {
+        initialPageParam: 0,
+        getNextPageParam: (lastPage) => lastPage.nextOffset,
+        enabled: enableMainQuery(),
+        offlineFn: async () => {
+          const albums = await getOfflineAlbumsList({
+            currentFilter,
+            yearFilter,
+            genre,
+            artistId,
+            query,
+          });
+
+          return {
+            albums,
+            nextOffset: null,
+            albumsCount: albums.length,
+          };
+        },
+      },
+    );
 
   const handleScroll = useCallback(() => {
     const scrollElement = scrollDivRef.current;
@@ -98,10 +128,10 @@ export function useAlbumsListModel() {
     const isNearBottom =
       scrollTop + clientHeight >= scrollHeight - scrollHeight / 4;
 
-    if (isNearBottom && hasNextPage) {
+    if (isNearBottom && hasNextPage && isOnline) {
       fetchNextPage();
     }
-  }, [fetchNextPage, hasNextPage]);
+  }, [fetchNextPage, hasNextPage, isOnline]);
 
   useEffect(() => {
     const scrollElement = scrollDivRef.current;

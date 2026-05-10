@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
+import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 import { ShadowHeader } from "@/app/components/album/shadow-header";
 import { ArtistGridCard } from "@/app/components/artist/artist-grid-card";
 import { ArtistsFallback } from "@/app/components/fallbacks/artists.tsx";
@@ -42,10 +42,11 @@ export default function ArtistsList() {
     ? (["index", "name", "starred"] as ColumnFilter[])
     : undefined;
 
-  const { data: artists, isLoading } = useQuery({
-    queryKey: [queryKeys.artist.all],
-    queryFn: subsonic.artists.getAll,
-  });
+  const { data: artists, isLoading } = useOfflineQuery(
+    [...queryKeys.artist.all],
+    subsonic.artists.getAll,
+    { offlineFn: offlineData.artists },
+  );
 
   async function handlePlayArtistRadio(artist: ISimilarArtist) {
     const songList = await getArtistAllSongs(artist.name);
@@ -67,7 +68,7 @@ export default function ArtistsList() {
 
         <MemoViewTypeSelector
           viewType={artistsPageViewType}
-          setViewType={setArtistsPageViewType}
+          setView_type={setArtistsPageViewType}
         />
       </MemoShadowHeader>
 

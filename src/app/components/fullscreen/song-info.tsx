@@ -46,7 +46,7 @@ export const SongInfo = memo(function SongInfo({
             <h2
               className={clsx(
                 "font-bold tracking-tight",
-                compact ? "text-xl sm:text-2xl" : "text-2xl sm:text-3xl",
+                compact ? "text-xl md:text-2xl" : "text-2xl md:text-3xl",
               )}
             >
               {currentSong.title}

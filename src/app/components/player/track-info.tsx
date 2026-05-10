@@ -15,8 +15,7 @@ import { Link, type LinkProps } from "react-router-dom";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { MarqueeTitle } from "@/app/components/fullscreen/marquee-title";
 import FullscreenMode from "@/app/components/fullscreen/page";
-import { Button } from "@/app/components/ui/button";
-import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
+
 import { useHasHover } from "@/app/hooks/use-input-mode";
 import { useIsMobile } from "@/app/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -137,15 +136,15 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
   if (!song) {
     return (
       <Fragment>
-        <div className="w-12 h-12 sm:w-[70px] sm:h-[70px] flex justify-center items-center bg-muted rounded">
+        <div className="w-12 h-12 md:w-[70px] md:h-[70px] flex justify-center items-center bg-muted rounded">
           <AudioLines
             data-testid="song-no-playing-icon"
-            className="size-5 sm:size-6"
+            className="size-5 md:size-6"
           />
         </div>
         <div className="flex flex-col justify-center">
           <span
-            className="text-xs sm:text-sm font-medium"
+            className="text-xs md:text-sm font-medium"
             data-testid="song-no-playing-label"
           >
             {t("player.noSongPlaying")}
@@ -158,14 +157,13 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
   return (
     <Fragment>
       <div className="group relative">
-        <div className="w-12 h-12 sm:w-[70px] sm:h-[70px] sm:min-w-[70px] sm:max-w-[70px] aspect-square bg-cover bg-center bg-skeleton rounded overflow-hidden shadow-md">
+        <div className="w-12 h-12 md:w-[70px] md:h-[70px] md:min-w-[70px] md:max-w-[70px] aspect-square bg-cover bg-center bg-skeleton rounded overflow-hidden shadow-md">
           <CachedImage
             key={song.id}
             id="track-song-image"
             coverArtId={song.coverArt}
             coverArtType="song"
             albumId={song.albumId}
-            coverArtSize="300"
             width="100%"
             height="100%"
             crossOrigin="anonymous"
@@ -182,25 +180,20 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
             if (open) openFullscreenPlayerWithHistory("playing");
           }}
         >
-          <Button
-            variant="secondary"
-            size="icon"
-            className="hidden sm:block cursor-pointer w-8 h-8 shadow-md rounded-full opacity-0 sm:group-hover:opacity-100 transition-opacity ease-in-out absolute top-1 right-1 focus-visible:opacity-100"
+          <div
+            className="hidden md:flex absolute inset-0 items-center justify-center bg-black/0 group-hover:bg-black/40 cursor-pointer rounded"
+            tabIndex={-1}
             data-testid="track-fullscreen-button"
           >
-            <SimpleTooltip text={t("fullscreen.switchButton")} align="start">
-              <div className="w-full h-full flex items-center justify-center">
-                <Maximize2 className="w-4 h-4" />
-              </div>
-            </SimpleTooltip>
-          </Button>
+            <Maximize2 className="w-5 h-5 text-white opacity-0 group-hover:opacity-100" />
+          </div>
         </FullscreenMode>
       </div>
       <div className="flex flex-col justify-center w-full overflow-hidden ml-1">
         <MarqueeTitle gap="mr-2">
           {isMobile ? (
             <span
-              className="text-xs sm:text-sm font-medium"
+              className="text-xs md:text-sm font-medium"
               data-testid="track-title"
             >
               {song.title}
@@ -212,7 +205,7 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
             >
               <span
                 className={cn(
-                  "text-xs sm:text-sm font-medium",
+                  "text-xs md:text-sm font-medium",
                   hasHover && "hover:underline cursor-pointer",
                 )}
                 data-testid="track-title"
@@ -249,7 +242,7 @@ function TrackInfoArtistsLinks({
     const reducedArtists = artists.slice(0, ALBUM_ARTISTS_MAX_NUMBER);
 
     return (
-      <div className="flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground w-full maskImage-marquee-fade-finished">
+      <div className="flex items-center gap-1 text-[10px] md:text-xs text-muted-foreground w-full maskImage-marquee-fade-finished">
         {reducedArtists.map(({ id, name }, index) => (
           <div key={id} className="flex items-center">
             <ArtistLink
@@ -291,7 +284,7 @@ function ArtistLink({
   if (disableNavigation || !id) {
     return (
       <span
-        className="w-fit inline-flex text-[10px] sm:text-xs text-muted-foreground text-nowrap"
+        className="w-fit inline-flex text-[10px] md:text-xs text-muted-foreground text-nowrap"
         data-testid="track-artist-url"
       >
         {name}
@@ -307,7 +300,7 @@ function ArtistLink({
     >
       <span
         className={cn(
-          "text-[10px] sm:text-xs text-muted-foreground text-nowrap",
+          "text-[10px] md:text-xs text-muted-foreground text-nowrap",
           enableInteractiveStyle &&
             "hover:underline hover:text-foreground cursor-pointer",
         )}
