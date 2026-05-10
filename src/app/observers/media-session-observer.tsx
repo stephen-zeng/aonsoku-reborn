@@ -76,13 +76,14 @@ export function MediaSessionObserver() {
       : isPlaying;
 
     if (isTransitioning) {
-      logger.info("[MediaSessionObserver → transitioning] | calling ensurePlaybackStatePlaying");
+      logger.info("[MediaSessionObserver → transitioning] | keeping existing metadata, only updating playback state");
       manageMediaSession.ensurePlaybackStatePlaying();
-    } else {
-      manageMediaSession.setPlaybackState(effectiveIsPlaying);
+      return;
     }
 
-    if (hasNothingPlaying && !isTransitioning) {
+    manageMediaSession.setPlaybackState(effectiveIsPlaying);
+
+    if (hasNothingPlaying) {
       logger.info("[MediaSessionObserver → nothingPlaying] | calling removeMediaSession");
       manageMediaSession.removeMediaSession();
       resetAppTitle();
@@ -101,6 +102,8 @@ export function MediaSessionObserver() {
         logger.info(`[MediaSessionObserver → setRadioMediaSession] | name=${radio.name}`);
         manageMediaSession.setRadioMediaSession(radioLabel, radio.name);
         lastMetadataRef.current = metadataKey;
+      } else {
+        logger.info(`[MediaSessionObserver → metadataUnchanged] | name=${radio.name}`);
       }
     } else if (isSong && song) {
       title = `${song.title} - ${song.artist} | Aonsoku`;
@@ -116,7 +119,7 @@ export function MediaSessionObserver() {
       }
     }
 
-    if (!effectiveIsPlaying && !isTransitioning) {
+    if (!effectiveIsPlaying) {
       resetAppTitle();
     } else if (title) {
       document.title = title;
