@@ -510,3 +510,9 @@
     --ring: 43 59% 81%;
   }
 }
+
+@media (hover: none) {
+  .slider-thumb {
+    opacity: 0 !important;
+  }
+}

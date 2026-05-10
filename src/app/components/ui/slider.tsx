@@ -313,7 +313,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
             "ring-offset-background transition-[background-color,opacity]",
             "focus-visible:outline-none focus-visible:ring-transparent",
             "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
-            "opacity-0 group-hover:opacity-100",
+            "opacity-0 group-hover:opacity-100 slider-thumb",
             variant === "default" && "bg-foreground border-foreground",
             variant === "secondary" &&
               (contrast?.sliderThumbColor ??
@@ -439,7 +439,7 @@ export function ProgressSlider(props: SliderBaseProps) {
           "ring-offset-background transition-[background-color,opacity]",
           "focus-visible:outline-none focus-visible:ring-transparent",
           "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
-          "opacity-0 group-hover:opacity-100",
+          "opacity-0 group-hover:opacity-100 slider-thumb",
           variant === "default" && "bg-foreground border-foreground",
           variant === "secondary" &&
             (contrast?.sliderThumbColor ??
