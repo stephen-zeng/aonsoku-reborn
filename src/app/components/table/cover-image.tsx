@@ -48,7 +48,7 @@ export function CoverImage({
   if (showOverlay) {
     return (
       <div
-        className="bg-skeleton overflow-hidden rounded shadow aspect-square relative"
+        className="bg-skeleton overflow-hidden rounded shadow aspect-square relative cursor-default"
         style={{
           width: size,
           height: size,
