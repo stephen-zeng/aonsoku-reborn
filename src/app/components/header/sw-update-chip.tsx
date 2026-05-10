@@ -20,7 +20,7 @@ function ActionBadge({
   return (
     <Badge
       variant={variant}
-      className={`electron-no-drag gap-1 cursor-pointer select-none ${className ?? ""}`}
+      className={`electron-no-drag gap-1 cursor-default h-5 select-none ${className ?? ""}`}
       role="button"
       tabIndex={0}
       onClick={onClick}
@@ -43,7 +43,7 @@ export function SwUpdateChip() {
 
   if (status === "installing") {
     return (
-      <Badge variant="beta" className="electron-no-drag gap-1 select-none">
+      <Badge variant="beta" className="electron-no-drag gap-1 h-5 select-none cursor-default">
         <Loader2 className="h-3 w-3 animate-spin" />
         <span>{t("update.sw.updating")}</span>
       </Badge>
