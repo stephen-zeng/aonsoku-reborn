@@ -242,3 +242,4 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 [Electron-url]: https://www.electronjs.org/
 [Release-badge]: https://img.shields.io/github/v/release/realtvop/aonsoku-reborn?display_name=release&style=for-the-badge&label=Download&labelColor=%23000&color=%2310B77F&logo=rocket&logoColor=%2310B77F&logoSize=auto
 [Release-url]: https://github.com/realtvop/aonsoku-reborn/releases/latest
+
