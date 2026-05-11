@@ -25,8 +25,9 @@ export function MainRoutes() {
 
   return (
     <main
+      id="main-scroll-container"
       className={cn(
-        "min-h-screen pl-0 md:pl-mini-sidebar pt-0 md:pt-header pb-[calc(var(--player-height)+var(--bottom-nav-height))]",
+        "fixed inset-0 overflow-y-auto overflow-x-hidden pl-0 md:pl-mini-sidebar pt-0 md:pt-header pb-[calc(var(--player-height)+var(--bottom-nav-height))]",
         isCollapsed ? "xl:pl-mini-sidebar" : "xl:pl-sidebar",
         mainDrawerState && "lg:pr-right-panel",
       )}
