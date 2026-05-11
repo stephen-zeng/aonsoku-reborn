@@ -470,7 +470,7 @@ function UnifiedQueueView({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 px-2 text-xs text-foreground/50 hover:text-foreground"
+                className="h-6 px-2 text-xs text-foreground/50 hover-supported:text-foreground"
                 onClick={clearPlayHistory}
               >
                 {t("generic.clear")}
@@ -1031,7 +1031,7 @@ function VirtualizedQueueView({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-6 px-2 text-xs text-foreground/50 hover:text-foreground"
+                              className="h-6 px-2 text-xs text-foreground/50 hover-supported:text-foreground"
                               onClick={clearUserQueue}
                             >
                               {t("generic.clear")}
@@ -1218,7 +1218,7 @@ function UserQueueSection({
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 px-2 text-xs text-foreground/50 hover:text-foreground"
+              className="h-6 px-2 text-xs text-foreground/50 hover-supported:text-foreground"
               onClick={clearUserQueue}
             >
               {t("generic.clear")}

@@ -59,7 +59,7 @@ export function radiosColumns(): ColumnDefType<Radio>[] {
                 href={homePageUrl}
                 target="_blank"
                 rel="nofollow noreferrer"
-                className="hover:underline"
+                className="hover-supported:underline"
               >
                 {homePageUrl}
               </a>

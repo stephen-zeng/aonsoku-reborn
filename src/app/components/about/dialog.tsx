@@ -100,7 +100,7 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
 
           <div className="md:flex md:items-start md:justify-center">
             <a
-              className="w-full md:w-auto px-2 py-1 rounded-md bg-primary/60 hover:bg-primary/50 border border-primary text-sm font-medium flex items-center justify-center"
+              className="w-full md:w-auto px-2 py-1 rounded-md bg-primary/60 hover-supported:bg-primary/50 border border-primary text-sm font-medium flex items-center justify-center"
               href={url}
               target="_blank"
               rel="nofollow noreferrer"

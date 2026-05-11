@@ -54,7 +54,7 @@ export function SwUpdateChip() {
     return (
       <ActionBadge
         variant="beta"
-        className="hover:bg-primary/30 active:bg-primary/40"
+        className="hover-supported:bg-primary/30 active:bg-primary/40"
         onClick={applyUpdate}
         icon={RefreshCwIcon}
         label={t("update.sw.refresh")}

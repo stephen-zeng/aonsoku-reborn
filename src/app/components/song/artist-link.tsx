@@ -36,7 +36,7 @@ export function ArtistLink({
 
   return (
     <Link
-      className={cn("truncate hover:underline", className)}
+      className={cn("truncate hover-supported:underline", className)}
       {...props}
       to={ROUTES.ARTIST.PAGE(artistId)}
       onContextMenu={(e) => {

@@ -56,7 +56,7 @@ export default function ArtistTopSongs({ topSongs, artist }: TopSongsProps) {
           className="h-full"
           data-testid="view-all-tracks-link"
         >
-          <p className="leading-7 text-sm truncate hover:underline text-muted-foreground hover:text-primary">
+          <p className="leading-7 text-sm truncate hover-supported:underline text-muted-foreground hover-supported:text-primary">
             {t("generic.viewAll")}
           </p>
         </Link>

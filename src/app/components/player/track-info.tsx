@@ -16,7 +16,6 @@ import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { MarqueeTitle } from "@/app/components/fullscreen/marquee-title";
 import FullscreenMode from "@/app/components/fullscreen/page";
 
-import { useHasHover } from "@/app/hooks/use-input-mode";
 import { useIsMobile } from "@/app/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
@@ -107,7 +106,6 @@ function TouchGuardedLink({
 
 export function TrackInfo({ song }: { song: ISong | undefined }) {
   const { t } = useTranslation();
-  const hasHover = useHasHover();
   const isMobile = useIsMobile();
   const { setCurrentSongColor } = useSongColor();
   const { fullscreenPlayerOpen } = useFullscreenPlayerState();
@@ -181,11 +179,11 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
           }}
         >
           <div
-            className="hidden md:flex absolute inset-0 items-center justify-center bg-black/0 group-hover:bg-black/40 cursor-pointer rounded"
+            className="hidden md:flex absolute inset-0 items-center justify-center bg-black/0 group-hover-supported:bg-black/40 cursor-pointer rounded"
             tabIndex={-1}
             data-testid="track-fullscreen-button"
           >
-            <Maximize2 className="w-5 h-5 text-white opacity-0 group-hover:opacity-100" />
+            <Maximize2 className="w-5 h-5 text-white opacity-0 group-hover-supported:opacity-100" />
           </div>
         </FullscreenMode>
       </div>
@@ -206,7 +204,7 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
               <span
                 className={cn(
                   "text-xs md:text-sm font-medium",
-                  hasHover && "hover:underline cursor-pointer",
+                  "hover-supported:underline cursor-pointer",
                 )}
                 data-testid="track-title"
               >
@@ -217,7 +215,6 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
         </MarqueeTitle>
         <TrackInfoArtistsLinks
           disableNavigation={isMobile}
-          enableInteractiveStyle={hasHover}
           song={song}
         />
       </div>
@@ -228,13 +225,11 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
 type TrackInfoArtistsLinksProps = {
   song: ISong;
   disableNavigation?: boolean;
-  enableInteractiveStyle?: boolean;
 };
 
 function TrackInfoArtistsLinks({
   song,
   disableNavigation = false,
-  enableInteractiveStyle = false,
 }: TrackInfoArtistsLinksProps) {
   const { artists, artistId, artist } = song;
 
@@ -247,7 +242,6 @@ function TrackInfoArtistsLinks({
           <div key={id} className="flex items-center">
             <ArtistLink
               disableNavigation={disableNavigation}
-              enableInteractiveStyle={enableInteractiveStyle}
               id={id}
               name={name}
             />
@@ -261,7 +255,6 @@ function TrackInfoArtistsLinks({
   return (
     <ArtistLink
       disableNavigation={disableNavigation}
-      enableInteractiveStyle={enableInteractiveStyle}
       id={artistId}
       name={artist}
     />
@@ -272,14 +265,12 @@ type ArtistLinkProps = {
   id?: string;
   name: string;
   disableNavigation?: boolean;
-  enableInteractiveStyle?: boolean;
 };
 
 function ArtistLink({
   id,
   name,
   disableNavigation = false,
-  enableInteractiveStyle = false,
 }: ArtistLinkProps) {
   if (disableNavigation || !id) {
     return (
@@ -301,8 +292,7 @@ function ArtistLink({
       <span
         className={cn(
           "text-[10px] md:text-xs text-muted-foreground text-nowrap",
-          enableInteractiveStyle &&
-            "hover:underline hover:text-foreground cursor-pointer",
+          "hover-supported:underline hover-supported:text-foreground cursor-pointer",
         )}
       >
         {name}

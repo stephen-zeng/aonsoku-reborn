@@ -42,7 +42,7 @@ export default function InfoPanel({
               target="_blank"
               rel="nofollow noreferrer"
               href={lastFmUrl}
-              className="p-2 hover:bg-black/10 dark:hover:bg-white/10 rounded-full"
+              className="p-2 hover-supported:bg-black/10 dark:hover-supported:bg-white/10 rounded-full"
             >
               <LastFmIcon className="w-6 h-6 fill-foreground" />
             </a>
@@ -55,7 +55,7 @@ export default function InfoPanel({
               target="_blank"
               rel="nofollow noreferrer"
               href={`https://musicbrainz.org/artist/${musicBrainzId}`}
-              className="p-2 hover:bg-black/10 dark:hover:bg-white/10 rounded-full"
+              className="p-2 hover-supported:bg-black/10 dark:hover-supported:bg-white/10 rounded-full"
             >
               <MusicbrainzIcon className="w-6 h-6 fill-foreground" />
             </a>

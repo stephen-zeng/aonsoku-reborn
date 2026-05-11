@@ -52,8 +52,8 @@ function Button({
         "rounded-full ease-linear duration-100 transition",
         "border-[1px] border-transparent",
         buttonStyle === "primary"
-          ? "w-14 h-14 hover:scale-105"
-          : "w-12 h-12 md:w-14 md:h-14 hover:bg-foreground/20",
+          ? "w-14 h-14 hover-supported:scale-105"
+          : "w-12 h-12 md:w-14 md:h-14 hover-supported:bg-foreground/20",
         className,
       )}
       variant={buttonStyle === "primary" ? "default" : "ghost"}
@@ -84,7 +84,7 @@ function Dropdown({ tooltip, options }: DropdownProps) {
           className={clsx(
             "rounded-full w-12 h-12 md:w-14 md:h-14 border-transparent",
             "data-[state=open]:bg-foreground/20",
-            "hover:bg-foreground/20",
+            "hover-supported:bg-foreground/20",
             "ease-linear duration-100 transition",
           )}
           variant="ghost"

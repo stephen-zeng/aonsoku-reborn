@@ -102,7 +102,7 @@ export const QueueItemRow = forwardRef<
       ref={ref}
       className={clsx([
         "group/queuerow flex items-center w-full h-16 text-sm rounded-md px-3 gap-2",
-        "hover:bg-muted",
+        "hover-supported:bg-muted",
       ])}
       style={style}
       {...dragAttributes}
@@ -136,7 +136,7 @@ export const QueueItemRow = forwardRef<
         <div
           className={clsx(
             "absolute inset-0 flex items-center justify-center bg-black/40 rounded",
-            "opacity-0 group-hover/cover:opacity-100 transition-opacity",
+            "opacity-0 group-hover-supported/cover:opacity-100 transition-opacity",
           )}
         >
           <PlayIcon size={16} className="text-white fill-white" />
@@ -155,7 +155,7 @@ export const QueueItemRow = forwardRef<
           <span
             className={clsx(
               "text-xs transition-opacity",
-              !dropdownOpen && "group-hover/queuerow:opacity-0",
+              !dropdownOpen && "group-hover-supported/queuerow:opacity-0",
               dropdownOpen && "opacity-0",
             )}
           >
@@ -172,7 +172,7 @@ export const QueueItemRow = forwardRef<
                   className={clsx(
                     "w-8 h-8 p-1 rounded-full",
                     "data-[state=open]:opacity-100",
-                    "opacity-0 group-hover/queuerow:opacity-100 transition-opacity",
+                    "opacity-0 group-hover-supported/queuerow:opacity-100 transition-opacity",
                   )}
                   onClick={(e) => {
                     e.stopPropagation();

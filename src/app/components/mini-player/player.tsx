@@ -50,7 +50,7 @@ export function MiniPlayer() {
               className={clsx(
                 "flex flex-col w-full gap-4 absolute inset-0",
                 "bg-gradient-to-b from-background/70 via-background/50 via-50% to-background to-90%",
-                "opacity-0 group-hover:opacity-100",
+                "opacity-0 group-hover-supported:opacity-100",
                 "transition-opacity duration-300",
                 "mid-player:hidden mini-player:hidden",
               )}
