@@ -82,6 +82,30 @@ export function createInitialSettings(set: SetFn): IPlayerContext["settings"] {
           state.settings.lyrics.showTranslation = value;
         });
       },
+      sourcePriority: ["navidrome", "lrclib", "custom"],
+      setSourcePriority: (value) => {
+        set((state) => {
+          state.settings.lyrics.sourcePriority = value;
+        });
+      },
+      customServerEnabled: false,
+      setCustomServerEnabled: (value: boolean) => {
+        set((state) => {
+          state.settings.lyrics.customServerEnabled = value;
+        });
+      },
+      customServerUrl: "",
+      setCustomServerUrl: (value: string) => {
+        set((state) => {
+          state.settings.lyrics.customServerUrl = value;
+        });
+      },
+      customServerPassword: "",
+      setCustomServerPassword: (value: string) => {
+        set((state) => {
+          state.settings.lyrics.customServerPassword = value;
+        });
+      },
     },
     replayGain: {
       values: {

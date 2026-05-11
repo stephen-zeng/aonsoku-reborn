@@ -1,7 +1,9 @@
 export function getMainScrollElement() {
-  return document.documentElement;
+  return document.getElementById("main-scroll-container") ??
+    document.documentElement;
 }
 
 export function scrollPageToTop() {
-  window.scrollTo({ top: 0 });
+  const scrollElement = getMainScrollElement();
+  scrollElement.scrollTo({ top: 0 });
 }

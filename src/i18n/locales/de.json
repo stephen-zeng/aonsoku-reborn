@@ -520,6 +520,35 @@
         "showTranslation": {
           "info": "Wenn verfügbar, übersetzte Songtexte unter den Originaltexten anzeigen.",
           "label": "Übersetzung anzeigen"
+        },
+        "source": {
+          "label": "Priorität der Liedtextquellen",
+          "info": "Lege die Reihenfolge fest, in der einfache Liedtexte oder LRC-Liedtexte abgerufen werden.",
+          "dragInstruction": "Ziehe die Quellen, um ihre Reihenfolge zu ändern.",
+          "dragHandle": "Quelle {{source}} ziehen",
+          "priority": "{{priority}}. {{source}}",
+          "navidrome": "Navidrome",
+          "lrclib": "LRCLIB",
+          "custom": "Benutzerdefiniert"
+        },
+        "customServer": {
+          "enabled": {
+            "label": "Benutzerdefinierter Liedtextserver",
+            "info": "Liedtexte von einem benutzerdefinierten externen Liedtextserver abrufen."
+          },
+          "url": {
+            "label": "Server-URL",
+            "placeholder": "https://example.com/lyrics",
+            "info": "Der Endpoint, über den externe Liedtexte abgerufen werden.",
+            "invalid": "Gib eine gültige HTTP- oder HTTPS-URL für den Liedtextserver ein."
+          },
+          "password": {
+            "label": "Passwort",
+            "placeholder": "Autorisierungspasswort",
+            "info": "Optionaler Authorization-Header-Wert, der an den benutzerdefinierten Liedtextserver gesendet wird. Er wird auf deinem Liedtextserver festgelegt."
+          },
+          "save": "Speichern",
+          "saved": "Einstellungen für den benutzerdefinierten Liedtextserver gespeichert."
         }
       },
       "replayGain": {

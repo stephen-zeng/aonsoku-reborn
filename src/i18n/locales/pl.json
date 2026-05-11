@@ -534,6 +534,35 @@
         "showTranslation": {
           "info": "Gdy dostępne, pokazuj przetłumaczony tekst poniżej oryginalnego tekstu.",
           "label": "Pokaż tłumaczenie"
+        },
+        "source": {
+          "label": "Priorytet źródeł tekstów",
+          "info": "Wybierz kolejność używaną do pobierania zwykłych tekstów lub tekstów LRC.",
+          "dragInstruction": "Przeciągnij, aby zmienić kolejność źródeł.",
+          "dragHandle": "Przeciągnij źródło {{source}}",
+          "priority": "{{priority}}. {{source}}",
+          "navidrome": "Navidrome",
+          "lrclib": "LRCLIB",
+          "custom": "Niestandardowe"
+        },
+        "customServer": {
+          "enabled": {
+            "label": "Niestandardowy serwer tekstów",
+            "info": "Pobieraj teksty z zewnętrznego serwera tekstów zdefiniowanego przez użytkownika."
+          },
+          "url": {
+            "label": "URL serwera",
+            "placeholder": "https://example.com/lyrics",
+            "info": "Endpoint używany do pobierania zewnętrznych tekstów.",
+            "invalid": "Wprowadź prawidłowy adres URL HTTP lub HTTPS serwera tekstów."
+          },
+          "password": {
+            "label": "Hasło",
+            "placeholder": "Hasło autoryzacji",
+            "info": "Opcjonalna wartość nagłówka Authorization wysyłana do niestandardowego serwera tekstów. Ustawia się ją na serwerze tekstów."
+          },
+          "save": "Zapisz",
+          "saved": "Ustawienia niestandardowego serwera tekstów zostały zapisane."
         }
       },
       "replayGain": {

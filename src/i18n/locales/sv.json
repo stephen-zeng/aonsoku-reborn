@@ -520,6 +520,35 @@
         "showTranslation": {
           "info": "När tillgängligt, visa översatta texter under originaltexten.",
           "label": "Visa översättning"
+        },
+        "source": {
+          "label": "Prioritet för textkällor",
+          "info": "Välj ordningen som används för att hämta vanlig text eller LRC-text.",
+          "dragInstruction": "Dra för att ändra ordningen på källorna.",
+          "dragHandle": "Dra källan {{source}}",
+          "priority": "{{priority}}. {{source}}",
+          "navidrome": "Navidrome",
+          "lrclib": "LRCLIB",
+          "custom": "Anpassad"
+        },
+        "customServer": {
+          "enabled": {
+            "label": "Anpassad textserver",
+            "info": "Hämta låttexter från en användardefinierad extern textserver."
+          },
+          "url": {
+            "label": "Server-URL",
+            "placeholder": "https://example.com/lyrics",
+            "info": "Endpointen som används för att hämta externa låttexter.",
+            "invalid": "Ange en giltig HTTP- eller HTTPS-URL för textservern."
+          },
+          "password": {
+            "label": "Lösenord",
+            "placeholder": "Auktoriseringslösenord",
+            "info": "Valfritt Authorization-header-värde som skickas till den anpassade textservern. Det ställs in på din textserver."
+          },
+          "save": "Spara",
+          "saved": "Inställningarna för den anpassade textservern har sparats."
         }
       },
       "replayGain": {
