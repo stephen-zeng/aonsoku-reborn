@@ -95,7 +95,7 @@ export function MediaSessionObserver() {
     let metadataKey = "";
 
     if (isRadio && radio) {
-      title = `${radioLabel} - ${radio.name} | Aonsoku`;
+      title = `${radioLabel} - ${radio.name} | ${appName}`;
       metadataKey = `radio:${radio.name}`;
 
       if (lastMetadataRef.current !== metadataKey) {
@@ -106,7 +106,7 @@ export function MediaSessionObserver() {
         logger.info(`[MediaSessionObserver → metadataUnchanged] | name=${radio.name}`);
       }
     } else if (isSong && song) {
-      title = `${song.title} - ${song.artist} | Aonsoku`;
+      title = `${song.title} - ${song.artist} | ${appName}`;
       metadataKey = `song:${song.id || song.title}`;
 
       const metadataChanged = lastMetadataRef.current !== metadataKey;

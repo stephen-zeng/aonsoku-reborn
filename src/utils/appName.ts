@@ -1,6 +1,6 @@
 import { repository, version } from "@/../package.json";
 
-export const appName = "Aonsoku";
+export const appName = "SZ Music";
 
 export const buildHash: string = __BUILD_HASH__;
 export const buildTime: number = __BUILD_TIME__;
