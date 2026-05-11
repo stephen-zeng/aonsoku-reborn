@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ListMusic, MicVocalIcon } from "lucide-react";
+import { ChevronDown, ListChecks, ListMusic, MicVocalIcon } from "lucide-react";
 import { memo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/app/components/ui/button";
 import { DrawerHandle } from "@/app/components/ui/drawer";
 import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
@@ -13,9 +14,11 @@ import {
   closeFullscreenPlayerWithHistory,
   setFullscreenTabWithHistory,
 } from "@/routes/fullscreenRouter";
+import { ROUTES } from "@/routes/routesList";
 import {
   useFullscreenPlayerState,
   useLyricsAlignment,
+  useLyricsSettings,
   useSongColor,
 } from "@/store/player.store";
 import { ArtworkWithInfo } from "./artwork-with-info";
@@ -122,8 +125,12 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
   const { t } = useTranslation();
   const { fullscreenPlayerTab } = useFullscreenPlayerState();
   const { hasLyrics } = useHasLyrics();
+  const { customServerEnabled, customServerUrl } = useLyricsSettings();
+  const navigate = useNavigate();
 
   const lyricsDisabled = hasLyrics === false;
+  const showCustomLyricsSelect =
+    customServerEnabled && customServerUrl.trim().length > 0;
 
   return (
     <div
@@ -141,6 +148,17 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
           )
         }
       />
+      {showCustomLyricsSelect && (
+        <MobileTabButton
+          icon={<ListChecks className="size-5" />}
+          label={t("fullscreen.selectLyrics")}
+          active={false}
+          onClick={() => {
+            closeFullscreenPlayerWithHistory();
+            navigate(ROUTES.LYRICS.CUSTOM_SELECT);
+          }}
+        />
+      )}
       <MobileTabButton
         icon={<ListMusic className="size-5" />}
         label={t("fullscreen.queue")}

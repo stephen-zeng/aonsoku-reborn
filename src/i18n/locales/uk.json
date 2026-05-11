@@ -133,7 +133,8 @@
     "queueFromSource": "З {{source}}",
     "queueHistory": "Історія",
     "queueRepeating": "Повторення",
-    "switchButton": "Перейти до великого плеєра"
+    "switchButton": "Перейти до великого плеєра",
+    "selectLyrics": "Вибрати текст"
   },
   "generic": {
     "beta": "Бета",
@@ -1060,5 +1061,22 @@
   "warnings": {
     "reload": "Відтворюється пісня!\nВи впевнені, що хочете перезавантажити сторінку?",
     "songError": "Не вдається відтворити пісню, перевірте сервер!"
+  },
+  "lyrics": {
+    "customSelect": {
+      "title": "Вибрати текст",
+      "subtitle": "{{title}} — {{artist}}",
+      "noSong": "Зараз нічого не відтворюється.",
+      "serverDisabled": "Користувацький сервер текстів не ввімкнено.",
+      "empty": "Користувацькі варіанти текстів не знайдено.",
+      "searchTitle": "Назва пісні",
+      "searchArtist": "Виконавець",
+      "search": "Пошук",
+      "select": "Вибрати",
+      "selected": "Вибрано",
+      "currentSelection": "Поточний вибір: {{title}} — {{artist}}",
+      "lyricsId": "ID: {{id}}",
+      "noPreview": "Попередній перегляд недоступний."
+    }
   }
 }

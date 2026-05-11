@@ -1,5 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import {
+  getCustomLyricsSongKey,
+  getSelectedCustomLyrics,
+} from "@/service/lyrics";
 import { subsonic } from "@/service/subsonic";
 import { useIsOnline } from "@/store/cache.store";
 import { useLyricsSettings, usePlayerSonglist } from "@/store/player.store";
@@ -10,17 +14,40 @@ const STALE_TIME = 5 * 60 * 1000;
 
 export function useHasLyrics() {
   const { currentSong } = usePlayerSonglist();
-  const { sourcePriority, customServerEnabled, customServerUrl } =
-    useLyricsSettings();
+  const {
+    sourcePriority,
+    customServerEnabled,
+    customServerUrl,
+    selectedCustomLyrics,
+  } = useLyricsSettings();
 
   const isOnline = useIsOnline();
 
-  const { id: songId, artist, title, album, duration, path } =
-    currentSong || {};
+  const {
+    id: songId,
+    artist,
+    title,
+    album,
+    duration,
+    path,
+  } = currentSong || {};
+  const selectedCustomLyricsKey = currentSong
+    ? getSelectedCustomLyrics(
+        selectedCustomLyrics,
+        getCustomLyricsSongKey({
+          artist: currentSong.artist,
+          title: currentSong.title,
+          album: currentSong.album,
+          duration: currentSong.duration,
+          path: currentSong.path,
+        }),
+      )?.key
+    : undefined;
   const lyricsSettingsKey = [
     sourcePriority.join(","),
     customServerEnabled,
     customServerUrl,
+    selectedCustomLyricsKey,
   ];
 
   const { data: lyrics, isLoading: isLoadingLyrics } = useQuery({

@@ -299,8 +299,26 @@
     "queueFromSource": "From {{source}}",
     "playing": "Playing now",
     "lyrics": "Lyrics",
+    "selectLyrics": "Select lyrics",
     "switchButton": "Switch to Big Player",
     "emptyQueue": "No songs in queue"
+  },
+  "lyrics": {
+    "customSelect": {
+      "title": "Select lyrics",
+      "subtitle": "{{title}} by {{artist}}",
+      "noSong": "No song is playing.",
+      "serverDisabled": "Custom lyrics server is not enabled.",
+      "empty": "No custom lyrics candidates found.",
+      "searchTitle": "Song title",
+      "searchArtist": "Artist",
+      "search": "Search",
+      "select": "Select",
+      "selected": "Selected",
+      "currentSelection": "Current selection: {{title}} by {{artist}}",
+      "lyricsId": "ID: {{id}}",
+      "noPreview": "No preview available."
+    }
   },
   "logout": {
     "dialog": {

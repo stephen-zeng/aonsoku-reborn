@@ -133,7 +133,8 @@
     "queueFromSource": "Aus {{source}}",
     "queueHistory": "Verlauf",
     "queueRepeating": "Wiederholen",
-    "switchButton": "Zum großen Player wechseln"
+    "switchButton": "Zum großen Player wechseln",
+    "selectLyrics": "Songtext auswählen"
   },
   "generic": {
     "beta": "Beta",
@@ -1058,5 +1059,22 @@
   "warnings": {
     "reload": "Es wird gerade ein Lied abgespielt!\nBist du sicher, dass du die Seite neu laden möchtest?",
     "songError": "Unfähig, das Lied abzuspielen, überprüfe den Server!"
+  },
+  "lyrics": {
+    "customSelect": {
+      "title": "Songtext auswählen",
+      "subtitle": "{{title}} von {{artist}}",
+      "noSong": "Es wird kein Song abgespielt.",
+      "serverDisabled": "Benutzerdefinierter Songtext-Server ist nicht aktiviert.",
+      "empty": "Keine benutzerdefinierten Songtext-Kandidaten gefunden.",
+      "searchTitle": "Songtitel",
+      "searchArtist": "Interpret",
+      "search": "Suchen",
+      "select": "Auswählen",
+      "selected": "Ausgewählt",
+      "currentSelection": "Aktuelle Auswahl: {{title}} von {{artist}}",
+      "lyricsId": "ID: {{id}}",
+      "noPreview": "Keine Vorschau verfügbar."
+    }
   }
 }

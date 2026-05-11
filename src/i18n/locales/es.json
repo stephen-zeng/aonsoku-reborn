@@ -134,7 +134,8 @@
     "queueFromSource": "De {{source}}",
     "queueHistory": "Historial",
     "queueRepeating": "Repitiendo",
-    "switchButton": "Cambiar a Reproductor Grande"
+    "switchButton": "Cambiar a Reproductor Grande",
+    "selectLyrics": "Seleccionar letra"
   },
   "generic": {
     "beta": "Beta",
@@ -1069,5 +1070,22 @@
   "warnings": {
     "reload": "¡Hay una canción en reproducción!\n¿Seguro que quiere recargar la página?",
     "songError": "Incapaz de reproducir la canción, revisa el servidor!"
+  },
+  "lyrics": {
+    "customSelect": {
+      "title": "Seleccionar letra",
+      "subtitle": "{{title}} de {{artist}}",
+      "noSong": "No se está reproduciendo ninguna canción.",
+      "serverDisabled": "El servidor personalizado de letras no está activado.",
+      "empty": "No se encontraron letras personalizadas candidatas.",
+      "searchTitle": "Título de la canción",
+      "searchArtist": "Artista",
+      "search": "Buscar",
+      "select": "Seleccionar",
+      "selected": "Seleccionada",
+      "currentSelection": "Selección actual: {{title}} de {{artist}}",
+      "lyricsId": "ID: {{id}}",
+      "noPreview": "Vista previa no disponible."
+    }
   }
 }
