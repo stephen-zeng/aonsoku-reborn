@@ -1,7 +1,9 @@
 import { get, set } from "idb-keyval";
 import { httpClient } from "@/api/httpClient";
 import { usePlayerStore } from "@/store/player.store";
+import type { LyricsSource } from "@/types/playerContext";
 import type {
+  ILyric,
   IStructuredLyric,
   LyricsBySongIdResponse,
   LyricsResponse,
@@ -14,6 +16,14 @@ interface GetLyricsData {
   title: string;
   album?: string;
   duration?: number;
+  path?: string;
+}
+
+interface CustomLyricsResponseItem {
+  id?: string;
+  title?: string;
+  artist?: string;
+  lyrics?: string;
 }
 
 interface LRCLibResponse {
@@ -25,9 +35,21 @@ interface LRCLibResponse {
 }
 
 async function getLyrics(getLyricsData: GetLyricsData) {
-  const { preferSyncedLyrics } = usePlayerStore.getState().settings.lyrics;
+  const lyricsSettings = usePlayerStore.getState().settings.lyrics;
+  const { preferSyncedLyrics } = lyricsSettings;
+  const sourcePriority = getEnabledLyricsSources(
+    lyricsSettings.sourcePriority,
+    lyricsSettings.customServerEnabled,
+    lyricsSettings.customServerUrl,
+  );
 
-  const cacheKey = getLyricsCacheKey(getLyricsData, preferSyncedLyrics);
+  const cacheKey = getLyricsCacheKey(
+    getLyricsData,
+    preferSyncedLyrics,
+    sourcePriority,
+    lyricsSettings.customServerEnabled,
+    lyricsSettings.customServerUrl,
+  );
 
   const cachedLyrics = await get(cacheKey);
 
@@ -35,18 +57,33 @@ async function getLyrics(getLyricsData: GetLyricsData) {
     return cachedLyrics;
   }
 
-  // If the user prefers synced lyrics, attempt to fetch them from the LrcLib first.
-  // If lyrics are found, return them immediately.
-  // If not, proceed with the default flow.
-  if (preferSyncedLyrics) {
-    const lyrics = await getLyricsFromLRCLib(getLyricsData);
+  for (const source of sourcePriority) {
+    const lyrics = await getLyricsFromSource(source, getLyricsData);
 
-    if (lyrics.value !== "") {
+    if (lyrics?.value) {
       set(cacheKey, lyrics);
       return lyrics;
     }
   }
 
+  return {
+    artist: getLyricsData.artist,
+    title: getLyricsData.title,
+    value: "",
+  };
+}
+
+async function getLyricsFromSource(
+  source: LyricsSource,
+  getLyricsData: GetLyricsData,
+) {
+  if (source === "lrclib") return getLyricsFromLRCLib(getLyricsData);
+  if (source === "custom") return getLyricsFromCustomServer(getLyricsData);
+
+  return getLyricsFromNavidrome(getLyricsData);
+}
+
+async function getLyricsFromNavidrome(getLyricsData: GetLyricsData) {
   const response = await httpClient<LyricsResponse>("/getLyrics", {
     method: "GET",
     query: {
@@ -54,27 +91,6 @@ async function getLyrics(getLyricsData: GetLyricsData) {
       title: getLyricsData.title,
     },
   });
-
-  const lyricNotFound =
-    !response || !response?.data.lyrics || !response.data.lyrics.value;
-
-  // If the Subsonic API did not return lyrics and the user does not prefer synced lyrics,
-  // fallback to fetching lyrics from the LrcLib.
-  // Note: If `preferSyncedLyrics` is true and we reached this point, it means the LrcLib
-  // does not contains lyrics for the track, so the fallback is unnecessary in that case.
-  if (lyricNotFound && !preferSyncedLyrics) {
-    const lyrics = await getLyricsFromLRCLib(getLyricsData);
-
-    if (lyrics.value !== "") {
-      set(cacheKey, lyrics);
-    }
-
-    return lyrics;
-  }
-
-  if (response?.data.lyrics) {
-    set(cacheKey, response.data.lyrics);
-  }
 
   return response?.data.lyrics;
 }
@@ -145,6 +161,62 @@ async function getLyricsFromLRCLib(getLyricsData: GetLyricsData) {
   };
 }
 
+async function getLyricsFromCustomServer(
+  getLyricsData: GetLyricsData,
+): Promise<ILyric> {
+  const { customServerEnabled, customServerUrl, customServerPassword } =
+    usePlayerStore.getState().settings.lyrics;
+  const { artist, title, album, duration, path } = getLyricsData;
+
+  if (!customServerEnabled || !customServerUrl.trim()) {
+    return { artist, title, value: "" };
+  }
+
+  try {
+    const url = new URL(customServerUrl.trim());
+    url.searchParams.set("title", title);
+    url.searchParams.set("artist", artist);
+    if (album) url.searchParams.set("album", album);
+    if (duration) url.searchParams.set("duration", duration.toString());
+    if (path) url.searchParams.set("path", path);
+    url.searchParams.set("offset", "0");
+    url.searchParams.set("limit", "10");
+
+    const headers = new Headers();
+    if (customServerPassword) {
+      headers.set("Authorization", customServerPassword);
+    }
+
+    const request = await fetch(url.toString(), { headers });
+
+    if (!request.ok) {
+      return { artist, title, value: "" };
+    }
+
+    const contentType = request.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      const response = (await request.json()) as CustomLyricsResponseItem[];
+      const item = response.find((candidate) => candidate.lyrics?.trim());
+
+      return {
+        artist: item?.artist || artist,
+        title: item?.title || title,
+        value: item?.lyrics ? formatLyrics(item.lyrics) : "",
+      };
+    }
+
+    const response = await request.text();
+
+    return {
+      artist,
+      title,
+      value: formatLyrics(response),
+    };
+  } catch {
+    return { artist, title, value: "" };
+  }
+}
+
 function formatLyrics(lyrics: string) {
   return lyrics.trim().replaceAll("\r\n", "\n");
 }
@@ -152,12 +224,48 @@ function formatLyrics(lyrics: string) {
 function getLyricsCacheKey(
   getLyricsData: GetLyricsData,
   preferSyncedLyrics: boolean,
+  sourcePriority: LyricsSource[],
+  customServerEnabled: boolean,
+  customServerUrl: string,
 ) {
   const { artist, title } = getLyricsData;
 
   const type = preferSyncedLyrics ? "synced" : "plain";
+  const customServerKey = customServerEnabled ? customServerUrl.trim() : "off";
 
-  return `lyrics:${artist}:${title}:${type}`;
+  return [
+    "lyrics",
+    artist,
+    title,
+    type,
+    sourcePriority.join(","),
+    customServerKey,
+  ].join(":");
+}
+
+function getEnabledLyricsSources(
+  sourcePriority: LyricsSource[] | undefined,
+  customServerEnabled: boolean,
+  customServerUrl: string,
+) {
+  const configuredSources = Array.isArray(sourcePriority)
+    ? sourcePriority
+    : [];
+  const sources = configuredSources.filter(isLyricsSource);
+
+  for (const source of ["navidrome", "lrclib", "custom"] as const) {
+    if (!sources.includes(source)) sources.push(source);
+  }
+
+  return sources.filter(
+    (source) =>
+      source !== "custom" ||
+      (customServerEnabled && customServerUrl.trim().length > 0),
+  );
+}
+
+function isLyricsSource(value: unknown): value is LyricsSource {
+  return value === "navidrome" || value === "lrclib" || value === "custom";
 }
 
 async function getStructuredLyrics(
@@ -212,5 +320,6 @@ async function getStructuredLyrics(
 export const lyrics = {
   getLyrics,
   getLyricsFromLRCLib,
+  getLyricsFromCustomServer,
   getStructuredLyrics,
 };

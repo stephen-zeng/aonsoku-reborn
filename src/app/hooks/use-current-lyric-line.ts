@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { subsonic } from "@/service/subsonic";
 import { useIsOnline } from "@/store/cache.store";
 import {
+  useLyricsSettings,
   usePlayerCurrentSong,
   usePlayerIsPlaying,
   usePlayerRef,
@@ -67,15 +68,31 @@ export function useCurrentLyricLine() {
   const playerRef = usePlayerRef();
   const isOnline = useIsOnline();
   const isPlaying = usePlayerIsPlaying();
+  const { sourcePriority, customServerEnabled, customServerUrl } =
+    useLyricsSettings();
 
-  const { id: songId, artist, title, duration } = currentSong || {};
+  const { id: songId, artist, title, album, duration, path } =
+    currentSong || {};
   const songDurationMs = duration ? duration * 1000 : undefined;
+  const lyricsSettingsKey = [
+    sourcePriority.join(","),
+    customServerEnabled,
+    customServerUrl,
+  ];
 
   const { data: lyrics } = useQuery({
-    queryKey: [...queryKeys.lyrics.plain, artist, title, duration],
+    queryKey: [
+      ...queryKeys.lyrics.plain,
+      artist,
+      title,
+      album,
+      duration,
+      path,
+      ...lyricsSettingsKey,
+    ],
     queryFn: () =>
       artist && title
-        ? subsonic.lyrics.getLyrics({ artist, title, duration })
+        ? subsonic.lyrics.getLyrics({ artist, title, album, duration, path })
         : Promise.resolve(null),
     enabled: isOnline && !!artist && !!title,
     staleTime: STALE_TIME,
