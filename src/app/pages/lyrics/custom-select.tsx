@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronLeft, Music2 } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/app/components/ui/button";
 import {
   Card,
@@ -14,7 +15,7 @@ import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
+import { PLAYER_SEARCH_PARAM } from "@/routes/routesList";
 import type { CustomLyricsCandidate } from "@/service/lyrics";
 import {
   getCustomLyricsCandidateKey,
@@ -29,9 +30,36 @@ function getLyricsPreview(lyrics?: string) {
   return lyrics?.trim() || "";
 }
 
+type ReturnToLocation = {
+  pathname: string;
+  search?: string;
+};
+
+function getReturnToLocation(state: unknown): ReturnToLocation | null {
+  if (typeof state !== "object" || state === null || !("returnTo" in state)) {
+    return null;
+  }
+
+  const returnTo = state.returnTo;
+  if (typeof returnTo !== "object" || returnTo === null) return null;
+  if (!("pathname" in returnTo) || typeof returnTo.pathname !== "string") {
+    return null;
+  }
+
+  return {
+    pathname: returnTo.pathname,
+    search:
+      "search" in returnTo && typeof returnTo.search === "string"
+        ? returnTo.search
+        : "",
+  };
+}
+
 export default function CustomLyricsSelect() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { currentSong } = usePlayerSonglist();
   const {
     customServerEnabled,
@@ -103,7 +131,18 @@ export default function CustomLyricsSelect() {
   }
 
   function returnToFullscreenLyrics() {
-    openFullscreenPlayerWithHistory("lyrics");
+    const returnTo = getReturnToLocation(location.state);
+    const pathname = returnTo?.pathname || "/";
+    const params = new URLSearchParams(returnTo?.search || "");
+    params.set(PLAYER_SEARCH_PARAM, "lyrics");
+
+    navigate(
+      {
+        pathname,
+        search: `?${params.toString()}`,
+      },
+      { replace: true },
+    );
   }
 
   function handleSelect(candidate: CustomLyricsCandidate, index: number) {

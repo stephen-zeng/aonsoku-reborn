@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ListChecks, ListMusic, MicVocalIcon } from "lucide-react";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/app/components/ui/button";
 
 import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
@@ -10,7 +10,7 @@ import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useIsTouchPrimary } from "@/app/hooks/use-input-mode";
 import { cn } from "@/lib/utils";
 import { closeFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
-import { ROUTES } from "@/routes/routesList";
+import { PLAYER_SEARCH_PARAM, ROUTES } from "@/routes/routesList";
 import {
   useFullscreenPlayerState,
   useLyricsSettings,
@@ -32,6 +32,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
   const { hasLyrics } = useHasLyrics();
   const { customServerEnabled, customServerUrl } = useLyricsSettings();
   const navigate = useNavigate();
+  const location = useLocation();
   const isTouchPrimary = useIsTouchPrimary();
   const contrast = useFullscreenContrast();
 
@@ -49,8 +50,18 @@ export const DesktopLayout = memo(function DesktopLayout() {
   }
 
   function handleSelectLyricsClick() {
+    const params = new URLSearchParams(location.search);
+    params.delete(PLAYER_SEARCH_PARAM);
+
     closeFullscreenPlayerWithHistory();
-    navigate(ROUTES.LYRICS.CUSTOM_SELECT);
+    navigate(ROUTES.LYRICS.CUSTOM_SELECT, {
+      state: {
+        returnTo: {
+          pathname: location.pathname,
+          search: params.toString() ? `?${params.toString()}` : "",
+        },
+      },
+    });
   }
 
   return (

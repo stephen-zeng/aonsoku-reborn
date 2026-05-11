@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ListChecks, ListMusic, MicVocalIcon } from "lucide-react";
 import { memo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/app/components/ui/button";
 import { DrawerHandle } from "@/app/components/ui/drawer";
 import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
@@ -14,7 +14,7 @@ import {
   closeFullscreenPlayerWithHistory,
   setFullscreenTabWithHistory,
 } from "@/routes/fullscreenRouter";
-import { ROUTES } from "@/routes/routesList";
+import { PLAYER_SEARCH_PARAM, ROUTES } from "@/routes/routesList";
 import {
   useFullscreenPlayerState,
   useLyricsAlignment,
@@ -127,6 +127,7 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
   const { hasLyrics } = useHasLyrics();
   const { customServerEnabled, customServerUrl } = useLyricsSettings();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const lyricsDisabled = hasLyrics === false;
   const showCustomLyricsSelect =
@@ -154,8 +155,18 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
           label={t("fullscreen.selectLyrics")}
           active={false}
           onClick={() => {
+            const params = new URLSearchParams(location.search);
+            params.delete(PLAYER_SEARCH_PARAM);
+
             closeFullscreenPlayerWithHistory();
-            navigate(ROUTES.LYRICS.CUSTOM_SELECT);
+            navigate(ROUTES.LYRICS.CUSTOM_SELECT, {
+              state: {
+                returnTo: {
+                  pathname: location.pathname,
+                  search: params.toString() ? `?${params.toString()}` : "",
+                },
+              },
+            });
           }}
         />
       )}
