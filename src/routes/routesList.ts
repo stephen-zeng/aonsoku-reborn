@@ -55,6 +55,10 @@ const PLAYLIST = {
 
 const SERVER_CONFIG = "/server-config";
 
+const LYRICS = {
+  CUSTOM_SELECT: "/lyrics/custom-select",
+};
+
 const MOBILE = {
   LIBRARY: "/mobile/library",
   SEARCH: "/mobile/search",
@@ -73,4 +77,5 @@ export const ROUTES = {
   FAVORITES,
   PLAYLIST,
   SERVER_CONFIG,
+  LYRICS,
 };

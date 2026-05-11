@@ -92,6 +92,14 @@ export type ReplayGainType = "track" | "album";
 
 export type LyricsSource = "navidrome" | "lrclib" | "custom";
 
+export interface SelectedCustomLyrics {
+  key: string;
+  id?: string;
+  title?: string;
+  artist?: string;
+  lyrics: string;
+}
+
 interface IReplayGainData {
   enabled: boolean;
   type: ReplayGainType;
@@ -136,6 +144,11 @@ interface ILyrics {
   setCustomServerUrl: (value: string) => void;
   customServerPassword: string;
   setCustomServerPassword: (value: string) => void;
+  selectedCustomLyrics?: Record<string, SelectedCustomLyrics>;
+  setSelectedCustomLyrics: (
+    songKey: string,
+    lyrics: SelectedCustomLyrics,
+  ) => void;
 }
 
 export interface IPrivacySettings {

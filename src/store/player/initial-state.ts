@@ -106,6 +106,13 @@ export function createInitialSettings(set: SetFn): IPlayerContext["settings"] {
           state.settings.lyrics.customServerPassword = value;
         });
       },
+      selectedCustomLyrics: {},
+      setSelectedCustomLyrics: (songKey, lyrics) => {
+        set((state) => {
+          state.settings.lyrics.selectedCustomLyrics ||= {};
+          state.settings.lyrics.selectedCustomLyrics[songKey] = lyrics;
+        });
+      },
     },
     replayGain: {
       values: {

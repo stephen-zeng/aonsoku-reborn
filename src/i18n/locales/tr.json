@@ -133,7 +133,8 @@
     "queueFromSource": "{{source}} kaynağından",
     "queueHistory": "Geçmiş",
     "queueRepeating": "Tekrarlanıyor",
-    "switchButton": "Büyük Oynatıcıya geç"
+    "switchButton": "Büyük Oynatıcıya geç",
+    "selectLyrics": "Söz seç"
   },
   "generic": {
     "beta": "Beta",
@@ -1058,5 +1059,22 @@
   "warnings": {
     "reload": "Şu an çalan bir şarkı var!\nSayfayı yenilemek istediğinizden emin misiniz?",
     "songError": "Şarkı çalınamıyor, Sunucuyu kontrol edin!"
+  },
+  "lyrics": {
+    "customSelect": {
+      "title": "Söz seç",
+      "subtitle": "{{artist}} - {{title}}",
+      "noSong": "Çalan şarkı yok.",
+      "serverDisabled": "Özel söz sunucusu etkin değil.",
+      "empty": "Özel söz adayı bulunamadı.",
+      "searchTitle": "Şarkı adı",
+      "searchArtist": "Sanatçı",
+      "search": "Ara",
+      "select": "Seç",
+      "selected": "Seçildi",
+      "currentSelection": "Geçerli seçim: {{artist}} - {{title}}",
+      "lyricsId": "ID: {{id}}",
+      "noPreview": "Önizleme yok."
+    }
   }
 }
