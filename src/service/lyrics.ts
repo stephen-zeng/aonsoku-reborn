@@ -228,15 +228,21 @@ function getLyricsCacheKey(
   customServerEnabled: boolean,
   customServerUrl: string,
 ) {
-  const { artist, title } = getLyricsData;
+  const { artist, title, album, duration, path } = getLyricsData;
 
   const type = preferSyncedLyrics ? "synced" : "plain";
   const customServerKey = customServerEnabled ? customServerUrl.trim() : "off";
+  const albumKey = album?.trim() || "";
+  const durationKey = duration?.toString() || "";
+  const pathKey = path?.trim() || "";
 
   return [
     "lyrics",
     artist,
     title,
+    albumKey,
+    durationKey,
+    pathKey,
     type,
     sourcePriority.join(","),
     customServerKey,
