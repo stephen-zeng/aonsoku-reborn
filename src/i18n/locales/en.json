@@ -683,7 +683,7 @@
           "password": {
             "label": "Password",
             "placeholder": "Authorization Password",
-            "info": "Optional Authorization header value sent to the custom lyrics server. This is set in your lyric server."
+            "info": "Optional Authorization header value sent to the custom lyrics server. This is set in your lyrics server."
           },
           "save": "Save",
           "saved": "Custom lyrics server settings saved."
