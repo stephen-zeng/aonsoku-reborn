@@ -662,6 +662,8 @@
         "source": {
           "label": "Lyrics source priority",
           "info": "Choose the order used to fetch plain or LRC lyrics.",
+          "dragInstruction": "Drag to reorder sources.",
+          "dragHandle": "Drag {{source}} source",
           "priority": "{{priority}}. {{source}}",
           "navidrome": "Navidrome",
           "lrclib": "LRCLIB",
@@ -680,8 +682,8 @@
           },
           "password": {
             "label": "Password",
-            "placeholder": "Authorization header value",
-            "info": "Optional Authorization header value sent to the custom lyrics server. This is stored locally with player settings."
+            "placeholder": "Authorization Password",
+            "info": "Optional Authorization header value sent to the custom lyrics server. This is set in your lyric server."
           },
           "save": "Save",
           "saved": "Custom lyrics server settings saved."

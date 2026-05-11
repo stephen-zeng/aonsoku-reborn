@@ -520,6 +520,35 @@
         "showTranslation": {
           "info": "Mevcut olduğunda, çevrilmiş şarkı sözlerini orijinal şarkı sözlerinin altında göster.",
           "label": "Çeviriyi göster"
+        },
+        "source": {
+          "label": "Şarkı sözü kaynağı önceliği",
+          "info": "Düz metin veya LRC şarkı sözlerini almak için kullanılacak sırayı seçin.",
+          "dragInstruction": "Kaynakları yeniden sıralamak için sürükleyin.",
+          "dragHandle": "{{source}} kaynağını sürükle",
+          "priority": "{{priority}}. {{source}}",
+          "navidrome": "Navidrome",
+          "lrclib": "LRCLIB",
+          "custom": "Özel"
+        },
+        "customServer": {
+          "enabled": {
+            "label": "Özel şarkı sözü sunucusu",
+            "info": "Kullanıcı tanımlı harici bir şarkı sözü sunucusundan sözleri al."
+          },
+          "url": {
+            "label": "Sunucu URL’si",
+            "placeholder": "https://example.com/lyrics",
+            "info": "Harici şarkı sözlerini almak için kullanılan endpoint.",
+            "invalid": "Geçerli bir HTTP veya HTTPS şarkı sözü sunucusu URL’si girin."
+          },
+          "password": {
+            "label": "Parola",
+            "placeholder": "Yetkilendirme parolası",
+            "info": "Özel şarkı sözü sunucusuna gönderilen isteğe bağlı Authorization header değeri. Bu değer şarkı sözü sunucunuzda ayarlanır."
+          },
+          "save": "Kaydet",
+          "saved": "Özel şarkı sözü sunucusu ayarları kaydedildi."
         }
       },
       "replayGain": {

@@ -527,6 +527,35 @@
         "showTranslation": {
           "info": "Cuando esté disponible, muestra la letra traducida debajo de la letra original.",
           "label": "Mostrar traducción"
+        },
+        "source": {
+          "label": "Prioridad de fuentes de letras",
+          "info": "Elige el orden usado para obtener letras sin formato o letras LRC.",
+          "dragInstruction": "Arrastra para reordenar las fuentes.",
+          "dragHandle": "Arrastrar fuente {{source}}",
+          "priority": "{{priority}}. {{source}}",
+          "navidrome": "Navidrome",
+          "lrclib": "LRCLIB",
+          "custom": "Personalizada"
+        },
+        "customServer": {
+          "enabled": {
+            "label": "Servidor de letras personalizado",
+            "info": "Obtén letras desde un servidor externo de letras definido por el usuario."
+          },
+          "url": {
+            "label": "URL del servidor",
+            "placeholder": "https://example.com/lyrics",
+            "info": "El endpoint usado para obtener letras externas.",
+            "invalid": "Introduce una URL HTTP o HTTPS válida para el servidor de letras."
+          },
+          "password": {
+            "label": "Contraseña",
+            "placeholder": "Contraseña de autorización",
+            "info": "Valor opcional de la cabecera Authorization enviado al servidor de letras personalizado. Se configura en tu servidor de letras."
+          },
+          "save": "Guardar",
+          "saved": "Configuración del servidor de letras personalizado guardada."
         }
       },
       "replayGain": {

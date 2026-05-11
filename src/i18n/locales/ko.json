@@ -520,6 +520,35 @@
         "showTranslation": {
           "info": "사용 가능한 경우 원본 가사 아래에 번역된 가사를 표시합니다.",
           "label": "번역 표시"
+        },
+        "source": {
+          "label": "가사 소스 우선순위",
+          "info": "일반 가사 또는 LRC 가사를 가져올 때 사용할 순서를 선택합니다.",
+          "dragInstruction": "드래그하여 소스 순서를 변경하세요.",
+          "dragHandle": "{{source}} 소스 드래그",
+          "priority": "{{priority}}. {{source}}",
+          "navidrome": "Navidrome",
+          "lrclib": "LRCLIB",
+          "custom": "사용자 지정"
+        },
+        "customServer": {
+          "enabled": {
+            "label": "사용자 지정 가사 서버",
+            "info": "사용자가 정의한 외부 가사 서버에서 가사를 가져옵니다."
+          },
+          "url": {
+            "label": "서버 URL",
+            "placeholder": "https://example.com/lyrics",
+            "info": "외부 가사를 가져오는 데 사용하는 엔드포인트입니다.",
+            "invalid": "유효한 HTTP 또는 HTTPS 가사 서버 URL을 입력하세요."
+          },
+          "password": {
+            "label": "비밀번호",
+            "placeholder": "Authorization 비밀번호",
+            "info": "사용자 지정 가사 서버로 전송되는 선택적 Authorization 헤더 값입니다. 이 값은 가사 서버에서 설정합니다."
+          },
+          "save": "저장",
+          "saved": "사용자 지정 가사 서버 설정이 저장되었습니다."
         }
       },
       "replayGain": {
