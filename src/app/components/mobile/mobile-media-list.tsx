@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { CoverImage } from "@/app/components/table/cover-image";
 import { SongMenuOptions } from "@/app/components/song/menu-options";
 import { TableArtists } from "@/app/components/table/song-title";
+import { CachedIndicator } from "@/app/components/table/cached-indicator";
 import { Button } from "@/app/components/ui/button";
 import {
   DropdownMenu,
@@ -155,31 +156,34 @@ function MobileSongRow({
         </div>
       </div>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-11 shrink-0 rounded-full"
-            aria-label="Song options"
-            data-testid="mobile-song-options"
+      <div className="flex shrink-0 items-center gap-1">
+        <CachedIndicator songId={song.id} />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-11 shrink-0 rounded-full"
+              aria-label="Song options"
+              data-testid="mobile-song-options"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <EllipsisVertical className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
             onClick={(event) => event.stopPropagation()}
           >
-            <EllipsisVertical className="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          onClick={(event) => event.stopPropagation()}
-        >
-          <SongMenuOptions
-            variant="dropdown"
-            song={song}
-            index={index}
-            showLikeOption={true}
-          />
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <SongMenuOptions
+              variant="dropdown"
+              song={song}
+              index={index}
+              showLikeOption={true}
+            />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }
