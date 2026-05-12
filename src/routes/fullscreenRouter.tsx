@@ -25,14 +25,12 @@ type FullscreenHistoryState = {
 type FullscreenNavState = {
   navigate: NavigateFunction | null;
   isMobile: boolean;
-  searchParams: URLSearchParams;
   locationState: unknown;
 };
 
 const navState: FullscreenNavState = {
   navigate: null,
   isMobile: false,
-  searchParams: new URLSearchParams(),
   locationState: null,
 };
 
@@ -299,9 +297,8 @@ export function FullscreenPlayerRouter() {
 
   useEffect(() => {
     navState.isMobile = isMobile;
-    navState.searchParams = new URLSearchParams(searchParams.toString());
     navState.locationState = location.state;
-  }, [isMobile, location.state, searchParams]);
+  }, [isMobile, location.state]);
 
   useEffect(() => {
     setFullscreenNavigator(navigate);

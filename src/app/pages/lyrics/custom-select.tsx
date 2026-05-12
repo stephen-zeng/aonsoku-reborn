@@ -1,8 +1,8 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronLeft, Music2 } from "lucide-react";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useBlocker, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/app/components/ui/button";
 import {
   Card,
@@ -15,7 +15,7 @@ import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { PLAYER_SEARCH_PARAM } from "@/routes/routesList";
+import { PLAYER_SEARCH_PARAM, ROUTES } from "@/routes/routesList";
 import type { CustomLyricsCandidate } from "@/service/lyrics";
 import {
   getCustomLyricsCandidateKey,
@@ -26,13 +26,20 @@ import { subsonic } from "@/service/subsonic";
 import { useLyricsSettings, usePlayerSonglist } from "@/store/player.store";
 import { queryKeys } from "@/utils/queryKeys";
 
+const FULLSCREEN_TABS = new Set(["playing", "lyrics", "queue"]);
+
 function getLyricsPreview(lyrics?: string) {
   return lyrics?.trim() || "";
 }
 
+function getFullscreenTab(search: string) {
+  const tab = new URLSearchParams(search).get(PLAYER_SEARCH_PARAM);
+  return tab && FULLSCREEN_TABS.has(tab) ? tab : null;
+}
+
 type ReturnToLocation = {
   pathname: string;
-  search?: string;
+  search: string;
 };
 
 function getReturnToLocation(state: unknown): ReturnToLocation | null {
@@ -55,11 +62,27 @@ function getReturnToLocation(state: unknown): ReturnToLocation | null {
   };
 }
 
+function buildFullscreenReturnLocation(
+  state: unknown,
+  tab = "lyrics",
+): ReturnToLocation {
+  const returnTo = getReturnToLocation(state);
+  const params = new URLSearchParams(returnTo?.search ?? "");
+
+  params.set(PLAYER_SEARCH_PARAM, tab);
+
+  return {
+    pathname: returnTo?.pathname ?? ROUTES.LIBRARY.HOME,
+    search: `?${params.toString()}`,
+  };
+}
+
 export default function CustomLyricsSelect() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
+  const rewritingNavigationRef = useRef(false);
   const { currentSong } = usePlayerSonglist();
   const {
     customServerEnabled,
@@ -122,6 +145,72 @@ export default function CustomLyricsSelect() {
     staleTime: 5 * 60 * 1000,
   });
 
+  useEffect(() => {
+    const tab = getFullscreenTab(location.search);
+    if (!tab) return;
+
+    navigate(buildFullscreenReturnLocation(location.state, tab), {
+      replace: true,
+    });
+  }, [location.search, location.state, navigate]);
+
+  const blocker = useBlocker(({ currentLocation, nextLocation }) => {
+    if (rewritingNavigationRef.current) return false;
+    if (currentLocation.pathname !== ROUTES.LYRICS.CUSTOM_SELECT) return false;
+    if (
+      nextLocation.pathname === ROUTES.LYRICS.CUSTOM_SELECT &&
+      !getFullscreenTab(nextLocation.search)
+    ) {
+      return false;
+    }
+
+    return true;
+  });
+
+  useEffect(() => {
+    if (blocker.state !== "blocked") return;
+
+    const destination = blocker.location;
+    rewritingNavigationRef.current = true;
+    blocker.reset();
+
+    const fullscreenTab = getFullscreenTab(destination.search);
+    if (fullscreenTab) {
+      const fullscreenDestination =
+        destination.pathname !== ROUTES.LYRICS.CUSTOM_SELECT
+        ? {
+            pathname: destination.pathname,
+            search: destination.search,
+            hash: destination.hash,
+          }
+        : buildFullscreenReturnLocation(location.state, fullscreenTab);
+
+      navigate(fullscreenDestination, {
+        replace: true,
+        state: destination.state,
+      });
+      window.setTimeout(() => {
+        rewritingNavigationRef.current = false;
+      }, 0);
+      return;
+    }
+
+    const handlePopState = () => {
+      navigate(
+        {
+          pathname: destination.pathname,
+          search: destination.search,
+          hash: destination.hash,
+        },
+        { replace: false, state: destination.state },
+      );
+      rewritingNavigationRef.current = false;
+    };
+
+    window.addEventListener("popstate", handlePopState, { once: true });
+    window.history.go(getReturnToLocation(location.state) ? -2 : -1);
+  }, [blocker, location.state, navigate]);
+
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmittedSearch({
@@ -131,18 +220,7 @@ export default function CustomLyricsSelect() {
   }
 
   function returnToFullscreenLyrics() {
-    const returnTo = getReturnToLocation(location.state);
-    const pathname = returnTo?.pathname || "/";
-    const params = new URLSearchParams(returnTo?.search || "");
-    params.set(PLAYER_SEARCH_PARAM, "lyrics");
-
-    navigate(
-      {
-        pathname,
-        search: `?${params.toString()}`,
-      },
-      { replace: true },
-    );
+    navigate(buildFullscreenReturnLocation(location.state), { replace: true });
   }
 
   function handleSelect(candidate: CustomLyricsCandidate, index: number) {
@@ -296,7 +374,7 @@ export default function CustomLyricsSelect() {
                         : t("lyrics.customSelect.select")}
                     </Button>
                   </CardHeader>
-                  <CardContent className="px-4 pb-4 pt-0">
+                  <CardContent className="min-w-0 px-4 pb-4 pt-0">
                     {candidate.id && (
                       <p className="mb-2 text-xs text-muted-foreground">
                         {t("lyrics.customSelect.lyricsId", {
@@ -304,14 +382,14 @@ export default function CustomLyricsSelect() {
                         })}
                       </p>
                     )}
-                    <ScrollArea
-                      type="always"
-                      className="h-56 rounded-md border bg-background/40 p-3 overscroll-contain"
+                      <ScrollArea
+                        type="always"
+                        className="h-56 min-w-0 rounded-md border bg-background/40 p-3 overscroll-contain"
                       scrollBarClassName="z-40"
                       onWheel={(event) => event.stopPropagation()}
                       onTouchMove={(event) => event.stopPropagation()}
                     >
-                      <pre className="min-h-60 whitespace-pre-wrap break-words pr-3 font-sans text-sm leading-6 text-foreground/80">
+                      <pre className="min-h-60 min-w-0 whitespace-pre-wrap break-words pr-3 font-sans text-sm leading-6 text-foreground/80">
                         {preview || t("lyrics.customSelect.noPreview")}
                       </pre>
                     </ScrollArea>
