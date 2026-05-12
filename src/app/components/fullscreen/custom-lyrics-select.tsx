@@ -150,7 +150,7 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
       </div>
 
       {currentSong && customServerReady && (
-        <div className="mx-2 mb-3 shrink-0 rounded-2xl border border-white/10 bg-foreground/[0.06] p-3 backdrop-blur-xl">
+        <div className="mb-3 ml-2 mr-6 shrink-0 rounded-2xl border border-white/10 bg-foreground/[0.06] p-3 backdrop-blur-xl">
           <form className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]" onSubmit={handleSearch}>
             <div className="grid gap-1.5">
               <Label
@@ -223,7 +223,7 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
         {candidates.length > 0 && (
           <ScrollArea
             type="always"
-            className="h-full min-w-0 pr-2"
+            className="h-full min-w-0 pr-4"
             thumbClassName="secondary-thumb-bar"
             onWheel={(event) => event.stopPropagation()}
             onTouchMove={(event) => event.stopPropagation()}
