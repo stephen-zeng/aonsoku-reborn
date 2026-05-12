@@ -87,13 +87,17 @@ export function createUiActions(shared: SharedDeps) {
       });
     },
 
-    setFullscreenPlayerTab: (tab: "queue" | "playing" | "lyrics") => {
+    setFullscreenPlayerTab: (
+      tab: "queue" | "playing" | "lyrics" | "customLyrics",
+    ) => {
       set((state) => {
         state.playerState.fullscreenPlayerTab = tab;
       });
     },
 
-    setDesktopFullscreenPanelView: (view: "queue" | "lyrics" | null) => {
+    setDesktopFullscreenPanelView: (
+      view: "queue" | "lyrics" | "customLyrics" | null,
+    ) => {
       set((state) => {
         state.playerState.desktopFullscreenPanelView = view;
       });

@@ -47,8 +47,16 @@ export interface ISongList {
   shuffleStartHistory: string[];
 }
 
-export type FullscreenPlayerTab = "queue" | "playing" | "lyrics";
-export type DesktopFullscreenPanelView = "queue" | "lyrics" | null;
+export type FullscreenPlayerTab =
+  | "queue"
+  | "playing"
+  | "lyrics"
+  | "customLyrics";
+export type DesktopFullscreenPanelView =
+  | "queue"
+  | "lyrics"
+  | "customLyrics"
+  | null;
 export type QueueTier = "context" | "user";
 
 export interface IPlayerState {
