@@ -53,7 +53,6 @@ export const DesktopLayout = memo(function DesktopLayout() {
     const params = new URLSearchParams(location.search);
     params.delete(PLAYER_SEARCH_PARAM);
 
-    closeFullscreenPlayerWithHistory();
     navigate(ROUTES.LYRICS.CUSTOM_SELECT, {
       state: {
         returnTo: {
