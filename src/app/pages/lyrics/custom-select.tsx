@@ -336,7 +336,7 @@ export default function CustomLyricsSelect() {
           )}
 
         {candidates.length > 0 && (
-          <div className="grid gap-3 pb-6">
+          <div className="grid min-w-0 gap-3 pb-6">
             {candidates.map((candidate, index) => {
               const candidateKey = getCustomLyricsCandidateKey(
                 candidate,
@@ -346,14 +346,14 @@ export default function CustomLyricsSelect() {
               const preview = getLyricsPreview(candidate.lyrics);
 
               return (
-                <Card
-                  key={candidateKey}
-                  className={cn(
-                    "transition-colors hover:border-primary/70 hover:bg-accent/40",
-                    selected && "border-primary bg-primary/5",
-                  )}
-                >
-                  <CardHeader className="flex-row items-start justify-between gap-4 space-y-0 p-4">
+                  <Card
+                    key={candidateKey}
+                    className={cn(
+                      "min-w-0 max-w-full overflow-hidden transition-colors hover:border-primary/70 hover:bg-accent/40",
+                      selected && "border-primary bg-primary/5",
+                    )}
+                  >
+                    <CardHeader className="min-w-0 flex-row items-start justify-between gap-4 space-y-0 p-4 max-[360px]:flex-col max-[360px]:items-stretch">
                     <div className="min-w-0 space-y-1">
                       <CardTitle className="truncate text-base">
                         {candidate.title || currentSong.title}
@@ -362,10 +362,10 @@ export default function CustomLyricsSelect() {
                         {candidate.artist || currentSong.artist}
                       </CardDescription>
                     </div>
-                    <Button
-                      size="sm"
-                      variant={selected ? "secondary" : "default"}
-                      className="shrink-0 gap-1.5"
+                      <Button
+                        size="sm"
+                        variant={selected ? "secondary" : "default"}
+                        className="shrink-0 gap-1.5 max-[360px]:w-full"
                       onClick={() => handleSelect(candidate, index)}
                     >
                       {selected && <Check className="size-4" />}
@@ -384,7 +384,7 @@ export default function CustomLyricsSelect() {
                     )}
                       <ScrollArea
                         type="always"
-                        className="h-56 min-w-0 rounded-md border bg-background/40 p-3 overscroll-contain"
+                        className="h-56 min-w-0 max-w-full rounded-md border bg-background/40 p-3 overscroll-contain"
                       scrollBarClassName="z-40"
                       onWheel={(event) => event.stopPropagation()}
                       onTouchMove={(event) => event.stopPropagation()}
