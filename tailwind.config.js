@@ -158,6 +158,17 @@ module.exports = {
   plugins: [
     require("tailwindcss-animate"),
     require("tailwind-extended-shadows"),
+    function ({ addVariant }) {
+      addVariant("hover-supported", "@media (hover: hover) { &:hover }");
+      addVariant(
+        "group-hover-supported",
+        "@media (hover: hover) { :where(.group):hover & }",
+      );
+      addVariant(
+        "peer-hover-supported",
+        "@media (hover: hover) { :where(.peer):hover ~ & }",
+      );
+    },
     function ({ matchUtilities, theme }) {
       matchUtilities(
         {

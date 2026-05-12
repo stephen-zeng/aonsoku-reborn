@@ -35,7 +35,7 @@ export function HeaderInfoGenerator({
               {item.type === "link" ? (
                 <Link
                   to={item.link}
-                  className="flex whitespace-nowrap opacity-80 text-shadow-lg hover:opacity-100 hover:underline"
+                  className="flex whitespace-nowrap opacity-80 text-shadow-lg hover-supported:opacity-100 hover-supported:underline"
                 >
                   {item.content}
                 </Link>

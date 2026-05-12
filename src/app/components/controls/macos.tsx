@@ -59,7 +59,7 @@ export function MacOS({ className, ...props }: HTMLProps<HTMLDivElement>) {
     >
       <ControlButton
         onClick={closeWindow}
-        className="relative aspect-square h-3 w-3 cursor-default content-center items-center justify-center self-center rounded-full border border-black/[.12] bg-[#ff544d] text-center text-black/60 hover:bg-[#ff544d] active:bg-[#bf403a] active:text-black/60 dark:border-none"
+        className="relative aspect-square h-3 w-3 cursor-default content-center items-center justify-center self-center rounded-full border border-black/[.12] bg-[#ff544d] text-center text-black/60 hover-supported:bg-[#ff544d] active:bg-[#bf403a] active:text-black/60 dark:border-none"
       >
         <Icons.closeMac
           className={clsx(
@@ -70,7 +70,7 @@ export function MacOS({ className, ...props }: HTMLProps<HTMLDivElement>) {
       </ControlButton>
       <ControlButton
         onClick={minimizeWindow}
-        className="relative aspect-square h-3 w-3 cursor-default content-center items-center justify-center self-center rounded-full border border-black/[.12]  bg-[#ffbd2e] text-center text-black/60 hover:bg-[#ffbd2e] active:bg-[#bf9122] active:text-black/60 dark:border-none"
+        className="relative aspect-square h-3 w-3 cursor-default content-center items-center justify-center self-center rounded-full border border-black/[.12]  bg-[#ffbd2e] text-center text-black/60 hover-supported:bg-[#ffbd2e] active:bg-[#bf9122] active:text-black/60 dark:border-none"
       >
         <Icons.minMac
           className={clsx(
@@ -81,7 +81,7 @@ export function MacOS({ className, ...props }: HTMLProps<HTMLDivElement>) {
       </ControlButton>
       <ControlButton
         onClick={handleMaximize}
-        className="relative aspect-square h-3 w-3 cursor-default content-center items-center justify-center self-center rounded-full border border-black/[.12] bg-[#28c93f] text-center text-black/60 hover:bg-[#28c93f] active:bg-[#1e9930] active:text-black/60 dark:border-none"
+        className="relative aspect-square h-3 w-3 cursor-default content-center items-center justify-center self-center rounded-full border border-black/[.12] bg-[#28c93f] text-center text-black/60 hover-supported:bg-[#28c93f] active:bg-[#1e9930] active:text-black/60 dark:border-none"
       >
         <Icons.fullMac
           className={clsx(

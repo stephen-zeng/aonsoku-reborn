@@ -106,10 +106,10 @@ function MobileTabButton({
         disabled && "opacity-50 cursor-not-allowed text-foreground/70",
         !disabled &&
           active &&
-          "text-foreground hover:text-foreground bg-foreground/10",
+          "text-foreground hover-supported:text-foreground bg-foreground/10",
         !disabled &&
           !active &&
-          "text-foreground/70 hover:text-foreground hover:bg-foreground/10",
+          "text-foreground/70 hover-supported:text-foreground hover-supported:bg-foreground/10",
       )}
       onClick={onClick}
       disabled={disabled}

@@ -28,13 +28,13 @@ export function Linux({ className, ...props }: LinuxProps) {
     >
       <ControlButton
         onClick={minimizeWindow}
-        className="m-0 aspect-square size-[26px] cursor-default rounded-full p-0 hover:bg-foreground/10 active:bg-foreground/20"
+        className="m-0 aspect-square size-[26px] cursor-default rounded-full p-0 hover-supported:bg-foreground/10 active:bg-foreground/20"
       >
         <Icons.minimizeLinux className="text-foreground size-[13px] mt-[1px]" />
       </ControlButton>
       <ControlButton
         onClick={maximizeWindow}
-        className="m-0 aspect-square size-[26px] cursor-default rounded-full p-0 hover:bg-foreground/10 active:bg-foreground/20"
+        className="m-0 aspect-square size-[26px] cursor-default rounded-full p-0 hover-supported:bg-foreground/10 active:bg-foreground/20"
       >
         {!isMaximized ? (
           <Icons.maximizeLinux className="text-foreground size-3" />
@@ -44,9 +44,9 @@ export function Linux({ className, ...props }: LinuxProps) {
       </ControlButton>
       <ControlButton
         onClick={closeWindow}
-        className="m-0 aspect-square size-[26px] cursor-default rounded-full p-0 hover:bg-windows-red group active:bg-windows-red"
+        className="m-0 aspect-square size-[26px] cursor-default rounded-full p-0 hover-supported:bg-windows-red group active:bg-windows-red"
       >
-        <Icons.closeLinux className="text-foreground group-hover:text-white size-3" />
+        <Icons.closeLinux className="text-foreground group-hover-supported:text-white size-3" />
       </ControlButton>
     </div>
   );

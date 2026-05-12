@@ -7,7 +7,7 @@ import { Icons } from "./icons";
 
 const regularButton = clsx(
   "min-h-[42px] max-h-[42px] mt-[1px] w-[46px] cursor-default rounded-none bg-transparent",
-  "text-foreground hover:bg-border active:bg-border",
+  "text-foreground hover-supported:bg-border active:bg-border",
   "p-0 flex items-center justify-center",
 );
 
@@ -27,7 +27,7 @@ export function Windows({ className, ...props }: HTMLProps<HTMLDivElement>) {
         onClick={closeWindow}
         className={clsx(
           regularButton,
-          "hover:bg-windows-red hover:text-white active:bg-windows-red/90",
+          "hover-supported:bg-windows-red hover-supported:text-white active:bg-windows-red/90",
         )}
       >
         <Icons.closeWin />

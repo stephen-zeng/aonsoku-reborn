@@ -35,7 +35,7 @@ export function CurrentSongInfo() {
           {currentSong.albumId ? (
             <Link
               to={ROUTES.ALBUM.PAGE(currentSong.albumId)}
-              className="hover:underline"
+              className="hover-supported:underline"
               onClick={closeDrawer}
             >
               {currentSong.title}
@@ -85,7 +85,7 @@ function ArtistLink({ id, name, className, ...props }: ArtistLinkProps) {
     <Link
       className={cn(
         className,
-        id ? "hover:underline hover:text-foreground" : "pointer-events-none",
+        id ? "hover-supported:underline hover-supported:text-foreground" : "pointer-events-none",
       )}
       to={ROUTES.ARTIST.PAGE(id ?? "")}
       {...props}

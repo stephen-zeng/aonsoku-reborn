@@ -113,7 +113,7 @@ export function SidebarPlaylistGenerator({
                 size="sm"
                 className={clsx(
                   "w-full justify-start",
-                  isActive(playlist.id) && "cursor-default hover:bg-accent",
+                  isActive(playlist.id) && "cursor-default hover-supported:bg-accent",
                 )}
               >
                 <ListMusic className="mr-2 min-h-4 min-w-4 h-4 w-4" />

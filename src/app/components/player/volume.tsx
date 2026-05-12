@@ -72,7 +72,7 @@ export function MuteButton({ className, ...props }: MuteButtonProps) {
       {...props}
       variant="ghost"
       size="icon"
-      className={cn("p-1 w-7 h-7 hover:bg-transparent", className)}
+      className={cn("p-1 w-7 h-7 hover-supported:bg-transparent", className)}
       onClick={handleMuteClick}
       onWheel={handleWheel}
       unfocusable

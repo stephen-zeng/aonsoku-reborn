@@ -187,9 +187,12 @@
 
 /* Fullscreen queue hover/active overrides — placed outside @layer to win
    over Tailwind utility classes (hover:bg-muted, bg-accent). Uses
-   foreground-based alpha so the colour blends with any backdrop. */
-.fullscreen-queue-bg .group\/queuerow:hover {
-  background-color: hsl(var(--foreground) / 0.1);
+   foreground-based alpha so the colour blends with any backdrop.
+   Only applies hover on devices that support it. */
+@media (hover: hover) {
+  .fullscreen-queue-bg .group\/queuerow:hover {
+    background-color: hsl(var(--foreground) / 0.1);
+  }
 }
 
 .fullscreen-queue-bg .group\/queuerow.bg-accent,
@@ -536,7 +539,7 @@ svg#bars .eq-bar--4 {
 }
 
 .secondary-thumb-bar {
-  @apply bg-foreground/30 hover:bg-foreground/40;
+  @apply bg-foreground/30 hover-supported:bg-foreground/40;
 }
 
 @media all and (display-mode: picture-in-picture) {
@@ -594,11 +597,19 @@ svg#bars .eq-bar--4 {
 }
 
 div[data-test-id="table-row"][data-state="selected"],
-div[data-test-id="table-row"].row-active,
-div[data-test-id="table-row"]:hover {
+div[data-test-id="table-row"].row-active {
   & a,
   & span {
     @apply text-foreground;
+  }
+}
+
+@media (hover: hover) {
+  div[data-test-id="table-row"]:hover {
+    & a,
+    & span {
+      @apply text-foreground;
+    }
   }
 }
 

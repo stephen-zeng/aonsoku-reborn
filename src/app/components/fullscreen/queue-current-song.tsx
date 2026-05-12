@@ -97,8 +97,8 @@ export const QueueModeButtons = memo(function QueueModeButtons() {
   const inactiveBtn = clsx(
     "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium",
     isBackdropDark
-      ? "text-white/60 border border-white/30 hover:text-white hover:bg-white/10"
-      : "text-foreground/60 border border-foreground/30 hover:text-foreground hover:bg-foreground/10",
+      ? "text-white/60 border border-white/30 hover-supported:text-white hover-supported:bg-white/10"
+      : "text-foreground/60 border border-foreground/30 hover-supported:text-foreground hover-supported:bg-foreground/10",
   );
 
   return (
