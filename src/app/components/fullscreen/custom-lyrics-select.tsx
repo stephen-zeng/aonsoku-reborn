@@ -202,22 +202,28 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
 
       <div className="min-h-0 flex-1 px-2 pb-3">
         {!currentSong && (
-          <EmptyState message={t("lyrics.customSelect.noSong")} />
+          <EmptyState className="mr-4" message={t("lyrics.customSelect.noSong")} />
         )}
 
         {currentSong && !customServerReady && (
-          <EmptyState message={t("lyrics.customSelect.serverDisabled")} />
+          <EmptyState
+            className="mr-4"
+            message={t("lyrics.customSelect.serverDisabled")}
+          />
         )}
 
         {currentSong && customServerReady && isLoading && (
-          <EmptyState message={t("fullscreen.loadingLyrics")} />
+          <EmptyState className="mr-4" message={t("fullscreen.loadingLyrics")} />
         )}
 
         {currentSong &&
           customServerReady &&
           !isLoading &&
           candidates.length === 0 && (
-            <EmptyState message={t("lyrics.customSelect.empty")} />
+            <EmptyState
+              className="mr-4"
+              message={t("lyrics.customSelect.empty")}
+            />
           )}
 
         {candidates.length > 0 && (
@@ -302,9 +308,20 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
   );
 }
 
-function EmptyState({ message }: { message: string }) {
+function EmptyState({
+  className,
+  message,
+}: {
+  className?: string;
+  message: string;
+}) {
   return (
-    <div className="flex h-full min-h-48 flex-col items-center justify-center gap-3 rounded-2xl border border-white/10 bg-foreground/[0.06] p-6 text-center text-foreground/60 backdrop-blur-xl">
+    <div
+      className={cn(
+        "flex h-full min-h-48 flex-col items-center justify-center gap-3 rounded-2xl border border-white/10 bg-foreground/[0.06] p-6 text-center text-foreground/60 backdrop-blur-xl",
+        className,
+      )}
+    >
       <Music2 className="size-8" />
       <p>{message}</p>
     </div>
