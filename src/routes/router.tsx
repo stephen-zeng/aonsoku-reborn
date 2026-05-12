@@ -35,9 +35,6 @@ const Playlist = lazy(() => import("@/app/pages/playlists/playlist"));
 const Radios = lazy(() => import("@/app/pages/radios/radios-list"));
 const SongList = lazy(() => import("@/app/pages/songs/songlist"));
 const Home = lazy(() => import("@/app/pages/home"));
-const CustomLyricsSelect = lazy(
-  () => import("@/app/pages/lyrics/custom-select"),
-);
 const MobileLibrary = lazy(() => import("@/app/pages/mobile/library"));
 const MobileSearch = lazy(() => import("@/app/pages/mobile/search"));
 const MobileSettings = lazy(() => import("@/app/pages/mobile/settings"));
@@ -146,16 +143,6 @@ export const router = createHashRouter([
         element: (
           <Suspense fallback={<PlaylistFallback />}>
             <Playlist />
-          </Suspense>
-        ),
-      },
-      {
-        id: "custom-lyrics-select",
-        path: ROUTES.LYRICS.CUSTOM_SELECT,
-        errorElement: <ErrorPage />,
-        element: (
-          <Suspense>
-            <CustomLyricsSelect />
           </Suspense>
         ),
       },

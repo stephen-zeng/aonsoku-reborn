@@ -2,7 +2,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ListChecks, ListMusic, MicVocalIcon } from "lucide-react";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/app/components/ui/button";
 
 import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
@@ -10,13 +9,13 @@ import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useIsTouchPrimary } from "@/app/hooks/use-input-mode";
 import { cn } from "@/lib/utils";
 import { closeFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
-import { PLAYER_SEARCH_PARAM, ROUTES } from "@/routes/routesList";
 import {
   useFullscreenPlayerState,
   useLyricsSettings,
 } from "@/store/player.store";
 import { ArtworkWithInfo } from "./artwork-with-info";
 import { FullscreenControlPanel } from "./control-panel";
+import { CustomLyricsSelect } from "./custom-lyrics-select";
 import { LyricsTab } from "./lyrics";
 import { FullscreenSongQueue } from "./queue";
 import { FullscreenSettings } from "./settings";
@@ -31,14 +30,12 @@ export const DesktopLayout = memo(function DesktopLayout() {
   const { t } = useTranslation();
   const { hasLyrics } = useHasLyrics();
   const { customServerEnabled, customServerUrl } = useLyricsSettings();
-  const navigate = useNavigate();
-  const location = useLocation();
   const isTouchPrimary = useIsTouchPrimary();
   const contrast = useFullscreenContrast();
 
   const lyricsDisabled = hasLyrics === false;
-  const showCustomLyricsSelect =
-    customServerEnabled && customServerUrl.trim().length > 0;
+  const customLyricsDisabled =
+    !customServerEnabled || customServerUrl.trim().length === 0;
 
   function handleQueueClick() {
     setRightPanelView(rightPanelView === "queue" ? null : "queue");
@@ -50,17 +47,11 @@ export const DesktopLayout = memo(function DesktopLayout() {
   }
 
   function handleSelectLyricsClick() {
-    const params = new URLSearchParams(location.search);
-    params.delete(PLAYER_SEARCH_PARAM);
+    if (customLyricsDisabled) return;
 
-    navigate(ROUTES.LYRICS.CUSTOM_SELECT, {
-      state: {
-        returnTo: {
-          pathname: location.pathname,
-          search: params.toString() ? `?${params.toString()}` : "",
-        },
-      },
-    });
+    setRightPanelView(
+      rightPanelView === "customLyrics" ? null : "customLyrics",
+    );
   }
 
   return (
@@ -103,6 +94,16 @@ export const DesktopLayout = memo(function DesktopLayout() {
                 aria-label={t("fullscreen.lyrics")}
               >
                 <MicVocalIcon className="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`size-10 rounded-full ${contrast.hoverBg} ${customLyricsDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                onClick={handleSelectLyricsClick}
+                disabled={customLyricsDisabled}
+                aria-label={t("fullscreen.selectLyrics")}
+              >
+                <ListChecks className="size-4" />
               </Button>
             </>
           )}
@@ -148,7 +149,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
               className={cn(
                 "gap-1.5",
                 lyricsDisabled && "opacity-50 cursor-not-allowed",
-                rightPanelView === "lyrics"
+                  rightPanelView === "lyrics"
                   ? "fullscreen-backdrop-layer rounded-md hover:bg-transparent"
                   : contrast.hoverBg,
               )}
@@ -158,17 +159,22 @@ export const DesktopLayout = memo(function DesktopLayout() {
               <MicVocalIcon className="size-4" />
               {t("fullscreen.lyrics")}
             </Button>
-            {showCustomLyricsSelect && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn("gap-1.5", contrast.hoverBg)}
-                onClick={handleSelectLyricsClick}
-              >
-                <ListChecks className="size-4" />
-                {t("fullscreen.selectLyrics")}
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "gap-1.5",
+                customLyricsDisabled && "opacity-50 cursor-not-allowed",
+                rightPanelView === "customLyrics"
+                  ? "fullscreen-backdrop-layer rounded-md hover:bg-transparent"
+                  : contrast.hoverBg,
+              )}
+              onClick={handleSelectLyricsClick}
+              disabled={customLyricsDisabled}
+            >
+              <ListChecks className="size-4" />
+              {t("fullscreen.selectLyrics")}
+            </Button>
           </div>
         </div>
 
@@ -196,6 +202,18 @@ export const DesktopLayout = memo(function DesktopLayout() {
                 className="h-full"
               >
                 <MemoLyricsTab />
+              </motion.div>
+            )}
+            {rightPanelView === "customLyrics" && (
+              <motion.div
+                key="custom-lyrics"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                className="h-full"
+              >
+                <CustomLyricsSelect onBack={() => setRightPanelView("lyrics")} />
               </motion.div>
             )}
           </AnimatePresence>
