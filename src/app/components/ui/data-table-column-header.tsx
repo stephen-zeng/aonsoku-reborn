@@ -60,15 +60,15 @@ export function DataTableColumnHeader<TData, TValue>({
       <Button
         variant="ghost"
         size="sm"
-        className="px-0 h-8 group hover:bg-transparent"
+        className="px-0 h-8 group hover-supported:bg-transparent"
         onClick={handleFilter}
       >
         {typeof children === "string" ? (
-          <span className="group-hover:underline">{children}</span>
+          <span className="group-hover-supported:underline">{children}</span>
         ) : (
           <>{children}</>
         )}
-        <div className="opacity-0 group-hover:opacity-100 ml-1">
+        <div className="opacity-0 group-hover-supported:opacity-100 ml-1">
           {getFilterIcon()}
         </div>
       </Button>

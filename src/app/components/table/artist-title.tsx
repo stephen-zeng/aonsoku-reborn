@@ -18,7 +18,7 @@ export function ArtistTitle({ artist }: ArtistTitleProps) {
       <div className="flex flex-col justify-center items-center">
         <Link
           to={ROUTES.ARTIST.PAGE(artist.id)}
-          className="hover:underline flex w-fit"
+          className="hover-supported:underline flex w-fit"
         >
           <p>{artist.name}</p>
         </Link>

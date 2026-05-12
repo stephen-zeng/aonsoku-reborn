@@ -51,7 +51,7 @@ export default function HomeHeader({ songs }: HomeHeaderProps) {
           </CarouselItem>
         ))}
       </CarouselContent>
-      <div className="absolute right-4 bottom-1 flex gap-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+      <div className="absolute right-4 bottom-1 flex gap-2 z-20 opacity-0 group-hover-supported:opacity-100 transition-opacity duration-300">
         <CarouselPrevious
           className="static shadow-sm"
           data-testid="header-carousel-previous"

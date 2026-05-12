@@ -86,7 +86,7 @@ export function TableLikeButton({
       disabled={songStar.isPending || artistStarMutation.isPending}
       className={clsx(
         "w-8 h-8 p-1 rounded-full transition-opacity",
-        !isStarred && "opacity-0 group-hover/tablerow:opacity-100",
+        !isStarred && "opacity-0 group-hover-supported/tablerow:opacity-100",
         !hasHover && "opacity-100",
       )}
       onClick={(e) => {

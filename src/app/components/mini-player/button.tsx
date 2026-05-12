@@ -57,7 +57,7 @@ export function MiniPlayerButton() {
           onClick={handleClick}
           className={clsx(
             "relative rounded-full",
-            pipWindow && "text-primary hover:text-primary player-button-active",
+            pipWindow && "text-primary hover-supported:text-primary player-button-active",
           )}
           disabled={disabled}
           unfocusable

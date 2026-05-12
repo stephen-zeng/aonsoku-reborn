@@ -25,7 +25,7 @@ export function CacheButton({
       disabled={isLoading}
       className={clsx(
         "w-8 h-8 p-1 rounded-full transition-opacity",
-        !isCached && `opacity-0 group-hover/${groupName}:opacity-100`,
+        !isCached && `opacity-0 group-hover-supported/${groupName}:opacity-100`,
         !hasHover && "opacity-100",
       )}
       onClick={(e) => {
@@ -41,7 +41,7 @@ export function CacheButton({
       {isLoading ? (
         <DownloadingIndicator progress={progress} className="w-4 h-4" />
       ) : isCached ? (
-        <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+        <Trash2 className="w-4 h-4 text-muted-foreground hover-supported:text-destructive" />
       ) : (
         <CircleArrowDown className="w-4 h-4 text-muted-foreground" />
       )}

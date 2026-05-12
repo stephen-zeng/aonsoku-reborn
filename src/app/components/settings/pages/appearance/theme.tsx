@@ -77,7 +77,7 @@ function ThemeModeSelector({
             "inline-flex min-h-11 items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md sm:min-h-8",
             mode === value
               ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted",
+              : "text-muted-foreground hover-supported:text-foreground hover-supported:bg-muted",
           )}
         >
           <Icon size={14} />

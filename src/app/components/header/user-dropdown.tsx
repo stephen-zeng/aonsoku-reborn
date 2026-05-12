@@ -225,7 +225,7 @@ export function UserDropdown() {
             <div className="relative w-8 h-8 rounded-full">
               <Avatar className="w-8 h-8 rounded-full cursor-pointer">
                 <AvatarImage src={avatarUrl ?? undefined} alt={username} />
-                <AvatarFallback className="text-sm bg-transparent hover:bg-accent rounded-full">
+                <AvatarFallback className="text-sm bg-transparent hover-supported:bg-accent rounded-full">
                   <User className="w-4 h-4" />
                 </AvatarFallback>
               </Avatar>
@@ -262,7 +262,7 @@ export function UserDropdown() {
                 <DrawerClose asChild>
                   <button
                     onClick={() => setRemoteControlOpen(true)}
-                    className="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-accent w-full text-left"
+                    className="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover-supported:bg-accent w-full text-left"
                   >
                     <Cast className="h-4 w-4" />
                     <span>{t("lanControl.remote.menu")}</span>
@@ -272,7 +272,7 @@ export function UserDropdown() {
               <DrawerClose asChild>
                 <button
                   onClick={handleSettingsClick}
-                  className="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-accent w-full text-left"
+                  className="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover-supported:bg-accent w-full text-left"
                 >
                   <Settings className="h-4 w-4" />
                   <span>{t("settings.label")}</span>
@@ -281,7 +281,7 @@ export function UserDropdown() {
               <DrawerClose asChild>
                 <button
                   onClick={() => setAboutOpen(true)}
-                  className="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover:bg-accent w-full text-left"
+                  className="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover-supported:bg-accent w-full text-left"
                 >
                   <Info className="h-4 w-4" />
                   <span>{t("menu.about")}</span>
@@ -292,7 +292,7 @@ export function UserDropdown() {
                 <DrawerClose asChild>
                   <button
                     onClick={() => applyUpdate()}
-                    className="flex items-center gap-3 rounded-md px-3 py-3 text-sm text-primary font-medium hover:bg-accent w-full text-left"
+                    className="flex items-center gap-3 rounded-md px-3 py-3 text-sm text-primary font-medium hover-supported:bg-accent w-full text-left"
                   >
                     <RefreshCw className="h-4 w-4" />
                     <span>{t("update.sw.refresh")}</span>
@@ -306,7 +306,7 @@ export function UserDropdown() {
                 <DrawerClose asChild>
                   <button
                     onClick={() => setLogoutDialogState(true)}
-                    className="flex items-center justify-center gap-2 rounded-md bg-destructive/10 px-3 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/20 w-full"
+                    className="flex items-center justify-center gap-2 rounded-md bg-destructive/10 px-3 py-2.5 text-sm font-medium text-destructive hover-supported:bg-destructive/20 w-full"
                   >
                     <LogOut className="h-4 w-4" />
                     <span>{t("menu.serverLogout")}</span>
@@ -326,7 +326,7 @@ export function UserDropdown() {
                   alt={username}
                   className="w-6 h-6 rounded-full"
                 />
-                <AvatarFallback className="text-sm bg-transparent hover:bg-accent">
+                <AvatarFallback className="text-sm bg-transparent hover-supported:bg-accent">
                   <User className="w-4 h-4" />
                 </AvatarFallback>
               </Avatar>
@@ -348,7 +348,7 @@ export function UserDropdown() {
                       e.stopPropagation();
                       setLogoutDialogState(true);
                     }}
-                    className="p-1.5 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground"
+                    className="p-1.5 rounded-md hover-supported:bg-accent text-muted-foreground hover-supported:text-foreground"
                     title={t("menu.serverLogout")}
                   >
                     <LogOut className="h-4 w-4" />

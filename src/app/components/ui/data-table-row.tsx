@@ -60,7 +60,7 @@ export function TableRow<TData>({
             !isNextRowSelected(index) &&
             "rounded-b-md",
           isModern && !row.getIsSelected() && "rounded-md",
-          "hover:bg-muted md:data-[state=selected]:bg-primary/75",
+          "hover-supported:bg-muted md:data-[state=selected]:bg-primary/75",
           isClassic && "border-b",
           isRowSongActive && isModern && "row-active",
         )}

@@ -31,7 +31,7 @@ export function TableActionButton({
           className={clsx(
             "w-8 h-8 p-1 rounded-full",
             "data-[state=open]:bg-accent data-[state=open]:opacity-100",
-            "opacity-0 group-hover/tablerow:opacity-100 transition-opacity",
+            "opacity-0 group-hover-supported/tablerow:opacity-100 transition-opacity",
             !hasHover && "opacity-100",
           )}
           onClick={(e) => {

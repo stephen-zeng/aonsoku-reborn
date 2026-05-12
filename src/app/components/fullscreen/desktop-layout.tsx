@@ -135,7 +135,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
               className={cn(
                 "gap-1.5",
                 rightPanelView === "queue"
-                  ? "fullscreen-backdrop-layer rounded-md hover:bg-transparent"
+                  ? "fullscreen-backdrop-layer rounded-md hover-supported:bg-transparent"
                   : contrast.hoverBg,
               )}
               onClick={handleQueueClick}
@@ -149,8 +149,8 @@ export const DesktopLayout = memo(function DesktopLayout() {
               className={cn(
                 "gap-1.5",
                 lyricsDisabled && "opacity-50 cursor-not-allowed",
-                  rightPanelView === "lyrics"
-                  ? "fullscreen-backdrop-layer rounded-md hover:bg-transparent"
+                rightPanelView === "lyrics"
+                  ? "fullscreen-backdrop-layer rounded-md hover-supported:bg-transparent"
                   : contrast.hoverBg,
               )}
               onClick={handleLyricsClick}

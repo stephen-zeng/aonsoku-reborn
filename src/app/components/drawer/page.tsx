@@ -61,7 +61,7 @@ export function MainDrawerPage() {
               className={cn(
                 "h-8 px-3 rounded-full gap-1.5 text-xs font-medium",
                 queueState && "bg-foreground/10 text-foreground",
-                !queueState && "text-muted-foreground hover:text-foreground",
+                !queueState && "text-muted-foreground hover-supported:text-foreground",
               )}
               onClick={() => {
                 if (lyricsState) toggleQueueAndLyrics();
@@ -79,7 +79,7 @@ export function MainDrawerPage() {
                 !lyricsDisabled &&
                   (lyricsState
                     ? "bg-foreground/10 text-foreground"
-                    : "text-muted-foreground hover:text-foreground"),
+                    : "text-muted-foreground hover-supported:text-foreground"),
               )}
               onClick={() => {
                 if (lyricsDisabled) return;
@@ -93,7 +93,7 @@ export function MainDrawerPage() {
           </div>
           <Button
             variant="ghost"
-            className="w-8 h-8 rounded-full p-0 hover:bg-foreground/20"
+            className="w-8 h-8 rounded-full p-0 hover-supported:bg-foreground/20"
             onClick={closeDrawer}
           >
             <XIcon className="w-4 h-4" />

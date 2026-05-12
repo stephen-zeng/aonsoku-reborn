@@ -93,7 +93,7 @@ function ResultSection({ title, seeMoreHref, children }: SectionProps) {
         {seeMoreHref && (
           <Link
             to={seeMoreHref}
-            className="text-xs text-primary underline-offset-1 hover:underline"
+            className="text-xs text-primary underline-offset-1 hover-supported:underline"
           >
             {t("generic.seeMore")}
           </Link>

@@ -375,7 +375,7 @@ const DownloadSection = memo(function DownloadSection() {
         <Button
           variant="ghost"
           size="sm"
-          className="ml-7 mt-1 h-5 text-[10px] text-muted-foreground hover:text-foreground p-0"
+          className="ml-7 mt-1 h-5 text-[10px] text-muted-foreground hover-supported:text-foreground p-0"
           onClick={() => setExpanded((v) => !v)}
         >
           {expanded ? (

@@ -43,7 +43,7 @@ function FullscreenControls() {
     isBackdropDark
       ? "data-[state=active]:text-white"
       : "data-[state=active]:text-primary",
-    "hover:bg-transparent hover:scale-110 transition-transform will-change-transform",
+    "hover-supported:bg-transparent hover-supported:scale-110 transition-transform will-change-transform",
   );
 
   return (

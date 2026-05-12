@@ -115,7 +115,7 @@ export function ExpandableSearchInput({ ...props }: SearchInputProps) {
             "absolute w-9 h-9 m-0 right-0 top-0",
             "inline-flex items-center justify-center",
             "leading-10 cursor-pointer text-center z-30",
-            "hover:bg-accent rounded-md",
+            "hover-supported:bg-accent rounded-md",
           )}
           aria-label={props.placeholder}
           onClick={toggleSearchActive}
