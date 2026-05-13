@@ -17,6 +17,16 @@ function isMediaSessionSupported(): boolean {
   );
 }
 
+function isSafariMediaSession(): boolean {
+  if (typeof navigator === "undefined") return false;
+
+  const { userAgent } = navigator;
+  return (
+    /Safari/.test(userAgent) &&
+    !/Chrome|Chromium|CriOS|FxiOS|Edg|OPR|Android/.test(userAgent)
+  );
+}
+
 let lastArtworkUrl: string | null = null;
 let currentSessionId = 0;
 let removeDebounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -93,6 +103,7 @@ async function setMediaSession(
         album,
         artwork: [],
       });
+      setHandlers();
       logger.info("[MediaSession] Set metadata (no artwork)", {
         title,
         artist,
@@ -184,6 +195,7 @@ async function setMediaSession(
     navigator.mediaSession.metadata = new MediaMetadata(metadata);
 
     ensurePlaybackStatePlaying();
+    setHandlers();
 
     if (navigator.mediaSession.metadata === null) {
       logger.info("[MediaSession] Metadata was set to null unexpectedly");
@@ -210,6 +222,7 @@ async function setRadioMediaSession(label: string, radioName: string) {
     navigator.mediaSession.metadata = new MediaMetadata(metadata);
 
     ensurePlaybackStatePlaying();
+    setHandlers();
   } catch (error) {
     logger.error("[MediaSession] Failed to set radio metadata:", error);
   }
@@ -260,6 +273,11 @@ function setPositionState(
   playbackRate = 1.0,
 ) {
   if (!isMediaSessionSupported()) return;
+
+  if (isSafariMediaSession()) {
+    logger.info("[MediaSession.setPosition] skipped for Safari");
+    return;
+  }
 
   if (!isValidDuration(duration)) {
     logger.info("[MediaSession] Invalid duration:", duration);
@@ -320,14 +338,19 @@ function setHandlers() {
       }
     };
 
-    mediaSession.setActionHandler("seekbackward", () => {
-      logger.info("[MediaSession.handler] action=seekbackward→previous");
-      playPrevious();
-    });
-    mediaSession.setActionHandler("seekforward", () => {
-      logger.info("[MediaSession.handler] action=seekforward→next");
-      playNext();
-    });
+    if (isSafariMediaSession()) {
+      mediaSession.setActionHandler("seekbackward", null);
+      mediaSession.setActionHandler("seekforward", null);
+    } else {
+      mediaSession.setActionHandler("seekbackward", () => {
+        logger.info("[MediaSession.handler] action=seekbackward→previous");
+        playPrevious();
+      });
+      mediaSession.setActionHandler("seekforward", () => {
+        logger.info("[MediaSession.handler] action=seekforward→next");
+        playNext();
+      });
+    }
 
     mediaSession.setActionHandler("stop", () => {
       logger.info("[MediaSession.handler] action=stop");
