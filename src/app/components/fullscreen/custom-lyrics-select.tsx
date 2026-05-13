@@ -150,7 +150,7 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
       </div>
 
       {currentSong && customServerReady && (
-        <div className="mb-3 ml-2 mr-6 shrink-0 rounded-2xl border border-white/10 bg-foreground/[0.06] p-3 backdrop-blur-xl">
+        <div className="mx-2 mb-3 shrink-0 rounded-2xl border border-white/10 bg-foreground/[0.06] p-3 backdrop-blur-xl">
           <form className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]" onSubmit={handleSearch}>
             <div className="grid gap-1.5">
               <Label
@@ -182,7 +182,8 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
             </div>
             <Button
               type="submit"
-              className="self-end gap-1.5 rounded-full bg-foreground text-background hover:bg-foreground/90"
+              variant="ghost"
+              className="self-end gap-1.5 rounded-full bg-foreground text-background hover:bg-foreground/90 hover:text-background"
               disabled={!searchTitle.trim() && !searchArtist.trim()}
             >
               <Search className="size-4" />
@@ -202,34 +203,29 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
 
       <div className="min-h-0 flex-1 px-2 pb-3">
         {!currentSong && (
-          <EmptyState className="mr-4" message={t("lyrics.customSelect.noSong")} />
+          <EmptyState message={t("lyrics.customSelect.noSong")} />
         )}
 
         {currentSong && !customServerReady && (
-          <EmptyState
-            className="mr-4"
-            message={t("lyrics.customSelect.serverDisabled")}
-          />
+          <EmptyState message={t("lyrics.customSelect.serverDisabled")} />
         )}
 
         {currentSong && customServerReady && isLoading && (
-          <EmptyState className="mr-4" message={t("fullscreen.loadingLyrics")} />
+          <EmptyState message={t("fullscreen.loadingLyrics")} />
         )}
 
         {currentSong &&
           customServerReady &&
           !isLoading &&
           candidates.length === 0 && (
-            <EmptyState
-              className="mr-4"
-              message={t("lyrics.customSelect.empty")}
-            />
+            <EmptyState message={t("lyrics.customSelect.empty")} />
           )}
 
         {candidates.length > 0 && (
           <ScrollArea
             type="always"
-            className="h-full min-w-0 pr-4"
+            className="h-full min-w-0"
+            scrollBarClassName="hidden"
             thumbClassName="secondary-thumb-bar"
             onWheel={(event) => event.stopPropagation()}
             onTouchMove={(event) => event.stopPropagation()}
@@ -308,20 +304,9 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
   );
 }
 
-function EmptyState({
-  className,
-  message,
-}: {
-  className?: string;
-  message: string;
-}) {
+function EmptyState({ message }: { message: string }) {
   return (
-    <div
-      className={cn(
-        "flex h-full min-h-48 flex-col items-center justify-center gap-3 rounded-2xl border border-white/10 bg-foreground/[0.06] p-6 text-center text-foreground/60 backdrop-blur-xl",
-        className,
-      )}
-    >
+    <div className="flex h-full min-h-48 flex-col items-center justify-center gap-3 rounded-2xl border border-white/10 bg-foreground/[0.06] p-6 text-center text-foreground/60 backdrop-blur-xl">
       <Music2 className="size-8" />
       <p>{message}</p>
     </div>
