@@ -1,6 +1,13 @@
 import { Cell, flexRender, Row } from "@tanstack/react-table";
 import clsx from "clsx";
-import { ComponentPropsWithoutRef, memo, ReactNode, useMemo } from "react";
+import {
+  ComponentPropsWithoutRef,
+  memo,
+  ReactNode,
+  TouchEvent,
+  useMemo,
+  useState,
+} from "react";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { usePlayerCurrentSong } from "@/store/player.store";
 import { ColumnDefType } from "@/types/react-table/columnDef";
@@ -29,6 +36,7 @@ export function TableRow<TData>({
   ...props
 }: RowProps<TData>) {
   const currentSong = usePlayerCurrentSong();
+  const [isPressed, setIsPressed] = useState(false);
 
   const isClassic = variant === "classic";
   const isModern = variant === "modern";
@@ -42,6 +50,26 @@ export function TableRow<TData>({
     return songId === currentSong?.id;
   }, [currentSong?.id, dataType, songId]);
 
+  function handleTouchStart(e: TouchEvent<HTMLDivElement>) {
+    setIsPressed(true);
+    props.onTouchStart?.(e);
+  }
+
+  function handleTouchMove(e: TouchEvent<HTMLDivElement>) {
+    setIsPressed(false);
+    props.onTouchMove?.(e);
+  }
+
+  function handleTouchEnd(e: TouchEvent<HTMLDivElement>) {
+    setIsPressed(false);
+    props.onTouchEnd?.(e);
+  }
+
+  function handleTouchCancel(e: TouchEvent<HTMLDivElement>) {
+    setIsPressed(false);
+    props.onTouchCancel?.(e);
+  }
+
   return (
     <MemoContextMenuProvider options={contextMenuOptions}>
       <div
@@ -51,6 +79,10 @@ export function TableRow<TData>({
         data-test-id="table-row"
         data-row-index={index}
         data-state={row.getIsSelected() && "selected"}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchCancel}
         className={clsx(
           "group/tablerow w-full flex flex-row",
           isModern &&
@@ -63,6 +95,7 @@ export function TableRow<TData>({
             "rounded-b-md",
           isModern && !row.getIsSelected() && "rounded-md",
           "hover-supported:bg-muted md:data-[state=selected]:bg-primary/75 focus:outline-none",
+          isPressed && "bg-muted",
           isClassic && "border-b",
           isRowSongActive && isModern && "row-active",
         )}

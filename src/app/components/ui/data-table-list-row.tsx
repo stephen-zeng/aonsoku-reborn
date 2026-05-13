@@ -1,6 +1,6 @@
 import { Cell, flexRender, Row } from "@tanstack/react-table";
 import clsx from "clsx";
-import { MouseEvent, memo, TouchEvent, useMemo, useRef } from "react";
+import { MouseEvent, memo, TouchEvent, useMemo, useRef, useState } from "react";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { usePlayerCurrentSong } from "@/store/player.store";
 import { ColumnDefType } from "@/types/react-table/columnDef";
@@ -35,12 +35,17 @@ export function TableListRow<TData>({
   pageType = "general",
 }: TableRowProps<TData>) {
   const currentSong = usePlayerCurrentSong();
-  const tapStateRef = useRef({ isTap: false, tapTimeout: null as ReturnType<typeof setTimeout> | null });
+  const tapStateRef = useRef({
+    isTap: false,
+    tapTimeout: null as ReturnType<typeof setTimeout> | null,
+  });
+  const [isPressed, setIsPressed] = useState(false);
 
   // @ts-expect-error row type
   const songId = row.original.id as string;
 
   function handleTouchStart() {
+    setIsPressed(true);
     tapStateRef.current.isTap = true;
     tapStateRef.current.tapTimeout = setTimeout(() => {
       tapStateRef.current.isTap = false;
@@ -48,10 +53,12 @@ export function TableListRow<TData>({
   }
 
   function handleTouchMove() {
+    setIsPressed(false);
     tapStateRef.current.isTap = false;
   }
 
   function handleTouchEnd(e: TouchEvent<HTMLDivElement>) {
+    setIsPressed(false);
     if (tapStateRef.current.tapTimeout) {
       clearTimeout(tapStateRef.current.tapTimeout);
     }
@@ -70,6 +77,7 @@ export function TableListRow<TData>({
   }
 
   function handleTouchCancel() {
+    setIsPressed(false);
     if (tapStateRef.current.tapTimeout) {
       clearTimeout(tapStateRef.current.tapTimeout);
     }
@@ -103,6 +111,7 @@ export function TableListRow<TData>({
         className={clsx(
           "group/tablerow w-[calc(100%-10px)] flex flex-row",
           "md:data-[state=selected]:bg-primary/75 hover-supported:bg-muted focus:outline-none",
+          isPressed && "bg-muted",
           isQueue && "rounded-md",
           isRowSongActive && "row-active",
         )}
