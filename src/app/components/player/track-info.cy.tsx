@@ -166,14 +166,14 @@ describe("TrackInfo Component", () => {
       getVisibleTrackTitle()
         .should("not.have.class", "cursor-pointer")
         .invoke("attr", "class")
-        .should("not.contain", "hover:underline");
+        .should("not.contain", "hover-supported:underline");
 
       cy.getByTestId("track-artist-url")
         .find("span")
         .should("not.have.class", "cursor-pointer")
         .invoke("attr", "class")
-        .should("not.contain", "hover:underline")
-        .and("not.contain", "hover:text-foreground");
+        .should("not.contain", "hover-supported:underline")
+        .and("not.contain", "hover-supported:text-foreground");
     });
   });
 

@@ -43,7 +43,7 @@ export function ResultItem({
         <Button
           variant="outline"
           size="sm"
-          className="w-7 h-7 p-[6px] rounded-full hover:bg-background"
+          className="w-7 h-7 p-[6px] rounded-full hover-supported:bg-background"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();

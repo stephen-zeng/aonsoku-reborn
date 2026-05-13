@@ -39,7 +39,7 @@ export function MiniPlayerSongTitle() {
             "mid-player:text-sm mini-player:text-xs mini-player:font-normal",
             !isShowingLyrics &&
               enableTitleNavigation &&
-              "hover:underline cursor-pointer",
+              "hover-supported:underline cursor-pointer",
           )}
           data-testid="track-title"
           onClick={
@@ -64,7 +64,7 @@ export function MiniPlayerSongTitle() {
               "w-fit max-w-full truncate",
               isShowingLyrics &&
                 enableTitleNavigation &&
-                "hover:underline cursor-pointer",
+                "hover-supported:underline cursor-pointer",
             )}
             onClick={
               isShowingLyrics && enableTitleNavigation

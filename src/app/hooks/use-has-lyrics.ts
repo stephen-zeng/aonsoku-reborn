@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { subsonic } from "@/service/subsonic";
 import { useIsOnline } from "@/store/cache.store";
-import { usePlayerSonglist } from "@/store/player.store";
+import { useLyricsSettings, usePlayerSonglist } from "@/store/player.store";
 import { areLyricsSynced } from "@/utils/lrc-converter";
 import { queryKeys } from "@/utils/queryKeys";
 
@@ -10,16 +10,32 @@ const STALE_TIME = 5 * 60 * 1000;
 
 export function useHasLyrics() {
   const { currentSong } = usePlayerSonglist();
+  const { sourcePriority, customServerEnabled, customServerUrl } =
+    useLyricsSettings();
 
   const isOnline = useIsOnline();
 
-  const { id: songId, artist, title, duration } = currentSong || {};
+  const { id: songId, artist, title, album, duration, path } =
+    currentSong || {};
+  const lyricsSettingsKey = [
+    sourcePriority.join(","),
+    customServerEnabled,
+    customServerUrl,
+  ];
 
   const { data: lyrics, isLoading: isLoadingLyrics } = useQuery({
-    queryKey: [...queryKeys.lyrics.plain, artist, title, duration],
+    queryKey: [
+      ...queryKeys.lyrics.plain,
+      artist,
+      title,
+      album,
+      duration,
+      path,
+      ...lyricsSettingsKey,
+    ],
     queryFn: () =>
       artist && title
-        ? subsonic.lyrics.getLyrics({ artist, title, duration })
+        ? subsonic.lyrics.getLyrics({ artist, title, album, duration, path })
         : Promise.resolve(null),
     enabled: isOnline && !!artist && !!title,
     staleTime: STALE_TIME,

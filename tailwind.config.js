@@ -16,6 +16,14 @@ module.exports = {
         "2xl": "1400px",
       },
     },
+    screens: {
+      xs: "480px",
+      sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+      "2xl": "1536px",
+    },
     extend: {
       fontFamily: {
         sans: ["Poppins", "sans-serif"],
@@ -150,6 +158,17 @@ module.exports = {
   plugins: [
     require("tailwindcss-animate"),
     require("tailwind-extended-shadows"),
+    function ({ addVariant }) {
+      addVariant("hover-supported", "@media (hover: hover) { &:hover }");
+      addVariant(
+        "group-hover-supported",
+        "@media (hover: hover) { :where(.group):hover & }",
+      );
+      addVariant(
+        "peer-hover-supported",
+        "@media (hover: hover) { :where(.peer):hover ~ & }",
+      );
+    },
     function ({ matchUtilities, theme }) {
       matchUtilities(
         {

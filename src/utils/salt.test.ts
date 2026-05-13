@@ -76,6 +76,12 @@ describe("toHex / fromHex roundtrip", () => {
 });
 
 describe("decodeStoredPassword", () => {
+  it("decodes enc-prefixed hex strings back to original", () => {
+    expect(decodeStoredPassword(genEncodedPassword("mypassword"))).toBe(
+      "mypassword",
+    );
+  });
+
   it("decodes hex strings back to original", () => {
     const encoded = toHex("mypassword");
     expect(decodeStoredPassword(encoded)).toBe("mypassword");

@@ -15,6 +15,7 @@ import { ISong } from "@/types/responses/song";
 import { hasElectronBridge } from "@/utils/desktop";
 import { discordRpc } from "@/utils/discordRpc";
 import { logger } from "@/utils/logger";
+import { decodeStoredPassword, genEncodedPassword } from "@/utils/salt";
 import { get as idbGet, set as idbSet } from "idb-keyval";
 import { createQueueActions } from "./queue-actions";
 import { createPlaybackActions } from "./playback-actions";
@@ -41,6 +42,37 @@ import {
 import { MAX_SHUFFLE_START_HISTORY } from "@/utils/songListFunctions";
 
 const IDB_SONGLIST_KEY = "player_songlist";
+
+function encodeCustomLyricsPassword(password: unknown) {
+  if (typeof password !== "string" || !password) return "";
+  if (password.startsWith("enc:")) return password;
+
+  return genEncodedPassword(password);
+}
+
+function decodeCustomLyricsPassword(password: unknown) {
+  return typeof password === "string" ? decodeStoredPassword(password) : "";
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: persisted state shape is versioned
+function encodePersistedCustomLyricsPassword(state: any) {
+  const lyrics = state?.settings?.lyrics;
+  if (!lyrics) return;
+
+  lyrics.customServerPassword = encodeCustomLyricsPassword(
+    lyrics.customServerPassword,
+  );
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: persisted state shape is versioned
+function decodePersistedCustomLyricsPassword(state: any) {
+  const lyrics = state?.settings?.lyrics;
+  if (!lyrics) return;
+
+  lyrics.customServerPassword = decodeCustomLyricsPassword(
+    lyrics.customServerPassword,
+  );
+}
 
 export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
   subscribeWithSelector(
@@ -152,7 +184,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
       ),
       {
         name: "player_store",
-        version: 4,
+        version: 5,
         // biome-ignore lint/suspicious/noExplicitAny: zustand persist migrate API
         migrate: (persistedState: any, version) => {
           if (version === 1) {
@@ -219,9 +251,14 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               }
             }
           }
+          if (version <= 4) {
+            encodePersistedCustomLyricsPassword(persistedState);
+          }
           return persistedState;
         },
         merge: (persistedState, currentState) => {
+          decodePersistedCustomLyricsPassword(persistedState);
+
           return merge(currentState, persistedState);
         },
         partialize: (state) => {
@@ -244,7 +281,15 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
             "remoteControl",
           ]);
 
-          return appStore;
+          return merge({}, appStore, {
+            settings: {
+              lyrics: {
+                customServerPassword: encodeCustomLyricsPassword(
+                  state.settings.lyrics.customServerPassword,
+                ),
+              },
+            },
+          });
         },
         onRehydrateStorage: () => {
           return (_state, error) => {

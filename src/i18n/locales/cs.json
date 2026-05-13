@@ -526,6 +526,35 @@
         "showTranslation": {
           "info": "Pokud je k dispozici, zobrazit překlad textů pod původními texty.",
           "label": "Zobrazit překlad"
+        },
+        "source": {
+          "label": "Priorita zdrojů textů",
+          "info": "Zvolte pořadí používané pro načítání prostých textů nebo LRC textů.",
+          "dragInstruction": "Přetažením změníte pořadí zdrojů.",
+          "dragHandle": "Přetáhnout zdroj {{source}}",
+          "priority": "{{priority}}. {{source}}",
+          "navidrome": "Navidrome",
+          "lrclib": "LRCLIB",
+          "custom": "Vlastní"
+        },
+        "customServer": {
+          "enabled": {
+            "label": "Vlastní server textů",
+            "info": "Načítat texty z uživatelem definovaného externího serveru textů."
+          },
+          "url": {
+            "label": "URL serveru",
+            "placeholder": "https://example.com/lyrics",
+            "info": "Endpoint používaný k načítání externích textů.",
+            "invalid": "Zadejte platnou HTTP nebo HTTPS URL serveru textů."
+          },
+          "password": {
+            "label": "Heslo",
+            "placeholder": "Autorizační heslo",
+            "info": "Volitelná hodnota hlavičky Authorization odesílaná na vlastní server textů. Nastavuje se na vašem serveru textů."
+          },
+          "save": "Uložit",
+          "saved": "Nastavení vlastního serveru textů bylo uloženo."
         }
       },
       "replayGain": {

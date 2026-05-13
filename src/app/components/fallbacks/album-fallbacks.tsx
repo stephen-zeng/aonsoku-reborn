@@ -175,7 +175,7 @@ export function AlbumsFallback() {
 
 function GridFallback() {
   return (
-    <div className="grid grid-cols-2 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-8 gap-3 md:gap-4 px-4 md:px-8">
+    <div className="grid grid-cols-2 xs:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-8 gap-3 md:gap-4 px-4 md:px-8">
       {Array.from({ length: 24 }, (_, i) => (
         <CardSkeleton key={"card-fallback-" + i} />
       ))}

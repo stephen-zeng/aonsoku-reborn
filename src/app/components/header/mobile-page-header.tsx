@@ -118,12 +118,12 @@ function StickyHeader({
           size="sm"
           className={cn(
             "h-11 w-11 p-0 rounded-md flex-shrink-0",
-            floatingOnImage && "hover:bg-white/20 text-white drop-shadow-md",
+            floatingOnImage && "hover-supported:bg-white/20 text-white drop-shadow-md",
             showFullBar && blendedColor && isDarkHex(blendedColor)
-              ? "hover:bg-white/20 text-white"
+              ? "hover-supported:bg-white/20 text-white"
               : "",
             showFullBar && blendedColor && !isDarkHex(blendedColor)
-              ? "hover:bg-black/10"
+              ? "hover-supported:bg-black/10"
               : "",
           )}
           onClick={handleBack}

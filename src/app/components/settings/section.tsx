@@ -75,7 +75,7 @@ export function ContentItemTitle({
         </span>
         {info && hasHover && (
           <SimpleTooltip text={info} delay={0}>
-            <div className="rounded p-1 hover:bg-muted-foreground/20">
+            <div className="rounded p-1 hover-supported:bg-muted-foreground/20">
               <InfoIcon className="w-3 h-3" />
             </div>
           </SimpleTooltip>

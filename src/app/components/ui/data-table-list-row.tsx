@@ -102,7 +102,7 @@ export function TableListRow<TData>({
         onKeyDown={(e) => handleRowKeyDown(e, row)}
         className={clsx(
           "group/tablerow w-[calc(100%-10px)] flex flex-row",
-          "md:data-[state=selected]:bg-primary/75 hover:bg-muted focus:outline-none",
+          "md:data-[state=selected]:bg-primary/75 hover-supported:bg-muted focus:outline-none",
           isQueue && "rounded-md",
           isRowSongActive && "row-active",
         )}

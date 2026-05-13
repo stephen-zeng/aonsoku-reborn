@@ -525,6 +525,35 @@
         "showTranslation": {
           "info": "Quando disponibile, mostra i testi tradotti sotto quelli originali.",
           "label": "Mostra traduzione"
+        },
+        "source": {
+          "label": "Priorità delle fonti dei testi",
+          "info": "Scegli l’ordine usato per recuperare testi semplici o testi LRC.",
+          "dragInstruction": "Trascina per riordinare le fonti.",
+          "dragHandle": "Trascina la fonte {{source}}",
+          "priority": "{{priority}}. {{source}}",
+          "navidrome": "Navidrome",
+          "lrclib": "LRCLIB",
+          "custom": "Personalizzata"
+        },
+        "customServer": {
+          "enabled": {
+            "label": "Server testi personalizzato",
+            "info": "Recupera i testi da un server esterno definito dall’utente."
+          },
+          "url": {
+            "label": "URL del server",
+            "placeholder": "https://example.com/lyrics",
+            "info": "L’endpoint usato per recuperare testi esterni.",
+            "invalid": "Inserisci un URL HTTP o HTTPS valido per il server dei testi."
+          },
+          "password": {
+            "label": "Password",
+            "placeholder": "Password di autorizzazione",
+            "info": "Valore opzionale dell’header Authorization inviato al server testi personalizzato. Viene impostato nel tuo server dei testi."
+          },
+          "save": "Salva",
+          "saved": "Impostazioni del server testi personalizzato salvate."
         }
       },
       "replayGain": {

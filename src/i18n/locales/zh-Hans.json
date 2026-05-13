@@ -528,6 +528,35 @@
         "showTranslation": {
           "info": "当翻译歌词可用时，在原文歌词下方显示翻译。",
           "label": "显示翻译歌词"
+        },
+        "source": {
+          "label": "歌词来源优先级",
+          "info": "选择普通歌词或 LRC 歌词的获取顺序。",
+          "dragInstruction": "拖拽以调整来源顺序。",
+          "dragHandle": "拖拽 {{source}} 来源",
+          "priority": "{{priority}}. {{source}}",
+          "navidrome": "Navidrome",
+          "lrclib": "LRCLIB",
+          "custom": "自定义"
+        },
+        "customServer": {
+          "enabled": {
+            "label": "自定义歌词服务器",
+            "info": "从用户自定义的外挂歌词服务器获取歌词。"
+          },
+          "url": {
+            "label": "服务器地址",
+            "placeholder": "https://example.com/lyrics",
+            "info": "用于获取外挂歌词的接口地址。",
+            "invalid": "请输入有效的 HTTP 或 HTTPS 歌词服务器地址。"
+          },
+          "password": {
+            "label": "密码",
+            "placeholder": "Authorization 密码",
+            "info": "发送给自定义歌词服务器的可选 Authorization 请求头内容。该值在你的歌词服务器中设置。"
+          },
+          "save": "保存",
+          "saved": "自定义歌词服务器设置已保存。"
         }
       },
       "replayGain": {

@@ -73,5 +73,7 @@ function isHexString(value: string): boolean {
 }
 
 export function decodeStoredPassword(raw: string): string {
+  if (raw.startsWith("enc:")) return fromHex(raw.slice(4));
+
   return isHexString(raw) ? fromHex(raw) : raw;
 }

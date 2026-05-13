@@ -90,6 +90,8 @@ export interface IVolumeSettings {
 
 export type ReplayGainType = "track" | "album";
 
+export type LyricsSource = "navidrome" | "lrclib" | "custom";
+
 interface IReplayGainData {
   enabled: boolean;
   type: ReplayGainType;
@@ -126,6 +128,14 @@ interface ILyrics {
   setPreferSyncedLyrics: (value: boolean) => void;
   showTranslation: boolean;
   setShowTranslation: (value: boolean) => void;
+  sourcePriority: LyricsSource[];
+  setSourcePriority: (value: LyricsSource[]) => void;
+  customServerEnabled: boolean;
+  setCustomServerEnabled: (value: boolean) => void;
+  customServerUrl: string;
+  setCustomServerUrl: (value: string) => void;
+  customServerPassword: string;
+  setCustomServerPassword: (value: string) => void;
 }
 
 export interface IPrivacySettings {

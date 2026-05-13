@@ -658,6 +658,35 @@
         "showTranslation": {
           "label": "Show translation",
           "info": "When available, show translated lyrics below the original lyrics."
+        },
+        "source": {
+          "label": "Lyrics source priority",
+          "info": "Choose the order used to fetch plain or LRC lyrics.",
+          "dragInstruction": "Drag to reorder sources.",
+          "dragHandle": "Drag {{source}} source",
+          "priority": "{{priority}}. {{source}}",
+          "navidrome": "Navidrome",
+          "lrclib": "LRCLIB",
+          "custom": "Custom"
+        },
+        "customServer": {
+          "enabled": {
+            "label": "Custom lyrics server",
+            "info": "Fetch lyrics from a user-defined external lyrics server."
+          },
+          "url": {
+            "label": "Server URL",
+            "placeholder": "https://example.com/lyrics",
+            "info": "The endpoint used to fetch external lyrics.",
+            "invalid": "Enter a valid HTTP or HTTPS lyrics server URL."
+          },
+          "password": {
+            "label": "Password",
+            "placeholder": "Authorization Password",
+            "info": "Optional Authorization header value sent to the custom lyrics server. This is set in your lyrics server."
+          },
+          "save": "Save",
+          "saved": "Custom lyrics server settings saved."
         }
       },
       "history": {

@@ -527,6 +527,35 @@
         "showTranslation": {
           "info": "Lorsqu'elles sont disponibles, afficher les paroles traduites sous les paroles originales.",
           "label": "Afficher la traduction"
+        },
+        "source": {
+          "label": "Priorité des sources de paroles",
+          "info": "Choisissez l’ordre utilisé pour récupérer les paroles simples ou LRC.",
+          "dragInstruction": "Faites glisser pour réordonner les sources.",
+          "dragHandle": "Faire glisser la source {{source}}",
+          "priority": "{{priority}}. {{source}}",
+          "navidrome": "Navidrome",
+          "lrclib": "LRCLIB",
+          "custom": "Personnalisée"
+        },
+        "customServer": {
+          "enabled": {
+            "label": "Serveur de paroles personnalisé",
+            "info": "Récupérer les paroles depuis un serveur de paroles externe défini par l’utilisateur."
+          },
+          "url": {
+            "label": "URL du serveur",
+            "placeholder": "https://example.com/lyrics",
+            "info": "Le point de terminaison utilisé pour récupérer les paroles externes.",
+            "invalid": "Saisissez une URL HTTP ou HTTPS valide pour le serveur de paroles."
+          },
+          "password": {
+            "label": "Mot de passe",
+            "placeholder": "Mot de passe d’autorisation",
+            "info": "Valeur facultative de l’en-tête Authorization envoyée au serveur de paroles personnalisé. Elle est définie sur votre serveur de paroles."
+          },
+          "save": "Enregistrer",
+          "saved": "Paramètres du serveur de paroles personnalisé enregistrés."
         }
       },
       "replayGain": {
