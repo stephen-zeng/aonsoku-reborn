@@ -274,11 +274,6 @@ function setPositionState(
 ) {
   if (!isMediaSessionSupported()) return;
 
-  if (isSafariMediaSession()) {
-    logger.info("[MediaSession.setPosition] skipped for Safari");
-    return;
-  }
-
   if (!isValidDuration(duration)) {
     logger.info("[MediaSession] Invalid duration:", duration);
     return;
@@ -393,7 +388,23 @@ function setHandlers() {
       playNext();
     });
 
-    mediaSession.setActionHandler("seekto", null);
+    mediaSession.setActionHandler("seekto", (details) => {
+      logger.info(`[MediaSession.handler] action=seekto | seekTime=${details.seekTime}`);
+      if (details.seekTime !== undefined) {
+        const state = usePlayerStore.getState();
+        if (state.remoteControl.active && state.remoteControl.sendCommand) {
+          state.remoteControl.sendCommand(LanControlMessageType.SEEK, {
+            time: details.seekTime,
+          });
+        } else {
+          const audioPlayerRef = state.playerState.audioPlayerRef;
+          if (audioPlayerRef) {
+            audioPlayerRef.currentTime = details.seekTime;
+            state.actions.setProgress(Math.floor(details.seekTime));
+          }
+        }
+      }
+    });
 
     logger.info("[MediaSession] All action handlers set successfully");
   } catch (error) {
