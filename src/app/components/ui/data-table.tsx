@@ -18,6 +18,7 @@ import {
   Fragment,
   MouseEvent,
   memo,
+  startTransition,
   TouchEvent,
   useCallback,
   useEffect,
@@ -309,12 +310,14 @@ export function DataTable<TData, TValue>({
 
   const handleClicks = useCallback(
     (e: MouseEvent<HTMLDivElement>, row: Row<TData>) => {
-      if (e.nativeEvent.button === MouseButton.Left) {
-        handleLeftClick(e, row);
-      }
-      if (e.nativeEvent.button === MouseButton.Right) {
-        handleRightClick(row);
-      }
+      startTransition(() => {
+        if (e.nativeEvent.button === MouseButton.Left) {
+          handleLeftClick(e, row);
+        }
+        if (e.nativeEvent.button === MouseButton.Right) {
+          handleRightClick(row);
+        }
+      });
     },
     [handleLeftClick, handleRightClick],
   );
@@ -327,7 +330,9 @@ export function DataTable<TData, TValue>({
       if (target.closest("[data-radix-menu-content]")) return;
 
       e.stopPropagation();
-      handlePlaySong(row);
+      startTransition(() => {
+        handlePlaySong(row);
+      });
     },
     [handlePlaySong],
   );
@@ -337,7 +342,9 @@ export function DataTable<TData, TValue>({
       if (e.key === "Enter" && handlePlaySong) {
         e.preventDefault();
         e.stopPropagation();
-        handlePlaySong(row);
+        startTransition(() => {
+          handlePlaySong(row);
+        });
       }
     },
     [handlePlaySong],
@@ -366,7 +373,9 @@ export function DataTable<TData, TValue>({
         // Don't trigger the row tap if touching a button, interactive element, or menu
         if (!isButton && !isInteractive && !isMenuContent) {
           e.stopPropagation();
-          handlePlaySong(row);
+          startTransition(() => {
+            handlePlaySong(row);
+          });
         }
       }
     },

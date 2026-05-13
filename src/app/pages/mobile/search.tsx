@@ -1,5 +1,5 @@
 import { Play, SearchIcon } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef, useState, startTransition } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
@@ -44,7 +44,7 @@ function MobileResultItem({
     <button
       type="button"
       className="flex min-h-14 w-full items-center gap-3 px-4 py-2 active:bg-accent/50 text-left"
-      onClick={onRowClick}
+      onClick={() => startTransition(onRowClick)}
     >
       <CachedImage
         coverArtId={coverArt}
@@ -67,7 +67,7 @@ function MobileResultItem({
         className="size-11 p-0 rounded-full flex-shrink-0"
         onClick={(e) => {
           e.stopPropagation();
-          onPlayClick();
+          startTransition(onPlayClick);
         }}
       >
         <Play className="w-4 h-4 fill-foreground" />

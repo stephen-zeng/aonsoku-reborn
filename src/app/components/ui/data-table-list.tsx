@@ -15,6 +15,7 @@ import debounce from "lodash/debounce";
 import {
   MouseEvent,
   memo,
+  startTransition,
   TouchEvent,
   useCallback,
   useEffect,
@@ -298,12 +299,14 @@ export function DataTableList<TData, TValue>({
 
   const handleClicks = useCallback(
     (e: MouseEvent<HTMLDivElement>, row: Row<TData>) => {
-      if (e.nativeEvent.button === MouseButton.Left) {
-        handleLeftClick(e, row);
-      }
-      if (e.nativeEvent.button === MouseButton.Right) {
-        handleRightClick(row);
-      }
+      startTransition(() => {
+        if (e.nativeEvent.button === MouseButton.Left) {
+          handleLeftClick(e, row);
+        }
+        if (e.nativeEvent.button === MouseButton.Right) {
+          handleRightClick(row);
+        }
+      });
     },
     [handleLeftClick, handleRightClick],
   );
@@ -316,7 +319,9 @@ export function DataTableList<TData, TValue>({
       if (target.closest("[data-radix-menu-content]")) return;
 
       e.stopPropagation();
-      handlePlaySongRef.current(row);
+      startTransition(() => {
+        handlePlaySongRef.current?.(row);
+      });
     },
     [],
   );
@@ -334,7 +339,9 @@ export function DataTableList<TData, TValue>({
       // Don't trigger the row tap if touching a button, interactive element, or menu
       if (!isButton && !isInteractive && !isMenuContent) {
         e.stopPropagation();
-        handlePlaySongRef.current(row);
+        startTransition(() => {
+          handlePlaySongRef.current?.(row);
+        });
       }
     },
     [],
@@ -345,7 +352,9 @@ export function DataTableList<TData, TValue>({
       if (e.key === "Enter" && handlePlaySongRef.current) {
         e.preventDefault();
         e.stopPropagation();
-        handlePlaySongRef.current(row);
+        startTransition(() => {
+          handlePlaySongRef.current?.(row);
+        });
       }
     },
     [],

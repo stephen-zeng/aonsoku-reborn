@@ -16,8 +16,8 @@ interface RowProps<TData> extends ComponentPropsWithoutRef<"div"> {
   index: number;
   row: Row<TData>;
   contextMenuOptions: ReactNode;
-  isPrevRowSelected: (rowIndex: number) => boolean;
-  isNextRowSelected: (rowIndex: number) => boolean;
+  isPrevRowSelected: boolean;
+  isNextRowSelected: boolean;
   variant?: "classic" | "modern";
   dataType?: "song" | "artist" | "playlist" | "radio";
 }
@@ -87,11 +87,11 @@ export function TableRow<TData>({
           "group/tablerow w-full flex flex-row",
           isModern &&
             row.getIsSelected() &&
-            !isPrevRowSelected(index) &&
+            !isPrevRowSelected &&
             "rounded-t-md",
           isModern &&
             row.getIsSelected() &&
-            !isNextRowSelected(index) &&
+            !isNextRowSelected &&
             "rounded-b-md",
           isModern && !row.getIsSelected() && "rounded-md",
           "hover-supported:bg-muted md:data-[state=selected]:bg-primary/75 focus:outline-none",

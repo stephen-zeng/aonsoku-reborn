@@ -1,5 +1,5 @@
 import { Disc2Icon, EllipsisVertical } from "lucide-react";
-import { type KeyboardEvent, type ReactNode } from "react";
+import { type KeyboardEvent, type ReactNode, startTransition } from "react";
 import { useTranslation } from "react-i18next";
 import { CoverImage } from "@/app/components/table/cover-image";
 import { SongMenuOptions } from "@/app/components/song/menu-options";
@@ -127,7 +127,9 @@ function MobileSongRow({
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Enter") {
       event.preventDefault();
-      onPlaySong(index);
+      startTransition(() => {
+        onPlaySong(index);
+      });
       return;
     }
 
@@ -157,7 +159,11 @@ function MobileSongRow({
       className={cn(
         "group flex min-h-14 w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors active:bg-accent/70",
       )}
-      onClick={() => onPlaySong(index)}
+      onClick={() =>
+        startTransition(() => {
+          onPlaySong(index);
+        })
+      }
       onKeyDown={handleKeyDown}
     >
       <CoverImage
