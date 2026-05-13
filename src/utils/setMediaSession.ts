@@ -302,12 +302,32 @@ function setHandlers() {
   try {
     logger.info("[MediaSession] Setting up action handlers");
 
-    // Disabled intentionally: on iOS, these handlers override the track
-    // skip buttons (previoustrack/nexttrack) on lock screen and Control
-    // Center, making it impossible to skip tracks. Leave as null to
-    // preserve skip functionality.
-    mediaSession.setActionHandler("seekbackward", null);
-    mediaSession.setActionHandler("seekforward", null);
+    const playPrevious = () => {
+      const state = usePlayerStore.getState();
+      if (state.remoteControl.active && state.remoteControl.sendCommand) {
+        state.remoteControl.sendCommand(LanControlMessageType.PREVIOUS);
+      } else {
+        state.actions.playPrevSong();
+      }
+    };
+
+    const playNext = () => {
+      const state = usePlayerStore.getState();
+      if (state.remoteControl.active && state.remoteControl.sendCommand) {
+        state.remoteControl.sendCommand(LanControlMessageType.NEXT);
+      } else {
+        state.actions.playNextSong();
+      }
+    };
+
+    mediaSession.setActionHandler("seekbackward", () => {
+      logger.info("[MediaSession.handler] action=seekbackward→previous");
+      playPrevious();
+    });
+    mediaSession.setActionHandler("seekforward", () => {
+      logger.info("[MediaSession.handler] action=seekforward→next");
+      playNext();
+    });
 
     mediaSession.setActionHandler("stop", () => {
       logger.info("[MediaSession.handler] action=stop");
@@ -342,41 +362,15 @@ function setHandlers() {
 
     mediaSession.setActionHandler("previoustrack", () => {
       logger.info("[MediaSession.handler] action=previoustrack");
-      const state = usePlayerStore.getState();
-      if (state.remoteControl.active && state.remoteControl.sendCommand) {
-        state.remoteControl.sendCommand(LanControlMessageType.PREVIOUS);
-      } else {
-        state.actions.playPrevSong();
-      }
+      playPrevious();
     });
 
     mediaSession.setActionHandler("nexttrack", () => {
       logger.info("[MediaSession.handler] action=nexttrack");
-      const state = usePlayerStore.getState();
-      if (state.remoteControl.active && state.remoteControl.sendCommand) {
-        state.remoteControl.sendCommand(LanControlMessageType.NEXT);
-      } else {
-        state.actions.playNextSong();
-      }
+      playNext();
     });
 
-    mediaSession.setActionHandler("seekto", (details) => {
-      logger.info(`[MediaSession.handler] action=seekto | seekTime=${details.seekTime}`);
-      if (details.seekTime !== undefined) {
-        const state = usePlayerStore.getState();
-        if (state.remoteControl.active && state.remoteControl.sendCommand) {
-          state.remoteControl.sendCommand(LanControlMessageType.SEEK, {
-            time: details.seekTime,
-          });
-        } else {
-          const audioPlayerRef = state.playerState.audioPlayerRef;
-          if (audioPlayerRef) {
-            audioPlayerRef.currentTime = details.seekTime;
-            state.actions.setProgress(Math.floor(details.seekTime));
-          }
-        }
-      }
-    });
+    mediaSession.setActionHandler("seekto", null);
 
     logger.info("[MediaSession] All action handlers set successfully");
   } catch (error) {
