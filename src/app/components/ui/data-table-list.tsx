@@ -26,6 +26,7 @@ import { isMacOs } from "react-device-detect";
 import { useHotkeys } from "react-hotkeys-hook";
 import { SongMenuOptions } from "@/app/components/song/menu-options";
 import { SelectedSongsMenuOptions } from "@/app/components/song/selected-options";
+import { useDataTableKeyboardNavigation } from "@/app/hooks/use-data-table-keyboard-navigation";
 import { ColumnFilter } from "@/types/columnFilter";
 import { ColumnDefType } from "@/types/react-table/columnDef";
 import { ISong } from "@/types/responses/song";
@@ -82,9 +83,11 @@ export function DataTableList<TData, TValue>({
   scrollToIndex = false,
   currentSongIndex,
 }: DataTableProps<TData, TValue>) {
-  const newColumns = columns.filter((column) => {
-    return columnFilter?.includes(column.id as ColumnFilter);
-  });
+  const newColumns = useMemo(() => {
+    return columns.filter((column) => {
+      return columnFilter?.includes(column.id as ColumnFilter);
+    });
+  }, [columns, columnFilter]);
 
   const [columnSearch, setColumnSearch] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -92,13 +95,19 @@ export function DataTableList<TData, TValue>({
   const [lastRowSelected, setLastRowSelected] = useState<number | null>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
+  const lastRowSelectedRef = useRef<number | null>(null);
+  useEffect(() => {
+    lastRowSelectedRef.current = lastRowSelected;
+  }, [lastRowSelected]);
+
+  const handlePlaySongRef = useRef(handlePlaySong);
+  useEffect(() => {
+    handlePlaySongRef.current = handlePlaySong;
+  }, [handlePlaySong]);
+
   const selectedRows = useMemo(
     () => Object.keys(rowSelection).map(Number),
     [rowSelection],
-  );
-  const isRowSelected = useCallback(
-    (rowIndex: number) => selectedRows.includes(rowIndex),
-    [selectedRows],
   );
 
   const tableConfig = useMemo(
@@ -142,6 +151,10 @@ export function DataTableList<TData, TValue>({
   );
 
   const table = useReactTable(tableConfig);
+  const tableRef = useRef(table);
+  useEffect(() => {
+    tableRef.current = table;
+  }, [table]);
 
   const { rows } = table.getRowModel();
 
@@ -165,10 +178,10 @@ export function DataTableList<TData, TValue>({
   const selectAllShortcut = useCallback(
     (state = true) => {
       if (allowRowSelection) {
-        table.toggleAllRowsSelected(state);
+        tableRef.current.toggleAllRowsSelected(state);
       }
     },
-    [allowRowSelection, table],
+    [allowRowSelection],
   );
 
   useHotkeys("mod+a", () => selectAllShortcut(), {
@@ -204,11 +217,16 @@ export function DataTableList<TData, TValue>({
     (row: Row<TData>) => {
       if (!showContextMenu) return undefined;
 
+      const currentTable = tableRef.current;
+
       if (dataType === "song") {
-        if (table.getIsSomeRowsSelected() || table.getIsAllRowsSelected()) {
+        if (
+          currentTable.getIsSomeRowsSelected() ||
+          currentTable.getIsAllRowsSelected()
+        ) {
           return (
             <SelectedSongsMenuOptions
-              table={table as unknown as Table<ISong>}
+              table={currentTable as unknown as Table<ISong>}
             />
           );
         } else {
@@ -224,7 +242,7 @@ export function DataTableList<TData, TValue>({
 
       return undefined;
     },
-    [dataType, showContextMenu, table],
+    [dataType, showContextMenu],
   );
 
   const handleLeftClick = useCallback(
@@ -243,39 +261,39 @@ export function DataTableList<TData, TValue>({
         return;
       }
 
-      if (e.shiftKey && lastRowSelected !== null) {
+      if (e.shiftKey && lastRowSelectedRef.current !== null) {
         const selectedRowsUpdater = computeMultiSelectedRows(
-          lastRowSelected,
+          lastRowSelectedRef.current,
           row.index,
         );
-        table.setRowSelection(selectedRowsUpdater);
+        tableRef.current.setRowSelection(selectedRowsUpdater);
         return;
       }
 
       // Deselect all rows, except current one
-      table.setRowSelection({
+      tableRef.current.setRowSelection({
         [row.index]: true,
       });
       setLastRowSelected(row.index);
     },
-    [allowRowSelection, lastRowSelected, table],
+    [allowRowSelection],
   );
 
   const handleRightClick = useCallback(
     (row: Row<TData>) => {
       if (!allowRowSelection) return;
 
-      const hasSelectedRows = selectedRows.length > 0;
-      const isSelected = isRowSelected(row.index);
+      const hasSelectedRows = tableRef.current.getSelectedRowModel().rows.length > 0;
+      const isSelected = row.getIsSelected();
 
       if (hasSelectedRows && !isSelected) {
-        table.resetRowSelection();
+        tableRef.current.resetRowSelection();
       }
 
       row.toggleSelected(true);
       setLastRowSelected(row.index);
     },
-    [allowRowSelection, isRowSelected, selectedRows.length, table],
+    [allowRowSelection],
   );
 
   const handleClicks = useCallback(
@@ -292,20 +310,20 @@ export function DataTableList<TData, TValue>({
 
   const handleRowDbClick = useCallback(
     (e: MouseEvent<HTMLDivElement>, row: Row<TData>) => {
-      if (!handlePlaySong) return;
+      if (!handlePlaySongRef.current) return;
 
       const target = e.target as HTMLElement;
       if (target.closest("[data-radix-menu-content]")) return;
 
       e.stopPropagation();
-      handlePlaySong(row);
+      handlePlaySongRef.current(row);
     },
-    [handlePlaySong],
+    [],
   );
 
   const handleRowTap = useCallback(
     (e: TouchEvent<HTMLDivElement>, row: Row<TData>) => {
-      if (!handlePlaySong) return;
+      if (!handlePlaySongRef.current) return;
 
       // Check if the touch target is within a button, interactive element, or menu
       const target = e.target as HTMLElement;
@@ -316,65 +334,31 @@ export function DataTableList<TData, TValue>({
       // Don't trigger the row tap if touching a button, interactive element, or menu
       if (!isButton && !isInteractive && !isMenuContent) {
         e.stopPropagation();
-        handlePlaySong(row);
+        handlePlaySongRef.current(row);
       }
     },
-    [handlePlaySong],
+    [],
   );
 
   const handleRowKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>, row: Row<TData>) => {
-      if (e.key === "Enter" && handlePlaySong) {
+      if (e.key === "Enter" && handlePlaySongRef.current) {
         e.preventDefault();
         e.stopPropagation();
-        handlePlaySong(row);
+        handlePlaySongRef.current(row);
       }
     },
-    [handlePlaySong],
+    [],
   );
 
-  const handleTableKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
-      if (e.defaultPrevented) return;
-
-      const activeElement = document.activeElement;
-      if (!activeElement) return;
-
-      const currentRow = activeElement.closest<HTMLElement>(
-        "[data-row-index]",
-      );
-      if (!currentRow) return;
-
-      const currentIndex = Number(currentRow.getAttribute("data-row-index"));
-      if (Number.isNaN(currentIndex)) return;
-
-      const nextIndex =
-        e.key === "ArrowUp" ? currentIndex - 1 : currentIndex + 1;
-      if (nextIndex < 0 || nextIndex >= rows.length) return;
-
-      e.preventDefault();
-
-      virtualizer.scrollToIndex(nextIndex, { align: "center" });
-
-      let attempts = 0;
-      const tryFocus = () => {
-        const tableContainer = tableContainerRef.current;
-        if (!tableContainer) return;
-        const nextRow = tableContainer.querySelector<HTMLElement>(
-          `[data-row-index="${nextIndex}"]`,
-        );
-        if (nextRow) {
-          nextRow.focus();
-        } else if (attempts < 10) {
-          attempts++;
-          requestAnimationFrame(tryFocus);
-        }
-      };
-      requestAnimationFrame(tryFocus);
-    },
-    [rows.length, virtualizer],
-  );
+  const { handleTableKeyDown } = useDataTableKeyboardNavigation({
+    table: tableRef.current,
+    rows,
+    tableContainerRef,
+    setLastRowSelected,
+    allowRowSelection,
+    virtualizer,
+  });
 
   const handleScroll = useCallback(() => {
     if (!virtualizer.scrollElement || !hasNextPage || !fetchNextPage) return;
