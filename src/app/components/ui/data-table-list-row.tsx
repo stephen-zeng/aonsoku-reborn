@@ -1,6 +1,6 @@
 import { Cell, flexRender, Row } from "@tanstack/react-table";
 import clsx from "clsx";
-import { MouseEvent, memo, TouchEvent, useMemo } from "react";
+import { MouseEvent, memo, TouchEvent, useMemo, useRef } from "react";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { usePlayerCurrentSong } from "@/store/player.store";
 import { ColumnDefType } from "@/types/react-table/columnDef";
@@ -14,13 +14,14 @@ interface TableRowProps<TData> {
   handleClicks: (e: MouseEvent<HTMLDivElement>, row: Row<TData>) => void;
   handleRowDbClick: (e: MouseEvent<HTMLDivElement>, row: Row<TData>) => void;
   handleRowTap: (e: TouchEvent<HTMLDivElement>, row: Row<TData>) => void;
+  handleRowKeyDown: (
+    e: React.KeyboardEvent<HTMLDivElement>,
+    row: Row<TData>,
+  ) => void;
   getContextMenuOptions: (row: Row<TData>) => JSX.Element | undefined;
   dataType?: "song" | "artist" | "playlist" | "radio";
   pageType?: "general" | "queue";
 }
-
-let isTap = false;
-let tapTimeout: NodeJS.Timeout;
 
 export function TableListRow<TData>({
   row,
@@ -28,29 +29,33 @@ export function TableListRow<TData>({
   handleClicks,
   handleRowDbClick,
   handleRowTap,
+  handleRowKeyDown,
   getContextMenuOptions,
   dataType = "song",
   pageType = "general",
 }: TableRowProps<TData>) {
   const currentSong = usePlayerCurrentSong();
+  const tapStateRef = useRef({ isTap: false, tapTimeout: null as ReturnType<typeof setTimeout> | null });
 
   // @ts-expect-error row type
   const songId = row.original.id as string;
 
   function handleTouchStart() {
-    isTap = true;
-    tapTimeout = setTimeout(() => {
-      isTap = false;
+    tapStateRef.current.isTap = true;
+    tapStateRef.current.tapTimeout = setTimeout(() => {
+      tapStateRef.current.isTap = false;
     }, 500);
   }
 
   function handleTouchMove() {
-    isTap = false;
+    tapStateRef.current.isTap = false;
   }
 
   function handleTouchEnd(e: TouchEvent<HTMLDivElement>) {
-    clearTimeout(tapTimeout);
-    if (isTap) {
+    if (tapStateRef.current.tapTimeout) {
+      clearTimeout(tapStateRef.current.tapTimeout);
+    }
+    if (tapStateRef.current.isTap) {
       // Check if the touch target is within a button, interactive element, or menu
       const target = e.target as HTMLElement;
       const isButton = target.closest("button");
@@ -65,8 +70,10 @@ export function TableListRow<TData>({
   }
 
   function handleTouchCancel() {
-    clearTimeout(tapTimeout);
-    isTap = false;
+    if (tapStateRef.current.tapTimeout) {
+      clearTimeout(tapStateRef.current.tapTimeout);
+    }
+    tapStateRef.current.isTap = false;
   }
 
   const isRowSongActive = useMemo(() => {
@@ -81,6 +88,7 @@ export function TableListRow<TData>({
     <MemoContextMenuProvider options={getContextMenuOptions(row)}>
       <div
         role="row"
+        tabIndex={0}
         data-test-id="table-row"
         data-row-index={virtualRow.index}
         data-state={row.getIsSelected() && "selected"}
@@ -91,9 +99,10 @@ export function TableListRow<TData>({
         onTouchEnd={handleTouchEnd}
         onTouchCancel={handleTouchCancel}
         onContextMenu={(e) => handleClicks(e, row)}
+        onKeyDown={(e) => handleRowKeyDown(e, row)}
         className={clsx(
           "group/tablerow w-[calc(100%-10px)] flex flex-row",
-          "md:data-[state=selected]:bg-primary/75 hover:bg-muted",
+          "md:data-[state=selected]:bg-primary/75 hover:bg-muted focus:outline-none",
           isQueue && "rounded-md",
           isRowSongActive && "row-active",
         )}

@@ -47,7 +47,9 @@ export function TableRow<TData>({
       <div
         {...props}
         role="row"
+        tabIndex={0}
         data-test-id="table-row"
+        data-row-index={index}
         data-state={row.getIsSelected() && "selected"}
         className={clsx(
           "group/tablerow w-full flex flex-row",
@@ -60,7 +62,7 @@ export function TableRow<TData>({
             !isNextRowSelected(index) &&
             "rounded-b-md",
           isModern && !row.getIsSelected() && "rounded-md",
-          "hover:bg-muted md:data-[state=selected]:bg-primary/75",
+          "hover:bg-muted md:data-[state=selected]:bg-primary/75 focus:outline-none",
           isClassic && "border-b",
           isRowSongActive && isModern && "row-active",
         )}

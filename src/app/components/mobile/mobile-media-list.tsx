@@ -37,7 +37,7 @@ export function MobileMediaList<TItem>({
   }
 
   return (
-    <div className={cn("flex flex-col gap-1", className)}>
+    <div data-testid="mobile-song-list" className={cn("flex flex-col gap-1", className)}>
       {items.map((item, index) => children(item, index))}
     </div>
   );
@@ -67,14 +67,16 @@ export function MobileSongList({
 
   if (songs.length === 0 && emptyMessage) {
     return (
-      <div className="flex min-h-24 items-center justify-center px-4 text-sm text-muted-foreground">
-        {emptyMessage}
+      <div data-testid="mobile-song-list" className={cn("flex flex-col gap-1", className)}>
+        <div className="flex min-h-24 items-center justify-center px-4 text-sm text-muted-foreground">
+          {emptyMessage}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className={cn("flex flex-col gap-1", className)}>
+    <div data-testid="mobile-song-list" className={cn("flex flex-col gap-1", className)}>
       {songs.map((song, index) => {
         const discNum = song.discNumber ?? 1;
         const isFirstOfDisc =
@@ -123,10 +125,27 @@ function MobileSongRow({
   const isCurrentPlaying = useIsCurrentPlaying(song.id);
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key !== "Enter" && event.key !== " ") return;
+    if (event.key === "Enter") {
+      event.preventDefault();
+      onPlaySong(index);
+      return;
+    }
 
-    event.preventDefault();
-    onPlaySong(index);
+    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+      event.preventDefault();
+      const currentRow = event.currentTarget;
+      const container = currentRow.closest('[data-testid="mobile-song-list"]');
+      if (!container) return;
+
+      const nextIndex =
+        event.key === "ArrowUp" ? index - 1 : index + 1;
+      const nextRow = container.querySelector<HTMLElement>(
+        `[data-testid="mobile-song-row"][data-row-index="${nextIndex}"]`,
+      );
+      if (nextRow) {
+        nextRow.focus();
+      }
+    }
   }
 
   return (
@@ -134,6 +153,7 @@ function MobileSongRow({
       role="button"
       tabIndex={0}
       data-testid="mobile-song-row"
+      data-row-index={index}
       className={cn(
         "group flex min-h-14 w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors active:bg-accent/70",
       )}

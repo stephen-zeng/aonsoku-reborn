@@ -75,9 +75,6 @@ interface DataTableProps<TData, TValue> {
   dataType?: "song" | "artist" | "playlist" | "radio";
 }
 
-let isTap = false;
-let tapTimeout: NodeJS.Timeout;
-
 export function DataTable<TData, TValue>({
   columns,
   data,
@@ -104,6 +101,7 @@ export function DataTable<TData, TValue>({
   const [rowSelection, setRowSelection] = useState({});
   const [lastRowSelected, setLastRowSelected] = useState<number | null>(null);
   const tableRef = useRef<HTMLDivElement>(null);
+  const tapStateRef = useRef({ isTap: false, tapTimeout: null as ReturnType<typeof setTimeout> | null });
 
   const isClassic = variant === "classic";
   const isModern = variant === "modern";
@@ -337,10 +335,58 @@ export function DataTable<TData, TValue>({
     [handlePlaySong],
   );
 
+  const handleRowKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>, row: Row<TData>) => {
+      if (e.key === "Enter" && handlePlaySong) {
+        e.preventDefault();
+        e.stopPropagation();
+        handlePlaySong(row);
+      }
+    },
+    [handlePlaySong],
+  );
+
+  const handleTableKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+      if (e.defaultPrevented) return;
+
+      const activeElement = document.activeElement;
+      if (!activeElement) return;
+
+      const currentRow = activeElement.closest<HTMLElement>(
+        "[data-row-index]",
+      );
+      if (!currentRow) return;
+
+      const currentIndex = Number(currentRow.getAttribute("data-row-index"));
+      if (Number.isNaN(currentIndex)) return;
+
+      const nextIndex =
+        e.key === "ArrowUp" ? currentIndex - 1 : currentIndex + 1;
+      if (nextIndex < 0 || nextIndex >= rows.length) return;
+
+      e.preventDefault();
+
+      const tableContainer = tableRef.current;
+      if (!tableContainer) return;
+
+      const nextRow = tableContainer.querySelector<HTMLElement>(
+        `[data-row-index="${nextIndex}"]`,
+      );
+      if (nextRow) {
+        nextRow.focus();
+      }
+    },
+    [rows],
+  );
+
   const handleRowTap = useCallback(
     (e: TouchEvent<HTMLDivElement>, row: Row<TData>) => {
-      clearTimeout(tapTimeout);
-      if (isTap && handlePlaySong) {
+      if (tapStateRef.current.tapTimeout) {
+        clearTimeout(tapStateRef.current.tapTimeout);
+      }
+      if (tapStateRef.current.isTap && handlePlaySong) {
         // Check if the touch target is within a button or interactive element
         const target = e.target as HTMLElement;
         const isButton = target.closest("button");
@@ -358,19 +404,21 @@ export function DataTable<TData, TValue>({
   );
 
   function handleTouchStart() {
-    isTap = true;
-    tapTimeout = setTimeout(() => {
-      isTap = false;
+    tapStateRef.current.isTap = true;
+    tapStateRef.current.tapTimeout = setTimeout(() => {
+      tapStateRef.current.isTap = false;
     }, 500);
   }
 
   function handleTouchMove() {
-    isTap = false;
+    tapStateRef.current.isTap = false;
   }
 
   function handleTouchCancel() {
-    clearTimeout(tapTimeout);
-    isTap = false;
+    if (tapStateRef.current.tapTimeout) {
+      clearTimeout(tapStateRef.current.tapTimeout);
+    }
+    tapStateRef.current.isTap = false;
   }
 
   return (
@@ -415,6 +463,7 @@ export function DataTable<TData, TValue>({
           )}
           data-testid="data-table"
           role="table"
+          onKeyDown={handleTableKeyDown}
         >
           {showHeader && (
             <div>
@@ -506,6 +555,7 @@ export function DataTable<TData, TValue>({
                       onTouchEnd={(e) => handleRowTap(e, row)}
                       onTouchCancel={handleTouchCancel}
                       onContextMenu={(e) => handleClicks(e, row)}
+                      onKeyDown={(e) => handleRowKeyDown(e, row)}
                     />
                   </Fragment>
                 ))

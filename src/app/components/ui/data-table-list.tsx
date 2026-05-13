@@ -322,6 +322,60 @@ export function DataTableList<TData, TValue>({
     [handlePlaySong],
   );
 
+  const handleRowKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>, row: Row<TData>) => {
+      if (e.key === "Enter" && handlePlaySong) {
+        e.preventDefault();
+        e.stopPropagation();
+        handlePlaySong(row);
+      }
+    },
+    [handlePlaySong],
+  );
+
+  const handleTableKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+      if (e.defaultPrevented) return;
+
+      const activeElement = document.activeElement;
+      if (!activeElement) return;
+
+      const currentRow = activeElement.closest<HTMLElement>(
+        "[data-row-index]",
+      );
+      if (!currentRow) return;
+
+      const currentIndex = Number(currentRow.getAttribute("data-row-index"));
+      if (Number.isNaN(currentIndex)) return;
+
+      const nextIndex =
+        e.key === "ArrowUp" ? currentIndex - 1 : currentIndex + 1;
+      if (nextIndex < 0 || nextIndex >= rows.length) return;
+
+      e.preventDefault();
+
+      virtualizer.scrollToIndex(nextIndex, { align: "center" });
+
+      let attempts = 0;
+      const tryFocus = () => {
+        const tableContainer = tableContainerRef.current;
+        if (!tableContainer) return;
+        const nextRow = tableContainer.querySelector<HTMLElement>(
+          `[data-row-index="${nextIndex}"]`,
+        );
+        if (nextRow) {
+          nextRow.focus();
+        } else if (attempts < 10) {
+          attempts++;
+          requestAnimationFrame(tryFocus);
+        }
+      };
+      requestAnimationFrame(tryFocus);
+    },
+    [rows.length, virtualizer],
+  );
+
   const handleScroll = useCallback(() => {
     if (!virtualizer.scrollElement || !hasNextPage || !fetchNextPage) return;
 
@@ -366,6 +420,7 @@ export function DataTableList<TData, TValue>({
         className="relative w-full h-full overflow-hidden cursor-default caption-bottom text-sm bg-transparent"
         data-testid="data-table"
         role="table"
+        onKeyDown={handleTableKeyDown}
       >
         <div className={clsx(!showHeader && "hidden")}>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -412,6 +467,7 @@ export function DataTableList<TData, TValue>({
                     handleClicks={handleClicks}
                     handleRowDbClick={handleRowDbClick}
                     handleRowTap={handleRowTap}
+                    handleRowKeyDown={handleRowKeyDown}
                     getContextMenuOptions={getContextMenuOptions}
                     dataType={dataType}
                     pageType={pageType}
