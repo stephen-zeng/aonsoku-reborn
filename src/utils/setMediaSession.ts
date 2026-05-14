@@ -401,6 +401,7 @@ function setHandlers() {
       );
       const state = usePlayerStore.getState();
       if (
+        state.settings.pip.acceptBrowserPipRequest &&
         !state.playerState.pipWindowOpen &&
         "documentPictureInPicture" in window
       ) {

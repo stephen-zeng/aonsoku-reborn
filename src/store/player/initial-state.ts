@@ -171,6 +171,14 @@ export function createInitialSettings(set: SetFn): IPlayerContext["settings"] {
         });
       },
     },
+    pip: {
+      acceptBrowserPipRequest: false,
+      setAcceptBrowserPipRequest: (value: boolean) => {
+        set((state) => {
+          state.settings.pip.acceptBrowserPipRequest = value;
+        });
+      },
+    },
   };
 }
 

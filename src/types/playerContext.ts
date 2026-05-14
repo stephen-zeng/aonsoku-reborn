@@ -180,6 +180,11 @@ interface IHapticSettings {
   setHapticFeedbackEnabled: (value: boolean) => void;
 }
 
+interface IPipSettings {
+  acceptBrowserPipRequest: boolean;
+  setAcceptBrowserPipRequest: (value: boolean) => void;
+}
+
 export interface IPlayerSettings {
   volume: IVolumeSettings;
   fullscreen: IFullscreen;
@@ -189,6 +194,7 @@ export interface IPlayerSettings {
   privacy: IPrivacySettings;
   colors: IColorsSettings;
   hapticFeedback: IHapticSettings;
+  pip: IPipSettings;
 }
 
 export interface IRemoteControlState {

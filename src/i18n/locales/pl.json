@@ -600,6 +600,14 @@
           "label": "Enable haptic feedback"
         },
         "group": "Haptic Feedback"
+      },
+      "pip": {
+        "group": "Picture-in-Picture",
+        "description": "Control how the app responds to picture-in-picture requests from the browser.",
+        "acceptBrowserRequest": {
+          "label": "Accept browser PiP requests",
+          "info": "When enabled, the app will respond to picture-in-picture requests from the browser. When disabled, the mini-player can only be opened manually via the PiP button."
+        }
       }
     },
     "content": {

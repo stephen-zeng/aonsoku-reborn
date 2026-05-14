@@ -724,6 +724,9 @@ export const useLyricsSettings = () =>
 export const useHapticSettings = () =>
   usePlayerStore((state) => state.settings.hapticFeedback);
 
+export const usePipSettings = () =>
+  usePlayerStore((state) => state.settings.pip);
+
 export const usePlayerSettings = () =>
   usePlayerStore((state) => state.settings);
 
