@@ -16,7 +16,7 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install
-      - run: pnpm test --browser electron --headed
+      - run: pnpm test --browser electron --headed --config video=false
       - name: Upload screenshots
         if: failure()
         uses: actions/upload-artifact@v4
