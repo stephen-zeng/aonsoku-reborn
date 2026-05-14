@@ -1,6 +1,8 @@
 import type { Draft } from "immer";
 import type { IPlayerContext, IPlayerState } from "@/types/playerContext";
 import { LoopState } from "@/types/playerContext";
+import { setCustomLyricsBody } from "@/service/lyrics";
+import { logger } from "@/utils/logger";
 import { initSonglistState } from "./queue-utils";
 
 export const initialPlayerState: IPlayerState = {
@@ -106,6 +108,19 @@ export function createInitialSettings(set: SetFn): IPlayerContext["settings"] {
         set((state) => {
           state.settings.lyrics.customServerPassword = value;
         });
+      },
+      selectedCustomLyrics: {},
+      setSelectedCustomLyrics: (songKey, selection) => {
+        const { lyrics: body, ...meta } = selection;
+        set((state) => {
+          state.settings.lyrics.selectedCustomLyrics ||= {};
+          state.settings.lyrics.selectedCustomLyrics[songKey] = meta;
+        });
+        if (body) {
+          setCustomLyricsBody(songKey, body).catch((err) => {
+            logger.warn("[player] Failed to persist custom lyrics body:", err);
+          });
+        }
       },
     },
     replayGain: {

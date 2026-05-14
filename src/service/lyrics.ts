@@ -1,7 +1,8 @@
-import { get, set } from "idb-keyval";
+import { createStore, del, get, set } from "idb-keyval";
 import { httpClient } from "@/api/httpClient";
 import { usePlayerStore } from "@/store/player.store";
-import type { LyricsSource } from "@/types/playerContext";
+import { idbSetWithRetry } from "@/store/idb";
+import type { LyricsSource, SelectedCustomLyrics } from "@/types/playerContext";
 import type {
   ILyric,
   IStructuredLyric,
@@ -9,9 +10,56 @@ import type {
   LyricsResponse,
 } from "@/types/responses/song";
 import { lrclibClient } from "@/utils/appName";
+import { logger } from "@/utils/logger";
 import { checkServerType } from "@/utils/servers";
 
-interface GetLyricsData {
+export const CUSTOM_LYRICS_IDB_PREFIX = "custom-lyrics:";
+
+const customLyricsStore = createStore(
+  "aonsoku-cache",
+  "custom-lyrics",
+);
+
+export async function getCustomLyricsBody(
+  songKey: string,
+): Promise<string | undefined> {
+  try {
+    return await get<string>(
+      `${CUSTOM_LYRICS_IDB_PREFIX}${songKey}`,
+      customLyricsStore,
+    );
+  } catch (err) {
+    logger.warn("[lyrics] Failed to read custom lyrics body from IDB:", err);
+    return undefined;
+  }
+}
+
+export function setCustomLyricsBody(
+  songKey: string,
+  lyrics: string,
+): Promise<void> {
+  return idbSetWithRetry(
+    `${CUSTOM_LYRICS_IDB_PREFIX}${songKey}`,
+    lyrics,
+    customLyricsStore,
+  );
+}
+
+export function deleteCustomLyricsBodies(
+  songKeys: string[],
+): Promise<void[]> {
+  return Promise.all(
+    songKeys.map((key) =>
+      del(`${CUSTOM_LYRICS_IDB_PREFIX}${key}`, customLyricsStore).catch(
+        (err) => {
+          logger.warn("[lyrics] Failed to delete custom lyrics body:", err);
+        },
+      ),
+    ),
+  );
+}
+
+export interface GetLyricsData {
   artist: string;
   title: string;
   album?: string;
@@ -19,11 +67,23 @@ interface GetLyricsData {
   path?: string;
 }
 
-interface CustomLyricsResponseItem {
+export interface CustomLyricsSearchData {
+  artist?: string;
+  title?: string;
+}
+
+export interface CustomLyricsCandidate {
   id?: string;
   title?: string;
   artist?: string;
   lyrics?: string;
+}
+
+export function getSelectedCustomLyrics(
+  selectedLyrics: Record<string, SelectedCustomLyrics> | undefined,
+  songKey: string,
+) {
+  return selectedLyrics?.[songKey];
 }
 
 interface LRCLibResponse {
@@ -42,6 +102,10 @@ async function getLyrics(getLyricsData: GetLyricsData) {
     lyricsSettings.customServerEnabled,
     lyricsSettings.customServerUrl,
   );
+  const selectedCustomLyrics = getSelectedCustomLyrics(
+    lyricsSettings.selectedCustomLyrics,
+    getCustomLyricsSongKey(getLyricsData),
+  );
 
   const cacheKey = getLyricsCacheKey(
     getLyricsData,
@@ -49,6 +113,7 @@ async function getLyrics(getLyricsData: GetLyricsData) {
     sourcePriority,
     lyricsSettings.customServerEnabled,
     lyricsSettings.customServerUrl,
+    selectedCustomLyrics?.key,
   );
 
   const cachedLyrics = await get(cacheKey);
@@ -167,6 +232,22 @@ async function getLyricsFromCustomServer(
   const { customServerEnabled, customServerUrl, customServerPassword } =
     usePlayerStore.getState().settings.lyrics;
   const { artist, title, album, duration, path } = getLyricsData;
+  const songKey = getCustomLyricsSongKey(getLyricsData);
+  const selectedCustomLyrics = getSelectedCustomLyrics(
+    usePlayerStore.getState().settings.lyrics.selectedCustomLyrics,
+    songKey,
+  );
+
+  if (selectedCustomLyrics?.key) {
+    const body = await getCustomLyricsBody(songKey);
+    if (body) {
+      return {
+        artist: selectedCustomLyrics.artist || artist,
+        title: selectedCustomLyrics.title || title,
+        value: formatLyrics(body),
+      };
+    }
+  }
 
   if (!customServerEnabled || !customServerUrl.trim()) {
     return { artist, title, value: "" };
@@ -174,8 +255,8 @@ async function getLyricsFromCustomServer(
 
   try {
     const url = new URL(customServerUrl.trim());
-    url.searchParams.set("title", title);
-    url.searchParams.set("artist", artist);
+    if (title) url.searchParams.set("title", title);
+    if (artist) url.searchParams.set("artist", artist);
     if (album) url.searchParams.set("album", album);
     if (duration) url.searchParams.set("duration", duration.toString());
     if (path) url.searchParams.set("path", path);
@@ -195,13 +276,23 @@ async function getLyricsFromCustomServer(
 
     const contentType = request.headers.get("content-type") || "";
     if (contentType.includes("application/json")) {
-      const response = (await request.json()) as CustomLyricsResponseItem[];
-      const item = response.find((candidate) => candidate.lyrics?.trim());
+      const response = (await request.json()) as CustomLyricsCandidate[];
+      const candidates = Array.isArray(response)
+        ? response.filter((candidate) => candidate.lyrics?.trim())
+        : [];
+      if (!candidates.length) return { artist, title, value: "" };
+
+      const item =
+        candidates.find(
+          (candidate, index) =>
+            getCustomLyricsCandidateKey(candidate, index) ===
+            selectedCustomLyrics?.key,
+        ) ?? candidates[0];
 
       return {
-        artist: item?.artist || artist,
-        title: item?.title || title,
-        value: item?.lyrics ? formatLyrics(item.lyrics) : "",
+        artist: item.artist || artist,
+        title: item.title || title,
+        value: item.lyrics ? formatLyrics(item.lyrics) : "",
       };
     }
 
@@ -217,6 +308,60 @@ async function getLyricsFromCustomServer(
   }
 }
 
+async function getCustomLyricsCandidates(
+  getLyricsData: CustomLyricsSearchData,
+): Promise<CustomLyricsCandidate[]> {
+  const { customServerEnabled, customServerUrl, customServerPassword } =
+    usePlayerStore.getState().settings.lyrics;
+  const { artist, title } = getLyricsData;
+
+  if (!customServerEnabled || !customServerUrl.trim()) return [];
+
+  try {
+    const headers = new Headers();
+    if (customServerPassword) {
+      headers.set("Authorization", customServerPassword);
+    }
+
+    const url = new URL(customServerUrl.trim());
+    if (title?.trim()) url.searchParams.set("title", title.trim());
+    if (artist?.trim()) url.searchParams.set("artist", artist.trim());
+
+    const request = await fetch(url.toString(), { headers });
+
+    if (!request.ok) return [];
+
+    const contentType = request.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) return [];
+
+    const response = (await request.json()) as CustomLyricsCandidate[];
+    if (!Array.isArray(response)) return [];
+
+    return response.filter((candidate) => candidate.lyrics?.trim());
+  } catch {
+    return [];
+  }
+}
+
+export function getCustomLyricsSongKey(getLyricsData: GetLyricsData) {
+  return [
+    getLyricsData.path || "",
+    getLyricsData.artist,
+    getLyricsData.title,
+    getLyricsData.album || "",
+  ].join("\u001f");
+}
+
+export function getCustomLyricsCandidateKey(
+  candidate: CustomLyricsCandidate,
+  index: number,
+) {
+  return (
+    candidate.id ||
+    `${index}:${candidate.artist || ""}:${candidate.title || ""}`
+  );
+}
+
 function formatLyrics(lyrics: string) {
   return lyrics.trim().replaceAll("\r\n", "\n");
 }
@@ -227,6 +372,7 @@ function getLyricsCacheKey(
   sourcePriority: LyricsSource[],
   customServerEnabled: boolean,
   customServerUrl: string,
+  selectedCustomLyricsKey?: string,
 ) {
   const { artist, title, album, duration, path } = getLyricsData;
 
@@ -246,6 +392,7 @@ function getLyricsCacheKey(
     type,
     sourcePriority.join(","),
     customServerKey,
+    selectedCustomLyricsKey || "auto",
   ].join(":");
 }
 
@@ -254,9 +401,7 @@ function getEnabledLyricsSources(
   customServerEnabled: boolean,
   customServerUrl: string,
 ) {
-  const configuredSources = Array.isArray(sourcePriority)
-    ? sourcePriority
-    : [];
+  const configuredSources = Array.isArray(sourcePriority) ? sourcePriority : [];
   const sources = configuredSources.filter(isLyricsSource);
 
   for (const source of ["navidrome", "lrclib", "custom"] as const) {
@@ -327,5 +472,8 @@ export const lyrics = {
   getLyrics,
   getLyricsFromLRCLib,
   getLyricsFromCustomServer,
+  getCustomLyricsCandidates,
+  getCustomLyricsSongKey,
+  getCustomLyricsCandidateKey,
   getStructuredLyrics,
 };

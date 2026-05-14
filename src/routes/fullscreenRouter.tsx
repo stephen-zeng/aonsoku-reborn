@@ -11,7 +11,12 @@ import { PLAYER_SEARCH_PARAM } from "@/routes/routesList";
 import { usePlayerStore } from "@/store/player.store";
 import type { FullscreenPlayerTab } from "@/types/playerContext";
 
-const VALID_TABS: ReadonlySet<string> = new Set(["playing", "lyrics", "queue"]);
+const VALID_TABS: ReadonlySet<string> = new Set([
+  "playing",
+  "lyrics",
+  "queue",
+  "customLyrics",
+]);
 const FULLSCREEN_HISTORY_STATE_KEY = "__fullscreenPlayerHistory";
 
 type FullscreenHistoryStep = "root" | "detail";
@@ -25,14 +30,12 @@ type FullscreenHistoryState = {
 type FullscreenNavState = {
   navigate: NavigateFunction | null;
   isMobile: boolean;
-  searchParams: URLSearchParams;
   locationState: unknown;
 };
 
 const navState: FullscreenNavState = {
   navigate: null,
   isMobile: false,
-  searchParams: new URLSearchParams(),
   locationState: null,
 };
 
@@ -299,9 +302,8 @@ export function FullscreenPlayerRouter() {
 
   useEffect(() => {
     navState.isMobile = isMobile;
-    navState.searchParams = new URLSearchParams(searchParams.toString());
     navState.locationState = location.state;
-  }, [isMobile, location.state, searchParams]);
+  }, [isMobile, location.state]);
 
   useEffect(() => {
     setFullscreenNavigator(navigate);

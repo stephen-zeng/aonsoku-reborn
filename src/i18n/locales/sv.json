@@ -133,7 +133,8 @@
     "queueFromSource": "Från {{source}}",
     "queueHistory": "Historik",
     "queueRepeating": "Upprepar",
-    "switchButton": "Byt till storspelare"
+    "switchButton": "Byt till storspelare",
+    "selectLyrics": "Välj text"
   },
   "generic": {
     "beta": "Beta",
@@ -1058,5 +1059,22 @@
   "warnings": {
     "reload": "Det är en låt som spelas!\nÄr du säker på att du vill ladda om sidan?",
     "songError": "Det går inte att spela låten, kontrollera servern!"
+  },
+  "lyrics": {
+    "customSelect": {
+      "title": "Välj text",
+      "subtitle": "{{title}} av {{artist}}",
+      "noSong": "Ingen låt spelas.",
+      "serverDisabled": "Anpassad textserver är inte aktiverad.",
+      "empty": "Inga anpassade textkandidater hittades.",
+      "searchTitle": "Låttitel",
+      "searchArtist": "Artist",
+      "search": "Sök",
+      "select": "Välj",
+      "selected": "Vald",
+      "currentSelection": "Aktuellt val: {{title}} av {{artist}}",
+      "lyricsId": "ID: {{id}}",
+      "noPreview": "Ingen förhandsvisning tillgänglig."
+    }
   }
 }

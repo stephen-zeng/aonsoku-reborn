@@ -133,7 +133,8 @@
     "queueFromSource": "Z {{source}}",
     "queueHistory": "Historie",
     "queueRepeating": "Opakování",
-    "switchButton": "Přepnout na velký přehrávač"
+    "switchButton": "Přepnout na velký přehrávač",
+    "selectLyrics": "Vybrat text"
   },
   "generic": {
     "beta": "Beta",
@@ -1066,5 +1067,22 @@
   "warnings": {
     "reload": "Právě se přehrává skladba!\nOpravdu chcete znovu načíst stránku?",
     "songError": "Nelze přehrát skladbu, zkontrolujte server!"
+  },
+  "lyrics": {
+    "customSelect": {
+      "title": "Vybrat text",
+      "subtitle": "{{title}} od {{artist}}",
+      "noSong": "Nepřehrává se žádná skladba.",
+      "serverDisabled": "Vlastní server textů není povolen.",
+      "empty": "Nebyly nalezeny žádné vlastní kandidátní texty.",
+      "searchTitle": "Název skladby",
+      "searchArtist": "Interpret",
+      "search": "Hledat",
+      "select": "Vybrat",
+      "selected": "Vybráno",
+      "currentSelection": "Aktuální výběr: {{title}} od {{artist}}",
+      "lyricsId": "ID: {{id}}",
+      "noPreview": "Náhled není k dispozici."
+    }
   }
 }

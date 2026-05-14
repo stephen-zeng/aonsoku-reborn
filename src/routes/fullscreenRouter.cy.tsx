@@ -50,6 +50,9 @@ function FullscreenHistoryHarness() {
       <button onClick={() => setFullscreenTabWithHistory("playing")}>
         tab-playing
       </button>
+      <button onClick={() => setFullscreenTabWithHistory("customLyrics")}>
+        tab-customLyrics
+      </button>
       <button onClick={() => navigate(-1)}>go-back</button>
     </div>
   );
@@ -140,5 +143,45 @@ describe("fullscreenRouter mobile history", () => {
     cy.get('button[aria-label="Close"]').click();
 
     cy.getByTestId("fullscreen-open").should("have.text", "closed");
+  });
+
+  it("navigates to customLyrics tab and back to playing", () => {
+    cy.contains("open-playing").click();
+
+    cy.contains("tab-customLyrics").click();
+
+    cy.getByTestId("location-search").should(
+      "have.text",
+      "?foo=bar&player=customLyrics",
+    );
+    cy.getByTestId("fullscreen-tab").should("have.text", "customLyrics");
+
+    cy.contains("go-back").click();
+
+    cy.getByTestId("location-search").should(
+      "have.text",
+      "?foo=bar&player=playing",
+    );
+    cy.getByTestId("fullscreen-tab").should("have.text", "playing");
+  });
+
+  it("collapses customLyrics tab changes into a single back step", () => {
+    cy.contains("open-playing").click();
+    cy.contains("tab-lyrics").click();
+    cy.contains("tab-customLyrics").click();
+
+    cy.getByTestId("location-search").should(
+      "have.text",
+      "?foo=bar&player=customLyrics",
+    );
+    cy.getByTestId("fullscreen-tab").should("have.text", "customLyrics");
+
+    cy.contains("go-back").click();
+
+    cy.getByTestId("location-search").should(
+      "have.text",
+      "?foo=bar&player=playing",
+    );
+    cy.getByTestId("fullscreen-tab").should("have.text", "playing");
   });
 });
