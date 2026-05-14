@@ -461,7 +461,7 @@ function UnifiedQueueView({
             <div
               className={cn(
                 FULLSCREEN_QUEUE_BG_CLASS,
-                "sticky top-0 z-10 flex items-center justify-between py-1",
+                "sticky top-0 z-10 flex items-center justify-between px-2 py-1",
               )}
             >
               <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
@@ -603,7 +603,7 @@ function UnifiedQueueView({
                 >
                   {!hideModeButtons && <QueueModeButtons />}
                   <div
-                    className={`flex items-center justify-between ${hideModeButtons ? "pt-1" : "pt-3"}`}
+                    className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
                   >
                     <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
                       {t("fullscreen.queueContinue")}
@@ -1024,7 +1024,7 @@ function VirtualizedQueueView({
                         )}
 
                         {item.type === "queueHeader" && (
-                          <div className="flex items-center justify-between px-1 py-1">
+                          <div className="flex items-center justify-between px-2 py-1">
                             <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
                               Queue
                             </h3>
@@ -1209,7 +1209,7 @@ function UserQueueSection({
           <div
             className={cn(
               sticky && `${FULLSCREEN_QUEUE_BG_CLASS} sticky top-0 z-10`,
-              "flex items-center justify-between py-1",
+              "flex items-center justify-between px-2 py-1",
             )}
           >
             <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
