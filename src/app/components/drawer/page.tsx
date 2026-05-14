@@ -39,7 +39,7 @@ export function MainDrawerPage() {
     <div
       className={cn(
         "fixed top-[--header-height] right-0 bottom-[calc(var(--player-height)+var(--bottom-nav-height))] w-[--right-panel-width] z-30",
-        "border-l bg-background-foreground",
+        "border-l bg-background",
         "transition-transform duration-300 ease-in-out",
         "hidden lg:flex flex-col",
         mainDrawerState
