@@ -355,6 +355,7 @@ export function DataTable<TData, TValue>({
     rows,
     tableContainerRef: tableRef,
     setLastRowSelected,
+    lastRowSelected,
     allowRowSelection,
   });
 

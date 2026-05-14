@@ -284,7 +284,8 @@ export function DataTableList<TData, TValue>({
     (row: Row<TData>) => {
       if (!allowRowSelection) return;
 
-      const hasSelectedRows = tableRef.current.getSelectedRowModel().rows.length > 0;
+      const hasSelectedRows =
+        tableRef.current.getSelectedRowModel().rows.length > 0;
       const isSelected = row.getIsSelected();
 
       if (hasSelectedRows && !isSelected) {
@@ -365,6 +366,7 @@ export function DataTableList<TData, TValue>({
     rows,
     tableContainerRef,
     setLastRowSelected,
+    lastRowSelected,
     allowRowSelection,
     virtualizer,
   });

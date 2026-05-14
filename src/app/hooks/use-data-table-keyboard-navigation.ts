@@ -1,15 +1,40 @@
 import { Row, Table } from "@tanstack/react-table";
-import { useCallback } from "react";
+import { useCallback, type RefObject } from "react";
+import { computeMultiSelectedRows } from "@/utils/dataTable";
 
 interface UseDataTableKeyboardNavigationProps<TData> {
   table: Table<TData>;
   rows: Row<TData>[];
-  tableContainerRef: React.RefObject<HTMLDivElement | null>;
+  tableContainerRef: RefObject<HTMLDivElement | null>;
   setLastRowSelected: (index: number | null) => void;
+  lastRowSelected: number | null;
   allowRowSelection?: boolean;
   virtualizer?: {
-    scrollToIndex: (index: number, options?: { align: "start" | "center" | "end" | "auto" }) => void;
+    scrollToIndex: (
+      index: number,
+      options?: { align: "start" | "center" | "end" | "auto" },
+    ) => void;
   };
+}
+
+function applyRowSelection(
+  table: Table<unknown>,
+  rows: Row<unknown>[],
+  nextIndex: number,
+  lastRowSelected: number | null,
+  shiftKey: boolean,
+  setLastRowSelected: (index: number | null) => void,
+) {
+  const rowIndex = rows[nextIndex].index;
+
+  if (shiftKey && lastRowSelected !== null) {
+    table.setRowSelection(
+      computeMultiSelectedRows(lastRowSelected, rowIndex),
+    );
+  } else {
+    table.setRowSelection({ [rowIndex]: true });
+    setLastRowSelected(rowIndex);
+  }
 }
 
 export function useDataTableKeyboardNavigation<TData>({
@@ -17,6 +42,7 @@ export function useDataTableKeyboardNavigation<TData>({
   rows,
   tableContainerRef,
   setLastRowSelected,
+  lastRowSelected,
   allowRowSelection = true,
   virtualizer,
 }: UseDataTableKeyboardNavigationProps<TData>) {
@@ -28,13 +54,17 @@ export function useDataTableKeyboardNavigation<TData>({
       const activeElement = document.activeElement;
       if (!activeElement) return;
 
-      const currentRow = activeElement.closest<HTMLElement>("[data-row-index]");
+      const currentRow =
+        activeElement.closest<HTMLElement>("[data-row-index]");
       if (!currentRow) return;
 
-      const currentIndex = Number(currentRow.getAttribute("data-row-index"));
+      const currentIndex = Number(
+        currentRow.getAttribute("data-row-index"),
+      );
       if (Number.isNaN(currentIndex)) return;
 
-      const nextIndex = e.key === "ArrowUp" ? currentIndex - 1 : currentIndex + 1;
+      const nextIndex =
+        e.key === "ArrowUp" ? currentIndex - 1 : currentIndex + 1;
       if (nextIndex < 0 || nextIndex >= rows.length) return;
 
       e.preventDefault();
@@ -52,8 +82,14 @@ export function useDataTableKeyboardNavigation<TData>({
           if (nextRow) {
             nextRow.focus();
             if (allowRowSelection) {
-              table.setRowSelection({ [rows[nextIndex].index]: true });
-              setLastRowSelected(rows[nextIndex].index);
+              applyRowSelection(
+                table as unknown as Table<unknown>,
+                rows as unknown as Row<unknown>[],
+                nextIndex,
+                lastRowSelected,
+                e.shiftKey,
+                setLastRowSelected,
+              );
             }
           } else if (attempts < 10) {
             attempts++;
@@ -71,13 +107,27 @@ export function useDataTableKeyboardNavigation<TData>({
         if (nextRow) {
           nextRow.focus();
           if (allowRowSelection) {
-            table.setRowSelection({ [rows[nextIndex].index]: true });
-            setLastRowSelected(rows[nextIndex].index);
+            applyRowSelection(
+              table as unknown as Table<unknown>,
+              rows as unknown as Row<unknown>[],
+              nextIndex,
+              lastRowSelected,
+              e.shiftKey,
+              setLastRowSelected,
+            );
           }
         }
       }
     },
-    [allowRowSelection, rows, table, tableContainerRef, setLastRowSelected, virtualizer],
+    [
+      allowRowSelection,
+      rows,
+      table,
+      tableContainerRef,
+      setLastRowSelected,
+      lastRowSelected,
+      virtualizer,
+    ],
   );
 
   return { handleTableKeyDown };
