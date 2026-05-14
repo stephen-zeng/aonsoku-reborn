@@ -9,8 +9,17 @@ import {
   usePlayerRef,
 } from "@/store/player.store";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
+import { cn } from "@/lib/utils";
 
-export function MiniPlayerProgress() {
+interface MiniPlayerProgressProps {
+  showTime?: boolean;
+  className?: string;
+}
+
+export function MiniPlayerProgress({
+  showTime = true,
+  className,
+}: MiniPlayerProgressProps) {
   const progress = usePlayerProgress();
   const bufferedProgress = usePlayerBufferedProgress();
   const audioPlayerRef = usePlayerRef();
@@ -39,16 +48,18 @@ export function MiniPlayerProgress() {
   );
 
   return (
-    <div className="flex items-center flex-col">
-      <div className="w-full flex justify-between text-foreground/70">
-        <div className="min-w-[40px] text-left text-[11px] font-light drop-shadow-md">
-          {currentTime}
-        </div>
+    <div className={cn("flex items-center flex-col w-full", className)}>
+      {showTime && (
+        <div className="w-full flex justify-between text-foreground/70">
+          <div className="min-w-[40px] text-left text-[11px] font-light drop-shadow-md">
+            {currentTime}
+          </div>
 
-        <div className="min-w-[40px] text-right text-[11px] font-light drop-shadow-md">
-          {songDuration}
+          <div className="min-w-[40px] text-right text-[11px] font-light drop-shadow-md">
+            {songDuration}
+          </div>
         </div>
-      </div>
+      )}
 
       <Slider
         variant="secondary"
@@ -58,7 +69,7 @@ export function MiniPlayerProgress() {
         value={isLocalSeeking ? [localProgress] : [progress]}
         max={currentDuration}
         step={1}
-        className="w-full h-4"
+        className={cn("w-full", showTime ? "h-4" : "h-3")}
         onValueChange={([value]) => handleSeeking(value)}
         onValueCommit={([value]) => handleSeeked(value)}
       />

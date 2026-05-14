@@ -1,8 +1,10 @@
 import clsx from "clsx";
+import { Volume2 } from "lucide-react";
 import { memo } from "react";
 import { ResizeHandler } from "@/app/components/icons/resize-handler";
 import { useSongColor } from "@/store/player.store";
 import { MiniPlayerControls, MiniPlayerLikeButton } from "./controls";
+import { MiniPlayerPopoverVolume } from "./popover-volume";
 import { MiniPlayerProgress } from "./progress";
 import { MiniPlayerSongImage } from "./song-image";
 import { MiniPlayerSongTitle } from "./song-title";
@@ -19,28 +21,30 @@ export function MiniPlayer() {
   const { currentSongColor } = useSongColor();
 
   return (
-    <div className="w-screen h-screen max-h-screen grid grid-rows-1 mid-player:grid-rows-floating-player gap-2 mid-player:gap-1 p-1 mid-player:p-2 mini-player:p-1.5 pb-4 mid-player:pb-4 relative">
+    <div className="w-screen h-screen max-h-screen grid grid-rows-1 mid-player:grid-rows-[auto_auto_auto] gap-2 mid-player:gap-1 p-1 mid-player:p-2 mini-player:p-1.5 pb-4 mid-player:pb-4 relative">
       <div
         className={clsx(
           "w-full h-full gap-2 grid grid-rows-floating-player",
           "mid-player:grid-rows-1 mid-player:grid-cols-mid-player-info mid-player:items-center",
-          "mini-player:grid-rows-1 mini-player:grid-cols-mini-player mini-player:items-center",
+          "mini-player:flex mini-player:gap-2 mini-player:items-center",
+          "group",
         )}
       >
         <div
           className={clsx(
-            "w-full h-full mid-player:aspect-square mini-player:aspect-square",
+            "w-full h-full mid-player:aspect-square",
             "flex flex-col items-center justify-center gap-2",
             "default-gradient rounded-md mini-player:rounded",
             "transition-[background-image,background-color] duration-1000 overflow-hidden",
             "mid-player:!bg-transparent mid-player:from-transparent mid-player:to-transparent",
             "mini-player:!bg-transparent mini-player:from-transparent mini-player:to-transparent",
+            "mini-player:w-10 mini-player:h-10 mini-player:shrink-0",
           )}
           style={{ backgroundColor: currentSongColor ?? undefined }}
         >
           <div
             className={clsx(
-              "flex w-full h-full relative p-3 justify-center items-center group bg-transparent",
+              "flex w-full h-full relative p-3 justify-center items-center bg-transparent",
               "mid-player:min-h-fit mid-player:max-h-full mid-player:p-0 mid-player:aspect-square",
               "mini-player:min-h-fit mini-player:max-h-full mini-player:p-0 mini-player:aspect-square",
             )}
@@ -71,17 +75,31 @@ export function MiniPlayer() {
           className={clsx(
             "min-w-12 h-12 flex items-center justify-between pb-2 pl-1 mini-player:h-10",
             "mid-player:pl-0 mini-player:pl-0 mid-player:pb-0 mini-player:pb-0.5 mid-player:flex-1",
+            "mini-player:flex-1 mini-player:min-w-0",
           )}
         >
           <MemoMiniPlayerSongTitle />
-          <MemoMiniPlayerLikeButton />
+          <div className="mid-player:hidden">
+            <MemoMiniPlayerLikeButton />
+          </div>
         </div>
-        <div className="hidden mini-player:flex">
+        <div className="hidden mini-player:group-hover-supported:flex mini-player:w-16 mini-player:shrink-0">
           <MemoMiniPlayerControls />
         </div>
       </div>
-      <div className="hidden mid-player:flex justify-center items-center h-10 max-h-10">
+      <div className="hidden mid-player:flex mid-player:items-center mid-player:px-2 mid-player:h-6">
+        <MemoMiniPlayerProgress showTime={false} />
+      </div>
+      <div className="hidden mid-player:flex justify-center items-center h-10 max-h-10 relative px-2">
+        <div className="absolute left-2">
+          <MemoMiniPlayerLikeButton />
+        </div>
         <MemoMiniPlayerControls />
+        <div className="absolute right-2">
+          <MiniPlayerPopoverVolume>
+            <Volume2 size={14} />
+          </MiniPlayerPopoverVolume>
+        </div>
       </div>
       <ResizeHandler className="absolute w-5 h-5 bottom-0 right-0 text-foreground/50" />
     </div>

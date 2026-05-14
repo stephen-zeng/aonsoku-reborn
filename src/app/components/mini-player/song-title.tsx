@@ -7,6 +7,7 @@ import { ROUTES } from "@/routes/routesList";
 import { usePlayerCurrentSong } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
+import { MiniPlayerProgress } from "./progress";
 
 export function MiniPlayerSongTitle() {
   const navigate = useNavigate();
@@ -56,6 +57,7 @@ export function MiniPlayerSongTitle() {
           "flex items-center gap-1 w-full",
           "text-xs font-normal text-foreground/70",
           "mini-player:text-[11px] mini-player:font-light",
+          "mini-player:group-hover-supported:hidden",
         )}
       >
         <MarqueeTitle gap="mr-2">
@@ -75,6 +77,9 @@ export function MiniPlayerSongTitle() {
             {displaySubtitle}
           </span>
         </MarqueeTitle>
+      </div>
+      <div className="hidden mini-player:group-hover-supported:block w-full">
+        <MiniPlayerProgress showTime={false} />
       </div>
     </div>
   );
