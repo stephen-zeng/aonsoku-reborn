@@ -25,7 +25,7 @@ export function MiniPlayerSongTitle() {
         <span
           className={cn(
             "text-base font-medium",
-            "mid-player:text-mid-player-title mini-player:text-mini-player-title mini-player:font-normal",
+            "mid-player:text-mid-player-title mini-player:text-mini-player-title",
           )}
           data-testid="track-title"
         >
@@ -37,7 +37,7 @@ export function MiniPlayerSongTitle() {
           "flex items-center gap-1 w-full",
           "text-xs font-normal text-foreground/70",
           "mid-player:text-mid-player-subtitle",
-          "mini-player:text-[11px] mini-player:font-light",
+          "mini-player:text-[11px] mini-player:font-normal",
           "mini-player:group-hover-supported:hidden",
         )}
       >
