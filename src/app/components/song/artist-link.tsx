@@ -26,6 +26,7 @@ export function ArtistLink({
     return (
       <span
         className={cn("truncate", className)}
+        data-testid={props["data-testid"]}
         onClick={props.onClick}
         title={props.title}
       >

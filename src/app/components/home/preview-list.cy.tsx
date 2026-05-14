@@ -107,12 +107,11 @@ describe('PreviewList Component', () => {
         />,
       )
 
-      albums.forEach((_, index) => {
+      albums.slice(0, 6).forEach((_, index) => {
         cy.getByTestId(`preview-list-carousel-item-${index}`).should(
           'have.css',
-          'flex-basis',
-          '20%',
-        )
+          'width',
+        ).and('match', /^2\d{2}px$/)
       })
     })
   })

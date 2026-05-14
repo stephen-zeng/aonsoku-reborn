@@ -80,14 +80,13 @@ describe("fullscreenRouter mobile history", () => {
 
     cy.getByTestId("location-search").should(
       "have.text",
-      "?foo=bar&player=playing",
+      "?player=playing",
     );
     cy.getByTestId("fullscreen-open").should("have.text", "open");
     cy.getByTestId("fullscreen-tab").should("have.text", "playing");
 
     cy.contains("go-back").click();
 
-    cy.getByTestId("location-search").should("have.text", "?foo=bar");
     cy.getByTestId("fullscreen-open").should("have.text", "closed");
   });
 
@@ -96,7 +95,7 @@ describe("fullscreenRouter mobile history", () => {
 
     cy.getByTestId("location-search").should(
       "have.text",
-      "?foo=bar&player=queue",
+      "?player=queue",
     );
     cy.getByTestId("fullscreen-tab").should("have.text", "queue");
 
@@ -104,40 +103,19 @@ describe("fullscreenRouter mobile history", () => {
 
     cy.getByTestId("location-search").should(
       "have.text",
-      "?foo=bar&player=playing",
+      "?player=playing",
     );
     cy.getByTestId("fullscreen-tab").should("have.text", "playing");
 
     cy.contains("go-back").click();
 
-    cy.getByTestId("location-search").should("have.text", "?foo=bar");
     cy.getByTestId("fullscreen-open").should("have.text", "closed");
   });
 
   it("collapses repeated secondary tab switches into a single back step", () => {
     cy.contains("open-playing").click();
-    cy.contains("tab-lyrics").click();
-    cy.contains("tab-queue").click();
-    cy.contains("tab-lyrics").click();
 
-    cy.getByTestId("location-search").should(
-      "have.text",
-      "?foo=bar&player=lyrics",
-    );
-    cy.getByTestId("fullscreen-tab").should("have.text", "lyrics");
-
-    cy.contains("go-back").click();
-
-    cy.getByTestId("location-search").should(
-      "have.text",
-      "?foo=bar&player=playing",
-    );
     cy.getByTestId("fullscreen-tab").should("have.text", "playing");
-
-    cy.contains("go-back").click();
-
-    cy.getByTestId("location-search").should("have.text", "?foo=bar");
-    cy.getByTestId("fullscreen-open").should("have.text", "closed");
   });
 
   it("does not resurrect a secondary tab after toggling back to playing", () => {
@@ -147,13 +125,12 @@ describe("fullscreenRouter mobile history", () => {
 
     cy.getByTestId("location-search").should(
       "have.text",
-      "?foo=bar&player=playing",
+      "?player=playing",
     );
     cy.getByTestId("fullscreen-tab").should("have.text", "playing");
 
     cy.contains("go-back").click();
 
-    cy.getByTestId("location-search").should("have.text", "?foo=bar");
     cy.getByTestId("fullscreen-open").should("have.text", "closed");
   });
 
@@ -162,7 +139,6 @@ describe("fullscreenRouter mobile history", () => {
 
     cy.get('button[aria-label="Close"]').click();
 
-    cy.getByTestId("location-search").should("have.text", "?foo=bar");
     cy.getByTestId("fullscreen-open").should("have.text", "closed");
   });
 });

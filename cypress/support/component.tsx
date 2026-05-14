@@ -26,15 +26,12 @@ import { mount } from 'cypress/react'
 import { MemoryRouter } from 'react-router-dom'
 import { useAppStore } from '@/store/app.store'
 import { AuthType } from '@/types/serverConfig'
+import { useThemeStore } from '@/store/theme.store'
+import { Theme } from '@/types/themeContext'
 import 'cypress-real-events'
 import '@/index.css'
 import '@/fonts.css'
 import '@/i18n'
-
-// Augment the Cypress namespace to include type definitions for
-// your custom command.
-// Alternatively, can be defined in cypress/support/component.d.ts
-// with a <reference path="./component" /> at the top of your spec.
 
 const queryClient = new QueryClient()
 
@@ -47,6 +44,20 @@ useAppStore.setState((state) => ({
     authType: AuthType.TOKEN,
   },
 }))
+
+Cypress.on('uncaught:exception', (err) => {
+  if (err.message.includes('ResizeObserver loop completed with undelivered notifications')) {
+    return false
+  }
+  return true
+})
+
+beforeEach(() => {
+  const theme = useThemeStore.getState().theme || Theme.Dark
+  cy.document().then((doc) => {
+    doc.documentElement.classList.add(theme)
+  })
+})
 
 Cypress.Commands.add('mount', (component, options = {}) => {
   const { routerProps = { initialEntries: ['/'] }, ...mountOptions } = options

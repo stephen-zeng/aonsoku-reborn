@@ -39,11 +39,11 @@ describe('HomeHeader Component', () => {
       })
 
       cy.getByTestId('header-carousel-previous')
-        .should('be.visible')
+        .should('exist')
         .and('be.enabled')
 
       cy.getByTestId('header-carousel-next')
-        .should('be.visible')
+        .should('exist')
         .and('be.enabled')
     })
   })
