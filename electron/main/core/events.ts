@@ -6,6 +6,7 @@ import {
   PlayerStatePayload,
 } from "../../preload/types";
 import { getIsQuitting } from "../index";
+import { setupMiniPlayerIpc } from "../mini-player";
 import { tray, updateTray } from "../tray";
 import { colorsState } from "./colors";
 import {
@@ -81,6 +82,8 @@ export function setupIpcEvents(window: BrowserWindow | null) {
   if (!window) return;
 
   ipcMain.removeAllListeners();
+
+  setupMiniPlayerIpc();
 
   ipcMain.on(IpcChannels.ToggleFullscreen, (_, isFullscreen: boolean) => {
     window.setFullScreen(isFullscreen);

@@ -5,17 +5,25 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import {
+  usePipWindowOpen,
   usePlayerCurrentList,
   usePlayerStore,
-  usePipWindowOpen,
 } from "@/store/player.store";
+import { hasElectronBridge } from "@/utils/desktop";
+import {
+  broadcastState,
+  destroyMiniPlayerSync,
+  handleControlAction,
+  initMiniPlayerSync,
+  listenControlActions,
+} from "@/utils/mini-player-sync";
 import { MiniPlayer } from "./player";
 import { MiniPlayerPortal } from "./portal";
 
 const MemoMiniPlayerPortal = memo(MiniPlayerPortal);
 const MemoMiniPlayer = memo(MiniPlayer);
 
-export function MiniPlayerButton() {
+function MiniPlayerButtonWeb() {
   const { t } = useTranslation();
   const currentList = usePlayerCurrentList();
   const pipWindowOpen = usePipWindowOpen();
@@ -106,4 +114,105 @@ export function MiniPlayerButton() {
       </MemoMiniPlayerPortal>
     </>
   );
+}
+
+function MiniPlayerButtonDesktop() {
+  const { t } = useTranslation();
+  const currentList = usePlayerCurrentList();
+  const pipWindowOpen = usePipWindowOpen();
+  const [isMiniPlayerOpen, setIsMiniPlayerOpen] = useState(false);
+
+  useEffect(() => {
+    if (!hasElectronBridge()) return;
+
+    window.api.isMiniPlayerOpen().then((open) => {
+      setIsMiniPlayerOpen(open);
+    });
+
+    window.api.miniPlayerStatusListener((isOpen: boolean) => {
+      setIsMiniPlayerOpen(isOpen);
+      if (isOpen) {
+        usePlayerStore.getState().actions.openPipWindow();
+      } else {
+        usePlayerStore.getState().actions.closePipWindow();
+      }
+    });
+
+    return () => {
+      window.api.removeMiniPlayerStatusListener();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isMiniPlayerOpen) {
+      initMiniPlayerSync();
+    } else {
+      destroyMiniPlayerSync();
+    }
+
+    return () => {
+      destroyMiniPlayerSync();
+    };
+  }, [isMiniPlayerOpen]);
+
+  useEffect(() => {
+    if (!isMiniPlayerOpen) return;
+
+    const cleanup = listenControlActions(
+      (action, value) => {
+        handleControlAction(action, value);
+      },
+      () => {
+        broadcastState();
+      },
+    );
+
+    return cleanup;
+  }, [isMiniPlayerOpen]);
+
+  const handleClick = useCallback(() => {
+    if (!hasElectronBridge()) return;
+
+    if (pipWindowOpen || isMiniPlayerOpen) {
+      window.api.closeMiniPlayer();
+      usePlayerStore.getState().actions.closePipWindow();
+    } else {
+      window.api.openMiniPlayer();
+      usePlayerStore.getState().actions.openPipWindow();
+    }
+  }, [pipWindowOpen, isMiniPlayerOpen]);
+
+  const disabled = currentList.length === 0;
+
+  const buttonTooltip =
+    pipWindowOpen || isMiniPlayerOpen
+      ? t("player.tooltips.miniPlayer.close")
+      : t("player.tooltips.miniPlayer.open");
+
+  return (
+    <SimpleTooltip text={buttonTooltip}>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={handleClick}
+        className={clsx(
+          "relative rounded-full",
+          (pipWindowOpen || isMiniPlayerOpen) &&
+            "text-primary hover-supported:text-primary player-button-active",
+        )}
+        disabled={disabled}
+        unfocusable
+      >
+        <PictureInPicture2Icon className="w-4 h-4" />
+      </Button>
+    </SimpleTooltip>
+  );
+}
+
+export function MiniPlayerButton() {
+  if (hasElectronBridge()) {
+    return <MiniPlayerButtonDesktop />;
+  }
+
+  return <MiniPlayerButtonWeb />;
 }

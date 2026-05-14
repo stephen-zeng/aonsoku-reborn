@@ -50,6 +50,18 @@ const api: IAonsokuAPI = {
   saveAppSettings: (payload) => {
     ipcRenderer.send(IpcChannels.SaveAppSettings, payload);
   },
+  // Mini Player
+  openMiniPlayer: () => ipcRenderer.send(IpcChannels.OpenMiniPlayer),
+  closeMiniPlayer: () => ipcRenderer.send(IpcChannels.CloseMiniPlayer),
+  isMiniPlayerOpen: () => ipcRenderer.invoke(IpcChannels.IsMiniPlayerOpen),
+  miniPlayerStatusListener: (func) => {
+    ipcRenderer.on(IpcChannels.MiniPlayerStatus, (_, isOpen: boolean) =>
+      func(isOpen),
+    );
+  },
+  removeMiniPlayerStatusListener: () => {
+    ipcRenderer.removeAllListeners(IpcChannels.MiniPlayerStatus);
+  },
   // LAN Control
   lanControl: {
     start: (config) => ipcRenderer.invoke(IpcChannels.LanControlStart, config),

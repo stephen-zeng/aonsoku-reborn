@@ -8,9 +8,10 @@ import { TrackInfo } from "@/app/components/player/track-info";
 import { Button } from "@/app/components/ui/button";
 import { useCachedAudioUrl } from "@/app/hooks/use-cached-audio";
 import { usePlayHistory } from "@/app/hooks/use-play-history";
-import { useScrobble } from "@/app/hooks/use-scrobble";
-import { usePreloadAudio } from "@/app/hooks/use-preload-audio";
 import { usePlayerBreakpoint } from "@/app/hooks/use-player-breakpoint";
+import { usePreloadAudio } from "@/app/hooks/use-preload-audio";
+import { useScrobble } from "@/app/hooks/use-scrobble";
+import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import {
   useIsRemoteControlActive,
   usePlayerActions,
@@ -24,13 +25,12 @@ import {
   useReplayGainState,
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
-import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
-import { hasPiPSupport } from "@/utils/browser";
+import { hasMiniPlayerSupport } from "@/utils/browser";
 import { isValidDuration } from "@/utils/duration";
 import { logger } from "@/utils/logger";
 import {
-  resolveReplayGainParams,
   type ReplayGainParams,
+  resolveReplayGainParams,
 } from "@/utils/replayGain";
 import { AudioPlayer } from "./audio";
 import { PlayerClearQueueButton } from "./clear-queue-button";
@@ -373,7 +373,7 @@ export function Player() {
               disabled={!song && !radio}
             />
 
-            {isSong && hasPiPSupport && <MemoMiniPlayerButton />}
+            {isSong && hasMiniPlayerSupport && <MemoMiniPlayerButton />}
           </div>
         </div>
       </div>

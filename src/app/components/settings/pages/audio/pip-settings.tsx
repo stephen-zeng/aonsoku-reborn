@@ -12,11 +12,16 @@ import {
 } from "@/app/components/settings/section";
 import { Switch } from "@/app/components/ui/switch";
 import { usePipSettings } from "@/store/player.store";
+import { isDesktop } from "@/utils/desktop";
 
 export function PipSettings() {
   const { t } = useTranslation();
   const { acceptBrowserPipRequest, setAcceptBrowserPipRequest } =
     usePipSettings();
+
+  if (isDesktop()) {
+    return null;
+  }
 
   return (
     <Root>
