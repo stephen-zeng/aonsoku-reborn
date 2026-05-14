@@ -55,12 +55,20 @@ function findCurrentLine(
   lines: SyncedLine[],
   currentTimeMs: number,
 ): string | null {
+  let bestLine: SyncedLine | null = null;
+
   for (const line of lines) {
     if (currentTimeMs >= line.startTime && currentTimeMs < line.endTime) {
       return line.text || null;
     }
+    if (line.startTime <= currentTimeMs) {
+      bestLine = line;
+    }
   }
-  return null;
+
+  // Return the closest previous line when no exact match is found
+  // (covers gaps between lyrics, before first line, and after last line)
+  return bestLine?.text || lines[0]?.text || null;
 }
 
 export function useCurrentLyricLine() {
