@@ -21,11 +21,11 @@ export function MiniPlayer() {
   const { currentSongColor } = useSongColor();
 
   return (
-    <div className="w-screen h-screen max-h-screen grid grid-rows-1 mid-player:grid-rows-[auto_auto_auto] gap-2 mid-player:gap-1 p-1 mid-player:p-2 mini-player:p-1.5 pb-4 mid-player:pb-4 relative">
+    <div className="w-screen h-screen max-h-screen grid grid-rows-1 mid-player:grid-rows-[auto_auto_auto] gap-2 mid-player:gap-mid-player-gap p-1 mid-player:p-mid-player-padding mini-player:p-1.5 pb-4 mid-player:pb-4 relative">
       <div
         className={clsx(
           "w-full h-full gap-2 grid grid-rows-floating-player",
-          "mid-player:grid-rows-1 mid-player:grid-cols-mid-player-info mid-player:items-center",
+          "mid-player:grid-rows-1 mid-player:grid-cols-mid-player-info mid-player:items-center mid-player:gap-mid-player-gap",
           "mini-player:flex mini-player:gap-2 mini-player:items-center",
           "group",
         )}
@@ -45,7 +45,7 @@ export function MiniPlayer() {
           <div
             className={clsx(
               "flex w-full h-full relative p-3 justify-center items-center bg-transparent",
-              "mid-player:min-h-fit mid-player:max-h-full mid-player:p-0 mid-player:aspect-square",
+              "mid-player:min-h-fit mid-player:max-h-full mid-player:p-0 mid-player:w-mid-player-image mid-player:h-mid-player-image",
               "mini-player:min-h-fit mini-player:max-h-full mini-player:p-0 mini-player:aspect-square",
             )}
           >
@@ -74,7 +74,7 @@ export function MiniPlayer() {
         <div
           className={clsx(
             "min-w-12 h-12 flex items-center justify-between pb-2 pl-1 mini-player:h-10",
-            "mid-player:pl-0 mini-player:pl-0 mid-player:pb-0 mini-player:pb-0.5 mid-player:flex-1",
+            "mid-player:pl-0 mini-player:pl-0 mid-player:pb-0 mini-player:pb-0.5 mid-player:flex-1 mid-player:h-mid-player-text-height",
             "mini-player:flex-1 mini-player:min-w-0",
           )}
         >
@@ -87,7 +87,7 @@ export function MiniPlayer() {
           <MemoMiniPlayerControls />
         </div>
       </div>
-      <div className="hidden mid-player:flex mid-player:items-center mid-player:px-2 mid-player:h-6">
+      <div className="hidden mid-player:flex mid-player:items-center mid-player:px-2 mid-player:h-mid-player-progress-height">
         <MemoMiniPlayerProgress showTime={false} />
       </div>
       <div className="hidden mid-player:flex justify-center items-center h-10 max-h-10 relative px-2">
