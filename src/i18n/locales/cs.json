@@ -116,7 +116,7 @@
       "play": "Přehrát {{name}}",
       "shuffle": "Přehrát {{name}} náhodně"
     },
-    "duration": "~ {{duration}}",
+    "duration": "{{duration}}",
     "headline": "Oblíbené",
     "noSongs": "Zatím žádné oblíbené skladby!",
     "songCount_one": "{{count}} skladba",
@@ -347,7 +347,7 @@
       "play": "Přehrát {{name}}",
       "shuffle": "Přehrát {{name}} v náhodném pořadí"
     },
-    "duration": "~ {{duration}}",
+    "duration": "{{duration}}",
     "form": {
       "create": {
         "button": "Vytvořit",

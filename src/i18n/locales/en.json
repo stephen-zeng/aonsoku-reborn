@@ -74,7 +74,7 @@
     "headline": "Favorites",
     "songCount_one": "{{count}} song",
     "songCount_other": "{{count}} songs",
-    "duration": "~ {{duration}}",
+    "duration": "{{duration}}",
     "noSongs": "No favorite songs yet!",
     "buttons": {
       "play": "Play {{name}}",
@@ -85,7 +85,7 @@
     "headline": "Playlist",
     "songCount_one": "{{count}} song",
     "songCount_other": "{{count}} songs",
-    "duration": "~ {{duration}}",
+    "duration": "{{duration}}",
     "refresh": "Refresh playlists",
     "buttons": {
       "play": "Play {{name}}",

@@ -118,7 +118,7 @@
       "play": "Odtwórz {{name}}",
       "shuffle": "Odtwórz {{name}} losowo"
     },
-    "duration": "~ {{duration}}",
+    "duration": "{{duration}}",
     "headline": "Ulubione",
     "noSongs": "Brak ulubionych utworów!",
     "songCount_one": "{{count}} utwór",

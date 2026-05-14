@@ -117,7 +117,7 @@
       "play": "Reproduzir {{name}}",
       "shuffle": "Reproduzir {{name}} em ordem aleatória"
     },
-    "duration": "~ {{duration}}",
+    "duration": "{{duration}}",
     "headline": "Favoritos",
     "noSongs": "Ainda não há músicas favoritas!",
     "songCount_one": "{{count}} música",
