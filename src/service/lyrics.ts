@@ -1,6 +1,7 @@
-import { get, set } from "idb-keyval";
+import { createStore, del, get, set } from "idb-keyval";
 import { httpClient } from "@/api/httpClient";
 import { usePlayerStore } from "@/store/player.store";
+import { idbSetWithRetry } from "@/store/idb";
 import type { LyricsSource, SelectedCustomLyrics } from "@/types/playerContext";
 import type {
   ILyric,
@@ -9,7 +10,54 @@ import type {
   LyricsResponse,
 } from "@/types/responses/song";
 import { lrclibClient } from "@/utils/appName";
+import { logger } from "@/utils/logger";
 import { checkServerType } from "@/utils/servers";
+
+export const CUSTOM_LYRICS_IDB_PREFIX = "custom-lyrics:";
+
+const customLyricsStore = createStore(
+  "aonsoku-cache",
+  "custom-lyrics",
+);
+
+export async function getCustomLyricsBody(
+  songKey: string,
+): Promise<string | undefined> {
+  try {
+    return await get<string>(
+      `${CUSTOM_LYRICS_IDB_PREFIX}${songKey}`,
+      customLyricsStore,
+    );
+  } catch (err) {
+    logger.warn("[lyrics] Failed to read custom lyrics body from IDB:", err);
+    return undefined;
+  }
+}
+
+export function setCustomLyricsBody(
+  songKey: string,
+  lyrics: string,
+): Promise<void> {
+  return idbSetWithRetry(
+    `${CUSTOM_LYRICS_IDB_PREFIX}${songKey}`,
+    lyrics,
+    customLyricsStore,
+  );
+}
+
+export function deleteCustomLyricsBodies(
+  songKeys: string[],
+): Promise<void[]> {
+  return Promise.all(
+    songKeys.map((key) =>
+      del(`${CUSTOM_LYRICS_IDB_PREFIX}${key}`, customLyricsStore).catch(
+        (err) => {
+          logger.warn("[lyrics] Failed to delete custom lyrics body:", err);
+        },
+      ),
+    ),
+  );
+}
 
 export interface GetLyricsData {
   artist: string;
@@ -184,17 +232,21 @@ async function getLyricsFromCustomServer(
   const { customServerEnabled, customServerUrl, customServerPassword } =
     usePlayerStore.getState().settings.lyrics;
   const { artist, title, album, duration, path } = getLyricsData;
+  const songKey = getCustomLyricsSongKey(getLyricsData);
   const selectedCustomLyrics = getSelectedCustomLyrics(
     usePlayerStore.getState().settings.lyrics.selectedCustomLyrics,
-    getCustomLyricsSongKey(getLyricsData),
+    songKey,
   );
 
-  if (selectedCustomLyrics?.lyrics) {
-    return {
-      artist: selectedCustomLyrics.artist || artist,
-      title: selectedCustomLyrics.title || title,
-      value: formatLyrics(selectedCustomLyrics.lyrics),
-    };
+  if (selectedCustomLyrics?.key) {
+    const body = await getCustomLyricsBody(songKey);
+    if (body) {
+      return {
+        artist: selectedCustomLyrics.artist || artist,
+        title: selectedCustomLyrics.title || title,
+        value: formatLyrics(body),
+      };
+    }
   }
 
   if (!customServerEnabled || !customServerUrl.trim()) {

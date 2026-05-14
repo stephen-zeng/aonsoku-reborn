@@ -105,8 +105,13 @@ export interface SelectedCustomLyrics {
   id?: string;
   title?: string;
   artist?: string;
+}
+
+export interface SelectedCustomLyricsInput extends SelectedCustomLyrics {
   lyrics: string;
 }
+
+export const MAX_SELECTED_CUSTOM_LYRICS = 50;
 
 interface IReplayGainData {
   enabled: boolean;
@@ -155,7 +160,7 @@ interface ILyrics {
   selectedCustomLyrics?: Record<string, SelectedCustomLyrics>;
   setSelectedCustomLyrics: (
     songKey: string,
-    lyrics: SelectedCustomLyrics,
+    lyrics: SelectedCustomLyricsInput,
   ) => void;
 }
 

@@ -10,12 +10,13 @@ import {
   LanControlMessageType,
   PlayerStateData,
 } from "@/types/lanControl";
-import { IPlayerContext, ISongList, LoopState } from "@/types/playerContext";
+import { IPlayerContext, ISongList, LoopState, MAX_SELECTED_CUSTOM_LYRICS, SelectedCustomLyrics } from "@/types/playerContext";
 import { ISong } from "@/types/responses/song";
 import { hasElectronBridge } from "@/utils/desktop";
 import { discordRpc } from "@/utils/discordRpc";
 import { logger } from "@/utils/logger";
 import { decodeStoredPassword, genEncodedPassword } from "@/utils/salt";
+import { setCustomLyricsBody, deleteCustomLyricsBodies } from "@/service/lyrics";
 import { get as idbGet, set as idbSet } from "idb-keyval";
 import { createQueueActions } from "./queue-actions";
 import { createPlaybackActions } from "./playback-actions";
@@ -72,6 +73,64 @@ function decodePersistedCustomLyricsPassword(state: any) {
   lyrics.customServerPassword = decodeCustomLyricsPassword(
     lyrics.customServerPassword,
   );
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: persisted state shape is versioned
+async function migrateCustomLyricsBodiesToIdb(state: any) {
+  const entries = state?.settings?.lyrics?.selectedCustomLyrics;
+  if (!entries || typeof entries !== "object") return;
+
+  const promises: Promise<void>[] = [];
+  for (const [songKey, entry] of Object.entries(entries)) {
+    if (entry && typeof entry === "object" && "lyrics" in entry) {
+      // biome-ignore lint/suspicious/noExplicitAny: migration
+      const body = (entry as any).lyrics;
+      if (typeof body === "string" && body) {
+        promises.push(setCustomLyricsBody(songKey, body));
+      }
+      // biome-ignore lint/suspicious/noExplicitAny: migration
+      delete (entry as any).lyrics;
+    }
+  }
+  await Promise.all(promises);
+}
+
+function stripCustomLyricsBodies(
+  selected: Record<string, SelectedCustomLyrics> | undefined,
+): {
+  sanitized: Record<string, SelectedCustomLyrics> | undefined;
+  evictedKeys: string[];
+} {
+  if (!selected || typeof selected !== "object") {
+    return { sanitized: selected, evictedKeys: [] };
+  }
+
+  const entries = Object.entries(selected);
+  const evictedKeys: string[] = [];
+
+  if (entries.length > MAX_SELECTED_CUSTOM_LYRICS) {
+    const evicted = entries.slice(
+      0,
+      entries.length - MAX_SELECTED_CUSTOM_LYRICS,
+    );
+    evictedKeys.push(...evicted.map(([k]) => k));
+  }
+
+  const trimmed = entries.slice(-MAX_SELECTED_CUSTOM_LYRICS);
+
+  const sanitized = Object.fromEntries(
+    trimmed
+      .filter(([_, v]) => v != null)
+      .map(([k, v]) => {
+        if ("lyrics" in v) {
+          const { lyrics: _lyrics, ...meta } = v;
+          return [k, meta];
+        }
+        return [k, v];
+      }),
+  );
+
+  return { sanitized, evictedKeys };
 }
 
 export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
@@ -184,7 +243,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
       ),
       {
         name: "player_store",
-        version: 5,
+        version: 6,
         // biome-ignore lint/suspicious/noExplicitAny: zustand persist migrate API
         migrate: (persistedState: any, version) => {
           if (version === 1) {
@@ -254,6 +313,9 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
           if (version <= 4) {
             encodePersistedCustomLyricsPassword(persistedState);
           }
+          if (version <= 5) {
+            migrateCustomLyricsBodiesToIdb(persistedState);
+          }
           return persistedState;
         },
         merge: (persistedState, currentState) => {
@@ -281,12 +343,20 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
             "remoteControl",
           ]);
 
+          const { sanitized, evictedKeys } = stripCustomLyricsBodies(
+            state.settings.lyrics.selectedCustomLyrics,
+          );
+          if (evictedKeys.length > 0) {
+            deleteCustomLyricsBodies(evictedKeys).catch(() => {});
+          }
+
           return merge({}, appStore, {
             settings: {
               lyrics: {
                 customServerPassword: encodeCustomLyricsPassword(
                   state.settings.lyrics.customServerPassword,
                 ),
+                selectedCustomLyrics: sanitized,
               },
             },
           });
