@@ -4,7 +4,7 @@ import { memo, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
-import { usePlayerCurrentList } from "@/store/player.store";
+import { usePlayerCurrentList, usePlayerStore, usePipWindowOpen } from "@/store/player.store";
 import { MiniPlayer } from "./player";
 import { MiniPlayerPortal } from "./portal";
 
@@ -14,37 +14,68 @@ const MemoMiniPlayer = memo(MiniPlayer);
 export function MiniPlayerButton() {
   const { t } = useTranslation();
   const currentList = usePlayerCurrentList();
+  const pipWindowOpen = usePipWindowOpen();
   const [pipWindow, setPipWindow] = useState<Window | null>(
     window.documentPictureInPicture.window,
   );
 
-  const handleClick = useCallback(async () => {
-    if (pipWindow) {
-      pipWindow.close();
-    } else {
-      const newWindow = await window.documentPictureInPicture.requestWindow({
-        width: 300,
-        height: 300,
-      });
-      setPipWindow(newWindow);
-    }
-  }, [pipWindow]);
-
   useEffect(() => {
-    const handleWindowClose = (): void => {
-      setPipWindow(null);
-    };
+    if (!pipWindowOpen) return;
+    if (pipWindow) return;
 
-    pipWindow?.addEventListener("pagehide", handleWindowClose);
+    let cancelled = false;
+
+    window.documentPictureInPicture
+      .requestWindow({ width: 300, height: 300 })
+      .then((newWindow) => {
+        if (cancelled) {
+          newWindow.close();
+          return;
+        }
+
+        const handlePageHide = () => {
+          setPipWindow(null);
+          usePlayerStore.getState().actions.closePipWindow();
+        };
+
+        newWindow.addEventListener("pagehide", handlePageHide);
+        setPipWindow(newWindow);
+      })
+      .catch(() => {
+        usePlayerStore.getState().actions.closePipWindow();
+      });
 
     return () => {
-      pipWindow?.removeEventListener("pagehide", handleWindowClose);
+      cancelled = true;
     };
-  }, [pipWindow]);
+  }, [pipWindowOpen, pipWindow]);
+
+  useEffect(() => {
+    if (!pipWindowOpen && pipWindow) {
+      pipWindow.close();
+      setPipWindow(null);
+    }
+  }, [pipWindowOpen, pipWindow]);
+
+  useEffect(() => {
+    const existingWindow = window.documentPictureInPicture.window;
+    if (existingWindow) {
+      setPipWindow(existingWindow);
+      usePlayerStore.getState().actions.openPipWindow();
+    }
+  }, []);
+
+  const handleClick = useCallback(() => {
+    if (pipWindowOpen) {
+      usePlayerStore.getState().actions.closePipWindow();
+    } else {
+      usePlayerStore.getState().actions.openPipWindow();
+    }
+  }, [pipWindowOpen]);
 
   const disabled = currentList.length === 0;
 
-  const buttonTooltip = pipWindow
+  const buttonTooltip = pipWindowOpen
     ? t("player.tooltips.miniPlayer.close")
     : t("player.tooltips.miniPlayer.open");
 
@@ -57,7 +88,8 @@ export function MiniPlayerButton() {
           onClick={handleClick}
           className={clsx(
             "relative rounded-full",
-            pipWindow && "text-primary hover-supported:text-primary player-button-active",
+            pipWindowOpen &&
+              "text-primary hover-supported:text-primary player-button-active",
           )}
           disabled={disabled}
           unfocusable

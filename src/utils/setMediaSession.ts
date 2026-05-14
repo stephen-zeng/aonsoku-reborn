@@ -378,6 +378,15 @@ function setHandlers() {
       }
     });
 
+    mediaSession.setActionHandler("enterpictureinpicture", (details) => {
+      const reason = (details as Record<string, unknown>)?.reason ?? "unknown";
+      logger.info(`[MediaSession.handler] action=enterpictureinpicture | reason=${reason}`);
+      const state = usePlayerStore.getState();
+      if (!state.playerState.pipWindowOpen && "documentPictureInPicture" in window) {
+        state.actions.openPipWindow();
+      }
+    });
+
     logger.info("[MediaSession] All action handlers set successfully");
   } catch (error) {
     logger.error("[MediaSession] Failed to set action handlers:", error);

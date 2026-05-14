@@ -275,6 +275,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
             "playerState.fullscreenPlayerOpen",
             "playerState.fullscreenPlayerTab",
             "playerState.desktopFullscreenPanelView",
+            "playerState.pipWindowOpen",
             "playerState.hasPrev",
             "playerState.hasNext",
             "playerProgress.bufferedProgress",
@@ -862,6 +863,9 @@ export const usePlayerIsBuffering = () =>
 
 export const useLyricsAlignment = () =>
   usePlayerStore((state) => state.playerState.areLyricsAligned);
+
+export const usePipWindowOpen = () =>
+  usePlayerStore((state) => state.playerState.pipWindowOpen);
 
 export function useIsCurrentPlaying(songId: string): boolean {
   return usePlayerStore((state) => {

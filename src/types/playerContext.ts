@@ -72,6 +72,7 @@ export interface IPlayerState {
   areLyricsAligned: boolean;
   seekToStart: boolean;
   isTransitioning: boolean;
+  pipWindowOpen: boolean;
 }
 
 export interface IPlayerProgress {
@@ -240,6 +241,8 @@ export interface IPlayerActions {
   setIsTransitioning: (value: boolean) => void;
   setCurrentSongColor: (value: string | null) => void;
   setCurrentSongIntensity: (value: number) => void;
+  openPipWindow: () => void;
+  closePipWindow: () => void;
   enterRemoteControl: (device: RemoteDeviceInfo | null) => void;
   exitRemoteControl: () => void;
   registerRemoteSender: (

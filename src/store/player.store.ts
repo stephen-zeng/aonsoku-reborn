@@ -41,6 +41,7 @@ export {
   useIsRemoteControlActive,
   usePlayerIsBuffering,
   useLyricsAlignment,
+  usePipWindowOpen,
   useHasQueueSongs,
   useHasRemainingUserQueue,
   useIsCurrentPlaying,

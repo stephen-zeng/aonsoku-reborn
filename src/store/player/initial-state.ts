@@ -24,6 +24,7 @@ export const initialPlayerState: IPlayerState = {
   areLyricsAligned: true,
   seekToStart: false,
   isTransitioning: false,
+  pipWindowOpen: false,
 };
 
 export const initialSonglist = initSonglistState();

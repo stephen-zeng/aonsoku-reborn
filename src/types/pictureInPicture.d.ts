@@ -10,6 +10,12 @@ declare global {
       }) => Promise<Window>;
     };
   }
+
+  interface MediaSessionActionDetails {
+    enterpictureinpicture?: {
+      reason: "useraction" | "contentoccluded" | "other";
+    };
+  }
 }
 
 export {};
