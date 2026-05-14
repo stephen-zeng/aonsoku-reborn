@@ -107,8 +107,13 @@ describe("Slider", () => {
 	}
 
 	function pointerEvent(
-		type: "pointerdown" | "pointermove" | "pointerup" | "pointercancel",
-		opts: { clientX: number; pointerId?: number; pointerType?: string },
+		type:
+			| "pointerdown"
+			| "pointermove"
+			| "pointerup"
+			| "pointercancel"
+			| "lostpointercapture",
+		opts: { clientX?: number; pointerId?: number; pointerType?: string },
 	) {
 		return {
 			eventConstructor: "PointerEvent",
@@ -422,6 +427,50 @@ describe("Slider", () => {
 				.trigger(
 					"pointercancel",
 					pointerEvent("pointercancel", { clientX: 150 }),
+				);
+			cy.getByTestId("display-commit").then(($el) => {
+				const val = Number($el.text());
+				expect(val).to.be.approximately(50, 1);
+			});
+		});
+
+		it("should handle lostpointercapture by committing current drag value and ending drag", () => {
+			mountSlider(50);
+			cy.getByTestId("test-slider")
+				.trigger(
+					"pointerdown",
+					pointerEvent("pointerdown", { clientX: 0 }),
+				)
+				.trigger(
+					"pointermove",
+					pointerEvent("pointermove", { clientX: 150 }),
+				)
+				.trigger(
+					"lostpointercapture",
+					pointerEvent("lostpointercapture", { pointerId: 1 }),
+				);
+			cy.getByTestId("display-commit").then(($el) => {
+				const val = Number($el.text());
+				expect(val).to.be.approximately(50, 1);
+			});
+		});
+
+		it("should handle lostpointercapture for touch tap by committing tap position", () => {
+			mountSlider(50);
+			cy.getByTestId("test-slider")
+				.trigger(
+					"pointerdown",
+					pointerEvent("pointerdown", {
+						clientX: 150,
+						pointerType: "touch",
+					}),
+				)
+				.trigger(
+					"lostpointercapture",
+					pointerEvent("lostpointercapture", {
+						clientX: 150,
+						pointerType: "touch",
+					}),
 				);
 			cy.getByTestId("display-commit").then(($el) => {
 				const val = Number($el.text());
