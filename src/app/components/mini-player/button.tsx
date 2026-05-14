@@ -66,7 +66,7 @@ export function MiniPlayerButton() {
         </Button>
       </SimpleTooltip>
       <MemoMiniPlayerPortal pipWindow={pipWindow}>
-        <MemoMiniPlayer />
+        <MemoMiniPlayer pipWindow={pipWindow} />
       </MemoMiniPlayerPortal>
     </>
   );

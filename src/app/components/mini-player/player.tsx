@@ -2,6 +2,8 @@ import clsx from "clsx";
 import { Volume2 } from "lucide-react";
 import { memo } from "react";
 import { ResizeHandler } from "@/app/components/icons/resize-handler";
+import { usePlayerHotkeys } from "@/app/hooks/use-audio-hotkeys";
+import { usePlaybackControls } from "@/app/hooks/use-playback-controls";
 import { useSongColor } from "@/store/player.store";
 import { MiniPlayerControls, MiniPlayerLikeButton } from "./controls";
 import { MiniPlayerPopoverVolume } from "./popover-volume";
@@ -17,8 +19,18 @@ const MemoMiniPlayerSongImage = memo(MiniPlayerSongImage);
 const MemoMiniPlayerSongTitle = memo(MiniPlayerSongTitle);
 const MemoMiniPlayerVolume = memo(MiniPlayerVolume);
 
-export function MiniPlayer() {
+interface MiniPlayerProps {
+  pipWindow?: Window | null;
+}
+
+export function MiniPlayer({ pipWindow }: MiniPlayerProps) {
   const { currentSongColor } = useSongColor();
+  const { togglePlayPause } = usePlaybackControls();
+  const { useAudioHotkeys } = usePlayerHotkeys({
+    document: pipWindow?.document,
+  });
+
+  useAudioHotkeys("space", togglePlayPause);
 
   return (
     <div className="w-screen h-screen max-h-screen grid grid-rows-1 mid-player:grid-rows-[auto_auto_auto] gap-2 mid-player:gap-mid-player-gap p-1 mid-player:p-mid-player-padding mini-player:p-1.5 pb-4 mid-player:pb-4 relative">
