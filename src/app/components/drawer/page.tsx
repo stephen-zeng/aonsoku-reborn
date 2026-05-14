@@ -61,7 +61,8 @@ export function MainDrawerPage() {
               className={cn(
                 "h-8 px-3 rounded-full gap-1.5 text-xs font-medium",
                 queueState && "bg-foreground/10 text-foreground",
-                !queueState && "text-muted-foreground hover-supported:text-foreground",
+                !queueState &&
+                  "text-muted-foreground hover-supported:text-foreground",
               )}
               onClick={() => {
                 if (lyricsState) toggleQueueAndLyrics();

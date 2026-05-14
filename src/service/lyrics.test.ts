@@ -113,9 +113,9 @@ describe("getCustomLyricsCandidateKey", () => {
   });
 
   it("returns id regardless of index", () => {
-    expect(
-      getCustomLyricsCandidateKey({ id: "xyz", lyrics: "text" }, 5),
-    ).toBe("xyz");
+    expect(getCustomLyricsCandidateKey({ id: "xyz", lyrics: "text" }, 5)).toBe(
+      "xyz",
+    );
   });
 
   it("falls back to index:artist:title when no id", () => {
@@ -128,9 +128,7 @@ describe("getCustomLyricsCandidateKey", () => {
   });
 
   it("uses empty strings for missing artist/title in fallback", () => {
-    expect(
-      getCustomLyricsCandidateKey({ lyrics: "text" }, 0),
-    ).toBe("0::");
+    expect(getCustomLyricsCandidateKey({ lyrics: "text" }, 0)).toBe("0::");
   });
 
   it("falls back to compound key when id is empty string (falsy)", () => {
@@ -164,9 +162,7 @@ describe("getSelectedCustomLyrics", () => {
   });
 
   it("returns undefined when map is undefined", () => {
-    expect(
-      getSelectedCustomLyrics(undefined, "song-key-1"),
-    ).toBeUndefined();
+    expect(getSelectedCustomLyrics(undefined, "song-key-1")).toBeUndefined();
   });
 
   it("returns undefined when map is empty", () => {

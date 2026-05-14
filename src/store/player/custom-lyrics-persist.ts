@@ -1,4 +1,7 @@
-import { MAX_SELECTED_CUSTOM_LYRICS, type SelectedCustomLyrics } from "@/types/playerContext";
+import {
+  MAX_SELECTED_CUSTOM_LYRICS,
+  type SelectedCustomLyrics,
+} from "@/types/playerContext";
 import { setCustomLyricsBody } from "@/service/lyrics";
 
 export function stripCustomLyricsBodies(
@@ -29,7 +32,9 @@ export function stripCustomLyricsBodies(
       .filter(([_, v]) => v != null)
       .map(([k, v]) => {
         if ("lyrics" in v) {
-          const { lyrics: _lyrics, ...meta } = v as SelectedCustomLyrics & { lyrics?: string };
+          const { lyrics: _lyrics, ...meta } = v as SelectedCustomLyrics & {
+            lyrics?: string;
+          };
           return [k, meta];
         }
         return [k, v];

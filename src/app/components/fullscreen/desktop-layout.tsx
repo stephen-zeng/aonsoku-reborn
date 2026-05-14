@@ -213,7 +213,9 @@ export const DesktopLayout = memo(function DesktopLayout() {
                 transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
                 className="h-full"
               >
-                <CustomLyricsSelect onBack={() => setRightPanelView("lyrics")} />
+                <CustomLyricsSelect
+                  onBack={() => setRightPanelView("lyrics")}
+                />
               </motion.div>
             )}
           </AnimatePresence>

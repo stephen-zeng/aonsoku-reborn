@@ -42,9 +42,7 @@ export function MiniPlayerSongTitle() {
         )}
       >
         <MarqueeTitle gap="mr-2">
-          <span className="w-fit max-w-full truncate">
-            {displaySubtitle}
-          </span>
+          <span className="w-fit max-w-full truncate">{displaySubtitle}</span>
         </MarqueeTitle>
       </div>
       <div className="hidden mini-player:group-hover-supported:flex w-full items-center h-4">

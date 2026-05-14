@@ -28,9 +28,7 @@ function applyRowSelection(
   const rowIndex = rows[nextIndex].index;
 
   if (shiftKey && lastRowSelected !== null) {
-    table.setRowSelection(
-      computeMultiSelectedRows(lastRowSelected, rowIndex),
-    );
+    table.setRowSelection(computeMultiSelectedRows(lastRowSelected, rowIndex));
   } else {
     table.setRowSelection({ [rowIndex]: true });
     setLastRowSelected(rowIndex);
@@ -54,13 +52,10 @@ export function useDataTableKeyboardNavigation<TData>({
       const activeElement = document.activeElement;
       if (!activeElement) return;
 
-      const currentRow =
-        activeElement.closest<HTMLElement>("[data-row-index]");
+      const currentRow = activeElement.closest<HTMLElement>("[data-row-index]");
       if (!currentRow) return;
 
-      const currentIndex = Number(
-        currentRow.getAttribute("data-row-index"),
-      );
+      const currentIndex = Number(currentRow.getAttribute("data-row-index"));
       if (Number.isNaN(currentIndex)) return;
 
       const nextIndex =

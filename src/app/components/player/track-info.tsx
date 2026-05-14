@@ -213,10 +213,7 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
             </TouchGuardedLink>
           )}
         </MarqueeTitle>
-        <TrackInfoArtistsLinks
-          disableNavigation={isMobile}
-          song={song}
-        />
+        <TrackInfoArtistsLinks disableNavigation={isMobile} song={song} />
       </div>
     </Fragment>
   );
@@ -267,11 +264,7 @@ type ArtistLinkProps = {
   disableNavigation?: boolean;
 };
 
-function ArtistLink({
-  id,
-  name,
-  disableNavigation = false,
-}: ArtistLinkProps) {
+function ArtistLink({ id, name, disableNavigation = false }: ArtistLinkProps) {
   if (disableNavigation || !id) {
     return (
       <span

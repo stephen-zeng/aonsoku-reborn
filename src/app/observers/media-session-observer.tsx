@@ -64,19 +64,25 @@ export function MediaSessionObserver() {
   }, []);
 
   useEffect(() => {
-    logger.info(`[MediaSessionObserver] handlers | remoteControl=${isRemoteActive}`);
+    logger.info(
+      `[MediaSessionObserver] handlers | remoteControl=${isRemoteActive}`,
+    );
     manageMediaSession.setHandlers();
   }, [isRemoteActive]);
 
   useEffect(() => {
-    logger.info(`[MediaSessionObserver] isPlaying=${isPlaying} | isTransitioning=${isTransitioning} | isSong=${isSong} | isRadio=${isRadio} | songId=${song?.id} | isRemote=${isRemoteActive} | hasNothingPlaying=${hasNothingPlaying}`);
+    logger.info(
+      `[MediaSessionObserver] isPlaying=${isPlaying} | isTransitioning=${isTransitioning} | isSong=${isSong} | isRadio=${isRadio} | songId=${song?.id} | isRemote=${isRemoteActive} | hasNothingPlaying=${hasNothingPlaying}`,
+    );
 
     const effectiveIsPlaying = isRemoteActive
       ? (remotePlayerState?.isPlaying ?? false)
       : isPlaying;
 
     if (isTransitioning) {
-      logger.info("[MediaSessionObserver → transitioning] | keeping existing metadata, only updating playback state");
+      logger.info(
+        "[MediaSessionObserver → transitioning] | keeping existing metadata, only updating playback state",
+      );
       manageMediaSession.ensurePlaybackStatePlaying();
       return;
     }
@@ -84,7 +90,9 @@ export function MediaSessionObserver() {
     manageMediaSession.setPlaybackState(effectiveIsPlaying);
 
     if (hasNothingPlaying) {
-      logger.info("[MediaSessionObserver → nothingPlaying] | calling removeMediaSession");
+      logger.info(
+        "[MediaSessionObserver → nothingPlaying] | calling removeMediaSession",
+      );
       manageMediaSession.removeMediaSession();
       resetAppTitle();
       lastMetadataRef.current = "";
@@ -99,11 +107,15 @@ export function MediaSessionObserver() {
       metadataKey = `radio:${radio.name}`;
 
       if (lastMetadataRef.current !== metadataKey) {
-        logger.info(`[MediaSessionObserver → setRadioMediaSession] | name=${radio.name}`);
+        logger.info(
+          `[MediaSessionObserver → setRadioMediaSession] | name=${radio.name}`,
+        );
         manageMediaSession.setRadioMediaSession(radioLabel, radio.name);
         lastMetadataRef.current = metadataKey;
       } else {
-        logger.info(`[MediaSessionObserver → metadataUnchanged] | name=${radio.name}`);
+        logger.info(
+          `[MediaSessionObserver → metadataUnchanged] | name=${radio.name}`,
+        );
       }
     } else if (isSong && song) {
       title = `${song.title} - ${song.artist} | Aonsoku`;
@@ -111,11 +123,15 @@ export function MediaSessionObserver() {
 
       const metadataChanged = lastMetadataRef.current !== metadataKey;
       if (metadataChanged) {
-        logger.info(`[MediaSessionObserver → setMediaSession] | songId=${song.id} | title="${song.title}"`);
+        logger.info(
+          `[MediaSessionObserver → setMediaSession] | songId=${song.id} | title="${song.title}"`,
+        );
         manageMediaSession.setMediaSession(song);
         lastMetadataRef.current = metadataKey;
       } else {
-        logger.info(`[MediaSessionObserver → metadataUnchanged] | songId=${song.id}`);
+        logger.info(
+          `[MediaSessionObserver → metadataUnchanged] | songId=${song.id}`,
+        );
       }
     }
 
@@ -189,7 +205,9 @@ export function MediaSessionObserver() {
 
     if (shouldUpdate) {
       const clampedProgress = clampProgress(effectiveProgress, duration);
-      logger.info(`[MediaSessionObserver.positionState] songId=${songId} | duration=${duration} | position=${effectiveProgress} | isPlaying=${effectiveIsPlaying} | updateReason=${songId !== lastState.songId ? 'songChanged' : effectiveIsPlaying !== lastState.isPlaying ? 'playStateChanged' : 'drift>2s'}`);
+      logger.info(
+        `[MediaSessionObserver.positionState] songId=${songId} | duration=${duration} | position=${effectiveProgress} | isPlaying=${effectiveIsPlaying} | updateReason=${songId !== lastState.songId ? "songChanged" : effectiveIsPlaying !== lastState.isPlaying ? "playStateChanged" : "drift>2s"}`,
+      );
       manageMediaSession.setPositionState(duration, clampedProgress);
 
       lastPositionStateRef.current = {

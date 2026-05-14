@@ -26,12 +26,8 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
 
   const isEmpty = isSong && !hasQueueSongs;
 
-  const {
-    localProgress,
-    isLocalSeeking,
-    handleSeeking,
-    handleSeeked,
-  } = useAudioSeeking({ audioRef });
+  const { localProgress, isLocalSeeking, handleSeeking, handleSeeked } =
+    useAudioSeeking({ audioRef });
 
   const currentTime = convertSecondsToTime(
     isLocalSeeking ? localProgress : progress,

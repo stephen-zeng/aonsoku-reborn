@@ -85,7 +85,9 @@ function ArtistLink({ id, name, className, ...props }: ArtistLinkProps) {
     <Link
       className={cn(
         className,
-        id ? "hover-supported:underline hover-supported:text-foreground" : "pointer-events-none",
+        id
+          ? "hover-supported:underline hover-supported:text-foreground"
+          : "pointer-events-none",
       )}
       to={ROUTES.ARTIST.PAGE(id ?? "")}
       {...props}

@@ -93,7 +93,9 @@ export function Player() {
     const timeout = setTimeout(() => {
       const current = usePlayerStore.getState().playerState.isTransitioning;
       if (current) {
-        logger.info(`[isTransitioning] timeout fallback, clearing isTransitioning`);
+        logger.info(
+          `[isTransitioning] timeout fallback, clearing isTransitioning`,
+        );
         setIsTransitioning(false);
       }
     }, 5000);
@@ -263,11 +265,19 @@ export function Player() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: songId and audioRef needed for debug logging
   const handleSongCanPlay = useCallback(() => {
     const audio = audioRef.current;
-    logger.info(`[onCanPlay] songId=${songId} | duration=${audio?.duration?.toFixed(2)} | isTransitioning=${usePlayerStore.getState().playerState.isTransitioning} | isPlaying=${usePlayerStore.getState().playerState.isPlaying} | audio.paused=${audio?.paused}`);
+    logger.info(
+      `[onCanPlay] songId=${songId} | duration=${audio?.duration?.toFixed(2)} | isTransitioning=${usePlayerStore.getState().playerState.isTransitioning} | isPlaying=${usePlayerStore.getState().playerState.isPlaying} | audio.paused=${audio?.paused}`,
+    );
     setStoreIsBuffering(false);
     updateAudioDuration();
     setIsTransitioning(false);
-  }, [setStoreIsBuffering, updateAudioDuration, setIsTransitioning, songId, audioRef]);
+  }, [
+    setStoreIsBuffering,
+    updateAudioDuration,
+    setIsTransitioning,
+    songId,
+    audioRef,
+  ]);
 
   const handleAudioSeeked = useCallback(() => {
     if (usePlayerStore.getState().playerProgress.isScrubbing) {

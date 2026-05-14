@@ -12,11 +12,8 @@ export function useBackgroundPlayback() {
     const handleVisibilityChange = () => {
       if (document.hidden) return;
 
-      const {
-        isPlaying,
-        remoteControl,
-        playerState,
-      } = usePlayerStore.getState();
+      const { isPlaying, remoteControl, playerState } =
+        usePlayerStore.getState();
 
       if (!isPlaying || remoteControl.active) return;
 

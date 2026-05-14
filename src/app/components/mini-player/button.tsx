@@ -4,7 +4,11 @@ import { memo, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
-import { usePlayerCurrentList, usePlayerStore, usePipWindowOpen } from "@/store/player.store";
+import {
+  usePlayerCurrentList,
+  usePlayerStore,
+  usePipWindowOpen,
+} from "@/store/player.store";
 import { MiniPlayer } from "./player";
 import { MiniPlayerPortal } from "./portal";
 

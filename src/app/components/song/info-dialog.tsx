@@ -112,41 +112,41 @@ export function SongInfoDialog() {
               <InfoGridItem title="album">
                 <Link
                   to={ROUTES.ALBUM.PAGE(song.albumId)}
-                   className="text-foreground hover-supported:underline"
-                   onClick={handleLinkClick}
-                 >
-                   {song.album}
-                 </Link>
-               </InfoGridItem>
+                  className="text-foreground hover-supported:underline"
+                  onClick={handleLinkClick}
+                >
+                  {song.album}
+                </Link>
+              </InfoGridItem>
 
-               {/* Multi artists info */}
-               {song.albumArtists && (
-                 <InfoGridItem title="albumArtist">
-                   {song.albumArtists.map(({ id, name }, index) => (
-                     <Fragment key={id}>
-                       <Link
-                         to={ROUTES.ARTIST.PAGE(id)}
-                         className="text-foreground hover-supported:underline"
-                         onClick={handleLinkClick}
-                       >
-                         {name}
-                       </Link>
-                       {index < song.albumArtists!.length - 1 && (
-                         <Dot className="mx-0" />
-                       )}
-                     </Fragment>
-                   ))}
-                 </InfoGridItem>
-               )}
+              {/* Multi artists info */}
+              {song.albumArtists && (
+                <InfoGridItem title="albumArtist">
+                  {song.albumArtists.map(({ id, name }, index) => (
+                    <Fragment key={id}>
+                      <Link
+                        to={ROUTES.ARTIST.PAGE(id)}
+                        className="text-foreground hover-supported:underline"
+                        onClick={handleLinkClick}
+                      >
+                        {name}
+                      </Link>
+                      {index < song.albumArtists!.length - 1 && (
+                        <Dot className="mx-0" />
+                      )}
+                    </Fragment>
+                  ))}
+                </InfoGridItem>
+              )}
 
-               {/* Multi artists info */}
-               {song.artists && (
-                 <InfoGridItem title="artist">
-                   {song.artists.map(({ id, name }, index) => (
-                     <Fragment key={id}>
-                       <Link
-                         to={ROUTES.ARTIST.PAGE(id)}
-                         className="text-foreground hover-supported:underline"
+              {/* Multi artists info */}
+              {song.artists && (
+                <InfoGridItem title="artist">
+                  {song.artists.map(({ id, name }, index) => (
+                    <Fragment key={id}>
+                      <Link
+                        to={ROUTES.ARTIST.PAGE(id)}
+                        className="text-foreground hover-supported:underline"
                         onClick={handleLinkClick}
                       >
                         {name}
@@ -166,7 +166,9 @@ export function SongInfoDialog() {
                     to={ROUTES.ARTIST.PAGE(song.artistId ?? "")}
                     className={clsx(
                       "text-foreground",
-                      song.artistId ? "hover-supported:underline" : "pointer-events-none",
+                      song.artistId
+                        ? "hover-supported:underline"
+                        : "pointer-events-none",
                     )}
                     onClick={() => {
                       if (song.artistId) handleLinkClick();

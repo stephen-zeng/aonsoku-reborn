@@ -214,7 +214,8 @@ export default function ImageHeader({
                 "2xl:w-[250px] 2xl:h-[250px] 2xl:min-w-[250px] 2xl:min-h-[250px]",
                 "bg-skeleton aspect-square bg-cover bg-center rounded",
                 "shadow-header-image overflow-hidden",
-                !customIcon && "hover-supported:scale-[1.02] ease-linear duration-100",
+                !customIcon &&
+                  "hover-supported:scale-[1.02] ease-linear duration-100",
               )}
             >
               {customIcon ? (

@@ -219,9 +219,7 @@ function useSlider({
       if (!state || state.pointerId !== e.pointerId) return;
 
       const isTap = e.pointerType === "touch" && !state.isDragging;
-      const commitValue = isTap
-        ? computeValue(e.clientX)
-        : state.currentValue;
+      const commitValue = isTap ? computeValue(e.clientX) : state.currentValue;
       finishDrag(e.pointerType, commitValue, isTap);
     },
     [computeValue, finishDrag],
@@ -334,7 +332,9 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
             "ring-offset-background transition-[background-color,opacity]",
             "focus-visible:outline-none focus-visible:ring-transparent",
             "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
-            hideThumb ? "opacity-0" : "opacity-0 group-hover-supported:opacity-100 slider-thumb",
+            hideThumb
+              ? "opacity-0"
+              : "opacity-0 group-hover-supported:opacity-100 slider-thumb",
             variant === "default" && "bg-foreground border-foreground",
             variant === "secondary" &&
               (contrast?.sliderThumbColor ??

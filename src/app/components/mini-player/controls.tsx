@@ -154,7 +154,7 @@ const buttonsStyle = {
   main: "w-9 h-9 p-0 rounded-full bg-secondary-foreground",
   mainIcon: "text-secondary fill-secondary",
   secondary:
-     "relative w-9 h-9 p-0 rounded-full text-secondary-foreground hover-supported:text-secondary-foreground data-[state=active]:text-primary hover-supported:bg-transparent",
+    "relative w-9 h-9 p-0 rounded-full text-secondary-foreground hover-supported:text-secondary-foreground data-[state=active]:text-primary hover-supported:bg-transparent",
   secondaryIconFilled: "text-secondary-foreground fill-secondary-foreground",
   activeDot: "mini-player-button-active",
   style: {

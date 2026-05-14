@@ -43,7 +43,10 @@ export function SwUpdateChip() {
 
   if (status === "installing") {
     return (
-      <Badge variant="beta" className="electron-no-drag gap-1 h-5 select-none cursor-default">
+      <Badge
+        variant="beta"
+        className="electron-no-drag gap-1 h-5 select-none cursor-default"
+      >
         <Loader2 className="h-3 w-3 animate-spin" />
         <span>{t("update.sw.updating")}</span>
       </Badge>

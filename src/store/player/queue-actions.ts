@@ -592,7 +592,9 @@ export function createQueueActions(shared: SharedDeps) {
 
       const { isInUserQueue, userQueue, contextQueue } = songlist;
       const currentSongId = getCurrentSong(songlist)?.id;
-      logger.info(`[playNextSong] loopState=${loopState} | currentIndex=${contextQueue.currentIndex} | hasUserQueue=${!!userQueue.songs.length} | isInUserQueue=${isInUserQueue} | currentSongId=${currentSongId}`);
+      logger.info(
+        `[playNextSong] loopState=${loopState} | currentIndex=${contextQueue.currentIndex} | hasUserQueue=${!!userQueue.songs.length} | isInUserQueue=${isInUserQueue} | currentSongId=${currentSongId}`,
+      );
 
       if (isInUserQueue) {
         const consumed = userQueue.songs[0];
@@ -647,7 +649,9 @@ export function createQueueActions(shared: SharedDeps) {
       }
 
       if (loopState === LoopState.One) {
-        logger.info(`[playNextSong:LoopOne] seekToStart=true | songId=${getCurrentSong(get().songlist)?.id}`);
+        logger.info(
+          `[playNextSong:LoopOne] seekToStart=true | songId=${getCurrentSong(get().songlist)?.id}`,
+        );
         set((state) => {
           state.playerProgress.progress = 0;
           state.playerProgress.bufferedProgress = 0;
@@ -658,7 +662,9 @@ export function createQueueActions(shared: SharedDeps) {
       }
 
       if (contextQueue.currentIndex < contextQueue.songs.length - 1) {
-        logger.info(`[playNextSong:advance] newIndex=${contextQueue.currentIndex + 1} | songId=${contextQueue.songs[contextQueue.currentIndex + 1]?.id}`);
+        logger.info(
+          `[playNextSong:advance] newIndex=${contextQueue.currentIndex + 1} | songId=${contextQueue.songs[contextQueue.currentIndex + 1]?.id}`,
+        );
         set((state) => {
           state.songlist.contextQueue.currentIndex += 1;
           state.playerProgress.progress = 0;
@@ -688,11 +694,15 @@ export function createQueueActions(shared: SharedDeps) {
             ? Math.round(nextSong.duration)
             : 0;
           if (nextSong?.id === lastPlayedSongId) {
-            logger.info(`[playNextSong:LoopAllWrap] same song, seekToStart=true | songId=${nextSong?.id}`);
+            logger.info(
+              `[playNextSong:LoopAllWrap] same song, seekToStart=true | songId=${nextSong?.id}`,
+            );
             state.playerState.isPlaying = true;
             state.playerState.seekToStart = true;
           } else {
-            logger.info(`[playNextSong:LoopAllWrap] wrapping to index 0 | songId=${nextSong?.id}`);
+            logger.info(
+              `[playNextSong:LoopAllWrap] wrapping to index 0 | songId=${nextSong?.id}`,
+            );
             state.playerState.isPlaying = true;
             state.playerState.isTransitioning = true;
           }
@@ -708,7 +718,9 @@ export function createQueueActions(shared: SharedDeps) {
       const currentSong = getCurrentSong(get().songlist);
       const progress = get().playerProgress.progress;
       const willSeekToStart = !!(currentSong && progress > PREV_SEEK_THRESHOLD);
-      logger.info(`[playPrevSong] progress=${progress} | willSeekToStart=${willSeekToStart} | hasPrev=${hasPrevEffectiveSong(get().songlist)} | songId=${currentSong?.id}`);
+      logger.info(
+        `[playPrevSong] progress=${progress} | willSeekToStart=${willSeekToStart} | hasPrev=${hasPrevEffectiveSong(get().songlist)} | songId=${currentSong?.id}`,
+      );
 
       if (currentSong && progress > PREV_SEEK_THRESHOLD) {
         set((state) => {
@@ -846,13 +858,19 @@ export function createQueueActions(shared: SharedDeps) {
           : hasNextEffectiveSong(songlist, loopState);
 
       const currentSongId = getCurrentSong(songlist)?.id;
-      logger.info(`[handleSongEnded] loopState=${loopState} | hasNext=${hasNext} | currentSongId=${currentSongId} | isRemote=${isRemoteActive()}`);
+      logger.info(
+        `[handleSongEnded] loopState=${loopState} | hasNext=${hasNext} | currentSongId=${currentSongId} | isRemote=${isRemoteActive()}`,
+      );
 
       if (hasNext) {
-        logger.info(`[handleSongEnded → playNextSong] | songId=${currentSongId}`);
+        logger.info(
+          `[handleSongEnded → playNextSong] | songId=${currentSongId}`,
+        );
         get().actions.playNextSong();
       } else if (loopState === LoopState.One) {
-        logger.info(`[handleSongEnded → loopOneRestart] | seekToStart=true | isPlaying=true | songId=${currentSongId}`);
+        logger.info(
+          `[handleSongEnded → loopOneRestart] | seekToStart=true | isPlaying=true | songId=${currentSongId}`,
+        );
         set((state) => {
           state.playerProgress.progress = 0;
           state.playerProgress.bufferedProgress = 0;
@@ -860,7 +878,9 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerState.seekToStart = true;
         });
       } else {
-        logger.info(`[handleSongEnded → stop] | isPlaying=false | isTransitioning=false | songId=${currentSongId}`);
+        logger.info(
+          `[handleSongEnded → stop] | isPlaying=false | isTransitioning=false | songId=${currentSongId}`,
+        );
         set((state) => {
           state.playerProgress.progress = 0;
           state.playerProgress.bufferedProgress = 0;

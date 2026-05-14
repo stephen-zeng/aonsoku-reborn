@@ -37,7 +37,10 @@ export function MobileMediaList<TItem>({
   }
 
   return (
-    <div data-testid="mobile-song-list" className={cn("flex flex-col gap-1", className)}>
+    <div
+      data-testid="mobile-song-list"
+      className={cn("flex flex-col gap-1", className)}
+    >
       {items.map((item, index) => children(item, index))}
     </div>
   );
@@ -67,7 +70,10 @@ export function MobileSongList({
 
   if (songs.length === 0 && emptyMessage) {
     return (
-      <div data-testid="mobile-song-list" className={cn("flex flex-col gap-1", className)}>
+      <div
+        data-testid="mobile-song-list"
+        className={cn("flex flex-col gap-1", className)}
+      >
         <div className="flex min-h-24 items-center justify-center px-4 text-sm text-muted-foreground">
           {emptyMessage}
         </div>
@@ -76,7 +82,10 @@ export function MobileSongList({
   }
 
   return (
-    <div data-testid="mobile-song-list" className={cn("flex flex-col gap-1", className)}>
+    <div
+      data-testid="mobile-song-list"
+      className={cn("flex flex-col gap-1", className)}
+    >
       {songs.map((song, index) => {
         const discNum = song.discNumber ?? 1;
         const isFirstOfDisc =
@@ -139,8 +148,7 @@ function MobileSongRow({
       const container = currentRow.closest('[data-testid="mobile-song-list"]');
       if (!container) return;
 
-      const nextIndex =
-        event.key === "ArrowUp" ? index - 1 : index + 1;
+      const nextIndex = event.key === "ArrowUp" ? index - 1 : index + 1;
       const nextRow = container.querySelector<HTMLElement>(
         `[data-testid="mobile-song-row"][data-row-index="${nextIndex}"]`,
       );

@@ -151,7 +151,10 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
 
       {currentSong && customServerReady && (
         <div className="mb-3 ml-2 mr-6 shrink-0 rounded-2xl border border-white/10 bg-foreground/[0.06] p-3 backdrop-blur-xl">
-          <form className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]" onSubmit={handleSearch}>
+          <form
+            className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]"
+            onSubmit={handleSearch}
+          >
             <div className="grid gap-1.5">
               <Label
                 htmlFor="fullscreen-custom-lyrics-title"
@@ -202,7 +205,10 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
 
       <div className="min-h-0 flex-1 px-2 pb-3">
         {!currentSong && (
-          <EmptyState className="mr-4" message={t("lyrics.customSelect.noSong")} />
+          <EmptyState
+            className="mr-4"
+            message={t("lyrics.customSelect.noSong")}
+          />
         )}
 
         {currentSong && !customServerReady && (
@@ -213,7 +219,10 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
         )}
 
         {currentSong && customServerReady && isLoading && (
-          <EmptyState className="mr-4" message={t("fullscreen.loadingLyrics")} />
+          <EmptyState
+            className="mr-4"
+            message={t("fullscreen.loadingLyrics")}
+          />
         )}
 
         {currentSong &&

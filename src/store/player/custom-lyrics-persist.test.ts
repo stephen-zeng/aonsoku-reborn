@@ -215,9 +215,7 @@ describe("migrateCustomLyricsBodiesToIdb", () => {
   });
 
   it("handles null state gracefully", async () => {
-    await expect(
-      migrateCustomLyricsBodiesToIdb(null),
-    ).resolves.toBeUndefined();
+    await expect(migrateCustomLyricsBodiesToIdb(null)).resolves.toBeUndefined();
     expect(mockSetCustomLyricsBody).not.toHaveBeenCalled();
   });
 

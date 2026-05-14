@@ -15,10 +15,7 @@ import { checkServerType } from "@/utils/servers";
 
 export const CUSTOM_LYRICS_IDB_PREFIX = "custom-lyrics:";
 
-const customLyricsStore = createStore(
-  "aonsoku-cache",
-  "custom-lyrics",
-);
+const customLyricsStore = createStore("aonsoku-cache", "custom-lyrics");
 
 export async function getCustomLyricsBody(
   songKey: string,
@@ -45,9 +42,7 @@ export function setCustomLyricsBody(
   );
 }
 
-export function deleteCustomLyricsBodies(
-  songKeys: string[],
-): Promise<void[]> {
+export function deleteCustomLyricsBodies(songKeys: string[]): Promise<void[]> {
   return Promise.all(
     songKeys.map((key) =>
       del(`${CUSTOM_LYRICS_IDB_PREFIX}${key}`, customLyricsStore).catch(

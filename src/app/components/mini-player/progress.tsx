@@ -31,12 +31,8 @@ export function MiniPlayerProgress({
     [audioPlayerRef],
   );
 
-  const {
-    localProgress,
-    isLocalSeeking,
-    handleSeeking,
-    handleSeeked,
-  } = useAudioSeeking({ audioRef });
+  const { localProgress, isLocalSeeking, handleSeeking, handleSeeked } =
+    useAudioSeeking({ audioRef });
 
   const currentTime = convertSecondsToTime(
     isLocalSeeking ? localProgress : progress,

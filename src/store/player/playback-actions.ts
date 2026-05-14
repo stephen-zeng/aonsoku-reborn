@@ -18,7 +18,9 @@ export function createPlaybackActions(shared: SharedDeps) {
   return {
     setPlayingState: (status: boolean) => {
       const prev = get().playerState.isPlaying;
-      logger.info(`[setPlayingState] ${prev} → ${status} | isRemote=${!!isRemoteActive()}`);
+      logger.info(
+        `[setPlayingState] ${prev} → ${status} | isRemote=${!!isRemoteActive()}`,
+      );
       if (isRemoteActive()) {
         remoteSend(
           status ? LanControlMessageType.PLAY : LanControlMessageType.PAUSE,

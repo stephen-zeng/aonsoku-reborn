@@ -18,7 +18,10 @@ import { logger } from "@/utils/logger";
 import { decodeStoredPassword, genEncodedPassword } from "@/utils/salt";
 import { deleteCustomLyricsBodies } from "@/service/lyrics";
 import { get as idbGet, set as idbSet } from "idb-keyval";
-import { migrateCustomLyricsBodiesToIdb, stripCustomLyricsBodies } from "./custom-lyrics-persist";
+import {
+  migrateCustomLyricsBodiesToIdb,
+  stripCustomLyricsBodies,
+} from "./custom-lyrics-persist";
 import { createQueueActions } from "./queue-actions";
 import { createPlaybackActions } from "./playback-actions";
 import { createUiActions } from "./ui-actions";
