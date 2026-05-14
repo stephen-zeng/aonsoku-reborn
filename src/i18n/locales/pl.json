@@ -135,7 +135,8 @@
     "queueFromSource": "Z {{source}}",
     "queueHistory": "Historia",
     "queueRepeating": "Powtarzanie",
-    "switchButton": "Przełącz na Duży Odtwarzacz"
+    "switchButton": "Przełącz na Duży Odtwarzacz",
+    "selectLyrics": "Wybierz tekst"
   },
   "generic": {
     "beta": "Beta",
@@ -1095,5 +1096,22 @@
   "warnings": {
     "reload": "Piosenka jest odtwarzana!\nCzy na pewno chcesz odświeżyć stronę?",
     "songError": "Nie można odtworzyć piosenki, sprawdź Serwer!"
+  },
+  "lyrics": {
+    "customSelect": {
+      "title": "Wybierz tekst",
+      "subtitle": "{{title}} wykonawcy {{artist}}",
+      "noSong": "Nie jest odtwarzany żaden utwór.",
+      "serverDisabled": "Niestandardowy serwer tekstów nie jest włączony.",
+      "empty": "Nie znaleziono niestandardowych propozycji tekstów.",
+      "searchTitle": "Tytuł utworu",
+      "searchArtist": "Wykonawca",
+      "search": "Szukaj",
+      "select": "Wybierz",
+      "selected": "Wybrano",
+      "currentSelection": "Bieżący wybór: {{title}} wykonawcy {{artist}}",
+      "lyricsId": "ID: {{id}}",
+      "noPreview": "Podgląd niedostępny."
+    }
   }
 }

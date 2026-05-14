@@ -16,7 +16,9 @@ import { hasElectronBridge } from "@/utils/desktop";
 import { discordRpc } from "@/utils/discordRpc";
 import { logger } from "@/utils/logger";
 import { decodeStoredPassword, genEncodedPassword } from "@/utils/salt";
+import { deleteCustomLyricsBodies } from "@/service/lyrics";
 import { get as idbGet, set as idbSet } from "idb-keyval";
+import { migrateCustomLyricsBodiesToIdb, stripCustomLyricsBodies } from "./custom-lyrics-persist";
 import { createQueueActions } from "./queue-actions";
 import { createPlaybackActions } from "./playback-actions";
 import { createUiActions } from "./ui-actions";
@@ -184,7 +186,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
       ),
       {
         name: "player_store",
-        version: 5,
+        version: 6,
         // biome-ignore lint/suspicious/noExplicitAny: zustand persist migrate API
         migrate: (persistedState: any, version) => {
           if (version === 1) {
@@ -254,6 +256,9 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
           if (version <= 4) {
             encodePersistedCustomLyricsPassword(persistedState);
           }
+          if (version <= 5) {
+            migrateCustomLyricsBodiesToIdb(persistedState);
+          }
           return persistedState;
         },
         merge: (persistedState, currentState) => {
@@ -282,12 +287,20 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
             "remoteControl",
           ]);
 
+          const { sanitized, evictedKeys } = stripCustomLyricsBodies(
+            state.settings.lyrics.selectedCustomLyrics,
+          );
+          if (evictedKeys.length > 0) {
+            deleteCustomLyricsBodies(evictedKeys).catch(() => {});
+          }
+
           return merge({}, appStore, {
             settings: {
               lyrics: {
                 customServerPassword: encodeCustomLyricsPassword(
                   state.settings.lyrics.customServerPassword,
                 ),
+                selectedCustomLyrics: sanitized,
               },
             },
           });

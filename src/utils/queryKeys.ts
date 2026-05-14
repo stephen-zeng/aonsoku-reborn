@@ -45,6 +45,7 @@ const genre = ["genres"] as const;
 const lyrics = {
   plain: ["lyrics", "plain"] as const,
   structured: ["lyrics", "structured"] as const,
+  customCandidates: ["lyrics", "custom-candidates"] as const,
 };
 
 const server = {

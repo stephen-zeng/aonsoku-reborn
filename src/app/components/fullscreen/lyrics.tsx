@@ -18,6 +18,10 @@ import {
   ScrollArea,
   scrollAreaViewportSelector,
 } from "@/app/components/ui/scroll-area";
+import {
+  getCustomLyricsSongKey,
+  getSelectedCustomLyrics,
+} from "@/service/lyrics";
 import { subsonic } from "@/service/subsonic";
 import { useIsOnline } from "@/store/cache.store";
 import {
@@ -154,6 +158,7 @@ export function LyricsTab() {
     sourcePriority,
     customServerEnabled,
     customServerUrl,
+    selectedCustomLyrics,
   } = useLyricsSettings();
   const { setAreLyricsAligned } = usePlayerActions();
 
@@ -163,14 +168,33 @@ export function LyricsTab() {
     };
   }, [setAreLyricsAligned]);
 
-  const { id: songId, artist, title, album, duration, path } =
-    currentSong || {};
+  const {
+    id: songId,
+    artist,
+    title,
+    album,
+    duration,
+    path,
+  } = currentSong || {};
   const songDurationMs = duration ? duration * 1000 : undefined;
+  const selectedCustomLyricsKey = currentSong
+    ? getSelectedCustomLyrics(
+        selectedCustomLyrics,
+        getCustomLyricsSongKey({
+          artist: currentSong.artist,
+          title: currentSong.title,
+          album: currentSong.album,
+          duration: currentSong.duration,
+          path: currentSong.path,
+        }),
+      )?.key
+    : undefined;
   const isOnline = useIsOnline();
   const lyricsSettingsKey = [
     sourcePriority.join(","),
     customServerEnabled,
     customServerUrl,
+    selectedCustomLyricsKey,
   ];
 
   const { data: lyrics, isLoading: isLoadingLyrics } = useQuery({

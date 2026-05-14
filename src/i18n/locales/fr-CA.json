@@ -134,7 +134,8 @@
     "queueFromSource": "Depuis {{source}}",
     "queueHistory": "Historique",
     "queueRepeating": "Répétition en cours",
-    "switchButton": "Passer au Big Player"
+    "switchButton": "Passer au Big Player",
+    "selectLyrics": "Choisir les paroles"
   },
   "generic": {
     "beta": "Bêta",
@@ -1086,5 +1087,22 @@
   "warnings": {
     "reload": "Une musique est en cours de lecture!\nÊtes-vous sûr·e de vouloir recharger la page?",
     "songError": "Impossible de jouer le titre, vérifiez le serveur!"
+  },
+  "lyrics": {
+    "customSelect": {
+      "title": "Choisir les paroles",
+      "subtitle": "{{title}} par {{artist}}",
+      "noSong": "Aucun morceau en cours de lecture.",
+      "serverDisabled": "Le serveur de paroles personnalisé n'est pas activé.",
+      "empty": "Aucune parole personnalisée candidate trouvée.",
+      "searchTitle": "Titre du morceau",
+      "searchArtist": "Artiste",
+      "search": "Rechercher",
+      "select": "Choisir",
+      "selected": "Sélectionné",
+      "currentSelection": "Sélection actuelle : {{title}} par {{artist}}",
+      "lyricsId": "ID : {{id}}",
+      "noPreview": "Aucun aperçu disponible."
+    }
   }
 }

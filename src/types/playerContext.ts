@@ -47,8 +47,16 @@ export interface ISongList {
   shuffleStartHistory: string[];
 }
 
-export type FullscreenPlayerTab = "queue" | "playing" | "lyrics";
-export type DesktopFullscreenPanelView = "queue" | "lyrics" | null;
+export type FullscreenPlayerTab =
+  | "queue"
+  | "playing"
+  | "lyrics"
+  | "customLyrics";
+export type DesktopFullscreenPanelView =
+  | "queue"
+  | "lyrics"
+  | "customLyrics"
+  | null;
 export type QueueTier = "context" | "user";
 
 export interface IPlayerState {
@@ -92,6 +100,19 @@ export interface IVolumeSettings {
 export type ReplayGainType = "track" | "album";
 
 export type LyricsSource = "navidrome" | "lrclib" | "custom";
+
+export interface SelectedCustomLyrics {
+  key: string;
+  id?: string;
+  title?: string;
+  artist?: string;
+}
+
+export interface SelectedCustomLyricsInput extends SelectedCustomLyrics {
+  lyrics: string;
+}
+
+export const MAX_SELECTED_CUSTOM_LYRICS = 50;
 
 interface IReplayGainData {
   enabled: boolean;
@@ -137,6 +158,11 @@ interface ILyrics {
   setCustomServerUrl: (value: string) => void;
   customServerPassword: string;
   setCustomServerPassword: (value: string) => void;
+  selectedCustomLyrics?: Record<string, SelectedCustomLyrics>;
+  setSelectedCustomLyrics: (
+    songKey: string,
+    lyrics: SelectedCustomLyricsInput,
+  ) => void;
 }
 
 export interface IPrivacySettings {

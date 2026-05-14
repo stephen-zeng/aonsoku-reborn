@@ -133,7 +133,25 @@
     "queueFromSource": "来自 {{source}}",
     "queueHistory": "历史记录",
     "queueRepeating": "单曲循环",
+    "selectLyrics": "选择歌词",
     "switchButton": "切换到大播放器"
+  },
+  "lyrics": {
+    "customSelect": {
+      "title": "选择歌词",
+      "subtitle": "{{artist}} - {{title}}",
+      "noSong": "当前没有播放歌曲。",
+      "serverDisabled": "自定义歌词服务器未启用。",
+      "empty": "没有找到可选的自定义歌词。",
+      "searchTitle": "歌曲名",
+      "searchArtist": "作者名",
+      "search": "搜索",
+      "select": "选择",
+      "selected": "已选择",
+      "currentSelection": "当前选择：{{artist}} - {{title}}",
+      "lyricsId": "ID：{{id}}",
+      "noPreview": "暂无预览。"
+    }
   },
   "generic": {
     "beta": "Beta",

@@ -135,7 +135,8 @@
     "queueFromSource": "Из {{source}}",
     "queueHistory": "История",
     "queueRepeating": "Повтор",
-    "switchButton": "Перейти в полноэкранный режим"
+    "switchButton": "Перейти в полноэкранный режим",
+    "selectLyrics": "Выбрать текст"
   },
   "generic": {
     "beta": "Бета",
@@ -1095,5 +1096,22 @@
   "warnings": {
     "reload": "Сейчас играет трек!\nВы уверены, что хотите перезагрузить страницу?",
     "songError": "Не удалось включить песню, проверьте сервер!"
+  },
+  "lyrics": {
+    "customSelect": {
+      "title": "Выбрать текст",
+      "subtitle": "{{title}} — {{artist}}",
+      "noSong": "Сейчас ничего не воспроизводится.",
+      "serverDisabled": "Пользовательский сервер текстов не включен.",
+      "empty": "Пользовательские варианты текстов не найдены.",
+      "searchTitle": "Название трека",
+      "searchArtist": "Исполнитель",
+      "search": "Поиск",
+      "select": "Выбрать",
+      "selected": "Выбрано",
+      "currentSelection": "Текущий выбор: {{title}} — {{artist}}",
+      "lyricsId": "ID: {{id}}",
+      "noPreview": "Предпросмотр недоступен."
+    }
   }
 }

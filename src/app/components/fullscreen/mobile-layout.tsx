@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ListMusic, MicVocalIcon } from "lucide-react";
+import { ChevronDown, ListChecks, ListMusic, MicVocalIcon } from "lucide-react";
 import { memo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
@@ -16,11 +16,13 @@ import {
 import {
   useFullscreenPlayerState,
   useLyricsAlignment,
+  useLyricsSettings,
   useSongColor,
 } from "@/store/player.store";
 import { ArtworkWithInfo } from "./artwork-with-info";
 import { FULLSCREEN_QUEUE_BG_CLASS, PANEL_MAX_WIDTH } from "./constants";
 import { FullscreenControlPanel } from "./control-panel";
+import { CustomLyricsSelect } from "./custom-lyrics-select";
 import { LyricsTab } from "./lyrics";
 import { FullscreenSongQueue } from "./queue";
 import { QueueCurrentSong } from "./queue-current-song";
@@ -122,8 +124,11 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
   const { t } = useTranslation();
   const { fullscreenPlayerTab } = useFullscreenPlayerState();
   const { hasLyrics } = useHasLyrics();
+  const { customServerEnabled, customServerUrl } = useLyricsSettings();
 
   const lyricsDisabled = hasLyrics === false;
+  const customLyricsDisabled =
+    !customServerEnabled || customServerUrl.trim().length === 0;
 
   return (
     <div
@@ -138,6 +143,17 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
         onClick={() =>
           setFullscreenTabWithHistory(
             fullscreenPlayerTab === "lyrics" ? "playing" : "lyrics",
+          )
+        }
+      />
+      <MobileTabButton
+        icon={<ListChecks className="size-5" />}
+        label={t("fullscreen.selectLyrics")}
+        active={fullscreenPlayerTab === "customLyrics"}
+        disabled={customLyricsDisabled}
+        onClick={() =>
+          setFullscreenTabWithHistory(
+            fullscreenPlayerTab === "customLyrics" ? "playing" : "customLyrics",
           )
         }
       />
@@ -254,6 +270,23 @@ export const MobileLayout = memo(function MobileLayout({
                   </motion.div>
                 )}
               </AnimatePresence>
+            </motion.div>
+          )}
+
+          {fullscreenPlayerTab === "customLyrics" && (
+            <motion.div
+              key="custom-lyrics-view"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={VIEW_TRANSITION}
+              className={`flex-1 overflow-hidden min-h-0 mx-auto w-full flex flex-col ${PANEL_MAX_WIDTH}`}
+              data-vaul-no-drag
+              onClick={(e) => e.stopPropagation()}
+            >
+              <CustomLyricsSelect
+                onBack={() => setFullscreenTabWithHistory("lyrics")}
+              />
             </motion.div>
           )}
 
