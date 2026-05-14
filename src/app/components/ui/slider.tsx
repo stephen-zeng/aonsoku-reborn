@@ -24,6 +24,7 @@ type SliderBaseProps = {
   isBuffering?: boolean;
   bufferedProgress?: number;
   contrast?: FullscreenContrast;
+  hideThumb?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 type DragState = {
@@ -231,6 +232,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
       isBuffering = false,
       bufferedProgress = 0,
       contrast,
+      hideThumb,
       value,
       defaultValue,
       min,
@@ -313,7 +315,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
             "ring-offset-background transition-[background-color,opacity]",
             "focus-visible:outline-none focus-visible:ring-transparent",
             "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
-            "opacity-0 group-hover-supported:opacity-100 slider-thumb",
+            hideThumb ? "opacity-0" : "opacity-0 group-hover-supported:opacity-100 slider-thumb",
             variant === "default" && "bg-foreground border-foreground",
             variant === "secondary" &&
               (contrast?.sliderThumbColor ??

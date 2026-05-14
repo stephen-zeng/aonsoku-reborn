@@ -65,6 +65,7 @@ export function MiniPlayerProgress({
         variant="secondary"
         isBuffering={isBuffering}
         bufferedProgress={bufferedProgress}
+        hideThumb
         defaultValue={[0]}
         value={isLocalSeeking ? [localProgress] : [progress]}
         max={currentDuration}
