@@ -1,30 +1,18 @@
-import { useNavigate } from "react-router-dom";
 import { MarqueeTitle } from "@/app/components/fullscreen/marquee-title";
 import { useCurrentLyricLine } from "@/app/hooks/use-current-lyric-line";
-import { useIsMobile } from "@/app/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { ROUTES } from "@/routes/routesList";
 import { usePlayerCurrentSong } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
 import { MiniPlayerProgress } from "./progress";
 
 export function MiniPlayerSongTitle() {
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
   const song = usePlayerCurrentSong();
   const { currentLine } = useCurrentLyricLine();
 
   if (!song) return null;
 
-  const enableTitleNavigation = !isMobile && Boolean(song.albumId);
   const isShowingLyrics = currentLine !== null;
-
-  function handleTitleClick() {
-    if (!enableTitleNavigation) return;
-
-    navigate(ROUTES.ALBUM.PAGE(song.albumId));
-  }
 
   const displayTitle = isShowingLyrics ? currentLine : song.title;
   const displaySubtitle = isShowingLyrics
@@ -38,16 +26,8 @@ export function MiniPlayerSongTitle() {
           className={cn(
             "text-base font-medium",
             "mid-player:text-sm mini-player:text-xs mini-player:font-normal",
-            !isShowingLyrics &&
-              enableTitleNavigation &&
-              "hover-supported:underline cursor-pointer",
           )}
           data-testid="track-title"
-          onClick={
-            !isShowingLyrics && enableTitleNavigation
-              ? handleTitleClick
-              : undefined
-          }
         >
           {displayTitle}
         </span>
@@ -61,19 +41,7 @@ export function MiniPlayerSongTitle() {
         )}
       >
         <MarqueeTitle gap="mr-2">
-          <span
-            className={cn(
-              "w-fit max-w-full truncate",
-              isShowingLyrics &&
-                enableTitleNavigation &&
-                "hover-supported:underline cursor-pointer",
-            )}
-            onClick={
-              isShowingLyrics && enableTitleNavigation
-                ? handleTitleClick
-                : undefined
-            }
-          >
+          <span className="w-fit max-w-full truncate">
             {displaySubtitle}
           </span>
         </MarqueeTitle>
