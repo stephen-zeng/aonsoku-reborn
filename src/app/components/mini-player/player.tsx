@@ -99,8 +99,8 @@ export function MiniPlayer({ pipWindow }: MiniPlayerProps) {
           <MemoMiniPlayerControls />
         </div>
       </div>
-      <div className="hidden mid-player:flex mid-player:items-center mid-player:px-2 mid-player:h-mid-player-progress-height">
-        <MemoMiniPlayerProgress showTime={false} />
+      <div className="hidden mid-player:flex mid-player:items-center mid-player:px-2 mid-player:h-mid-player-progress-height w-full">
+        <MemoMiniPlayerProgress showTime compact />
       </div>
       <div className="hidden mid-player:flex justify-center items-center h-10 max-h-10 relative px-2">
         <div className="absolute left-2">

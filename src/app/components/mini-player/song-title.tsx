@@ -46,7 +46,7 @@ export function MiniPlayerSongTitle() {
         </MarqueeTitle>
       </div>
       <div className="hidden mini-player:group-hover-supported:flex w-full items-center h-4">
-        <MiniPlayerProgress showTime={false} />
+        <MiniPlayerProgress showTime compact />
       </div>
     </div>
   );
