@@ -4,8 +4,8 @@ import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
 import { usePlaylistRemoveSong } from "@/store/playlists.store";
 import { useSongInfo } from "@/store/ui.store";
-import { UpdateParams } from "@/types/responses/playlist";
 import type { QueueSourceId } from "@/types/playerContext";
+import { UpdateParams } from "@/types/responses/playlist";
 import { ISong } from "@/types/responses/song";
 import { queryKeys } from "@/utils/queryKeys";
 

@@ -3,12 +3,12 @@ import { RefObject, useMemo } from "react";
 import { ProgressSlider } from "@/app/components/ui/slider";
 import { useAudioSeeking } from "@/app/hooks/use-audio-seeking";
 import {
+  useHasQueueSongs,
   usePlayerBufferedProgress,
   usePlayerDuration,
   usePlayerIsBuffering,
   usePlayerMediaType,
   usePlayerProgress,
-  useHasQueueSongs,
 } from "@/store/player.store";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 

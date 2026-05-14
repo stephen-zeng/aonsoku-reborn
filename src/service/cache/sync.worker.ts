@@ -1,6 +1,6 @@
 import { expose, wrap } from "comlink";
-import { SyncWorkerService } from "@/service/cache/sync-worker-service";
 import type { Callbacks } from "@/service/cache/sync-worker-service";
+import { SyncWorkerService } from "@/service/cache/sync-worker-service";
 
 const service = new SyncWorkerService();
 

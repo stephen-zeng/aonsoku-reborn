@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { AuthType } from "@/types/serverConfig";
 import {
   decodeStoredPassword,
   fromHex,
@@ -9,7 +10,6 @@ import {
   saltWord,
   toHex,
 } from "./salt";
-import { AuthType } from "@/types/serverConfig";
 
 describe("saltWord", () => {
   it("is a non-empty string", () => {

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { cn } from "@/lib/utils";
 import { Skeleton } from "@/app/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { useSidebar } from "@/store/ui.store";
 
 interface ShadowHeaderFallbackProps {

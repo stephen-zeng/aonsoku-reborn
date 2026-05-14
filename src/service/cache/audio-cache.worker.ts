@@ -1,12 +1,12 @@
-import { expose, wrap, type Remote } from "comlink";
+import { expose, type Remote, wrap } from "comlink";
 import {
+  getSongStreamUrl as workerGetSongStreamUrl,
   initAuth as workerInitAuth,
   updateAuth as workerUpdateAuth,
-  getSongStreamUrl as workerGetSongStreamUrl,
 } from "@/api/workerHttpClient";
-import { LibraryDB } from "@/store/library-db";
-import { audioKey } from "@/service/cache/cache-keys";
 import { AudioCacheQueue } from "@/service/cache/audio-cache-queue";
+import { audioKey } from "@/service/cache/cache-keys";
+import { LibraryDB } from "@/store/library-db";
 import type { CachedItemMeta, CacheTask } from "@/types/cache";
 
 interface WorkerAuthConfig {

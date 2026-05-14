@@ -16,9 +16,9 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import { AboutDialog } from "@/app/components/about/dialog";
+import { SyncPopoverContent } from "@/app/components/header/sync-progress-bar";
 import { RemoteControlDialog } from "@/app/components/remote-control/dialog";
 import { ShortcutsDialog } from "@/app/components/shortcuts/dialog";
-import { SyncPopoverContent } from "@/app/components/header/sync-progress-bar";
 import {
   Avatar,
   AvatarFallback,
@@ -43,17 +43,18 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
+import { useAvatarUrl } from "@/app/hooks/use-avatar-url";
 import { useIsMobile } from "@/app/hooks/use-mobile";
 import { useSwUpdate } from "@/app/hooks/use-sw-update";
-import { useAvatarUrl } from "@/app/hooks/use-avatar-url";
 import { LogoutObserver } from "@/app/observers/logout-observer";
+import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
 import {
   settingsKeys,
   shortcutDialogKeys,
   stringifyShortcut,
 } from "@/shortcuts";
-import { useAppData, useAppStore, useAppSettings } from "@/store/app.store";
+import { useAppData, useAppSettings, useAppStore } from "@/store/app.store";
 import {
   useCacheStore,
   useIsOnline,
@@ -62,7 +63,6 @@ import {
   useSyncState,
 } from "@/store/cache.store";
 import { useLanControlServerInfo } from "@/store/lanControl.store";
-import { cn } from "@/lib/utils";
 import { isMacOS } from "@/utils/desktop";
 
 type SyncBadgeVariant = "offline" | "error" | "syncing" | "done" | null;

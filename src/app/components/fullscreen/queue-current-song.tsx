@@ -3,6 +3,7 @@ import { EllipsisVertical, Repeat, Shuffle } from "lucide-react";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
+import { LikeButton } from "@/app/components/fullscreen/like-button";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { QueueMenuOptions } from "@/app/components/queue/queue-menu-options";
 import { Button } from "@/app/components/ui/button";
@@ -11,7 +12,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
-import { LikeButton } from "@/app/components/fullscreen/like-button";
 import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
 import {
   usePlayerActions,

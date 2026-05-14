@@ -15,8 +15,8 @@ vi.mock("@/service/lyrics", () => ({
 
 import { setCustomLyricsBody } from "@/service/lyrics";
 import {
-  stripCustomLyricsBodies,
   migrateCustomLyricsBodiesToIdb,
+  stripCustomLyricsBodies,
 } from "./custom-lyrics-persist";
 
 const mockSetCustomLyricsBody = vi.mocked(setCustomLyricsBody);

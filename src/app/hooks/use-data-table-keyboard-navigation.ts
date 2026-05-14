@@ -1,5 +1,5 @@
 import { Row, Table } from "@tanstack/react-table";
-import { useCallback, type RefObject } from "react";
+import { type RefObject, useCallback } from "react";
 import { computeMultiSelectedRows } from "@/utils/dataTable";
 
 interface UseDataTableKeyboardNavigationProps<TData> {

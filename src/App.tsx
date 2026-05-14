@@ -15,8 +15,8 @@ import { SmartDownloadObserver } from "@/app/observers/smart-download-observer";
 import { ThemeObserver } from "@/app/observers/theme-observer";
 import { ToastContainer } from "@/app/observers/toast-container";
 import { router } from "@/routes/router";
-import { useCacheIndexActions } from "@/store/cache-index.store";
 import { cacheManager } from "@/service/cache";
+import { useCacheIndexActions } from "@/store/cache-index.store";
 import {
   tryAutoConnect,
   useLanControlClientStore,

@@ -1,4 +1,5 @@
 import type { Draft } from "immer";
+import { LanControlMessageType } from "@/types/lanControl";
 import type {
   IPlayerActions,
   IPlayerContext,
@@ -7,10 +8,10 @@ import type {
   QueueTier,
 } from "@/types/playerContext";
 import { LoopState } from "@/types/playerContext";
-import type { ISong } from "@/types/responses/song";
 import type { Radio } from "@/types/responses/radios";
-import { LanControlMessageType } from "@/types/lanControl";
+import type { ISong } from "@/types/responses/song";
 import { areSongListsEqual } from "@/utils/compareSongLists";
+import { logger } from "@/utils/logger";
 import {
   MAX_SHUFFLE_HISTORY,
   MAX_SHUFFLE_START_HISTORY,
@@ -34,7 +35,6 @@ import {
   setNextOnUserQueue,
   trimQueueToWindow,
 } from "./queue-utils";
-import { logger } from "@/utils/logger";
 
 interface SharedDeps {
   set: (fn: (state: Draft<IPlayerContext>) => void) => void;

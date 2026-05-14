@@ -1,9 +1,9 @@
 import type { Draft } from "immer";
 import clamp from "lodash/clamp";
-import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
 import { LanControlMessageType } from "@/types/lanControl";
-import { isIOS } from "@/utils/platform";
+import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
 import { logger } from "@/utils/logger";
+import { isIOS } from "@/utils/platform";
 
 interface SharedDeps {
   set: (fn: (state: Draft<IPlayerContext>) => void) => void;

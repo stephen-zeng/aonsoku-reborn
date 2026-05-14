@@ -3,10 +3,10 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { cacheIndexStore } from "@/store/idb";
 import { _resetLibraryDbForTests, libraryDb } from "@/store/library-db";
 import {
-  useCacheIndexStore,
+  computePoolStats,
   isAudioCached,
   isCoverCached,
-  computePoolStats,
+  useCacheIndexStore,
 } from "./cache-index.store";
 
 const INDEX_KEY = "cache-index-v1";

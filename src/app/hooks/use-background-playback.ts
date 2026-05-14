@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { usePlayerStore } from "@/store/player.store";
-import { manageMediaSession } from "@/utils/setMediaSession";
 import { logger } from "@/utils/logger";
+import { manageMediaSession } from "@/utils/setMediaSession";
 
 const RESUME_DELAY_MS = 100;
 

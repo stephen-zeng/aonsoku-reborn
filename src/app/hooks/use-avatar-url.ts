@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { cacheManager } from "@/service/cache";
-import { useIsAvatarCached } from "@/store/cache-index.store";
 import { useIsOfflineMode } from "@/store/cache.store";
+import { useIsAvatarCached } from "@/store/cache-index.store";
 
 export function useAvatarUrl(username: string | undefined): string | null {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);

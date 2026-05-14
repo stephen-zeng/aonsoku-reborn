@@ -1,8 +1,8 @@
+import { setCustomLyricsBody } from "@/service/lyrics";
 import {
   MAX_SELECTED_CUSTOM_LYRICS,
   type SelectedCustomLyrics,
 } from "@/types/playerContext";
-import { setCustomLyricsBody } from "@/service/lyrics";
 
 export function stripCustomLyricsBodies(
   selected: Record<string, SelectedCustomLyrics> | undefined,

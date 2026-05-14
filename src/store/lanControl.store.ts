@@ -3,7 +3,7 @@ import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
 import { LanControlConfig, LanControlServerInfo } from "@/types/lanControl";
-import { toHex, decodeStoredPassword } from "@/utils/salt";
+import { decodeStoredPassword, toHex } from "@/utils/salt";
 
 interface ILanControlContext {
   config: LanControlConfig;

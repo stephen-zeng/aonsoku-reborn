@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Slider } from "@/app/components/ui/slider";
 import { useAudioSeeking } from "@/app/hooks/use-audio-seeking";
+import { cn } from "@/lib/utils";
 import {
   usePlayerBufferedProgress,
   usePlayerDuration,
@@ -9,7 +10,6 @@ import {
   usePlayerRef,
 } from "@/store/player.store";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
-import { cn } from "@/lib/utils";
 
 interface MiniPlayerProgressProps {
   showTime?: boolean;

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useCacheIndexStore } from "@/store/cache-index.store";
 import { useCacheStore } from "@/store/cache.store";
+import { useCacheIndexStore } from "@/store/cache-index.store";
 import { _resetLibraryDbForTests, libraryDb } from "@/store/library-db";
 
 const cacheSmartSong = vi.fn();

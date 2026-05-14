@@ -11,21 +11,21 @@ import { useAudioContext } from "@/app/hooks/use-audio-context";
 import { getNetworkStatus } from "@/app/hooks/use-network-status";
 import { useCacheStore } from "@/store/cache.store";
 import {
+  useIsRemoteControlActive,
+  usePlayerActions,
   usePlayerIsPlaying,
   usePlayerMediaType,
+  usePlayerStore,
   usePlayerVolume,
-  useIsRemoteControlActive,
   useReplayGainActions,
   useReplayGainState,
-  usePlayerActions,
-  usePlayerStore,
 } from "@/store/player.store";
-import { logger } from "@/utils/logger";
-import { manageMediaSession } from "@/utils/setMediaSession";
-import { calculateReplayGain, ReplayGainParams } from "@/utils/replayGain";
-import { perceptualToGain } from "@/utils/volume";
-import { isIOS } from "@/utils/platform";
 import { LoopState } from "@/types/playerContext";
+import { logger } from "@/utils/logger";
+import { isIOS } from "@/utils/platform";
+import { calculateReplayGain, ReplayGainParams } from "@/utils/replayGain";
+import { manageMediaSession } from "@/utils/setMediaSession";
+import { perceptualToGain } from "@/utils/volume";
 
 type AudioPlayerProps = ComponentPropsWithoutRef<"audio"> & {
   audioRef: RefObject<HTMLAudioElement>;

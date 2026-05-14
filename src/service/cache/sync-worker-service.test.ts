@@ -1,17 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  BULK_CHUNK_SIZE,
+  bulkPutInChunks,
+  PLAYLIST_DETAIL_BATCH_SIZE,
   SyncWorkerService,
   TIER_FRESH_WINDOW_MS,
-  BULK_CHUNK_SIZE,
-  PLAYLIST_DETAIL_BATCH_SIZE,
-  bulkPutInChunks,
 } from "@/service/cache/sync-worker-service";
 import {
   _resetLibraryDbForTests,
-  libraryDb,
-  withPlayedAt,
-  type SongRow,
   type CacheMetaRow,
+  libraryDb,
+  type SongRow,
+  withPlayedAt,
 } from "@/store/library-db";
 
 vi.mock("@/api/workerHttpClient", () => ({

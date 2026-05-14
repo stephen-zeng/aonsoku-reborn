@@ -1,8 +1,8 @@
+import { Pause, PlayIcon } from "lucide-react";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
 import { useHasHover } from "@/app/hooks/use-input-mode";
 import { cn } from "@/lib/utils";
-import { Pause, PlayIcon } from "lucide-react";
 import { CoverArt } from "@/types/coverArtType";
 
 interface CoverImageProps {

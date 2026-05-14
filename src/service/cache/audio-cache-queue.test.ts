@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AudioCacheQueue } from "./audio-cache-queue";
 import type { CacheTask } from "@/types/cache";
+import { AudioCacheQueue } from "./audio-cache-queue";
 
 function makeTask(
   songId: string,

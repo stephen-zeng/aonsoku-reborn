@@ -34,14 +34,14 @@ vi.mock("@/utils/logger", () => ({
 }));
 
 import {
-  getCustomLyricsSongKey,
-  getCustomLyricsCandidateKey,
-  getSelectedCustomLyrics,
-  getCustomLyricsBody,
-  setCustomLyricsBody,
-  deleteCustomLyricsBodies,
   CUSTOM_LYRICS_IDB_PREFIX,
+  deleteCustomLyricsBodies,
   type GetLyricsData,
+  getCustomLyricsBody,
+  getCustomLyricsCandidateKey,
+  getCustomLyricsSongKey,
+  getSelectedCustomLyrics,
+  setCustomLyricsBody,
 } from "./lyrics";
 
 describe("getCustomLyricsSongKey", () => {

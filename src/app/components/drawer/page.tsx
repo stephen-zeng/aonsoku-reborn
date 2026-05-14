@@ -1,8 +1,8 @@
 import { ListVideo, MicVocalIcon, XIcon } from "lucide-react";
 import { ComponentPropsWithoutRef } from "react";
 import { useTranslation } from "react-i18next";
-import { FullscreenSongQueue } from "@/app/components/fullscreen/queue";
 import { LyricsTab } from "@/app/components/fullscreen/lyrics";
+import { FullscreenSongQueue } from "@/app/components/fullscreen/queue";
 import { Button } from "@/app/components/ui/button";
 import { ResizeHandle } from "@/app/components/ui/resize-handle";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";

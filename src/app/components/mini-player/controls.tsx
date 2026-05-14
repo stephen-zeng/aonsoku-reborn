@@ -1,6 +1,6 @@
 import { clsx } from "clsx";
-import { Heart } from "lucide-react";
 import {
+  Heart,
   Pause,
   Play,
   Repeat,
@@ -11,8 +11,8 @@ import {
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { Button } from "@/app/components/ui/button";
 import { usePlaybackControls } from "@/app/hooks/use-playback-controls";
-import { usePlayerActions, usePlayerSongStarred } from "@/store/player.store";
 import { cn } from "@/lib/utils";
+import { usePlayerActions, usePlayerSongStarred } from "@/store/player.store";
 
 export function MiniPlayerControls() {
   const {

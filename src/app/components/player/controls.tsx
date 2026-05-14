@@ -12,10 +12,10 @@ import { useTranslation } from "react-i18next";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
-import { usePlaybackControls } from "@/app/hooks/use-playback-controls";
 import { usePlayerHotkeys } from "@/app/hooks/use-audio-hotkeys";
-import { usePlayerMediaType } from "@/store/player.store";
+import { usePlaybackControls } from "@/app/hooks/use-playback-controls";
 import { cn } from "@/lib/utils";
+import { usePlayerMediaType } from "@/store/player.store";
 import { Radio } from "@/types/responses/radios";
 import { ISong } from "@/types/responses/song";
 

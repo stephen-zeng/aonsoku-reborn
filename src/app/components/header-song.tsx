@@ -1,8 +1,8 @@
 import {
-  usePlayerCurrentSong,
-  usePlayerCurrentSongIndex,
   useHasQueueSongs,
   usePlayerCurrentList,
+  usePlayerCurrentSong,
+  usePlayerCurrentSongIndex,
 } from "@/store/player.store";
 import { AppTitle } from "./header/app-title";
 

@@ -1,6 +1,6 @@
+import type { IDBKeyvalStore } from "idb-keyval";
 import { createStore, del, get, set } from "idb-keyval";
 import type { PersistStorage } from "zustand/middleware";
-import type { IDBKeyvalStore } from "idb-keyval";
 
 export const cacheIndexStore = createStore("aonsoku-cache", "cache-index");
 export const offlineLibraryStore = createStore(

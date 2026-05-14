@@ -1,10 +1,10 @@
-import { wrap, expose, transfer, type Remote } from "comlink";
+import { expose, type Remote, transfer, wrap } from "comlink";
 import { queryClient } from "@/lib/queryClient";
+import { metadataSyncService } from "@/service/cache/metadata-sync";
 import { useAppStore } from "@/store/app.store";
 import { useCacheStore } from "@/store/cache.store";
-import { usePlayerStore } from "@/store/player.store";
 import { getCacheIndexActions } from "@/store/cache-index.store";
-import { metadataSyncService } from "@/service/cache/metadata-sync";
+import { usePlayerStore } from "@/store/player.store";
 import type { SyncState } from "@/types/cache";
 import type { AuthType } from "@/types/serverConfig";
 

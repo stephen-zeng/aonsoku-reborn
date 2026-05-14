@@ -1,10 +1,10 @@
 import { Disc2Icon, EllipsisVertical } from "lucide-react";
 import { type KeyboardEvent, type ReactNode, startTransition } from "react";
 import { useTranslation } from "react-i18next";
-import { CoverImage } from "@/app/components/table/cover-image";
 import { SongMenuOptions } from "@/app/components/song/menu-options";
-import { TableArtists } from "@/app/components/table/song-title";
 import { CachedIndicator } from "@/app/components/table/cached-indicator";
+import { CoverImage } from "@/app/components/table/cover-image";
+import { TableArtists } from "@/app/components/table/song-title";
 import { Button } from "@/app/components/ui/button";
 import {
   DropdownMenu,

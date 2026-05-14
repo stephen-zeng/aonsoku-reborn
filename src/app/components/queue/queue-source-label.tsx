@@ -1,6 +1,6 @@
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useQueueSource } from "@/store/player.store";
-import { useTranslation } from "react-i18next";
 
 interface QueueSourceLabelProps {
   className?: string;

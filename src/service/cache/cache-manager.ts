@@ -1,6 +1,6 @@
 import {
-  getCoverArtUrl,
   getAvatarUrl,
+  getCoverArtUrl,
   getSongStreamUrl,
 } from "@/api/httpClient";
 import { asyncPool } from "@/service/cache/concurrency";
@@ -18,11 +18,12 @@ import { libraryDb } from "@/store/library-db";
 import { usePlayerStore } from "@/store/player.store";
 import { CachedItemMeta, CacheMetaSource, Priority } from "@/types/cache";
 import { getSongCoverArtId } from "@/utils/coverArt";
+import { audioCacheService } from "./audio-cache-worker-adapter";
 import {
   albumKey,
   audioKey,
-  COVER_PREFIX,
   avatarKey,
+  COVER_PREFIX,
   coverKey,
   isOldCoverKey,
   playlistKey,
@@ -35,7 +36,6 @@ import {
   persistCacheMeta,
 } from "./persist-meta";
 import { syncService } from "./sync-worker-adapter";
-import { audioCacheService } from "./audio-cache-worker-adapter";
 
 export interface CachedItemDetail {
   key: string;

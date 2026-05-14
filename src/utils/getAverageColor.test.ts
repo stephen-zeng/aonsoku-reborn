@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  hslToRgb,
-  hslToHex,
-  isDarkColor,
-  hslToHsla,
+  blendColors,
   hexToRgb,
   hexToRgba,
-  blendColors,
+  hslToHex,
+  hslToHsla,
+  hslToRgb,
+  isDarkColor,
 } from "./getAverageColor";
 
 describe("hslToRgb", () => {

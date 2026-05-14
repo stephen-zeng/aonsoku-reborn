@@ -17,8 +17,8 @@ import {
   PopoverTrigger,
 } from "@/app/components/ui/popover";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
 import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
+import { cn } from "@/lib/utils";
 import { subsonic } from "@/service/subsonic";
 import { AlbumsSearchParams } from "@/utils/albumsFilter";
 import { queryKeys } from "@/utils/queryKeys";

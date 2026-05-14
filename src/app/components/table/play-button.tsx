@@ -1,9 +1,9 @@
+import { cn } from "@/lib/utils";
 import {
   usePlayerActions,
   usePlayerMediaType,
   usePlayerSonglist,
 } from "@/store/player.store";
-import { cn } from "@/lib/utils";
 
 interface PlaySongButtonProps {
   trackNumber: number;

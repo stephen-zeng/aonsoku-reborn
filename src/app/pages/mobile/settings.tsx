@@ -14,6 +14,8 @@ import {
 import { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
+import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
+import { SettingsOptions } from "@/app/components/settings/options";
 import { Accounts } from "@/app/components/settings/pages/accounts";
 import { Appearance } from "@/app/components/settings/pages/appearance";
 import { Audio } from "@/app/components/settings/pages/audio";
@@ -21,11 +23,9 @@ import { Content } from "@/app/components/settings/pages/content";
 import { Desktop } from "@/app/components/settings/pages/desktop";
 import { Language } from "@/app/components/settings/pages/language";
 import { Privacy } from "@/app/components/settings/pages/privacy";
-import { SettingsOptions } from "@/app/components/settings/options";
-import { Storage } from "@/app/components/settings/pages/storage";
 import { ServerSettings } from "@/app/components/settings/pages/server";
+import { Storage } from "@/app/components/settings/pages/storage";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
-import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import { isDesktop } from "@/utils/desktop";
 
 interface CategoryItem {

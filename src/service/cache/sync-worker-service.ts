@@ -1,25 +1,25 @@
-import type { SyncPhase, SyncState, SyncTier } from "@/types/cache";
-import { type ServerAuthConfig, buildCoverArtUrl } from "@/api/urlBuilder";
+import { buildCoverArtUrl, type ServerAuthConfig } from "@/api/urlBuilder";
 import {
+  ensureAuth as workerEnsureAuth,
   workerHttpClient,
   initAuth as workerInitAuth,
   updateAuth as workerUpdateAuth,
-  ensureAuth as workerEnsureAuth,
 } from "@/api/workerHttpClient";
-import { LibraryDB, withStarredAt, withPlayedAt } from "@/store/library-db";
-import type { PlaylistRow, CacheMetaRow } from "@/store/library-db";
+import { coverKey } from "@/service/cache/cache-keys";
+import { asyncPool } from "@/service/cache/concurrency";
+import type { CacheMetaRow, PlaylistRow } from "@/store/library-db";
+import { LibraryDB, withPlayedAt, withStarredAt } from "@/store/library-db";
+import type { SyncPhase, SyncState, SyncTier } from "@/types/cache";
+import type { AlbumListResponse } from "@/types/responses/album";
+import type { ArtistsResponse, ISimilarArtist } from "@/types/responses/artist";
 import type { GenresResponse } from "@/types/responses/genre";
 import type {
   PlaylistsResponse,
   PlaylistWithEntries,
   PlaylistWithEntriesResponse,
 } from "@/types/responses/playlist";
-import type { ArtistsResponse, ISimilarArtist } from "@/types/responses/artist";
-import type { AlbumListResponse } from "@/types/responses/album";
-import type { FavoritesResponse } from "@/types/responses/song";
 import type { ISearchResponse } from "@/types/responses/search";
-import { coverKey } from "@/service/cache/cache-keys";
-import { asyncPool } from "@/service/cache/concurrency";
+import type { FavoritesResponse } from "@/types/responses/song";
 
 export interface WorkerAuthConfig extends ServerAuthConfig {
   serverType?: string | null;

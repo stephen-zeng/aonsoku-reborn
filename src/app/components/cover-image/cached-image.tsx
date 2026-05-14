@@ -7,8 +7,8 @@ import {
 } from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { cacheManager } from "@/service/cache";
-import { useIsCoverCached } from "@/store/cache-index.store";
 import { useIsOfflineMode } from "@/store/cache.store";
+import { useIsCoverCached } from "@/store/cache-index.store";
 import { CoverArt } from "@/types/coverArtType";
 import {
   getDefaultArtUrl,

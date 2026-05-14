@@ -1,7 +1,7 @@
 import { createStore, del, get, set } from "idb-keyval";
 import { httpClient } from "@/api/httpClient";
-import { usePlayerStore } from "@/store/player.store";
 import { idbSetWithRetry } from "@/store/idb";
+import { usePlayerStore } from "@/store/player.store";
 import type { LyricsSource, SelectedCustomLyrics } from "@/types/playerContext";
 import type {
   ILyric,

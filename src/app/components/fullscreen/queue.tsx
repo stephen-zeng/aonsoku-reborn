@@ -4,6 +4,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import type { LucideIcon } from "lucide-react";
 import { Repeat } from "lucide-react";
 import {
@@ -17,41 +18,39 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { useWebHaptics } from "web-haptics/react";
+import RepeatOne from "@/app/components/icons/repeat-one";
+import { useQueueDndSensors } from "@/app/components/queue/dnd-sensors";
 import {
   QueueItemRow,
   SortableQueueItem,
 } from "@/app/components/queue/queue-item-row";
-import { useIsMobile } from "@/app/hooks/use-mobile";
-import { useQueueDndSensors } from "@/app/components/queue/dnd-sensors";
+import { QueueSourceLabel } from "@/app/components/queue/queue-source-label";
+import { Button } from "@/app/components/ui/button";
 import {
   ScrollArea,
   scrollAreaViewportSelector,
 } from "@/app/components/ui/scroll-area";
-import { Button } from "@/app/components/ui/button";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import {
-  usePlayHistory,
-  usePlayHistoryActions,
-} from "@/store/playHistory.store";
-import {
+  useContextQueue,
+  useHapticSettings,
+  useHasQueueSongs,
   usePlayerActions,
   usePlayerCurrentSong,
   usePlayerCurrentSongIndex,
   usePlayerLoop,
   useUserQueue,
-  useContextQueue,
-  useHasQueueSongs,
-  useHapticSettings,
 } from "@/store/player.store";
-import type { ISong } from "@/types/responses/song";
+import {
+  usePlayHistory,
+  usePlayHistoryActions,
+} from "@/store/playHistory.store";
 import { LoopState } from "@/types/playerContext";
-
-import { QueueCurrentSong, QueueModeButtons } from "./queue-current-song";
-import { QueueSourceLabel } from "@/app/components/queue/queue-source-label";
-import RepeatOne from "@/app/components/icons/repeat-one";
+import type { ISong } from "@/types/responses/song";
 import { FULLSCREEN_QUEUE_BG_CLASS } from "./constants";
+import { QueueCurrentSong, QueueModeButtons } from "./queue-current-song";
 
 function syncQueueCurrentSongPosition({
   container,

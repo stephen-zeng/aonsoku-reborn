@@ -1,7 +1,7 @@
 import type { Draft } from "immer";
+import { setCustomLyricsBody } from "@/service/lyrics";
 import type { IPlayerContext, IPlayerState } from "@/types/playerContext";
 import { LoopState } from "@/types/playerContext";
-import { setCustomLyricsBody } from "@/service/lyrics";
 import { logger } from "@/utils/logger";
 import { initSonglistState } from "./queue-utils";
 

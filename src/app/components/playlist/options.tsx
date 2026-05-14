@@ -3,8 +3,8 @@ import { DropdownMenuSeparator } from "@/app/components/ui/dropdown-menu";
 import { useOptions } from "@/app/hooks/use-options";
 import { cacheManager } from "@/service/cache";
 import { subsonic } from "@/service/subsonic";
-import { usePlaylists, useRemovePlaylist } from "@/store/playlists.store";
 import { usePlayerStore } from "@/store/player.store";
+import { usePlaylists, useRemovePlaylist } from "@/store/playlists.store";
 import { Playlist, PlaylistWithEntries } from "@/types/responses/playlist";
 import { ISong } from "@/types/responses/song";
 

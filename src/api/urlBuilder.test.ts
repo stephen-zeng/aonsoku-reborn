@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { AuthType } from "@/types/serverConfig";
+import type { ServerAuthConfig } from "./urlBuilder";
 import {
   buildCoverArtUrl,
   buildQueryParams,
   buildSongStreamUrl,
   buildUrl,
 } from "./urlBuilder";
-import type { ServerAuthConfig } from "./urlBuilder";
 
 const tokenConfig: ServerAuthConfig = {
   url: "https://music.example.com",

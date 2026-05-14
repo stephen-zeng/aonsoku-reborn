@@ -1,14 +1,14 @@
 import type { ReactNode } from "react";
+import { Skeleton } from "@/app/components/ui/skeleton";
+import { useHasHover } from "@/app/hooks/use-input-mode";
 import {
   getColumnLayouts,
-  topSongsColumnIds,
   type TableColumnId,
   type TableColumnLayout,
   type TableKind,
+  topSongsColumnIds,
 } from "@/app/tables/column-layouts";
-import { useHasHover } from "@/app/hooks/use-input-mode";
 import { cn } from "@/lib/utils";
-import { Skeleton } from "@/app/components/ui/skeleton";
 
 interface TableFallbackProps {
   variant?: "classic" | "modern";

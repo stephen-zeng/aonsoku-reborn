@@ -4,10 +4,10 @@ import { useAppStore } from "@/store/app.store";
 import type { CoverArt } from "@/types/coverArtType";
 import { AppRequestError } from "./errors";
 import {
-  buildUrl,
   buildAvatarUrl as _buildAvatarUrl,
   buildCoverArtUrl as _buildCoverArtUrl,
   buildSongStreamUrl as _buildSongStreamUrl,
+  buildUrl,
   type ServerAuthConfig,
 } from "./urlBuilder";
 

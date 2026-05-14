@@ -6,8 +6,8 @@ import {
 import { CommandGroup, CommandItem } from "@/app/components/ui/command";
 import { useTheme } from "@/store/theme.store";
 import {
-  ThemeMode,
   getThemeGroupForMode,
+  ThemeMode,
   themeGroups,
   themeModeItems,
 } from "@/types/themeContext";

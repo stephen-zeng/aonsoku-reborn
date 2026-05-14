@@ -1,7 +1,7 @@
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { ReactNode } from "react";
-import { Button } from "@/app/components/ui/button";
 import { VolumeSlider } from "@/app/components/player/volume";
+import { Button } from "@/app/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function MiniPlayerPopoverVolume({ children }: { children: ReactNode }) {

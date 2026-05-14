@@ -1,13 +1,13 @@
 import type { CoverArt } from "@/types/coverArtType";
 import { AppRequestError } from "./errors";
 import {
-  buildUrl,
   buildCoverArtUrl as _buildCoverArtUrl,
   buildSongStreamUrl as _buildSongStreamUrl,
+  buildUrl,
   type ServerAuthConfig,
 } from "./urlBuilder";
 
-export type { ServerAuthConfig, QueryType } from "./urlBuilder";
+export type { QueryType, ServerAuthConfig } from "./urlBuilder";
 
 export interface FetchOptions extends RequestInit {
   query?: Record<string, string | number | undefined>;

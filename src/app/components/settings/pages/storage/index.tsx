@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CacheManagerSection } from "./cache-manager";
 import {
   Content,
   ContentItem,
@@ -25,11 +24,6 @@ import {
 import { Switch } from "@/app/components/ui/switch";
 import { cacheManager } from "@/service/cache";
 import { syncService } from "@/service/cache/sync-worker-adapter";
-import { clearLibraryData } from "@/store/library-db";
-import {
-  type CachePoolBreakdown,
-  useCachePoolStats,
-} from "@/store/cache-index.store";
 import {
   useCacheActions,
   useCacheSettings,
@@ -40,13 +34,19 @@ import {
   useSmartRules,
 } from "@/store/cache.store";
 import {
+  type CachePoolBreakdown,
+  useCachePoolStats,
+} from "@/store/cache-index.store";
+import { clearLibraryData } from "@/store/library-db";
+import {
   CACHE_SIZE_OPTIONS,
+  type CacheMetaSource,
   COVER_ART_CONCURRENCY_MAX,
   COVER_ART_CONCURRENCY_MIN,
-  type CacheMetaSource,
 } from "@/types/cache";
 import dateTime from "@/utils/dateTime";
 import { formatBytes } from "@/utils/formatBytes";
+import { CacheManagerSection } from "./cache-manager";
 
 function LibraryCachingSection() {
   const { t } = useTranslation();

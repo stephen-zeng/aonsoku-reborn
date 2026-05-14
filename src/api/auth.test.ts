@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { authQueryParams } from "./auth";
 import { AuthType } from "@/types/serverConfig";
+import { authQueryParams } from "./auth";
 
 describe("authQueryParams", () => {
   it("returns token auth params for AuthType.TOKEN", () => {

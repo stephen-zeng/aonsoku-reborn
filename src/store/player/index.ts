@@ -1,10 +1,12 @@
+import { get as idbGet, set as idbSet } from "idb-keyval";
+import debounce from "lodash/debounce";
 import merge from "lodash/merge";
 import omit from "lodash/omit";
-import debounce from "lodash/debounce";
 import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
+import { deleteCustomLyricsBodies } from "@/service/lyrics";
 import {
   CurrentSongData,
   LanControlMessageType,
@@ -16,25 +18,20 @@ import { hasElectronBridge } from "@/utils/desktop";
 import { discordRpc } from "@/utils/discordRpc";
 import { logger } from "@/utils/logger";
 import { decodeStoredPassword, genEncodedPassword } from "@/utils/salt";
-import { deleteCustomLyricsBodies } from "@/service/lyrics";
-import { get as idbGet, set as idbSet } from "idb-keyval";
+import { MAX_SHUFFLE_START_HISTORY } from "@/utils/songListFunctions";
 import {
   migrateCustomLyricsBodiesToIdb,
   stripCustomLyricsBodies,
 } from "./custom-lyrics-persist";
-import { createQueueActions } from "./queue-actions";
-import { createPlaybackActions } from "./playback-actions";
-import { createUiActions } from "./ui-actions";
-import { createRemoteControlActions } from "./remote-control-actions";
-import { createStarActions } from "./star-actions";
-import { createSettingsActions } from "./settings-actions";
 import {
-  initialPlayerState,
-  initialPlayerProgress,
-  initialRemoteControl,
   createInitialSettings,
+  initialPlayerProgress,
+  initialPlayerState,
+  initialRemoteControl,
   initialSonglist,
 } from "./initial-state";
+import { createPlaybackActions } from "./playback-actions";
+import { createQueueActions } from "./queue-actions";
 import {
   clearSonglistState,
   getEffectiveIndex,
@@ -44,7 +41,10 @@ import {
   MAX_USER_QUEUE_IDB_SIZE,
   trimQueueToWindow,
 } from "./queue-utils";
-import { MAX_SHUFFLE_START_HISTORY } from "@/utils/songListFunctions";
+import { createRemoteControlActions } from "./remote-control-actions";
+import { createSettingsActions } from "./settings-actions";
+import { createStarActions } from "./star-actions";
+import { createUiActions } from "./ui-actions";
 
 const IDB_SONGLIST_KEY = "player_songlist";
 

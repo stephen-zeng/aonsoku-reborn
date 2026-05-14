@@ -1,6 +1,6 @@
 import { Table } from "@tanstack/react-table";
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { OptionsButtons } from "@/app/components/options/buttons";
 
 import {
@@ -8,13 +8,13 @@ import {
   ContextMenuSeparator,
 } from "@/app/components/ui/context-menu";
 import { useOptions } from "@/app/hooks/use-options";
-import { audioKey, cacheManager } from "@/service/cache";
-import { useCacheIndexStore } from "@/store/cache-index.store";
 import { ROUTES } from "@/routes/routesList";
+import { audioKey, cacheManager } from "@/service/cache";
+import { useLibraryCaching } from "@/store/cache.store";
+import { useCacheIndexStore } from "@/store/cache-index.store";
+import { usePlayerStore } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { AddToPlaylistSubMenu } from "./add-to-playlist";
-import { usePlayerStore } from "@/store/player.store";
-import { useLibraryCaching } from "@/store/cache.store";
 
 interface SelectedSongsProps {
   table: Table<ISong>;

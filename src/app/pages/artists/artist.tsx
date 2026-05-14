@@ -8,8 +8,8 @@ import RelatedArtistsList from "@/app/components/artist/related-artists";
 import { ArtistFallback } from "@/app/components/fallbacks/artists";
 import { PreviewListFallback } from "@/app/components/fallbacks/home-fallbacks";
 import { TopSongsTableFallback } from "@/app/components/fallbacks/table-fallbacks";
-import { BadgesData } from "@/app/components/header-info";
 import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
+import { BadgesData } from "@/app/components/header-info";
 import PreviewList from "@/app/components/home/preview-list";
 import ListWrapper from "@/app/components/list-wrapper";
 import {

@@ -2,8 +2,8 @@ import Autoplay from "embla-carousel-autoplay";
 import { useState } from "react";
 import { HeaderItem } from "@/app/components/home/carousel/header-item";
 import {
-  type CarouselApi,
   Carousel,
+  type CarouselApi,
   CarouselContent,
   CarouselItem,
   CarouselNext,

@@ -1,5 +1,5 @@
 import { Play, SearchIcon } from "lucide-react";
-import { useRef, useState, startTransition } from "react";
+import { startTransition, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
@@ -8,8 +8,10 @@ import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { useSongList } from "@/app/hooks/use-song-list";
-import { useOfflineQuery } from "@/lib/offlineQueryClient";
-import { getOfflineSearchResults } from "@/lib/offlineQueryClient";
+import {
+  getOfflineSearchResults,
+  useOfflineQuery,
+} from "@/lib/offlineQueryClient";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
