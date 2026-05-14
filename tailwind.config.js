@@ -150,7 +150,7 @@ module.exports = {
         "header-image": "0 3px 20px rgba(0, 0, 0, 0.45)",
       },
       screens: {
-        "mid-player": { raw: "(min-height: 133px) and (max-height: 170px)" },
+        "mid-player": { raw: "(min-height: 133px) and (max-height: 200px)" },
         "mini-player": { raw: "(max-height: 132px)" },
       },
     },
