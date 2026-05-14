@@ -75,7 +75,9 @@
     "headline": "Umělec",
     "info": {
       "albumsCount_one": "{{count}} album",
-      "albumsCount_other": "{{count}} alb"
+      "albumsCount_other": "{{count}} alb",
+      "albumsCount_few": "{{count}} albumy",
+      "albumsCount_many": "{{count}} albumów"
     },
     "recentAlbums": "Nedávná alba",
     "relatedArtists": "Příbuzní umělci",
@@ -391,8 +393,11 @@
           "error_other": "Nepodařilo se smazat skladby!",
           "success_few": "Skladby byly úspěšně smazány.",
           "success_one": "Skladba byla úspěšně smazána.",
-          "success_other": "Skladby byly úspěšně smazány."
-        }
+          "success_other": "Skladby byly úspěšně smazány.",
+          "error_many": "Nie udało się usunąć piosenek!",
+          "success_many": "Piosenki usunięte pomyślnie!"
+        },
+        "title_many": "Czy napewno chcesz usunąć wybrane piosenki?"
       },
       "validations": {
         "nameLength": "Playlist musí obsahovat alespoň 2 znaky."
@@ -403,7 +408,8 @@
     "refresh": "Obnovit playlisty",
     "songCount_few": "{{count}} skladby",
     "songCount_one": "{{count}} skladba",
-    "songCount_other": "{{count}} skladeb"
+    "songCount_other": "{{count}} skladeb",
+    "songCount_many": "{{count}} piosenek"
   },
   "queue": {
     "clear": "Vyprázdnit frontu",
@@ -481,7 +487,9 @@
     "songCount_few": "{{count}} skladby",
     "songCount_one": "{{count}} skladba",
     "songCount_other": "{{count}} skladeb",
-    "status": "Stav"
+    "status": "Stav",
+    "folderCount_many": "{{count}} folderów",
+    "songCount_many": "{{count}} piosenek"
   },
   "settings": {
     "accounts": {
@@ -505,6 +513,14 @@
           "label": "Povolit automatickou celou obrazovku"
         },
         "group": "Obecné"
+      },
+      "queue": {
+        "colors": {
+          "info": "Si activé, l'application utilisera la couleur dominante de la pochette de l'album actuel comme couleur de fond.",
+          "label": "Activer la couleur de fond dynamique"
+        },
+        "description": "Personnaliser la page de la file d'attente et des paroles.",
+        "group": "File d'attente et paroles"
       }
     },
     "audio": {
@@ -575,6 +591,14 @@
           "track": "Zesílení stopy"
         },
         "preAmp": "Předzesílení (dB)"
+      },
+      "hapticFeedback": {
+        "description": "Control vibration feedback when interacting with the app.",
+        "enabled": {
+          "info": "When enabled, the device will vibrate when dragging queue items on mobile.",
+          "label": "Enable haptic feedback"
+        },
+        "group": "Haptic Feedback"
       }
     },
     "content": {
@@ -881,7 +905,8 @@
             "label": "Obaly alb",
             "description": "Obrázky alb · interpretů · playlistů"
           }
-        }
+        },
+        "downloading": "Stahování {{count}} skladeb"
       }
     }
   },
@@ -986,7 +1011,8 @@
     "menu": {
       "selectedCount_few": "{{count}} vybrány",
       "selectedCount_one": "{{count}} vybrán",
-      "selectedCount_other": "{{count}} vybráno"
+      "selectedCount_other": "{{count}} vybráno",
+      "selectedCount_many": "{{count}} wybranych"
     },
     "pagination": {
       "currentPage": "Stránka {{currentPage}} z {{totalPages}}",
@@ -1030,7 +1056,9 @@
     "system": "Systémový",
     "tinacious-design": "Tinacious Design",
     "vim-dark-soft": "Vim Dark Soft",
-    "vue-dark": "Vue Dark"
+    "vue-dark": "Vue Dark",
+    "cool": "Cool",
+    "huacat-pink": "Huacat Pink"
   },
   "time": {
     "days_few": "{{days}} dny",
@@ -1038,7 +1066,8 @@
     "days_other": "{{days}} dní",
     "hour": "{{hour}} h",
     "minutes": "{{minutes}} min",
-    "seconds": "{{seconds}} s"
+    "seconds": "{{seconds}} s",
+    "days_many": "{{days}} dni"
   },
   "toast": {
     "server": {

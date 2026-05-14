@@ -499,6 +499,14 @@
           "label": "开启自动全屏"
         },
         "group": "通用"
+      },
+      "queue": {
+        "colors": {
+          "info": "Si activé, l'application utilisera la couleur dominante de la pochette de l'album actuel comme couleur de fond.",
+          "label": "Activer la couleur de fond dynamique"
+        },
+        "description": "Personnaliser la page de la file d'attente et des paroles.",
+        "group": "File d'attente et paroles"
       }
     },
     "audio": {
@@ -1032,7 +1040,9 @@
     "system": "系统",
     "tinacious-design": "Tinacious Design",
     "vim-dark-soft": "Vim Dark Soft",
-    "vue-dark": "Vue Dark"
+    "vue-dark": "Vue Dark",
+    "cool": "Cool",
+    "huacat-pink": "Huacat Pink"
   },
   "time": {
     "days_one": "{{days}} 天",

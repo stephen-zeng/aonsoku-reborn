@@ -499,6 +499,14 @@
           "label": "자동 전체 화면 활성화"
         },
         "group": "일반"
+      },
+      "queue": {
+        "colors": {
+          "info": "Si activé, l'application utilisera la couleur dominante de la pochette de l'album actuel comme couleur de fond.",
+          "label": "Activer la couleur de fond dynamique"
+        },
+        "description": "Personnaliser la page de la file d'attente et des paroles.",
+        "group": "File d'attente et paroles"
       }
     },
     "audio": {
@@ -569,6 +577,14 @@
           "track": "트랙 게인"
         },
         "preAmp": "프리앰프 (dB)"
+      },
+      "hapticFeedback": {
+        "description": "控制与应用交互时的震动反馈。",
+        "enabled": {
+          "info": "启用后，在移动设备上拖动队列项目时设备将会震动。",
+          "label": "启用震动反馈"
+        },
+        "group": "震动反馈"
       }
     },
     "content": {
@@ -875,7 +891,8 @@
             "label": "커버 아트",
             "description": "앨범 · 아티스트 · 재생목록 이미지"
           }
-        }
+        },
+        "downloading": "{{count}}곡 다운로드 중"
       }
     }
   },
@@ -1023,7 +1040,9 @@
     "system": "시스템",
     "tinacious-design": "Tinacious 디자인",
     "vim-dark-soft": "Vim 다크 소프트",
-    "vue-dark": "Vue 다크"
+    "vue-dark": "Vue 다크",
+    "cool": "Cool",
+    "huacat-pink": "Huacat Pink"
   },
   "time": {
     "days_one": "{{days}}일",

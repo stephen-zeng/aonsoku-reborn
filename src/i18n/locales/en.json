@@ -68,7 +68,9 @@
     "discord": "Discord",
     "tinacious-design": "Tinacious Design",
     "vue-dark": "Vue Dark",
-    "vim-dark-soft": "Vim Dark Soft"
+    "vim-dark-soft": "Vim Dark Soft",
+    "cool": "Cool",
+    "huacat-pink": "Huacat Pink"
   },
   "favorites": {
     "headline": "Favorites",
@@ -618,6 +620,14 @@
           "label": "Always use album covers",
           "info": "When enabled, every song artwork request uses the album cover to reduce loading time."
         }
+      },
+      "queue": {
+        "colors": {
+          "info": "When enabled, the app will use the dominant color of the current album cover as the background color.",
+          "label": "Enable dynamic background color"
+        },
+        "description": "Customize the queue and lyrics page.",
+        "group": "Queue and lyrics"
       }
     },
     "audio": {
@@ -789,7 +799,8 @@
           "description": "Disabling library caching will clear all synced library data (artists, albums, songs, playlists, genres). You can re-enable it and re-sync at any time.",
           "keep": "Keep enabled",
           "clear": "Clear and disable"
-        }
+        },
+        "downloading": "Downloading {{count}} songs"
       },
       "offline": {
         "group": "Offline Experience",

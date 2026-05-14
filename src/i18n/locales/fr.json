@@ -584,6 +584,14 @@
           "track": "Gain de piste"
         },
         "preAmp": "Préamplificateur (dB)"
+      },
+      "hapticFeedback": {
+        "description": "Control vibration feedback when interacting with the app.",
+        "enabled": {
+          "info": "When enabled, the device will vibrate when dragging queue items on mobile.",
+          "label": "Enable haptic feedback"
+        },
+        "group": "Haptic Feedback"
       }
     },
     "content": {
@@ -890,7 +898,8 @@
             "label": "Pochettes",
             "description": "Images d'albums · d'artistes · de playlists"
           }
-        }
+        },
+        "downloading": "Téléchargement de {{count}} titres"
       }
     }
   },
@@ -1039,7 +1048,9 @@
     "system": "Système",
     "tinacious-design": "Tinacious Design",
     "vim-dark-soft": "Vim Sombre Doux",
-    "vue-dark": "Vue sombre"
+    "vue-dark": "Vue sombre",
+    "cool": "Cool",
+    "huacat-pink": "Huacat Pink"
   },
   "time": {
     "days_many": "{{days}} jours",
