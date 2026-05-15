@@ -14,6 +14,7 @@ import { MiniPlayerSyncObserver } from "@/app/observers/mini-player-sync-observe
 import { NetworkMonitorObserver } from "@/app/observers/network-monitor";
 import { SmartDownloadObserver } from "@/app/observers/smart-download-observer";
 import { ThemeObserver } from "@/app/observers/theme-observer";
+import { KeyboardObserver } from "@/app/observers/keyboard-observer";
 import { ToastContainer } from "@/app/observers/toast-container";
 import { router } from "@/routes/router";
 import { cacheManager } from "@/service/cache";
@@ -65,6 +66,7 @@ function App() {
       <MiniPlayerSyncObserver />
       <LangObserver />
       <ThemeObserver />
+      <KeyboardObserver />
       <LanControlObserver />
       <LibraryMigrationObserver />
       <NetworkMonitorObserver />
