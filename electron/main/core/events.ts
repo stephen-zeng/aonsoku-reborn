@@ -121,6 +121,14 @@ export function setupIpcEvents(window: BrowserWindow | null) {
     win.close();
   });
 
+  ipcMain.on(IpcChannels.FocusMainWindow, () => {
+    if (window && !window.isDestroyed()) {
+      if (window.isMinimized()) window.restore();
+      if (!window.isVisible()) window.show();
+      window.focus();
+    }
+  });
+
   ipcMain.on(IpcChannels.SetAlwaysOnTop, (event, isAlwaysOnTop: boolean) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) return;

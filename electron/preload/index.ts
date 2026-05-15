@@ -28,6 +28,7 @@ const api: IAonsokuAPI = {
     ipcRenderer.send(IpcChannels.ToggleMaximize, isMaximized),
   toggleMinimize: () => ipcRenderer.send(IpcChannels.ToggleMinimize),
   closeWindow: () => ipcRenderer.send(IpcChannels.CloseWindow),
+  focusMainWindow: () => ipcRenderer.send(IpcChannels.FocusMainWindow),
   setTitleBarOverlayColors: (color) =>
     ipcRenderer.send(IpcChannels.ThemeChanged, color),
   setNativeTheme: (isDark) =>

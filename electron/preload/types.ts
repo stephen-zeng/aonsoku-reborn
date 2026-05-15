@@ -32,6 +32,7 @@ export enum IpcChannels {
   MiniPlayerStatus = "mini-player-status",
   SetAlwaysOnTop = "set-always-on-top",
   IsAlwaysOnTop = "is-always-on-top",
+  FocusMainWindow = "focus-main-window",
   // LAN Control
   LanControlStart = "lan-control:start",
   LanControlStop = "lan-control:stop",
@@ -86,6 +87,7 @@ export interface IAonsokuAPI {
   setDiscordRpcActivity: (payload: RpcPayload) => void;
   clearDiscordRpcActivity: () => void;
   saveAppSettings: (payload: ISettingPayload) => void;
+  focusMainWindow: () => void;
   // Mini Player
   openMiniPlayer: () => void;
   closeMiniPlayer: () => void;

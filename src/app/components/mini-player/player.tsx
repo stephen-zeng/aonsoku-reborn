@@ -2,7 +2,6 @@ import clsx from "clsx";
 import { Volume2 } from "lucide-react";
 import { memo } from "react";
 import { ResizeHandler } from "@/app/components/icons/resize-handler";
-import { isDesktop } from "@/utils/desktop";
 import { useMiniPlayerContext } from "./context";
 import { MiniPlayerControls, MiniPlayerLikeButton } from "./controls";
 import { MiniPlayerPopoverVolume } from "./popover-volume";
@@ -34,29 +33,16 @@ export function MiniPlayer() {
 
   return (
     <div
-      className="w-screen h-screen max-h-screen relative group overflow-hidden select-none bg-background"
+      className="w-screen h-screen max-h-screen relative flex flex-col group select-none bg-background overflow-hidden"
     >
-      {/* 
-        The background layer handles dragging. 
-        In Electron, 'drag' regions swallow mouse events, so we place it BEHIND the content.
-      */}
-      {isDesktop() && (
-        <div
-          className="absolute inset-0 z-0"
-          style={{ WebkitAppRegion: "drag" }}
-        />
-      )}
+      <MiniPlayerTitleBar />
 
-      {/* 
-        The content layer handles hover and interaction.
-        We set it to 'no-drag' so it can receive mouse events and trigger the :hover state on the root '.group'.
-      */}
       <div 
-        className="absolute inset-0 z-10 grid grid-rows-1 mid-player:grid-rows-[auto_auto_auto] gap-2 mid-player:gap-mid-player-gap p-1 mid-player:p-mid-player-padding mini-player:p-1.5 pb-4 mid-player:pb-4 mini-player:pb-1.5"
-        style={isDesktop() ? { WebkitAppRegion: "no-drag" } : undefined}
+        className={clsx(
+          "flex-1 relative z-10 grid grid-rows-1 mid-player:grid-rows-[auto_auto_auto] gap-2 mid-player:gap-mid-player-gap p-1 mid-player:p-mid-player-padding mini-player:p-1.5 pb-4 mid-player:pb-4 mini-player:pb-1.5",
+          "overflow-hidden"
+        )}
       >
-        <MiniPlayerTitleBar />
-
         <div
           className={clsx(
             "w-full h-full gap-2 grid grid-rows-floating-player relative z-10",
