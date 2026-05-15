@@ -1,17 +1,17 @@
 import { MiniPlayerWindowControls } from "./window-controls";
 import { cn } from "@/lib/utils";
-import { hasElectronBridge } from "@/utils/desktop";
+import { hasElectronBridge, isDesktop } from "@/utils/desktop";
 
 export function MiniPlayerTitleBar() {
-  if (!hasElectronBridge()) return null;
+  if (!isDesktop() || !hasElectronBridge()) return null;
 
   return (
     <div 
       className={cn(
-        "absolute top-0 left-0 right-0 h-8 z-50 flex items-center justify-between px-2",
+        "absolute top-0 left-0 right-0 h-8 mini-player:h-7 z-50 flex items-center justify-between px-2",
         "bg-gradient-to-b from-background/80 to-transparent backdrop-blur-[2px]",
-        "opacity-0 group-hover/player:opacity-100 transition-opacity duration-200",
-        "select-none pointer-events-none"
+        "opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+        "pointer-events-none"
       )}
     >
       <div 
@@ -24,3 +24,4 @@ export function MiniPlayerTitleBar() {
     </div>
   );
 }
+
