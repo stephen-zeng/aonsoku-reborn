@@ -1,10 +1,12 @@
 import { CachedImage } from "@/app/components/cover-image/cached-image";
-import { usePlayerCurrentSong } from "@/store/player.store";
+import { useMiniPlayerContext } from "./context";
 
 export function MiniPlayerSongImage() {
-  const song = usePlayerCurrentSong();
+  const { state } = useMiniPlayerContext();
 
-  if (!song) return null;
+  if (!state || !state.currentSong) return null;
+
+  const song = state.currentSong;
 
   return (
     <div className="min-w-[20%] h-full max-w-full aspect-square flex items-center justify-center rounded">

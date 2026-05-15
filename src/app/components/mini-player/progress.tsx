@@ -1,15 +1,8 @@
-import { useMemo } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Slider } from "@/app/components/ui/slider";
-import { useAudioSeeking } from "@/app/hooks/use-audio-seeking";
 import { cn } from "@/lib/utils";
-import {
-  usePlayerBufferedProgress,
-  usePlayerDuration,
-  usePlayerIsBuffering,
-  usePlayerProgress,
-  usePlayerRef,
-} from "@/store/player.store";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
+import { useMiniPlayerContext } from "./context";
 
 interface MiniPlayerProgressProps {
   showTime?: boolean;
@@ -22,28 +15,33 @@ export function MiniPlayerProgress({
   compact = false,
   className,
 }: MiniPlayerProgressProps) {
-  const progress = usePlayerProgress();
-  const bufferedProgress = usePlayerBufferedProgress();
-  const audioPlayerRef = usePlayerRef();
-  const currentDuration = usePlayerDuration();
-  const isBuffering = usePlayerIsBuffering();
+  const { state, actions } = useMiniPlayerContext();
 
-  const audioRef = useMemo(
-    () => ({ current: audioPlayerRef }),
-    [audioPlayerRef],
-  );
+  const progress = state?.progress ?? 0;
+  const currentDuration = state?.duration ?? 0;
+  const isBuffering = state?.isBuffering ?? false;
 
-  const { localProgress, isLocalSeeking, handleSeeking, handleSeeked } =
-    useAudioSeeking({ audioRef });
+  const [localProgress, setLocalProgress] = useState(progress);
+  const [isLocalSeeking, setIsLocalSeeking] = useState(false);
 
-  const currentTime = convertSecondsToTime(
-    isLocalSeeking ? localProgress : progress,
-  );
+  useEffect(() => {
+    if (!isLocalSeeking) {
+      setLocalProgress(progress);
+    }
+  }, [progress, isLocalSeeking]);
 
-  const songDuration = useMemo(
-    () => convertSecondsToTime(currentDuration ?? 0),
-    [currentDuration],
-  );
+  const handleSeeking = useCallback((value: number) => {
+    setIsLocalSeeking(true);
+    setLocalProgress(value);
+  }, []);
+
+  const handleSeeked = useCallback((value: number) => {
+    setIsLocalSeeking(false);
+    actions.seek(value);
+  }, [actions]);
+
+  const currentTime = convertSecondsToTime(localProgress);
+  const songDuration = convertSecondsToTime(currentDuration);
 
   const timeClass = compact
     ? "text-[10px] font-light tabular-nums whitespace-nowrap"
@@ -74,11 +72,10 @@ export function MiniPlayerProgress({
       <Slider
         variant="secondary"
         isBuffering={isBuffering}
-        bufferedProgress={bufferedProgress}
         hideThumb
         defaultValue={[0]}
-        value={isLocalSeeking ? [localProgress] : [progress]}
-        max={currentDuration}
+        value={[localProgress]}
+        max={currentDuration || 1}
         step={1}
         className={cn("w-full", !compact && showTime ? "h-4" : "h-3")}
         onValueChange={([value]) => handleSeeking(value)}

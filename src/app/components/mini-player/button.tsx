@@ -10,15 +10,9 @@ import {
   usePlayerStore,
 } from "@/store/player.store";
 import { hasElectronBridge } from "@/utils/desktop";
-import {
-  broadcastState,
-  destroyMiniPlayerSync,
-  handleControlAction,
-  initMiniPlayerSync,
-  listenControlActions,
-} from "@/utils/mini-player-sync";
 import { MiniPlayer } from "./player";
 import { MiniPlayerPortal } from "./portal";
+import { InternalMiniPlayerProvider } from "./provider";
 
 const MemoMiniPlayerPortal = memo(MiniPlayerPortal);
 const MemoMiniPlayer = memo(MiniPlayer);
@@ -110,7 +104,9 @@ function MiniPlayerButtonWeb() {
         </Button>
       </SimpleTooltip>
       <MemoMiniPlayerPortal pipWindow={pipWindow}>
-        <MemoMiniPlayer pipWindow={pipWindow} />
+        <InternalMiniPlayerProvider>
+          <MemoMiniPlayer />
+        </InternalMiniPlayerProvider>
       </MemoMiniPlayerPortal>
     </>
   );
@@ -142,33 +138,6 @@ function MiniPlayerButtonDesktop() {
       window.api.removeMiniPlayerStatusListener();
     };
   }, []);
-
-  useEffect(() => {
-    if (isMiniPlayerOpen) {
-      initMiniPlayerSync();
-    } else {
-      destroyMiniPlayerSync();
-    }
-
-    return () => {
-      destroyMiniPlayerSync();
-    };
-  }, [isMiniPlayerOpen]);
-
-  useEffect(() => {
-    if (!isMiniPlayerOpen) return;
-
-    const cleanup = listenControlActions(
-      (action, value) => {
-        handleControlAction(action, value);
-      },
-      () => {
-        broadcastState();
-      },
-    );
-
-    return cleanup;
-  }, [isMiniPlayerOpen]);
 
   const handleClick = useCallback(() => {
     if (!hasElectronBridge()) return;

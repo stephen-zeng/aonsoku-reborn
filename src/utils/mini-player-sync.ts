@@ -1,4 +1,5 @@
 import { usePlayerStore } from "@/store/player.store";
+import { LoopState } from "@/types/playerContext";
 
 const CHANNEL_NAME = "aonsoku-mini-player";
 
@@ -22,7 +23,7 @@ export interface MiniPlayerState {
   isTransitioning: boolean;
   isBuffering: boolean;
   shuffleActive: boolean;
-  loopState: string;
+  loopState: LoopState;
   hasPrev: boolean;
   hasNext: boolean;
   isSongStarred: boolean;
@@ -30,6 +31,7 @@ export interface MiniPlayerState {
     id: string;
     title: string;
     artist: string;
+    artists?: { id: string; name: string }[];
     coverArt: string;
     albumId: string;
   } | null;
@@ -38,14 +40,21 @@ export interface MiniPlayerState {
   volume: number;
   mediaType: "song" | "radio";
   currentSongColor: string | null;
+  currentLine: string | null;
 }
 
 let channel: BroadcastChannel | null = null;
 let unsubscribeStore: (() => void) | null = null;
+let lastCurrentLine: string | null = null;
+
+export function setCurrentLine(line: string | null) {
+  lastCurrentLine = line;
+}
 
 function getStateFromStore(): MiniPlayerState {
   const state = usePlayerStore.getState();
   const song = state.songlist.currentSong;
+
   return {
     isPlaying: state.playerState.isPlaying,
     isTransitioning: state.playerState.isTransitioning,
@@ -60,6 +69,7 @@ function getStateFromStore(): MiniPlayerState {
           id: song.id,
           title: song.title,
           artist: song.artist,
+          artists: song.artists?.map((a) => ({ id: a.id, name: a.name })),
           coverArt: song.coverArt,
           albumId: song.albumId,
         }
@@ -69,14 +79,15 @@ function getStateFromStore(): MiniPlayerState {
     volume: state.playerState.volume,
     mediaType: state.playerState.mediaType,
     currentSongColor: state.settings.colors.currentSongColor,
+    currentLine: lastCurrentLine,
   };
 }
 
-export function broadcastState() {
+export function broadcastState(state?: MiniPlayerState) {
   if (!channel) return;
   channel.postMessage({
     type: "state-update",
-    payload: getStateFromStore(),
+    payload: state ?? getStateFromStore(),
   });
 }
 
@@ -85,7 +96,10 @@ export function initMiniPlayerSync() {
 
   channel = new BroadcastChannel(CHANNEL_NAME);
 
-  unsubscribeStore = usePlayerStore.subscribe(broadcastState);
+  // Use a listener that correctly gets the mapped state
+  unsubscribeStore = usePlayerStore.subscribe(() => {
+    broadcastState();
+  });
 
   broadcastState();
 }

@@ -10,6 +10,7 @@ import { LangObserver } from "@/app/observers/lang-observer";
 import { LibraryMigrationObserver } from "@/app/observers/library-migration-observer";
 import { MediaSessionObserver } from "@/app/observers/media-session-observer";
 import { MetadataSyncObserver } from "@/app/observers/metadata-sync-observer";
+import { MiniPlayerSyncObserver } from "@/app/observers/mini-player-sync-observer";
 import { NetworkMonitorObserver } from "@/app/observers/network-monitor";
 import { SmartDownloadObserver } from "@/app/observers/smart-download-observer";
 import { ThemeObserver } from "@/app/observers/theme-observer";
@@ -61,6 +62,7 @@ function App() {
   return (
     <>
       <MediaSessionObserver />
+      <MiniPlayerSyncObserver />
       <LangObserver />
       <ThemeObserver />
       <LanControlObserver />

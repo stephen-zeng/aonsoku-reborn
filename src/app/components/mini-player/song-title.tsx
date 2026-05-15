@@ -1,17 +1,15 @@
 import { MarqueeTitle } from "@/app/components/fullscreen/marquee-title";
-import { useCurrentLyricLine } from "@/app/hooks/use-current-lyric-line";
 import { cn } from "@/lib/utils";
-import { usePlayerCurrentSong } from "@/store/player.store";
-import { ISong } from "@/types/responses/song";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
+import { useMiniPlayerContext } from "./context";
 import { MiniPlayerProgress } from "./progress";
 
 export function MiniPlayerSongTitle() {
-  const song = usePlayerCurrentSong();
-  const { currentLine } = useCurrentLyricLine();
+  const { state } = useMiniPlayerContext();
 
-  if (!song) return null;
+  if (!state || !state.currentSong) return null;
 
+  const { currentSong: song, currentLine } = state;
   const isShowingLyrics = currentLine !== null;
 
   const displayTitle = isShowingLyrics ? currentLine : song.title;
@@ -52,7 +50,7 @@ export function MiniPlayerSongTitle() {
   );
 }
 
-function getArtistsText(song: ISong): string {
+function getArtistsText(song: { artist: string; artists?: { name: string }[] }): string {
   if (song.artists && song.artists.length > 0) {
     return song.artists
       .slice(0, ALBUM_ARTISTS_MAX_NUMBER)
@@ -62,6 +60,6 @@ function getArtistsText(song: ISong): string {
   return song.artist;
 }
 
-function getSongAndArtistText(song: ISong): string {
+function getSongAndArtistText(song: { title: string; artist: string; artists?: { name: string }[] }): string {
   return `${song.title} · ${getArtistsText(song)}`;
 }

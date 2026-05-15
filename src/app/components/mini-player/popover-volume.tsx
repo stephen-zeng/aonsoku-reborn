@@ -1,8 +1,8 @@
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { ReactNode } from "react";
-import { VolumeSlider } from "@/app/components/player/volume";
 import { Button } from "@/app/components/ui/button";
 import { cn } from "@/lib/utils";
+import { MiniPlayerVolumeSlider } from "./volume-slider";
 
 export function MiniPlayerPopoverVolume({ children }: { children: ReactNode }) {
   return (
@@ -30,7 +30,7 @@ export function MiniPlayerPopoverVolume({ children }: { children: ReactNode }) {
         align="center"
         sideOffset={4}
       >
-        <VolumeSlider className="w-24" />
+        <MiniPlayerVolumeSlider className="w-24" />
       </PopoverPrimitive.Content>
     </PopoverPrimitive.Root>
   );
