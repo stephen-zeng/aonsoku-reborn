@@ -8,15 +8,19 @@ export function MiniPlayerTitleBar() {
   return (
     <div 
       className={cn(
-        "h-8 mini-player:h-7 shrink-0 flex items-center justify-between px-2 w-full",
-        "bg-transparent"
+        "h-8 mini-player:h-7 shrink-0 flex items-center justify-between w-full relative",
+        "bg-secondary/10 border-b border-border/30 backdrop-blur-md"
       )}
     >
       <div 
-        className="flex-1 h-full" 
+        className="flex-1 h-full flex items-center px-3" 
         style={{ WebkitAppRegion: "drag" }}
-      />
-      <div className="flex items-center" style={{ WebkitAppRegion: "no-drag" }}>
+      >
+        <span className="text-[10px] uppercase tracking-widest font-medium text-foreground/40 select-none">
+          aonsoku
+        </span>
+      </div>
+      <div className="flex items-center h-full shrink-0" style={{ WebkitAppRegion: "no-drag" }}>
         <MiniPlayerWindowControls />
       </div>
     </div>

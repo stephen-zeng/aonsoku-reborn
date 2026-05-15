@@ -19,11 +19,11 @@ export function MiniPlayerWindowControls() {
   if (!hasElectronBridge()) return null;
 
   return (
-    <div className="flex items-center gap-0.5 justify-end">
+    <div className="flex items-center justify-end h-full">
       <Button
         variant="ghost"
         size="icon"
-        className="w-7 h-7 rounded-full hover:bg-accent/50 text-foreground/70 hover:text-foreground"
+        className="w-10 h-full rounded-none hover:bg-accent/80 text-foreground/70 hover:text-foreground transition-colors"
         onClick={handleFocusMain}
         title="Open Main Window"
       >
@@ -32,7 +32,7 @@ export function MiniPlayerWindowControls() {
       <Button
         variant="ghost"
         size="icon"
-        className="w-7 h-7 rounded-full hover:bg-red-500/20 text-foreground/70 hover:text-red-500"
+        className="w-10 h-full rounded-none hover:bg-red-500 hover:text-white text-foreground/70 transition-colors"
         onClick={handleClose}
         title="Close"
       >
