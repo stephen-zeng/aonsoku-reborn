@@ -48,7 +48,7 @@ export function MiniPlayerControls() {
         className={clsx(
           buttonsStyle.secondary,
           buttonsStyle.removeRing,
-          "mini-player:w-8 mini-player:h-8",
+          "mini-player:hidden",
         )}
         style={{ ...buttonsStyle.style }}
         onClick={() => actions.playPrevSong()}
@@ -128,7 +128,7 @@ export function MiniPlayerLikeButton() {
       className={clsx(
         buttonsStyle.secondary,
         buttonsStyle.removeRing,
-        "mini-player:w-8 mini-player:h-8",
+        "mini-player:hidden",
       )}
       onClick={() => actions.starCurrentSong()}
       style={{ ...buttonsStyle.style }}
