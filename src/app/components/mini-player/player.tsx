@@ -33,14 +33,20 @@ export function MiniPlayer() {
 
   return (
     <div
-      className="w-screen h-screen max-h-screen grid grid-rows-1 mid-player:grid-rows-[auto_auto_auto] gap-2 mid-player:gap-mid-player-gap p-1 mid-player:p-mid-player-padding mini-player:p-1.5 pb-4 mid-player:pb-4 relative group/player overflow-hidden select-none"
-      style={{ WebkitAppRegion: "drag" }}
+      className="w-screen h-screen max-h-screen grid grid-rows-1 mid-player:grid-rows-[auto_auto_auto] gap-2 mid-player:gap-mid-player-gap p-1 mid-player:p-mid-player-padding mini-player:p-1.5 pb-4 mid-player:pb-4 relative group/player group overflow-hidden select-none"
+      style={{ WebkitAppRegion: "no-drag" }}
     >
+      {/* Background drag handle for frameless window */}
+      <div 
+        className="absolute inset-0 z-0" 
+        style={{ WebkitAppRegion: "drag" }} 
+      />
+
       <MiniPlayerTitleBar />
 
       <div
         className={clsx(
-          "w-full h-full gap-2 grid grid-rows-floating-player relative z-10",
+          "w-full h-full gap-2 grid grid-rows-floating-player relative z-10 pointer-events-none",
           "mid-player:grid-rows-1 mid-player:grid-cols-mid-player-info mid-player:items-center mid-player:gap-mid-player-gap",
           "mini-player:flex mini-player:gap-2 mini-player:items-center",
           "group",
@@ -48,7 +54,7 @@ export function MiniPlayer() {
       >
         <div
           className={clsx(
-            "w-full h-full mid-player:aspect-square",
+            "w-full h-full mid-player:aspect-square pointer-events-auto",
             "flex flex-col items-center justify-center gap-2",
             "default-gradient rounded-md mini-player:rounded",
             "transition-[background-image,background-color] duration-1000 overflow-hidden",
@@ -74,7 +80,6 @@ export function MiniPlayer() {
                 "transition-opacity duration-300",
                 "mid-player:hidden mini-player:hidden",
               )}
-              style={{ WebkitAppRegion: "no-drag" }}
             >
               <div className="flex flex-col flex-1 px-2 justify-center items-center absolute inset-0">
                 <MemoMiniPlayerControls />
@@ -90,7 +95,7 @@ export function MiniPlayer() {
         </div>
         <div
           className={clsx(
-            "min-w-12 h-12 flex items-center justify-between pb-2 pl-1 mini-player:h-10",
+            "min-w-12 h-12 flex items-center justify-between pb-2 pl-1 mini-player:h-10 pointer-events-auto",
             "mid-player:pl-0 mini-player:pl-0 mid-player:pb-0 mini-player:pb-0.5 mid-player:flex-1 mid-player:h-mid-player-text-height",
             "mini-player:flex-1 mini-player:min-w-0",
           )}
@@ -98,27 +103,23 @@ export function MiniPlayer() {
           <MemoMiniPlayerSongTitle />
           <div
             className="mid-player:hidden"
-            style={{ WebkitAppRegion: "no-drag" }}
           >
             <MemoMiniPlayerLikeButton />
           </div>
         </div>
         <div
-          className="hidden mini-player:group-hover-supported:flex mini-player:w-16 mini-player:shrink-0"
-          style={{ WebkitAppRegion: "no-drag" }}
+          className="hidden mini-player:group-hover-supported:flex mini-player:w-16 mini-player:shrink-0 pointer-events-auto"
         >
           <MemoMiniPlayerControls />
         </div>
       </div>
       <div
-        className="hidden mid-player:flex mid-player:items-center mid-player:px-2 mid-player:h-mid-player-progress-height w-full"
-        style={{ WebkitAppRegion: "no-drag" }}
+        className="hidden mid-player:flex mid-player:items-center mid-player:px-2 mid-player:h-mid-player-progress-height w-full relative z-10"
       >
         <MemoMiniPlayerProgress showTime compact />
       </div>
       <div
-        className="hidden mid-player:flex justify-center items-center h-10 max-h-10 relative px-2"
-        style={{ WebkitAppRegion: "no-drag" }}
+        className="hidden mid-player:flex justify-center items-center h-10 max-h-10 relative px-2 z-10"
       >
         <div className="absolute left-2">
           <MemoMiniPlayerLikeButton />
@@ -130,7 +131,7 @@ export function MiniPlayer() {
           </MiniPlayerPopoverVolume>
         </div>
       </div>
-      <ResizeHandler className="absolute w-5 h-5 bottom-0 right-0 text-foreground/50" />
+      <ResizeHandler className="absolute w-5 h-5 bottom-0 right-0 text-foreground/50 z-20" />
     </div>
   );
 }
