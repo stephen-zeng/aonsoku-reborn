@@ -33,7 +33,7 @@ export function MiniPlayer() {
 
   return (
     <div
-      className="w-screen h-screen max-h-screen grid grid-rows-1 mid-player:grid-rows-[auto_auto_auto] gap-2 mid-player:gap-mid-player-gap p-1 mid-player:p-mid-player-padding mini-player:p-1.5 pb-4 mid-player:pb-4 relative group/player overflow-hidden select-none"
+      className="w-screen h-screen max-h-screen grid grid-rows-1 mid-player:grid-rows-[auto_auto_auto] gap-2 mid-player:gap-mid-player-gap p-1 mid-player:p-mid-player-padding mini-player:p-1.5 pb-4 mid-player:pb-4 mini-player:pb-1.5 relative group/player overflow-hidden select-none"
       style={{ WebkitAppRegion: "drag" }}
     >
       <MiniPlayerTitleBar />
@@ -104,7 +104,7 @@ export function MiniPlayer() {
           </div>
         </div>
         <div
-          className="hidden mini-player:group-hover-supported:flex mini-player:w-16 mini-player:shrink-0"
+          className="hidden mini-player:group-hover-supported:flex mini-player:w-24 mini-player:shrink-0"
           style={{ WebkitAppRegion: "no-drag" }}
         >
           <MemoMiniPlayerControls />
