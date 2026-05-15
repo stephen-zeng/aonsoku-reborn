@@ -99,20 +99,38 @@ export function setupIpcEvents(window: BrowserWindow | null) {
     return window.isMaximized();
   });
 
-  ipcMain.on(IpcChannels.ToggleMaximize, (_, isMaximized: boolean) => {
+  ipcMain.on(IpcChannels.ToggleMaximize, (event, isMaximized: boolean) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win) return;
     if (isMaximized) {
-      window.unmaximize();
+      win.unmaximize();
     } else {
-      window.maximize();
+      win.maximize();
     }
   });
 
-  ipcMain.on(IpcChannels.ToggleMinimize, () => {
-    window.minimize();
+  ipcMain.on(IpcChannels.ToggleMinimize, (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win) return;
+    win.minimize();
   });
 
-  ipcMain.on(IpcChannels.CloseWindow, () => {
-    window.close();
+  ipcMain.on(IpcChannels.CloseWindow, (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win) return;
+    win.close();
+  });
+
+  ipcMain.on(IpcChannels.SetAlwaysOnTop, (event, isAlwaysOnTop: boolean) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win) return;
+    win.setAlwaysOnTop(isAlwaysOnTop);
+  });
+
+  ipcMain.removeHandler(IpcChannels.IsAlwaysOnTop);
+  ipcMain.handle(IpcChannels.IsAlwaysOnTop, (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    return win?.isAlwaysOnTop() ?? false;
   });
 
   ipcMain.on(IpcChannels.ThemeChanged, (_, colors: OverlayColors) => {

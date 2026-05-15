@@ -8,6 +8,7 @@ import { MiniPlayerPopoverVolume } from "./popover-volume";
 import { MiniPlayerProgress } from "./progress";
 import { MiniPlayerSongImage } from "./song-image";
 import { MiniPlayerSongTitle } from "./song-title";
+import { MiniPlayerTitleBar } from "./title-bar";
 import { MiniPlayerVolume } from "./volume";
 
 const MemoMiniPlayerControls = memo(MiniPlayerControls);
@@ -31,10 +32,15 @@ export function MiniPlayer() {
   const currentSongColor = state.currentSongColor;
 
   return (
-    <div className="w-screen h-screen max-h-screen grid grid-rows-1 mid-player:grid-rows-[auto_auto_auto] gap-2 mid-player:gap-mid-player-gap p-1 mid-player:p-mid-player-padding mini-player:p-1.5 pb-4 mid-player:pb-4 relative">
+    <div
+      className="w-screen h-screen max-h-screen grid grid-rows-1 mid-player:grid-rows-[auto_auto_auto] gap-2 mid-player:gap-mid-player-gap p-1 mid-player:p-mid-player-padding mini-player:p-1.5 pb-4 mid-player:pb-4 relative group/player overflow-hidden select-none"
+      style={{ WebkitAppRegion: "drag" }}
+    >
+      <MiniPlayerTitleBar />
+
       <div
         className={clsx(
-          "w-full h-full gap-2 grid grid-rows-floating-player",
+          "w-full h-full gap-2 grid grid-rows-floating-player relative z-10",
           "mid-player:grid-rows-1 mid-player:grid-cols-mid-player-info mid-player:items-center mid-player:gap-mid-player-gap",
           "mini-player:flex mini-player:gap-2 mini-player:items-center",
           "group",
@@ -68,6 +74,7 @@ export function MiniPlayer() {
                 "transition-opacity duration-300",
                 "mid-player:hidden mini-player:hidden",
               )}
+              style={{ WebkitAppRegion: "no-drag" }}
             >
               <div className="flex flex-col flex-1 px-2 justify-center items-center absolute inset-0">
                 <MemoMiniPlayerControls />
@@ -89,18 +96,30 @@ export function MiniPlayer() {
           )}
         >
           <MemoMiniPlayerSongTitle />
-          <div className="mid-player:hidden">
+          <div
+            className="mid-player:hidden"
+            style={{ WebkitAppRegion: "no-drag" }}
+          >
             <MemoMiniPlayerLikeButton />
           </div>
         </div>
-        <div className="hidden mini-player:group-hover-supported:flex mini-player:w-16 mini-player:shrink-0">
+        <div
+          className="hidden mini-player:group-hover-supported:flex mini-player:w-16 mini-player:shrink-0"
+          style={{ WebkitAppRegion: "no-drag" }}
+        >
           <MemoMiniPlayerControls />
         </div>
       </div>
-      <div className="hidden mid-player:flex mid-player:items-center mid-player:px-2 mid-player:h-mid-player-progress-height w-full">
+      <div
+        className="hidden mid-player:flex mid-player:items-center mid-player:px-2 mid-player:h-mid-player-progress-height w-full"
+        style={{ WebkitAppRegion: "no-drag" }}
+      >
         <MemoMiniPlayerProgress showTime compact />
       </div>
-      <div className="hidden mid-player:flex justify-center items-center h-10 max-h-10 relative px-2">
+      <div
+        className="hidden mid-player:flex justify-center items-center h-10 max-h-10 relative px-2"
+        style={{ WebkitAppRegion: "no-drag" }}
+      >
         <div className="absolute left-2">
           <MemoMiniPlayerLikeButton />
         </div>

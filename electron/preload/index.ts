@@ -62,6 +62,9 @@ const api: IAonsokuAPI = {
   removeMiniPlayerStatusListener: () => {
     ipcRenderer.removeAllListeners(IpcChannels.MiniPlayerStatus);
   },
+  setAlwaysOnTop: (isAlwaysOnTop) =>
+    ipcRenderer.send(IpcChannels.SetAlwaysOnTop, isAlwaysOnTop),
+  isAlwaysOnTop: () => ipcRenderer.invoke(IpcChannels.IsAlwaysOnTop),
   // LAN Control
   lanControl: {
     start: (config) => ipcRenderer.invoke(IpcChannels.LanControlStart, config),

@@ -30,6 +30,8 @@ export enum IpcChannels {
   CloseMiniPlayer = "close-mini-player",
   IsMiniPlayerOpen = "is-mini-player-open",
   MiniPlayerStatus = "mini-player-status",
+  SetAlwaysOnTop = "set-always-on-top",
+  IsAlwaysOnTop = "is-always-on-top",
   // LAN Control
   LanControlStart = "lan-control:start",
   LanControlStop = "lan-control:stop",
@@ -90,6 +92,8 @@ export interface IAonsokuAPI {
   isMiniPlayerOpen: () => Promise<boolean>;
   miniPlayerStatusListener: (func: (isOpen: boolean) => void) => void;
   removeMiniPlayerStatusListener: () => void;
+  setAlwaysOnTop: (isAlwaysOnTop: boolean) => void;
+  isAlwaysOnTop: () => Promise<boolean>;
   // LAN Control
   lanControl: {
     start: (config: LanControlConfig) => Promise<LanControlServerInfo>;
