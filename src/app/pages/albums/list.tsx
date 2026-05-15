@@ -100,7 +100,7 @@ export default function AlbumsList() {
   if (isEmpty) return <EmptyAlbums />;
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full min-h-content">
       <AlbumsHeader albumCount={albumsCount} />
 
       <ListWrapper className="pt-[--shadow-header-distance] px-0">

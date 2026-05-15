@@ -58,7 +58,7 @@ export default function ArtistsList() {
   if (!artists) return null;
 
   return (
-    <div className="w-full h-content">
+    <div className="w-full min-h-content">
       <MemoShadowHeader
         showGlassEffect={false}
         fixed={false}
@@ -73,7 +73,7 @@ export default function ArtistsList() {
       </MemoShadowHeader>
 
       {isTableView && (
-        <div className="w-full h-[calc(100%-80px)]">
+        <div className="w-full">
           <MemoDataTableList
             columns={columns}
             data={artists}

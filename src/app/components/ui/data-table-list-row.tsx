@@ -109,7 +109,7 @@ export function TableListRow<TData>({
         onContextMenu={(e) => handleClicks(e, row)}
         onKeyDown={(e) => handleRowKeyDown(e, row)}
         className={clsx(
-          "group/tablerow w-[calc(100%-10px)] flex flex-row",
+          "group/tablerow w-full flex flex-row",
           "md:data-[state=selected]:bg-primary/75 hover-supported:bg-muted focus:outline-none",
           isPressed && "bg-muted",
           isQueue && "rounded-md",
