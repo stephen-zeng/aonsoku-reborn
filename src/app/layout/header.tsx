@@ -73,7 +73,7 @@ export function Header() {
 
   return (
     <header
-      className="w-full hidden md:flex md:grid md:grid-cols-header items-center justify-between h-header pt-[var(--safe-area-top)] fixed top-0 right-0 left-0 z-20 bg-background border-b electron-drag"
+      className="w-full hidden md:flex md:grid md:grid-cols-header items-center justify-between h-header box-content pt-[var(--safe-area-top)] fixed top-0 right-0 left-0 z-20 bg-background border-b electron-drag"
       style={{
         paddingLeft: "max(1rem, var(--safe-area-left))",
         paddingRight: "max(1rem, var(--safe-area-right))",

@@ -155,7 +155,7 @@ function StickyHeader({
   return (
     <div
       className={cn(
-        "fixed top-0 left-0 right-0 z-30 md:hidden flex items-center gap-1 h-11 transition-[background-color,backdrop-filter,color] duration-200",
+        "fixed top-0 left-0 right-0 z-30 md:hidden flex items-center gap-1 h-11 box-content transition-[background-color,backdrop-filter,color] duration-200",
         !showFullBar && "bg-transparent",
         showFullBar &&
           !accentColor &&
