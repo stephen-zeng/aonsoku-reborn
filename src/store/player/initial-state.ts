@@ -1,5 +1,4 @@
 import type { Draft } from "immer";
-import { setCustomLyricsBody } from "@/service/lyrics";
 import type { IPlayerContext, IPlayerState } from "@/types/playerContext";
 import { LoopState } from "@/types/playerContext";
 import { logger } from "@/utils/logger";
@@ -117,9 +116,16 @@ export function createInitialSettings(set: SetFn): IPlayerContext["settings"] {
           state.settings.lyrics.selectedCustomLyrics[songKey] = meta;
         });
         if (body) {
-          setCustomLyricsBody(songKey, body).catch((err) => {
-            logger.warn("[player] Failed to persist custom lyrics body:", err);
-          });
+          import("@/service/lyrics")
+            .then(({ setCustomLyricsBody }) =>
+              setCustomLyricsBody(songKey, body),
+            )
+            .catch((err) => {
+              logger.warn(
+                "[player] Failed to persist custom lyrics body:",
+                err,
+              );
+            });
         }
       },
     },
