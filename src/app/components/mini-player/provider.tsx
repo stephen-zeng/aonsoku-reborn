@@ -37,7 +37,7 @@ export function InternalMiniPlayerProvider({ children }: PropsWithChildren) {
   const { currentSongColor } = useSongColor();
   const currentSong = usePlayerStore((s) => s.songlist.currentSong);
   const playerState = usePlayerStore((s) => s.playerState);
-  const { progress } = usePlayerProgress();
+  const progress = usePlayerProgress();
   const { currentLine } = useCurrentLyricLine();
 
   const value = useMemo<MiniPlayerContextValue>(
