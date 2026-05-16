@@ -1,12 +1,17 @@
 import { PropsWithChildren, useEffect, useMemo, useState } from "react";
 import { useCurrentLyricLine } from "@/app/hooks/use-current-lyric-line";
 import { usePlaybackControls } from "@/app/hooks/use-playback-controls";
-import { usePlayerActions, usePlayerProgress, usePlayerStore, useSongColor } from "@/store/player.store";
-import { 
-  listenMiniPlayerUpdates, 
-  MiniPlayerState, 
-  requestState, 
-  sendControlAction 
+import {
+  usePlayerActions,
+  usePlayerProgress,
+  usePlayerStore,
+  useSongColor,
+} from "@/store/player.store";
+import {
+  listenMiniPlayerUpdates,
+  MiniPlayerState,
+  requestState,
+  sendControlAction,
 } from "@/utils/mini-player-sync";
 import { MiniPlayerContext, MiniPlayerContextValue } from "./context";
 
@@ -35,47 +40,69 @@ export function InternalMiniPlayerProvider({ children }: PropsWithChildren) {
   const { progress } = usePlayerProgress();
   const { currentLine } = useCurrentLyricLine();
 
-  const value = useMemo<MiniPlayerContextValue>(() => ({
-    state: {
+  const value = useMemo<MiniPlayerContextValue>(
+    () => ({
+      state: {
+        isPlaying,
+        isTransitioning: playerState.isTransitioning,
+        isBuffering: playerState.isBuffering,
+        shuffleActive: isShuffleActive,
+        loopState,
+        hasPrev: !cannotSkipPrev,
+        hasNext: !cannotSkipNext,
+        isSongStarred: playerState.isSongStarred,
+        currentSong: currentSong
+          ? {
+              id: currentSong.id,
+              title: currentSong.title,
+              artist: currentSong.artist,
+              artists: currentSong.artists?.map((a) => ({
+                id: a.id,
+                name: a.name,
+              })),
+              coverArt: currentSong.coverArt,
+              albumId: currentSong.albumId,
+            }
+          : null,
+        progress,
+        duration: playerState.currentDuration ?? 0,
+        volume: playerState.volume,
+        mediaType: playerState.mediaType as "song" | "radio",
+        currentSongColor,
+        currentLine,
+      },
+      actions: {
+        togglePlayPause,
+        playNextSong,
+        playPrevSong,
+        toggleShuffle: () => toggleShuffle(),
+        toggleLoop: () => toggleLoop(),
+        seek: (time) => setProgress(time),
+        setVolume: (v) => setVolume(v),
+        starCurrentSong,
+      },
+    }),
+    [
       isPlaying,
-      isTransitioning: playerState.isTransitioning,
-      isBuffering: playerState.isBuffering,
-      shuffleActive: isShuffleActive,
+      playerState,
+      isShuffleActive,
       loopState,
-      hasPrev: !cannotSkipPrev,
-      hasNext: !cannotSkipNext,
-      isSongStarred: playerState.isSongStarred,
-      currentSong: currentSong ? {
-        id: currentSong.id,
-        title: currentSong.title,
-        artist: currentSong.artist,
-        artists: currentSong.artists?.map(a => ({ id: a.id, name: a.name })),
-        coverArt: currentSong.coverArt,
-        albumId: currentSong.albumId,
-      } : null,
+      cannotSkipPrev,
+      cannotSkipNext,
+      currentSong,
       progress,
-      duration: playerState.currentDuration ?? 0,
-      volume: playerState.volume,
-      mediaType: playerState.mediaType as "song" | "radio",
       currentSongColor,
       currentLine,
-    },
-    actions: {
       togglePlayPause,
       playNextSong,
       playPrevSong,
-      toggleShuffle: () => toggleShuffle(),
-      toggleLoop: () => toggleLoop(),
-      seek: (time) => setProgress(time),
-      setVolume: (v) => setVolume(v),
+      toggleShuffle,
+      toggleLoop,
+      setProgress,
+      setVolume,
       starCurrentSong,
-    }
-  }), [
-    isPlaying, playerState, isShuffleActive, loopState, cannotSkipPrev, 
-    cannotSkipNext, currentSong, progress, currentSongColor, currentLine,
-    togglePlayPause, playNextSong, playPrevSong, toggleShuffle, toggleLoop,
-    setProgress, setVolume, starCurrentSong
-  ]);
+    ],
+  );
 
   return (
     <MiniPlayerContext.Provider value={value}>
@@ -97,19 +124,22 @@ export function ExternalMiniPlayerProvider({ children }: PropsWithChildren) {
     return unsubscribe;
   }, []);
 
-  const value = useMemo<MiniPlayerContextValue>(() => ({
-    state,
-    actions: {
-      togglePlayPause: () => sendControlAction("togglePlayPause"),
-      playNextSong: () => sendControlAction("playNextSong"),
-      playPrevSong: () => sendControlAction("playPrevSong"),
-      toggleShuffle: () => sendControlAction("toggleShuffle"),
-      toggleLoop: () => sendControlAction("toggleLoop"),
-      seek: (time) => sendControlAction("seek", time),
-      setVolume: (v) => sendControlAction("setVolume", v),
-      starCurrentSong: () => sendControlAction("starCurrentSong"),
-    }
-  }), [state]);
+  const value = useMemo<MiniPlayerContextValue>(
+    () => ({
+      state,
+      actions: {
+        togglePlayPause: () => sendControlAction("togglePlayPause"),
+        playNextSong: () => sendControlAction("playNextSong"),
+        playPrevSong: () => sendControlAction("playPrevSong"),
+        toggleShuffle: () => sendControlAction("toggleShuffle"),
+        toggleLoop: () => sendControlAction("toggleLoop"),
+        seek: (time) => sendControlAction("seek", time),
+        setVolume: (v) => sendControlAction("setVolume", v),
+        starCurrentSong: () => sendControlAction("starCurrentSong"),
+      },
+    }),
+    [state],
+  );
 
   return (
     <MiniPlayerContext.Provider value={value}>

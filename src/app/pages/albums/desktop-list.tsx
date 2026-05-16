@@ -29,7 +29,6 @@ export default function DesktopAlbumsList() {
   } = useAlbumsListModel();
 
   useEffect(() => {
-// ... existing useEffect logic ...
     const hasMainFilter = searchParams.has(AlbumsSearchParams.MainFilter);
     const hasArtistNameFilter = searchParams.has(AlbumsSearchParams.ArtistName);
     const hasArtistIdFilter = searchParams.has(AlbumsSearchParams.ArtistId);

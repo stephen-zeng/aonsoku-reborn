@@ -36,9 +36,12 @@ export function InfiniteScroll({
   if (!hasNextPage) return null;
 
   return (
-    <div ref={observerTarget} className="h-10 w-full flex items-center justify-center">
+    <div
+      ref={observerTarget}
+      className="h-10 w-full flex items-center justify-center"
+    >
       {isLoading && (
-         <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       )}
     </div>
   );

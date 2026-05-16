@@ -76,43 +76,38 @@ export function useAlbumsListModel() {
     return true;
   }
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isLoading,
-    isFetchingNextPage,
-  } = useOfflineInfiniteQuery(
-    [
-      ...queryKeys.album.all,
-      currentFilter,
-      yearFilter,
-      genre,
-      artistId,
-      query,
-    ],
-    ({ pageParam }) => fetchAlbums({ pageParam }),
-    {
-      initialPageParam: 0,
-      getNextPageParam: (lastPage) => lastPage.nextOffset,
-      enabled: enableMainQuery(),
-      offlineFn: async () => {
-        const albums = await getOfflineAlbumsList({
-          currentFilter,
-          yearFilter,
-          genre,
-          artistId,
-          query,
-        });
+  const { data, fetchNextPage, hasNextPage, isLoading, isFetchingNextPage } =
+    useOfflineInfiniteQuery(
+      [
+        ...queryKeys.album.all,
+        currentFilter,
+        yearFilter,
+        genre,
+        artistId,
+        query,
+      ],
+      ({ pageParam }) => fetchAlbums({ pageParam }),
+      {
+        initialPageParam: 0,
+        getNextPageParam: (lastPage) => lastPage.nextOffset,
+        enabled: enableMainQuery(),
+        offlineFn: async () => {
+          const albums = await getOfflineAlbumsList({
+            currentFilter,
+            yearFilter,
+            genre,
+            artistId,
+            query,
+          });
 
-        return {
-          albums,
-          nextOffset: null,
-          albumsCount: albums.length,
-        };
+          return {
+            albums,
+            nextOffset: null,
+            albumsCount: albums.length,
+          };
+        },
       },
-    },
-  );
+    );
 
   function getAlbums() {
     if (!data) return { albums: [], albumsCount: 0 };

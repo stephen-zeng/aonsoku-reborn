@@ -34,7 +34,10 @@ import { ColumnDefType } from "@/types/react-table/columnDef";
 import { ISong } from "@/types/responses/song";
 import { MouseButton } from "@/utils/browser";
 import { computeMultiSelectedRows } from "@/utils/dataTable";
-import { addPageScrollListener, getPageScrollMetrics } from "@/utils/scrollPageToTop";
+import {
+  addPageScrollListener,
+  getPageScrollMetrics,
+} from "@/utils/scrollPageToTop";
 import { DataTableListHeader } from "./data-table-list-header";
 import { TableListRow } from "./data-table-list-row";
 

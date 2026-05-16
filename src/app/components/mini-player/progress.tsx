@@ -35,10 +35,13 @@ export function MiniPlayerProgress({
     setLocalProgress(value);
   }, []);
 
-  const handleSeeked = useCallback((value: number) => {
-    setIsLocalSeeking(false);
-    actions.seek(value);
-  }, [actions]);
+  const handleSeeked = useCallback(
+    (value: number) => {
+      setIsLocalSeeking(false);
+      actions.seek(value);
+    },
+    [actions],
+  );
 
   const currentTime = convertSecondsToTime(localProgress);
   const songDuration = convertSecondsToTime(currentDuration);
