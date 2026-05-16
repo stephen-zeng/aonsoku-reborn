@@ -33,7 +33,6 @@ import {
   resolveReplayGainParams,
 } from "@/utils/replayGain";
 import { AudioPlayer } from "./audio";
-import { AudioElementAdapter } from "@/service/audio/audio-element-adapter";
 import { PlayerClearQueueButton } from "./clear-queue-button";
 import { PlayerControls } from "./controls";
 import { PlayerLikeButton } from "./like-button";
@@ -58,8 +57,6 @@ export function Player() {
   const { t } = useTranslation();
   const audioRef = useRef<HTMLAudioElement>(null);
   const radioRef = useRef<HTMLAudioElement>(null);
-  const audioAdapterRef = useRef<AudioElementAdapter | null>(null);
-  const radioAdapterRef = useRef<AudioElementAdapter | null>(null);
   const isMobile = usePlayerBreakpoint();
   const {
     setAudioPlayerRef,
@@ -122,10 +119,11 @@ export function Player() {
     setBufferedProgress(0);
 
     const currentAudio = audioRef.current;
-    if (currentAudio && audioAdapterRef.current?.element !== currentAudio) {
-      const adapter = new AudioElementAdapter(currentAudio);
-      audioAdapterRef.current = adapter;
-      setAudioPlayerRef(adapter);
+    if (
+      currentAudio &&
+      currentAudio !== usePlayerStore.getState().playerState.audioPlayerRef
+    ) {
+      setAudioPlayerRef(currentAudio);
     }
   }, [
     isRemoteControlActive,
@@ -139,16 +137,16 @@ export function Player() {
     if (!isSong || isRemoteControlActive) return;
 
     const currentAudio = audioRef.current;
-    if (currentAudio && audioAdapterRef.current?.element !== currentAudio) {
-      const adapter = new AudioElementAdapter(currentAudio);
-      audioAdapterRef.current = adapter;
-      setAudioPlayerRef(adapter);
+    if (
+      currentAudio &&
+      currentAudio !== usePlayerStore.getState().playerState.audioPlayerRef
+    ) {
+      setAudioPlayerRef(currentAudio);
     }
 
     return () => {
       const storedRef = usePlayerStore.getState().playerState.audioPlayerRef;
-      if (storedRef === audioAdapterRef.current) {
-        audioAdapterRef.current = null;
+      if (storedRef === currentAudio) {
         setAudioPlayerRef(null);
       }
     };
@@ -158,16 +156,16 @@ export function Player() {
     if (!isRadio || isRemoteControlActive) return;
 
     const currentRadio = radioRef.current;
-    if (currentRadio && radioAdapterRef.current?.element !== currentRadio) {
-      const adapter = new AudioElementAdapter(currentRadio);
-      radioAdapterRef.current = adapter;
-      setRadioPlayerRef(adapter);
+    if (
+      currentRadio &&
+      currentRadio !== usePlayerStore.getState().playerState.radioPlayerRef
+    ) {
+      setRadioPlayerRef(currentRadio);
     }
 
     return () => {
       const storedRef = usePlayerStore.getState().playerState.radioPlayerRef;
-      if (storedRef === radioAdapterRef.current) {
-        radioAdapterRef.current = null;
+      if (storedRef === currentRadio) {
         setRadioPlayerRef(null);
       }
     };
