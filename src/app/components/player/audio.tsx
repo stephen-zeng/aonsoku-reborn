@@ -201,9 +201,12 @@ export function AudioPlayer({
 
   useEffect(() => {
     if (src !== audioSrc) {
-      const sourceChange = sessionRef.current.beginSourceChange(songId);
+      const currentProgress = usePlayerStore.getState().playerProgress.progress;
+      const sourceChange = sessionRef.current.beginSourceChange(songId, {
+        resumePosition: currentProgress > 0 ? currentProgress : undefined,
+      });
       logger.info(
-        `[AudioSrcChange] newSrc=${src?.slice(-60)} | oldSrc=${audioSrc?.slice(-60)} | cancelledRetry=${sourceChange.cancelledRetry} | retryCount=${sourceChange.retryCount} | srcChangingRef=true`,
+        `[AudioSrcChange] newSrc=${src?.slice(-60)} | oldSrc=${audioSrc?.slice(-60)} | cancelledRetry=${sourceChange.cancelledRetry} | retryCount=${sourceChange.retryCount} | resumePosition=${currentProgress} | srcChangingRef=true`,
       );
 
       const state = usePlayerStore.getState();
@@ -445,6 +448,19 @@ export function AudioPlayer({
   const handleAudioErrorRef = useRef(handleAudioError);
   handleAudioErrorRef.current = handleAudioError;
 
+  const applyPendingResume = useCallback(
+    (audio: HTMLAudioElement) => {
+      const clampedPos = sessionRef.current.applyPendingResume(audio, {
+        seekAudio,
+        setStoreProgress,
+      });
+      if (clampedPos === null) return;
+
+      logger.info("Applying pending resume position:", clampedPos);
+    },
+    [seekAudio, setStoreProgress],
+  );
+
   useEffect(() => {
     return () => {
       sessionRef.current.dispose();
@@ -475,6 +491,12 @@ export function AudioPlayer({
         const duration = Math.round(event.duration);
         if (duration > 0) {
           setStoreCurrentDuration(duration);
+          // For native backend, we use duration event as a signal that metadata is ready
+          // similar to loadedmetadata/canplay for DOM audio.
+          if (sessionRef.current.pendingResumePosition !== null) {
+            applyPendingResume(audio);
+          }
+          sessionRef.current.finishCanPlay();
         }
       },
     );
@@ -491,6 +513,33 @@ export function AudioPlayer({
       setStorePlayingState(false);
     });
     const unsubscribeEnded = backendEntry.backend.subscribe("ended", () => {
+      const state = usePlayerStore.getState();
+      const loopState = state.playerState.loopState;
+      const songlist = state.songlist;
+
+      const userQueueRemaining = songlist.isInUserQueue
+        ? songlist.userQueue.songs.length - 1
+        : songlist.userQueue.songs.length;
+
+      const decision = getPlaybackEndedDecision({
+        loopState,
+        userQueueRemaining,
+      });
+
+      if (state.songlist.currentSong) {
+        manageMediaSession.setMediaSession(state.songlist.currentSong);
+      }
+
+      if (decision.type === "restart-current") {
+        logger.info(
+          `[onEnded:NATIVE → LoopRestartSync] songId=${songId} | currentTime→0 | calling safePlay`,
+        );
+        sessionRef.current.markLoopRestarting();
+        sessionRef.current.markLoopRestartSyncHandled();
+        seekAudio(audio, 0);
+        safePlay(audio, "LoopRestartSync");
+      }
+
       (onEnded as (() => void) | undefined)?.();
     });
     const unsubscribeError = backendEntry.backend.subscribe("error", () => {
@@ -507,15 +556,19 @@ export function AudioPlayer({
       unsubscribeError();
     };
   }, [
+    applyPendingResume,
     audioRef,
     getPlaybackBackendEntry,
     onEnded,
     onPlaybackError,
+    safePlay,
+    seekAudio,
     setStoreBufferedProgress,
     setStoreCurrentDuration,
     setStoreIsBuffering,
     setStorePlayingState,
     setStoreProgress,
+    songId,
   ]);
 
   useEffect(() => {
@@ -638,19 +691,6 @@ export function AudioPlayer({
     }
     if (isRadio) handleRadio();
   }, [audioRef, isPlaying, isRadio, loadAudio, pauseAudio, safePlay]);
-
-  const applyPendingResume = useCallback(
-    (audio: HTMLAudioElement) => {
-      const clampedPos = sessionRef.current.applyPendingResume(audio, {
-        seekAudio,
-        setStoreProgress,
-      });
-      if (clampedPos === null) return;
-
-      logger.info("Applying pending resume position:", clampedPos);
-    },
-    [seekAudio, setStoreProgress],
-  );
 
   const handleLoadedMetadata = useCallback(
     (e: React.SyntheticEvent<HTMLAudioElement>) => {

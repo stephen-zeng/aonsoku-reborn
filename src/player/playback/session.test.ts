@@ -75,6 +75,19 @@ describe("PlaybackSession source changes", () => {
     expect(session.sourceChanging).toBe(true);
   });
 
+  it("handles initial resume position during source change", () => {
+    const session = new PlaybackSession<PlaybackSessionAudio>();
+
+    session.beginSourceChange("song-1", { resumePosition: 120 });
+
+    expect(session.pendingResumePosition).toBe(120);
+    expect(session.shouldSuppressProgressUpdate()).toBe(true);
+
+    session.finishCanPlay();
+    expect(session.pendingResumePosition).toBe(null);
+    expect(session.shouldSuppressProgressUpdate()).toBe(false);
+  });
+
   it("tracks whether a playback effect belongs to the loaded source", () => {
     const session = new PlaybackSession<PlaybackSessionAudio>();
 

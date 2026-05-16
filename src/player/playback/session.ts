@@ -120,7 +120,10 @@ export class PlaybackSession<TAudio extends PlaybackSessionAudio> {
     return this.#resumeGuardActive;
   }
 
-  beginSourceChange(sourceId?: string): PlaybackSessionSourceChange {
+  beginSourceChange(
+    sourceId?: string,
+    options: { resumePosition?: number } = {},
+  ): PlaybackSessionSourceChange {
     const result = {
       cancelledRetry: this.#retryTimeout !== null,
       retryCount: this.#retryCount,
@@ -132,6 +135,11 @@ export class PlaybackSession<TAudio extends PlaybackSessionAudio> {
     this.#playPromise = null;
     this.#srcChanging = true;
     this.#loadedSourceId = sourceId;
+
+    if (options.resumePosition) {
+      this.#pendingResumePosition = options.resumePosition;
+      this.#resumeGuardActive = true;
+    }
 
     return result;
   }
