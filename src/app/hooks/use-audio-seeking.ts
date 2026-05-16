@@ -1,5 +1,4 @@
-import { useCallback, useState } from "react";
-import type { PlaybackEngine } from "@/service/audio/types";
+import { RefObject, useCallback, useState } from "react";
 import {
   useIsRemoteControlActive,
   usePlayerActions,
@@ -7,7 +6,7 @@ import {
 import { logger } from "@/utils/logger";
 
 interface UseAudioSeekingOptions {
-  audioRef: { current: PlaybackEngine | null };
+  audioRef: RefObject<HTMLAudioElement> | { current: HTMLAudioElement | null };
 }
 
 export function useAudioSeeking({ audioRef }: UseAudioSeekingOptions) {
@@ -20,10 +19,10 @@ export function useAudioSeeking({ audioRef }: UseAudioSeekingOptions) {
   const updateAudioCurrentTime = useCallback(
     (value: number) => {
       if (isRemoteControlActive) return;
-      const engine = audioRef.current;
-      if (engine) {
+      const audio = audioRef.current;
+      if (audio) {
         logger.debug("Seeking to:", value);
-        engine.seek(value);
+        audio.currentTime = value;
       }
     },
     [audioRef, isRemoteControlActive],

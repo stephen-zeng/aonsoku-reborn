@@ -730,7 +730,7 @@ export function createQueueActions(shared: SharedDeps) {
         lastPrevSongTime = Date.now();
         const audioRef = get().playerState.audioPlayerRef;
         if (audioRef) {
-          audioRef.seek(0);
+          audioRef.currentTime = 0;
         }
         return;
       }

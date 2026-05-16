@@ -40,8 +40,6 @@ export interface PlaybackEngine {
   getCurrentTime(): number;
   getDuration(): number;
   isPaused(): boolean;
-  isEnded(): boolean;
-  hasSrc(): boolean;
   getReadyState(): number;
 
   on<K extends keyof PlaybackEngineEvents>(

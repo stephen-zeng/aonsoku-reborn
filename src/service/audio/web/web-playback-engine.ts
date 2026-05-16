@@ -123,14 +123,6 @@ export class WebPlaybackEngine implements PlaybackEngine {
     return this.audio.paused;
   }
 
-  isEnded(): boolean {
-    return this.audio.ended;
-  }
-
-  hasSrc(): boolean {
-    return !!this.audio.src && this.audio.src !== "";
-  }
-
   getReadyState(): number {
     return this.audio.readyState;
   }
