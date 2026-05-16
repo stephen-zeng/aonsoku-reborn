@@ -9,15 +9,19 @@ struct AudioPlaybackState {
     var buffered: Double = 0
 }
 
-class AudioService {
+class AudioService: NSObject {
     private weak var plugin: NativeAudioPlugin?
     private var player: AVPlayer?
+    private var playerItem: AVPlayerItem?
     private var timeObserver: Any?
+    private var statusObservation: NSKeyValueObservation?
+    private var bufferedObservation: NSKeyValueObservation?
     private var replayGainEnabled = false
     private var replayGainValue: Float = 1.0
 
     init(plugin: NativeAudioPlugin) {
         self.plugin = plugin
+        super.init()
         setupAudioSession()
         setupRemoteCommands()
     }
@@ -27,7 +31,7 @@ class AudioService {
     func setSrc(url: String, songId: String, headers: [String: String]?) {
         guard let audioUrl = URL(string: url) else { return }
 
-        var asset: AVURLAsset
+        let asset: AVURLAsset
         if let headers = headers, !headers.isEmpty {
             asset = AVURLAsset(url: audioUrl, options: ["AVURLAssetHTTPHeaderFieldsKey": headers])
         } else {
@@ -35,6 +39,9 @@ class AudioService {
         }
 
         let item = AVPlayerItem(asset: asset)
+        removeObservers()
+        playerItem = item
+
         if player == nil {
             player = AVPlayer(playerItem: item)
         } else {
@@ -65,9 +72,11 @@ class AudioService {
 
     func stop() {
         player?.pause()
-        player?.replaceCurrentItem(with: nil)
         removeObservers()
+        player?.replaceCurrentItem(with: nil)
+        playerItem = nil
         plugin?.notifyPlaybackStateChanged(state: "stopped")
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
     }
 
     func setVolume(_ volume: Float) {
@@ -93,7 +102,7 @@ class AudioService {
         var buffered: Double = 0
         if let range = item.loadedTimeRanges.last?.timeRangeValue {
             let end = CMTimeGetSeconds(range.start) + CMTimeGetSeconds(range.duration)
-            if duration > 0 {
+            if duration > 0, !duration.isNaN {
                 buffered = end / duration
             }
         }
@@ -201,14 +210,14 @@ class AudioService {
     }
 
     private func setupObservers() {
-        removeObservers()
+        guard let player = player, let item = playerItem else { return }
 
-        timeObserver = player?.addPeriodicTimeObserver(
+        timeObserver = player.addPeriodicTimeObserver(
             forInterval: CMTime(seconds: 0.5, preferredTimescale: 600),
             queue: .main
         ) { [weak self] time in
             guard let self = self,
-                  let duration = self.player?.currentItem?.duration.seconds,
+                  let duration = self.playerItem?.duration.seconds,
                   !duration.isNaN else { return }
             self.plugin?.notifyTimeUpdate(currentTime: time.seconds, duration: duration)
             self.updateNowPlayingTime()
@@ -218,10 +227,29 @@ class AudioService {
             self,
             selector: #selector(playerDidFinishPlaying),
             name: .AVPlayerItemDidPlayToEndTime,
-            object: player?.currentItem
+            object: item
         )
 
-        player?.currentItem?.addObserver(self, forKeyPath: "loadedTimeRanges", context: nil)
+        bufferedObservation = item.observe(\.loadedTimeRanges, options: [.new]) { [weak self] item, _ in
+            guard let self = self,
+                  let range = item.loadedTimeRanges.last?.timeRangeValue else { return }
+            let duration = item.duration.seconds
+            guard duration > 0, !duration.isNaN else { return }
+            let end = CMTimeGetSeconds(range.start) + CMTimeGetSeconds(range.duration)
+            self.plugin?.notifyBufferedProgress(buffered: end / duration)
+        }
+
+        statusObservation = item.observe(\.status, options: [.new]) { [weak self] item, _ in
+            switch item.status {
+            case .readyToPlay:
+                self?.plugin?.notifyPlaybackStateChanged(state: "stopped")
+            case .failed:
+                let message = item.error?.localizedDescription ?? "Unknown error"
+                self?.plugin?.notifyPlaybackError(code: "decode", message: message)
+            default:
+                break
+            }
+        }
     }
 
     private func removeObservers() {
@@ -229,18 +257,12 @@ class AudioService {
             player?.removeTimeObserver(observer)
             timeObserver = nil
         }
-        NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: nil)
-        // KVO removal handled by deinit
-    }
-
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {
-        if keyPath == "loadedTimeRanges" {
-            guard let item = player?.currentItem,
-                  let range = item.loadedTimeRanges.last?.timeRangeValue else { return }
-            let duration = item.duration.seconds
-            guard duration > 0, !duration.isNaN else { return }
-            let end = CMTimeGetSeconds(range.start) + CMTimeGetSeconds(range.duration)
-            plugin?.notifyBufferedProgress(buffered: end / duration)
+        statusObservation?.invalidate()
+        statusObservation = nil
+        bufferedObservation?.invalidate()
+        bufferedObservation = nil
+        if let item = playerItem {
+            NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: item)
         }
     }
 

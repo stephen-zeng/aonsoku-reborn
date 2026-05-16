@@ -4,9 +4,13 @@ import type { PlaybackEngine } from "./types";
 import { CapacitorPlaybackEngine } from "./capacitor/capacitor-playback-engine";
 import { WebPlaybackEngine } from "./web/web-playback-engine";
 
-export function createPlaybackEngine(): PlaybackEngine {
+export async function createPlaybackEngine(): Promise<PlaybackEngine> {
   if (isCapacitorNative()) {
-    return new CapacitorPlaybackEngine(NativeAudio);
+    const engine = new CapacitorPlaybackEngine(NativeAudio);
+    await engine.initialize();
+    return engine;
   }
-  return new WebPlaybackEngine();
+  const engine = new WebPlaybackEngine();
+  await engine.initialize();
+  return engine;
 }

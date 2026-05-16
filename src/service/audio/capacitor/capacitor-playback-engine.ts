@@ -5,6 +5,7 @@ import type {
   TimeUpdateEvent,
   BufferedProgressEvent,
   PlaybackErrorEvent,
+  MediaSessionActionEvent,
 } from "aonsoku-native-audio";
 import type {
   PlaybackEngine,
@@ -25,6 +26,9 @@ export class CapacitorPlaybackEngine implements PlaybackEngine {
   private paused = true;
   private ended = false;
   private srcSet = false;
+  private mediaSessionHandler:
+    | ((action: string, seekTime?: number) => void)
+    | null = null;
 
   private listeners: Listeners = {
     play: new Set(),
@@ -106,7 +110,20 @@ export class CapacitorPlaybackEngine implements PlaybackEngine {
       },
     );
 
-    this.handles = [h1, h2, h3, h4, h5];
+    const h6 = await this.plugin.addListener(
+      "mediaSessionAction",
+      (data: MediaSessionActionEvent) => {
+        this.mediaSessionHandler?.(data.action, data.seekTime);
+      },
+    );
+
+    this.handles = [h1, h2, h3, h4, h5, h6];
+  }
+
+  setMediaSessionHandler(
+    handler: ((action: string, seekTime?: number) => void) | null,
+  ): void {
+    this.mediaSessionHandler = handler;
   }
 
   destroy(): void {
