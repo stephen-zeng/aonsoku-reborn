@@ -14,8 +14,13 @@ import {
   createUrlPlaybackSource,
   getPlaybackEndedDecision,
   type PlaybackBackend,
+  type PlaybackSource,
   PlaybackSession,
 } from "@/player/playback";
+import {
+  type AudioSourceDescriptor,
+  getAudioSourceUrl,
+} from "@/service/cache";
 import { useCacheStore } from "@/store/cache.store";
 import {
   useIsRemoteControlActive,
@@ -35,6 +40,7 @@ import { perceptualToGain } from "@/utils/volume";
 
 type AudioPlayerProps = ComponentPropsWithoutRef<"audio"> & {
   audioRef: RefObject<HTMLAudioElement>;
+  audioSource?: AudioSourceDescriptor | null;
   replayGain?: ReplayGainParams;
   onPlaybackError?: () => void;
   onReplayGainError?: () => void;
@@ -44,6 +50,7 @@ type AudioPlayerProps = ComponentPropsWithoutRef<"audio"> & {
 export function AudioPlayer({
   audioRef,
   replayGain,
+  audioSource,
   onPlaybackError,
   onReplayGainError,
   src,
@@ -102,12 +109,42 @@ export function AudioPlayer({
   );
 
   const createPlaybackSource = useCallback(
-    (url: string) =>
-      createUrlPlaybackSource(url, {
+    (url: string): PlaybackSource => {
+      if (audioSource && getAudioSourceUrl(audioSource) === url) {
+        switch (audioSource.kind) {
+          case "stream":
+            return {
+              kind: "stream",
+              url: audioSource.url,
+              songId: audioSource.songId,
+            };
+          case "blob":
+            return {
+              kind: "blob",
+              url: audioSource.url,
+              songId: audioSource.songId,
+            };
+          case "native-file":
+            return {
+              kind: "native-file",
+              uri: audioSource.uri,
+              songId: audioSource.songId,
+            };
+          case "radio":
+            return {
+              kind: "radio",
+              url: audioSource.url,
+              radioId: audioSource.radioId,
+            };
+        }
+      }
+
+      return createUrlPlaybackSource(url, {
         kind: isRadio ? "radio" : undefined,
         songId: isRadio ? undefined : songId,
-      }),
-    [isRadio, songId],
+      });
+    },
+    [audioSource, isRadio, songId],
   );
 
   const loadAudio = useCallback(

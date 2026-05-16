@@ -18,6 +18,7 @@ import { usePlayerStore } from "@/store/player.store";
 import { CachedItemMeta, CacheMetaSource, Priority } from "@/types/cache";
 import { getSongCoverArtId } from "@/utils/coverArt";
 import { audioCacheService } from "./audio-cache-worker-adapter";
+import { resolveCachedAudioSource } from "./audio-source";
 import {
   albumKey,
   audioKey,
@@ -188,58 +189,8 @@ class CacheManager {
    * avoid leaking memory.**
    */
   async getCachedAudioUrl(songId: string): Promise<string | null> {
-    const key = audioKey(songId);
-
-    // Fast path: when the index is loaded and the key is absent, the
-    // blob cannot exist in the Cache API — skip the async lookup.
-    const { loaded } = useCacheIndexStore.getState();
-    if (loaded && !isAudioCached(songId)) return null;
-
-    // Slow path (index not loaded yet, or index says cached): read the
-    // Cache API directly.  This ensures offline audio is playable
-    // immediately on app startup before loadFromIDB completes.
-    const blob = await cacheStorage.get(key);
-    if (!blob) {
-      if (isAudioCached(songId)) {
-        getCacheIndexActions().removeItem(key);
-      }
-      return null;
-    }
-
-    // If the blob exists but the in-memory index missed it (e.g.
-    // loadFromIDB has not completed yet), try to recover the original
-    // metadata from Dexie cacheMeta.  Falls back to a synthetic entry
-    // only when no persisted metadata exists.
-    if (!isAudioCached(songId)) {
-      const existingRow = await libraryDb.cacheMeta.get(key);
-      if (existingRow) {
-        getCacheIndexActions().addItem(key, {
-          id: existingRow.id,
-          type: existingRow.type,
-          source: existingRow.source,
-          triggers: existingRow.triggers,
-          sizeBytes: existingRow.sizeBytes,
-          cachedAt: existingRow.cachedAt,
-          lastAccessedAt: Date.now(),
-          removedFromServer: existingRow.removedFromServer,
-        });
-      } else {
-        const syntheticMeta = {
-          id: songId,
-          type: "audio" as const,
-          source: "explicit" as const,
-          sizeBytes: blob.size,
-          cachedAt: Date.now(),
-          lastAccessedAt: Date.now(),
-        };
-        getCacheIndexActions().addItem(key, syntheticMeta);
-        persistCacheMeta(key, { key, ...syntheticMeta });
-      }
-    } else {
-      getCacheIndexActions().touchItem(key);
-    }
-
-    return URL.createObjectURL(blob);
+    const source = await resolveCachedAudioSource(songId);
+    return source?.url ?? null;
   }
 
   async cacheCover(coverArtId: string, size = "700"): Promise<void> {

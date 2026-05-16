@@ -6,7 +6,7 @@ import { MiniPlayerButton } from "@/app/components/mini-player/button";
 import { RadioInfo } from "@/app/components/player/radio-info";
 import { TrackInfo } from "@/app/components/player/track-info";
 import { Button } from "@/app/components/ui/button";
-import { useCachedAudioUrl } from "@/app/hooks/use-cached-audio";
+import { useAudioSource } from "@/app/hooks/use-audio-source";
 import { usePlayHistory } from "@/app/hooks/use-play-history";
 import { usePlayerBreakpoint } from "@/app/hooks/use-player-breakpoint";
 import { usePreloadAudio } from "@/app/hooks/use-preload-audio";
@@ -36,6 +36,7 @@ import {
   type ReplayGainParams,
   resolveReplayGainParams,
 } from "@/utils/replayGain";
+import { getAudioSourceUrl } from "@/service/cache";
 import { AudioPlayer } from "./audio";
 import { PlayerClearQueueButton } from "./clear-queue-button";
 import { PlayerControls } from "./controls";
@@ -109,7 +110,8 @@ export function Player() {
   const song = currentList[currentSongIndex] ?? null;
   const radio = radioList[currentSongIndex];
   const songId = song?.id;
-  const { url: audioSrc, resolvedSongId } = useCachedAudioUrl(song?.id);
+  const { source: audioSource, resolvedSongId } = useAudioSource(song?.id);
+  const audioSrc = audioSource ? getAudioSourceUrl(audioSource) : "";
 
   const getAudioRef = useCallback(() => {
     if (isRadio) return radioRef;
@@ -379,6 +381,7 @@ export function Player() {
 
       {isSong && song && !isRemoteControlActive && (
         <MemoAudioPlayer
+          audioSource={audioSource}
           replayGain={trackReplayGain}
           src={audioSrc}
           songId={resolvedSongId}

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { buildAudioUrl, cacheManager } from "@/service/cache";
+import { getAudioSourceUrl } from "@/service/cache";
+import { useAudioSource } from "./use-audio-source";
 
 interface CachedAudioState {
   url: string;
@@ -16,68 +16,15 @@ const INITIAL_STATE: CachedAudioState = {
 };
 
 export function useCachedAudioUrl(songId?: string) {
-  const [state, setState] = useState<CachedAudioState>(INITIAL_STATE);
-  const blobUrlRef = useRef<string | null>(null);
+  const { source, resolvedSongId, isCached, isLoading } =
+    useAudioSource(songId);
 
-  const revokePreviousBlobUrl = useCallback(() => {
-    if (blobUrlRef.current) {
-      URL.revokeObjectURL(blobUrlRef.current);
-      blobUrlRef.current = null;
-    }
-  }, []);
+  if (!source) return INITIAL_STATE;
 
-  useEffect(() => {
-    if (!songId) {
-      revokePreviousBlobUrl();
-      setState({
-        url: "",
-        resolvedSongId: undefined,
-        isCached: false,
-        isLoading: false,
-      });
-      return;
-    }
-
-    let cancelled = false;
-
-    (async () => {
-      const cachedUrl = await cacheManager.getCachedAudioUrl(songId);
-      if (cancelled) {
-        if (cachedUrl) URL.revokeObjectURL(cachedUrl);
-        return;
-      }
-
-      if (cachedUrl) {
-        revokePreviousBlobUrl();
-        blobUrlRef.current = cachedUrl;
-        setState({
-          url: cachedUrl,
-          resolvedSongId: songId,
-          isCached: true,
-          isLoading: false,
-        });
-        return;
-      }
-
-      revokePreviousBlobUrl();
-      setState({
-        url: buildAudioUrl(songId, "stream"),
-        resolvedSongId: songId,
-        isCached: false,
-        isLoading: false,
-      });
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [songId, revokePreviousBlobUrl]);
-
-  useEffect(() => {
-    return () => {
-      revokePreviousBlobUrl();
-    };
-  }, [revokePreviousBlobUrl]);
-
-  return state;
+  return {
+    url: getAudioSourceUrl(source),
+    resolvedSongId,
+    isCached,
+    isLoading,
+  };
 }

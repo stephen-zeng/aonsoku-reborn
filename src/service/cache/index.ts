@@ -1,4 +1,12 @@
 export { AudioCacheQueue } from "./audio-cache-queue";
+export {
+  audioSourceResolver,
+  CacheAudioSourceResolver,
+  getAudioSourceUrl,
+  isCachedAudioSource,
+  resolveCachedAudioSource,
+  revokeAudioSource,
+} from "./audio-source";
 export { audioUrlResolver, buildAudioUrl } from "./audio-url-resolver";
 export { cacheIndexAdapter } from "./cache-index-adapter";
 export { audioKey, coverKey } from "./cache-keys";
