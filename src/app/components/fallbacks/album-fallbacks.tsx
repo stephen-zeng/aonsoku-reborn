@@ -112,8 +112,12 @@ export function HeaderWithImageEffect({
         <div
           className={cn(
             IMAGE_HEADER_MAIN_GRADIENT,
-            "w-full px-3 py-3 md:px-8 md:py-6 bg-background-foreground flex flex-col gap-2 md:gap-4 relative md:absolute md:inset-0",
+            "w-full px-3 pb-3 pt-[calc(var(--safe-area-top)+3.25rem)] md:px-8 md:py-6 bg-background-foreground flex flex-col gap-2 md:gap-4 relative md:absolute md:inset-0",
           )}
+          style={{
+            paddingLeft: "max(var(--safe-area-left), 0.75rem)",
+            paddingRight: "max(var(--safe-area-right), 0.75rem)",
+          }}
         >
           <AlbumHeaderContent
             showSecondaryBadges={showSecondaryBadges}
