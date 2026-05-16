@@ -6,9 +6,9 @@ commit that contains the change.
 
 ## Current Status
 
-- Roadmap status: Phase 2 in progress.
-- Active implementation phase: Phase 2 - Cache Modularization.
-- Next step: Phase 2.4, isolate blob URL lifetime.
+- Roadmap status: Phase 3 in progress.
+- Active implementation phase: Phase 3 - Capacitor Bridge Foundation.
+- Next step: Phase 3.2, route Capacitor iOS to native backend.
 - Android status: blocked until the full iOS native implementation is complete.
 
 ## Completed Work
@@ -26,6 +26,7 @@ commit that contains the change.
 | 2026-05-17 | Phase 2.1 - Define cache service contracts | Added cache storage, index, metadata persistence, audio download service/queue, audio URL/source resolver, and native file resolver contracts. Added default adapters around the current Cache API, Zustand index, Dexie metadata persistence, and audio download service, plus test fakes for future resolver work. | `pnpm exec vitest run src/service/cache/contracts/fakes.test.ts src/service/cache/audio-url-resolver.test.ts src/service/cache/cache-storage.test.ts src/service/cache/persist-meta.test.ts src/service/cache/audio-cache-queue.test.ts` 48/48 passed. `pnpm run test:unit` 687/687 passed. `pnpm run lint` passed. `pnpm run build` succeeded with existing Vite warnings. | `72a88af4 refactor(cache): define cache service contracts` |
 | 2026-05-17 | Phase 2.2 - Split audio URL resolution | Added `CacheAudioSourceResolver` to return typed stream/blob/native-file source descriptors and moved cached-or-stream selection out of React hooks. Added `useAudioSource(songId)`, kept `useCachedAudioUrl` as a compatibility wrapper, routed preloading through the resolver, and passed typed song sources into `AudioPlayer` while preserving string `src` playback. | `pnpm exec vitest run src/service/cache/audio-source/index.test.ts src/service/cache/cache-manager.test.ts src/service/cache/audio-url-resolver.test.ts` 28/28 passed. `pnpm run test:unit` 693/693 passed. `pnpm run lint` passed. `pnpm run build` succeeded with existing Vite warnings. | `8090d3c3 refactor(cache): isolate audio source resolution` |
 | 2026-05-17 | Phase 2.3 - Prepare native cache access | Added `NativeCacheAdapter` contract extending `NativeFileResolver` with `storeAudioFile`, `getAudioFileSize`, and `evictAudioFile`. Added `FakeNativeCacheAdapter` for tests. Created `native-cache-adapter.ts` with platform-aware factory that returns a null adapter on web and throws on iOS/Android (not yet implemented). Wired the factory into `CacheAudioSourceResolver` as the default `nativeFileResolver`. Added 18 new tests: 5 for `FakeNativeCacheAdapter`, 11 for `getNativeCacheAdapter` platform selection, and 2 for resolver integration with `NativeCacheAdapter`. | `pnpm exec vitest run src/service/cache/contracts/fakes.test.ts src/service/cache/native-cache-adapter.test.ts src/service/cache/audio-source/index.test.ts` 34/34 passed. `pnpm run test:unit` 711/711 passed. `pnpm run lint` passed. `pnpm run build` succeeded with existing Vite warnings. | `5e250d17 refactor(cache): prepare native cache adapter` |
+| 2026-05-17 | Phase 3.1 - Add TypeScript native plugin facades | Added the `src/native/audio/` facade with typed Capacitor plugin registration, native source descriptors, metadata, queue/control methods, typed event payloads, unavailable-safe web behavior, plugin availability checks, and typed listener helpers. No Android dependency or project file was added. | `pnpm exec vitest run src/native/audio/facade.test.ts` 6/6 passed. `pnpm run test:unit` 717/717 passed. `pnpm run lint` passed. `pnpm run build` succeeded with existing Vite warnings. Commit hook Biome lint passed. | `f9d2d498 refactor(capacitor): add native audio facade` |
 
 ## Phase Checklist
 
@@ -33,8 +34,8 @@ commit that contains the change.
 | --- | --- | --- |
 | Phase 0 - Baseline And Guardrails | Complete | Both Phase 0.1 and 0.2 done. Follow-up review corrected browser/PWA vs native Capacitor runtime detection. |
 | Phase 1 - Playback And Queue Modularization | Complete | Phase 1.1 through 1.4 are complete. Cypress was not run in this session because the local Cypress installation has a known host issue and the user requested not to run or repair it. |
-| Phase 2 - Cache Modularization | In progress | Phase 2.1 through 2.3 are complete. Phase 2.4 should isolate blob URL lifetime next. |
-| Phase 3 - Capacitor Bridge Foundation | Not started | No native implementation until contracts are stable. |
+| Phase 2 - Cache Modularization | Complete for Phase 3 handoff | Phase 2.1 through 2.3 are complete per `01-roadmap.md`. Detailed cache follow-ups in `03-cache-modularization.md` remain useful future hardening work. |
+| Phase 3 - Capacitor Bridge Foundation | In progress | Phase 3.1 is complete. Phase 3.2 should select the native playback backend only inside Capacitor iOS with web fallback elsewhere. |
 | Phase 4 - Complete iOS Native Implementation | Not started | Must finish before Android begins. |
 | Phase 5 - Android Platform Support | Blocked | Do not add `@capacitor/android` or Android project files yet. |
 | Phase 6 - Stabilization | Not started | Runs after platform implementation work. |
@@ -85,6 +86,10 @@ Record test commands and outcomes here as the roadmap progresses.
 | 2026-05-17 | `pnpm run test:unit` | 711 passed | Full unit suite after Phase 2.3. |
 | 2026-05-17 | `pnpm run lint` | Passed | Biome lint after Phase 2.3; commit hook also ran Biome and passed. |
 | 2026-05-17 | `pnpm run build` | Succeeded | Build succeeds; existing Vite warnings remain. |
+| 2026-05-17 | `pnpm exec vitest run src/native/audio/facade.test.ts` | 6 passed | Phase 3.1 facade registration, web fallback, iOS availability, missing-plugin fallback, and typed listener wrappers. |
+| 2026-05-17 | `pnpm run test:unit` | 717 passed | Full unit suite after Phase 3.1. |
+| 2026-05-17 | `pnpm run lint` | Passed | Biome lint after Phase 3.1; commit hook also ran Biome and passed. |
+| 2026-05-17 | `pnpm run build` | Succeeded | Build succeeds; existing Vite chunking and non-module `env-config.js` warnings remain. |
 
 ### Phase 0.1 - Baseline Test Coverage Added
 
@@ -250,13 +255,20 @@ side effects. This makes queue behavior fully testable without a store.
   native platforms (iOS/Android implementations deferred to Phase 4/5). The
   `CacheAudioSourceResolver` now uses this factory as its default
   `nativeFileResolver`. `FakeNativeCacheAdapter` is available for tests.
+- Phase 3.1 is complete. The TypeScript Capacitor native audio facade lives in
+  `src/native/audio/`. It registers `AonsokuNativeAudio`, defines typed source,
+  metadata, queue/control, and event contracts, provides unavailable-safe web
+  behavior, and exposes availability/listener helpers for mocked and future
+  native backends.
 - Public imports from `@/store/player.store` remain stable.
 - Public imports of `buildAudioUrl` from `@/service/cache` remain stable.
 - Cypress component tests were intentionally not run after user instruction:
   this machine has a known Cypress host issue, and Cypress repair is out of
   scope for this roadmap work.
-- The next implementation session should begin with Phase 2.4 from
-  `01-roadmap.md` and `03-cache-modularization.md`: isolate blob URL lifetime.
+- The next implementation session should continue Phase 3.2 from
+  `01-roadmap.md`: route Capacitor iOS to the native playback backend while
+  keeping web/Electron on the web backend and falling back if the plugin is
+  unavailable.
 - Keep every sub-step small, tested, and committed independently.
 - Keep Android blocked until the iOS done criteria in `00-requirements.md` and
   `04-ios-native-implementation.md` are satisfied.
