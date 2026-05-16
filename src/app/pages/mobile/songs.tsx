@@ -50,8 +50,8 @@ function MobileSongsFallback() {
       />
       <div className="flex flex-col">
         <div className="px-4 py-4 flex items-center justify-between">
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-8 w-32" />
+          <div className="flex flex-col">
+            <Skeleton id="detail-page-title" className="h-8 w-32 mb-1" />
             <Skeleton className="h-3 w-16" />
           </div>
           <div className="flex gap-1">
@@ -61,7 +61,7 @@ function MobileSongsFallback() {
         </div>
         {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="flex items-center gap-3 px-4 py-2">
-            <Skeleton className="size-12 rounded shadow" />
+            <Skeleton className="size-12 rounded shadow shrink-0" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-3/4" />
               <Skeleton className="h-3 w-1/2" />

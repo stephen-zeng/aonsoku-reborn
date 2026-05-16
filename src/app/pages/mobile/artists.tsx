@@ -21,13 +21,13 @@ function MobileArtistsFallback() {
         transparentTheme="default"
       />
       <div className="flex flex-col">
-        <div className="px-4 py-4 flex flex-col gap-2">
-          <Skeleton className="h-8 w-32" />
+        <div className="px-4 py-4 flex flex-col">
+          <Skeleton id="detail-page-title" className="h-8 w-32 mb-1" />
           <Skeleton className="h-3 w-16" />
         </div>
         {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="flex items-center gap-3 px-4 py-2">
-            <Skeleton className="size-11 rounded-full" />
+            <Skeleton className="size-11 rounded-full shrink-0" />
             <div className="flex-1 space-y-1.5">
               <Skeleton className="h-4 w-3/4" />
               <Skeleton className="h-3 w-1/2" />
