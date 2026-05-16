@@ -23,9 +23,16 @@ step can be executed, tested, and committed independently.
   that must not start until the iOS implementation is complete.
 - [06-testing-and-commit-protocol.md](./06-testing-and-commit-protocol.md):
   testing, verification, and git commit rules for every sub-step.
+- [07-progress.md](./07-progress.md): current progress, completed steps,
+  active step, verification notes, and commit history for this roadmap.
 
 ## Execution Rule
 
 Do not treat this roadmap as a single large refactor. Each sub-step must be a
 small, reviewable change with its own tests and commit. Android work is blocked
 until every iOS requirement in the iOS plan is implemented and verified.
+
+## Progress Tracking
+
+Update [07-progress.md](./07-progress.md) after each completed sub-step. The
+progress document is the handoff point for future sessions.
