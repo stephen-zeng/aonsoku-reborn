@@ -27,7 +27,6 @@ export default function MobileArtistsList() {
       <MobilePageHeader
         variant="sub"
         title={t("sidebar.artists")}
-        showUserMenu={false}
       />
       <div className="flex flex-col">
         <div className="px-4 py-4 flex flex-col">

@@ -17,7 +17,7 @@ interface MobilePageHeaderProps {
   accentColor?: string;
   count?: number;
   actions?: ReactNode;
-  showUserMenu?: boolean;
+  showSpacer?: boolean;
 }
 
 function DesktopHeaderStatusItems() {
@@ -26,15 +26,12 @@ function DesktopHeaderStatusItems() {
 
 function MobileHeaderStatusItems({
   extra,
-  showUserMenu = true,
 }: {
   extra?: ReactNode;
-  showUserMenu?: boolean;
 }) {
   return (
     <div className="flex items-center gap-1">
       {extra}
-      {showUserMenu && <UserDropdown />}
     </div>
   );
 }
@@ -43,13 +40,11 @@ function StickyHeader({
   title,
   onBack,
   accentColor,
-  showUserMenu = true,
   actions,
 }: {
   title: string;
   onBack?: () => void;
   accentColor?: string;
-  showUserMenu?: boolean;
   actions?: ReactNode;
 }) {
   const navigate = useNavigate();
@@ -108,7 +103,9 @@ function StickyHeader({
       : undefined;
 
   const textColorClass = floatingOnImage
-    ? "text-white"
+    ? accentColor
+      ? "text-white"
+      : "text-foreground"
     : showFullBar && blendedColor && isDarkHex(blendedColor)
       ? "text-white"
       : "text-foreground";
@@ -136,9 +133,8 @@ function StickyHeader({
           variant="ghost"
           size="sm"
           className={cn(
-            "h-11 w-11 p-0 rounded-md flex-shrink-0",
-            floatingOnImage &&
-              "hover-supported:bg-white/20 text-white drop-shadow-md",
+            "h-11 w-11 p-0 rounded-md flex-shrink-0 z-10 transition-colors",
+            floatingOnImage && "text-foreground drop-shadow-md",
             showFullBar && blendedColor && isDarkHex(blendedColor)
               ? "hover-supported:bg-white/20 text-white"
               : "",
@@ -151,16 +147,18 @@ function StickyHeader({
         >
           <ChevronLeft className="w-5 h-5" strokeWidth={2} />
         </Button>
-        <span
-          className={cn(
-            "flex-1 text-sm font-medium truncate px-2 transition-opacity duration-200",
-            showFullBar ? "opacity-100" : "opacity-0 w-0 overflow-hidden",
-          )}
-        >
-          {title}
-        </span>
-        <div className="pr-2 flex-shrink-0">
-          <MobileHeaderStatusItems extra={actions} showUserMenu={showUserMenu} />
+        <div className="flex-1 min-w-0">
+          <span
+            className={cn(
+              "text-sm font-bold truncate transition-opacity duration-200 block",
+              showFullBar ? "opacity-100" : "opacity-0",
+            )}
+          >
+            {title}
+          </span>
+        </div>
+        <div className="pr-2 flex-shrink-0 z-10">
+          <MobileHeaderStatusItems extra={actions} />
         </div>
       </div>
     </>
@@ -175,9 +173,10 @@ export function MobilePageHeader({
   accentColor,
   count,
   actions,
-  showUserMenu = true,
+  showSpacer = true,
 }: MobilePageHeaderProps) {
   if (variant === "root") {
+// ... existing root logic ...
     return (
       <div
         className={cn("md:hidden px-4 pt-[var(--safe-area-top)]", className)}
@@ -191,20 +190,27 @@ export function MobilePageHeader({
               </span>
             )}
           </div>
-          <MobileHeaderStatusItems extra={actions} showUserMenu={showUserMenu} />
+          <MobileHeaderStatusItems extra={actions} />
         </div>
       </div>
     );
   }
 
   return (
-    <StickyHeader
-      title={title}
-      onBack={onBack}
-      accentColor={accentColor}
-      showUserMenu={showUserMenu}
-      actions={actions}
-    />
+    <>
+      {showSpacer && (
+        <div
+          className="h-11 md:hidden"
+          style={{ marginTop: "var(--safe-area-top)" }}
+        />
+      )}
+      <StickyHeader
+        title={title}
+        onBack={onBack}
+        accentColor={accentColor}
+        actions={actions}
+      />
+    </>
   );
 }
 

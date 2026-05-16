@@ -26,7 +26,6 @@ export default function MobileAlbumsList() {
       <MobilePageHeader
         variant="sub"
         title={t("sidebar.albums")}
-        showUserMenu={false}
       />
       <div className="px-4 py-4">
         <div className="flex flex-col mb-4">

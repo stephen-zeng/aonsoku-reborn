@@ -96,7 +96,6 @@ export default function MobileSongsList() {
       <MobilePageHeader
         variant="sub"
         title={title}
-        showUserMenu={false}
       />
       <div className="flex flex-col pb-4">
         <div className="px-4 py-4 flex items-center justify-between">
