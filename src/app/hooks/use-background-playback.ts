@@ -18,24 +18,24 @@ export function useBackgroundPlayback() {
       if (!isPlaying || remoteControl.active) return;
 
       const isRadio = playerState.mediaType === "radio";
-      const audio = isRadio
+      const engine = isRadio
         ? playerState.radioPlayerRef
         : playerState.audioPlayerRef;
 
-      if (!audio) return;
+      if (!engine) return;
 
-      if (!audio.paused && !audio.ended) {
+      if (!engine.isPaused() && !engine.isEnded()) {
         logger.info(
           `[BackgroundPlayback] visibility=visible | audio already playing | isRadio=${isRadio}`,
         );
         return;
       }
 
-      if (!audio.src) return;
+      if (!engine.hasSrc()) return;
 
       const label = isRadio ? "Radio" : "Song";
       logger.info(
-        `[BackgroundPlayback] visibility=visible | resuming ${label} | paused=${audio.paused} | ended=${audio.ended}`,
+        `[BackgroundPlayback] visibility=visible | resuming ${label} | paused=${engine.isPaused()} | ended=${engine.isEnded()}`,
       );
 
       if (timeoutId !== null) clearTimeout(timeoutId);
@@ -45,11 +45,11 @@ export function useBackgroundPlayback() {
         if (!latestState.playerState.isPlaying) return;
 
         const latestIsRadio = latestState.playerState.mediaType === "radio";
-        const currentAudio = latestIsRadio
+        const currentEngine = latestIsRadio
           ? latestState.playerState.radioPlayerRef
           : latestState.playerState.audioPlayerRef;
 
-        if (currentAudio !== audio) {
+        if (currentEngine !== engine) {
           logger.info(
             `[BackgroundPlayback] stale audio ref, skipping resume | isRadio=${latestIsRadio}`,
           );
@@ -60,7 +60,7 @@ export function useBackgroundPlayback() {
           manageMediaSession.ensurePlaybackStatePlaying();
         }
 
-        audio.play().catch((error) => {
+        engine.play().catch((error) => {
           if (error.name !== "AbortError") {
             logger.error(
               `[BackgroundPlayback] resume failed | ${error.name}: ${error.message}`,

@@ -196,7 +196,7 @@ export function handleControlAction(action: ControlAction, value?: number) {
       if (value !== undefined) {
         actions.setProgress(value);
         if (audioRef) {
-          audioRef.currentTime = value;
+          audioRef.seek(value);
         }
       }
       break;

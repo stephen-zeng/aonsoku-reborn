@@ -387,7 +387,7 @@ function setHandlers() {
         } else {
           const audioPlayerRef = state.playerState.audioPlayerRef;
           if (audioPlayerRef) {
-            audioPlayerRef.currentTime = details.seekTime;
+            audioPlayerRef.seek(details.seekTime);
             state.actions.setProgress(Math.floor(details.seekTime));
           }
         }

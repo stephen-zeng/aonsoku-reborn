@@ -1,5 +1,6 @@
 import type { Draft } from "immer";
 import clamp from "lodash/clamp";
+import type { PlaybackEngine } from "@/service/audio/types";
 import { LanControlMessageType } from "@/types/lanControl";
 import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
 import { logger } from "@/utils/logger";
@@ -132,13 +133,13 @@ export function createPlaybackActions(shared: SharedDeps) {
       });
     },
 
-    setAudioPlayerRef: (audioPlayer: HTMLAudioElement | null) => {
+    setAudioPlayerRef: (audioPlayer: PlaybackEngine | null) => {
       set((state) => {
         state.playerState.audioPlayerRef = audioPlayer;
       });
     },
 
-    setRadioPlayerRef: (radioPlayer: HTMLAudioElement | null) => {
+    setRadioPlayerRef: (radioPlayer: PlaybackEngine | null) => {
       set((state) => {
         state.playerState.radioPlayerRef = radioPlayer;
       });

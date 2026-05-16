@@ -1,3 +1,4 @@
+import type { PlaybackEngine } from "@/service/audio/types";
 import {
   CurrentSongData,
   LanControlMessageType,
@@ -66,8 +67,8 @@ export interface IPlayerState {
   volume: number;
   currentDuration: number;
   mediaType: "song" | "radio";
-  audioPlayerRef: HTMLAudioElement | null;
-  radioPlayerRef: HTMLAudioElement | null;
+  audioPlayerRef: PlaybackEngine | null;
+  radioPlayerRef: PlaybackEngine | null;
   mainDrawerState: boolean;
   queueState: boolean;
   lyricsState: boolean;
@@ -240,8 +241,8 @@ export interface IPlayerActions {
   setIsBuffering: (value: boolean) => void;
   setBufferedProgress: (value: number) => void;
   setPlayRadio: (list: Radio[], index: number) => void;
-  setAudioPlayerRef: (ref: HTMLAudioElement | null) => void;
-  setRadioPlayerRef: (ref: HTMLAudioElement | null) => void;
+  setAudioPlayerRef: (ref: PlaybackEngine | null) => void;
+  setRadioPlayerRef: (ref: PlaybackEngine | null) => void;
   setNextOnQueue: (
     songlist: ISong[],
     sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
