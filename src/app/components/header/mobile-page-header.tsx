@@ -43,15 +43,20 @@ function StickyHeader({
   title,
   onBack,
   accentColor,
+  showUserMenu = true,
+  actions,
 }: {
   title: string;
   onBack?: () => void;
   accentColor?: string;
+  showUserMenu?: boolean;
+  actions?: ReactNode;
 }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [titleInViewport, setTitleInViewport] = useState(true);
   const titleObserverRef = useRef<IntersectionObserver | null>(null);
+// ... existing logic ...
 
   useEffect(() => {
     const titleEl = document.getElementById("detail-page-title");
@@ -154,6 +159,9 @@ function StickyHeader({
         >
           {title}
         </span>
+        <div className="pr-2 flex-shrink-0">
+          <MobileHeaderStatusItems extra={actions} showUserMenu={showUserMenu} />
+        </div>
       </div>
     </>
   );
@@ -190,7 +198,13 @@ export function MobilePageHeader({
   }
 
   return (
-    <StickyHeader title={title} onBack={onBack} accentColor={accentColor} />
+    <StickyHeader
+      title={title}
+      onBack={onBack}
+      accentColor={accentColor}
+      showUserMenu={showUserMenu}
+      actions={actions}
+    />
   );
 }
 

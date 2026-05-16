@@ -25,12 +25,19 @@ export default function MobileArtistsList() {
   return (
     <div className="w-full flex flex-col">
       <MobilePageHeader
-        variant="root"
+        variant="sub"
         title={t("sidebar.artists")}
-        count={artists.length}
         showUserMenu={false}
       />
       <div className="flex flex-col">
+        <div className="px-4 py-4 flex flex-col">
+          <h1 id="detail-page-title" className="text-2xl font-bold tracking-tight">
+            {t("sidebar.artists")}
+          </h1>
+          <span className="text-xs text-muted-foreground font-medium">
+            {artists.length}
+          </span>
+        </div>
         {artists.map((artist) => (
           <Link
             key={artist.id}

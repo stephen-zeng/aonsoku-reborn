@@ -94,11 +94,20 @@ export default function MobileSongsList() {
   return (
     <div className="w-full flex flex-col">
       <MobilePageHeader
-        variant="root"
+        variant="sub"
         title={title}
-        count={songCount}
         showUserMenu={false}
-        actions={
+      />
+      <div className="flex flex-col pb-4">
+        <div className="px-4 py-4 flex items-center justify-between">
+          <div className="flex flex-col">
+            <h1 id="detail-page-title" className="text-2xl font-bold tracking-tight">
+              {title}
+            </h1>
+            <span className="text-xs text-muted-foreground font-medium">
+              {songCount}
+            </span>
+          </div>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" className="size-10">
               <SearchIcon className="size-5" />
@@ -107,9 +116,7 @@ export default function MobileSongsList() {
               <SortAscIcon className="size-5" />
             </Button>
           </div>
-        }
-      />
-      <div className="flex flex-col pb-4">
+        </div>
         {songlist.map((song, index) => (
           <MobileSongRow
             key={`${song.id}-${index}`}
