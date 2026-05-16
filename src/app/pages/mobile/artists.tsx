@@ -20,14 +20,14 @@ function MobileArtistsFallback() {
           <Skeleton className="h-8 w-32" />
           <Skeleton className="h-3 w-16" />
         </div>
-        {Array.from({ length: 10 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 px-4 py-3">
-            <Skeleton className="size-14 rounded-full" />
-            <div className="flex-1 space-y-2">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3 px-4 py-2">
+            <Skeleton className="size-11 rounded-full" />
+            <div className="flex-1 space-y-1.5">
               <Skeleton className="h-4 w-3/4" />
               <Skeleton className="h-3 w-1/2" />
             </div>
-            <Skeleton className="size-10 rounded-md" />
+            <Skeleton className="size-9 rounded-md" />
           </div>
         ))}
       </div>
@@ -71,9 +71,9 @@ export default function MobileArtistsList() {
           <Link
             key={artist.id}
             to={ROUTES.ARTIST.PAGE(artist.id)}
-            className="flex items-center gap-4 px-4 py-3 active:bg-accent/50 transition-colors"
+            className="flex items-center gap-3 px-4 py-2 active:bg-accent/50 transition-colors"
           >
-            <div className="size-14 shrink-0 overflow-hidden rounded-full bg-secondary relative">
+            <div className="size-11 shrink-0 overflow-hidden rounded-full bg-secondary relative">
               <PreviewCard.Image
                 coverArtId={artist.coverArt}
                 coverArtType="artist"
@@ -82,8 +82,8 @@ export default function MobileArtistsList() {
               />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-base truncate">{artist.name}</h3>
-              <p className="text-sm text-muted-foreground truncate">
+              <h3 className="font-medium text-sm truncate">{artist.name}</h3>
+              <p className="text-xs text-muted-foreground truncate">
                 {t("artist.info.albumsCount", {
                   count: artist.albumCount,
                 })}
@@ -92,14 +92,14 @@ export default function MobileArtistsList() {
             <Button
               variant="ghost"
               size="icon"
-              className="size-10"
+              className="size-9"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 // TODO: Artist actions menu
               }}
             >
-              <MoreVerticalIcon className="size-5" />
+              <MoreVerticalIcon className="size-4" />
             </Button>
           </Link>
         ))}
