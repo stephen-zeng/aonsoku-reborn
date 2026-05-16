@@ -19,12 +19,13 @@ commit that contains the change.
 | 2026-05-16 | Phase 0.1 - Capture baseline behavior | Ran existing unit tests (482 passing, 0 failing, 0 flaky). Added baseline regression tests for queue utilities (88 tests) and platform detection (16 tests). Total test count went from 482 to 570. All tests pass, lint clean. | `pnpm run test:unit` 570/570 passed. `biome lint` passed. | `2bf22f38 test(player): capture playback and queue baseline` |
 | 2026-05-17 | Phase 0.2 - Add platform capability detection | Created `src/utils/capabilities.ts` with `detectRuntime()`, `getRuntime()`, `getPlaybackCapabilities()`, and `getDesktopCapabilities()`. Migrated all 7 `isIOS()` call sites to capability queries (`canSetVolume`, `requiresSystemVolume`). Added 17 capability tests. Total 587 tests pass. Build succeeds. | `pnpm run test:unit` 587/587 passed. `biome lint` passed. `pnpm run build` succeeded. | `7e35d40e refactor(platform): centralize runtime capability detection` |
 | 2026-05-17 | Phase 1.1 - Extract pure queue transitions | Created `src/store/player/queue-transitions.ts` with 13 pure transition functions extracted from `queue-actions.ts`. Added 59 tests in `queue-transitions.test.ts`. Total 646 tests pass. Build succeeds. | `pnpm run test:unit` 646/646 passed. `biome lint` passed. `pnpm run build` succeeded. | `cacd277b refactor(queue): extract pure queue transitions` |
+| 2026-05-17 | Phase 0 review - Runtime detection correction | Corrected `detectRuntime()` to use Capacitor native platform detection instead of iOS/Android user-agent checks, so browser/PWA sessions stay `web`; preserved iOS system-volume capability behavior for web. | `pnpm vitest run src/utils/capabilities.test.ts` 21/21 passed. `pnpm run test:unit` 650/650 passed. `pnpm run lint` passed. `pnpm run build` succeeded. | Pending current-session commit |
 
 ## Phase Checklist
 
 | Phase | Status | Notes |
 | --- | --- | --- |
-| Phase 0 - Baseline And Guardrails | Complete | Both Phase 0.1 and 0.2 done. |
+| Phase 0 - Baseline And Guardrails | Complete | Both Phase 0.1 and 0.2 done. Follow-up review corrected browser/PWA vs native Capacitor runtime detection. |
 | Phase 1 - Playback And Queue Modularization | In progress | Phase 1.1 done. Next: Phase 1.2 define playback backend contract. |
 | Phase 2 - Cache Modularization | Not started | Should follow or coordinate with playback source descriptor work. |
 | Phase 3 - Capacitor Bridge Foundation | Not started | No native implementation until contracts are stable. |
@@ -48,6 +49,10 @@ Record test commands and outcomes here as the roadmap progresses.
 | 2026-05-17 | `pnpm run test:unit` | 646 passed | Added queue-transitions tests (59). All pass. |
 | 2026-05-17 | `biome lint` | Passed | Clean after Phase 1.1 changes. |
 | 2026-05-17 | `pnpm run build` | Succeeded | Web build passes with no errors. |
+| 2026-05-17 | `pnpm vitest run src/utils/capabilities.test.ts` | 21 passed | Phase 0 review fix: native runtime now requires Capacitor native platform detection; iOS web keeps system-volume behavior. |
+| 2026-05-17 | `pnpm run test:unit` | 650 passed | Full unit suite after Phase 0 runtime detection correction. |
+| 2026-05-17 | `pnpm run lint` | Passed | Biome lint after Phase 0 runtime detection correction. |
+| 2026-05-17 | `pnpm run build` | Succeeded | Build succeeds; existing Vite chunking and non-module `env-config.js` warnings remain. |
 
 ### Phase 0.1 - Baseline Test Coverage Added
 
@@ -85,12 +90,12 @@ Record test commands and outcomes here as the roadmap progresses.
 - `PlatformRuntime` type: `"web" | "electron" | "capacitor-ios" | "capacitor-android"`
 - `PlaybackCapabilities` interface: `canSetVolume`, `requiresSystemVolume`, `supportsWebAudioReplayGain`, `supportsNativePlayback`, `supportsBackgroundPlayback`
 - `DesktopCapabilities` interface: `hasDesktopIntegration`, `hasLanControl`, `hasMiniPlayer`, `hasNativeThemeSync`, `hasUpdateCheck`
-- `detectRuntime()`: uses `isDesktop()`, `isIOS()`, `isAndroid()` to determine runtime
+- `detectRuntime()`: uses `isDesktop()` plus Capacitor native platform detection (`isNativePlatform()`/`getPlatform()`) to determine runtime. iOS and Android browser/PWA sessions remain `web`.
 - `getRuntime()`: cached runtime detection
 - `resetRuntimeCache()`: testability hook
-- `getPlaybackCapabilities()`: returns capability set for current runtime
+- `getPlaybackCapabilities()`: returns capability set for current runtime, with iOS web/PWA preserving system-volume behavior (`canSetVolume: false`, `requiresSystemVolume: true`)
 - `getDesktopCapabilities()`: returns desktop integration capabilities
-- `isIOS()` is still exported from `platform.ts` and used internally by `detectRuntime()`
+- `isIOS()` is still exported from `platform.ts` and used internally by `getPlaybackCapabilities()` for web/PWA volume behavior
 
 **Migrated call sites** (7 total):
 - `playback-actions.ts`: `setVolume` and `handleVolumeWheel` now use `!canSetVolume` instead of `isIOS()`
@@ -99,10 +104,10 @@ Record test commands and outcomes here as the roadmap progresses.
 - `fullscreen/volume-bar.tsx`: display volume, mute button, and scroll handling use `requiresSystemVolume`
 - `use-mute-toggle.ts`: mute toggle uses `!canSetVolume` instead of `isIOS()`
 
-**`src/utils/capabilities.test.ts`** (17 tests):
-- `detectRuntime`: electron, ios, android, web, priority (electron over ios/android)
+**`src/utils/capabilities.test.ts`** (21 tests):
+- `detectRuntime`: electron, iOS browser as web, Android browser as web, native Capacitor iOS, native Capacitor Android, web, priority (electron over native ios/android)
 - `getRuntime` caching: caches result, resets after `resetRuntimeCache()`
-- `getPlaybackCapabilities`: web, electron, ios, android capabilities; interface shape
+- `getPlaybackCapabilities`: web, iOS web system-volume behavior, electron, native Capacitor iOS, native Capacitor Android capabilities; interface shape
 - `getDesktopCapabilities`: no bridge, with bridge, LAN control detection
 - Consistency with `isIOS()` for volume control
 

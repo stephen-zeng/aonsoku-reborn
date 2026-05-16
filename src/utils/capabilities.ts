@@ -1,5 +1,6 @@
+import { Capacitor } from "@capacitor/core";
 import { hasElectronBridge, isDesktop } from "./desktop";
-import { isAndroid, isIOS } from "./platform";
+import { isIOS } from "./platform";
 
 export type PlatformRuntime = "web" | "electron" | "capacitor-ios" | "capacitor-android";
 
@@ -46,12 +47,19 @@ export function detectRuntime(): PlatformRuntime {
   if (isDesktop()) {
     return "electron";
   }
-  if (isIOS()) {
+
+  if (!Capacitor.isNativePlatform()) {
+    return "web";
+  }
+
+  const platform = Capacitor.getPlatform();
+  if (platform === "ios") {
     return "capacitor-ios";
   }
-  if (isAndroid()) {
+  if (platform === "android") {
     return "capacitor-android";
   }
+
   return "web";
 }
 
@@ -69,7 +77,18 @@ export function resetRuntimeCache(): void {
 }
 
 export function getPlaybackCapabilities(): PlaybackCapabilities {
-  return runtimeCapabilities[getRuntime()];
+  const runtime = getRuntime();
+  const capabilities = runtimeCapabilities[runtime];
+
+  if (runtime === "web" && isIOS()) {
+    return {
+      ...capabilities,
+      canSetVolume: false,
+      requiresSystemVolume: true,
+    };
+  }
+
+  return capabilities;
 }
 
 export interface DesktopCapabilities {
