@@ -160,31 +160,32 @@ export default function MobileSearch() {
 
   return (
     <div className="flex flex-col w-full h-full">
-      <MobilePageHeader
-        variant="root"
-        title={t("sidebar.miniSearch")}
-        showUserDropdown
-      />
-      <div
-        className="sticky top-0 z-10 bg-background border-b px-4 py-3"
-        style={{
-          paddingTop: "max(0.75rem, var(--safe-area-top))",
-          paddingLeft: "max(1rem, var(--safe-area-left))",
-          paddingRight: "max(1rem, var(--safe-area-right))",
-        }}
-      >
-        <div className="relative flex items-center">
-          <SearchIcon className="absolute left-3 w-4 h-4 text-muted-foreground pointer-events-none" />
-          <Input
-            ref={inputRef}
-            autoFocus
-            placeholder={t("command.inputPlaceholder")}
-            className="pl-9"
-            autoCorrect="off"
-            autoCapitalize="off"
-            spellCheck={false}
-            onChange={(e) => debounced(e.target.value)}
-          />
+      <div className="sticky top-0 z-10 bg-background border-b">
+        <MobilePageHeader
+          variant="root"
+          title={t("sidebar.miniSearch")}
+          showUserDropdown
+        />
+        <div
+          className="px-4 pb-3 pt-0"
+          style={{
+            paddingLeft: "max(1rem, var(--safe-area-left))",
+            paddingRight: "max(1rem, var(--safe-area-right))",
+          }}
+        >
+          <div className="relative flex items-center">
+            <SearchIcon className="absolute left-3 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Input
+              ref={inputRef}
+              autoFocus
+              placeholder={t("command.inputPlaceholder")}
+              className="pl-9"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              onChange={(e) => debounced(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
