@@ -8,7 +8,7 @@ commit that contains the change.
 
 - Roadmap status: Phase 2 in progress.
 - Active implementation phase: Phase 2 - Cache Modularization.
-- Next step: Phase 2.2, split audio URL resolution.
+- Next step: Phase 2.3, prepare native cache access.
 - Android status: blocked until the full iOS native implementation is complete.
 
 ## Completed Work
@@ -24,6 +24,7 @@ commit that contains the change.
 | 2026-05-17 | Phase 1.3 - Extract playback orchestration | Added `PlaybackSession` for source-change flags, retry timers, pending resume, play/pause/end decisions, and progress/buffer/duration helpers. `AudioPlayer` now delegates orchestration decisions to the session while ReplayGain stays on the web audio path. | `pnpm vitest run src/player/playback/playback-backend.test.ts src/player/playback/session.test.ts` 20/20 passed. `pnpm run test:unit` 670/670 passed. `pnpm run lint` passed. `pnpm run build` succeeded. Cypress component tests not run per known local Cypress issue/user instruction. | `6d3d98e6 refactor(player): isolate playback session orchestration` |
 | 2026-05-17 | Phase 1.4 - Split player store responsibilities | Kept `@/store/player.store` stable while splitting store creation, selectors, persistence/migrations/IDB flushing, and side-effect subscriptions into dedicated modules. Added persistence/migration tests. No persisted schema change. | `pnpm vitest run src/store/player/persistence.test.ts` 5/5 passed. `pnpm vitest run src/store/player/*.test.ts src/store/player/persistence.test.ts` 151/151 passed. `pnpm run test:unit` 675/675 passed. `pnpm run lint` passed. `pnpm run build` succeeded. Cypress not applicable for this store-only step and not run per user instruction. | `11f734ca refactor(player-store): split persistence and action modules` |
 | 2026-05-17 | Phase 2.1 - Define cache service contracts | Added cache storage, index, metadata persistence, audio download service/queue, audio URL/source resolver, and native file resolver contracts. Added default adapters around the current Cache API, Zustand index, Dexie metadata persistence, and audio download service, plus test fakes for future resolver work. | `pnpm exec vitest run src/service/cache/contracts/fakes.test.ts src/service/cache/audio-url-resolver.test.ts src/service/cache/cache-storage.test.ts src/service/cache/persist-meta.test.ts src/service/cache/audio-cache-queue.test.ts` 48/48 passed. `pnpm run test:unit` 687/687 passed. `pnpm run lint` passed. `pnpm run build` succeeded with existing Vite warnings. | `72a88af4 refactor(cache): define cache service contracts` |
+| 2026-05-17 | Phase 2.2 - Split audio URL resolution | Added `CacheAudioSourceResolver` to return typed stream/blob/native-file source descriptors and moved cached-or-stream selection out of React hooks. Added `useAudioSource(songId)`, kept `useCachedAudioUrl` as a compatibility wrapper, routed preloading through the resolver, and passed typed song sources into `AudioPlayer` while preserving string `src` playback. | `pnpm exec vitest run src/service/cache/audio-source/index.test.ts src/service/cache/cache-manager.test.ts src/service/cache/audio-url-resolver.test.ts` 28/28 passed. `pnpm run test:unit` 693/693 passed. `pnpm run lint` passed. `pnpm run build` succeeded with existing Vite warnings. | `8090d3c3 refactor(cache): isolate audio source resolution` |
 
 ## Phase Checklist
 
@@ -31,7 +32,7 @@ commit that contains the change.
 | --- | --- | --- |
 | Phase 0 - Baseline And Guardrails | Complete | Both Phase 0.1 and 0.2 done. Follow-up review corrected browser/PWA vs native Capacitor runtime detection. |
 | Phase 1 - Playback And Queue Modularization | Complete | Phase 1.1 through 1.4 are complete. Cypress was not run in this session because the local Cypress installation has a known host issue and the user requested not to run or repair it. |
-| Phase 2 - Cache Modularization | In progress | Phase 2.1 is complete. Phase 2.2 should extract cached-or-stream audio source resolution into typed descriptors. |
+| Phase 2 - Cache Modularization | In progress | Phase 2.1 and 2.2 are complete. Phase 2.3 should prepare native cache access without adding Android implementation. |
 | Phase 3 - Capacitor Bridge Foundation | Not started | No native implementation until contracts are stable. |
 | Phase 4 - Complete iOS Native Implementation | Not started | Must finish before Android begins. |
 | Phase 5 - Android Platform Support | Blocked | Do not add `@capacitor/android` or Android project files yet. |
@@ -74,6 +75,10 @@ Record test commands and outcomes here as the roadmap progresses.
 | 2026-05-17 | `pnpm exec vitest run src/service/cache/contracts/fakes.test.ts src/service/cache/audio-url-resolver.test.ts src/service/cache/cache-storage.test.ts src/service/cache/persist-meta.test.ts src/service/cache/audio-cache-queue.test.ts` | 48 passed | Phase 2.1 cache contract fakes, URL resolver, storage, metadata persistence, and queue tests. |
 | 2026-05-17 | `pnpm run test:unit` | 687 passed | Full unit suite after Phase 2.1. |
 | 2026-05-17 | `pnpm run lint` | Passed | Biome lint after Phase 2.1; commit hook also ran Biome and passed. |
+| 2026-05-17 | `pnpm run build` | Succeeded | Build succeeds; existing Vite chunking and non-module `env-config.js` warnings remain. |
+| 2026-05-17 | `pnpm exec vitest run src/service/cache/audio-source/index.test.ts src/service/cache/cache-manager.test.ts src/service/cache/audio-url-resolver.test.ts` | 28 passed | Phase 2.2 resolver tests covered cache hit, cache miss, stale index, index-not-loaded recovery, synthetic metadata, native-file resolution, and legacy cache manager compatibility. |
+| 2026-05-17 | `pnpm run test:unit` | 693 passed | Full unit suite after Phase 2.2. |
+| 2026-05-17 | `pnpm run lint` | Passed | Biome lint after Phase 2.2; commit hook also ran Biome and passed. |
 | 2026-05-17 | `pnpm run build` | Succeeded | Build succeeds; existing Vite chunking and non-module `env-config.js` warnings remain. |
 
 ### Phase 0.1 - Baseline Test Coverage Added
@@ -188,14 +193,19 @@ side effects. This makes queue behavior fully testable without a store.
   `src/service/cache/contracts/fakes.ts`, the stream/cache URL builder now
   lives in `src/service/cache/audio-url-resolver.ts`, and the current Zustand
   cache index adapter lives in `src/service/cache/cache-index-adapter.ts`.
+- Phase 2.2 is complete. Typed audio source resolution lives in
+  `src/service/cache/audio-source/`, `useAudioSource(songId)` is the new typed
+  hook, `useCachedAudioUrl(songId)` remains as a compatibility wrapper, and
+  `AudioPlayer` now receives typed song source descriptors while still loading
+  a string `src` for web playback.
 - Public imports from `@/store/player.store` remain stable.
 - Public imports of `buildAudioUrl` from `@/service/cache` remain stable.
 - Cypress component tests were intentionally not run after user instruction:
   this machine has a known Cypress host issue, and Cypress repair is out of
   scope for this roadmap work.
-- The next implementation session should begin with Phase 2.2 from
-  `01-roadmap.md` and `03-cache-modularization.md`: split audio URL resolution
-  and return typed audio source descriptors.
+- The next implementation session should begin with Phase 2.3 from
+  `01-roadmap.md` and `03-cache-modularization.md`: prepare native cache access
+  without adding Android implementation.
 - Keep every sub-step small, tested, and committed independently.
 - Keep Android blocked until the iOS done criteria in `00-requirements.md` and
   `04-ios-native-implementation.md` are satisfied.
