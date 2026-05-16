@@ -1,14 +1,39 @@
 import { MoreVerticalIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { ArtistsFallback } from "@/app/components/fallbacks/artists.tsx";
 import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import { PreviewCard } from "@/app/components/preview-card/card";
 import { Button } from "@/app/components/ui/button";
+import { Skeleton } from "@/app/components/ui/skeleton";
 import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { queryKeys } from "@/utils/queryKeys";
+
+function MobileArtistsFallback() {
+  const { t } = useTranslation();
+  return (
+    <div className="w-full flex flex-col">
+      <MobilePageHeader variant="sub" title={t("sidebar.artists")} />
+      <div className="flex flex-col">
+        <div className="px-4 py-4 flex flex-col gap-2">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-3 w-16" />
+        </div>
+        {Array.from({ length: 10 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4 px-4 py-3">
+            <Skeleton className="size-14 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3 w-1/2" />
+            </div>
+            <Skeleton className="size-10 rounded-md" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function MobileArtistsList() {
   const { t } = useTranslation();
@@ -16,10 +41,15 @@ export default function MobileArtistsList() {
   const { data: artists, isLoading } = useOfflineQuery(
     [...queryKeys.artist.all],
     subsonic.artists.getAll,
-    { offlineFn: offlineData.artists },
+    {
+      offlineFn: async () => {
+        const data = await offlineData.artists();
+        return data.length > 0 ? data : null;
+      },
+    },
   );
 
-  if (isLoading) return <ArtistsFallback />;
+  if (isLoading && (!artists || artists.length === 0)) return <MobileArtistsFallback />;
   if (!artists) return null;
 
   return (
@@ -43,7 +73,7 @@ export default function MobileArtistsList() {
             to={ROUTES.ARTIST.PAGE(artist.id)}
             className="flex items-center gap-4 px-4 py-3 active:bg-accent/50 transition-colors"
           >
-            <div className="size-14 shrink-0 overflow-hidden rounded-full bg-secondary">
+            <div className="size-14 shrink-0 overflow-hidden rounded-full bg-secondary relative">
               <PreviewCard.Image
                 coverArtId={artist.coverArt}
                 coverArtType="artist"

@@ -1,5 +1,5 @@
 import { ChevronLeft } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { UserDropdown } from "@/app/components/header/user-dropdown";
@@ -51,7 +51,6 @@ function StickyHeader({
   const { t } = useTranslation();
   const [titleInViewport, setTitleInViewport] = useState(true);
   const titleObserverRef = useRef<IntersectionObserver | null>(null);
-// ... existing logic ...
 
   useEffect(() => {
     const titleEl = document.getElementById("detail-page-title");
@@ -102,66 +101,65 @@ function StickyHeader({
       ? { backgroundColor: `${blendedColor}e6` }
       : undefined;
 
-  const textColorClass = floatingOnImage
-    ? accentColor
-      ? "text-white"
-      : "text-foreground"
-    : showFullBar && blendedColor && isDarkHex(blendedColor)
+  const textColorClass = useMemo(() => {
+    if (floatingOnImage) {
+      return accentColor ? "text-white" : "text-foreground";
+    }
+    return showFullBar && blendedColor && isDarkHex(blendedColor)
       ? "text-white"
       : "text-foreground";
+  }, [floatingOnImage, accentColor, showFullBar, blendedColor]);
 
   return (
-    <>
-      <div
+    <div
+      className={cn(
+        "fixed top-0 left-0 right-0 z-20 md:hidden flex items-center gap-1 h-11 transition-all duration-200",
+        !showFullBar && "bg-transparent",
+        showFullBar &&
+          !accentColor &&
+          "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80",
+        showFullBar && accentColor && "backdrop-blur-sm",
+        textColorClass,
+      )}
+      style={{
+        paddingTop: "var(--safe-area-top)",
+        paddingLeft: "max(0.25rem, var(--safe-area-left))",
+        paddingRight: "max(0.25rem, var(--safe-area-right))",
+        ...accentBgStyle,
+      }}
+    >
+      <Button
+        variant="ghost"
+        size="sm"
         className={cn(
-          "fixed top-0 left-0 right-0 z-20 md:hidden flex items-center gap-1 h-11 transition-all duration-200",
-          !showFullBar && "bg-transparent",
-          showFullBar &&
-            !accentColor &&
-            "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80",
-          showFullBar && accentColor && "backdrop-blur-sm",
-          textColorClass,
+          "h-11 w-11 p-0 rounded-md flex-shrink-0 z-10 transition-colors",
+          floatingOnImage && "text-foreground drop-shadow-md",
+          showFullBar && blendedColor && isDarkHex(blendedColor)
+            ? "hover-supported:bg-white/20 text-white"
+            : "",
+          showFullBar && blendedColor && !isDarkHex(blendedColor)
+            ? "hover-supported:bg-black/10"
+            : "",
         )}
-        style={{
-          paddingTop: "var(--safe-area-top)",
-          paddingLeft: "max(0.25rem, var(--safe-area-left))",
-          paddingRight: "max(0.25rem, var(--safe-area-right))",
-          ...accentBgStyle,
-        }}
+        onClick={handleBack}
+        aria-label={t("navigation.back")}
       >
-        <Button
-          variant="ghost"
-          size="sm"
+        <ChevronLeft className="w-5 h-5" strokeWidth={2} />
+      </Button>
+      <div className="flex-1 min-w-0">
+        <span
           className={cn(
-            "h-11 w-11 p-0 rounded-md flex-shrink-0 z-10 transition-colors",
-            floatingOnImage && "text-foreground drop-shadow-md",
-            showFullBar && blendedColor && isDarkHex(blendedColor)
-              ? "hover-supported:bg-white/20 text-white"
-              : "",
-            showFullBar && blendedColor && !isDarkHex(blendedColor)
-              ? "hover-supported:bg-black/10"
-              : "",
+            "text-sm font-bold truncate transition-opacity duration-200 block",
+            showFullBar ? "opacity-100" : "opacity-0",
           )}
-          onClick={handleBack}
-          aria-label={t("navigation.back")}
         >
-          <ChevronLeft className="w-5 h-5" strokeWidth={2} />
-        </Button>
-        <div className="flex-1 min-w-0">
-          <span
-            className={cn(
-              "text-sm font-bold truncate transition-opacity duration-200 block",
-              showFullBar ? "opacity-100" : "opacity-0",
-            )}
-          >
-            {title}
-          </span>
-        </div>
-        <div className="pr-2 flex-shrink-0 z-10">
-          <MobileHeaderStatusItems extra={actions} />
-        </div>
+          {title}
+        </span>
       </div>
-    </>
+      <div className="pr-2 flex-shrink-0 z-10">
+        <MobileHeaderStatusItems extra={actions} />
+      </div>
+    </div>
   );
 }
 
@@ -176,7 +174,6 @@ export function MobilePageHeader({
   showSpacer = true,
 }: MobilePageHeaderProps) {
   if (variant === "root") {
-// ... existing root logic ...
     return (
       <div
         className={cn("md:hidden px-4 pt-[var(--safe-area-top)]", className)}
