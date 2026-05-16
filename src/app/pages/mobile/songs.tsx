@@ -1,6 +1,7 @@
 import { EllipsisVertical, SearchIcon, SortAscIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
+import { InfiniteScroll } from "@/app/components/infinite-scroll";
 import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import { SongMenuOptions } from "@/app/components/song/menu-options";
 import { CachedIndicator } from "@/app/components/table/cached-indicator";
@@ -62,24 +63,25 @@ export default function MobileSongsList() {
     });
   }
 
-  const { data, fetchNextPage, hasNextPage } = useOfflineInfiniteQuery(
-    [...queryKeys.song.all, filter, query, artistId, orderBy, sort],
-    ({ pageParam }) => fetchSongs({ pageParam }),
-    {
-      initialPageParam: 0,
-      getNextPageParam: (lastPage) => lastPage.nextOffset,
-      offlineFn: async () => ({
-        songs: await getOfflineSongsList({
-          filter,
-          query,
-          artistId,
-          orderBy,
-          sort,
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useOfflineInfiniteQuery(
+      [...queryKeys.song.all, filter, query, artistId, orderBy, sort],
+      ({ pageParam }) => fetchSongs({ pageParam }),
+      {
+        initialPageParam: 0,
+        getNextPageParam: (lastPage) => lastPage.nextOffset,
+        offlineFn: async () => ({
+          songs: await getOfflineSongsList({
+            filter,
+            query,
+            artistId,
+            orderBy,
+            sort,
+          }),
+          nextOffset: null,
         }),
-        nextOffset: null,
-      }),
-    },
-  );
+      },
+    );
 
   const { data: songCountData } = useTotalSongs();
   const songlist = data?.pages.flatMap((page) => page.songs) ?? [];
@@ -115,15 +117,11 @@ export default function MobileSongsList() {
             onClick={() => setSongList(songlist, index, false, undefined, title)}
           />
         ))}
-        {hasNextPage && (
-          <Button
-            variant="ghost"
-            className="mx-4 mt-2"
-            onClick={() => fetchNextPage()}
-          >
-            {t("common.loadMore")}
-          </Button>
-        )}
+        <InfiniteScroll
+          fetchNextPage={fetchNextPage}
+          hasNextPage={!!hasNextPage}
+          isLoading={isFetchingNextPage}
+        />
       </div>
     </div>
   );

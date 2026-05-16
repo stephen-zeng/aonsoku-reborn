@@ -5,6 +5,7 @@ import { EmptyAlbums } from "@/app/components/albums/empty-page";
 import { AlbumsHeader } from "@/app/components/albums/header";
 import { AlbumsFallback } from "@/app/components/fallbacks/album-fallbacks";
 import { GridViewWrapper } from "@/app/components/grid-view-wrapper";
+import { InfiniteScroll } from "@/app/components/infinite-scroll";
 import ListWrapper from "@/app/components/list-wrapper";
 import { ROUTES } from "@/routes/routesList";
 import {
@@ -17,9 +18,18 @@ import { useAlbumsListModel } from "./list.model";
 export default function DesktopAlbumsList() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { isLoading, isEmpty, albums, albumsCount } = useAlbumsListModel();
+  const {
+    isLoading,
+    isEmpty,
+    albums,
+    albumsCount,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useAlbumsListModel();
 
   useEffect(() => {
+// ... existing useEffect logic ...
     const hasMainFilter = searchParams.has(AlbumsSearchParams.MainFilter);
     const hasArtistNameFilter = searchParams.has(AlbumsSearchParams.ArtistName);
     const hasArtistIdFilter = searchParams.has(AlbumsSearchParams.ArtistId);
@@ -107,6 +117,11 @@ export default function DesktopAlbumsList() {
         <GridViewWrapper list={albums} data-testid="albums-grid" type="albums">
           {(album) => <AlbumGridCard album={album} />}
         </GridViewWrapper>
+        <InfiniteScroll
+          fetchNextPage={fetchNextPage}
+          hasNextPage={hasNextPage}
+          isLoading={isFetchingNextPage}
+        />
       </ListWrapper>
     </div>
   );

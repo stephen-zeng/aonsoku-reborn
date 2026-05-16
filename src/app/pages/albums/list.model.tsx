@@ -1,5 +1,3 @@
-import debounce from "lodash/debounce";
-import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   getOfflineAlbumsList,
@@ -10,7 +8,6 @@ import {
   getAlbumList,
   getArtistDiscography,
 } from "@/queries/albums";
-import { useIsOnline } from "@/store/cache.store";
 import { AlbumListType } from "@/types/responses/album";
 import {
   AlbumsFilters,
@@ -19,7 +16,6 @@ import {
   YearSortOptions,
 } from "@/utils/albumsFilter";
 import { queryKeys } from "@/utils/queryKeys";
-import { addPageScrollListener, getPageScrollMetrics } from "@/utils/scrollPageToTop";
 import { SearchParamsHandler } from "@/utils/searchParamsHandler";
 
 export function useAlbumsListModel() {
@@ -28,8 +24,6 @@ export function useAlbumsListModel() {
   const defaultOffset = 128;
   const oldestYear = "0001";
   const currentYear = new Date().getFullYear().toString();
-
-  const isOnline = useIsOnline();
 
   const currentFilter = getSearchParam<AlbumListType>(
     AlbumsSearchParams.MainFilter,
@@ -82,52 +76,43 @@ export function useAlbumsListModel() {
     return true;
   }
 
-  const { data, fetchNextPage, hasNextPage, isLoading } =
-    useOfflineInfiniteQuery(
-      [
-        ...queryKeys.album.all,
-        currentFilter,
-        yearFilter,
-        genre,
-        artistId,
-        query,
-      ],
-      ({ pageParam }) => fetchAlbums({ pageParam }),
-      {
-        initialPageParam: 0,
-        getNextPageParam: (lastPage) => lastPage.nextOffset,
-        enabled: enableMainQuery(),
-        offlineFn: async () => {
-          const albums = await getOfflineAlbumsList({
-            currentFilter,
-            yearFilter,
-            genre,
-            artistId,
-            query,
-          });
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isLoading,
+    isFetchingNextPage,
+  } = useOfflineInfiniteQuery(
+    [
+      ...queryKeys.album.all,
+      currentFilter,
+      yearFilter,
+      genre,
+      artistId,
+      query,
+    ],
+    ({ pageParam }) => fetchAlbums({ pageParam }),
+    {
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => lastPage.nextOffset,
+      enabled: enableMainQuery(),
+      offlineFn: async () => {
+        const albums = await getOfflineAlbumsList({
+          currentFilter,
+          yearFilter,
+          genre,
+          artistId,
+          query,
+        });
 
-          return {
-            albums,
-            nextOffset: null,
-            albumsCount: albums.length,
-          };
-        },
+        return {
+          albums,
+          nextOffset: null,
+          albumsCount: albums.length,
+        };
       },
-    );
-
-  useEffect(() => {
-    const handler = debounce(() => {
-      const { scrollTop, clientHeight, scrollHeight } = getPageScrollMetrics();
-      const isNearBottom =
-        scrollTop + clientHeight >= scrollHeight - scrollHeight / 4;
-
-      if (isNearBottom && hasNextPage && isOnline) {
-        fetchNextPage();
-      }
-    }, 200);
-
-    return addPageScrollListener(handler);
-  }, [fetchNextPage, hasNextPage, isOnline]);
+    },
+  );
 
   function getAlbums() {
     if (!data) return { albums: [], albumsCount: 0 };
@@ -150,5 +135,8 @@ export function useAlbumsListModel() {
     isEmpty,
     albums,
     albumsCount,
+    fetchNextPage,
+    hasNextPage: !!hasNextPage,
+    isFetchingNextPage,
   };
 }
