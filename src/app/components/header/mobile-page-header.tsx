@@ -19,6 +19,7 @@ interface MobilePageHeaderProps {
   actions?: ReactNode;
   showSpacer?: boolean;
   showUserDropdown?: boolean;
+  transparentTheme?: "default" | "image";
 }
 
 function DesktopHeaderStatusItems() {
@@ -46,12 +47,14 @@ function StickyHeader({
   accentColor,
   actions,
   showUserDropdown,
+  transparentTheme,
 }: {
   title: string;
   onBack?: () => void;
   accentColor?: string;
   actions?: ReactNode;
   showUserDropdown?: boolean;
+  transparentTheme?: "default" | "image";
 }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -112,12 +115,42 @@ function StickyHeader({
 
   const textColorClass = useMemo(() => {
     if (floatingOnImage) {
+      if (transparentTheme === "default") {
+        return "text-foreground";
+      }
+
+      if (accentColor) {
+        if (accentColor.startsWith("var(")) {
+          const varName = accentColor.replace(/^var\(/, "").replace(/\)$/, "");
+          const bgHsl = getComputedStyle(document.documentElement)
+            .getPropertyValue(varName)
+            .trim();
+          const baseHex = hslToHex(bgHsl);
+          return isDarkHex(baseHex) ? "text-white" : "text-foreground";
+        }
+        return isDarkHex(accentColor) ? "text-white" : "text-foreground";
+      }
+
+      const bgFgHsl = getComputedStyle(document.documentElement)
+        .getPropertyValue("--background-foreground")
+        .trim();
+      if (bgFgHsl) {
+        const baseHex = hslToHex(bgFgHsl);
+        return isDarkHex(baseHex) ? "text-white" : "text-foreground";
+      }
+
       return "text-white";
     }
     return showFullBar && blendedColor && isDarkHex(blendedColor)
       ? "text-white"
       : "text-foreground";
-  }, [floatingOnImage, showFullBar, blendedColor]);
+  }, [
+    floatingOnImage,
+    showFullBar,
+    blendedColor,
+    transparentTheme,
+    accentColor,
+  ]);
 
   return (
     <div
@@ -141,14 +174,21 @@ function StickyHeader({
         variant="ghost"
         className={cn(
           "h-9 w-9 p-0 rounded-md flex-shrink-0 z-10 transition-colors ml-1",
-          floatingOnImage && "text-white hover-supported:bg-white/10 hover-supported:text-white",
+          floatingOnImage &&
+            textColorClass === "text-white" &&
+            "text-white hover-supported:bg-white/10 hover-supported:text-white",
+          floatingOnImage &&
+            textColorClass === "text-foreground" &&
+            "text-foreground hover-supported:bg-foreground/10 hover-supported:text-foreground",
           showFullBar && blendedColor && isDarkHex(blendedColor)
             ? "hover-supported:bg-white/10 text-white hover-supported:text-white"
             : "",
           showFullBar && blendedColor && !isDarkHex(blendedColor)
             ? "hover-supported:bg-black/10 hover-supported:text-foreground"
             : "",
-          showFullBar && !accentColor && "hover-supported:bg-foreground/10 hover-supported:text-foreground",
+          showFullBar &&
+            !accentColor &&
+            "hover-supported:bg-foreground/10 hover-supported:text-foreground",
         )}
         onClick={handleBack}
         aria-label={t("navigation.back")}
@@ -185,6 +225,7 @@ export function MobilePageHeader({
   actions,
   showSpacer = true,
   showUserDropdown,
+  transparentTheme,
 }: MobilePageHeaderProps) {
   if (variant === "root") {
     return (
@@ -223,6 +264,7 @@ export function MobilePageHeader({
         accentColor={accentColor}
         actions={actions}
         showUserDropdown={showUserDropdown}
+        transparentTheme={transparentTheme}
       />
     </>
   );

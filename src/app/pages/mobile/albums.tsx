@@ -12,7 +12,11 @@ function MobileAlbumsFallback() {
   const { t } = useTranslation();
   return (
     <div className="w-full flex flex-col">
-      <MobilePageHeader variant="sub" title={t("sidebar.albums")} />
+      <MobilePageHeader
+        variant="sub"
+        title={t("sidebar.albums")}
+        transparentTheme="default"
+      />
       <div className="px-4 py-4">
         <div className="flex flex-col mb-4 gap-2">
           <Skeleton className="h-8 w-32" />
@@ -57,10 +61,14 @@ export default function MobileAlbumsList() {
       <MobilePageHeader
         variant="sub"
         title={t("sidebar.albums")}
+        transparentTheme="default"
       />
       <div className="px-4 py-4">
         <div className="flex flex-col mb-4">
-          <h1 id="detail-page-title" className="text-2xl font-bold tracking-tight">
+          <h1
+            id="detail-page-title"
+            className="text-2xl font-bold tracking-tight"
+          >
             {t("sidebar.albums")}
           </h1>
           <span className="text-xs text-muted-foreground font-medium">

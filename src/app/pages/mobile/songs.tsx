@@ -1,4 +1,9 @@
-import { EllipsisVertical, Music2Icon, SearchIcon, SortAscIcon } from "lucide-react";
+import {
+  EllipsisVertical,
+  Music2Icon,
+  SearchIcon,
+  SortAscIcon,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { InfiniteScroll } from "@/app/components/infinite-scroll";
@@ -38,7 +43,11 @@ function MobileSongsFallback() {
   const { t } = useTranslation();
   return (
     <div className="w-full flex flex-col">
-      <MobilePageHeader variant="sub" title={t("sidebar.songs")} />
+      <MobilePageHeader
+        variant="sub"
+        title={t("sidebar.songs")}
+        transparentTheme="default"
+      />
       <div className="flex flex-col">
         <div className="px-4 py-4 flex items-center justify-between">
           <div className="flex flex-col gap-2">
@@ -143,11 +152,15 @@ export default function MobileSongsList() {
       <MobilePageHeader
         variant="sub"
         title={title}
+        transparentTheme="default"
       />
       <div className="flex flex-col pb-4">
         <div className="px-4 py-4 flex items-center justify-between">
           <div className="flex flex-col">
-            <h1 id="detail-page-title" className="text-2xl font-bold tracking-tight">
+            <h1
+              id="detail-page-title"
+              className="text-2xl font-bold tracking-tight"
+            >
               {title}
             </h1>
             <span className="text-xs text-muted-foreground font-medium">
@@ -167,7 +180,9 @@ export default function MobileSongsList() {
           <MobileSongRow
             key={`${song.id}-${index}`}
             song={song}
-            onClick={() => setSongList(songlist, index, false, undefined, title)}
+            onClick={() =>
+              setSongList(songlist, index, false, undefined, title)
+            }
           />
         ))}
         <InfiniteScroll
@@ -180,7 +195,13 @@ export default function MobileSongsList() {
   );
 }
 
-function MobileSongRow({ song, onClick }: { song: ISong; onClick: () => void }) {
+function MobileSongRow({
+  song,
+  onClick,
+}: {
+  song: ISong;
+  onClick: () => void;
+}) {
   const isCurrentPlaying = useIsCurrentPlaying(song.id);
 
   return (
@@ -230,10 +251,7 @@ function MobileSongRow({ song, onClick }: { song: ISong; onClick: () => void }) 
               <EllipsisVertical className="size-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
             <SongMenuOptions
               variant="dropdown"
               song={song}

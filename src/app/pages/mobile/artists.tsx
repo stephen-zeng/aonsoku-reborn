@@ -15,7 +15,11 @@ function MobileArtistsFallback() {
   const { t } = useTranslation();
   return (
     <div className="w-full flex flex-col">
-      <MobilePageHeader variant="sub" title={t("sidebar.artists")} />
+      <MobilePageHeader
+        variant="sub"
+        title={t("sidebar.artists")}
+        transparentTheme="default"
+      />
       <div className="flex flex-col">
         <div className="px-4 py-4 flex flex-col gap-2">
           <Skeleton className="h-8 w-32" />
@@ -50,7 +54,8 @@ export default function MobileArtistsList() {
     },
   );
 
-  if (isLoading && (!artists || artists.length === 0)) return <MobileArtistsFallback />;
+  if (isLoading && (!artists || artists.length === 0))
+    return <MobileArtistsFallback />;
   if (!artists || artists.length === 0) {
     return (
       <MobileEmptyState
@@ -67,10 +72,14 @@ export default function MobileArtistsList() {
       <MobilePageHeader
         variant="sub"
         title={t("sidebar.artists")}
+        transparentTheme="default"
       />
       <div className="flex flex-col">
         <div className="px-4 py-4 flex flex-col">
-          <h1 id="detail-page-title" className="text-2xl font-bold tracking-tight">
+          <h1
+            id="detail-page-title"
+            className="text-2xl font-bold tracking-tight"
+          >
             {t("sidebar.artists")}
           </h1>
           <span className="text-xs text-muted-foreground font-medium">
