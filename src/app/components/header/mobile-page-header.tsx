@@ -58,6 +58,7 @@ function StickyHeader({
   const [titleInViewport, setTitleInViewport] = useState(true);
   const titleObserverRef = useRef<IntersectionObserver | null>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: title change indicates content swap, need to re-bind observer
   useEffect(() => {
     const titleEl = document.getElementById("detail-page-title");
     if (!titleEl) {
@@ -109,7 +110,7 @@ function StickyHeader({
 
   const textColorClass = useMemo(() => {
     if (floatingOnImage) {
-      return accentColor ? "text-white" : "text-white drop-shadow-md";
+      return "text-white";
     }
     return showFullBar && blendedColor && isDarkHex(blendedColor)
       ? "text-white"
@@ -137,14 +138,15 @@ function StickyHeader({
       <Button
         variant="ghost"
         className={cn(
-          "h-11 w-11 p-0 rounded-md flex-shrink-0 z-10 transition-colors",
-          floatingOnImage && "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]",
+          "h-9 w-9 p-0 rounded-md flex-shrink-0 z-10 transition-colors ml-1",
+          floatingOnImage && "text-white hover-supported:bg-white/20",
           showFullBar && blendedColor && isDarkHex(blendedColor)
             ? "hover-supported:bg-white/20 text-white"
             : "",
           showFullBar && blendedColor && !isDarkHex(blendedColor)
             ? "hover-supported:bg-black/10"
             : "",
+          showFullBar && !accentColor && "hover-supported:bg-foreground/10",
         )}
         onClick={handleBack}
         aria-label={t("navigation.back")}
