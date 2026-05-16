@@ -1,5 +1,5 @@
 import { ChevronLeft } from "lucide-react";
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { UserDropdown } from "@/app/components/header/user-dropdown";
@@ -56,19 +56,10 @@ function StickyHeader({
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [titleInViewport, setTitleInViewport] = useState(true);
-  const titleObserverRef = useRef<IntersectionObserver | null>(null);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: title change indicates content swap, need to re-bind observer
   useEffect(() => {
-    const titleEl = document.getElementById("detail-page-title");
-    if (!titleEl) {
-      setTitleInViewport(true);
-      return;
-    }
-
-    if (titleObserverRef.current) {
-      titleObserverRef.current.disconnect();
-    }
+    setTitleInViewport(true);
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -77,8 +68,19 @@ function StickyHeader({
       { threshold: 0, rootMargin: "0px 0px -10% 0px" },
     );
 
-    observer.observe(titleEl);
-    titleObserverRef.current = observer;
+    let retryCount = 0;
+    const checkElement = () => {
+      const titleEl = document.getElementById("detail-page-title");
+      if (titleEl) {
+        observer.observe(titleEl);
+      } else if (retryCount < 20) {
+        retryCount++;
+        setTimeout(checkElement, 100);
+      }
+    };
+
+    checkElement();
+
     return () => observer.disconnect();
   }, [title]);
 
@@ -115,12 +117,12 @@ function StickyHeader({
     return showFullBar && blendedColor && isDarkHex(blendedColor)
       ? "text-white"
       : "text-foreground";
-  }, [floatingOnImage, accentColor, showFullBar, blendedColor]);
+  }, [floatingOnImage, showFullBar, blendedColor]);
 
   return (
     <div
       className={cn(
-        "fixed top-0 left-0 right-0 z-30 md:hidden flex items-center gap-1 h-11 transition-all duration-200",
+        "fixed top-0 left-0 right-0 z-30 md:hidden flex items-center gap-1 h-11 transition-[background-color,backdrop-filter,color] duration-200",
         !showFullBar && "bg-transparent",
         showFullBar &&
           !accentColor &&
@@ -139,14 +141,14 @@ function StickyHeader({
         variant="ghost"
         className={cn(
           "h-9 w-9 p-0 rounded-md flex-shrink-0 z-10 transition-colors ml-1",
-          floatingOnImage && "text-white hover-supported:bg-white/20",
+          floatingOnImage && "text-white hover-supported:bg-white/10 hover-supported:text-white",
           showFullBar && blendedColor && isDarkHex(blendedColor)
-            ? "hover-supported:bg-white/20 text-white"
+            ? "hover-supported:bg-white/10 text-white hover-supported:text-white"
             : "",
           showFullBar && blendedColor && !isDarkHex(blendedColor)
-            ? "hover-supported:bg-black/10"
+            ? "hover-supported:bg-black/10 hover-supported:text-foreground"
             : "",
-          showFullBar && !accentColor && "hover-supported:bg-foreground/10",
+          showFullBar && !accentColor && "hover-supported:bg-foreground/10 hover-supported:text-foreground",
         )}
         onClick={handleBack}
         aria-label={t("navigation.back")}
