@@ -45,7 +45,10 @@ function AlbumHeaderContent({
         <Skeleton className="rounded shadow-header-image w-[200px] h-[200px] min-w-[200px] min-h-[200px] 2xl:w-[250px] 2xl:h-[250px] 2xl:min-w-[250px] 2xl:min-h-[250px] aspect-square" />
         <div className="flex w-full items-center flex-col md:items-start md:max-w-[calc(100%-216px)] 2xl:max-w-[calc(100%-266px)] md:justify-end">
           <Skeleton className="text-[10px] md:text-xs 2xl:text-sm h-3 md:h-4 2xl:h-5 w-16 mb-2" />
-          <Skeleton className="h-6 md:h-12 w-[200px] md:w-[260px] mb-2" />
+          <Skeleton
+            id="detail-page-title"
+            className="h-6 md:h-12 w-[200px] md:w-[260px] mb-2"
+          />
 
           <div className="hidden md:flex flex-wrap items-center gap-2 mt-1 md:mt-2 justify-center md:justify-start text-sm">
             <Skeleton className="h-[22px] w-12 rounded-full" />

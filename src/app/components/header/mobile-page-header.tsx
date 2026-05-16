@@ -79,7 +79,7 @@ function StickyHeader({
     observer.observe(titleEl);
     titleObserverRef.current = observer;
     return () => observer.disconnect();
-  }, []);
+  }, [title]);
 
   function handleBack() {
     if (onBack) {
@@ -109,7 +109,7 @@ function StickyHeader({
 
   const textColorClass = useMemo(() => {
     if (floatingOnImage) {
-      return accentColor ? "text-white" : "text-foreground";
+      return accentColor ? "text-white" : "text-white drop-shadow-md";
     }
     return showFullBar && blendedColor && isDarkHex(blendedColor)
       ? "text-white"
@@ -119,7 +119,7 @@ function StickyHeader({
   return (
     <div
       className={cn(
-        "fixed top-0 left-0 right-0 z-20 md:hidden flex items-center gap-1 h-11 transition-all duration-200",
+        "fixed top-0 left-0 right-0 z-30 md:hidden flex items-center gap-1 h-11 transition-all duration-200",
         !showFullBar && "bg-transparent",
         showFullBar &&
           !accentColor &&
@@ -136,10 +136,9 @@ function StickyHeader({
     >
       <Button
         variant="ghost"
-        size="sm"
         className={cn(
           "h-11 w-11 p-0 rounded-md flex-shrink-0 z-10 transition-colors",
-          floatingOnImage && "text-foreground drop-shadow-md",
+          floatingOnImage && "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]",
           showFullBar && blendedColor && isDarkHex(blendedColor)
             ? "hover-supported:bg-white/20 text-white"
             : "",
