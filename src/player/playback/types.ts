@@ -1,0 +1,96 @@
+export type PlaybackSource =
+  | {
+      kind: "stream";
+      url: string;
+      songId?: string;
+    }
+  | {
+      kind: "blob";
+      url: string;
+      songId?: string;
+    }
+  | {
+      kind: "native-file";
+      uri: string;
+      songId?: string;
+    }
+  | {
+      kind: "radio";
+      url: string;
+      radioId?: string;
+    };
+
+export interface PlaybackProgressEvent {
+  currentTime: number;
+  duration: number;
+  bufferedTime: number;
+}
+
+export interface PlaybackDurationEvent {
+  duration: number;
+}
+
+export interface PlaybackBufferingEvent {
+  isBuffering: boolean;
+}
+
+export interface PlaybackErrorEvent {
+  error: unknown;
+  code?: number;
+  message?: string;
+}
+
+export interface PlaybackBackendEvents {
+  progress: PlaybackProgressEvent;
+  duration: PlaybackDurationEvent;
+  buffering: PlaybackBufferingEvent;
+  ended: void;
+  play: void;
+  pause: void;
+  error: PlaybackErrorEvent;
+}
+
+export type PlaybackBackendEvent = keyof PlaybackBackendEvents;
+
+export type PlaybackBackendListener<TEvent extends PlaybackBackendEvent> = (
+  event: PlaybackBackendEvents[TEvent],
+) => void;
+
+export type UnsubscribePlaybackEvent = () => void;
+
+export interface PlaybackBackend {
+  load(source: PlaybackSource): void | Promise<void>;
+  play(): Promise<void>;
+  pause(): void | Promise<void>;
+  stop(): void | Promise<void>;
+  seek(seconds: number): void | Promise<void>;
+  setLoop(enabled: boolean): void | Promise<void>;
+  setVolume(value: number): void | Promise<void>;
+  preload(source: PlaybackSource): void | Promise<void>;
+  dispose(): void;
+  subscribe<TEvent extends PlaybackBackendEvent>(
+    event: TEvent,
+    listener: PlaybackBackendListener<TEvent>,
+  ): UnsubscribePlaybackEvent;
+}
+
+export function getPlaybackSourceUrl(source: PlaybackSource) {
+  return source.kind === "native-file" ? source.uri : source.url;
+}
+
+export function createUrlPlaybackSource(
+  url: string,
+  options: {
+    kind?: "stream" | "blob" | "radio";
+    songId?: string;
+    radioId?: string;
+  } = {},
+): PlaybackSource {
+  const kind = options.kind ?? (url.startsWith("blob:") ? "blob" : "stream");
+
+  if (kind === "radio") {
+    return { kind, url, radioId: options.radioId };
+  }
+
+  return { kind, url, songId: options.songId };
+}

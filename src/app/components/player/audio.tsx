@@ -9,6 +9,11 @@ import {
 } from "react";
 import { useAudioContext } from "@/app/hooks/use-audio-context";
 import { getNetworkStatus } from "@/app/hooks/use-network-status";
+import {
+  createWebAudioPlaybackBackend,
+  createUrlPlaybackSource,
+  type PlaybackBackend,
+} from "@/player/playback";
 import { useCacheStore } from "@/store/cache.store";
 import {
   useIsRemoteControlActive,
@@ -65,6 +70,10 @@ export function AudioPlayer({
     isSong && replayGainEnabled && !replayGainError && !isRemoteControlActive;
   const shouldUseNativeAudio = !shouldUseWebAudioReplayGain;
 
+  const backendRef = useRef<{
+    audio: HTMLAudioElement;
+    backend: PlaybackBackend;
+  } | null>(null);
   const retryCountRef = useRef(0);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryGenerationRef = useRef(0);
@@ -95,6 +104,51 @@ export function AudioPlayer({
 
   const { setProgress: setStoreProgress } = usePlayerActions();
 
+  const getPlaybackBackend = useCallback(
+    (audioOverride?: HTMLAudioElement | null) => {
+      const audio = audioOverride ?? audioRef.current;
+      if (!audio) return null;
+
+      if (!backendRef.current || backendRef.current.audio !== audio) {
+        backendRef.current?.backend.dispose();
+        backendRef.current = {
+          audio,
+          backend: createWebAudioPlaybackBackend(audio),
+        };
+      }
+
+      return backendRef.current.backend;
+    },
+    [audioRef],
+  );
+
+  const createPlaybackSource = useCallback(
+    (url: string) =>
+      createUrlPlaybackSource(url, {
+        kind: isRadio ? "radio" : undefined,
+        songId: isRadio ? undefined : songId,
+      }),
+    [isRadio, songId],
+  );
+
+  const loadAudio = useCallback(
+    (audio: HTMLAudioElement) => {
+      const sourceUrl = audio.currentSrc || audio.src || audioSrc;
+      if (!sourceUrl) {
+        audio.load();
+        return;
+      }
+
+      const backend = getPlaybackBackend(audio);
+      if (backend) {
+        backend.load(createPlaybackSource(sourceUrl));
+      } else {
+        audio.load();
+      }
+    },
+    [audioSrc, createPlaybackSource, getPlaybackBackend],
+  );
+
   useEffect(() => {
     if (src !== audioSrc) {
       logger.info(
@@ -113,8 +167,20 @@ export function AudioPlayer({
       }
 
       setAudioSrc(src || undefined);
+      const audio = audioRef.current;
+      if (audio && src) {
+        getPlaybackBackend(audio)?.load(createPlaybackSource(src));
+      }
     }
-  }, [audioSrc, cancelRetry, src, songId]);
+  }, [
+    audioRef,
+    audioSrc,
+    cancelRetry,
+    createPlaybackSource,
+    getPlaybackBackend,
+    src,
+    songId,
+  ]);
 
   const audioVolume = useMemo(
     () => (getPlaybackCapabilities().requiresSystemVolume ? 1 : perceptualToGain(volume)),
@@ -147,13 +213,13 @@ export function AudioPlayer({
     if (!audio) return;
 
     if (shouldUseNativeAudio) {
-      audio.volume = audioVolume;
+      getPlaybackBackend(audio)?.setVolume(audioVolume);
       previousGainRef.current = Number.NaN;
       logger.info("Native audio volume set:", audioVolume);
       return;
     }
 
-    audio.volume = 1;
+    getPlaybackBackend(audio)?.setVolume(1);
     if (gainValue === previousGainRef.current) return;
 
     setupGain(gainValue, replayGain);
@@ -161,6 +227,7 @@ export function AudioPlayer({
   }, [
     audioRef,
     audioVolume,
+    getPlaybackBackend,
     gainValue,
     replayGain,
     setupGain,
@@ -176,7 +243,7 @@ export function AudioPlayer({
       if (state.playerState.isPlaying && !state.remoteControl.active) {
         manageMediaSession.ensurePlaybackStatePlaying();
       }
-      const playPromise = audio.play();
+      const playPromise = getPlaybackBackend(audio)?.play() ?? audio.play();
       const promise = playPromise ?? undefined;
       playPromiseRef.current = promise ?? null;
       if (promise !== undefined) {
@@ -205,7 +272,7 @@ export function AudioPlayer({
           });
       }
     },
-    [],
+    [getPlaybackBackend],
   );
 
   const pauseAudio = useCallback((audio: HTMLAudioElement) => {
@@ -218,11 +285,16 @@ export function AudioPlayer({
       playPromiseRef.current = null;
     }
     effectPausingRef.current = true;
-    audio.pause();
+    const backend = getPlaybackBackend(audio);
+    if (backend) {
+      backend.pause();
+    } else {
+      audio.pause();
+    }
     if (audio.paused) {
       effectPausingRef.current = false;
     }
-  }, []);
+  }, [getPlaybackBackend]);
 
   const scheduleRetry = useCallback(
     (audio: HTMLAudioElement) => {
@@ -245,9 +317,14 @@ export function AudioPlayer({
             "[scheduleRetry] All retries failed — retrying from position 0",
             { fallbackPosition, generation: retryGenerationRef.current },
           );
-          audio.currentTime = 0;
+          const backend = getPlaybackBackend(audio);
+          if (backend) {
+            backend.seek(0);
+          } else {
+            audio.currentTime = 0;
+          }
           setStoreProgress(0);
-          audio.load();
+          loadAudio(audio);
           safePlay(audio, "RangeFallback");
           return;
         }
@@ -299,11 +376,19 @@ export function AudioPlayer({
           return;
         }
 
-        currentAudio.load();
+        loadAudio(currentAudio);
         safePlay(currentAudio, "Retry");
       }, delay);
     },
-    [audioRef, cancelRetry, onPlaybackError, safePlay, setStoreProgress],
+    [
+      audioRef,
+      cancelRetry,
+      getPlaybackBackend,
+      loadAudio,
+      onPlaybackError,
+      safePlay,
+      setStoreProgress,
+    ],
   );
 
   const handleAudioError = useCallback(() => {
@@ -377,6 +462,8 @@ export function AudioPlayer({
       retryCountRef.current = 0;
       rangeFallbackRef.current = false;
       playPromiseRef.current = null;
+      backendRef.current?.backend.dispose();
+      backendRef.current = null;
     };
   }, [cancelRetry]);
 
@@ -401,13 +488,13 @@ export function AudioPlayer({
           }
           retryCountRef.current = 0;
           rangeFallbackRef.current = false;
-          audio.load();
+          loadAudio(audio);
           safePlay(audio, "Reconnect");
         }
       },
     );
     return unsubscribe;
-  }, [audioRef, safePlay]);
+  }, [audioRef, loadAudio, safePlay]);
 
   const handlePlaySuccess = useCallback(() => {
     retryCountRef.current = 0;
@@ -449,7 +536,7 @@ export function AudioPlayer({
               `[PlayEffect:seekToStart] songId=${songId} | setting currentTime=0`,
             );
             loopRestartingRef.current = true;
-            audio.currentTime = 0;
+            getPlaybackBackend(audio)?.seek(0);
             usePlayerStore.setState((state) => {
               state.playerState.seekToStart = false;
             });
@@ -458,7 +545,7 @@ export function AudioPlayer({
               `[PlayEffect:endedRestart] songId=${songId} | setting currentTime=0`,
             );
             loopRestartingRef.current = true;
-            audio.currentTime = 0;
+            getPlaybackBackend(audio)?.seek(0);
           }
           if (shouldUseWebAudioReplayGain) {
             await resumeContext();
@@ -488,6 +575,7 @@ export function AudioPlayer({
   }, [
     audioRef,
     audioSrc,
+    getPlaybackBackend,
     isPlaying,
     isSong,
     pauseAudio,
@@ -504,14 +592,14 @@ export function AudioPlayer({
       if (!audio) return;
 
       if (isPlaying) {
-        audio.load();
+        loadAudio(audio);
         safePlay(audio, "Radio");
       } else {
         pauseAudio(audio);
       }
     }
     if (isRadio) handleRadio();
-  }, [audioRef, isPlaying, isRadio, pauseAudio, safePlay]);
+  }, [audioRef, isPlaying, isRadio, loadAudio, pauseAudio, safePlay]);
 
   const applyPendingResume = useCallback(
     (audio: HTMLAudioElement) => {
@@ -525,10 +613,15 @@ export function AudioPlayer({
           : resumePos;
 
       logger.info("Applying pending resume position:", clampedPos);
-      audio.currentTime = clampedPos;
+      const backend = getPlaybackBackend(audio);
+      if (backend) {
+        backend.seek(clampedPos);
+      } else {
+        audio.currentTime = clampedPos;
+      }
       setStoreProgress(Math.floor(clampedPos));
     },
-    [setStoreProgress],
+    [getPlaybackBackend, setStoreProgress],
   );
 
   const handleLoadedMetadata = useCallback(
@@ -664,7 +757,7 @@ export function AudioPlayer({
           );
           loopRestartingRef.current = true;
           syncPlayHandledRef.current = true;
-          e.currentTarget.currentTime = 0;
+          getPlaybackBackend(e.currentTarget)?.seek(0);
           safePlay(e.currentTarget, "LoopRestartSync");
 
           // Force refresh MediaSession metadata as some browsers clear it on ended
