@@ -6,7 +6,7 @@ import { Slider } from "@/app/components/ui/slider";
 import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
 import { useMuteToggle } from "@/app/hooks/use-mute-toggle";
 import { usePlayerVolume, useVolumeSettings } from "@/store/player.store";
-import { isIOS } from "@/utils/platform";
+import { getPlaybackCapabilities } from "@/utils/capabilities";
 
 export function VolumeBar() {
   const { volume, handleMuteClick } = useMuteToggle();
@@ -14,19 +14,19 @@ export function VolumeBar() {
   const { min, max, step } = useVolumeSettings();
   const wheelRafRef = useRef<number | null>(null);
   const { t } = useTranslation();
-  const ios = isIOS();
-  const displayVolume = ios ? 100 : volume;
+  const { requiresSystemVolume } = getPlaybackCapabilities();
+  const displayVolume = requiresSystemVolume ? 100 : volume;
   const { hoverBg10 } = useFullscreenContrast();
 
   const handleWheel = useCallback(
     (e: WheelEvent<HTMLDivElement>) => {
-      if (ios || wheelRafRef.current !== null) return;
+      if (requiresSystemVolume || wheelRafRef.current !== null) return;
       wheelRafRef.current = requestAnimationFrame(() => {
         handleVolumeWheel(e.deltaY > 0);
         wheelRafRef.current = null;
       });
     },
-    [handleVolumeWheel, ios],
+    [handleVolumeWheel, requiresSystemVolume],
   );
 
   return (
@@ -40,7 +40,7 @@ export function VolumeBar() {
         size="icon"
         className={`size-8 p-0 shrink-0 ${hoverBg10}`}
         onClick={handleMuteClick}
-        disabled={ios}
+        disabled={requiresSystemVolume}
         aria-label={
           volume === 0
             ? t("player.tooltips.volume.unmute")
@@ -61,7 +61,7 @@ export function VolumeBar() {
         step={step}
         className="h-3 w-full min-w-0"
         onValueChange={([value]) => setVolume(value)}
-        disabled={ios}
+        disabled={requiresSystemVolume}
         aria-label={t("player.tooltips.volume.mute")}
       />
       <VolumeIcon

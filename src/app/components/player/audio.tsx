@@ -22,7 +22,7 @@ import {
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
 import { logger } from "@/utils/logger";
-import { isIOS } from "@/utils/platform";
+import { getPlaybackCapabilities } from "@/utils/capabilities";
 import { calculateReplayGain, ReplayGainParams } from "@/utils/replayGain";
 import { manageMediaSession } from "@/utils/setMediaSession";
 import { perceptualToGain } from "@/utils/volume";
@@ -117,7 +117,7 @@ export function AudioPlayer({
   }, [audioSrc, cancelRetry, src, songId]);
 
   const audioVolume = useMemo(
-    () => (isIOS() ? 1 : perceptualToGain(volume)),
+    () => (getPlaybackCapabilities().requiresSystemVolume ? 1 : perceptualToGain(volume)),
     [volume],
   );
 

@@ -9,7 +9,7 @@ import { usePlayerHotkeys } from "@/app/hooks/use-audio-hotkeys";
 import { useMuteToggle } from "@/app/hooks/use-mute-toggle";
 import { cn } from "@/lib/utils";
 import { usePlayerVolume, useVolumeSettings } from "@/store/player.store";
-import { isIOS } from "@/utils/platform";
+import { getPlaybackCapabilities } from "@/utils/capabilities";
 import { PopoverVolume } from "./popover-volume";
 
 interface PlayerVolumeProps {
@@ -21,9 +21,9 @@ export function PlayerVolume({ disabled, audioRef }: PlayerVolumeProps) {
   const { t } = useTranslation();
   const { volume, handleVolumeWheel } = usePlayerVolume();
   const { useAudioHotkeys } = usePlayerHotkeys();
-  const ios = isIOS();
-  const displayVolume = ios ? 100 : volume;
-  const isDisabled = ios || disabled;
+  const { requiresSystemVolume } = getPlaybackCapabilities();
+  const displayVolume = requiresSystemVolume ? 100 : volume;
+  const isDisabled = requiresSystemVolume || disabled;
 
   useAudioHotkeys("mod+up", () => handleVolumeWheel(false));
   useAudioHotkeys("mod+down", () => handleVolumeWheel(true));
@@ -89,9 +89,9 @@ export function VolumeSlider({
 }: VolumeSliderProps) {
   const { volume, setVolume, handleVolumeWheel } = usePlayerVolume();
   const { min, max, step } = useVolumeSettings();
-  const ios = isIOS();
-  const displayVolume = ios ? 100 : volume;
-  const isDisabled = ios || disabled;
+  const { requiresSystemVolume } = getPlaybackCapabilities();
+  const displayVolume = requiresSystemVolume ? 100 : volume;
+  const isDisabled = requiresSystemVolume || disabled;
 
   function handleWheel(e: WheelEvent) {
     handleVolumeWheel(e.deltaY > 0);

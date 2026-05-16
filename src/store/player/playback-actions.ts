@@ -2,8 +2,8 @@ import type { Draft } from "immer";
 import clamp from "lodash/clamp";
 import { LanControlMessageType } from "@/types/lanControl";
 import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
+import { getPlaybackCapabilities } from "@/utils/capabilities";
 import { logger } from "@/utils/logger";
-import { isIOS } from "@/utils/platform";
 
 interface SharedDeps {
   set: (fn: (state: Draft<IPlayerContext>) => void) => void;
@@ -82,7 +82,7 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     setVolume: (volume: number) => {
-      if (isIOS()) return;
+      if (!getPlaybackCapabilities().canSetVolume) return;
       remoteSend(LanControlMessageType.SET_VOLUME, {
         volume,
       });
@@ -92,7 +92,7 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     handleVolumeWheel: (isScrollingDown: boolean) => {
-      if (isIOS()) return;
+      if (!getPlaybackCapabilities().canSetVolume) return;
       if (isRemoteActive()) return;
       const { min, max, wheelStep } = get().settings.volume;
       const { volume } = get().playerState;

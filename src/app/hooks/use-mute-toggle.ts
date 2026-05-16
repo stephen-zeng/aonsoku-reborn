@@ -1,13 +1,13 @@
 import { useCallback, useRef } from "react";
 import { usePlayerVolume } from "@/store/player.store";
-import { isIOS } from "@/utils/platform";
+import { getPlaybackCapabilities } from "@/utils/capabilities";
 
 export function useMuteToggle() {
   const { volume, setVolume } = usePlayerVolume();
   const lastVolumeRef = useRef(volume > 0 ? volume : 100);
 
   const handleMuteClick = useCallback(() => {
-    if (isIOS()) return;
+    if (!getPlaybackCapabilities().canSetVolume) return;
     if (volume === 0) {
       const volumeSafety =
         lastVolumeRef.current >= 1 ? lastVolumeRef.current : 100;
