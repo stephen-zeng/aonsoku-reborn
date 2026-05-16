@@ -11,7 +11,7 @@ import "@/index.css";
 import "@/i18n";
 
 import App from "@/App";
-
+import { ErrorBoundary } from "@/app/components/error-boundary";
 import { queryClient } from "@/lib/queryClient";
 import { blockFeatures } from "@/utils/browser";
 
@@ -19,8 +19,10 @@ blockFeatures();
 
 createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </ErrorBoundary>
   </StrictMode>,
 );
