@@ -6,9 +6,9 @@ commit that contains the change.
 
 ## Current Status
 
-- Roadmap status: Phase 1 in progress.
-- Active implementation phase: Phase 1 - Playback And Queue Modularization.
-- Next step: Phase 1.2, define the playback backend contract.
+- Roadmap status: Phase 2 ready to start.
+- Active implementation phase: Phase 2 - Cache Modularization.
+- Next step: Phase 2.1, define cache service contracts.
 - Android status: blocked until the full iOS native implementation is complete.
 
 ## Completed Work
@@ -19,15 +19,18 @@ commit that contains the change.
 | 2026-05-16 | Phase 0.1 - Capture baseline behavior | Ran existing unit tests (482 passing, 0 failing, 0 flaky). Added baseline regression tests for queue utilities (88 tests) and platform detection (16 tests). Total test count went from 482 to 570. All tests pass, lint clean. | `pnpm run test:unit` 570/570 passed. `biome lint` passed. | `2bf22f38 test(player): capture playback and queue baseline` |
 | 2026-05-17 | Phase 0.2 - Add platform capability detection | Created `src/utils/capabilities.ts` with `detectRuntime()`, `getRuntime()`, `getPlaybackCapabilities()`, and `getDesktopCapabilities()`. Migrated all 7 `isIOS()` call sites to capability queries (`canSetVolume`, `requiresSystemVolume`). Added 17 capability tests. Total 587 tests pass. Build succeeds. | `pnpm run test:unit` 587/587 passed. `biome lint` passed. `pnpm run build` succeeded. | `7e35d40e refactor(platform): centralize runtime capability detection` |
 | 2026-05-17 | Phase 1.1 - Extract pure queue transitions | Created `src/store/player/queue-transitions.ts` with 13 pure transition functions extracted from `queue-actions.ts`. Added 59 tests in `queue-transitions.test.ts`. Total 646 tests pass. Build succeeds. | `pnpm run test:unit` 646/646 passed. `biome lint` passed. `pnpm run build` succeeded. | `cacd277b refactor(queue): extract pure queue transitions` |
-| 2026-05-17 | Phase 0 review - Runtime detection correction | Corrected `detectRuntime()` to use Capacitor native platform detection instead of iOS/Android user-agent checks, so browser/PWA sessions stay `web`; preserved iOS system-volume capability behavior for web. | `pnpm vitest run src/utils/capabilities.test.ts` 21/21 passed. `pnpm run test:unit` 650/650 passed. `pnpm run lint` passed. `pnpm run build` succeeded. | Pending current-session commit |
+| 2026-05-17 | Phase 0 review - Runtime detection correction | Corrected `detectRuntime()` to use Capacitor native platform detection instead of iOS/Android user-agent checks, so browser/PWA sessions stay `web`; preserved iOS system-volume capability behavior for web. | `pnpm vitest run src/utils/capabilities.test.ts` 21/21 passed. `pnpm run test:unit` 650/650 passed. `pnpm run lint` passed. `pnpm run build` succeeded. | `a8480d2a fix(platform): detect native capacitor runtimes correctly` |
+| 2026-05-17 | Phase 1.2 - Define playback backend contract | Added typed playback source descriptors and the `PlaybackBackend` contract for load, play, pause, stop, seek, loop, volume, preload, dispose, and events. Added `WebAudioPlaybackBackend` around `HTMLAudioElement` and routed `AudioPlayer` imperative load/play/pause/seek/volume calls through it. | `pnpm vitest run src/player/playback/playback-backend.test.ts` 7/7 passed. `pnpm run test:unit` 657/657 passed. `pnpm run lint` passed. `pnpm run build` succeeded. Cypress component tests not run per known local Cypress issue/user instruction. | `18607812 refactor(player): introduce playback backend contract` |
+| 2026-05-17 | Phase 1.3 - Extract playback orchestration | Added `PlaybackSession` for source-change flags, retry timers, pending resume, play/pause/end decisions, and progress/buffer/duration helpers. `AudioPlayer` now delegates orchestration decisions to the session while ReplayGain stays on the web audio path. | `pnpm vitest run src/player/playback/playback-backend.test.ts src/player/playback/session.test.ts` 20/20 passed. `pnpm run test:unit` 670/670 passed. `pnpm run lint` passed. `pnpm run build` succeeded. Cypress component tests not run per known local Cypress issue/user instruction. | `6d3d98e6 refactor(player): isolate playback session orchestration` |
+| 2026-05-17 | Phase 1.4 - Split player store responsibilities | Kept `@/store/player.store` stable while splitting store creation, selectors, persistence/migrations/IDB flushing, and side-effect subscriptions into dedicated modules. Added persistence/migration tests. No persisted schema change. | `pnpm vitest run src/store/player/persistence.test.ts` 5/5 passed. `pnpm vitest run src/store/player/*.test.ts src/store/player/persistence.test.ts` 151/151 passed. `pnpm run test:unit` 675/675 passed. `pnpm run lint` passed. `pnpm run build` succeeded. Cypress not applicable for this store-only step and not run per user instruction. | `11f734ca refactor(player-store): split persistence and action modules` |
 
 ## Phase Checklist
 
 | Phase | Status | Notes |
 | --- | --- | --- |
 | Phase 0 - Baseline And Guardrails | Complete | Both Phase 0.1 and 0.2 done. Follow-up review corrected browser/PWA vs native Capacitor runtime detection. |
-| Phase 1 - Playback And Queue Modularization | In progress | Phase 1.1 done. Next: Phase 1.2 define playback backend contract. |
-| Phase 2 - Cache Modularization | Not started | Should follow or coordinate with playback source descriptor work. |
+| Phase 1 - Playback And Queue Modularization | Complete | Phase 1.1 through 1.4 are complete. Cypress was not run in this session because the local Cypress installation has a known host issue and the user requested not to run or repair it. |
+| Phase 2 - Cache Modularization | Ready | Should follow or coordinate with playback source descriptor work. |
 | Phase 3 - Capacitor Bridge Foundation | Not started | No native implementation until contracts are stable. |
 | Phase 4 - Complete iOS Native Implementation | Not started | Must finish before Android begins. |
 | Phase 5 - Android Platform Support | Blocked | Do not add `@capacitor/android` or Android project files yet. |
@@ -53,6 +56,20 @@ Record test commands and outcomes here as the roadmap progresses.
 | 2026-05-17 | `pnpm run test:unit` | 650 passed | Full unit suite after Phase 0 runtime detection correction. |
 | 2026-05-17 | `pnpm run lint` | Passed | Biome lint after Phase 0 runtime detection correction. |
 | 2026-05-17 | `pnpm run build` | Succeeded | Build succeeds; existing Vite chunking and non-module `env-config.js` warnings remain. |
+| 2026-05-17 | `pnpm vitest run src/player/playback/playback-backend.test.ts` | 7 passed | Phase 1.2 backend contract and web adapter tests. |
+| 2026-05-17 | `pnpm run test:unit` | 657 passed | Full unit suite after Phase 1.2. |
+| 2026-05-17 | `pnpm run lint` | Passed | Biome lint after Phase 1.2. |
+| 2026-05-17 | `pnpm run build` | Succeeded | Build succeeds; existing Vite warnings remain. |
+| 2026-05-17 | `pnpm exec cypress run --component --spec src/app/components/player/player.cy.tsx,src/app/components/player/audio.cy.tsx` | Not run to completion | Cypress has a known local host issue on this machine; user instructed not to run Cypress or spend time repairing it. |
+| 2026-05-17 | `pnpm vitest run src/player/playback/playback-backend.test.ts src/player/playback/session.test.ts` | 20 passed | Phase 1.3 backend and playback session tests. |
+| 2026-05-17 | `pnpm run test:unit` | 670 passed | Full unit suite after Phase 1.3. |
+| 2026-05-17 | `pnpm run lint` | Passed | Biome lint after Phase 1.3. |
+| 2026-05-17 | `pnpm run build` | Succeeded | Build succeeds; existing Vite warnings remain. |
+| 2026-05-17 | `pnpm vitest run src/store/player/persistence.test.ts` | 5 passed | Phase 1.4 persistence and migration tests. |
+| 2026-05-17 | `pnpm vitest run src/store/player/*.test.ts src/store/player/persistence.test.ts` | 151 passed | Existing player store tests plus persistence tests after Phase 1.4. |
+| 2026-05-17 | `pnpm run test:unit` | 675 passed | Full unit suite after Phase 1.4. |
+| 2026-05-17 | `pnpm run lint` | Passed | Biome lint after Phase 1.4. |
+| 2026-05-17 | `pnpm run build` | Succeeded | Build succeeds; existing Vite warnings remain. |
 
 ### Phase 0.1 - Baseline Test Coverage Added
 
@@ -153,16 +170,21 @@ side effects. This makes queue behavior fully testable without a store.
 
 ## Handoff Notes
 
-- Phase 1.1 is complete. All 646 tests pass.
-- The pure transition functions in `queue-transitions.ts` currently coexist
-  alongside the Zustand-based actions in `queue-actions.ts`. The Zustand
-  actions have not yet been refactored to call the pure transitions.
-- The next implementation session should begin with Phase 1.2 from
-  `01-roadmap.md` and `02-playback-and-queue-modularization.md`: define the
-  playback backend contract.
-- Before Phase 1.2, the Zustand actions in `queue-actions.ts` should be
-  refactored to call the pure transitions from `queue-transitions.ts`, making
-  the actions thin adapters. This is part of Step 3 in the detailed plan.
+- Phase 1.2 is complete. Playback sources, backend events, and the web
+  `HTMLAudioElement` backend live in `src/player/playback/`.
+- Phase 1.3 is complete. `PlaybackSession` owns retry/source-change/pending
+  resume/play-pause/end decisions, and React audio components delegate to it.
+- Phase 1.4 is complete. `src/store/player/index.ts` is now the coordinator,
+  with store creation in `store.ts`, public hooks in `selectors.ts`,
+  persistence/migrations/IDB flushing in `persistence.ts`, and side-effect
+  subscriptions in `subscriptions.ts`.
+- Public imports from `@/store/player.store` remain stable.
+- Cypress component tests were intentionally not run after user instruction:
+  this machine has a known Cypress host issue, and Cypress repair is out of
+  scope for this roadmap work.
+- The next implementation session should begin with Phase 2.1 from
+  `01-roadmap.md` and `03-cache-modularization.md`: define cache service
+  contracts.
 - Keep every sub-step small, tested, and committed independently.
 - Keep Android blocked until the iOS done criteria in `00-requirements.md` and
   `04-ios-native-implementation.md` are satisfied.
