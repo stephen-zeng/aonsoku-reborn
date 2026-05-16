@@ -11,6 +11,11 @@ import { usePlayHistory } from "@/app/hooks/use-play-history";
 import { usePlayerBreakpoint } from "@/app/hooks/use-player-breakpoint";
 import { usePreloadAudio } from "@/app/hooks/use-preload-audio";
 import { useScrobble } from "@/app/hooks/use-scrobble";
+import {
+  getAudioDurationSeconds,
+  getAudioProgressSnapshot,
+  getBufferedTime,
+} from "@/player/playback";
 import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import {
   useIsRemoteControlActive,
@@ -26,7 +31,6 @@ import {
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
 import { hasMiniPlayerSupport } from "@/utils/browser";
-import { isValidDuration } from "@/utils/duration";
 import { logger } from "@/utils/logger";
 import {
   type ReplayGainParams,
@@ -175,9 +179,8 @@ export function Player() {
     const audio = getAudioRef().current;
     if (!audio) return;
 
-    const audioDuration = audio.duration;
-    if (isValidDuration(audioDuration)) {
-      const roundedDuration = Math.round(audioDuration);
+    const roundedDuration = getAudioDurationSeconds(audio);
+    if (roundedDuration !== null) {
       const currentDur = usePlayerStore.getState().playerState.currentDuration;
       if (currentDur !== roundedDuration) {
         setCurrentDuration(roundedDuration);
@@ -203,13 +206,11 @@ export function Player() {
 
     if (usePlayerStore.getState().playerProgress.isScrubbing) return;
 
-    const currentProgress = Math.floor(audio.currentTime);
-    setProgress(currentProgress);
+    const { progress, bufferedProgress } = getAudioProgressSnapshot(audio);
+    setProgress(progress);
 
     if (audio.buffered.length > 0) {
-      const bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
-      const clamped = Math.min(bufferedEnd, audio.duration || 0);
-      setBufferedProgress(clamped);
+      setBufferedProgress(bufferedProgress);
     }
   }, [getAudioRef, setProgress, setBufferedProgress]);
 
@@ -289,9 +290,7 @@ export function Player() {
     (e: React.SyntheticEvent<HTMLAudioElement>) => {
       const audio = e.currentTarget;
       if (audio.buffered.length > 0) {
-        const bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
-        const clamped = Math.min(bufferedEnd, audio.duration || 0);
-        setBufferedProgress(clamped);
+        setBufferedProgress(getBufferedTime(audio));
       }
     },
     [setBufferedProgress],
