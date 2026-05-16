@@ -82,7 +82,7 @@ describe("Aonsoku native audio plugin skeleton", () => {
     expect(packageSwift).not.toContain("Android");
   });
 
-  it("bridges the expected native methods under the TypeScript plugin name", () => {
+  it("bridges and implements the expected native methods", () => {
     const swift = readText(
       path.join(
         pluginRoot,
@@ -90,14 +90,38 @@ describe("Aonsoku native audio plugin skeleton", () => {
       ),
     );
 
+    expect(swift).toContain("import AVFoundation");
+    expect(swift).toContain("private var player: AVPlayer?");
     expect(swift).toContain("@objc(AonsokuNativeAudioPlugin)");
     expect(swift).toContain(
       `public let jsName = "${NATIVE_AUDIO_PLUGIN_NAME}"`,
     );
+    expect(swift).not.toContain("rejectNotImplemented");
+    expect(swift).not.toContain("not_implemented");
 
     for (const method of nativeAudioMethods) {
       expect(swift).toContain(`CAPPluginMethod(name: "${method}"`);
       expect(swift).toContain(`@objc func ${method}(_ call: CAPPluginCall)`);
+    }
+  });
+
+  it("emits the shared playback backend event names from native iOS", () => {
+    const swift = readText(
+      path.join(
+        pluginRoot,
+        "ios/Sources/AonsokuNativeAudioPlugin/AonsokuNativeAudioPlugin.swift",
+      ),
+    );
+
+    for (const eventName of [
+      "playbackStateChanged",
+      "progress",
+      "durationChanged",
+      "bufferingChanged",
+      "ended",
+      "error",
+    ]) {
+      expect(swift).toContain(`notifyListeners("${eventName}"`);
     }
   });
 
