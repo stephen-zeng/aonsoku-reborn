@@ -1,6 +1,7 @@
-import { MoreVerticalIcon } from "lucide-react";
+import { Mic2Icon, MoreVerticalIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { MobileEmptyState } from "@/app/components/mobile/empty-state";
 import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import { PreviewCard } from "@/app/components/preview-card/card";
 import { Button } from "@/app/components/ui/button";
@@ -50,7 +51,16 @@ export default function MobileArtistsList() {
   );
 
   if (isLoading && (!artists || artists.length === 0)) return <MobileArtistsFallback />;
-  if (!artists) return null;
+  if (!artists || artists.length === 0) {
+    return (
+      <MobileEmptyState
+        headerTitle={t("sidebar.artists")}
+        title={t("sidebar.artists")}
+        description={t("common.noResults")}
+        icon={<Mic2Icon className="size-12" />}
+      />
+    );
+  }
 
   return (
     <div className="w-full flex flex-col">

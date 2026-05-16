@@ -1,7 +1,8 @@
-import { EllipsisVertical, SearchIcon, SortAscIcon } from "lucide-react";
+import { EllipsisVertical, Music2Icon, SearchIcon, SortAscIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { InfiniteScroll } from "@/app/components/infinite-scroll";
+import { MobileEmptyState } from "@/app/components/mobile/empty-state";
 import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import { SongMenuOptions } from "@/app/components/song/menu-options";
 import { CachedIndicator } from "@/app/components/table/cached-indicator";
@@ -12,6 +13,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
+import { Skeleton } from "@/app/components/ui/skeleton";
 import { useTotalSongs } from "@/app/hooks/use-total-songs";
 import { cn } from "@/lib/utils";
 import {
@@ -32,11 +34,43 @@ import { ISong } from "@/types/responses/song";
 
 const DEFAULT_OFFSET = 100;
 
+function MobileSongsFallback() {
+  const { t } = useTranslation();
+  return (
+    <div className="w-full flex flex-col">
+      <MobilePageHeader variant="sub" title={t("sidebar.songs")} />
+      <div className="flex flex-col">
+        <div className="px-4 py-4 flex items-center justify-between">
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+          <div className="flex gap-1">
+            <Skeleton className="size-10 rounded-md" />
+            <Skeleton className="size-10 rounded-md" />
+          </div>
+        </div>
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3 px-4 py-2">
+            <Skeleton className="size-12 rounded shadow" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3 w-1/2" />
+            </div>
+            <Skeleton className="size-10 rounded-md" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function MobileSongsList() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const { getSearchParam } = new SearchParamsHandler(searchParams);
   const { setSongList } = usePlayerActions();
+  const { data: songCountData } = useTotalSongs();
 
   const filter = getSearchParam<string>(AlbumsSearchParams.MainFilter, "");
   const query = getSearchParam<string>(AlbumsSearchParams.Query, "");
@@ -63,7 +97,7 @@ export default function MobileSongsList() {
     });
   }
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useOfflineInfiniteQuery(
       [...queryKeys.song.all, filter, query, artistId, orderBy, sort],
       ({ pageParam }) => fetchSongs({ pageParam }),
@@ -83,13 +117,26 @@ export default function MobileSongsList() {
       },
     );
 
-  const { data: songCountData } = useTotalSongs();
   const songlist = data?.pages.flatMap((page) => page.songs) ?? [];
-  const songCount = (filterByArtist ? songlist.length : songCountData) ?? 0;
+
+  if (isLoading && songlist.length === 0) return <MobileSongsFallback />;
 
   const title = filterByArtist
     ? t("songs.list.byArtist", { artist: artistName })
     : t("sidebar.songs");
+
+  if (songlist.length === 0) {
+    return (
+      <MobileEmptyState
+        headerTitle={title}
+        title={title}
+        description={t("common.noResults")}
+        icon={<Music2Icon className="size-12" />}
+      />
+    );
+  }
+
+  const songCount = (filterByArtist ? songlist.length : songCountData) ?? 0;
 
   return (
     <div className="w-full flex flex-col">

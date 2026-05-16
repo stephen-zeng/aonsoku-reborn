@@ -1,10 +1,32 @@
+import { DiscAlbumIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { AlbumGridCard } from "@/app/components/albums/album-grid-card";
-import { EmptyAlbums } from "@/app/components/albums/empty-page";
-import { AlbumsFallback } from "@/app/components/fallbacks/album-fallbacks";
+import { CardSkeleton } from "@/app/components/fallbacks/ui-fallbacks";
 import { InfiniteScroll } from "@/app/components/infinite-scroll";
+import { MobileEmptyState } from "@/app/components/mobile/empty-state";
 import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
+import { Skeleton } from "@/app/components/ui/skeleton";
 import { useAlbumsListModel } from "../albums/list.model";
+
+function MobileAlbumsFallback() {
+  const { t } = useTranslation();
+  return (
+    <div className="w-full flex flex-col">
+      <MobilePageHeader variant="sub" title={t("sidebar.albums")} />
+      <div className="px-4 py-4">
+        <div className="flex flex-col mb-4 gap-2">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-3 w-16" />
+        </div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <CardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function MobileAlbumsList() {
   const { t } = useTranslation();
@@ -18,8 +40,17 @@ export default function MobileAlbumsList() {
     isFetchingNextPage,
   } = useAlbumsListModel();
 
-  if (isLoading && albums.length === 0) return <AlbumsFallback />;
-  if (isEmpty) return <EmptyAlbums />;
+  if (isLoading && albums.length === 0) return <MobileAlbumsFallback />;
+  if (isEmpty) {
+    return (
+      <MobileEmptyState
+        headerTitle={t("sidebar.albums")}
+        title={t("album.list.empty.title")}
+        description={t("album.list.empty.info")}
+        icon={<DiscAlbumIcon className="size-12" />}
+      />
+    );
+  }
 
   return (
     <div className="w-full flex flex-col">
