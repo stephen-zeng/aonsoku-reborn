@@ -8,7 +8,7 @@ commit that contains the change.
 
 - Roadmap status: Phase 2 in progress.
 - Active implementation phase: Phase 2 - Cache Modularization.
-- Next step: Phase 2.3, prepare native cache access.
+- Next step: Phase 2.4, isolate blob URL lifetime.
 - Android status: blocked until the full iOS native implementation is complete.
 
 ## Completed Work
@@ -25,6 +25,7 @@ commit that contains the change.
 | 2026-05-17 | Phase 1.4 - Split player store responsibilities | Kept `@/store/player.store` stable while splitting store creation, selectors, persistence/migrations/IDB flushing, and side-effect subscriptions into dedicated modules. Added persistence/migration tests. No persisted schema change. | `pnpm vitest run src/store/player/persistence.test.ts` 5/5 passed. `pnpm vitest run src/store/player/*.test.ts src/store/player/persistence.test.ts` 151/151 passed. `pnpm run test:unit` 675/675 passed. `pnpm run lint` passed. `pnpm run build` succeeded. Cypress not applicable for this store-only step and not run per user instruction. | `11f734ca refactor(player-store): split persistence and action modules` |
 | 2026-05-17 | Phase 2.1 - Define cache service contracts | Added cache storage, index, metadata persistence, audio download service/queue, audio URL/source resolver, and native file resolver contracts. Added default adapters around the current Cache API, Zustand index, Dexie metadata persistence, and audio download service, plus test fakes for future resolver work. | `pnpm exec vitest run src/service/cache/contracts/fakes.test.ts src/service/cache/audio-url-resolver.test.ts src/service/cache/cache-storage.test.ts src/service/cache/persist-meta.test.ts src/service/cache/audio-cache-queue.test.ts` 48/48 passed. `pnpm run test:unit` 687/687 passed. `pnpm run lint` passed. `pnpm run build` succeeded with existing Vite warnings. | `72a88af4 refactor(cache): define cache service contracts` |
 | 2026-05-17 | Phase 2.2 - Split audio URL resolution | Added `CacheAudioSourceResolver` to return typed stream/blob/native-file source descriptors and moved cached-or-stream selection out of React hooks. Added `useAudioSource(songId)`, kept `useCachedAudioUrl` as a compatibility wrapper, routed preloading through the resolver, and passed typed song sources into `AudioPlayer` while preserving string `src` playback. | `pnpm exec vitest run src/service/cache/audio-source/index.test.ts src/service/cache/cache-manager.test.ts src/service/cache/audio-url-resolver.test.ts` 28/28 passed. `pnpm run test:unit` 693/693 passed. `pnpm run lint` passed. `pnpm run build` succeeded with existing Vite warnings. | `8090d3c3 refactor(cache): isolate audio source resolution` |
+| 2026-05-17 | Phase 2.3 - Prepare native cache access | Added `NativeCacheAdapter` contract extending `NativeFileResolver` with `storeAudioFile`, `getAudioFileSize`, and `evictAudioFile`. Added `FakeNativeCacheAdapter` for tests. Created `native-cache-adapter.ts` with platform-aware factory that returns a null adapter on web and throws on iOS/Android (not yet implemented). Wired the factory into `CacheAudioSourceResolver` as the default `nativeFileResolver`. Added 18 new tests: 5 for `FakeNativeCacheAdapter`, 11 for `getNativeCacheAdapter` platform selection, and 2 for resolver integration with `NativeCacheAdapter`. | `pnpm exec vitest run src/service/cache/contracts/fakes.test.ts src/service/cache/native-cache-adapter.test.ts src/service/cache/audio-source/index.test.ts` 34/34 passed. `pnpm run test:unit` 711/711 passed. `pnpm run lint` passed. `pnpm run build` succeeded with existing Vite warnings. | `5e250d17 refactor(cache): prepare native cache adapter` |
 
 ## Phase Checklist
 
@@ -32,7 +33,7 @@ commit that contains the change.
 | --- | --- | --- |
 | Phase 0 - Baseline And Guardrails | Complete | Both Phase 0.1 and 0.2 done. Follow-up review corrected browser/PWA vs native Capacitor runtime detection. |
 | Phase 1 - Playback And Queue Modularization | Complete | Phase 1.1 through 1.4 are complete. Cypress was not run in this session because the local Cypress installation has a known host issue and the user requested not to run or repair it. |
-| Phase 2 - Cache Modularization | In progress | Phase 2.1 and 2.2 are complete. Phase 2.3 should prepare native cache access without adding Android implementation. |
+| Phase 2 - Cache Modularization | In progress | Phase 2.1 through 2.3 are complete. Phase 2.4 should isolate blob URL lifetime next. |
 | Phase 3 - Capacitor Bridge Foundation | Not started | No native implementation until contracts are stable. |
 | Phase 4 - Complete iOS Native Implementation | Not started | Must finish before Android begins. |
 | Phase 5 - Android Platform Support | Blocked | Do not add `@capacitor/android` or Android project files yet. |
@@ -80,6 +81,10 @@ Record test commands and outcomes here as the roadmap progresses.
 | 2026-05-17 | `pnpm run test:unit` | 693 passed | Full unit suite after Phase 2.2. |
 | 2026-05-17 | `pnpm run lint` | Passed | Biome lint after Phase 2.2; commit hook also ran Biome and passed. |
 | 2026-05-17 | `pnpm run build` | Succeeded | Build succeeds; existing Vite chunking and non-module `env-config.js` warnings remain. |
+| 2026-05-17 | `pnpm exec vitest run src/service/cache/contracts/fakes.test.ts src/service/cache/native-cache-adapter.test.ts src/service/cache/audio-source/index.test.ts` | 34 passed | Phase 2.3: `FakeNativeCacheAdapter` tests (5), `getNativeCacheAdapter` platform-selection tests (11), resolver integration tests including `NativeCacheAdapter`-backed resolution and native-over-blob priority (2), plus existing contract and resolver tests (16). |
+| 2026-05-17 | `pnpm run test:unit` | 711 passed | Full unit suite after Phase 2.3. |
+| 2026-05-17 | `pnpm run lint` | Passed | Biome lint after Phase 2.3; commit hook also ran Biome and passed. |
+| 2026-05-17 | `pnpm run build` | Succeeded | Build succeeds; existing Vite warnings remain. |
 
 ### Phase 0.1 - Baseline Test Coverage Added
 
@@ -178,6 +183,46 @@ side effects. This makes queue behavior fully testable without a store.
 - `transitionPlaySong` (3 tests): creates single-song context queue, uses provided sourceName, sets sourceId to null
 - `PREV_SEEK_THRESHOLD` (1 test): validates constant value
 
+### Phase 2.3 - Prepare Native Cache Access
+
+**`src/service/cache/contracts/index.ts`** - Extended with `NativeCacheAdapter`:
+- `NativeCacheAdapter extends NativeFileResolver`: adds `storeAudioFile(songId, data, contentType)`, `getAudioFileSize(songId)`, and `evictAudioFile(songId)`
+- Contract lets native platforms store audio bytes to filesystem, resolve song IDs to native-playable URIs, query stored file sizes for eviction, and remove files during cache eviction
+- Web, iOS, and Android each get their own adapter implementation (iOS in Phase 4, Android in Phase 5)
+
+**`src/service/cache/contracts/fakes.ts`** - New `FakeNativeCacheAdapter`:
+- Stores files in an in-memory `Map` with auto-incrementing URI paths
+- `storeAudioFile`: creates a `NativeCachedAudioFile` with `uri`, `contentType`, `sizeBytes`, `lastModifiedAt`
+- `resolveAudioFile`: returns stored file metadata (without the Blob data)
+- `getAudioFileSize`: returns `sizeBytes` or `null`
+- `deleteAudioFile` / `evictAudioFile`: remove from the map
+
+**`src/service/cache/native-cache-adapter.ts`** - Platform-aware factory:
+- `WebNullNativeCacheAdapter`: returns `null`/`false` from read operations, throws on `storeAudioFile` (web cannot store native files)
+- `getNativeCacheAdapter()`: uses `getRuntime()` to choose adapter; on `capacitor-ios` throws "not yet implemented" (Phase 4), on `capacitor-android` throws "not available until Phase 5"
+- `_resetNativeCacheAdapter()` and `_setNativeCacheAdapterForTests()` for test injection
+
+**`src/service/cache/audio-source/index.ts`** - Updated:
+- `audioSourceResolver` now passes `getNativeCacheAdapter()` as `nativeFileResolver`, so native file resolution is wired through the platform-aware factory
+
+**`src/service/cache/native-cache-adapter.test.ts`** (11 tests):
+- `getNativeCacheAdapter` on web: returns null adapter, resolve returns null, size returns null, delete/evict return false, store throws
+- `getNativeCacheAdapter` on capacitor-ios: throws "not yet implemented"
+- `getNativeCacheAdapter` on capacitor-android: throws "not available until Phase 5"
+- Adapter instance caching and reset
+- Test adapter injection via `_setNativeCacheAdapterForTests`
+
+**`src/service/cache/contracts/fakes.test.ts`** - Added 5 `FakeNativeCacheAdapter` tests:
+- Store, resolve, and report size
+- Null returns for missing files
+- Delete and evict operations
+- False returns for missing file deletion/eviction
+- Overwrite on store
+
+**`src/service/cache/audio-source/index.test.ts`** - Added 2 tests:
+- Resolver returns native-file descriptor when `NativeCacheAdapter` has stored a file
+- Resolver prefers native-file over cached blob when both exist
+
 ## Handoff Notes
 
 - Phase 1.2 is complete. Playback sources, backend events, and the web
@@ -198,14 +243,20 @@ side effects. This makes queue behavior fully testable without a store.
   hook, `useCachedAudioUrl(songId)` remains as a compatibility wrapper, and
   `AudioPlayer` now receives typed song source descriptors while still loading
   a string `src` for web playback.
+- Phase 2.3 is complete. `NativeCacheAdapter` contract extends
+  `NativeFileResolver` with `storeAudioFile`, `getAudioFileSize`, and
+  `evictAudioFile`. `native-cache-adapter.ts` provides a platform-aware factory
+  (`getNativeCacheAdapter()`) that returns a null adapter on web and throws on
+  native platforms (iOS/Android implementations deferred to Phase 4/5). The
+  `CacheAudioSourceResolver` now uses this factory as its default
+  `nativeFileResolver`. `FakeNativeCacheAdapter` is available for tests.
 - Public imports from `@/store/player.store` remain stable.
 - Public imports of `buildAudioUrl` from `@/service/cache` remain stable.
 - Cypress component tests were intentionally not run after user instruction:
   this machine has a known Cypress host issue, and Cypress repair is out of
   scope for this roadmap work.
-- The next implementation session should begin with Phase 2.3 from
-  `01-roadmap.md` and `03-cache-modularization.md`: prepare native cache access
-  without adding Android implementation.
+- The next implementation session should begin with Phase 2.4 from
+  `01-roadmap.md` and `03-cache-modularization.md`: isolate blob URL lifetime.
 - Keep every sub-step small, tested, and committed independently.
 - Keep Android blocked until the iOS done criteria in `00-requirements.md` and
   `04-ios-native-implementation.md` are satisfied.
