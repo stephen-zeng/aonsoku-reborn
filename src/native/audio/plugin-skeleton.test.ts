@@ -1,0 +1,116 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { describe, expect, it } from "vitest";
+import { NATIVE_AUDIO_PLUGIN_NAME } from ".";
+
+const pluginRoot = path.join(
+  process.cwd(),
+  "capacitor-plugins/aonsoku-native-audio",
+);
+
+const nativeAudioMethods = [
+  "load",
+  "play",
+  "pause",
+  "stop",
+  "seek",
+  "setRepeatMode",
+  "setShuffle",
+  "setQueue",
+  "skipToNext",
+  "skipToPrevious",
+  "updateMetadata",
+  "preload",
+  "clear",
+] as const;
+
+interface PackageJson {
+  name?: string;
+  dependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  capacitor?: {
+    ios?: {
+      src?: string;
+    };
+    android?: unknown;
+  };
+}
+
+function readText(filePath: string) {
+  return readFileSync(filePath, "utf-8");
+}
+
+function readPackageJson(filePath: string): PackageJson {
+  return JSON.parse(readText(filePath)) as PackageJson;
+}
+
+describe("Aonsoku native audio plugin skeleton", () => {
+  it("is declared as a local iOS-only Capacitor plugin package", () => {
+    const manifest = readPackageJson(path.join(pluginRoot, "package.json"));
+
+    expect(manifest).toMatchObject({
+      name: "@aonsoku/native-audio",
+      peerDependencies: {
+        "@capacitor/core": ">=8.0.0",
+      },
+      capacitor: {
+        ios: {
+          src: "ios",
+        },
+      },
+    });
+    expect(manifest.capacitor).not.toHaveProperty("android");
+  });
+
+  it("is included by the app through a local file dependency", () => {
+    const manifest = readPackageJson(path.join(process.cwd(), "package.json"));
+
+    expect(manifest.dependencies?.["@aonsoku/native-audio"]).toBe(
+      "file:capacitor-plugins/aonsoku-native-audio",
+    );
+  });
+
+  it("declares an iOS Swift package without Android targets", () => {
+    const packageSwift = readText(path.join(pluginRoot, "Package.swift"));
+
+    expect(packageSwift).toContain('name: "AonsokuNativeAudio"');
+    expect(packageSwift).toContain("platforms: [.iOS(.v15)]");
+    expect(packageSwift).toContain('name: "AonsokuNativeAudioPlugin"');
+    expect(packageSwift).toContain(
+      'path: "ios/Sources/AonsokuNativeAudioPlugin"',
+    );
+    expect(packageSwift).not.toContain("Android");
+  });
+
+  it("bridges the expected native methods under the TypeScript plugin name", () => {
+    const swift = readText(
+      path.join(
+        pluginRoot,
+        "ios/Sources/AonsokuNativeAudioPlugin/AonsokuNativeAudioPlugin.swift",
+      ),
+    );
+
+    expect(swift).toContain("@objc(AonsokuNativeAudioPlugin)");
+    expect(swift).toContain(
+      `public let jsName = "${NATIVE_AUDIO_PLUGIN_NAME}"`,
+    );
+
+    for (const method of nativeAudioMethods) {
+      expect(swift).toContain(`CAPPluginMethod(name: "${method}"`);
+      expect(swift).toContain(`@objc func ${method}(_ call: CAPPluginCall)`);
+    }
+  });
+
+  it("is wired into the generated Capacitor iOS Swift package", () => {
+    const packageSwift = readText(
+      path.join(process.cwd(), "ios/App/CapApp-SPM/Package.swift"),
+    );
+
+    expect(packageSwift).toContain(
+      '.package(name: "AonsokuNativeAudio", path: "../../../node_modules/@aonsoku/native-audio")',
+    );
+    expect(packageSwift).toContain(
+      '.product(name: "AonsokuNativeAudio", package: "AonsokuNativeAudio")',
+    );
+  });
+});

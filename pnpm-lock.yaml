@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@aonsoku/native-audio':
+        specifier: file:capacitor-plugins/aonsoku-native-audio
+        version: file:capacitor-plugins/aonsoku-native-audio(@capacitor/core@8.3.4)
       '@applemusic-like-lyrics/core':
         specifier: 0.2.0
         version: 0.2.0(@pixi/app@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3)))(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))(@pixi/filter-blur@7.4.3(@pixi/core@7.4.3))(@pixi/filter-bulge-pinch@5.1.1(@pixi/core@7.4.3))(@pixi/filter-color-matrix@7.4.3(@pixi/core@7.4.3))(@pixi/sprite@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3)))
@@ -417,6 +420,11 @@ packages:
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
+
+  '@aonsoku/native-audio@file:capacitor-plugins/aonsoku-native-audio':
+    resolution: {directory: capacitor-plugins/aonsoku-native-audio, type: directory}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
 
   '@applemusic-like-lyrics/core@0.2.0':
     resolution: {integrity: sha512-gC3EC8gd6M9ieSk83W/ffTFMjtKknjmSACaKcGcL+/4dmYuPNlaXwRbl5Ggu0cp+LVqH7jQ6zXPYpWJ1cUZ/6g==}
@@ -5866,6 +5874,10 @@ packages:
 snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
+
+  '@aonsoku/native-audio@file:capacitor-plugins/aonsoku-native-audio(@capacitor/core@8.3.4)':
+    dependencies:
+      '@capacitor/core': 8.3.4
 
   '@applemusic-like-lyrics/core@0.2.0(@pixi/app@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3)))(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))(@pixi/filter-blur@7.4.3(@pixi/core@7.4.3))(@pixi/filter-bulge-pinch@5.1.1(@pixi/core@7.4.3))(@pixi/filter-color-matrix@7.4.3(@pixi/core@7.4.3))(@pixi/sprite@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3)))':
     dependencies:

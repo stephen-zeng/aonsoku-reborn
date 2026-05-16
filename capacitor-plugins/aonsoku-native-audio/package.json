@@ -1,0 +1,22 @@
+{
+  "name": "@aonsoku/native-audio",
+  "version": "0.0.0",
+  "description": "Capacitor native audio bridge for Aonsoku.",
+  "type": "module",
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/definitions.ts",
+  "files": [
+    "ios/Sources",
+    "src",
+    "Package.swift"
+  ],
+  "peerDependencies": {
+    "@capacitor/core": ">=8.0.0"
+  },
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    }
+  }
+}
