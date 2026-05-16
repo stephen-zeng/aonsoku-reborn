@@ -15,14 +15,28 @@ interface MobilePageHeaderProps {
   className?: string;
   onBack?: () => void;
   accentColor?: string;
+  count?: number;
+  actions?: ReactNode;
+  showUserMenu?: boolean;
 }
 
 function DesktopHeaderStatusItems() {
   return <UserDropdown />;
 }
 
-function MobileHeaderStatusItems() {
-  return <UserDropdown />;
+function MobileHeaderStatusItems({
+  extra,
+  showUserMenu = true,
+}: {
+  extra?: ReactNode;
+  showUserMenu?: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      {extra}
+      {showUserMenu && <UserDropdown />}
+    </div>
+  );
 }
 
 function StickyHeader({
@@ -151,6 +165,9 @@ export function MobilePageHeader({
   className,
   onBack,
   accentColor,
+  count,
+  actions,
+  showUserMenu = true,
 }: MobilePageHeaderProps) {
   if (variant === "root") {
     return (
@@ -158,10 +175,15 @@ export function MobilePageHeader({
         className={cn("md:hidden px-4 pt-[var(--safe-area-top)]", className)}
       >
         <div className="flex items-center justify-between py-4">
-          <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-          <div className="flex items-center gap-1">
-            <MobileHeaderStatusItems />
+          <div className="flex flex-col">
+            <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+            {count !== undefined && (
+              <span className="text-xs text-muted-foreground font-medium">
+                {count}
+              </span>
+            )}
           </div>
+          <MobileHeaderStatusItems extra={actions} showUserMenu={showUserMenu} />
         </div>
       </div>
     );
