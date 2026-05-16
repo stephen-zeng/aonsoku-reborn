@@ -27,14 +27,14 @@ function CSSVariableSync() {
 
   useEffect(() => {
     document.documentElement.style.setProperty(
-      "--sidebar-width",
+      "--sidebar-base-width",
       `${sidebarWidth}px`,
     );
   }, [sidebarWidth]);
 
   useEffect(() => {
     document.documentElement.style.setProperty(
-      "--right-panel-width",
+      "--right-panel-base-width",
       `${rightPanelWidth}px`,
     );
   }, [rightPanelWidth]);

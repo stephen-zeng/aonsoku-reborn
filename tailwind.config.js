@@ -49,6 +49,10 @@ module.exports = {
         "mid-player-text-height": "clamp(40px, calc(12vh + 24px), 48px)",
         "mid-player-padding": "clamp(6px, calc(3vh + 2px), 8px)",
         "mid-player-progress-height": "clamp(16px, calc(10vh + 3px), 24px)",
+        "safe-top": "var(--safe-area-top)",
+        "safe-bottom": "var(--safe-area-bottom)",
+        "safe-left": "var(--safe-area-left)",
+        "safe-right": "var(--safe-area-right)",
       },
       colors: {
         border: "hsl(var(--border))",

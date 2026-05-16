@@ -26,9 +26,11 @@ export function MainRoutes() {
   return (
     <main
       className={cn(
-        "relative min-h-screen pl-0 md:pl-mini-sidebar pt-0 md:pt-header pb-[calc(var(--player-height)+var(--bottom-nav-height))]",
+        "relative min-h-screen pt-0 md:pt-header pb-[calc(var(--player-height)+var(--bottom-nav-height))]",
+        "pl-safe-left pr-safe-right md:pl-0",
+        "md:pl-mini-sidebar",
         isCollapsed ? "xl:pl-mini-sidebar" : "xl:pl-sidebar",
-        mainDrawerState && "lg:pr-right-panel",
+        mainDrawerState ? "lg:pr-right-panel lg:pr-0" : "lg:pr-safe-right",
       )}
     >
       <div className="w-full">
