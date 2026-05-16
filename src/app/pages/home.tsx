@@ -54,7 +54,11 @@ export default function Home() {
 
   return (
     <div className="w-full px-4 sm:px-8 py-4 sm:py-6">
-      <MobilePageHeader variant="root" title={t("sidebar.home")} />
+      <MobilePageHeader
+        variant="root"
+        title={t("sidebar.home")}
+        showUserDropdown
+      />
 
       {isFetching || isLoading ? (
         <HeaderFallback />

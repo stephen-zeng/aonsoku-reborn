@@ -18,6 +18,7 @@ interface MobilePageHeaderProps {
   count?: number;
   actions?: ReactNode;
   showSpacer?: boolean;
+  showUserDropdown?: boolean;
 }
 
 function DesktopHeaderStatusItems() {
@@ -26,12 +27,15 @@ function DesktopHeaderStatusItems() {
 
 function MobileHeaderStatusItems({
   extra,
+  showUserDropdown,
 }: {
   extra?: ReactNode;
+  showUserDropdown?: boolean;
 }) {
   return (
     <div className="flex items-center gap-1">
       {extra}
+      {showUserDropdown && <UserDropdown />}
     </div>
   );
 }
@@ -41,11 +45,13 @@ function StickyHeader({
   onBack,
   accentColor,
   actions,
+  showUserDropdown,
 }: {
   title: string;
   onBack?: () => void;
   accentColor?: string;
   actions?: ReactNode;
+  showUserDropdown?: boolean;
 }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -157,7 +163,10 @@ function StickyHeader({
         </span>
       </div>
       <div className="pr-2 flex-shrink-0 z-10">
-        <MobileHeaderStatusItems extra={actions} />
+        <MobileHeaderStatusItems
+          extra={actions}
+          showUserDropdown={showUserDropdown}
+        />
       </div>
     </div>
   );
@@ -172,6 +181,7 @@ export function MobilePageHeader({
   count,
   actions,
   showSpacer = true,
+  showUserDropdown,
 }: MobilePageHeaderProps) {
   if (variant === "root") {
     return (
@@ -187,7 +197,10 @@ export function MobilePageHeader({
               </span>
             )}
           </div>
-          <MobileHeaderStatusItems extra={actions} />
+          <MobileHeaderStatusItems
+            extra={actions}
+            showUserDropdown={showUserDropdown}
+          />
         </div>
       </div>
     );
@@ -206,6 +219,7 @@ export function MobilePageHeader({
         onBack={onBack}
         accentColor={accentColor}
         actions={actions}
+        showUserDropdown={showUserDropdown}
       />
     </>
   );

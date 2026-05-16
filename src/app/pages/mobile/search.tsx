@@ -160,7 +160,11 @@ export default function MobileSearch() {
 
   return (
     <div className="flex flex-col w-full h-full">
-      <MobilePageHeader variant="root" title={t("sidebar.miniSearch")} />
+      <MobilePageHeader
+        variant="root"
+        title={t("sidebar.miniSearch")}
+        showUserDropdown
+      />
       <div
         className="sticky top-0 z-10 bg-background border-b px-4 py-3"
         style={{
