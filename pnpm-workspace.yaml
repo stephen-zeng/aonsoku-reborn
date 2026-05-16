@@ -1,3 +1,6 @@
+packages:
+  - "capacitor-plugins/*"
+
 allowBuilds:
   '@applemusic-like-lyrics/core': true
   '@applemusic-like-lyrics/lyric': true
