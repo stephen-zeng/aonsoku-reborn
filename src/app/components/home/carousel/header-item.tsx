@@ -102,7 +102,10 @@ export function HeaderItem({ song }: { song: ISong }) {
                 {song.title}
               </h1>
             ) : (
-              <Link to={ROUTES.ALBUM.PAGE(song.albumId)} className="w-fit">
+              <Link
+                to={ROUTES.ALBUM.PAGE(song.albumId)}
+                className="w-fit max-w-full"
+              >
                 <h1
                   data-testid="header-title"
                   className="w-full scroll-m-20 text-xl sm:text-3xl 2xl:text-4xl font-bold tracking-tight mb-0 2xl:mb-1 hover-supported:underline line-clamp-2"
@@ -114,22 +117,25 @@ export function HeaderItem({ song }: { song: ISong }) {
             {!song.artistId ? (
               <h4
                 data-testid="header-artist"
-                className="scroll-m-20 text-base sm:text-lg 2xl:text-xl font-semibold tracking-tight opacity-70"
+                className="scroll-m-20 text-base sm:text-lg 2xl:text-xl font-semibold tracking-tight opacity-70 line-clamp-1"
               >
                 {song.artist}
               </h4>
             ) : isMobile ? (
               <h4
                 data-testid="header-artist"
-                className="scroll-m-20 text-base sm:text-lg 2xl:text-xl font-semibold tracking-tight opacity-70"
+                className="scroll-m-20 text-base sm:text-lg 2xl:text-xl font-semibold tracking-tight opacity-70 line-clamp-1"
               >
                 {song.artist}
               </h4>
             ) : (
-              <Link to={ROUTES.ARTIST.PAGE(song.artistId)} className="w-fit">
+              <Link
+                to={ROUTES.ARTIST.PAGE(song.artistId)}
+                className="w-fit max-w-full"
+              >
                 <h4
                   data-testid="header-artist"
-                  className="scroll-m-20 text-base sm:text-lg 2xl:text-xl font-semibold tracking-tight opacity-70 hover-supported:underline"
+                  className="scroll-m-20 text-base sm:text-lg 2xl:text-xl font-semibold tracking-tight opacity-70 hover-supported:underline line-clamp-1"
                 >
                   {song.artist}
                 </h4>
