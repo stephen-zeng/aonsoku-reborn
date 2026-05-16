@@ -1,6 +1,8 @@
+import type { CacheStorageAdapter } from "./contracts";
+
 const CACHE_NAME = "aonsoku-media-cache";
 
-class CacheStorageService {
+class CacheStorageService implements CacheStorageAdapter {
   private async getCache(): Promise<Cache> {
     return caches.open(CACHE_NAME);
   }

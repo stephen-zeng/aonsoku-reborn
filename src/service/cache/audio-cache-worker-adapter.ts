@@ -14,6 +14,7 @@ import {
 import { libraryDb } from "@/store/library-db";
 import type { CachedItemMeta, CacheTask } from "@/types/cache";
 import type { AuthType } from "@/types/serverConfig";
+import type { AudioDownloadService } from "./contracts";
 
 /* ── Types ─────────────────────────────────────────────────────── */
 
@@ -41,13 +42,7 @@ interface Callbacks {
   onError(songId: string, message: string): void;
 }
 
-/** Shared interface for both Worker and fallback implementations. */
-interface AudioCacheDownloader {
-  cacheSong(task: CacheTask): Promise<void>;
-  cancelAll(): void;
-  isQueued(songId: string): boolean;
-  isInFlight(songId: string): boolean;
-}
+type AudioCacheDownloader = AudioDownloadService;
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
 
