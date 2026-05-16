@@ -36,7 +36,7 @@ export interface PlaybackBufferingEvent {
 
 export interface PlaybackErrorEvent {
   error: unknown;
-  code?: number;
+  code?: number | string;
   message?: string;
 }
 

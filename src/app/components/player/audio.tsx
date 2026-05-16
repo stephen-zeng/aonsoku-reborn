@@ -10,10 +10,12 @@ import {
 import { useAudioContext } from "@/app/hooks/use-audio-context";
 import { getNetworkStatus } from "@/app/hooks/use-network-status";
 import {
-  createWebAudioPlaybackBackend,
+  createPlaybackBackend,
   createUrlPlaybackSource,
   getPlaybackEndedDecision,
+  shouldUseNativePlaybackBackend,
   type PlaybackBackend,
+  type PlaybackBackendKind,
   type PlaybackSource,
   PlaybackSession,
 } from "@/player/playback";
@@ -81,6 +83,7 @@ export function AudioPlayer({
   const backendRef = useRef<{
     audio: HTMLAudioElement;
     backend: PlaybackBackend;
+    kind: PlaybackBackendKind;
   } | null>(null);
   const sessionRef = useRef(new PlaybackSession<HTMLAudioElement>());
 
@@ -88,24 +91,43 @@ export function AudioPlayer({
     sessionRef.current.cancelRetry();
   }, []);
 
-  const { setProgress: setStoreProgress } = usePlayerActions();
+  const {
+    setBufferedProgress: setStoreBufferedProgress,
+    setCurrentDuration: setStoreCurrentDuration,
+    setIsBuffering: setStoreIsBuffering,
+    setPlayingState: setStorePlayingState,
+    setProgress: setStoreProgress,
+  } = usePlayerActions();
 
-  const getPlaybackBackend = useCallback(
+  const getPlaybackBackendEntry = useCallback(
     (audioOverride?: HTMLAudioElement | null) => {
       const audio = audioOverride ?? audioRef.current;
       if (!audio) return null;
 
       if (!backendRef.current || backendRef.current.audio !== audio) {
         backendRef.current?.backend.dispose();
+        const selection = createPlaybackBackend(audio);
+        if (selection.fallbackReason) {
+          logger.info(
+            `[PlaybackBackend] native fallback=${selection.fallbackReason}`,
+          );
+        }
         backendRef.current = {
           audio,
-          backend: createWebAudioPlaybackBackend(audio),
+          backend: selection.backend,
+          kind: selection.kind,
         };
       }
 
-      return backendRef.current.backend;
+      return backendRef.current;
     },
     [audioRef],
+  );
+
+  const getPlaybackBackend = useCallback(
+    (audioOverride?: HTMLAudioElement | null) =>
+      getPlaybackBackendEntry(audioOverride)?.backend ?? null,
+    [getPlaybackBackendEntry],
   );
 
   const createPlaybackSource = useCallback(
@@ -432,6 +454,71 @@ export function AudioPlayer({
   }, []);
 
   useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const backendEntry = getPlaybackBackendEntry(audio);
+    if (!backendEntry || backendEntry.kind !== "native") return;
+
+    const unsubscribeProgress = backendEntry.backend.subscribe(
+      "progress",
+      (event) => {
+        if (!sessionRef.current.shouldSuppressProgressUpdate()) {
+          setStoreProgress(event.currentTime);
+        }
+        setStoreBufferedProgress(event.bufferedTime);
+      },
+    );
+    const unsubscribeDuration = backendEntry.backend.subscribe(
+      "duration",
+      (event) => {
+        const duration = Math.round(event.duration);
+        if (duration > 0) {
+          setStoreCurrentDuration(duration);
+        }
+      },
+    );
+    const unsubscribeBuffering = backendEntry.backend.subscribe(
+      "buffering",
+      (event) => {
+        setStoreIsBuffering(event.isBuffering);
+      },
+    );
+    const unsubscribePlay = backendEntry.backend.subscribe("play", () => {
+      setStorePlayingState(true);
+    });
+    const unsubscribePause = backendEntry.backend.subscribe("pause", () => {
+      setStorePlayingState(false);
+    });
+    const unsubscribeEnded = backendEntry.backend.subscribe("ended", () => {
+      (onEnded as (() => void) | undefined)?.();
+    });
+    const unsubscribeError = backendEntry.backend.subscribe("error", () => {
+      onPlaybackError?.();
+    });
+
+    return () => {
+      unsubscribeProgress();
+      unsubscribeDuration();
+      unsubscribeBuffering();
+      unsubscribePlay();
+      unsubscribePause();
+      unsubscribeEnded();
+      unsubscribeError();
+    };
+  }, [
+    audioRef,
+    getPlaybackBackendEntry,
+    onEnded,
+    onPlaybackError,
+    setStoreBufferedProgress,
+    setStoreCurrentDuration,
+    setStoreIsBuffering,
+    setStorePlayingState,
+    setStoreProgress,
+  ]);
+
+  useEffect(() => {
     if (!isPlaying) {
       cancelRetry();
     }
@@ -601,11 +688,13 @@ export function AudioPlayer({
     return "anonymous";
   }, [shouldUseWebAudioReplayGain, audioSrc]);
 
+  const shouldAttachDomAudioSource = !shouldUseNativePlaybackBackend();
+
   return (
     <audio
       ref={audioRef}
       {...props}
-      src={audioSrc}
+      src={shouldAttachDomAudioSource ? audioSrc : undefined}
       crossOrigin={crossOrigin}
       onError={handleError}
       onTimeUpdate={handleTimeUpdate}
