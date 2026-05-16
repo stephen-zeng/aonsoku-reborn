@@ -97,3 +97,9 @@ export interface NativeFileResolver {
   resolveAudioFile(songId: string): Promise<NativeCachedAudioFile | null>;
   deleteAudioFile(songId: string): Promise<boolean>;
 }
+
+export interface NativeCacheAdapter extends NativeFileResolver {
+  storeAudioFile(songId: string, data: Blob, contentType: string): Promise<NativeCachedAudioFile>;
+  getAudioFileSize(songId: string): Promise<number | null>;
+  evictAudioFile(songId: string): Promise<boolean>;
+}

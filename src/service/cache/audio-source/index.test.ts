@@ -5,6 +5,7 @@ import {
   FakeCacheIndex,
   FakeCacheMetadataPersistence,
   FakeCacheStorage,
+  FakeNativeCacheAdapter,
   FakeNativeFileResolver,
 } from "../contracts/fakes";
 import { CacheAudioSourceResolver, getAudioSourceUrl } from "./resolver";
@@ -40,7 +41,7 @@ function createResolver(options: {
   storage?: FakeCacheStorage;
   index?: FakeCacheIndex;
   metadata?: FakeCacheMetadataPersistence;
-  nativeFileResolver?: FakeNativeFileResolver;
+  nativeFileResolver?: FakeNativeFileResolver | FakeNativeCacheAdapter;
   now?: () => number;
 } = {}) {
   const blobUrls = createBlobUrls();
@@ -188,5 +189,51 @@ describe("CacheAudioSourceResolver", () => {
       uri: "file:///cache/song-1.flac",
     });
     expect(getAudioSourceUrl(source)).toBe("file:///cache/song-1.flac");
+  });
+
+  it("returns a native-file descriptor when a NativeCacheAdapter has stored a file", async () => {
+    const nativeCacheAdapter = new FakeNativeCacheAdapter();
+    await nativeCacheAdapter.storeAudioFile(
+      "song-1",
+      new Blob(["audio data"]),
+      "audio/mpeg",
+    );
+    const { resolver } = createResolver({ nativeFileResolver: nativeCacheAdapter });
+
+    const source = await resolver.resolveSongSource("song-1");
+
+    expect(source.kind).toBe("native-file");
+    expect(source).toMatchObject({
+      kind: "native-file",
+      songId: "song-1",
+    });
+    if (source.kind === "native-file") {
+      expect(typeof source.uri).toBe("string");
+      expect(source.uri.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("prefers native-file over cached blob when both exist", async () => {
+    const storage = new FakeCacheStorage();
+    const index = new FakeCacheIndex({
+      items: { [audioKey("song-1")]: audioMeta() },
+    });
+    await storage.put(audioKey("song-1"), new Blob(["web audio"]), "audio/mpeg");
+
+    const nativeCacheAdapter = new FakeNativeCacheAdapter();
+    await nativeCacheAdapter.storeAudioFile(
+      "song-1",
+      new Blob(["native audio"]),
+      "audio/mpeg",
+    );
+    const { resolver } = createResolver({
+      storage,
+      index,
+      nativeFileResolver: nativeCacheAdapter,
+    });
+
+    const source = await resolver.resolveSongSource("song-1");
+
+    expect(source.kind).toBe("native-file");
   });
 });

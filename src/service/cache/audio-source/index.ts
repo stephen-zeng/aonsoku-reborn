@@ -1,6 +1,7 @@
 import { audioUrlResolver } from "../audio-url-resolver";
 import { cacheIndexAdapter } from "../cache-index-adapter";
 import { cacheStorage } from "../cache-storage";
+import { getNativeCacheAdapter } from "../native-cache-adapter";
 import { cacheMetadataPersistence } from "../persist-meta";
 import {
   CacheAudioSourceResolver,
@@ -27,6 +28,7 @@ export const audioSourceResolver = new CacheAudioSourceResolver({
   index: cacheIndexAdapter,
   metadata: cacheMetadataPersistence,
   urlResolver: audioUrlResolver,
+  nativeFileResolver: getNativeCacheAdapter(),
   blobUrls: browserBlobUrls,
 });
 

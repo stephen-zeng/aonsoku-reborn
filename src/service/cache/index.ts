@@ -25,6 +25,7 @@ export type {
   CacheMetadataPersistence,
   CacheMetadataRecord,
   CacheStorageAdapter,
+  NativeCacheAdapter,
   NativeCachedAudioFile,
   NativeFileResolver,
 } from "./contracts";

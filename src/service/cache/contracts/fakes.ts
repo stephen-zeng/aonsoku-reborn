@@ -12,6 +12,7 @@ import type {
   CacheMetadataPersistence,
   CacheMetadataRecord,
   CacheStorageAdapter,
+  NativeCacheAdapter,
   NativeCachedAudioFile,
   NativeFileResolver,
 } from "./index";
@@ -278,6 +279,56 @@ export class FakeNativeFileResolver implements NativeFileResolver {
   }
 
   async deleteAudioFile(songId: string): Promise<boolean> {
+    return this.files.delete(songId);
+  }
+}
+
+export class FakeNativeCacheAdapter
+  implements NativeCacheAdapter
+{
+  private readonly files = new Map<
+    string,
+    NativeCachedAudioFile & { data: Blob }
+  >();
+  private nextId = 1;
+
+  async storeAudioFile(
+    songId: string,
+    data: Blob,
+    contentType: string,
+  ): Promise<NativeCachedAudioFile> {
+    const file: NativeCachedAudioFile & { data: Blob } = {
+      songId,
+      uri: `file:///native-cache/${songId}-${this.nextId++}`,
+      contentType,
+      sizeBytes: data.size,
+      lastModifiedAt: Date.now(),
+      data,
+    };
+    this.files.set(songId, file);
+    const { data: _data, ...stored } = file;
+    return stored;
+  }
+
+  async resolveAudioFile(
+    songId: string,
+  ): Promise<NativeCachedAudioFile | null> {
+    const file = this.files.get(songId);
+    if (!file) return null;
+    const { data: _data, ...stored } = file;
+    return stored;
+  }
+
+  async getAudioFileSize(songId: string): Promise<number | null> {
+    const file = this.files.get(songId);
+    return file?.sizeBytes ?? null;
+  }
+
+  async deleteAudioFile(songId: string): Promise<boolean> {
+    return this.files.delete(songId);
+  }
+
+  async evictAudioFile(songId: string): Promise<boolean> {
     return this.files.delete(songId);
   }
 }
