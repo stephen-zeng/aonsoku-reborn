@@ -18,6 +18,7 @@ import {
   shouldUseNativePlaybackBackend,
   type PlaybackBackend,
   type PlaybackBackendKind,
+  type PlaybackErrorEvent,
   type PlaybackSource,
   PlaybackSession,
 } from "@/player/playback";
@@ -454,6 +455,27 @@ export function AudioPlayer({
     return undefined;
   }, [handleAudioError, handleRadioError, isRadio, isSong]);
 
+  const handleNativeBackendError = useCallback(
+    (event: PlaybackErrorEvent) => {
+      const audio = audioRef.current;
+      if (!audio) return;
+
+      logger.info(
+        `[NativeBackend:onError] code=${event.code ?? "unknown"} | message=${event.message ?? ""} | mediaType=${isSong ? "song" : isRadio ? "radio" : "unknown"} | retryAttempt=${sessionRef.current.retryCount + 1}/5`,
+      );
+
+      if (isRadio) {
+        scheduleRetry(audio);
+        return;
+      }
+
+      if (isSong) {
+        onPlaybackError?.();
+      }
+    },
+    [audioRef, isRadio, isSong, onPlaybackError, scheduleRetry],
+  );
+
   const handleAudioErrorRef = useRef(handleAudioError);
   handleAudioErrorRef.current = handleAudioError;
 
@@ -533,6 +555,7 @@ export function AudioPlayer({
       },
     );
     const unsubscribePlay = backendEntry.backend.subscribe("play", () => {
+      sessionRef.current.handlePlayEvent();
       setStorePlayingState(true);
     });
     const unsubscribePause = backendEntry.backend.subscribe("pause", () => {
@@ -564,9 +587,10 @@ export function AudioPlayer({
 
       (onEnded as (() => void) | undefined)?.();
     });
-    const unsubscribeError = backendEntry.backend.subscribe("error", () => {
-      onPlaybackError?.();
-    });
+    const unsubscribeError = backendEntry.backend.subscribe(
+      "error",
+      handleNativeBackendError,
+    );
 
     return () => {
       unsubscribeProgress();
@@ -581,8 +605,8 @@ export function AudioPlayer({
     applyPendingResume,
     audioRef,
     getPlaybackBackendEntry,
+    handleNativeBackendError,
     onEnded,
-    onPlaybackError,
     safePlay,
     seekAudio,
     setStoreBufferedProgress,

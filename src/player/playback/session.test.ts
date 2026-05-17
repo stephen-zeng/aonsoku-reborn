@@ -145,6 +145,33 @@ describe("PlaybackSession retry orchestration", () => {
     expect(events).toHaveBeenCalledWith({ type: "retry" });
   });
 
+  it("retries native placeholder audio using store progress", () => {
+    const timeout = vi.fn((callback: () => void) => {
+      callback();
+      return 1 as unknown as ReturnType<typeof setTimeout>;
+    });
+    const session = new PlaybackSession<PlaybackSessionAudio>({
+      setTimeoutFn: timeout as typeof setTimeout,
+      clearTimeoutFn: vi.fn() as typeof clearTimeout,
+    });
+    const audio = makeAudio({ currentTime: 0, src: "" });
+    const { context } = createRetryContext(session, {
+      audio,
+      getStoreProgress: vi.fn(() => 73),
+    });
+
+    const result = session.scheduleRetry(context);
+
+    expect(result).toEqual({
+      type: "scheduled",
+      attempt: 1,
+      delay: 1000,
+      resumePosition: 73,
+    });
+    expect(context.loadAudio).toHaveBeenCalledWith(audio);
+    expect(context.playAudio).toHaveBeenCalledWith(audio, "Retry");
+  });
+
   it("does not retry when playback was paused before the timer fires", () => {
     let retryCallback: (() => void) | null = null;
     const session = new PlaybackSession<PlaybackSessionAudio>({

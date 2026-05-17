@@ -95,6 +95,8 @@ describe("Aonsoku native audio plugin skeleton", () => {
     expect(swift).toContain('private var repeatMode = "off"');
     expect(swift).toContain("private var shuffleEnabled = false");
     expect(swift).toContain("private var queueItemCount = 0");
+    expect(swift).toContain("private var currentSourceKind: String?");
+    expect(swift).toContain("private var currentRadioId: String?");
     expect(swift).toContain("@objc(AonsokuNativeAudioPlugin)");
     expect(swift).toContain(
       `public let jsName = "${NATIVE_AUDIO_PLUGIN_NAME}"`,
@@ -127,6 +129,25 @@ describe("Aonsoku native audio plugin skeleton", () => {
     ]) {
       expect(swift).toContain(`notifyListeners("${eventName}"`);
     }
+  });
+
+  it("tracks radio sources and resets native state on clear", () => {
+    const swift = readText(
+      path.join(
+        pluginRoot,
+        "ios/Sources/AonsokuNativeAudioPlugin/AonsokuNativeAudioPlugin.swift",
+      ),
+    );
+
+    expect(swift).toContain("case \"radio\":");
+    expect(swift).toContain("Invalid radio stream URL.");
+    expect(swift).toContain("self.currentSourceKind = resolvedSource.kind");
+    expect(swift).toContain("self.currentRadioId = resolvedSource.radioId");
+    expect(swift).toContain("private func resetControlState()");
+    expect(swift).toContain("repeatMode = \"off\"");
+    expect(swift).toContain("shuffleEnabled = false");
+    expect(swift).toContain("queueItemCount = 0");
+    expect(swift).toContain("queueIndex = 0");
   });
 
   it("is wired into the generated Capacitor iOS Swift package", () => {

@@ -236,4 +236,25 @@ describe("CacheAudioSourceResolver", () => {
 
     expect(source.kind).toBe("native-file");
   });
+
+  it("returns a radio descriptor without touching song cache state", () => {
+    const index = new FakeCacheIndex({
+      items: {
+        [audioKey("song-1")]: audioMeta(),
+      },
+    });
+    const { resolver } = createResolver({ index });
+
+    const source = resolver.resolveRadioSource(
+      "https://radio.example/stream",
+      "radio-1",
+    );
+
+    expect(source).toEqual({
+      kind: "radio",
+      url: "https://radio.example/stream",
+      radioId: "radio-1",
+    });
+    expect(index.hasItem(audioKey("song-1"))).toBe(true);
+  });
 });

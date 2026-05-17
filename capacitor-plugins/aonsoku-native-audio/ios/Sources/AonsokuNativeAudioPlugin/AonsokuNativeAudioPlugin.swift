@@ -34,6 +34,8 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var shuffleEnabled = false
     private var queueItemCount = 0
     private var queueIndex = 0
+    private var currentSourceKind: String?
+    private var currentRadioId: String?
 
     deinit {
         clearPlayer(sendIdleEvent: false)
@@ -46,8 +48,8 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                     throw NativeAudioPluginError.invalidSource("Missing audio source.")
                 }
 
-                let url = try self.resolveURL(from: source)
-                let item = AVPlayerItem(url: url)
+                let resolvedSource = try self.resolveSource(from: source)
+                let item = AVPlayerItem(url: resolvedSource.url)
                 let player = AVPlayer(playerItem: item)
                 let startTime = max(0, call.getDouble("startTime") ?? 0)
                 let autoplay = call.getBool("autoplay") ?? false
@@ -55,6 +57,8 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 self.clearPlayer(sendIdleEvent: false)
                 self.player = player
                 self.playerItem = item
+                self.currentSourceKind = resolvedSource.kind
+                self.currentRadioId = resolvedSource.radioId
                 self.addObservers(for: item, player: player)
                 self.addProgressObserver(to: player)
 
@@ -203,21 +207,27 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     @objc func clear(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
             self.clearPlayer(sendIdleEvent: true)
+            self.resetControlState()
             call.resolve()
         }
     }
 
-    private func resolveURL(from source: JSObject) throws -> URL {
+    private func resolveSource(from source: JSObject) throws -> ResolvedAudioSource {
         guard let kind = source["kind"] as? String else {
             throw NativeAudioPluginError.invalidSource("Missing source kind.")
         }
 
         switch kind {
-        case "stream", "radio":
+        case "stream":
             guard let urlString = source["url"] as? String, let url = URL(string: urlString) else {
                 throw NativeAudioPluginError.invalidSource("Invalid audio URL.")
             }
-            return url
+            return ResolvedAudioSource(kind: kind, url: url, radioId: nil)
+        case "radio":
+            guard let urlString = source["url"] as? String, let url = URL(string: urlString) else {
+                throw NativeAudioPluginError.invalidSource("Invalid radio stream URL.")
+            }
+            return ResolvedAudioSource(kind: kind, url: url, radioId: source["radioId"] as? String)
         case "blob":
             throw NativeAudioPluginError.unsupportedSource("Blob URLs are not supported by native iOS playback yet.")
         case "native-file":
@@ -334,11 +344,20 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         player?.replaceCurrentItem(with: nil)
         player = nil
         playerItem = nil
+        currentSourceKind = nil
+        currentRadioId = nil
 
         if sendIdleEvent {
             emitPlaybackState("idle")
             emitBuffering(false)
         }
+    }
+
+    private func resetControlState() {
+        repeatMode = "off"
+        shuffleEnabled = false
+        queueItemCount = 0
+        queueIndex = 0
     }
 
     private func emitPlaybackState(_ state: String) {
@@ -427,6 +446,12 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private func makeTime(_ seconds: Double) -> CMTime {
         CMTime(seconds: seconds, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
     }
+}
+
+private struct ResolvedAudioSource {
+    let kind: String
+    let url: URL
+    let radioId: String?
 }
 
 private enum NativeAudioPluginError: LocalizedError {

@@ -143,6 +143,26 @@ describe("NativeAudioPlaybackBackend", () => {
     });
   });
 
+  it("loads radio streams with their native radio metadata", async () => {
+    const { plugin } = createPlugin();
+    const backend = new NativeAudioPlaybackBackend(plugin);
+
+    await backend.load(
+      createUrlPlaybackSource("https://radio.example/stream", {
+        kind: "radio",
+        radioId: "radio-1",
+      }),
+    );
+
+    expect(plugin.load).toHaveBeenCalledWith({
+      source: {
+        kind: "radio",
+        url: "https://radio.example/stream",
+        radioId: "radio-1",
+      },
+    });
+  });
+
   it("maps native events to playback backend events", async () => {
     const { plugin, emit } = createPlugin();
     const backend = new NativeAudioPlaybackBackend(plugin);

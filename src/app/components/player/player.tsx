@@ -36,7 +36,11 @@ import {
   type ReplayGainParams,
   resolveReplayGainParams,
 } from "@/utils/replayGain";
-import { getAudioSourceUrl } from "@/service/cache";
+import {
+  audioSourceResolver,
+  getAudioSourceUrl,
+  type AudioSourceDescriptor,
+} from "@/service/cache";
 import { AudioPlayer } from "./audio";
 import { PlayerClearQueueButton } from "./clear-queue-button";
 import { PlayerControls } from "./controls";
@@ -112,6 +116,11 @@ export function Player() {
   const songId = song?.id;
   const { source: audioSource, resolvedSongId } = useAudioSource(song?.id);
   const audioSrc = audioSource ? getAudioSourceUrl(audioSource) : "";
+  const radioSource = useMemo<AudioSourceDescriptor | null>(() => {
+    if (!radio) return null;
+
+    return audioSourceResolver.resolveRadioSource(radio.streamUrl, radio.id);
+  }, [radio]);
 
   const getAudioRef = useCallback(() => {
     if (isRadio) return radioRef;
@@ -406,6 +415,7 @@ export function Player() {
 
       {isRadio && radio && !isRemoteControlActive && (
         <MemoAudioPlayer
+          audioSource={radioSource}
           src={radio.streamUrl}
           autoPlay={isPlaying}
           audioRef={radioRef}
