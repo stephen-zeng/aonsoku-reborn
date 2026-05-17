@@ -1,4 +1,6 @@
 import { getRuntime } from "@/utils/capabilities";
+import { logger } from "@/utils/logger";
+import { NativeQueueController } from "./native-controller";
 import type { QueueController } from "./types";
 import { WebQueueController } from "./web-controller";
 
@@ -13,8 +15,14 @@ export function getQueueController(): QueueController {
 
 function createQueueController(): QueueController {
   if (getRuntime() === "capacitor-ios") {
-    // Phase 4: NativeQueueController will be imported here
-    return new WebQueueController();
+    try {
+      return new NativeQueueController();
+    } catch (err) {
+      logger.error(
+        "[QueueController] Native controller unavailable, falling back to web",
+        err,
+      );
+    }
   }
   return new WebQueueController();
 }
