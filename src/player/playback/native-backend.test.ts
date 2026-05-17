@@ -111,6 +111,10 @@ describe("NativeAudioPlaybackBackend", () => {
     await backend.stop();
     await backend.seek(-12);
     await backend.setLoop(true);
+    await backend.setRepeatMode("all");
+    await backend.setShuffle(true);
+    await backend.skipToNext();
+    await backend.skipToPrevious();
     await backend.setVolume(0.5);
     await backend.preload(preloadSource);
 
@@ -126,6 +130,10 @@ describe("NativeAudioPlaybackBackend", () => {
     expect(plugin.stop).toHaveBeenCalledTimes(1);
     expect(plugin.seek).toHaveBeenCalledWith({ position: 0 });
     expect(plugin.setRepeatMode).toHaveBeenCalledWith({ mode: "one" });
+    expect(plugin.setRepeatMode).toHaveBeenCalledWith({ mode: "all" });
+    expect(plugin.setShuffle).toHaveBeenCalledWith({ enabled: true });
+    expect(plugin.skipToNext).toHaveBeenCalledTimes(1);
+    expect(plugin.skipToPrevious).toHaveBeenCalledTimes(1);
     expect(plugin.preload).toHaveBeenCalledWith({
       source: {
         kind: "stream",

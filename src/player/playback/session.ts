@@ -1,4 +1,6 @@
+import type { ISongList } from "@/types/playerContext";
 import { LoopState } from "@/types/playerContext";
+import { transitionHandleSongEnded } from "@/store/player/queue-transitions";
 
 export const MAX_PLAYBACK_RETRIES = 5;
 
@@ -52,12 +54,16 @@ export type PlaybackPauseDecision =
 
 export interface PlaybackEndedInput {
   loopState: LoopState;
-  userQueueRemaining: number;
+  songlist: ISongList;
 }
 
 export type PlaybackEndedDecision =
   | { type: "restart-current" }
-  | { type: "forward-ended"; hasNextInRepeatOne: boolean };
+  | {
+      type: "forward-ended";
+      action: "playNext" | "stop";
+      hasNextInRepeatOne: boolean;
+    };
 
 export class PlaybackSession<TAudio extends PlaybackSessionAudio> {
   readonly #maxRetries: number;
@@ -391,16 +397,20 @@ function getRetrySkipReason<TAudio extends PlaybackSessionAudio>(input: {
 
 export function getPlaybackEndedDecision({
   loopState,
-  userQueueRemaining,
+  songlist,
 }: PlaybackEndedInput): PlaybackEndedDecision {
-  const hasNextInRepeatOne =
-    loopState === LoopState.One ? userQueueRemaining > 0 : false;
+  const transition = transitionHandleSongEnded(songlist, loopState);
 
-  if (!hasNextInRepeatOne && loopState === LoopState.One) {
+  if (transition.action === "seekToStart") {
     return { type: "restart-current" };
   }
 
-  return { type: "forward-ended", hasNextInRepeatOne };
+  return {
+    type: "forward-ended",
+    action: transition.action,
+    hasNextInRepeatOne:
+      loopState === LoopState.One && transition.action === "playNext",
+  };
 }
 
 export function getAudioDurationSeconds(audio: PlaybackSessionAudio) {

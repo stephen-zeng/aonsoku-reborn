@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
+import type { ISongList } from "@/types/playerContext";
 import { LoopState } from "@/types/playerContext";
+import type { ISong } from "@/types/responses/song";
+import { emptyContextQueue, initSonglistState } from "@/store/player/queue-utils";
 import {
   getAudioDurationSeconds,
   getAudioProgressSnapshot,
@@ -22,6 +25,23 @@ function makeAudio(
       length: 0,
       end: vi.fn(),
     },
+    ...overrides,
+  };
+}
+
+function makeSong(id: string): ISong {
+  return { id, duration: 180 } as ISong;
+}
+
+function makeSonglist(overrides: Partial<ISongList> = {}): ISongList {
+  return {
+    ...initSonglistState(),
+    contextQueue: {
+      ...emptyContextQueue(),
+      songs: [makeSong("song-1")],
+      currentIndex: 0,
+    },
+    currentSong: makeSong("song-1"),
     ...overrides,
   };
 }
@@ -288,25 +308,39 @@ describe("PlaybackSession event decisions", () => {
     expect(
       getPlaybackEndedDecision({
         loopState: LoopState.One,
-        userQueueRemaining: 0,
+        songlist: makeSonglist(),
       }),
     ).toEqual({ type: "restart-current" });
     expect(
       getPlaybackEndedDecision({
         loopState: LoopState.One,
-        userQueueRemaining: 1,
+        songlist: makeSonglist({
+          userQueue: { songs: [makeSong("queued")] },
+        }),
       }),
     ).toEqual({
       type: "forward-ended",
+      action: "playNext",
       hasNextInRepeatOne: true,
     });
     expect(
       getPlaybackEndedDecision({
         loopState: LoopState.All,
-        userQueueRemaining: 0,
+        songlist: makeSonglist(),
       }),
     ).toEqual({
       type: "forward-ended",
+      action: "playNext",
+      hasNextInRepeatOne: false,
+    });
+    expect(
+      getPlaybackEndedDecision({
+        loopState: LoopState.Off,
+        songlist: makeSonglist(),
+      }),
+    ).toEqual({
+      type: "forward-ended",
+      action: "stop",
       hasNextInRepeatOne: false,
     });
   });

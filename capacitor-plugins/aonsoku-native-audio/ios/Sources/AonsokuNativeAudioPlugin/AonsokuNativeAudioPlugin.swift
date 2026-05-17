@@ -30,6 +30,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var timeObserverToken: Any?
     private var endObserver: NSObjectProtocol?
     private var failedEndObserver: NSObjectProtocol?
+    private var repeatMode = "off"
+    private var shuffleEnabled = false
+    private var queueItemCount = 0
+    private var queueIndex = 0
 
     deinit {
         clearPlayer(sendIdleEvent: false)
@@ -123,23 +127,69 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func setRepeatMode(_ call: CAPPluginCall) {
-        call.resolve()
+        DispatchQueue.main.async {
+            let mode = call.getString("mode") ?? "off"
+            guard ["off", "one", "all"].contains(mode) else {
+                self.reject(call, code: "invalid_repeat_mode", message: "Unsupported repeat mode: \(mode).")
+                return
+            }
+
+            self.repeatMode = mode
+            call.resolve()
+        }
     }
 
     @objc func setShuffle(_ call: CAPPluginCall) {
-        call.resolve()
+        DispatchQueue.main.async {
+            self.shuffleEnabled = call.getBool("enabled") ?? false
+            call.resolve()
+        }
     }
 
     @objc func setQueue(_ call: CAPPluginCall) {
-        call.resolve()
+        DispatchQueue.main.async {
+            let items = call.getArray("items") ?? []
+            let requestedIndex = call.getInt("index") ?? 0
+
+            guard requestedIndex >= 0 else {
+                self.reject(call, code: "invalid_queue", message: "Queue index must be non-negative.")
+                return
+            }
+
+            if items.isEmpty {
+                guard requestedIndex == 0 else {
+                    self.reject(call, code: "invalid_queue", message: "Empty native queue must use index 0.")
+                    return
+                }
+                self.queueItemCount = 0
+                self.queueIndex = 0
+                call.resolve()
+                return
+            }
+
+            guard requestedIndex < items.count else {
+                self.reject(call, code: "invalid_queue", message: "Queue index is outside the native queue.")
+                return
+            }
+
+            self.queueItemCount = items.count
+            self.queueIndex = requestedIndex
+            call.resolve()
+        }
     }
 
     @objc func skipToNext(_ call: CAPPluginCall) {
-        call.resolve()
+        DispatchQueue.main.async {
+            self.notifyListeners("remoteCommand", data: ["command": "next"])
+            call.resolve()
+        }
     }
 
     @objc func skipToPrevious(_ call: CAPPluginCall) {
-        call.resolve()
+        DispatchQueue.main.async {
+            self.notifyListeners("remoteCommand", data: ["command": "previous"])
+            call.resolve()
+        }
     }
 
     @objc func updateMetadata(_ call: CAPPluginCall) {

@@ -1,3 +1,5 @@
+import { LoopState } from "@/types/playerContext";
+
 export type PlaybackSource =
   | {
       kind: "stream";
@@ -58,6 +60,8 @@ export type PlaybackBackendListener<TEvent extends PlaybackBackendEvent> = (
 
 export type UnsubscribePlaybackEvent = () => void;
 
+export type PlaybackRepeatMode = "off" | "one" | "all";
+
 export interface PlaybackBackend {
   load(source: PlaybackSource): void | Promise<void>;
   play(): Promise<void>;
@@ -65,6 +69,10 @@ export interface PlaybackBackend {
   stop(): void | Promise<void>;
   seek(seconds: number): void | Promise<void>;
   setLoop(enabled: boolean): void | Promise<void>;
+  setRepeatMode(mode: PlaybackRepeatMode): void | Promise<void>;
+  setShuffle(enabled: boolean): void | Promise<void>;
+  skipToNext(): void | Promise<void>;
+  skipToPrevious(): void | Promise<void>;
   setVolume(value: number): void | Promise<void>;
   preload(source: PlaybackSource): void | Promise<void>;
   dispose(): void;
@@ -93,4 +101,17 @@ export function createUrlPlaybackSource(
   }
 
   return { kind, url, songId: options.songId };
+}
+
+export function playbackRepeatModeFromLoopState(
+  loopState: LoopState,
+): PlaybackRepeatMode {
+  switch (loopState) {
+    case LoopState.All:
+      return "all";
+    case LoopState.One:
+      return "one";
+    case LoopState.Off:
+      return "off";
+  }
 }

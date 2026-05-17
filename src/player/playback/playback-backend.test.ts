@@ -1,11 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
+import { LoopState } from "@/types/playerContext";
 import {
   createUrlPlaybackSource,
+  getRegisteredPlaybackBackend,
   getPlaybackSourceUrl,
+  playbackRepeatModeFromLoopState,
+  registerPlaybackBackend,
+  seekPlaybackTarget,
   type PlaybackBackend,
   type PlaybackBackendEvent,
   type PlaybackBackendEvents,
   type PlaybackBackendListener,
+  type PlaybackRepeatMode,
   type PlaybackSource,
   WebAudioPlaybackBackend,
 } from ".";
@@ -16,6 +22,10 @@ class MemoryPlaybackBackend implements PlaybackBackend {
   isPlaying = false;
   currentTime = 0;
   loop = false;
+  repeatMode: PlaybackRepeatMode = "off";
+  shuffle = false;
+  skipNextCount = 0;
+  skipPreviousCount = 0;
   volume = 1;
   disposed = false;
   readonly listeners = new Map<
@@ -46,6 +56,22 @@ class MemoryPlaybackBackend implements PlaybackBackend {
 
   setLoop(enabled: boolean) {
     this.loop = enabled;
+  }
+
+  setRepeatMode(mode: PlaybackRepeatMode) {
+    this.repeatMode = mode;
+  }
+
+  setShuffle(enabled: boolean) {
+    this.shuffle = enabled;
+  }
+
+  skipToNext() {
+    this.skipNextCount += 1;
+  }
+
+  skipToPrevious() {
+    this.skipPreviousCount += 1;
   }
 
   setVolume(value: number) {
@@ -159,7 +185,7 @@ describe("playback source descriptors", () => {
 });
 
 describe("PlaybackBackend contract", () => {
-  it("supports loading, transport controls, seeking, loop, volume, and preload", async () => {
+  it("supports loading, transport controls, queue controls, seeking, volume, and preload", async () => {
     const backend = new MemoryPlaybackBackend();
     const source = createUrlPlaybackSource("https://server/song.mp3");
     const preloadSource = createUrlPlaybackSource("https://server/next.mp3");
@@ -168,6 +194,10 @@ describe("PlaybackBackend contract", () => {
     await backend.play();
     backend.seek(42);
     backend.setLoop(true);
+    backend.setRepeatMode("all");
+    backend.setShuffle(true);
+    backend.skipToNext();
+    backend.skipToPrevious();
     backend.setVolume(0.4);
     backend.preload(preloadSource);
 
@@ -175,12 +205,22 @@ describe("PlaybackBackend contract", () => {
     expect(backend.isPlaying).toBe(true);
     expect(backend.currentTime).toBe(42);
     expect(backend.loop).toBe(true);
+    expect(backend.repeatMode).toBe("all");
+    expect(backend.shuffle).toBe(true);
+    expect(backend.skipNextCount).toBe(1);
+    expect(backend.skipPreviousCount).toBe(1);
     expect(backend.volume).toBe(0.4);
     expect(backend.preloadedSource).toBe(preloadSource);
 
     backend.stop();
     expect(backend.isPlaying).toBe(false);
     expect(backend.currentTime).toBe(0);
+  });
+
+  it("maps player loop state to backend repeat modes", () => {
+    expect(playbackRepeatModeFromLoopState(LoopState.Off)).toBe("off");
+    expect(playbackRepeatModeFromLoopState(LoopState.All)).toBe("all");
+    expect(playbackRepeatModeFromLoopState(LoopState.One)).toBe("one");
   });
 
   it("subscribes and unsubscribes typed playback events", () => {
@@ -214,6 +254,22 @@ describe("PlaybackBackend contract", () => {
       bufferedTime: 60,
     });
     expect(bufferingListener).toHaveBeenCalledWith({ isBuffering: true });
+  });
+
+  it("registers active backends for non-DOM seek requests", () => {
+    const audio = makeAudio();
+    const backend = new MemoryPlaybackBackend();
+    const unregister = registerPlaybackBackend(audio, backend);
+
+    expect(getRegisteredPlaybackBackend(audio)).toBe(backend);
+    seekPlaybackTarget(audio, 36);
+    expect(backend.currentTime).toBe(36);
+    expect(audio.currentTime).toBe(0);
+
+    unregister();
+    expect(getRegisteredPlaybackBackend(audio)).toBeNull();
+    seekPlaybackTarget(audio, 12);
+    expect(audio.currentTime).toBe(12);
   });
 });
 

@@ -92,6 +92,9 @@ describe("Aonsoku native audio plugin skeleton", () => {
 
     expect(swift).toContain("import AVFoundation");
     expect(swift).toContain("private var player: AVPlayer?");
+    expect(swift).toContain('private var repeatMode = "off"');
+    expect(swift).toContain("private var shuffleEnabled = false");
+    expect(swift).toContain("private var queueItemCount = 0");
     expect(swift).toContain("@objc(AonsokuNativeAudioPlugin)");
     expect(swift).toContain(
       `public let jsName = "${NATIVE_AUDIO_PLUGIN_NAME}"`,
@@ -120,6 +123,7 @@ describe("Aonsoku native audio plugin skeleton", () => {
       "bufferingChanged",
       "ended",
       "error",
+      "remoteCommand",
     ]) {
       expect(swift).toContain(`notifyListeners("${eventName}"`);
     }

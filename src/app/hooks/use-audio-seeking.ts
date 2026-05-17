@@ -1,4 +1,5 @@
 import { RefObject, useCallback, useState } from "react";
+import { seekPlaybackTarget } from "@/player/playback/backend-registry";
 import {
   useIsRemoteControlActive,
   usePlayerActions,
@@ -22,7 +23,7 @@ export function useAudioSeeking({ audioRef }: UseAudioSeekingOptions) {
       const audio = audioRef.current;
       if (audio) {
         logger.debug("Seeking to:", value);
-        audio.currentTime = value;
+        seekPlaybackTarget(audio, value);
       }
     },
     [audioRef, isRemoteControlActive],

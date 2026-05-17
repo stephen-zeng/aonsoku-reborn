@@ -11,6 +11,7 @@ import {
   type PlaybackBackendEvents,
   type PlaybackBackendListener,
   type PlaybackErrorEvent,
+  type PlaybackRepeatMode,
   type PlaybackSource,
   type UnsubscribePlaybackEvent,
 } from "./types";
@@ -67,8 +68,27 @@ export class NativeAudioPlaybackBackend implements PlaybackBackend {
   }
 
   setLoop(enabled: boolean) {
+    return this.setRepeatMode(enabled ? "one" : "off");
+  }
+
+  setRepeatMode(mode: PlaybackRepeatMode) {
     this.#assertActive();
-    return this.#plugin.setRepeatMode({ mode: enabled ? "one" : "off" });
+    return this.#plugin.setRepeatMode({ mode });
+  }
+
+  setShuffle(enabled: boolean) {
+    this.#assertActive();
+    return this.#plugin.setShuffle({ enabled });
+  }
+
+  skipToNext() {
+    this.#assertActive();
+    return this.#plugin.skipToNext();
+  }
+
+  skipToPrevious() {
+    this.#assertActive();
+    return this.#plugin.skipToPrevious();
   }
 
   setVolume(_value: number) {

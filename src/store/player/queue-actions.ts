@@ -1,5 +1,6 @@
 import type { Draft } from "immer";
 import { LanControlMessageType } from "@/types/lanControl";
+import { seekPlaybackTarget } from "@/player/playback/backend-registry";
 import type {
   IPlayerActions,
   IPlayerContext,
@@ -35,6 +36,7 @@ import {
   setNextOnUserQueue,
   trimQueueToWindow,
 } from "./queue-utils";
+import { transitionHandleSongEnded } from "./queue-transitions";
 
 interface SharedDeps {
   set: (fn: (state: Draft<IPlayerContext>) => void) => void;
@@ -730,7 +732,7 @@ export function createQueueActions(shared: SharedDeps) {
         lastPrevSongTime = Date.now();
         const audioRef = get().playerState.audioPlayerRef;
         if (audioRef) {
-          audioRef.currentTime = 0;
+          seekPlaybackTarget(audioRef, 0);
         }
         return;
       }
@@ -848,26 +850,19 @@ export function createQueueActions(shared: SharedDeps) {
       if (isRemoteActive()) return;
       const { loopState } = get().playerState;
       const songlist = get().songlist;
-
-      const userQueueRemaining = songlist.isInUserQueue
-        ? songlist.userQueue.songs.length - 1
-        : songlist.userQueue.songs.length;
-      const hasNext =
-        loopState === LoopState.One
-          ? userQueueRemaining > 0
-          : hasNextEffectiveSong(songlist, loopState);
+      const transition = transitionHandleSongEnded(songlist, loopState);
 
       const currentSongId = getCurrentSong(songlist)?.id;
       logger.info(
-        `[handleSongEnded] loopState=${loopState} | hasNext=${hasNext} | currentSongId=${currentSongId} | isRemote=${isRemoteActive()}`,
+        `[handleSongEnded] loopState=${loopState} | action=${transition.action} | currentSongId=${currentSongId} | isRemote=${isRemoteActive()}`,
       );
 
-      if (hasNext) {
+      if (transition.action === "playNext") {
         logger.info(
           `[handleSongEnded → playNextSong] | songId=${currentSongId}`,
         );
         get().actions.playNextSong();
-      } else if (loopState === LoopState.One) {
+      } else if (transition.action === "seekToStart") {
         logger.info(
           `[handleSongEnded → loopOneRestart] | seekToStart=true | isPlaying=true | songId=${currentSongId}`,
         );

@@ -7,6 +7,7 @@ import {
   type PlaybackBackendListener,
   type PlaybackErrorEvent,
   type PlaybackProgressEvent,
+  type PlaybackRepeatMode,
   type PlaybackSource,
   type UnsubscribePlaybackEvent,
 } from "./types";
@@ -78,6 +79,23 @@ export class WebAudioPlaybackBackend implements PlaybackBackend {
   setLoop(enabled: boolean) {
     this.#assertActive();
     this.#audio.loop = enabled;
+  }
+
+  setRepeatMode(_mode: PlaybackRepeatMode) {
+    this.#assertActive();
+  }
+
+  setShuffle(_enabled: boolean) {
+    this.#assertActive();
+  }
+
+  skipToNext() {
+    this.#assertActive();
+  }
+
+  skipToPrevious() {
+    this.#assertActive();
+    this.seek(0);
   }
 
   setVolume(value: number) {

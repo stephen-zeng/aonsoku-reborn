@@ -13,6 +13,8 @@ import {
   createPlaybackBackend,
   createUrlPlaybackSource,
   getPlaybackEndedDecision,
+  playbackRepeatModeFromLoopState,
+  registerPlaybackBackend,
   shouldUseNativePlaybackBackend,
   type PlaybackBackend,
   type PlaybackBackendKind,
@@ -28,7 +30,9 @@ import {
   useIsRemoteControlActive,
   usePlayerActions,
   usePlayerIsPlaying,
+  usePlayerLoop,
   usePlayerMediaType,
+  usePlayerShuffle,
   usePlayerStore,
   usePlayerVolume,
   useReplayGainActions,
@@ -73,6 +77,8 @@ export function AudioPlayer({
   const { setReplayGainEnabled, setReplayGainError } = useReplayGainActions();
   const { volume } = usePlayerVolume();
   const isPlaying = usePlayerIsPlaying();
+  const loopState = usePlayerLoop();
+  const isShuffleActive = usePlayerShuffle();
   const seekToStart = usePlayerStore((s) => s.playerState.seekToStart);
   const isRemoteControlActive = useIsRemoteControlActive();
 
@@ -84,6 +90,7 @@ export function AudioPlayer({
     audio: HTMLAudioElement;
     backend: PlaybackBackend;
     kind: PlaybackBackendKind;
+    unregisterBackend: () => void;
   } | null>(null);
   const sessionRef = useRef(new PlaybackSession<HTMLAudioElement>());
 
@@ -105,6 +112,7 @@ export function AudioPlayer({
       if (!audio) return null;
 
       if (!backendRef.current || backendRef.current.audio !== audio) {
+        backendRef.current?.unregisterBackend();
         backendRef.current?.backend.dispose();
         const selection = createPlaybackBackend(audio);
         if (selection.fallbackReason) {
@@ -116,6 +124,7 @@ export function AudioPlayer({
           audio,
           backend: selection.backend,
           kind: selection.kind,
+          unregisterBackend: registerPlaybackBackend(audio, selection.backend),
         };
       }
 
@@ -464,10 +473,27 @@ export function AudioPlayer({
   useEffect(() => {
     return () => {
       sessionRef.current.dispose();
+      backendRef.current?.unregisterBackend();
       backendRef.current?.backend.dispose();
       backendRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const backend = getPlaybackBackend(audio);
+    if (!backend) return;
+
+    const repeatMode = playbackRepeatModeFromLoopState(loopState);
+    Promise.resolve(backend.setRepeatMode(repeatMode)).catch((error) => {
+      logger.info("[PlaybackBackend] repeat sync failed", error);
+    });
+    Promise.resolve(backend.setShuffle(isShuffleActive)).catch((error) => {
+      logger.info("[PlaybackBackend] shuffle sync failed", error);
+    });
+  }, [audioRef, getPlaybackBackend, isShuffleActive, loopState]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -517,13 +543,9 @@ export function AudioPlayer({
       const loopState = state.playerState.loopState;
       const songlist = state.songlist;
 
-      const userQueueRemaining = songlist.isInUserQueue
-        ? songlist.userQueue.songs.length - 1
-        : songlist.userQueue.songs.length;
-
       const decision = getPlaybackEndedDecision({
         loopState,
-        userQueueRemaining,
+        songlist,
       });
 
       if (state.songlist.currentSong) {
@@ -801,17 +823,13 @@ export function AudioPlayer({
         const loopState = state.playerState.loopState;
         const songlist = state.songlist;
 
-        const userQueueRemaining = songlist.isInUserQueue
-          ? songlist.userQueue.songs.length - 1
-          : songlist.userQueue.songs.length;
-
         const decision = getPlaybackEndedDecision({
           loopState,
-          userQueueRemaining,
+          songlist,
         });
         const hasNext =
           decision.type === "forward-ended"
-            ? decision.hasNextInRepeatOne
+            ? decision.action === "playNext"
             : false;
 
         logger.info(
