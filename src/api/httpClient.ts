@@ -2,7 +2,9 @@ import omit from "lodash/omit";
 import { markServerUnreachable } from "@/app/hooks/use-network-status";
 import { useAppStore } from "@/store/app.store";
 import type { CoverArt } from "@/types/coverArtType";
+import { getRuntime } from "@/utils/capabilities";
 import { AppRequestError } from "./errors";
+import { nativeHttpClient } from "./nativeHttpClient";
 import {
   buildAvatarUrl as _buildAvatarUrl,
   buildCoverArtUrl as _buildCoverArtUrl,
@@ -94,6 +96,10 @@ export async function httpClient<T>(
   path: string,
   options: FetchOptions,
 ): Promise<{ count: number; data: T }> {
+  if (getRuntime() === "capacitor-ios") {
+    return nativeHttpClient<T>(path, options);
+  }
+
   const url = buildUrl(
     path,
     getAuthConfig(),
@@ -112,6 +118,11 @@ export async function httpClient<T>(
 }
 
 export function getAvatarUrl(username: string, size?: string): string {
+  if (getRuntime() === "capacitor-ios") {
+    const params = new URLSearchParams({ username });
+    if (size) params.set("size", size);
+    return `aonsoku-media://getAvatar?${params.toString()}`;
+  }
   return _buildAvatarUrl(getAuthConfig(), username, size);
 }
 
@@ -120,6 +131,13 @@ export function getCoverArtUrl(
   type: CoverArt = "album",
   size = "300",
 ): string {
+  if (getRuntime() === "capacitor-ios") {
+    if (!id) {
+      type = type === "artist" ? "artist" : "album";
+      return `/default_${type}_art.png`;
+    }
+    return `aonsoku-media://getCoverArt?id=${id}&size=${size}`;
+  }
   return _buildCoverArtUrl(getAuthConfig(), id, type, size);
 }
 
@@ -128,5 +146,11 @@ export function getSongStreamUrl(
   maxBitRate?: string,
   format?: string,
 ) {
+  if (getRuntime() === "capacitor-ios") {
+    const params = new URLSearchParams({ id });
+    if (maxBitRate) params.set("maxBitRate", maxBitRate);
+    if (format) params.set("format", format);
+    return `aonsoku-media://stream?${params.toString()}`;
+  }
   return _buildSongStreamUrl(getAuthConfig(), id, maxBitRate, format);
 }
