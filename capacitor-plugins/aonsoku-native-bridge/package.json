@@ -1,0 +1,18 @@
+{
+  "name": "@aonsoku/native-bridge",
+  "version": "0.0.0",
+  "description": "Capacitor native bridge for Aonsoku — Subsonic API proxy, Keychain credential storage, and media URL scheme handler.",
+  "type": "module",
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/definitions.ts",
+  "files": ["ios/Sources", "src", "Package.swift"],
+  "peerDependencies": {
+    "@capacitor/core": ">=8.0.0"
+  },
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    }
+  }
+}

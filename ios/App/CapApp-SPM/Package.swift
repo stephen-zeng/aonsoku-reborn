@@ -13,6 +13,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.3.4"),
         .package(name: "AonsokuNativeAudio", path: "../../../node_modules/@aonsoku/native-audio"),
+        .package(name: "AonsokuNativeBridge", path: "../../../node_modules/@aonsoku/native-bridge"),
         .package(name: "CapacitorKeyboard", path: "../../../node_modules/@capacitor/keyboard")
     ],
     targets: [
@@ -22,6 +23,7 @@ let package = Package(
                 .product(name: "Capacitor", package: "capacitor-swift-pm"),
                 .product(name: "Cordova", package: "capacitor-swift-pm"),
                 .product(name: "AonsokuNativeAudio", package: "AonsokuNativeAudio"),
+                .product(name: "AonsokuNativeBridge", package: "AonsokuNativeBridge"),
                 .product(name: "CapacitorKeyboard", package: "CapacitorKeyboard")
             ]
         )

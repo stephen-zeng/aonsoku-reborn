@@ -36,3 +36,4 @@ env-config.js
 out/
 dist/
 coverage/
+.build/
