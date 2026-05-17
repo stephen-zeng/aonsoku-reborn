@@ -181,7 +181,8 @@ private final class MediaSchemeTaskState {
 
         guard !isStopped, !isCompleted else { return false }
 
-        schemeTask.didReceive(response)
+        let task = schemeTask
+        DispatchQueue.main.async { task.didReceive(response) }
         return true
     }
 
@@ -191,7 +192,8 @@ private final class MediaSchemeTaskState {
 
         guard !isStopped, !isCompleted else { return }
 
-        schemeTask.didReceive(data)
+        let task = schemeTask
+        DispatchQueue.main.async { task.didReceive(data) }
     }
 
     @discardableResult
@@ -202,7 +204,8 @@ private final class MediaSchemeTaskState {
         guard !isStopped, !isCompleted else { return false }
 
         isCompleted = true
-        schemeTask.didFinish()
+        let task = schemeTask
+        DispatchQueue.main.async { task.didFinish() }
         return true
     }
 
@@ -214,7 +217,8 @@ private final class MediaSchemeTaskState {
         guard !isStopped, !isCompleted else { return false }
 
         isCompleted = true
-        schemeTask.didFailWithError(error)
+        let task = schemeTask
+        DispatchQueue.main.async { task.didFailWithError(error) }
         return true
     }
 }
