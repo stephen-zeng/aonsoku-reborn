@@ -14,6 +14,7 @@ let package = Package(
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.3.4"),
         .package(name: "AonsokuNativeAudio", path: "../../../node_modules/@aonsoku/native-audio"),
         .package(name: "AonsokuNativeBridge", path: "../../../node_modules/@aonsoku/native-bridge"),
+        .package(name: "AonsokuNativeData", path: "../../../node_modules/@aonsoku/native-data"),
         .package(name: "CapacitorKeyboard", path: "../../../node_modules/@capacitor/keyboard")
     ],
     targets: [
@@ -24,6 +25,7 @@ let package = Package(
                 .product(name: "Cordova", package: "capacitor-swift-pm"),
                 .product(name: "AonsokuNativeAudio", package: "AonsokuNativeAudio"),
                 .product(name: "AonsokuNativeBridge", package: "AonsokuNativeBridge"),
+                .product(name: "AonsokuNativeData", package: "AonsokuNativeData"),
                 .product(name: "CapacitorKeyboard", package: "CapacitorKeyboard")
             ]
         )

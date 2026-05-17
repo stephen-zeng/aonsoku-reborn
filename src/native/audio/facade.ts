@@ -157,6 +157,16 @@ class UnavailableNativeAudioWeb extends WebPlugin implements NativeAudioPlugin {
       createNativeAudioUnavailableError("clearScrobbleBuffer"),
     );
   }
+
+  downloadAudioFile(): Promise<void> {
+    return Promise.reject(
+      createNativeAudioUnavailableError("downloadAudioFile"),
+    );
+  }
+
+  cancelDownload(): Promise<void> {
+    return Promise.reject(createNativeAudioUnavailableError("cancelDownload"));
+  }
 }
 
 export const AonsokuNativeAudio = registerPlugin<NativeAudioPlugin>(
