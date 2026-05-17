@@ -2,6 +2,8 @@ import { Capacitor, registerPlugin, WebPlugin } from "@capacitor/core";
 import type { PluginListenerHandle } from "@capacitor/core";
 import {
   NATIVE_AUDIO_PLUGIN_NAME,
+  type NativeAddToUserQueueOptions,
+  type NativeAuthConfig,
   type NativeAudioEventName,
   type NativeAudioEvents,
   type NativeAudioFileOptions,
@@ -14,6 +16,9 @@ import {
   type NativeAudioShuffleOptions,
   type NativeAudioSource,
   type NativeAudioStoreFileOptions,
+  type NativePlayAtIndexOptions,
+  type NativeRemoveFromUserQueueOptions,
+  type NativeSetContextQueueOptions,
 } from "./types";
 
 export type NativeAudioUnavailableReason =
@@ -112,6 +117,50 @@ class UnavailableNativeAudioWeb extends WebPlugin implements NativeAudioPlugin {
 
   clearAudioFiles() {
     return Promise.reject(createNativeAudioUnavailableError("clearAudioFiles"));
+  }
+
+  setContextQueue(_options: NativeSetContextQueueOptions): Promise<void> {
+    return Promise.reject(createNativeAudioUnavailableError("setContextQueue"));
+  }
+
+  addToUserQueue(_options: NativeAddToUserQueueOptions): Promise<void> {
+    return Promise.reject(createNativeAudioUnavailableError("addToUserQueue"));
+  }
+
+  removeFromUserQueue(
+    _options: NativeRemoveFromUserQueueOptions,
+  ): Promise<void> {
+    return Promise.reject(
+      createNativeAudioUnavailableError("removeFromUserQueue"),
+    );
+  }
+
+  clearUserQueue(): Promise<void> {
+    return Promise.reject(createNativeAudioUnavailableError("clearUserQueue"));
+  }
+
+  playAtIndex(_options: NativePlayAtIndexOptions): Promise<void> {
+    return Promise.reject(createNativeAudioUnavailableError("playAtIndex"));
+  }
+
+  getFullState() {
+    return Promise.reject(createNativeAudioUnavailableError("getFullState"));
+  }
+
+  setAuthConfig(_options: NativeAuthConfig): Promise<void> {
+    return Promise.reject(createNativeAudioUnavailableError("setAuthConfig"));
+  }
+
+  getScrobbleBuffer() {
+    return Promise.reject(
+      createNativeAudioUnavailableError("getScrobbleBuffer"),
+    );
+  }
+
+  clearScrobbleBuffer(): Promise<void> {
+    return Promise.reject(
+      createNativeAudioUnavailableError("clearScrobbleBuffer"),
+    );
   }
 }
 

@@ -96,6 +96,106 @@ export interface NativeAudioClearFilesResult {
   deletedCount: number;
 }
 
+// --- Native Queue Control Types ---
+
+export interface NativeQueueSong {
+  id: string;
+  title: string;
+  artist: string;
+  artistId?: string;
+  album: string;
+  albumId?: string;
+  duration: number;
+  coverArtId?: string;
+  streamUrl: string;
+  cachedFileUri?: string;
+}
+
+export interface NativeSetContextQueueOptions {
+  songs: NativeQueueSong[];
+  currentIndex: number;
+  sourceId?: NativeQueueSourceId | null;
+  sourceName?: string | null;
+  autoplay?: boolean;
+  startTime?: number;
+}
+
+export type NativeQueueSourceId =
+  | { type: "album"; id: string }
+  | { type: "playlist"; id: string }
+  | { type: "radio"; id: string }
+  | { type: "artist"; id: string }
+  | { type: "genre"; id: string };
+
+export interface NativeAddToUserQueueOptions {
+  songs: NativeQueueSong[];
+  position: "next" | "last";
+}
+
+export interface NativeRemoveFromUserQueueOptions {
+  indices: number[];
+}
+
+export interface NativePlayAtIndexOptions {
+  index: number;
+  startTime?: number;
+}
+
+export interface NativeAuthConfig {
+  serverUrl: string;
+  username: string;
+  password: string;
+  authType: "token" | "password";
+  protocolVersion?: string;
+}
+
+export interface NativeFullState {
+  contextQueue: {
+    songs: NativeQueueSong[];
+    currentIndex: number;
+    sourceId: NativeQueueSourceId | null;
+    sourceName: string | null;
+  };
+  userQueue: NativeQueueSong[];
+  isInUserQueue: boolean;
+  isShuffleActive: boolean;
+  loopState: "off" | "one" | "all";
+  isPlaying: boolean;
+  currentTime: number;
+  duration: number;
+  currentSongId: string | null;
+}
+
+export interface NativeScrobbleEntry {
+  songId: string;
+  playedDurationMs: number;
+  timestamp: number;
+}
+
+export interface NativeScrobbleBufferResult {
+  entries: NativeScrobbleEntry[];
+}
+
+// --- Native Queue Control Events ---
+
+export interface NativeAudioQueueStateChangedEvent {
+  requestId?: string;
+  currentIndex: number;
+  songId: string;
+  reason: "next" | "previous" | "ended" | "skip";
+}
+
+export interface NativeAudioQueueContentsChangedEvent {
+  requestId?: string;
+  reason: "shuffle" | "unshuffle" | "user-queue-consumed" | "queue-edit";
+}
+
+export interface NativeAudioScrobbleEvent {
+  songId: string;
+  playedDurationMs: number;
+  timestamp: number;
+}
+
 export interface NativeAudioPlaybackStateChangedEvent {
   requestId?: string;
   state:
@@ -171,6 +271,9 @@ export interface NativeAudioEvents {
   remoteCommand: NativeAudioRemoteCommandEvent;
   interruptionChanged: NativeAudioInterruptionChangedEvent;
   routeChanged: NativeAudioRouteChangedEvent;
+  queueStateChanged: NativeAudioQueueStateChangedEvent;
+  queueContentsChanged: NativeAudioQueueContentsChangedEvent;
+  scrobbleEvent: NativeAudioScrobbleEvent;
 }
 
 export type NativeAudioEventName = keyof NativeAudioEvents;
@@ -202,6 +305,18 @@ export interface AonsokuNativeAudioPlugin extends Plugin {
     options: NativeAudioFileOptions,
   ): Promise<NativeAudioDeleteFileResult>;
   clearAudioFiles(): Promise<NativeAudioClearFilesResult>;
+
+  // Native Queue Control
+  setContextQueue(options: NativeSetContextQueueOptions): Promise<void>;
+  addToUserQueue(options: NativeAddToUserQueueOptions): Promise<void>;
+  removeFromUserQueue(options: NativeRemoveFromUserQueueOptions): Promise<void>;
+  clearUserQueue(): Promise<void>;
+  playAtIndex(options: NativePlayAtIndexOptions): Promise<void>;
+  getFullState(): Promise<NativeFullState>;
+  setAuthConfig(options: NativeAuthConfig): Promise<void>;
+  getScrobbleBuffer(): Promise<NativeScrobbleBufferResult>;
+  clearScrobbleBuffer(): Promise<void>;
+
   addListener<TEvent extends NativeAudioEventName>(
     eventName: TEvent,
     listenerFunc: (event: NativeAudioEvents[TEvent]) => void,

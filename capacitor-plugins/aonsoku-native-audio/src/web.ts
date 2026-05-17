@@ -1,6 +1,8 @@
 import { WebPlugin } from "@capacitor/core";
 import type {
   AonsokuNativeAudioPlugin,
+  NativeAddToUserQueueOptions,
+  NativeAuthConfig,
   NativeAudioFileOptions,
   NativeAudioLoadOptions,
   NativeAudioMetadata,
@@ -10,6 +12,9 @@ import type {
   NativeAudioShuffleOptions,
   NativeAudioSource,
   NativeAudioStoreFileOptions,
+  NativePlayAtIndexOptions,
+  NativeRemoveFromUserQueueOptions,
+  NativeSetContextQueueOptions,
 } from "./definitions";
 import { NATIVE_AUDIO_PLUGIN_NAME } from "./definitions";
 
@@ -97,5 +102,49 @@ export class AonsokuNativeAudioWeb
 
   clearAudioFiles() {
     return Promise.reject(createNativeAudioUnavailableError("clearAudioFiles"));
+  }
+
+  setContextQueue(_options: NativeSetContextQueueOptions): Promise<void> {
+    return Promise.reject(createNativeAudioUnavailableError("setContextQueue"));
+  }
+
+  addToUserQueue(_options: NativeAddToUserQueueOptions): Promise<void> {
+    return Promise.reject(createNativeAudioUnavailableError("addToUserQueue"));
+  }
+
+  removeFromUserQueue(
+    _options: NativeRemoveFromUserQueueOptions,
+  ): Promise<void> {
+    return Promise.reject(
+      createNativeAudioUnavailableError("removeFromUserQueue"),
+    );
+  }
+
+  clearUserQueue(): Promise<void> {
+    return Promise.reject(createNativeAudioUnavailableError("clearUserQueue"));
+  }
+
+  playAtIndex(_options: NativePlayAtIndexOptions): Promise<void> {
+    return Promise.reject(createNativeAudioUnavailableError("playAtIndex"));
+  }
+
+  getFullState() {
+    return Promise.reject(createNativeAudioUnavailableError("getFullState"));
+  }
+
+  setAuthConfig(_options: NativeAuthConfig): Promise<void> {
+    return Promise.reject(createNativeAudioUnavailableError("setAuthConfig"));
+  }
+
+  getScrobbleBuffer() {
+    return Promise.reject(
+      createNativeAudioUnavailableError("getScrobbleBuffer"),
+    );
+  }
+
+  clearScrobbleBuffer(): Promise<void> {
+    return Promise.reject(
+      createNativeAudioUnavailableError("clearScrobbleBuffer"),
+    );
   }
 }
