@@ -29,6 +29,25 @@ const nativeAudioMethods = [
   "clearAudioFiles",
 ] as const;
 
+const nativeAudioEventNames = [
+  "playbackStateChanged",
+  "progress",
+  "durationChanged",
+  "bufferingChanged",
+  "ended",
+  "error",
+  "remoteCommand",
+  "interruptionChanged",
+  "routeChanged",
+] as const;
+
+const nativeAudioSourceKinds = [
+  "stream",
+  "blob",
+  "native-file",
+  "radio",
+] as const;
+
 interface PackageJson {
   name?: string;
   dependencies?: Record<string, string>;
@@ -128,18 +147,40 @@ describe("Aonsoku native audio plugin skeleton", () => {
       ),
     );
 
-    for (const eventName of [
-      "playbackStateChanged",
-      "progress",
-      "durationChanged",
-      "bufferingChanged",
-      "ended",
-      "error",
-      "remoteCommand",
-      "interruptionChanged",
-      "routeChanged",
-    ]) {
+    for (const eventName of nativeAudioEventNames) {
       expect(swift).toContain(`notifyListeners("${eventName}"`);
+    }
+  });
+
+  it("keeps the app facade and plugin package contracts in parity", () => {
+    const appTypes = readText(
+      path.join(process.cwd(), "src/native/audio/types.ts"),
+    );
+    const packageDefinitions = readText(
+      path.join(pluginRoot, "src/definitions.ts"),
+    );
+    const swift = readText(
+      path.join(
+        pluginRoot,
+        "ios/Sources/AonsokuNativeAudioPlugin/AonsokuNativeAudioPlugin.swift",
+      ),
+    );
+
+    for (const method of nativeAudioMethods) {
+      expect(appTypes).toContain(`${method}(`);
+      expect(packageDefinitions).toContain(`${method}(`);
+      expect(swift).toContain(`CAPPluginMethod(name: "${method}"`);
+    }
+
+    for (const eventName of nativeAudioEventNames) {
+      expect(appTypes).toContain(`${eventName}:`);
+      expect(packageDefinitions).toContain(`${eventName}:`);
+      expect(swift).toContain(`notifyListeners("${eventName}"`);
+    }
+
+    for (const sourceKind of nativeAudioSourceKinds) {
+      expect(appTypes).toContain(`kind: "${sourceKind}"`);
+      expect(packageDefinitions).toContain(`kind: "${sourceKind}"`);
     }
   });
 
