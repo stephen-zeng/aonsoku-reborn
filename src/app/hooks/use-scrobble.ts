@@ -8,6 +8,7 @@ import {
   usePlayerMediaType,
   usePlayerProgress,
 } from "@/store/player.store";
+import { getRuntime } from "@/utils/capabilities";
 
 const SCROBBLE_THRESHOLD_PERCENT = 50;
 const SCROBBLE_THRESHOLD_SECONDS = 60 * 4;
@@ -33,6 +34,7 @@ export function useScrobble() {
   }, [currentSong?.id]);
 
   useEffect(() => {
+    if (getRuntime() === "capacitor-ios") return;
     if (isRemoteControlActive || !isSong || !isPlaying) return;
 
     const progressPercentage =

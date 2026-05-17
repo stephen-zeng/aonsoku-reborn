@@ -68,6 +68,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private let queueEngine = NativeQueueEngine()
     private let sourceResolver = NativeSourceResolver()
     private let scrobbleBuffer = NativeScrobbleBuffer()
+    private let scrobbleSubmitter = NativeScrobbleSubmitter()
     private var isQueueEngineActive = false
 
     public override func load() {
@@ -973,6 +974,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private func handleApplicationVisibilityChanged() {
         emitCurrentPlaybackState()
         emitProgress()
+        scrobbleSubmitter.submitPending(buffer: scrobbleBuffer)
     }
 
     private func metadata(from call: CAPPluginCall) -> NativeAudioMetadata {
@@ -1659,7 +1661,12 @@ private enum NativeAudioPluginError: LocalizedError {
 
 extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
     func queueEngine(_ engine: NativeQueueEngine, loadSong song: QueueSong, autoplay: Bool, startTime: Double?) {
-        scrobbleBuffer.stopTracking()
+        if let entry = scrobbleBuffer.stopTracking() {
+            scrobbleSubmitter.submitIfEligible(
+                entry: ScrobbleEntry(songId: entry.songId, playedDurationMs: entry.playedDurationMs, timestamp: entry.timestamp),
+                songDurationSeconds: entry.timestamp
+            )
+        }
 
         guard let resolved = sourceResolver.resolveSource(for: song) else {
             emitError(code: "invalid_source", message: "Cannot resolve audio source for song: \(song.id)")
@@ -1714,7 +1721,7 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
             }
             player.play()
             emitPlaybackState("playing")
-            scrobbleBuffer.startTracking(songId: song.id)
+            scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
         }
     }
 
@@ -1733,7 +1740,12 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
     }
 
     func queueEngineDidExhaustQueue(_ engine: NativeQueueEngine) {
-        scrobbleBuffer.stopTracking()
+        if let entry = scrobbleBuffer.stopTracking() {
+            scrobbleSubmitter.submitIfEligible(
+                entry: ScrobbleEntry(songId: entry.songId, playedDurationMs: entry.playedDurationMs, timestamp: entry.timestamp),
+                songDurationSeconds: entry.timestamp
+            )
+        }
         emitPlaybackState("ended")
         notifyListeners("ended", data: [
             "reason": "finished",
@@ -1745,8 +1757,13 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
         player.seek(to: CMTime.zero) { [weak self] finished in
             guard finished, let self = self else { return }
             player.play()
-            self.scrobbleBuffer.stopTracking()
-            self.scrobbleBuffer.startTracking(songId: song.id)
+            if let entry = self.scrobbleBuffer.stopTracking() {
+                self.scrobbleSubmitter.submitIfEligible(
+                    entry: ScrobbleEntry(songId: entry.songId, playedDurationMs: entry.playedDurationMs, timestamp: entry.timestamp),
+                    songDurationSeconds: entry.timestamp
+                )
+            }
+            self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
         }
     }
 }
