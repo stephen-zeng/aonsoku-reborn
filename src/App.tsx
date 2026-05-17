@@ -15,6 +15,7 @@ import { NetworkMonitorObserver } from "@/app/observers/network-monitor";
 import { SmartDownloadObserver } from "@/app/observers/smart-download-observer";
 import { ThemeObserver } from "@/app/observers/theme-observer";
 import { KeyboardObserver } from "@/app/observers/keyboard-observer";
+import { NativeAuthObserver } from "@/app/observers/native-auth-observer";
 import { ToastContainer } from "@/app/observers/toast-container";
 import { router } from "@/routes/router";
 import { cacheManager } from "@/service/cache";
@@ -67,6 +68,7 @@ function App() {
       <LangObserver />
       <ThemeObserver />
       <KeyboardObserver />
+      <NativeAuthObserver />
       <LanControlObserver />
       <LibraryMigrationObserver />
       <NetworkMonitorObserver />
