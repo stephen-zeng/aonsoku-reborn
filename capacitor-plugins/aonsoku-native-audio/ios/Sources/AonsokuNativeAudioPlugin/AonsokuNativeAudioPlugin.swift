@@ -33,7 +33,6 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "clearUserQueue", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "playAtIndex", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getFullState", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "setAuthConfig", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getScrobbleBuffer", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "clearScrobbleBuffer", returnType: CAPPluginReturnPromise),
     ]
@@ -483,12 +482,6 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    @objc func setAuthConfig(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
-            call.resolve()
-        }
-    }
-
     @objc func getScrobbleBuffer(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
             let entries = self.scrobbleBuffer.getEntriesAsArray()
@@ -696,11 +689,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func cacheId(for songId: String) -> String {
-        Data(songId.utf8)
-            .base64EncodedString()
-            .replacingOccurrences(of: "+", with: "-")
-            .replacingOccurrences(of: "/", with: "_")
-            .replacingOccurrences(of: "=", with: "")
+        AudioCacheUtils.cacheId(for: songId)
     }
 
     private func fileExtension(for contentType: String) -> String {

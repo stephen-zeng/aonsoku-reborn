@@ -2,7 +2,6 @@ import { WebPlugin } from "@capacitor/core";
 import type {
   AonsokuNativeAudioPlugin,
   NativeAddToUserQueueOptions,
-  NativeAuthConfig,
   NativeAudioFileOptions,
   NativeAudioLoadOptions,
   NativeAudioMetadata,
@@ -130,10 +129,6 @@ export class AonsokuNativeAudioWeb
 
   getFullState() {
     return Promise.reject(createNativeAudioUnavailableError("getFullState"));
-  }
-
-  setAuthConfig(_options: NativeAuthConfig): Promise<void> {
-    return Promise.reject(createNativeAudioUnavailableError("setAuthConfig"));
   }
 
   getScrobbleBuffer() {

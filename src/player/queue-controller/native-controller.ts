@@ -429,7 +429,11 @@ export class NativeQueueController implements QueueController {
     this.#plugin
       .addListener(event, listener)
       .then((handle) => {
-        this.#nativeListenerHandles.push(handle);
+        if (this.#disposed) {
+          handle.remove();
+        } else {
+          this.#nativeListenerHandles.push(handle);
+        }
       })
       .catch((err) =>
         logger.error(

@@ -3,7 +3,6 @@ import type { PluginListenerHandle } from "@capacitor/core";
 import {
   NATIVE_AUDIO_PLUGIN_NAME,
   type NativeAddToUserQueueOptions,
-  type NativeAuthConfig,
   type NativeAudioEventName,
   type NativeAudioEvents,
   type NativeAudioFileOptions,
@@ -145,10 +144,6 @@ class UnavailableNativeAudioWeb extends WebPlugin implements NativeAudioPlugin {
 
   getFullState() {
     return Promise.reject(createNativeAudioUnavailableError("getFullState"));
-  }
-
-  setAuthConfig(_options: NativeAuthConfig): Promise<void> {
-    return Promise.reject(createNativeAudioUnavailableError("setAuthConfig"));
   }
 
   getScrobbleBuffer() {

@@ -185,12 +185,6 @@ class NativeQueueEngine {
     }
 
     func skipToNext() {
-        if loopState == .one {
-            if let song = currentSong {
-                delegate?.queueEngine(self, seekToStart: song)
-            }
-            return
-        }
         advanceToNext(reason: .next)
     }
 

@@ -59,10 +59,6 @@ class NativeSourceResolver {
     }
 
     private func cacheId(for songId: String) -> String {
-        Data(songId.utf8)
-            .base64EncodedString()
-            .replacingOccurrences(of: "+", with: "-")
-            .replacingOccurrences(of: "/", with: "_")
-            .replacingOccurrences(of: "=", with: "")
+        AudioCacheUtils.cacheId(for: songId)
     }
 }

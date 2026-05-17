@@ -141,14 +141,6 @@ export interface NativePlayAtIndexOptions {
   startTime?: number;
 }
 
-export interface NativeAuthConfig {
-  serverUrl: string;
-  username: string;
-  password: string;
-  authType: "token" | "password";
-  protocolVersion?: string;
-}
-
 export interface NativeFullState {
   contextQueue: {
     songs: NativeQueueSong[];
@@ -313,7 +305,6 @@ export interface AonsokuNativeAudioPlugin extends Plugin {
   clearUserQueue(): Promise<void>;
   playAtIndex(options: NativePlayAtIndexOptions): Promise<void>;
   getFullState(): Promise<NativeFullState>;
-  setAuthConfig(options: NativeAuthConfig): Promise<void>;
   getScrobbleBuffer(): Promise<NativeScrobbleBufferResult>;
   clearScrobbleBuffer(): Promise<void>;
 
