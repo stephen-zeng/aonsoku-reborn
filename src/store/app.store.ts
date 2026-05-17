@@ -13,6 +13,7 @@ import {
   IServerConfig,
   IServerUrlConfig,
 } from "@/types/serverConfig";
+import { getRuntime } from "@/utils/capabilities";
 import { hasElectronBridge } from "@/utils/desktop";
 import { discordRpc } from "@/utils/discordRpc";
 import { logger } from "@/utils/logger";
@@ -321,6 +322,44 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                 return false;
               }
 
+              if (getRuntime() === "capacitor-ios") {
+                const { AonsokuNativeBridge } = await import(
+                  "@aonsoku/native-bridge"
+                );
+                const result = await AonsokuNativeBridge.login({
+                  url: primaryUrl,
+                  fallbackUrl: normalizedFallbackUrl || undefined,
+                  username,
+                  password,
+                });
+
+                if (result.success) {
+                  set((state) => {
+                    state.data.url = result.activeUrl || primaryUrl;
+                    state.data.primaryUrl = primaryUrl;
+                    state.data.fallbackUrl = normalizedFallbackUrl;
+                    state.data.activeServerType =
+                      (result.activeServerType as ActiveServerType) || "primary";
+                    state.data.username = username;
+                    state.data.password = "";
+                    state.data.authType =
+                      result.authType === "token"
+                        ? AuthType.TOKEN
+                        : AuthType.PASSWORD;
+                    state.data.protocolVersion =
+                      result.protocolVersion || "1.16.0";
+                    state.data.serverType = result.serverType || "subsonic";
+                    state.data.isServerConfigured = true;
+                  });
+                  return true;
+                }
+
+                set((state) => {
+                  state.data.isServerConfigured = false;
+                });
+                return false;
+              }
+
               // try both token and password methods
               for (const authType of [AuthType.TOKEN, AuthType.PASSWORD]) {
                 const token =
@@ -456,6 +495,14 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
               return true;
             },
             removeConfig: () => {
+              if (getRuntime() === "capacitor-ios") {
+                import("@aonsoku/native-bridge").then(
+                  ({ AonsokuNativeBridge }) => {
+                    AonsokuNativeBridge.clearCredentials();
+                  },
+                );
+              }
+
               set((state) => {
                 state.data.isServerConfigured = false;
                 state.data.osType = "";
