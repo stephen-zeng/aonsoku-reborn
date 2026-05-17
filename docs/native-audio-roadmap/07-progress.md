@@ -8,7 +8,7 @@ commit that contains the change.
 
 - Roadmap status: Phase 4 in progress.
 - Active implementation phase: Phase 4 - Complete iOS Native Implementation.
-- Next step: Phase 4 Step 5, background audio and audio session.
+- Next step: Phase 4 Step 6, lock screen and remote controls.
 - Android status: blocked until the full iOS native implementation is complete.
 
 ## Completed Work
@@ -32,6 +32,7 @@ commit that contains the change.
 | 2026-05-17 | Phase 4.2 - Basic native playback | Implemented iOS `load`, `play`, `pause`, `stop`, `seek`, and `clear` using `AVPlayer`/`AVPlayerItem` for stream and radio URLs. Added native KVO/notification/time observers for playback state, duration, buffering, progress, ended, and error events. Unsupported future source types still reject clearly; future queue/metadata/preload controls currently resolve as no-ops until their roadmap steps. No Android dependency or project file was added. | `pnpm exec vitest run src/native/audio/facade.test.ts src/native/audio/plugin-skeleton.test.ts src/player/playback/native-backend.test.ts src/player/playback/backend-factory.test.ts` 21/21 passed. `xcodebuild -project ios/App/App.xcodeproj -scheme App -destination generic/platform=iOS -derivedDataPath /private/tmp/aonsoku-ios-derived-data CODE_SIGNING_ALLOWED=NO build` succeeded after rerun with Xcode cache approval. `pnpm run lint` passed. `pnpm run test:unit` 732/732 passed. `pnpm run build` succeeded with existing Vite warnings. Commit hook Biome lint passed. | `54066c78 feat(ios): implement native song playback` |
 | 2026-05-17 | Phase 4.3 - Queue and end handling | Extended the shared playback backend contract with repeat, shuffle, and skip control hooks. `AudioPlayer` now registers the active backend, syncs loop/shuffle state to native playback, routes seek-to-start and seek requests through the backend registry, and bases ended decisions on the shared queue transition helper. The iOS plugin now stores repeat/shuffle/queue control state and emits remote command events for native skip requests without making native queue state authoritative. No Android dependency or project file was added. | `pnpm exec vitest run src/player/playback/playback-backend.test.ts src/player/playback/native-backend.test.ts src/player/playback/session.test.ts src/native/audio/plugin-skeleton.test.ts src/store/player/queue-transitions.test.ts` 92/92 passed. `pnpm run lint` passed. `pnpm run test:unit` 735/735 passed. `pnpm run build` succeeded with existing Vite warnings. `xcodebuild -project ios/App/App.xcodeproj -scheme App -destination generic/platform=iOS -derivedDataPath /private/tmp/aonsoku-ios-derived-data CODE_SIGNING_ALLOWED=NO build` succeeded after rerun with Xcode cache approval. Manual iOS smoke checklist for next, previous, repeat-one, and repeat-all was not run in this non-interactive session. Commit hook Biome lint passed. | `22342546 feat(ios): connect native playback to queue controls` |
 | 2026-05-17 | Phase 4.4 - Radio playback | Passed typed radio source descriptors (including radio IDs) into the native backend, routed native radio error events through the existing `PlaybackSession` retry path, reset retry state on native play events, and updated the iOS plugin to track current radio/source state and reset native control state on clear. No Android dependency or project file was added. | `pnpm exec vitest run src/service/cache/audio-source/index.test.ts src/player/playback/native-backend.test.ts src/player/playback/session.test.ts src/native/audio/plugin-skeleton.test.ts` 36/36 passed. `pnpm run lint` passed. `pnpm run test:unit` 739/739 passed. `pnpm run build` succeeded with existing Vite warnings. `xcodebuild -project ios/App/App.xcodeproj -scheme App -destination generic/platform=iOS -derivedDataPath /private/tmp/aonsoku-ios-derived-data CODE_SIGNING_ALLOWED=NO build` succeeded after rerun with Xcode cache approval. Manual iOS radio smoke checklist for play, pause, and error recovery was not run in this non-interactive session. Commit hook Biome lint passed. | `347ced1f feat(ios): support native radio playback` |
+| 2026-05-17 | Phase 4.5 - Background audio and audio session | Enabled iOS background audio mode, configured the native plugin's `AVAudioSession` for playback, activated the session on native play/autoplay, handled audio interruptions with optional resume, emitted route-change and interruption bridge events, and resynced playback state/progress on background and foreground transitions. No Android dependency or project file was added. | `pnpm exec vitest run src/native/audio/facade.test.ts src/native/audio/plugin-skeleton.test.ts src/player/playback/native-backend.test.ts src/player/playback/backend-factory.test.ts` 24/24 passed. `pnpm run lint` passed. `xcodebuild -project ios/App/App.xcodeproj -scheme App -destination generic/platform=iOS -derivedDataPath /private/tmp/aonsoku-ios-derived-data CODE_SIGNING_ALLOWED=NO build` succeeded. `pnpm run test:unit` 740/740 passed. `pnpm run build` succeeded with existing Vite warnings. Manual iOS checklist for background, lock screen, interruption resume, and route switching was not run in this non-interactive session. Commit hook Biome lint passed. | `94724936 feat(ios): enable background audio session` |
 
 ## Phase Checklist
 
@@ -41,7 +42,7 @@ commit that contains the change.
 | Phase 1 - Playback And Queue Modularization | Complete | Phase 1.1 through 1.4 are complete. Cypress was not run in this session because the local Cypress installation has a known host issue and the user requested not to run or repair it. |
 | Phase 2 - Cache Modularization | Complete for Phase 3 handoff | Phase 2.1 through 2.3 are complete per `01-roadmap.md`. Detailed cache follow-ups in `03-cache-modularization.md` remain useful future hardening work. |
 | Phase 3 - Capacitor Bridge Foundation | Complete | Phase 3.1 and 3.2 are complete. Native playback is selected only for Capacitor iOS when the facade reports the plugin is available; otherwise web playback remains the fallback. |
-| Phase 4 - Complete iOS Native Implementation | In progress | Steps 1 through 4 are complete. Next: Step 5 background audio and audio session. Must finish before Android begins. |
+| Phase 4 - Complete iOS Native Implementation | In progress | Steps 1 through 5 are complete. Next: Step 6 lock screen and remote controls. Must finish before Android begins. |
 | Phase 5 - Android Platform Support | Blocked | Do not add `@capacitor/android` or Android project files yet. |
 | Phase 6 - Stabilization | Not started | Runs after platform implementation work. |
 
@@ -122,6 +123,13 @@ Record test commands and outcomes here as the roadmap progresses.
 | 2026-05-17 | `pnpm run build` | Succeeded | Build succeeds; existing Vite chunking and non-module `env-config.js` warnings remain. |
 | 2026-05-17 | `xcodebuild -project ios/App/App.xcodeproj -scheme App -destination generic/platform=iOS -derivedDataPath /private/tmp/aonsoku-ios-derived-data CODE_SIGNING_ALLOWED=NO build` | Succeeded | First sandboxed run could not write SwiftPM/Xcode cache files; rerun with approval compiled the updated native radio plugin. |
 | 2026-05-17 | iOS simulator/device radio smoke checklist | Not run | Manual radio play, pause, and error recovery checks need an interactive simulator/device session. |
+| 2026-05-17 | `pnpm exec vitest run src/native/audio/plugin-skeleton.test.ts` | 8 passed | Phase 4.5 focused coverage for background audio mode and native audio-session lifecycle handling. |
+| 2026-05-17 | `pnpm exec vitest run src/native/audio/facade.test.ts src/native/audio/plugin-skeleton.test.ts src/player/playback/native-backend.test.ts src/player/playback/backend-factory.test.ts` | 24 passed | Phase 4.5 native facade, Swift bridge surface, native backend, and backend selection coverage. |
+| 2026-05-17 | `pnpm run lint` | Passed | Biome lint after Phase 4.5; commit hook also ran Biome and passed. |
+| 2026-05-17 | `xcodebuild -project ios/App/App.xcodeproj -scheme App -destination generic/platform=iOS -derivedDataPath /private/tmp/aonsoku-ios-derived-data CODE_SIGNING_ALLOWED=NO build` | Succeeded | Compiled the updated `AVAudioSession`, interruption, route-change, and iOS background-audio plugin changes. |
+| 2026-05-17 | `pnpm run test:unit` | 740 passed | Full unit suite after Phase 4.5. |
+| 2026-05-17 | `pnpm run build` | Succeeded | Build succeeds; existing Vite chunking and non-module `env-config.js` warnings remain. |
+| 2026-05-17 | iOS simulator/device background audio checklist | Not run | Manual background playback, lock screen playback, interruption resume, and route-switching checks need an interactive simulator/device session. |
 
 ### Phase 0.1 - Baseline Test Coverage Added
 
@@ -372,6 +380,33 @@ side effects. This makes queue behavior fully testable without a store.
 - `src/native/audio/plugin-skeleton.test.ts`: verifies Swift radio source
   handling and clear-state reset behavior.
 
+### Phase 4.5 - Background Audio And Audio Session
+
+**iOS app configuration**:
+- `ios/App/App/Info.plist` now declares `UIBackgroundModes` with `audio`, so
+  the Capacitor iOS app can continue audio playback while backgrounded.
+
+**iOS native plugin**:
+- `AonsokuNativeAudioPlugin.swift` configures `AVAudioSession` with the
+  `.playback` category and activates the session when native playback starts.
+- Native `stop` and `clear` deactivate the audio session with
+  `.notifyOthersOnDeactivation`.
+- The plugin observes `AVAudioSession.interruptionNotification` and emits
+  `interruptionChanged` events. It pauses on interruption start and resumes
+  only when iOS indicates playback should resume and the player had been
+  playing before the interruption.
+- The plugin observes `AVAudioSession.routeChangeNotification`, emits
+  `routeChanged` events with mapped route-change reasons, and resyncs
+  playback state/progress.
+- The plugin observes foreground/background app lifecycle notifications and
+  emits current playback state/progress so TypeScript can catch up after app
+  visibility changes.
+
+**Tests updated**:
+- `src/native/audio/plugin-skeleton.test.ts`: verifies iOS background audio
+  mode, `AVAudioSession` playback-category setup, lifecycle observers, and
+  native interruption/route-change event emission.
+
 ## Handoff Notes
 
 - Phase 1.2 is complete. Playback sources, backend events, and the web
@@ -419,8 +454,8 @@ side effects. This makes queue behavior fully testable without a store.
 - Phase 4.2 is complete. The iOS plugin now uses `AVPlayer` for remote
   stream/radio sources and emits the shared playback/progress/duration/
   buffering/ended/error events. Cached/native-file playback, Now Playing
-  metadata, background audio, and lifecycle hardening remain for later Phase 4
-  steps.
+  metadata, native cached playback, and lifecycle hardening remain for later
+  Phase 4 steps.
 - Phase 4.3 is complete. Native ended decisions now flow through the shared
   TypeScript queue transition helper, loop/shuffle control state is synchronized
   through the playback backend, and seek-to-start/user seek paths use the active
@@ -432,14 +467,20 @@ side effects. This makes queue behavior fully testable without a store.
   session, and clearing radio playback tears down the native player/source
   state. Manual radio play, pause, and error-recovery checks still need an
   interactive iOS simulator/device session.
+- Phase 4.5 is complete. The iOS app declares background audio mode, and the
+  native plugin configures/activates `AVAudioSession` for playback, handles
+  interruptions and route changes, and resyncs playback state/progress across
+  background and foreground transitions. Manual background playback, lock
+  screen playback, interruption-resume, and route-switching checks still need
+  an interactive iOS simulator/device session.
 - Public imports from `@/store/player.store` remain stable.
 - Public imports of `buildAudioUrl` from `@/service/cache` remain stable.
 - Cypress component tests were intentionally not run after user instruction:
   this machine has a known Cypress host issue, and Cypress repair is out of
   scope for this roadmap work.
-- The next implementation session should begin Phase 4 Step 5 from
-  `04-ios-native-implementation.md`: enable background audio, configure
-  `AVAudioSession`, and handle interruptions/route changes.
+- The next implementation session should begin Phase 4 Step 6 from
+  `04-ios-native-implementation.md`: implement Now Playing metadata and remote
+  controls.
 - Keep every sub-step small, tested, and committed independently.
 - Keep Android blocked until the iOS done criteria in `00-requirements.md` and
   `04-ios-native-implementation.md` are satisfied.
