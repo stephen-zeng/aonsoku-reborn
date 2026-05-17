@@ -51,6 +51,8 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var queueIndex = 0
     private var currentSourceKind: String?
     private var currentRadioId: String?
+    private var currentRequestId: String?
+    private var playbackGeneration = 0
     private var currentMetadata = NativeAudioMetadata()
     private var artworkTask: URLSessionDataTask?
     private var nowPlayingRevision = 0
@@ -87,19 +89,23 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 let startTime = max(0, call.getDouble("startTime") ?? 0)
                 let autoplay = call.getBool("autoplay") ?? false
                 let metadata = self.metadata(from: call.getObject("metadata"))
+                let requestId = call.getString("requestId")
 
                 try self.configureAudioSession()
                 self.clearPlayer(sendIdleEvent: false)
+                self.playbackGeneration += 1
+                let generation = self.playbackGeneration
                 self.player = player
                 self.playerItem = item
                 self.currentSourceKind = resolvedSource.kind
                 self.currentRadioId = resolvedSource.radioId
+                self.currentRequestId = requestId
                 self.currentMetadata = metadata
-                self.addObservers(for: item, player: player)
-                self.addProgressObserver(to: player)
+                self.addObservers(for: item, player: player, generation: generation, requestId: requestId)
+                self.addProgressObserver(to: player, generation: generation, requestId: requestId)
                 self.updateNowPlayingInfo()
 
-                self.emitPlaybackState("loading")
+                self.emitPlaybackState("loading", requestId: requestId)
 
                 if startTime > 0 {
                     player.seek(to: self.makeTime(startTime))
@@ -108,7 +114,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 if autoplay {
                     try self.activateAudioSession()
                     player.play()
-                    self.emitPlaybackState("playing")
+                    self.emitPlaybackState("playing", requestId: requestId)
                 }
 
                 call.resolve()
@@ -796,7 +802,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         case .began:
             wasPlayingBeforeInterruption = player?.timeControlStatus == .playing
             player?.pause()
-            notifyListeners("interruptionChanged", data: ["type": "began"])
+            notifyListeners("interruptionChanged", data: eventData(["type": "began"]))
             emitBuffering(false)
             emitPlaybackState("paused")
             emitProgress()
@@ -805,10 +811,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             let options = AVAudioSession.InterruptionOptions(rawValue: rawOptions)
             let shouldResume = options.contains(.shouldResume)
 
-            notifyListeners("interruptionChanged", data: [
+            notifyListeners("interruptionChanged", data: eventData([
                 "type": "ended",
                 "shouldResume": shouldResume,
-            ])
+            ]))
 
             if shouldResume, wasPlayingBeforeInterruption, let player = player {
                 do {
@@ -832,7 +838,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private func handleAudioSessionRouteChange(_ notification: Notification) {
         let reason = routeChangeReason(from: notification)
 
-        notifyListeners("routeChanged", data: ["reason": reason])
+        notifyListeners("routeChanged", data: eventData(["reason": reason]))
         emitCurrentPlaybackState()
         emitProgress()
     }
@@ -1025,22 +1031,40 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         return URL(fileURLWithPath: uri)
     }
 
-    private func addObservers(for item: AVPlayerItem, player: AVPlayer) {
+    private func addObservers(
+        for item: AVPlayerItem,
+        player: AVPlayer,
+        generation: Int,
+        requestId: String?
+    ) {
         statusObservation = item.observe(\.status, options: [.new]) { [weak self] observedItem, _ in
             DispatchQueue.main.async {
-                self?.handleStatusChanged(observedItem)
+                self?.handleStatusChanged(
+                    observedItem,
+                    generation: generation,
+                    requestId: requestId
+                )
             }
         }
 
         durationObservation = item.observe(\.duration, options: [.new]) { [weak self] observedItem, _ in
             DispatchQueue.main.async {
-                self?.emitDuration(for: observedItem)
+                self?.emitDuration(
+                    for: observedItem,
+                    generation: generation,
+                    requestId: requestId
+                )
             }
         }
 
         timeControlStatusObservation = player.observe(\.timeControlStatus, options: [.new]) { [weak self] observedPlayer, _ in
             DispatchQueue.main.async {
-                self?.handleTimeControlStatusChanged(observedPlayer.timeControlStatus)
+                self?.handleTimeControlStatusChanged(
+                    observedPlayer.timeControlStatus,
+                    player: observedPlayer,
+                    generation: generation,
+                    requestId: requestId
+                )
             }
         }
 
@@ -1049,7 +1073,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             object: item,
             queue: .main
         ) { [weak self] _ in
-            self?.handleEnded()
+            self?.handleEnded(generation: generation, requestId: requestId)
         }
 
         failedEndObserver = NotificationCenter.default.addObserver(
@@ -1057,58 +1081,102 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             object: item,
             queue: .main
         ) { [weak self] notification in
+            guard self?.isCurrentPlayback(item: item, generation: generation) == true else {
+                return
+            }
             let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error
-            self?.emitError(code: "playback_failed", message: error?.localizedDescription ?? "Native playback failed.")
-            self?.emitPlaybackState("failed")
+            self?.emitError(
+                code: self?.playbackErrorCode(for: error, fallback: "playback_failed") ?? "playback_failed",
+                message: error?.localizedDescription ?? "Native playback failed.",
+                requestId: requestId
+            )
+            self?.emitPlaybackState("failed", requestId: requestId)
         }
     }
 
-    private func addProgressObserver(to player: AVPlayer) {
+    private func addProgressObserver(
+        to player: AVPlayer,
+        generation: Int,
+        requestId: String?
+    ) {
         let interval = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
         timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] _ in
-            self?.emitProgress()
+            guard self?.isCurrentPlayback(player: player, generation: generation) == true else {
+                return
+            }
+            self?.emitProgress(requestId: requestId)
         }
     }
 
-    private func handleStatusChanged(_ item: AVPlayerItem) {
+    private func handleStatusChanged(
+        _ item: AVPlayerItem,
+        generation: Int,
+        requestId: String?
+    ) {
+        guard isCurrentPlayback(item: item, generation: generation) else {
+            return
+        }
+
         switch item.status {
         case .readyToPlay:
-            emitDuration(for: item)
-            emitBuffering(false)
+            emitDuration(for: item, generation: generation, requestId: requestId)
+            emitBuffering(false, requestId: requestId)
         case .failed:
             emitError(
-                code: "load_failed",
-                message: item.error?.localizedDescription ?? "Native audio failed to load."
+                code: playbackErrorCode(for: item.error, fallback: "load_failed"),
+                message: item.error?.localizedDescription ?? "Native audio failed to load.",
+                requestId: requestId
             )
-            emitPlaybackState("failed")
+            emitPlaybackState("failed", requestId: requestId)
         case .unknown:
-            emitPlaybackState("loading")
+            emitPlaybackState("loading", requestId: requestId)
         @unknown default:
-            emitError(code: "unknown_status", message: "Native audio entered an unknown state.")
+            emitError(
+                code: "unknown_status",
+                message: "Native audio entered an unknown state.",
+                requestId: requestId
+            )
         }
     }
 
-    private func handleTimeControlStatusChanged(_ status: AVPlayer.TimeControlStatus) {
+    private func handleTimeControlStatusChanged(
+        _ status: AVPlayer.TimeControlStatus,
+        player: AVPlayer,
+        generation: Int,
+        requestId: String?
+    ) {
+        guard isCurrentPlayback(player: player, generation: generation) else {
+            return
+        }
+
         switch status {
         case .playing:
-            emitBuffering(false)
-            emitPlaybackState("playing")
+            emitBuffering(false, requestId: requestId)
+            emitPlaybackState("playing", requestId: requestId)
         case .paused:
-            emitBuffering(false)
+            emitBuffering(false, requestId: requestId)
         case .waitingToPlayAtSpecifiedRate:
-            emitBuffering(true)
+            emitBuffering(true, requestId: requestId)
         @unknown default:
-            emitBuffering(false)
+            emitBuffering(false, requestId: requestId)
         }
     }
 
-    private func handleEnded() {
-        emitProgress()
-        emitPlaybackState("ended")
-        notifyListeners("ended", data: ["reason": "finished"])
+    private func handleEnded(generation: Int, requestId: String?) {
+        guard isCurrentPlayback(generation: generation) else {
+            return
+        }
+
+        emitProgress(requestId: requestId)
+        emitPlaybackState("ended", requestId: requestId)
+        notifyListeners("ended", data: eventData([
+            "reason": "finished",
+        ], requestId: requestId))
     }
 
     private func clearPlayer(sendIdleEvent: Bool, deactivateSession: Bool = false) {
+        playbackGeneration += 1
+
         if let token = timeObserverToken {
             player?.removeTimeObserver(token)
             timeObserverToken = nil
@@ -1134,6 +1202,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         playerItem = nil
         currentSourceKind = nil
         currentRadioId = nil
+        currentRequestId = nil
 
         if sendIdleEvent {
             emitPlaybackState("idle")
@@ -1153,14 +1222,20 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         queueIndex = 0
     }
 
-    private func emitPlaybackState(_ state: String) {
-        notifyListeners("playbackStateChanged", data: ["state": state])
+    private func emitPlaybackState(_ state: String, requestId: String? = nil) {
+        notifyListeners("playbackStateChanged", data: eventData([
+            "state": state,
+        ], requestId: requestId))
         updateNowPlayingPlaybackInfo()
     }
 
-    private func emitProgress() {
+    private func emitProgress(requestId: String? = nil) {
         guard let player = player else {
-            notifyListeners("progress", data: ["currentTime": 0, "duration": 0, "bufferedTime": 0])
+            notifyListeners("progress", data: eventData([
+                "currentTime": 0,
+                "duration": 0,
+                "bufferedTime": 0,
+            ], requestId: requestId))
             updateNowPlayingPlaybackInfo()
             return
         }
@@ -1168,26 +1243,38 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         let currentTime = seconds(from: player.currentTime())
         let duration = durationSeconds()
 
-        notifyListeners("progress", data: [
+        notifyListeners("progress", data: eventData([
             "currentTime": currentTime,
             "duration": duration,
             "bufferedTime": bufferedTime(),
-        ])
+        ], requestId: requestId))
         updateNowPlayingPlaybackInfo()
     }
 
-    private func emitDuration(for item: AVPlayerItem) {
+    private func emitDuration(
+        for item: AVPlayerItem,
+        generation: Int? = nil,
+        requestId: String? = nil
+    ) {
+        if let generation, !isCurrentPlayback(item: item, generation: generation) {
+            return
+        }
+
         let duration = seconds(from: item.duration)
         guard duration > 0 else {
             return
         }
 
-        notifyListeners("durationChanged", data: ["duration": duration])
+        notifyListeners("durationChanged", data: eventData([
+            "duration": duration,
+        ], requestId: requestId))
         updateNowPlayingPlaybackInfo()
     }
 
-    private func emitBuffering(_ isBuffering: Bool) {
-        notifyListeners("bufferingChanged", data: ["isBuffering": isBuffering])
+    private func emitBuffering(_ isBuffering: Bool, requestId: String? = nil) {
+        notifyListeners("bufferingChanged", data: eventData([
+            "isBuffering": isBuffering,
+        ], requestId: requestId))
     }
 
     private func emitCurrentPlaybackState() {
@@ -1212,21 +1299,88 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    private func emitError(code: String, message: String) {
-        notifyListeners("error", data: [
+    private func emitError(
+        code: String,
+        message: String,
+        requestId: String? = nil
+    ) {
+        notifyListeners("error", data: eventData([
             "code": code,
             "message": message,
-        ])
+        ], requestId: requestId))
     }
 
     private func emitRemoteCommand(_ command: String, position: Double? = nil) {
-        var data: JSObject = ["command": command]
+        var data: JSObject = eventData(["command": command])
 
         if let position {
             data["position"] = position
         }
 
         notifyListeners("remoteCommand", data: data)
+    }
+
+    private func eventData(_ data: JSObject, requestId: String? = nil) -> JSObject {
+        var resolvedData = data
+
+        if let requestId = requestId ?? currentRequestId {
+            resolvedData["requestId"] = requestId
+        }
+
+        return resolvedData
+    }
+
+    private func isCurrentPlayback(generation: Int) -> Bool {
+        generation == playbackGeneration
+    }
+
+    private func isCurrentPlayback(item: AVPlayerItem, generation: Int) -> Bool {
+        guard let currentItem = playerItem else {
+            return false
+        }
+
+        return isCurrentPlayback(generation: generation) && item === currentItem
+    }
+
+    private func isCurrentPlayback(player observedPlayer: AVPlayer, generation: Int) -> Bool {
+        guard let currentPlayer = player else {
+            return false
+        }
+
+        return isCurrentPlayback(generation: generation) && observedPlayer === currentPlayer
+    }
+
+    private func playbackErrorCode(for error: Error?, fallback: String) -> String {
+        guard let error else {
+            return fallback
+        }
+
+        let nsError = error as NSError
+
+        if nsError.domain == NSURLErrorDomain {
+            switch nsError.code {
+            case NSURLErrorCancelled:
+                return "aborted"
+            case NSURLErrorNotConnectedToInternet:
+                return "not_connected_to_internet"
+            case NSURLErrorTimedOut:
+                return "timed_out"
+            case NSURLErrorCannotConnectToHost:
+                return "cannot_connect_to_host"
+            case NSURLErrorCannotFindHost, NSURLErrorDNSLookupFailed:
+                return "cannot_find_host"
+            case NSURLErrorDataNotAllowed:
+                return "data_not_allowed"
+            default:
+                return "network"
+            }
+        }
+
+        if nsError.domain == AVFoundationErrorDomain {
+            return "decode_failed"
+        }
+
+        return fallback
     }
 
     private func reject(_ call: CAPPluginCall, error: Error) {

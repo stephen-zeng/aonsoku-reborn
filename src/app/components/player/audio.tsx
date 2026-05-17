@@ -12,10 +12,12 @@ import { getNetworkStatus } from "@/app/hooks/use-network-status";
 import {
   createPlaybackBackend,
   createUrlPlaybackSource,
+  getPlaybackErrorKind,
   getPlaybackEndedDecision,
   handlePlaybackRemoteCommand,
   playbackRepeatModeFromLoopState,
   registerPlaybackBackend,
+  shouldRetryPlaybackError,
   shouldUseNativePlaybackBackend,
   type PlaybackBackend,
   type PlaybackBackendKind,
@@ -479,19 +481,25 @@ export function AudioPlayer({
       if (!audio) return;
 
       logger.info(
-        `[NativeBackend:onError] code=${event.code ?? "unknown"} | message=${event.message ?? ""} | mediaType=${isSong ? "song" : isRadio ? "radio" : "unknown"} | retryAttempt=${sessionRef.current.retryCount + 1}/5`,
+        `[NativeBackend:onError] kind=${getPlaybackErrorKind(event)} | code=${event.code ?? "unknown"} | nativeCode=${event.nativeCode ?? "none"} | message=${event.message ?? ""} | mediaType=${isSong ? "song" : isRadio ? "radio" : "unknown"} | retryAttempt=${sessionRef.current.retryCount + 1}/5`,
       );
 
-      if (isRadio) {
+      if (shouldRetryPlaybackError(event, { isRadio })) {
         scheduleRetry(audio);
         return;
       }
 
-      if (isSong) {
+      if (getPlaybackErrorKind(event) === "aborted") {
+        logger.info("[NativeBackend:onError:ABORTED] Skipping retry");
+        return;
+      }
+
+      if (isSong || isRadio) {
         onPlaybackError?.();
+        cancelRetry();
       }
     },
-    [audioRef, isRadio, isSong, onPlaybackError, scheduleRetry],
+    [audioRef, cancelRetry, isRadio, isSong, onPlaybackError, scheduleRetry],
   );
 
   const handleNativeRemoteCommand = useCallback(

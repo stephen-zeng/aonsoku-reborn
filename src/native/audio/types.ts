@@ -37,6 +37,7 @@ export interface NativeAudioLoadOptions {
   metadata?: NativeAudioMetadata;
   autoplay?: boolean;
   startTime?: number;
+  requestId?: string;
 }
 
 export interface NativeAudioSeekOptions {
@@ -96,6 +97,7 @@ export interface NativeAudioClearFilesResult {
 }
 
 export interface NativeAudioPlaybackStateChangedEvent {
+  requestId?: string;
   state:
     | "idle"
     | "loading"
@@ -107,24 +109,29 @@ export interface NativeAudioPlaybackStateChangedEvent {
 }
 
 export interface NativeAudioProgressEvent {
+  requestId?: string;
   currentTime: number;
   duration: number;
   bufferedTime?: number;
 }
 
 export interface NativeAudioDurationChangedEvent {
+  requestId?: string;
   duration: number;
 }
 
 export interface NativeAudioBufferingChangedEvent {
+  requestId?: string;
   isBuffering: boolean;
 }
 
 export interface NativeAudioEndedEvent {
+  requestId?: string;
   reason?: "finished" | "stopped";
 }
 
 export interface NativeAudioErrorEvent {
+  requestId?: string;
   code?: string;
   message: string;
 }
@@ -138,16 +145,19 @@ export type NativeAudioRemoteCommand =
   | "seek";
 
 export interface NativeAudioRemoteCommandEvent {
+  requestId?: string;
   command: NativeAudioRemoteCommand;
   position?: number;
 }
 
 export interface NativeAudioInterruptionChangedEvent {
+  requestId?: string;
   type: "began" | "ended";
   shouldResume?: boolean;
 }
 
 export interface NativeAudioRouteChangedEvent {
+  requestId?: string;
   reason?: string;
 }
 

@@ -47,8 +47,17 @@ export interface PlaybackMetadata {
 export interface PlaybackErrorEvent {
   error: unknown;
   code?: number | string;
+  kind?: PlaybackErrorKind;
   message?: string;
+  nativeCode?: string;
 }
+
+export type PlaybackErrorKind =
+  | "aborted"
+  | "network"
+  | "decode"
+  | "source-not-supported"
+  | "unknown";
 
 export type PlaybackRemoteCommand =
   | "play"

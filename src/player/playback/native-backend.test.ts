@@ -160,6 +160,7 @@ describe("NativeAudioPlaybackBackend", () => {
         songId: "song-1",
       },
       metadata,
+      requestId: "native-audio-1",
     });
     expect(plugin.play).toHaveBeenCalledTimes(1);
     expect(plugin.pause).toHaveBeenCalledTimes(1);
@@ -203,6 +204,7 @@ describe("NativeAudioPlaybackBackend", () => {
         url: "https://radio.example/stream",
         radioId: "radio-1",
       },
+      requestId: "native-audio-1",
     });
   });
 
@@ -250,13 +252,68 @@ describe("NativeAudioPlaybackBackend", () => {
         code: "network",
         message: "Native stream failed",
       },
-      code: "network",
+      code: 2,
+      kind: "network",
       message: "Native stream failed",
+      nativeCode: "network",
     });
     expect(listeners.remoteCommand).toHaveBeenCalledWith({
       command: "seek",
       position: 42,
     });
+  });
+
+  it("ignores stale native events from previous load requests", async () => {
+    const { plugin, emit } = createPlugin();
+    const backend = new NativeAudioPlaybackBackend(plugin);
+    const listeners = makePlaybackListeners();
+
+    backend.subscribe("progress", listeners.progress);
+    backend.subscribe("play", listeners.play);
+    backend.subscribe("ended", listeners.ended);
+    backend.subscribe("error", listeners.error);
+
+    await backend.load(createUrlPlaybackSource("https://server/old.mp3"));
+    await backend.load(createUrlPlaybackSource("https://server/new.mp3"));
+
+    emit("progress", {
+      requestId: "native-audio-1",
+      currentTime: 91,
+      duration: 180,
+    });
+    emit("playbackStateChanged", {
+      requestId: "native-audio-1",
+      state: "playing",
+    });
+    emit("ended", {
+      requestId: "native-audio-1",
+      reason: "finished",
+    });
+    emit("error", {
+      requestId: "native-audio-1",
+      code: "network",
+      message: "Old source failed late",
+    });
+
+    emit("progress", {
+      requestId: "native-audio-2",
+      currentTime: 12,
+      duration: 180,
+    });
+    emit("playbackStateChanged", {
+      requestId: "native-audio-2",
+      state: "playing",
+    });
+
+    expect(listeners.progress).toHaveBeenCalledTimes(1);
+    expect(listeners.progress).toHaveBeenCalledWith({
+      currentTime: 12,
+      duration: 180,
+      bufferedTime: 12,
+    });
+    expect(listeners.play).toHaveBeenCalledTimes(1);
+    expect(listeners.ended).not.toHaveBeenCalled();
+    expect(listeners.error).not.toHaveBeenCalled();
   });
 
   it("removes native listeners and clears plugin state on dispose", async () => {

@@ -252,6 +252,27 @@ describe("Aonsoku native audio plugin skeleton", () => {
     expect(swift).toContain("jsObject(from file: NativeCachedAudioFile)");
   });
 
+  it("guards native lifecycle events against stale source changes", () => {
+    const swift = readText(
+      path.join(
+        pluginRoot,
+        "ios/Sources/AonsokuNativeAudioPlugin/AonsokuNativeAudioPlugin.swift",
+      ),
+    );
+
+    expect(swift).toContain("private var currentRequestId: String?");
+    expect(swift).toContain("private var playbackGeneration = 0");
+    expect(swift).toContain('let requestId = call.getString("requestId")');
+    expect(swift).toContain("self.currentRequestId = requestId");
+    expect(swift).toContain("generation: generation, requestId: requestId");
+    expect(swift).toContain("private func isCurrentPlayback(generation: Int)");
+    expect(swift).toContain(
+      "guard isCurrentPlayback(item: item, generation: generation)",
+    );
+    expect(swift).toContain("player?.removeTimeObserver(token)");
+    expect(swift).toContain("timeObserverToken = nil");
+  });
+
   it("is wired into the generated Capacitor iOS Swift package", () => {
     const packageSwift = readText(
       path.join(process.cwd(), "ios/App/CapApp-SPM/Package.swift"),

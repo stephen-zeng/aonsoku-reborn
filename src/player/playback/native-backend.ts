@@ -1,11 +1,16 @@
 import type { PluginListenerHandle } from "@capacitor/core";
 import type {
   NativeAudioEventName,
+  NativeAudioErrorEvent,
   NativeAudioEvents,
   NativeAudioMetadata,
   NativeAudioPlugin,
   NativeAudioSource,
 } from "@/native/audio";
+import {
+  nativePlaybackErrorKind,
+  playbackErrorCodeFromKind,
+} from "./errors";
 import {
   type PlaybackBackend,
   type PlaybackBackendEvent,
@@ -28,6 +33,8 @@ export class NativeAudioPlaybackBackend implements PlaybackBackend {
   readonly #nativeListenerHandles: Array<
     Promise<PluginListenerHandle | null>
   > = [];
+  #loadSequence = 0;
+  #activeRequestId: string | null = null;
   #disposed = false;
 
   constructor(plugin: NativeAudioPlugin) {
@@ -47,9 +54,12 @@ export class NativeAudioPlaybackBackend implements PlaybackBackend {
 
   load(source: PlaybackSource, metadata?: PlaybackMetadata) {
     this.#assertActive();
+    const requestId = this.#nextRequestId();
+
     return this.#plugin.load({
       source: toNativeAudioSource(source),
       metadata: metadata ? toNativeAudioMetadata(metadata) : undefined,
+      requestId,
     });
   }
 
@@ -115,6 +125,7 @@ export class NativeAudioPlaybackBackend implements PlaybackBackend {
   dispose() {
     if (this.#disposed) return;
     this.#disposed = true;
+    this.#activeRequestId = null;
 
     for (const handlePromise of this.#nativeListenerHandles) {
       handlePromise.then((handle) => handle?.remove()).catch(() => {});
@@ -141,6 +152,7 @@ export class NativeAudioPlaybackBackend implements PlaybackBackend {
 
   #wireNativeEvents() {
     this.#addNativeListener("progress", (event) => {
+      if (this.#isStaleNativeEvent(event)) return;
       this.#emit("progress", {
         currentTime: event.currentTime,
         duration: event.duration,
@@ -148,22 +160,23 @@ export class NativeAudioPlaybackBackend implements PlaybackBackend {
       });
     });
     this.#addNativeListener("durationChanged", (event) => {
+      if (this.#isStaleNativeEvent(event)) return;
       this.#emit("duration", { duration: event.duration });
     });
     this.#addNativeListener("bufferingChanged", (event) => {
+      if (this.#isStaleNativeEvent(event)) return;
       this.#emit("buffering", { isBuffering: event.isBuffering });
     });
-    this.#addNativeListener("ended", () => {
+    this.#addNativeListener("ended", (event) => {
+      if (this.#isStaleNativeEvent(event)) return;
       this.#emit("ended", undefined);
     });
     this.#addNativeListener("error", (event) => {
-      this.#emit("error", {
-        error: event,
-        code: event.code,
-        message: event.message,
-      });
+      if (this.#isStaleNativeEvent(event)) return;
+      this.#emit("error", toPlaybackErrorEvent(event));
     });
     this.#addNativeListener("playbackStateChanged", (event) => {
+      if (this.#isStaleNativeEvent(event)) return;
       if (event.state === "playing") {
         this.#emit("play", undefined);
       } else if (
@@ -175,6 +188,7 @@ export class NativeAudioPlaybackBackend implements PlaybackBackend {
       }
     });
     this.#addNativeListener("remoteCommand", (event) => {
+      if (this.#isStaleNativeEvent(event)) return;
       this.#emit("remoteCommand", {
         command: event.command,
         position: event.position,
@@ -211,6 +225,19 @@ export class NativeAudioPlaybackBackend implements PlaybackBackend {
     if (this.#disposed) {
       throw new Error("Playback backend has been disposed");
     }
+  }
+
+  #nextRequestId() {
+    const requestId = `native-audio-${++this.#loadSequence}`;
+    this.#activeRequestId = requestId;
+
+    return requestId;
+  }
+
+  #isStaleNativeEvent(event: { requestId?: string }) {
+    return (
+      event.requestId !== undefined && event.requestId !== this.#activeRequestId
+    );
   }
 }
 
@@ -259,16 +286,41 @@ export function toNativeAudioSource(source: PlaybackSource): NativeAudioSource {
   }
 }
 
-function toPlaybackErrorEvent(error: unknown): PlaybackErrorEvent {
+function toPlaybackErrorEvent(
+  error: NativeAudioErrorEvent | unknown,
+): PlaybackErrorEvent {
+  if (isNativeAudioErrorEvent(error)) {
+    const kind = nativePlaybackErrorKind(error.code);
+
+    return {
+      error,
+      code: playbackErrorCodeFromKind(kind) ?? error.code,
+      kind,
+      message: error.message,
+      nativeCode: error.code,
+    };
+  }
+
   if (error instanceof Error) {
     return {
       error,
+      kind: "unknown",
       message: error.message,
     };
   }
 
   return {
     error,
+    kind: "unknown",
     message: "Native audio listener failed",
   };
+}
+
+function isNativeAudioErrorEvent(error: unknown): error is NativeAudioErrorEvent {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as { message?: unknown }).message === "string"
+  );
 }
