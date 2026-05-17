@@ -34,7 +34,6 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
     private var syncEngine: SyncEngine!
     private var syncScheduler: SyncScheduler!
     private var eventEmitter: EventEmitter!
-    private var queryBridge: DataQueryBridge!
 
     // MARK: - Initialization
 
@@ -52,7 +51,6 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         syncScheduler = SyncScheduler(syncEngine: syncEngine)
-        queryBridge = DataQueryBridge(db: dbManager.dbPool)
 
         let hasData = (try? SyncStateRepository(db: dbManager.dbPool).getFullSyncTimestamp()) != nil
 

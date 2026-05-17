@@ -10,11 +10,6 @@ struct LyricsRecord: Codable, FetchableRecord, PersistableRecord {
     var cachedAt: Int
     var lastAccessedAt: Int
 
-    static let databaseSelection: [any SQLSelectable] = [
-        Column("songId"), Column("content"), Column("synced"),
-        Column("cachedAt"), Column("lastAccessedAt"),
-    ]
-
     func toDictionary() -> [String: Any?] {
         [
             "songId": songId,

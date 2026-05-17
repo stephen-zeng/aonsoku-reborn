@@ -21,9 +21,11 @@ final class DatabaseManager {
         let dbPath = dbDirectory.appendingPathComponent("library.sqlite").path
 
         var config = Configuration()
+        #if DEBUG
         config.prepareDatabase { db in
             db.trace { print("[SQL] \($0)") }
         }
+        #endif
 
         dbPool = try! DatabasePool(path: dbPath, configuration: config)
 
