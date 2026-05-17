@@ -189,7 +189,10 @@ let syncService: SyncWorkerAdapter | typeof metadataSyncService;
 
 try {
   if (getRuntime() === "capacitor-ios" || typeof Worker === "undefined") {
-    syncService = metadataSyncService;
+    const { nativeSyncAdapter } = await import(
+      "@/native/data/native-sync-adapter"
+    );
+    syncService = nativeSyncAdapter as unknown as typeof metadataSyncService;
   } else {
     syncService = new SyncWorkerAdapter();
   }
