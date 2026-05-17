@@ -7,6 +7,7 @@ import { getCacheIndexActions } from "@/store/cache-index.store";
 import { usePlayerStore } from "@/store/player.store";
 import type { SyncState } from "@/types/cache";
 import type { AuthType } from "@/types/serverConfig";
+import { getRuntime } from "@/utils/capabilities";
 
 interface WorkerAuthConfig {
   url: string;
@@ -187,10 +188,10 @@ class SyncWorkerAdapter {
 let syncService: SyncWorkerAdapter | typeof metadataSyncService;
 
 try {
-  if (typeof Worker !== "undefined") {
-    syncService = new SyncWorkerAdapter();
-  } else {
+  if (getRuntime() === "capacitor-ios" || typeof Worker === "undefined") {
     syncService = metadataSyncService;
+  } else {
+    syncService = new SyncWorkerAdapter();
   }
 } catch (err) {
   console.warn(
