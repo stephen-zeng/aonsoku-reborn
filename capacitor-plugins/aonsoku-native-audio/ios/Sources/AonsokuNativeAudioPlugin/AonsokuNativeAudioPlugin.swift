@@ -33,6 +33,8 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "clearUserQueue", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "playAtIndex", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getFullState", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "downloadAudioFile", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "cancelDownload", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getScrobbleBuffer", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "clearScrobbleBuffer", returnType: CAPPluginReturnPromise),
     ]
@@ -69,11 +71,13 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private let sourceResolver = NativeSourceResolver()
     private let scrobbleBuffer = NativeScrobbleBuffer()
     private let scrobbleSubmitter = NativeScrobbleSubmitter()
+    private let downloadManager = NativeDownloadManager()
     private var isQueueEngineActive = false
 
     public override func load() {
         super.load()
         queueEngine.delegate = self
+        downloadManager.delegate = self
         registerLifecycleObservers()
         registerRemoteCommands()
 
@@ -495,6 +499,27 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             self.scrobbleBuffer.clear()
             call.resolve()
         }
+    }
+
+    @objc func downloadAudioFile(_ call: CAPPluginCall) {
+        guard let songId = call.getString("songId"), !songId.isEmpty else {
+            reject(call, code: "invalid_download_request", message: "Missing songId for audio download.")
+            return
+        }
+
+        let maxBitRate = call.getInt("maxBitRate")
+        let format = call.getString("format")
+        downloadManager.download(songId: songId, maxBitRate: maxBitRate, format: format)
+        call.resolve()
+    }
+
+    @objc func cancelDownload(_ call: CAPPluginCall) {
+        if let songId = call.getString("songId") {
+            downloadManager.cancel(songId: songId)
+        } else {
+            downloadManager.cancelAll()
+        }
+        call.resolve()
     }
 
     private func storeCachedAudioFile(
@@ -1765,5 +1790,33 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
             }
             self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
         }
+    }
+}
+
+// MARK: - NativeDownloadManagerDelegate
+
+extension AonsokuNativeAudioPlugin: NativeDownloadManagerDelegate {
+    func downloadManager(_ manager: NativeDownloadManager, didProgress songId: String, loaded: Int64, total: Int64) {
+        notifyListeners("downloadProgress", data: [
+            "songId": songId,
+            "loaded": NSNumber(value: loaded),
+            "total": NSNumber(value: total),
+        ])
+    }
+
+    func downloadManager(_ manager: NativeDownloadManager, didComplete songId: String, fileUrl: URL, contentType: String, sizeBytes: Int64) {
+        notifyListeners("downloadCompleted", data: [
+            "songId": songId,
+            "uri": fileUrl.absoluteString,
+            "contentType": contentType,
+            "sizeBytes": NSNumber(value: sizeBytes),
+        ])
+    }
+
+    func downloadManager(_ manager: NativeDownloadManager, didFail songId: String, error: Error) {
+        notifyListeners("downloadFailed", data: [
+            "songId": songId,
+            "error": error.localizedDescription,
+        ])
     }
 }

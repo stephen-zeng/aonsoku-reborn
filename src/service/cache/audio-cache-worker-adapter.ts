@@ -1,5 +1,7 @@
 import { expose, type Remote, transfer, wrap } from "comlink";
 import { getSongStreamUrl } from "@/api/httpClient";
+import { getNativeAudioPluginAvailability } from "@/native/audio/facade";
+import type { PluginListenerHandle } from "@capacitor/core";
 import { AudioCacheQueue } from "@/service/cache/audio-cache-queue";
 import { audioKey } from "@/service/cache/cache-keys";
 import { cacheStorage } from "@/service/cache/cache-storage";
@@ -179,6 +181,10 @@ class MainThreadAudioCacheEngine implements AudioCacheDownloader {
   }
 
   private async executeDownload(task: CacheTask): Promise<void> {
+    if (getRuntime() === "capacitor-ios") {
+      return this.executeNativeDownload(task);
+    }
+
     const { songId, source, triggers } = task;
     const url = `${getSongStreamUrl(songId)}&_c=1`;
     const response = await fetch(url);
@@ -226,6 +232,89 @@ class MainThreadAudioCacheEngine implements AudioCacheDownloader {
     });
 
     this.scheduleClearDownloadProgress(songId);
+  }
+
+  private executeNativeDownload(task: CacheTask): Promise<void> {
+    const { songId, source, triggers } = task;
+    const availability = getNativeAudioPluginAvailability();
+    if (!availability.available) {
+      throw new Error("Native audio plugin not available for download");
+    }
+
+    const plugin = availability.plugin;
+
+    return new Promise<void>((resolve, reject) => {
+      let progressHandle: PluginListenerHandle | null = null;
+      let completedHandle: PluginListenerHandle | null = null;
+      let failedHandle: PluginListenerHandle | null = null;
+
+      const cleanup = () => {
+        progressHandle?.remove();
+        completedHandle?.remove();
+        failedHandle?.remove();
+      };
+
+      plugin
+        .addListener("downloadProgress", (event) => {
+          if (event.songId !== songId) return;
+          if (event.total > 0) {
+            const { onProgress } = this.createProgressCallbacks(songId);
+            onProgress(event.loaded, event.total);
+          }
+        })
+        .then((h) => {
+          progressHandle = h;
+        });
+
+      plugin
+        .addListener("downloadCompleted", (event) => {
+          if (event.songId !== songId) return;
+          cleanup();
+
+          const key = audioKey(songId);
+          const meta: CachedItemMeta = {
+            id: songId,
+            type: "audio",
+            source,
+            triggers,
+            sizeBytes: event.sizeBytes,
+            cachedAt: Date.now(),
+            lastAccessedAt: Date.now(),
+          };
+
+          getCacheIndexActions().addItem(key, meta);
+          refreshCacheStatsFromIndex();
+          persistCacheMeta(key, { key, ...meta });
+          this.scheduleClearDownloadProgress(songId);
+
+          this.cacheLyrics(songId).catch((err) => {
+            console.warn(
+              `[cacheManager] lyrics prefetch failed for ${songId}:`,
+              err,
+            );
+          });
+
+          resolve();
+        })
+        .then((h) => {
+          completedHandle = h;
+        });
+
+      plugin
+        .addListener("downloadFailed", (event) => {
+          if (event.songId !== songId) return;
+          cleanup();
+          reject(new Error(event.error));
+        })
+        .then((h) => {
+          failedHandle = h;
+        });
+
+      plugin.downloadAudioFile({ songId }).catch((err) => {
+        cleanup();
+        reject(err);
+      });
+    });
   }
 
   private async cacheLyrics(songId: string): Promise<void> {

@@ -142,4 +142,14 @@ export class AonsokuNativeAudioWeb
       createNativeAudioUnavailableError("clearScrobbleBuffer"),
     );
   }
+
+  downloadAudioFile(): Promise<void> {
+    return Promise.reject(
+      createNativeAudioUnavailableError("downloadAudioFile"),
+    );
+  }
+
+  cancelDownload(): Promise<void> {
+    return Promise.reject(createNativeAudioUnavailableError("cancelDownload"));
+  }
 }

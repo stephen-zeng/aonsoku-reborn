@@ -30,6 +30,11 @@ import {
   type NativeAudioQueueStateChangedEvent,
   type NativeAudioQueueContentsChangedEvent,
   type NativeAudioScrobbleEvent,
+  type NativeDownloadAudioFileOptions,
+  type NativeCancelDownloadOptions,
+  type NativeDownloadProgressEvent,
+  type NativeDownloadCompletedEvent,
+  type NativeDownloadFailedEvent,
 } from "./definitions";
 import { AonsokuNativeAudioWeb } from "./web";
 
@@ -75,4 +80,9 @@ export type {
   NativeAudioQueueStateChangedEvent,
   NativeAudioQueueContentsChangedEvent,
   NativeAudioScrobbleEvent,
+  NativeDownloadAudioFileOptions,
+  NativeCancelDownloadOptions,
+  NativeDownloadProgressEvent,
+  NativeDownloadCompletedEvent,
+  NativeDownloadFailedEvent,
 };

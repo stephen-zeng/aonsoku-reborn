@@ -251,6 +251,34 @@ export interface NativeAudioRouteChangedEvent {
   reason?: string;
 }
 
+export interface NativeDownloadAudioFileOptions {
+  songId: string;
+  maxBitRate?: number;
+  format?: string;
+}
+
+export interface NativeCancelDownloadOptions {
+  songId?: string;
+}
+
+export interface NativeDownloadProgressEvent {
+  songId: string;
+  loaded: number;
+  total: number;
+}
+
+export interface NativeDownloadCompletedEvent {
+  songId: string;
+  uri: string;
+  contentType: string;
+  sizeBytes: number;
+}
+
+export interface NativeDownloadFailedEvent {
+  songId: string;
+  error: string;
+}
+
 export interface NativeAudioEvents {
   playbackStateChanged: NativeAudioPlaybackStateChangedEvent;
   progress: NativeAudioProgressEvent;
@@ -264,6 +292,9 @@ export interface NativeAudioEvents {
   queueStateChanged: NativeAudioQueueStateChangedEvent;
   queueContentsChanged: NativeAudioQueueContentsChangedEvent;
   scrobbleEvent: NativeAudioScrobbleEvent;
+  downloadProgress: NativeDownloadProgressEvent;
+  downloadCompleted: NativeDownloadCompletedEvent;
+  downloadFailed: NativeDownloadFailedEvent;
 }
 
 export type NativeAudioEventName = keyof NativeAudioEvents;
@@ -305,6 +336,10 @@ export interface NativeAudioPlugin extends Plugin {
   getFullState(): Promise<NativeFullState>;
   getScrobbleBuffer(): Promise<NativeScrobbleBufferResult>;
   clearScrobbleBuffer(): Promise<void>;
+
+  // Native Audio Download
+  downloadAudioFile(options: NativeDownloadAudioFileOptions): Promise<void>;
+  cancelDownload(options?: NativeCancelDownloadOptions): Promise<void>;
 
   addListener<TEvent extends NativeAudioEventName>(
     eventName: TEvent,
