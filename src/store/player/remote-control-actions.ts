@@ -1,10 +1,5 @@
 import type { Draft } from "immer";
-import type {
-  IPlayerActions,
-  IPlayerContext,
-  ISongList,
-} from "@/types/playerContext";
-import type { ISong } from "@/types/responses/song";
+import clamp from "lodash/clamp";
 import {
   CurrentSongData,
   LanControlMessageType,
@@ -12,8 +7,13 @@ import {
   QueueData,
   RemoteDeviceInfo,
 } from "@/types/lanControl";
+import type {
+  IPlayerActions,
+  IPlayerContext,
+  ISongList,
+} from "@/types/playerContext";
 import { LoopState } from "@/types/playerContext";
-import clamp from "lodash/clamp";
+import type { ISong } from "@/types/responses/song";
 import { emptyContextQueue, resetPlaybackState } from "./queue-utils";
 
 interface SharedDeps {

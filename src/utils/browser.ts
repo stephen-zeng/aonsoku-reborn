@@ -12,9 +12,14 @@ export enum MouseButton {
 
 export const isChromeOrFirefox = ["Blink", "Gecko"].includes(engineName);
 
-// Enable only for browsers
+// Enable for browsers that support Document PiP API
 export const hasPiPSupport = isDesktop()
   ? false
+  : "documentPictureInPicture" in window;
+
+// Enable mini player for desktop (Electron) or browsers with PiP support
+export const hasMiniPlayerSupport = isDesktop()
+  ? true
   : "documentPictureInPicture" in window;
 
 function preventContextMenu() {

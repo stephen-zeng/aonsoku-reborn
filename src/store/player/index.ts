@@ -1,10 +1,12 @@
+import { get as idbGet, set as idbSet } from "idb-keyval";
+import debounce from "lodash/debounce";
 import merge from "lodash/merge";
 import omit from "lodash/omit";
-import debounce from "lodash/debounce";
 import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
+import { deleteCustomLyricsBodies } from "@/service/lyrics";
 import {
   CurrentSongData,
   LanControlMessageType,
@@ -16,20 +18,20 @@ import { hasElectronBridge } from "@/utils/desktop";
 import { discordRpc } from "@/utils/discordRpc";
 import { logger } from "@/utils/logger";
 import { decodeStoredPassword, genEncodedPassword } from "@/utils/salt";
-import { get as idbGet, set as idbSet } from "idb-keyval";
-import { createQueueActions } from "./queue-actions";
-import { createPlaybackActions } from "./playback-actions";
-import { createUiActions } from "./ui-actions";
-import { createRemoteControlActions } from "./remote-control-actions";
-import { createStarActions } from "./star-actions";
-import { createSettingsActions } from "./settings-actions";
+import { MAX_SHUFFLE_START_HISTORY } from "@/utils/songListFunctions";
 import {
-  initialPlayerState,
-  initialPlayerProgress,
-  initialRemoteControl,
+  migrateCustomLyricsBodiesToIdb,
+  stripCustomLyricsBodies,
+} from "./custom-lyrics-persist";
+import {
   createInitialSettings,
+  initialPlayerProgress,
+  initialPlayerState,
+  initialRemoteControl,
   initialSonglist,
 } from "./initial-state";
+import { createPlaybackActions } from "./playback-actions";
+import { createQueueActions } from "./queue-actions";
 import {
   clearSonglistState,
   getEffectiveIndex,
@@ -39,7 +41,10 @@ import {
   MAX_USER_QUEUE_IDB_SIZE,
   trimQueueToWindow,
 } from "./queue-utils";
-import { MAX_SHUFFLE_START_HISTORY } from "@/utils/songListFunctions";
+import { createRemoteControlActions } from "./remote-control-actions";
+import { createSettingsActions } from "./settings-actions";
+import { createStarActions } from "./star-actions";
+import { createUiActions } from "./ui-actions";
 
 const IDB_SONGLIST_KEY = "player_songlist";
 
@@ -184,7 +189,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
       ),
       {
         name: "player_store",
-        version: 5,
+        version: 6,
         // biome-ignore lint/suspicious/noExplicitAny: zustand persist migrate API
         migrate: (persistedState: any, version) => {
           if (version === 1) {
@@ -254,6 +259,9 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
           if (version <= 4) {
             encodePersistedCustomLyricsPassword(persistedState);
           }
+          if (version <= 5) {
+            migrateCustomLyricsBodiesToIdb(persistedState);
+          }
           return persistedState;
         },
         merge: (persistedState, currentState) => {
@@ -275,11 +283,19 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
             "playerState.fullscreenPlayerOpen",
             "playerState.fullscreenPlayerTab",
             "playerState.desktopFullscreenPanelView",
+            "playerState.pipWindowOpen",
             "playerState.hasPrev",
             "playerState.hasNext",
             "playerProgress.bufferedProgress",
             "remoteControl",
           ]);
+
+          const { sanitized, evictedKeys } = stripCustomLyricsBodies(
+            state.settings.lyrics.selectedCustomLyrics,
+          );
+          if (evictedKeys.length > 0) {
+            deleteCustomLyricsBodies(evictedKeys).catch(() => {});
+          }
 
           return merge({}, appStore, {
             settings: {
@@ -287,6 +303,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 customServerPassword: encodeCustomLyricsPassword(
                   state.settings.lyrics.customServerPassword,
                 ),
+                selectedCustomLyrics: sanitized,
               },
             },
           });
@@ -707,6 +724,9 @@ export const useLyricsSettings = () =>
 export const useHapticSettings = () =>
   usePlayerStore((state) => state.settings.hapticFeedback);
 
+export const usePipSettings = () =>
+  usePlayerStore((state) => state.settings.pip);
+
 export const usePlayerSettings = () =>
   usePlayerStore((state) => state.settings);
 
@@ -862,6 +882,9 @@ export const usePlayerIsBuffering = () =>
 
 export const useLyricsAlignment = () =>
   usePlayerStore((state) => state.playerState.areLyricsAligned);
+
+export const usePipWindowOpen = () =>
+  usePlayerStore((state) => state.playerState.pipWindowOpen);
 
 export function useIsCurrentPlaying(songId: string): boolean {
   return usePlayerStore((state) => {

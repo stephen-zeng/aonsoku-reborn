@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { sortRecentAlbums } from "./album";
 import type { Albums } from "@/types/responses/album";
+import { sortRecentAlbums } from "./album";
 
 function makeAlbum(year: number | undefined): Albums {
   return { year } as Albums;

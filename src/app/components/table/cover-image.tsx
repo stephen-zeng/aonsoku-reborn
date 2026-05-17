@@ -1,8 +1,8 @@
+import { Pause, PlayIcon } from "lucide-react";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
 import { useHasHover } from "@/app/hooks/use-input-mode";
 import { cn } from "@/lib/utils";
-import { Pause, PlayIcon } from "lucide-react";
 import { CoverArt } from "@/types/coverArtType";
 
 interface CoverImageProps {
@@ -65,7 +65,7 @@ export function CoverImage({
         {image}
         {isCurrentPlaying && (
           <div
-            className=            "absolute inset-0 flex items-center justify-center bg-black/40 rounded transition-opacity opacity-100 group-hover-supported/tablerow:opacity-0"
+            className="absolute inset-0 flex items-center justify-center bg-black/40 rounded transition-opacity opacity-100 group-hover-supported/tablerow:opacity-0"
             role="status"
             aria-label="Currently playing"
           >
@@ -81,15 +81,9 @@ export function CoverImage({
           )}
         >
           {isCurrentPlaying ? (
-            <Pause
-              size={iconSize}
-              className="text-white fill-white"
-            />
+            <Pause size={iconSize} className="text-white fill-white" />
           ) : (
-            <PlayIcon
-              size={iconSize}
-              className="text-white fill-white"
-            />
+            <PlayIcon size={iconSize} className="text-white fill-white" />
           )}
         </div>
       </div>

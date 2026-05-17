@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
-import { usePlayHistoryStore } from "@/store/playHistory.store";
 import {
   useIsRemoteControlActive,
   usePlayerIsPlaying,
   usePlayerMediaType,
   usePlayerStore,
 } from "@/store/player.store";
+import { usePlayHistoryStore } from "@/store/playHistory.store";
 import type { ISong } from "@/types/responses/song";
 
 const MIN_PLAY_MS = 10_000;

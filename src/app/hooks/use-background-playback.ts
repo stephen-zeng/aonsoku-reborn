@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { usePlayerStore } from "@/store/player.store";
-import { manageMediaSession } from "@/utils/setMediaSession";
 import { logger } from "@/utils/logger";
+import { manageMediaSession } from "@/utils/setMediaSession";
 
 const RESUME_DELAY_MS = 100;
 
@@ -12,11 +12,8 @@ export function useBackgroundPlayback() {
     const handleVisibilityChange = () => {
       if (document.hidden) return;
 
-      const {
-        isPlaying,
-        remoteControl,
-        playerState,
-      } = usePlayerStore.getState();
+      const { isPlaying, remoteControl, playerState } =
+        usePlayerStore.getState();
 
       if (!isPlaying || remoteControl.active) return;
 

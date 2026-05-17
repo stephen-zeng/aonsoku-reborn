@@ -36,7 +36,7 @@ function isFocusVisibleActive(): boolean {
   }
 }
 
-export function usePlayerHotkeys() {
+export function usePlayerHotkeys(options?: { document?: Document }) {
   const hasSongs = usePlayerStore(
     (state) =>
       state.songlist.contextQueue.songs.length > 0 ||
@@ -64,6 +64,7 @@ export function usePlayerHotkeys() {
       {
         preventDefault: false,
         enabled: hasSongsRef.current,
+        document: options?.document,
       },
     );
   };

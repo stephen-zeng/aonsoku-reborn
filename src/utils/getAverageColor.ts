@@ -50,8 +50,12 @@ export function hexToRgba(hex: string, alpha: number = 1) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-export function hslToRgb(hsl: string) {
+export function hslToRgb(hsl: string): [number, number, number] | undefined {
+  if (!hsl) return undefined;
+
   const [h, s, l] = hsl.split(" ");
+
+  if (!h || !s || !l) return undefined;
 
   const hue = parseInt(h);
   let saturation = parseFloat(s.replace("%", ""));
@@ -124,14 +128,19 @@ export function blendColors(
 }
 
 export function hslToHex(hsl: string) {
-  const [red, green, blue] = hslToRgb(hsl);
+  const rgb = hslToRgb(hsl);
+  if (!rgb) return "#000000";
+
+  const [red, green, blue] = rgb;
 
   return `#${toHex(red)}${toHex(green)}${toHex(blue)}`;
 }
 
 export function isDarkColor(hsl: string) {
-  const [r, g, b] = hslToRgb(hsl);
+  const rgb = hslToRgb(hsl);
+  if (!rgb) return true;
 
+  const [r, g, b] = rgb;
   const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
   const isDark = luminance < 128;
 
@@ -153,7 +162,12 @@ export function isDarkHex(hex: string) {
  * @param [alpha=1] - The alpha value (opacity), default is 1.
  */
 export function hslToHsla(hsl: string, alpha = 1) {
-  const hslBaseString = hsl.split(" ").join(", ");
+  if (!hsl) return `hsla(0, 0%, 0%, ${alpha})`;
+
+  const parts = hsl.split(" ");
+  if (parts.length < 3) return `hsla(0, 0%, 0%, ${alpha})`;
+
+  const hslBaseString = parts.join(", ");
 
   return `hsla(${hslBaseString}, ${alpha})`;
 }

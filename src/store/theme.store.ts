@@ -3,9 +3,9 @@ import { immer } from "zustand/middleware/immer";
 import { createWithEqualityFn } from "zustand/traditional";
 import {
   IThemeContext,
+  isDarkTheme,
   Theme,
   ThemeMode,
-  isDarkTheme,
 } from "@/types/themeContext";
 
 const VALID_THEMES = new Set<string>(Object.values(Theme));

@@ -8,6 +8,9 @@ interface UseResizePanelConfig {
   defaultWidth: number;
   direction: "left" | "right";
   onWidthChange: (width: number) => void;
+  collapseThreshold?: number;
+  onCollapse?: (collapsed: boolean) => void;
+  isCollapsed?: boolean;
 }
 
 export function useResizePanel({
@@ -17,6 +20,9 @@ export function useResizePanel({
   defaultWidth,
   direction,
   onWidthChange,
+  collapseThreshold,
+  onCollapse,
+  isCollapsed,
 }: UseResizePanelConfig) {
   const isResizingRef = useRef(false);
   const startXRef = useRef(0);
@@ -36,16 +42,24 @@ export function useResizePanel({
 
       const delta = e.clientX - startXRef.current;
       const multiplier = direction === "right" ? 1 : -1;
-      const newWidth = clamp(
-        startWidthRef.current + delta * multiplier,
-        min,
-        max,
-      );
+      let newWidth = startWidthRef.current + delta * multiplier;
 
-      lastWidthRef.current = newWidth;
-      setVariable(newWidth);
+      if (collapseThreshold !== undefined && onCollapse) {
+        if (newWidth < collapseThreshold) {
+          onCollapse(true);
+        } else {
+          onCollapse(false);
+          newWidth = clamp(newWidth, min, max);
+          lastWidthRef.current = newWidth;
+          setVariable(newWidth);
+        }
+      } else {
+        newWidth = clamp(newWidth, min, max);
+        lastWidthRef.current = newWidth;
+        setVariable(newWidth);
+      }
     },
-    [direction, min, max, setVariable],
+    [direction, min, max, setVariable, collapseThreshold, onCollapse],
   );
 
   const handleMouseUp = useCallback(() => {
@@ -65,22 +79,29 @@ export function useResizePanel({
       isResizingRef.current = true;
       startXRef.current = e.clientX;
 
-      const raw = document.documentElement.style.getPropertyValue(cssVar);
-      startWidthRef.current = raw ? parseInt(raw, 10) : defaultWidth;
+      if (isCollapsed) {
+        startWidthRef.current = 48; // Approximation of mini-sidebar width
+      } else {
+        const raw = document.documentElement.style.getPropertyValue(cssVar);
+        startWidthRef.current = raw ? parseInt(raw, 10) : defaultWidth;
+      }
       lastWidthRef.current = startWidthRef.current;
 
       document.body.classList.add("is-resizing");
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
     },
-    [cssVar, defaultWidth, handleMouseMove, handleMouseUp],
+    [cssVar, defaultWidth, handleMouseMove, handleMouseUp, isCollapsed],
   );
 
   const handleDoubleClick = useCallback(() => {
     lastWidthRef.current = defaultWidth;
     setVariable(defaultWidth);
     onWidthChange(defaultWidth);
-  }, [defaultWidth, setVariable, onWidthChange]);
+    if (onCollapse) {
+      onCollapse(false);
+    }
+  }, [defaultWidth, setVariable, onWidthChange, onCollapse]);
 
   useEffect(() => {
     return () => {

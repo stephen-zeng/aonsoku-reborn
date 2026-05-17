@@ -10,13 +10,14 @@ import { LangObserver } from "@/app/observers/lang-observer";
 import { LibraryMigrationObserver } from "@/app/observers/library-migration-observer";
 import { MediaSessionObserver } from "@/app/observers/media-session-observer";
 import { MetadataSyncObserver } from "@/app/observers/metadata-sync-observer";
+import { MiniPlayerSyncObserver } from "@/app/observers/mini-player-sync-observer";
 import { NetworkMonitorObserver } from "@/app/observers/network-monitor";
 import { SmartDownloadObserver } from "@/app/observers/smart-download-observer";
 import { ThemeObserver } from "@/app/observers/theme-observer";
 import { ToastContainer } from "@/app/observers/toast-container";
 import { router } from "@/routes/router";
-import { useCacheIndexActions } from "@/store/cache-index.store";
 import { cacheManager } from "@/service/cache";
+import { useCacheIndexActions } from "@/store/cache-index.store";
 import {
   tryAutoConnect,
   useLanControlClientStore,
@@ -61,6 +62,7 @@ function App() {
   return (
     <>
       <MediaSessionObserver />
+      <MiniPlayerSyncObserver />
       <LangObserver />
       <ThemeObserver />
       <LanControlObserver />

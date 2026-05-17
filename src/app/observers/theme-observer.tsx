@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect } from "react";
 import { useThemeStore } from "@/store/theme.store";
-import { Theme, ThemeMode, isDarkTheme } from "@/types/themeContext";
+import { isDarkTheme, Theme, ThemeMode } from "@/types/themeContext";
 import { hasElectronBridge } from "@/utils/desktop";
 import { setDesktopTitleBarColors, updatePwaThemeColor } from "@/utils/theme";
 

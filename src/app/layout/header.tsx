@@ -1,7 +1,7 @@
 import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { NavigationButtons } from "@/app/components/header/navigation-buttons";
+
 import { DesktopHeaderStatusItems } from "@/app/components/header/mobile-page-header";
 import { useAppWindow } from "@/app/hooks/use-app-window";
 import { useWindowControlsOverlay } from "@/app/hooks/use-window-controls-overlay";
@@ -99,7 +99,6 @@ export function Header() {
             <SidebarToggleIcon className="w-4 h-4" strokeWidth={1.5} />
           </Button>
         </div>
-        <NavigationButtons />
         <SwUpdateChip />
       </div>
       <div className="hidden md:flex col-span-2 items-center justify-center">

@@ -1,6 +1,6 @@
 import type { Draft } from "immer";
-import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
 import { subsonic } from "@/service/subsonic";
+import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
 import { applyStarToAllLists, hasAnySongs } from "./queue-utils";
 
 interface SharedDeps {

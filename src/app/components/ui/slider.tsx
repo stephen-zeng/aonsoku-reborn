@@ -24,6 +24,7 @@ type SliderBaseProps = {
   isBuffering?: boolean;
   bufferedProgress?: number;
   contrast?: FullscreenContrast;
+  hideThumb?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 type DragState = {
@@ -181,33 +182,47 @@ function useSlider({
     [isControlled, min, max, range, safeStep, computeValue, onValueChange],
   );
 
+  const finishDrag = React.useCallback(
+    (pointerType: string, commitValue: number, isTap: boolean) => {
+      try {
+        if (isTap) {
+          if (!isControlled) setInternalValue(commitValue);
+          onValueChange?.([commitValue]);
+        }
+        onValueCommit?.([commitValue]);
+
+        if (pointerType === "touch") {
+          onTouchStateChange?.(false);
+        }
+      } finally {
+        dragStateRef.current = null;
+      }
+    },
+    [isControlled, onValueChange, onValueCommit, onTouchStateChange],
+  );
+
   const commitAndCleanup = React.useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       const state = dragStateRef.current;
       if (!state || state.pointerId !== e.pointerId) return;
 
-      if (e.pointerType === "touch" && !state.isDragging) {
-        const newValue = computeValue(e.clientX);
-        if (!isControlled) setInternalValue(newValue);
-        onValueChange?.([newValue]);
-        onValueCommit?.([newValue]);
-      } else if (state.isDragging) {
-        onValueCommit?.([state.currentValue]);
-      }
-
-      if (e.pointerType === "touch") {
-        onTouchStateChange?.(false);
-      }
-
-      dragStateRef.current = null;
+      const isTap = e.pointerType === "touch" && !state.isDragging;
+      const commitValue = isTap ? computeValue(e.clientX) : state.currentValue;
+      finishDrag(e.pointerType, commitValue, isTap);
     },
-    [
-      isControlled,
-      computeValue,
-      onValueChange,
-      onValueCommit,
-      onTouchStateChange,
-    ],
+    [computeValue, finishDrag],
+  );
+
+  const handleLostPointerCapture = React.useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const state = dragStateRef.current;
+      if (!state || state.pointerId !== e.pointerId) return;
+
+      const isTap = e.pointerType === "touch" && !state.isDragging;
+      const commitValue = isTap ? computeValue(e.clientX) : state.currentValue;
+      finishDrag(e.pointerType, commitValue, isTap);
+    },
+    [computeValue, finishDrag],
   );
 
   const percentage = range === 0 ? 0 : ((currentValue - min) / range) * 100;
@@ -220,6 +235,7 @@ function useSlider({
     handlePointerMove,
     handlePointerUp: commitAndCleanup,
     handlePointerCancel: commitAndCleanup,
+    handleLostPointerCapture,
   };
 }
 
@@ -231,6 +247,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
       isBuffering = false,
       bufferedProgress = 0,
       contrast,
+      hideThumb,
       value,
       defaultValue,
       min,
@@ -252,6 +269,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
       handlePointerMove,
       handlePointerUp,
       handlePointerCancel,
+      handleLostPointerCapture,
     } = useSlider({
       value,
       defaultValue,
@@ -272,11 +290,12 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
           "group relative h-3 flex w-full touch-none select-none items-center cursor-pointer",
           className,
         )}
+        {...props}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}
-        {...props}
+        onLostPointerCapture={handleLostPointerCapture}
       >
         <div
           ref={trackRef}
@@ -313,7 +332,9 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
             "ring-offset-background transition-[background-color,opacity]",
             "focus-visible:outline-none focus-visible:ring-transparent",
             "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
-            "opacity-0 group-hover-supported:opacity-100 slider-thumb",
+            hideThumb
+              ? "opacity-0"
+              : "opacity-0 group-hover-supported:opacity-100 slider-thumb",
             variant === "default" && "bg-foreground border-foreground",
             variant === "secondary" &&
               (contrast?.sliderThumbColor ??
@@ -353,103 +374,5 @@ function BufferedProgressIndicator({
 export { Slider };
 
 export function ProgressSlider(props: SliderBaseProps) {
-  const {
-    className,
-    variant = "default",
-    isBuffering = false,
-    bufferedProgress = 0,
-    contrast,
-    value,
-    defaultValue,
-    min,
-    max,
-    step,
-    onValueChange,
-    onValueCommit,
-    disabled,
-    ...rest
-  } = props;
-
-  const [isTouching, setIsTouching] = React.useState(false);
-
-  const {
-    trackRef,
-    percentage,
-    handlePointerDown,
-    handlePointerMove,
-    handlePointerUp,
-    handlePointerCancel,
-  } = useSlider({
-    value,
-    defaultValue,
-    min,
-    max,
-    step,
-    onValueChange,
-    onValueCommit,
-    disabled,
-    onTouchStateChange: setIsTouching,
-  });
-
-  return (
-    <div
-      aria-busy={isBuffering || undefined}
-      className={cn(
-        "group relative h-3 flex w-full touch-none select-none items-center cursor-pointer",
-        className,
-      )}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerCancel}
-      {...rest}
-    >
-      <div
-        ref={trackRef}
-        className={clsx(
-          "relative w-full grow overflow-hidden rounded-full select-none transition-[height] duration-150 ease-out",
-          isTouching ? "h-[10px]" : "h-1",
-          !isBuffering && variant === "default" && "bg-secondary",
-          isBuffering && "buffer-track",
-          isBuffering && variant === "secondary" && "buffer-secondary",
-          !isBuffering &&
-            variant === "secondary" &&
-            (contrast?.sliderTrackColor ?? "bg-muted-foreground/70"),
-        )}
-        onContextMenu={(e) => e.preventDefault()}
-      >
-        <BufferedProgressIndicator
-          bufferedProgress={bufferedProgress}
-          max={max ?? 100}
-        />
-        <div
-          className={clsx(
-            "absolute h-full select-none rounded-full",
-            variant === "default" && "bg-primary",
-            variant === "secondary" &&
-              (contrast?.sliderRangeColor ?? "bg-secondary-foreground"),
-          )}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
-
-      <div
-        className={clsx(
-          "absolute top-1/2 h-4 w-4 sm:h-3 sm:w-3 cursor-pointer select-none rounded-full border-2 shadow-md",
-          "ring-offset-background transition-[background-color,opacity]",
-          "focus-visible:outline-none focus-visible:ring-transparent",
-          "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
-          "opacity-0 group-hover-supported:opacity-100 slider-thumb",
-          variant === "default" && "bg-foreground border-foreground",
-          variant === "secondary" &&
-            (contrast?.sliderThumbColor ??
-              "bg-secondary-foreground border-secondary-foreground"),
-        )}
-        style={{
-          left: `${percentage}%`,
-          transform: "translate(-50%, -50%)",
-        }}
-      />
-    </div>
-  );
+  return <Slider {...props} />;
 }

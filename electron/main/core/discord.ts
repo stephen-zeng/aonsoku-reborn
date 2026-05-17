@@ -86,8 +86,6 @@ function loginRPC() {
 }
 
 function set(data: IActivity | null) {
-  if (!discord || !discord.user) return;
-
   if (data) {
     data.instance = true;
     data.type = ActivityType.Listening;
@@ -97,6 +95,8 @@ function set(data: IActivity | null) {
     activity: data,
   };
   lastPayload = payload;
+
+  if (!discord || !discord.user) return;
 
   // @ts-expect-error raw request
   discord.request("SET_ACTIVITY", payload);

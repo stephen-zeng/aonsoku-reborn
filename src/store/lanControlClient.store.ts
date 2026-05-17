@@ -9,8 +9,7 @@ import {
   QueueData,
   RemoteDeviceInfo,
 } from "@/types/lanControl";
-import { toHex } from "@/utils/salt";
-import { decodeStoredPassword } from "@/utils/salt";
+import { decodeStoredPassword, toHex } from "@/utils/salt";
 import { usePlayerStore } from "./player.store";
 
 type ConnectionStatus =

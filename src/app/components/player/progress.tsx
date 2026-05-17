@@ -3,12 +3,12 @@ import { RefObject, useMemo } from "react";
 import { ProgressSlider } from "@/app/components/ui/slider";
 import { useAudioSeeking } from "@/app/hooks/use-audio-seeking";
 import {
+  useHasQueueSongs,
   usePlayerBufferedProgress,
   usePlayerDuration,
   usePlayerIsBuffering,
   usePlayerMediaType,
   usePlayerProgress,
-  useHasQueueSongs,
 } from "@/store/player.store";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 
@@ -26,12 +26,8 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
 
   const isEmpty = isSong && !hasQueueSongs;
 
-  const {
-    localProgress,
-    isLocalSeeking,
-    handleSeeking,
-    handleSeeked,
-  } = useAudioSeeking({ audioRef });
+  const { localProgress, isLocalSeeking, handleSeeking, handleSeeked } =
+    useAudioSeeking({ audioRef });
 
   const currentTime = convertSecondsToTime(
     isLocalSeeking ? localProgress : progress,

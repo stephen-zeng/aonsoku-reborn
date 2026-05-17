@@ -1,6 +1,8 @@
 import type { Draft } from "immer";
+import { setCustomLyricsBody } from "@/service/lyrics";
 import type { IPlayerContext, IPlayerState } from "@/types/playerContext";
 import { LoopState } from "@/types/playerContext";
+import { logger } from "@/utils/logger";
 import { initSonglistState } from "./queue-utils";
 
 export const initialPlayerState: IPlayerState = {
@@ -24,6 +26,7 @@ export const initialPlayerState: IPlayerState = {
   areLyricsAligned: true,
   seekToStart: false,
   isTransitioning: false,
+  pipWindowOpen: false,
 };
 
 export const initialSonglist = initSonglistState();
@@ -107,11 +110,17 @@ export function createInitialSettings(set: SetFn): IPlayerContext["settings"] {
         });
       },
       selectedCustomLyrics: {},
-      setSelectedCustomLyrics: (songKey, lyrics) => {
+      setSelectedCustomLyrics: (songKey, selection) => {
+        const { lyrics: body, ...meta } = selection;
         set((state) => {
           state.settings.lyrics.selectedCustomLyrics ||= {};
-          state.settings.lyrics.selectedCustomLyrics[songKey] = lyrics;
+          state.settings.lyrics.selectedCustomLyrics[songKey] = meta;
         });
+        if (body) {
+          setCustomLyricsBody(songKey, body).catch((err) => {
+            logger.warn("[player] Failed to persist custom lyrics body:", err);
+          });
+        }
       },
     },
     replayGain: {
@@ -159,6 +168,14 @@ export function createInitialSettings(set: SetFn): IPlayerContext["settings"] {
       setHapticFeedbackEnabled: (value: boolean) => {
         set((state) => {
           state.settings.hapticFeedback.hapticFeedbackEnabled = value;
+        });
+      },
+    },
+    pip: {
+      acceptBrowserPipRequest: false,
+      setAcceptBrowserPipRequest: (value: boolean) => {
+        set((state) => {
+          state.settings.pip.acceptBrowserPipRequest = value;
         });
       },
     },

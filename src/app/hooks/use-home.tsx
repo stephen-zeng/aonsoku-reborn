@@ -1,14 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
+import { offlineData } from "@/lib/offlineQueryClient";
 import { subsonic } from "@/service/subsonic";
 import { useIsOnline } from "@/store/cache.store";
-import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
-import { queryKeys } from "@/utils/queryKeys";
-import { offlineData } from "@/lib/offlineQueryClient";
 import {
   type AlbumListType,
   type Albums,
   type AlbumsListData,
 } from "@/types/responses/album";
+import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
+import { queryKeys } from "@/utils/queryKeys";
 
 const HOME_SECTION_SIZE = 16;
 type HomeAlbumListType = Extract<

@@ -38,6 +38,7 @@ const Home = lazy(() => import("@/app/pages/home"));
 const MobileLibrary = lazy(() => import("@/app/pages/mobile/library"));
 const MobileSearch = lazy(() => import("@/app/pages/mobile/search"));
 const MobileSettings = lazy(() => import("@/app/pages/mobile/settings"));
+const MiniPlayerPage = lazy(() => import("@/app/pages/mini-player"));
 
 export const router = createHashRouter([
   {
@@ -194,6 +195,15 @@ export const router = createHashRouter([
     element: (
       <Suspense>
         <Login />
+      </Suspense>
+    ),
+  },
+  {
+    id: "mini-player",
+    path: ROUTES.MINI_PLAYER,
+    element: (
+      <Suspense>
+        <MiniPlayerPage />
       </Suspense>
     ),
   },

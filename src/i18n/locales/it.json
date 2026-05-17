@@ -481,7 +481,9 @@
     "management": "Gestione server",
     "songCount_one": "{{count}} brano",
     "songCount_other": "{{count}} brani",
-    "status": "Stato"
+    "status": "Stato",
+    "folderCount_many": "{{count}} carpetas",
+    "songCount_many": "{{count}} canciones"
   },
   "settings": {
     "accounts": {
@@ -505,6 +507,14 @@
           "label": "Attiva schermo intero automatico"
         },
         "group": "Generale"
+      },
+      "queue": {
+        "colors": {
+          "info": "Si activé, l'application utilisera la couleur dominante de la pochette de l'album actuel comme couleur de fond.",
+          "label": "Activer la couleur de fond dynamique"
+        },
+        "description": "Personnaliser la page de la file d'attente et des paroles.",
+        "group": "File d'attente et paroles"
       }
     },
     "audio": {
@@ -575,6 +585,22 @@
           "track": "Gain traccia"
         },
         "preAmp": "PreAmp (dB)"
+      },
+      "hapticFeedback": {
+        "description": "Control vibration feedback when interacting with the app.",
+        "enabled": {
+          "info": "When enabled, the device will vibrate when dragging queue items on mobile.",
+          "label": "Enable haptic feedback"
+        },
+        "group": "Haptic Feedback"
+      },
+      "pip": {
+        "group": "Picture-in-Picture",
+        "description": "Control how the app responds to picture-in-picture requests from the browser.",
+        "acceptBrowserRequest": {
+          "label": "Accept browser PiP requests",
+          "info": "When enabled, the app will respond to picture-in-picture requests from the browser. When disabled, the mini-player can only be opened manually via the PiP button."
+        }
       }
     },
     "content": {
@@ -881,7 +907,8 @@
             "label": "Copertine",
             "description": "Immagini di album · artisti · playlist"
           }
-        }
+        },
+        "downloading": "Scaricamento {{count}} brani"
       }
     }
   },
@@ -1030,14 +1057,17 @@
     "system": "Sistema",
     "tinacious-design": "Tinacious Design",
     "vim-dark-soft": "Vim Scuro Leggero",
-    "vue-dark": "Vue Scuro"
+    "vue-dark": "Vue Scuro",
+    "cool": "Cool",
+    "huacat-pink": "Huacat Pink"
   },
   "time": {
     "days_one": "{{days}} giorno",
     "days_other": "{{days}} giorni",
     "hour": "{{hour}} h",
     "minutes": "{{minutes}} min",
-    "seconds": "{{seconds}} s"
+    "seconds": "{{seconds}} s",
+    "days_many": "{{days}} días"
   },
   "toast": {
     "server": {

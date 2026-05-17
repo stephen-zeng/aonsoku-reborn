@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { areSongListsEqual } from "./compareSongLists";
 import type { ISong } from "@/types/responses/song";
+import { areSongListsEqual } from "./compareSongLists";
 
 function makeSong(id: string): ISong {
   return { id } as ISong;

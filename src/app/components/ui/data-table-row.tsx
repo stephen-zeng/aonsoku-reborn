@@ -1,6 +1,13 @@
 import { Cell, flexRender, Row } from "@tanstack/react-table";
 import clsx from "clsx";
-import { ComponentPropsWithoutRef, memo, ReactNode, useMemo } from "react";
+import {
+  ComponentPropsWithoutRef,
+  memo,
+  ReactNode,
+  TouchEvent,
+  useMemo,
+  useState,
+} from "react";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { usePlayerCurrentSong } from "@/store/player.store";
 import { ColumnDefType } from "@/types/react-table/columnDef";
@@ -9,8 +16,8 @@ interface RowProps<TData> extends ComponentPropsWithoutRef<"div"> {
   index: number;
   row: Row<TData>;
   contextMenuOptions: ReactNode;
-  isPrevRowSelected: (rowIndex: number) => boolean;
-  isNextRowSelected: (rowIndex: number) => boolean;
+  isPrevRowSelected: boolean;
+  isNextRowSelected: boolean;
   variant?: "classic" | "modern";
   dataType?: "song" | "artist" | "playlist" | "radio";
 }
@@ -29,6 +36,7 @@ export function TableRow<TData>({
   ...props
 }: RowProps<TData>) {
   const currentSong = usePlayerCurrentSong();
+  const [isPressed, setIsPressed] = useState(false);
 
   const isClassic = variant === "classic";
   const isModern = variant === "modern";
@@ -42,25 +50,52 @@ export function TableRow<TData>({
     return songId === currentSong?.id;
   }, [currentSong?.id, dataType, songId]);
 
+  function handleTouchStart(e: TouchEvent<HTMLDivElement>) {
+    setIsPressed(true);
+    props.onTouchStart?.(e);
+  }
+
+  function handleTouchMove(e: TouchEvent<HTMLDivElement>) {
+    setIsPressed(false);
+    props.onTouchMove?.(e);
+  }
+
+  function handleTouchEnd(e: TouchEvent<HTMLDivElement>) {
+    setIsPressed(false);
+    props.onTouchEnd?.(e);
+  }
+
+  function handleTouchCancel(e: TouchEvent<HTMLDivElement>) {
+    setIsPressed(false);
+    props.onTouchCancel?.(e);
+  }
+
   return (
     <MemoContextMenuProvider options={contextMenuOptions}>
       <div
         {...props}
         role="row"
+        tabIndex={0}
         data-test-id="table-row"
+        data-row-index={index}
         data-state={row.getIsSelected() && "selected"}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchCancel}
         className={clsx(
           "group/tablerow w-full flex flex-row",
           isModern &&
             row.getIsSelected() &&
-            !isPrevRowSelected(index) &&
+            !isPrevRowSelected &&
             "rounded-t-md",
           isModern &&
             row.getIsSelected() &&
-            !isNextRowSelected(index) &&
+            !isNextRowSelected &&
             "rounded-b-md",
           isModern && !row.getIsSelected() && "rounded-md",
-          "hover-supported:bg-muted md:data-[state=selected]:bg-primary/75",
+          "hover-supported:bg-muted md:data-[state=selected]:bg-primary/75 focus:outline-none",
+          isPressed && "bg-muted",
           isClassic && "border-b",
           isRowSongActive && isModern && "row-active",
         )}

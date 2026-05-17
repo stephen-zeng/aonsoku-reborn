@@ -6,6 +6,7 @@ import {
   PlayerStatePayload,
 } from "../../preload/types";
 import { getIsQuitting } from "../index";
+import { setupMiniPlayerIpc } from "../mini-player";
 import { tray, updateTray } from "../tray";
 import { colorsState } from "./colors";
 import {
@@ -82,6 +83,8 @@ export function setupIpcEvents(window: BrowserWindow | null) {
 
   ipcMain.removeAllListeners();
 
+  setupMiniPlayerIpc();
+
   ipcMain.on(IpcChannels.ToggleFullscreen, (_, isFullscreen: boolean) => {
     window.setFullScreen(isFullscreen);
   });
@@ -96,20 +99,46 @@ export function setupIpcEvents(window: BrowserWindow | null) {
     return window.isMaximized();
   });
 
-  ipcMain.on(IpcChannels.ToggleMaximize, (_, isMaximized: boolean) => {
+  ipcMain.on(IpcChannels.ToggleMaximize, (event, isMaximized: boolean) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win) return;
     if (isMaximized) {
-      window.unmaximize();
+      win.unmaximize();
     } else {
-      window.maximize();
+      win.maximize();
     }
   });
 
-  ipcMain.on(IpcChannels.ToggleMinimize, () => {
-    window.minimize();
+  ipcMain.on(IpcChannels.ToggleMinimize, (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win) return;
+    win.minimize();
   });
 
-  ipcMain.on(IpcChannels.CloseWindow, () => {
-    window.close();
+  ipcMain.on(IpcChannels.CloseWindow, (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win) return;
+    win.close();
+  });
+
+  ipcMain.on(IpcChannels.FocusMainWindow, () => {
+    if (window && !window.isDestroyed()) {
+      if (window.isMinimized()) window.restore();
+      if (!window.isVisible()) window.show();
+      window.focus();
+    }
+  });
+
+  ipcMain.on(IpcChannels.SetAlwaysOnTop, (event, isAlwaysOnTop: boolean) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win) return;
+    win.setAlwaysOnTop(isAlwaysOnTop);
+  });
+
+  ipcMain.removeHandler(IpcChannels.IsAlwaysOnTop);
+  ipcMain.handle(IpcChannels.IsAlwaysOnTop, (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    return win?.isAlwaysOnTop() ?? false;
   });
 
   ipcMain.on(IpcChannels.ThemeChanged, (_, colors: OverlayColors) => {

@@ -16,7 +16,6 @@ import {
 import { hasElectronBridge } from "@/utils/desktop";
 import { discordRpc } from "@/utils/discordRpc";
 import { logger } from "@/utils/logger";
-import { isValidServerUrl, normalizeServerUrl } from "@/utils/serverUrl";
 import {
   genEncodedPassword,
   genPassword,
@@ -25,6 +24,7 @@ import {
   getAuthType,
   hasValidConfig,
 } from "@/utils/salt";
+import { isValidServerUrl, normalizeServerUrl } from "@/utils/serverUrl";
 
 const configSource =
   typeof window !== "undefined"

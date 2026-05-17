@@ -1,4 +1,5 @@
 import type { Draft } from "immer";
+import { LanControlMessageType } from "@/types/lanControl";
 import type {
   IContextQueue,
   IPlayerContext,
@@ -6,7 +7,6 @@ import type {
   QueueSourceId,
 } from "@/types/playerContext";
 import { LoopState } from "@/types/playerContext";
-import { LanControlMessageType } from "@/types/lanControl";
 import type { ISong } from "@/types/responses/song";
 import {
   MAX_SHUFFLE_START_HISTORY,

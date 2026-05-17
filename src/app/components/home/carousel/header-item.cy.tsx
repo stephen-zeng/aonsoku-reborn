@@ -21,23 +21,25 @@ describe('HeaderItem Component', () => {
     })
   })
 
-  it('should reduce image size on hd displays', () => {
+  it('should render on hd displays', () => {
     cy.viewport(1280, 720)
 
     cy.fixture('songs/song').then((song: ISong) => {
       cy.mount(<HeaderItem song={song} />)
 
-      cy.getByTestId('header-image').invoke('width').should('equal', 152)
-      cy.getByTestId('header-image').invoke('height').should('equal', 152)
+      cy.getByTestId('header-image-container').should('exist')
+      cy.getByTestId('header-bg').should('have.css', 'background-image')
+      cy.getByTestId('header-title').should('have.text', song.title)
     })
   })
 
-  it('should keep image size on full hd displays', () => {
+  it('should render on full hd displays', () => {
     cy.fixture('songs/song').then((song: ISong) => {
       cy.mount(<HeaderItem song={song} />)
 
-      cy.getByTestId('header-image').invoke('width').should('equal', 252)
-      cy.getByTestId('header-image').invoke('height').should('equal', 252)
+      cy.getByTestId('header-image-container').should('exist')
+      cy.getByTestId('header-bg').should('have.css', 'background-image')
+      cy.getByTestId('header-title').should('have.text', song.title)
     })
   })
 })

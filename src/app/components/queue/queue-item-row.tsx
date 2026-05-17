@@ -1,12 +1,13 @@
-import { useSortable } from "@dnd-kit/sortable";
 import type { DraggableAttributes, SyntheticListenerMap } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
 import { EllipsisVertical, GripVertical, PlayIcon } from "lucide-react";
 import { CSSProperties, forwardRef, useState } from "react";
+import { useWebHaptics } from "web-haptics/react";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
-import { CachedIndicator } from "@/app/components/table/cached-indicator";
 import { CacheButton } from "@/app/components/table/cache-button";
+import { CachedIndicator } from "@/app/components/table/cached-indicator";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { Button } from "@/app/components/ui/button";
 import {
@@ -14,12 +15,11 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
+import { useHapticSettings } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
 import { QueueMenuOptions } from "./queue-menu-options";
-import { useHapticSettings } from "@/store/player.store";
-import { useWebHaptics } from "web-haptics/react";
 
 interface QueueItemRowProps {
   song: ISong;

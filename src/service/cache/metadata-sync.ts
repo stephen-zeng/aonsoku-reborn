@@ -3,8 +3,9 @@
  * The primary implementation is in sync.worker.ts (Web Worker).
  * This file is kept for environments where Web Workers are unavailable.
  */
-import { queryClient } from "@/lib/queryClient";
+
 import { httpClient } from "@/api/httpClient";
+import { queryClient } from "@/lib/queryClient";
 import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
 import { useCacheStore } from "@/store/cache.store";

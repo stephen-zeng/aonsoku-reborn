@@ -517,6 +517,14 @@
           "label": "开启自动全屏"
         },
         "group": "通用"
+      },
+      "queue": {
+        "colors": {
+          "info": "Si activé, l'application utilisera la couleur dominante de la pochette de l'album actuel comme couleur de fond.",
+          "label": "Activer la couleur de fond dynamique"
+        },
+        "description": "Personnaliser la page de la file d'attente et des paroles.",
+        "group": "File d'attente et paroles"
       }
     },
     "audio": {
@@ -526,6 +534,14 @@
         "enabled": {
           "label": "启用震动反馈",
           "info": "启用后，在移动设备上拖动队列项目时设备将会震动。"
+        }
+      },
+      "pip": {
+        "group": "画中画",
+        "description": "控制应用如何响应来自浏览器的画中画请求。",
+        "acceptBrowserRequest": {
+          "label": "接受浏览器的画中画请求",
+          "info": "启用后，应用将响应来自浏览器的画中画请求。禁用后，迷你播放器只能通过画中画按钮手动打开。"
         }
       },
       "history": {
@@ -1050,7 +1066,9 @@
     "system": "系统",
     "tinacious-design": "Tinacious Design",
     "vim-dark-soft": "Vim Dark Soft",
-    "vue-dark": "Vue Dark"
+    "vue-dark": "Vue Dark",
+    "cool": "Cool",
+    "huacat-pink": "Huacat Pink"
   },
   "time": {
     "days_one": "{{days}} 天",

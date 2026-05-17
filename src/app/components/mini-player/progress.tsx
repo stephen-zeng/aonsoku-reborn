@@ -1,67 +1,92 @@
-import { useMemo } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Slider } from "@/app/components/ui/slider";
-import { useAudioSeeking } from "@/app/hooks/use-audio-seeking";
-import {
-  usePlayerBufferedProgress,
-  usePlayerDuration,
-  usePlayerIsBuffering,
-  usePlayerProgress,
-  usePlayerRef,
-} from "@/store/player.store";
+import { cn } from "@/lib/utils";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
+import { useMiniPlayerContext } from "./context";
 
-export function MiniPlayerProgress() {
-  const progress = usePlayerProgress();
-  const bufferedProgress = usePlayerBufferedProgress();
-  const audioPlayerRef = usePlayerRef();
-  const currentDuration = usePlayerDuration();
-  const isBuffering = usePlayerIsBuffering();
+interface MiniPlayerProgressProps {
+  showTime?: boolean;
+  compact?: boolean;
+  className?: string;
+}
 
-  const audioRef = useMemo(
-    () => ({ current: audioPlayerRef }),
-    [audioPlayerRef],
-  );
+export function MiniPlayerProgress({
+  showTime = true,
+  compact = false,
+  className,
+}: MiniPlayerProgressProps) {
+  const { state, actions } = useMiniPlayerContext();
 
-  const {
-    localProgress,
-    isLocalSeeking,
-    handleSeeking,
-    handleSeeked,
-  } = useAudioSeeking({ audioRef });
+  const progress = state?.progress ?? 0;
+  const currentDuration = state?.duration ?? 0;
+  const isBuffering = state?.isBuffering ?? false;
 
-  const currentTime = convertSecondsToTime(
-    isLocalSeeking ? localProgress : progress,
-  );
+  const [localProgress, setLocalProgress] = useState(progress);
+  const [isLocalSeeking, setIsLocalSeeking] = useState(false);
 
-  const songDuration = useMemo(
-    () => convertSecondsToTime(currentDuration ?? 0),
-    [currentDuration],
-  );
+  useEffect(() => {
+    if (!isLocalSeeking) {
+      setLocalProgress(progress);
+    }
+  }, [progress, isLocalSeeking]);
+
+  const handleSeeking = useCallback((value: number) => {
+    setIsLocalSeeking(true);
+    setLocalProgress(value);
+  }, []);
+
+  const handleSeeked = useCallback((value: number) => {
+    setIsLocalSeeking(false);
+    actions.seek(value);
+  }, [actions]);
+
+  const currentTime = convertSecondsToTime(localProgress);
+  const songDuration = convertSecondsToTime(currentDuration);
+
+  const timeClass = compact
+    ? "text-[10px] font-light tabular-nums whitespace-nowrap"
+    : "min-w-[40px] text-[11px] font-light drop-shadow-md";
 
   return (
-    <div className="flex items-center flex-col">
-      <div className="w-full flex justify-between text-foreground/70">
-        <div className="min-w-[40px] text-left text-[11px] font-light drop-shadow-md">
+    <div
+      className={cn(
+        compact
+          ? "grid grid-cols-[auto_1fr_auto] items-center gap-2 w-full"
+          : "flex items-center flex-col w-full",
+        className,
+      )}
+    >
+      {showTime && compact && (
+        <div className={cn(timeClass, "text-right text-foreground/70")}>
           {currentTime}
         </div>
+      )}
 
-        <div className="min-w-[40px] text-right text-[11px] font-light drop-shadow-md">
-          {songDuration}
+      {showTime && !compact && (
+        <div className="w-full flex justify-between text-foreground/70">
+          <div className={cn(timeClass, "text-left")}>{currentTime}</div>
+          <div className={cn(timeClass, "text-right")}>{songDuration}</div>
         </div>
-      </div>
+      )}
 
       <Slider
         variant="secondary"
         isBuffering={isBuffering}
-        bufferedProgress={bufferedProgress}
+        hideThumb
         defaultValue={[0]}
-        value={isLocalSeeking ? [localProgress] : [progress]}
-        max={currentDuration}
+        value={[localProgress]}
+        max={currentDuration || 1}
         step={1}
-        className="w-full h-4"
+        className={cn("w-full", !compact && showTime ? "h-4" : "h-3")}
         onValueChange={([value]) => handleSeeking(value)}
         onValueCommit={([value]) => handleSeeked(value)}
       />
+
+      {showTime && compact && (
+        <div className={cn(timeClass, "text-left text-foreground/70")}>
+          {songDuration}
+        </div>
+      )}
     </div>
   );
 }

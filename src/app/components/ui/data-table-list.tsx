@@ -15,6 +15,7 @@ import debounce from "lodash/debounce";
 import {
   MouseEvent,
   memo,
+  startTransition,
   TouchEvent,
   useCallback,
   useEffect,
@@ -26,6 +27,7 @@ import { isMacOs } from "react-device-detect";
 import { useHotkeys } from "react-hotkeys-hook";
 import { SongMenuOptions } from "@/app/components/song/menu-options";
 import { SelectedSongsMenuOptions } from "@/app/components/song/selected-options";
+import { useDataTableKeyboardNavigation } from "@/app/hooks/use-data-table-keyboard-navigation";
 import { ColumnFilter } from "@/types/columnFilter";
 import { ColumnDefType } from "@/types/react-table/columnDef";
 import { ISong } from "@/types/responses/song";
@@ -82,9 +84,11 @@ export function DataTableList<TData, TValue>({
   scrollToIndex = false,
   currentSongIndex,
 }: DataTableProps<TData, TValue>) {
-  const newColumns = columns.filter((column) => {
-    return columnFilter?.includes(column.id as ColumnFilter);
-  });
+  const newColumns = useMemo(() => {
+    return columns.filter((column) => {
+      return columnFilter?.includes(column.id as ColumnFilter);
+    });
+  }, [columns, columnFilter]);
 
   const [columnSearch, setColumnSearch] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -92,13 +96,19 @@ export function DataTableList<TData, TValue>({
   const [lastRowSelected, setLastRowSelected] = useState<number | null>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
+  const lastRowSelectedRef = useRef<number | null>(null);
+  useEffect(() => {
+    lastRowSelectedRef.current = lastRowSelected;
+  }, [lastRowSelected]);
+
+  const handlePlaySongRef = useRef(handlePlaySong);
+  useEffect(() => {
+    handlePlaySongRef.current = handlePlaySong;
+  }, [handlePlaySong]);
+
   const selectedRows = useMemo(
     () => Object.keys(rowSelection).map(Number),
     [rowSelection],
-  );
-  const isRowSelected = useCallback(
-    (rowIndex: number) => selectedRows.includes(rowIndex),
-    [selectedRows],
   );
 
   const tableConfig = useMemo(
@@ -142,6 +152,10 @@ export function DataTableList<TData, TValue>({
   );
 
   const table = useReactTable(tableConfig);
+  const tableRef = useRef(table);
+  useEffect(() => {
+    tableRef.current = table;
+  }, [table]);
 
   const { rows } = table.getRowModel();
 
@@ -165,10 +179,10 @@ export function DataTableList<TData, TValue>({
   const selectAllShortcut = useCallback(
     (state = true) => {
       if (allowRowSelection) {
-        table.toggleAllRowsSelected(state);
+        tableRef.current.toggleAllRowsSelected(state);
       }
     },
-    [allowRowSelection, table],
+    [allowRowSelection],
   );
 
   useHotkeys("mod+a", () => selectAllShortcut(), {
@@ -204,11 +218,16 @@ export function DataTableList<TData, TValue>({
     (row: Row<TData>) => {
       if (!showContextMenu) return undefined;
 
+      const currentTable = tableRef.current;
+
       if (dataType === "song") {
-        if (table.getIsSomeRowsSelected() || table.getIsAllRowsSelected()) {
+        if (
+          currentTable.getIsSomeRowsSelected() ||
+          currentTable.getIsAllRowsSelected()
+        ) {
           return (
             <SelectedSongsMenuOptions
-              table={table as unknown as Table<ISong>}
+              table={currentTable as unknown as Table<ISong>}
             />
           );
         } else {
@@ -224,7 +243,7 @@ export function DataTableList<TData, TValue>({
 
       return undefined;
     },
-    [dataType, showContextMenu, table],
+    [dataType, showContextMenu],
   );
 
   const handleLeftClick = useCallback(
@@ -243,69 +262,74 @@ export function DataTableList<TData, TValue>({
         return;
       }
 
-      if (e.shiftKey && lastRowSelected !== null) {
+      if (e.shiftKey && lastRowSelectedRef.current !== null) {
         const selectedRowsUpdater = computeMultiSelectedRows(
-          lastRowSelected,
+          lastRowSelectedRef.current,
           row.index,
         );
-        table.setRowSelection(selectedRowsUpdater);
+        tableRef.current.setRowSelection(selectedRowsUpdater);
         return;
       }
 
       // Deselect all rows, except current one
-      table.setRowSelection({
+      tableRef.current.setRowSelection({
         [row.index]: true,
       });
       setLastRowSelected(row.index);
     },
-    [allowRowSelection, lastRowSelected, table],
+    [allowRowSelection],
   );
 
   const handleRightClick = useCallback(
     (row: Row<TData>) => {
       if (!allowRowSelection) return;
 
-      const hasSelectedRows = selectedRows.length > 0;
-      const isSelected = isRowSelected(row.index);
+      const hasSelectedRows =
+        tableRef.current.getSelectedRowModel().rows.length > 0;
+      const isSelected = row.getIsSelected();
 
       if (hasSelectedRows && !isSelected) {
-        table.resetRowSelection();
+        tableRef.current.resetRowSelection();
       }
 
       row.toggleSelected(true);
       setLastRowSelected(row.index);
     },
-    [allowRowSelection, isRowSelected, selectedRows.length, table],
+    [allowRowSelection],
   );
 
   const handleClicks = useCallback(
     (e: MouseEvent<HTMLDivElement>, row: Row<TData>) => {
-      if (e.nativeEvent.button === MouseButton.Left) {
-        handleLeftClick(e, row);
-      }
-      if (e.nativeEvent.button === MouseButton.Right) {
-        handleRightClick(row);
-      }
+      startTransition(() => {
+        if (e.nativeEvent.button === MouseButton.Left) {
+          handleLeftClick(e, row);
+        }
+        if (e.nativeEvent.button === MouseButton.Right) {
+          handleRightClick(row);
+        }
+      });
     },
     [handleLeftClick, handleRightClick],
   );
 
   const handleRowDbClick = useCallback(
     (e: MouseEvent<HTMLDivElement>, row: Row<TData>) => {
-      if (!handlePlaySong) return;
+      if (!handlePlaySongRef.current) return;
 
       const target = e.target as HTMLElement;
       if (target.closest("[data-radix-menu-content]")) return;
 
       e.stopPropagation();
-      handlePlaySong(row);
+      startTransition(() => {
+        handlePlaySongRef.current?.(row);
+      });
     },
-    [handlePlaySong],
+    [],
   );
 
   const handleRowTap = useCallback(
     (e: TouchEvent<HTMLDivElement>, row: Row<TData>) => {
-      if (!handlePlaySong) return;
+      if (!handlePlaySongRef.current) return;
 
       // Check if the touch target is within a button, interactive element, or menu
       const target = e.target as HTMLElement;
@@ -316,11 +340,36 @@ export function DataTableList<TData, TValue>({
       // Don't trigger the row tap if touching a button, interactive element, or menu
       if (!isButton && !isInteractive && !isMenuContent) {
         e.stopPropagation();
-        handlePlaySong(row);
+        startTransition(() => {
+          handlePlaySongRef.current?.(row);
+        });
       }
     },
-    [handlePlaySong],
+    [],
   );
+
+  const handleRowKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>, row: Row<TData>) => {
+      if (e.key === "Enter" && handlePlaySongRef.current) {
+        e.preventDefault();
+        e.stopPropagation();
+        startTransition(() => {
+          handlePlaySongRef.current?.(row);
+        });
+      }
+    },
+    [],
+  );
+
+  const { handleTableKeyDown } = useDataTableKeyboardNavigation({
+    table: tableRef.current,
+    rows,
+    tableContainerRef,
+    setLastRowSelected,
+    lastRowSelected,
+    allowRowSelection,
+    virtualizer,
+  });
 
   const handleScroll = useCallback(() => {
     if (!virtualizer.scrollElement || !hasNextPage || !fetchNextPage) return;
@@ -366,6 +415,7 @@ export function DataTableList<TData, TValue>({
         className="relative w-full h-full overflow-hidden cursor-default caption-bottom text-sm bg-transparent"
         data-testid="data-table"
         role="table"
+        onKeyDown={handleTableKeyDown}
       >
         <div className={clsx(!showHeader && "hidden")}>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -412,6 +462,7 @@ export function DataTableList<TData, TValue>({
                     handleClicks={handleClicks}
                     handleRowDbClick={handleRowDbClick}
                     handleRowTap={handleRowTap}
+                    handleRowKeyDown={handleRowKeyDown}
                     getContextMenuOptions={getContextMenuOptions}
                     dataType={dataType}
                     pageType={pageType}

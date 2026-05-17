@@ -18,6 +18,7 @@ import {
   Fragment,
   MouseEvent,
   memo,
+  startTransition,
   TouchEvent,
   useCallback,
   useEffect,
@@ -35,6 +36,7 @@ import { SelectedSongsMenuOptions } from "@/app/components/song/selected-options
 import { Button } from "@/app/components/ui/button";
 import { DataTablePagination } from "@/app/components/ui/data-table-pagination";
 import { Input } from "@/app/components/ui/input";
+import { useDataTableKeyboardNavigation } from "@/app/hooks/use-data-table-keyboard-navigation";
 import { ColumnFilter } from "@/types/columnFilter";
 import { ColumnDefType } from "@/types/react-table/columnDef";
 import { Playlist } from "@/types/responses/playlist";
@@ -75,9 +77,6 @@ interface DataTableProps<TData, TValue> {
   dataType?: "song" | "artist" | "playlist" | "radio";
 }
 
-let isTap = false;
-let tapTimeout: NodeJS.Timeout;
-
 export function DataTable<TData, TValue>({
   columns,
   data,
@@ -95,15 +94,21 @@ export function DataTable<TData, TValue>({
   dataType = "song",
 }: DataTableProps<TData, TValue>) {
   const { t } = useTranslation();
-  const newColumns = columns.filter((column) => {
-    return columnFilter?.includes(column.id as ColumnFilter);
-  });
+  const newColumns = useMemo(() => {
+    return columns.filter((column) => {
+      return columnFilter?.includes(column.id as ColumnFilter);
+    });
+  }, [columns, columnFilter]);
 
   const [columnSearch, setColumnSearch] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState({});
   const [lastRowSelected, setLastRowSelected] = useState<number | null>(null);
   const tableRef = useRef<HTMLDivElement>(null);
+  const tapStateRef = useRef({
+    isTap: false,
+    tapTimeout: null as ReturnType<typeof setTimeout> | null,
+  });
 
   const isClassic = variant === "classic";
   const isModern = variant === "modern";
@@ -115,14 +120,6 @@ export function DataTable<TData, TValue>({
   const isRowSelected = useCallback(
     (rowIndex: number) => selectedRows.includes(rowIndex),
     [selectedRows],
-  );
-  const isPrevRowSelected = useCallback(
-    (rowIndex: number) => isRowSelected(rowIndex - 1),
-    [isRowSelected],
-  );
-  const isNextRowSelected = useCallback(
-    (rowIndex: number) => isRowSelected(rowIndex + 1),
-    [isRowSelected],
   );
 
   const table = useReactTable({
@@ -193,7 +190,7 @@ export function DataTable<TData, TValue>({
       ? (table.getColumn(searchColumn || "")?.getFilterValue() as string)
       : undefined;
 
-  const getDiscIndexes = useCallback(() => {
+  const discIndexes = useMemo(() => {
     const uniqueIndices: number[] = [];
     const seen = new Set<number>();
 
@@ -220,7 +217,6 @@ export function DataTable<TData, TValue>({
     };
   }, [rows, showDiscNumber]);
 
-  const discIndexes = getDiscIndexes();
   const isSingleDisk = discIndexes.seen.size <= 1;
   const discNumberIndexes = discIndexes.uniqueIndices;
 
@@ -314,12 +310,14 @@ export function DataTable<TData, TValue>({
 
   const handleClicks = useCallback(
     (e: MouseEvent<HTMLDivElement>, row: Row<TData>) => {
-      if (e.nativeEvent.button === MouseButton.Left) {
-        handleLeftClick(e, row);
-      }
-      if (e.nativeEvent.button === MouseButton.Right) {
-        handleRightClick(row);
-      }
+      startTransition(() => {
+        if (e.nativeEvent.button === MouseButton.Left) {
+          handleLeftClick(e, row);
+        }
+        if (e.nativeEvent.button === MouseButton.Right) {
+          handleRightClick(row);
+        }
+      });
     },
     [handleLeftClick, handleRightClick],
   );
@@ -332,15 +330,41 @@ export function DataTable<TData, TValue>({
       if (target.closest("[data-radix-menu-content]")) return;
 
       e.stopPropagation();
-      handlePlaySong(row);
+      startTransition(() => {
+        handlePlaySong(row);
+      });
     },
     [handlePlaySong],
   );
 
+  const handleRowKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>, row: Row<TData>) => {
+      if (e.key === "Enter" && handlePlaySong) {
+        e.preventDefault();
+        e.stopPropagation();
+        startTransition(() => {
+          handlePlaySong(row);
+        });
+      }
+    },
+    [handlePlaySong],
+  );
+
+  const { handleTableKeyDown } = useDataTableKeyboardNavigation({
+    table,
+    rows,
+    tableContainerRef: tableRef,
+    setLastRowSelected,
+    lastRowSelected,
+    allowRowSelection,
+  });
+
   const handleRowTap = useCallback(
     (e: TouchEvent<HTMLDivElement>, row: Row<TData>) => {
-      clearTimeout(tapTimeout);
-      if (isTap && handlePlaySong) {
+      if (tapStateRef.current.tapTimeout) {
+        clearTimeout(tapStateRef.current.tapTimeout);
+      }
+      if (tapStateRef.current.isTap && handlePlaySong) {
         // Check if the touch target is within a button or interactive element
         const target = e.target as HTMLElement;
         const isButton = target.closest("button");
@@ -350,28 +374,32 @@ export function DataTable<TData, TValue>({
         // Don't trigger the row tap if touching a button, interactive element, or menu
         if (!isButton && !isInteractive && !isMenuContent) {
           e.stopPropagation();
-          handlePlaySong(row);
+          startTransition(() => {
+            handlePlaySong(row);
+          });
         }
       }
     },
     [handlePlaySong],
   );
 
-  function handleTouchStart() {
-    isTap = true;
-    tapTimeout = setTimeout(() => {
-      isTap = false;
+  const handleTouchStart = useCallback(() => {
+    tapStateRef.current.isTap = true;
+    tapStateRef.current.tapTimeout = setTimeout(() => {
+      tapStateRef.current.isTap = false;
     }, 500);
-  }
+  }, []);
 
-  function handleTouchMove() {
-    isTap = false;
-  }
+  const handleTouchMove = useCallback(() => {
+    tapStateRef.current.isTap = false;
+  }, []);
 
-  function handleTouchCancel() {
-    clearTimeout(tapTimeout);
-    isTap = false;
-  }
+  const handleTouchCancel = useCallback(() => {
+    if (tapStateRef.current.tapTimeout) {
+      clearTimeout(tapStateRef.current.tapTimeout);
+    }
+    tapStateRef.current.isTap = false;
+  }, []);
 
   return (
     <>
@@ -415,6 +443,7 @@ export function DataTable<TData, TValue>({
           )}
           data-testid="data-table"
           role="table"
+          onKeyDown={handleTableKeyDown}
         >
           {showHeader && (
             <div>
@@ -495,8 +524,8 @@ export function DataTable<TData, TValue>({
                       index={index}
                       row={row}
                       contextMenuOptions={getContextMenuOptions(row)}
-                      isPrevRowSelected={isPrevRowSelected}
-                      isNextRowSelected={isNextRowSelected}
+                      isPrevRowSelected={isRowSelected(index - 1)}
+                      isNextRowSelected={isRowSelected(index + 1)}
                       variant={variant}
                       dataType={dataType}
                       onClick={(e) => handleClicks(e, row)}
@@ -506,6 +535,7 @@ export function DataTable<TData, TValue>({
                       onTouchEnd={(e) => handleRowTap(e, row)}
                       onTouchCancel={handleTouchCancel}
                       onContextMenu={(e) => handleClicks(e, row)}
+                      onKeyDown={(e) => handleRowKeyDown(e, row)}
                     />
                   </Fragment>
                 ))

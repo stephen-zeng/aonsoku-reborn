@@ -1,7 +1,7 @@
+import type { CoverArt } from "@/types/coverArtType";
 import type { AuthType } from "@/types/serverConfig";
 import { appName } from "@/utils/appName";
-import { authQueryParams, type AuthParams } from "./auth";
-import type { CoverArt } from "@/types/coverArtType";
+import { type AuthParams, authQueryParams } from "./auth";
 
 export interface ServerAuthConfig {
   url: string;

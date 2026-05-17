@@ -28,6 +28,7 @@ const api: IAonsokuAPI = {
     ipcRenderer.send(IpcChannels.ToggleMaximize, isMaximized),
   toggleMinimize: () => ipcRenderer.send(IpcChannels.ToggleMinimize),
   closeWindow: () => ipcRenderer.send(IpcChannels.CloseWindow),
+  focusMainWindow: () => ipcRenderer.send(IpcChannels.FocusMainWindow),
   setTitleBarOverlayColors: (color) =>
     ipcRenderer.send(IpcChannels.ThemeChanged, color),
   setNativeTheme: (isDark) =>
@@ -50,6 +51,21 @@ const api: IAonsokuAPI = {
   saveAppSettings: (payload) => {
     ipcRenderer.send(IpcChannels.SaveAppSettings, payload);
   },
+  // Mini Player
+  openMiniPlayer: () => ipcRenderer.send(IpcChannels.OpenMiniPlayer),
+  closeMiniPlayer: () => ipcRenderer.send(IpcChannels.CloseMiniPlayer),
+  isMiniPlayerOpen: () => ipcRenderer.invoke(IpcChannels.IsMiniPlayerOpen),
+  miniPlayerStatusListener: (func) => {
+    ipcRenderer.on(IpcChannels.MiniPlayerStatus, (_, isOpen: boolean) =>
+      func(isOpen),
+    );
+  },
+  removeMiniPlayerStatusListener: () => {
+    ipcRenderer.removeAllListeners(IpcChannels.MiniPlayerStatus);
+  },
+  setAlwaysOnTop: (isAlwaysOnTop) =>
+    ipcRenderer.send(IpcChannels.SetAlwaysOnTop, isAlwaysOnTop),
+  isAlwaysOnTop: () => ipcRenderer.invoke(IpcChannels.IsAlwaysOnTop),
   // LAN Control
   lanControl: {
     start: (config) => ipcRenderer.invoke(IpcChannels.LanControlStart, config),

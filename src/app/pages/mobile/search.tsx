@@ -1,5 +1,5 @@
 import { Play, SearchIcon } from "lucide-react";
-import { useRef, useState } from "react";
+import { startTransition, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
@@ -8,8 +8,10 @@ import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { useSongList } from "@/app/hooks/use-song-list";
-import { useOfflineQuery } from "@/lib/offlineQueryClient";
-import { getOfflineSearchResults } from "@/lib/offlineQueryClient";
+import {
+  getOfflineSearchResults,
+  useOfflineQuery,
+} from "@/lib/offlineQueryClient";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
@@ -44,7 +46,7 @@ function MobileResultItem({
     <button
       type="button"
       className="flex min-h-14 w-full items-center gap-3 px-4 py-2 active:bg-accent/50 text-left"
-      onClick={onRowClick}
+      onClick={() => startTransition(onRowClick)}
     >
       <CachedImage
         coverArtId={coverArt}
@@ -67,7 +69,7 @@ function MobileResultItem({
         className="size-11 p-0 rounded-full flex-shrink-0"
         onClick={(e) => {
           e.stopPropagation();
-          onPlayClick();
+          startTransition(onPlayClick);
         }}
       >
         <Play className="w-4 h-4 fill-foreground" />

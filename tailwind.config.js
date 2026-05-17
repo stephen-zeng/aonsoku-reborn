@@ -28,6 +28,11 @@ module.exports = {
       fontFamily: {
         sans: ["Poppins", "sans-serif"],
       },
+      fontSize: {
+        "mid-player-title": "clamp(13px, calc(6.25vh + 4.6875px), 16px)",
+        "mid-player-subtitle": "clamp(11px, calc(3.125vh + 6.84375px), 12px)",
+        "mini-player-title": "13px",
+      },
       spacing: {
         header: "var(--header-height)",
         sidebar: "var(--sidebar-width)",
@@ -39,6 +44,11 @@ module.exports = {
         "shadow-header-distance": "var(--shadow-header-distance)",
         toast: "var(--toastify-toast-container-height)",
         "bottom-nav": "var(--bottom-nav-height)",
+        "mid-player-image": "clamp(40px, calc(45vh - 20px), 70px)",
+        "mid-player-gap": "clamp(4px, calc(5vh - 3px), 8px)",
+        "mid-player-text-height": "clamp(40px, calc(12vh + 24px), 48px)",
+        "mid-player-padding": "clamp(6px, calc(3vh + 2px), 8px)",
+        "mid-player-progress-height": "clamp(16px, calc(10vh + 3px), 24px)",
       },
       colors: {
         border: "hsl(var(--border))",
@@ -121,7 +131,7 @@ module.exports = {
           "minmax(250px, 1fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(250px, 1fr)",
         header:
           "minmax(180px, 1fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(180px, 1fr)",
-        "mid-player-info": "minmax(40px, 70px) minmax(168px, 1fr)",
+        "mid-player-info": "minmax(40px, auto) minmax(168px, 1fr)",
         "mini-player": "minmax(30px, 40px) minmax(80px, 1fr) 64px",
       },
       gridTemplateRows: {
@@ -150,8 +160,8 @@ module.exports = {
         "header-image": "0 3px 20px rgba(0, 0, 0, 0.45)",
       },
       screens: {
-        "mid-player": { raw: "(min-height: 133px) and (max-height: 170px)" },
-        "mini-player": { raw: "(max-height: 132px)" },
+        "mid-player": { raw: "(min-height: 161px) and (max-height: 228px)" },
+        "mini-player": { raw: "(max-height: 160px)" },
       },
     },
   },

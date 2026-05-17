@@ -1,6 +1,10 @@
 import { ArtistLink, ArtistsLinks } from "@/app/components/song/artist-link";
 import { CoverImage } from "@/app/components/table/cover-image";
-import { useIsCurrentPlaying, useMainDrawerState, usePlayerStore } from "@/store/player.store";
+import {
+  useIsCurrentPlaying,
+  useMainDrawerState,
+  usePlayerStore,
+} from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 
 export function TableSongTitle({

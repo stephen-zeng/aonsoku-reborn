@@ -37,15 +37,18 @@ const MemoSidebarGenerator = memo(SidebarGenerator);
 
 export function Sidebar({ className }: SidebarProps) {
   const { t } = useTranslation();
-  const { isCollapsed, setWidth } = useSidebar();
+  const { isCollapsed, setWidth, setIsCollapsed } = useSidebar();
 
   const { handleMouseDown, handleDoubleClick } = useResizePanel({
     cssVar: "--sidebar-width",
-    min: 200,
+    min: 160,
     max: 420,
     defaultWidth: DEFAULT_SIDEBAR_WIDTH,
     direction: "right",
     onWidthChange: setWidth,
+    collapseThreshold: 120,
+    onCollapse: setIsCollapsed,
+    isCollapsed,
   });
 
   return (

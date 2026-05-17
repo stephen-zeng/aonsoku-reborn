@@ -75,7 +75,9 @@
     "headline": "Виконавець",
     "info": {
       "albumsCount_one": "{{count}} альбом",
-      "albumsCount_other": "{{count}} альбомів"
+      "albumsCount_other": "{{count}} альбомів",
+      "albumsCount_few": "{{count}} альбома",
+      "albumsCount_many": "{{count}} альбомов"
     },
     "recentAlbums": "Недавні альбоми",
     "relatedArtists": "Схожі виконавці",
@@ -389,8 +391,14 @@
           "error_one": "Не вдалося видалити пісню!",
           "error_other": "Не вдалося видалити пісні!",
           "success_one": "Пісню успішно видалено!",
-          "success_other": "Пісні успішно видалено!"
-        }
+          "success_other": "Пісні успішно видалено!",
+          "error_few": "Не удалось удалить треки!",
+          "error_many": "Не удалось удалить треки!",
+          "success_few": "Треки удалены!",
+          "success_many": "Треки удалены!"
+        },
+        "title_few": "Вы уверены, что хотите удалить выбранные треки?",
+        "title_many": "Вы уверены, что хотите удалить выбранные треки?"
       },
       "validations": {
         "nameLength": "Назва списку відтворення має містити щонайменше 2 символи."
@@ -478,7 +486,11 @@
     "management": "Керування сервером",
     "songCount_one": "{{count}} пісня",
     "songCount_other": "{{count}} пісень",
-    "status": "Статус"
+    "status": "Статус",
+    "folderCount_few": "{{count}} папки",
+    "folderCount_many": "{{count}} папок",
+    "songCount_few": "{{count}} трека",
+    "songCount_many": "{{count}} треков"
   },
   "settings": {
     "accounts": {
@@ -502,6 +514,14 @@
           "label": "Увімкнути автоматичний повноекранний режим"
         },
         "group": "Загальні"
+      },
+      "queue": {
+        "colors": {
+          "info": "Si activé, l'application utilisera la couleur dominante de la pochette de l'album actuel comme couleur de fond.",
+          "label": "Activer la couleur de fond dynamique"
+        },
+        "description": "Personnaliser la page de la file d'attente et des paroles.",
+        "group": "File d'attente et paroles"
       }
     },
     "audio": {
@@ -572,6 +592,22 @@
           "track": "Посилення треку"
         },
         "preAmp": "PreAmp (dB)"
+      },
+      "hapticFeedback": {
+        "description": "Control vibration feedback when interacting with the app.",
+        "enabled": {
+          "info": "When enabled, the device will vibrate when dragging queue items on mobile.",
+          "label": "Enable haptic feedback"
+        },
+        "group": "Haptic Feedback"
+      },
+      "pip": {
+        "group": "Picture-in-Picture",
+        "description": "Control how the app responds to picture-in-picture requests from the browser.",
+        "acceptBrowserRequest": {
+          "label": "Accept browser PiP requests",
+          "info": "When enabled, the app will respond to picture-in-picture requests from the browser. When disabled, the mini-player can only be opened manually via the PiP button."
+        }
       }
     },
     "content": {
@@ -878,7 +914,8 @@
             "label": "Обкладинки",
             "description": "Зображення альбомів · виконавців · списків відтворення"
           }
-        }
+        },
+        "downloading": "Завантаження {{count}} пісень"
       }
     }
   },
@@ -982,7 +1019,9 @@
     "lastPlayed": "{{date}} тому",
     "menu": {
       "selectedCount_one": "{{count}} вибрано",
-      "selectedCount_other": "{{count}} вибрано"
+      "selectedCount_other": "{{count}} вибрано",
+      "selectedCount_few": "{{count}} выбрано",
+      "selectedCount_many": "{{count}} выбрано"
     },
     "pagination": {
       "currentPage": "Сторінка {{currentPage}} з {{totalPages}}",
@@ -1026,14 +1065,18 @@
     "system": "Системна",
     "tinacious-design": "Tinacious Design",
     "vim-dark-soft": "Vim Dark Soft",
-    "vue-dark": "Vue Dark"
+    "vue-dark": "Vue Dark",
+    "cool": "Cool",
+    "huacat-pink": "Huacat Pink"
   },
   "time": {
     "days_one": "{{days}} день",
     "days_other": "{{days}} днів",
     "hour": "{{hour}} год",
     "minutes": "{{minutes}} хв",
-    "seconds": "{{seconds}} с"
+    "seconds": "{{seconds}} с",
+    "days_few": "{{days}} дня",
+    "days_many": "{{days}} дней"
   },
   "toast": {
     "server": {

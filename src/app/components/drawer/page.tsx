@@ -1,8 +1,8 @@
 import { ListVideo, MicVocalIcon, XIcon } from "lucide-react";
 import { ComponentPropsWithoutRef } from "react";
 import { useTranslation } from "react-i18next";
-import { FullscreenSongQueue } from "@/app/components/fullscreen/queue";
 import { LyricsTab } from "@/app/components/fullscreen/lyrics";
+import { FullscreenSongQueue } from "@/app/components/fullscreen/queue";
 import { Button } from "@/app/components/ui/button";
 import { ResizeHandle } from "@/app/components/ui/resize-handle";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
@@ -39,7 +39,7 @@ export function MainDrawerPage() {
     <div
       className={cn(
         "fixed top-[--header-height] right-0 bottom-[calc(var(--player-height)+var(--bottom-nav-height))] w-[--right-panel-width] z-30",
-        "border-l bg-background-foreground",
+        "border-l bg-background",
         "transition-transform duration-300 ease-in-out",
         "hidden lg:flex flex-col",
         mainDrawerState
@@ -61,7 +61,8 @@ export function MainDrawerPage() {
               className={cn(
                 "h-8 px-3 rounded-full gap-1.5 text-xs font-medium",
                 queueState && "bg-foreground/10 text-foreground",
-                !queueState && "text-muted-foreground hover-supported:text-foreground",
+                !queueState &&
+                  "text-muted-foreground hover-supported:text-foreground",
               )}
               onClick={() => {
                 if (lyricsState) toggleQueueAndLyrics();

@@ -1,9 +1,9 @@
+import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 import { subsonic } from "@/service/subsonic";
-import { useIsOnline } from "@/store/cache.store";
 import { useAppStore } from "@/store/app.store";
+import { useIsOnline } from "@/store/cache.store";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
-import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 
 async function fetchFavorites() {
   const response = await subsonic.songs.getFavoriteSongs();

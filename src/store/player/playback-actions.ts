@@ -1,9 +1,9 @@
 import type { Draft } from "immer";
 import clamp from "lodash/clamp";
-import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
 import { LanControlMessageType } from "@/types/lanControl";
-import { isIOS } from "@/utils/platform";
+import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
 import { logger } from "@/utils/logger";
+import { isIOS } from "@/utils/platform";
 
 interface SharedDeps {
   set: (fn: (state: Draft<IPlayerContext>) => void) => void;
@@ -18,7 +18,9 @@ export function createPlaybackActions(shared: SharedDeps) {
   return {
     setPlayingState: (status: boolean) => {
       const prev = get().playerState.isPlaying;
-      logger.info(`[setPlayingState] ${prev} → ${status} | isRemote=${!!isRemoteActive()}`);
+      logger.info(
+        `[setPlayingState] ${prev} → ${status} | isRemote=${!!isRemoteActive()}`,
+      );
       if (isRemoteActive()) {
         remoteSend(
           status ? LanControlMessageType.PLAY : LanControlMessageType.PAUSE,

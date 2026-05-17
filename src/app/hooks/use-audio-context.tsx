@@ -79,12 +79,11 @@ export function useAudioContext(
 
             try {
               await ctx.resume();
-              logger.info("[AudioContext:proactiveResume] resumed successfully");
-            } catch (error) {
-              logger.error(
-                "Failed to proactively resume AudioContext",
-                error,
+              logger.info(
+                "[AudioContext:proactiveResume] resumed successfully",
               );
+            } catch (error) {
+              logger.error("Failed to proactively resume AudioContext", error);
             }
           }
         };
@@ -129,7 +128,9 @@ export function useAudioContext(
     if (audioContext.state === "suspended") {
       try {
         await audioContext.resume();
-        logger.info(`[AudioContext:resumeResult] state=${audioContext.state} | success=true`);
+        logger.info(
+          `[AudioContext:resumeResult] state=${audioContext.state} | success=true`,
+        );
       } catch (error) {
         logger.error("Failed to resume AudioContext", error);
       }
@@ -183,13 +184,15 @@ export function useAudioContext(
       if (!audioContext) return;
 
       // When page becomes visible again, resume the context if suspended
-    if (!document.hidden && audioContext.state === "suspended") {
-      logger.info(`[AudioContext:visibilityResume] visibilityState=${document.visibilityState} | state=${audioContext.state}`);
-      try {
-        await audioContext.resume();
-        logger.info("[AudioContext:visibilityResume] resumed successfully");
-      } catch (error) {
-        logger.error("[AudioContext:visibilityResume] failed", error);
+      if (!document.hidden && audioContext.state === "suspended") {
+        logger.info(
+          `[AudioContext:visibilityResume] visibilityState=${document.visibilityState} | state=${audioContext.state}`,
+        );
+        try {
+          await audioContext.resume();
+          logger.info("[AudioContext:visibilityResume] resumed successfully");
+        } catch (error) {
+          logger.error("[AudioContext:visibilityResume] failed", error);
         }
       }
     };

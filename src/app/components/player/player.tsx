@@ -8,9 +8,10 @@ import { TrackInfo } from "@/app/components/player/track-info";
 import { Button } from "@/app/components/ui/button";
 import { useCachedAudioUrl } from "@/app/hooks/use-cached-audio";
 import { usePlayHistory } from "@/app/hooks/use-play-history";
-import { useScrobble } from "@/app/hooks/use-scrobble";
-import { usePreloadAudio } from "@/app/hooks/use-preload-audio";
 import { usePlayerBreakpoint } from "@/app/hooks/use-player-breakpoint";
+import { usePreloadAudio } from "@/app/hooks/use-preload-audio";
+import { useScrobble } from "@/app/hooks/use-scrobble";
+import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import {
   useIsRemoteControlActive,
   usePlayerActions,
@@ -24,13 +25,12 @@ import {
   useReplayGainState,
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
-import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
-import { hasPiPSupport } from "@/utils/browser";
+import { hasMiniPlayerSupport } from "@/utils/browser";
 import { isValidDuration } from "@/utils/duration";
 import { logger } from "@/utils/logger";
 import {
-  resolveReplayGainParams,
   type ReplayGainParams,
+  resolveReplayGainParams,
 } from "@/utils/replayGain";
 import { AudioPlayer } from "./audio";
 import { PlayerClearQueueButton } from "./clear-queue-button";
@@ -93,7 +93,9 @@ export function Player() {
     const timeout = setTimeout(() => {
       const current = usePlayerStore.getState().playerState.isTransitioning;
       if (current) {
-        logger.info(`[isTransitioning] timeout fallback, clearing isTransitioning`);
+        logger.info(
+          `[isTransitioning] timeout fallback, clearing isTransitioning`,
+        );
         setIsTransitioning(false);
       }
     }, 5000);
@@ -263,11 +265,19 @@ export function Player() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: songId and audioRef needed for debug logging
   const handleSongCanPlay = useCallback(() => {
     const audio = audioRef.current;
-    logger.info(`[onCanPlay] songId=${songId} | duration=${audio?.duration?.toFixed(2)} | isTransitioning=${usePlayerStore.getState().playerState.isTransitioning} | isPlaying=${usePlayerStore.getState().playerState.isPlaying} | audio.paused=${audio?.paused}`);
+    logger.info(
+      `[onCanPlay] songId=${songId} | duration=${audio?.duration?.toFixed(2)} | isTransitioning=${usePlayerStore.getState().playerState.isTransitioning} | isPlaying=${usePlayerStore.getState().playerState.isPlaying} | audio.paused=${audio?.paused}`,
+    );
     setStoreIsBuffering(false);
     updateAudioDuration();
     setIsTransitioning(false);
-  }, [setStoreIsBuffering, updateAudioDuration, setIsTransitioning, songId, audioRef]);
+  }, [
+    setStoreIsBuffering,
+    updateAudioDuration,
+    setIsTransitioning,
+    songId,
+    audioRef,
+  ]);
 
   const handleAudioSeeked = useCallback(() => {
     if (usePlayerStore.getState().playerProgress.isScrubbing) {
@@ -363,7 +373,7 @@ export function Player() {
               disabled={!song && !radio}
             />
 
-            {isSong && hasPiPSupport && <MemoMiniPlayerButton />}
+            {isSong && hasMiniPlayerSupport && <MemoMiniPlayerButton />}
           </div>
         </div>
       </div>

@@ -1,8 +1,9 @@
 import { Disc2Icon, EllipsisVertical } from "lucide-react";
-import { type KeyboardEvent, type ReactNode } from "react";
+import { type KeyboardEvent, type ReactNode, startTransition } from "react";
 import { useTranslation } from "react-i18next";
-import { CoverImage } from "@/app/components/table/cover-image";
 import { SongMenuOptions } from "@/app/components/song/menu-options";
+import { CachedIndicator } from "@/app/components/table/cached-indicator";
+import { CoverImage } from "@/app/components/table/cover-image";
 import { TableArtists } from "@/app/components/table/song-title";
 import { Button } from "@/app/components/ui/button";
 import {
@@ -36,7 +37,10 @@ export function MobileMediaList<TItem>({
   }
 
   return (
-    <div className={cn("flex flex-col gap-1", className)}>
+    <div
+      data-testid="mobile-song-list"
+      className={cn("flex flex-col gap-1", className)}
+    >
       {items.map((item, index) => children(item, index))}
     </div>
   );
@@ -66,14 +70,22 @@ export function MobileSongList({
 
   if (songs.length === 0 && emptyMessage) {
     return (
-      <div className="flex min-h-24 items-center justify-center px-4 text-sm text-muted-foreground">
-        {emptyMessage}
+      <div
+        data-testid="mobile-song-list"
+        className={cn("flex flex-col gap-1", className)}
+      >
+        <div className="flex min-h-24 items-center justify-center px-4 text-sm text-muted-foreground">
+          {emptyMessage}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className={cn("flex flex-col gap-1", className)}>
+    <div
+      data-testid="mobile-song-list"
+      className={cn("flex flex-col gap-1", className)}
+    >
       {songs.map((song, index) => {
         const discNum = song.discNumber ?? 1;
         const isFirstOfDisc =
@@ -122,10 +134,28 @@ function MobileSongRow({
   const isCurrentPlaying = useIsCurrentPlaying(song.id);
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key !== "Enter" && event.key !== " ") return;
+    if (event.key === "Enter") {
+      event.preventDefault();
+      startTransition(() => {
+        onPlaySong(index);
+      });
+      return;
+    }
 
-    event.preventDefault();
-    onPlaySong(index);
+    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+      event.preventDefault();
+      const currentRow = event.currentTarget;
+      const container = currentRow.closest('[data-testid="mobile-song-list"]');
+      if (!container) return;
+
+      const nextIndex = event.key === "ArrowUp" ? index - 1 : index + 1;
+      const nextRow = container.querySelector<HTMLElement>(
+        `[data-testid="mobile-song-row"][data-row-index="${nextIndex}"]`,
+      );
+      if (nextRow) {
+        nextRow.focus();
+      }
+    }
   }
 
   return (
@@ -133,10 +163,15 @@ function MobileSongRow({
       role="button"
       tabIndex={0}
       data-testid="mobile-song-row"
+      data-row-index={index}
       className={cn(
         "group flex min-h-14 w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors active:bg-accent/70",
       )}
-      onClick={() => onPlaySong(index)}
+      onClick={() =>
+        startTransition(() => {
+          onPlaySong(index);
+        })
+      }
       onKeyDown={handleKeyDown}
     >
       <CoverImage
@@ -155,31 +190,34 @@ function MobileSongRow({
         </div>
       </div>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-11 shrink-0 rounded-full"
-            aria-label="Song options"
-            data-testid="mobile-song-options"
+      <div className="flex shrink-0 items-center gap-1">
+        <CachedIndicator songId={song.id} />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-11 shrink-0 rounded-full"
+              aria-label="Song options"
+              data-testid="mobile-song-options"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <EllipsisVertical className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
             onClick={(event) => event.stopPropagation()}
           >
-            <EllipsisVertical className="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          onClick={(event) => event.stopPropagation()}
-        >
-          <SongMenuOptions
-            variant="dropdown"
-            song={song}
-            index={index}
-            showLikeOption={true}
-          />
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <SongMenuOptions
+              variant="dropdown"
+              song={song}
+              index={index}
+              showLikeOption={true}
+            />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }

@@ -11,21 +11,21 @@ import { useAudioContext } from "@/app/hooks/use-audio-context";
 import { getNetworkStatus } from "@/app/hooks/use-network-status";
 import { useCacheStore } from "@/store/cache.store";
 import {
+  useIsRemoteControlActive,
+  usePlayerActions,
   usePlayerIsPlaying,
   usePlayerMediaType,
+  usePlayerStore,
   usePlayerVolume,
-  useIsRemoteControlActive,
   useReplayGainActions,
   useReplayGainState,
-  usePlayerActions,
-  usePlayerStore,
 } from "@/store/player.store";
-import { logger } from "@/utils/logger";
-import { manageMediaSession } from "@/utils/setMediaSession";
-import { calculateReplayGain, ReplayGainParams } from "@/utils/replayGain";
-import { perceptualToGain } from "@/utils/volume";
-import { isIOS } from "@/utils/platform";
 import { LoopState } from "@/types/playerContext";
+import { logger } from "@/utils/logger";
+import { isIOS } from "@/utils/platform";
+import { calculateReplayGain, ReplayGainParams } from "@/utils/replayGain";
+import { manageMediaSession } from "@/utils/setMediaSession";
+import { perceptualToGain } from "@/utils/volume";
 
 type AudioPlayerProps = ComponentPropsWithoutRef<"audio"> & {
   audioRef: RefObject<HTMLAudioElement>;
@@ -97,7 +97,9 @@ export function AudioPlayer({
 
   useEffect(() => {
     if (src !== audioSrc) {
-      logger.info(`[AudioSrcChange] newSrc=${src?.slice(-60)} | oldSrc=${audioSrc?.slice(-60)} | cancelledRetry=${!!retryTimeoutRef.current} | retryCount=${retryCountRef.current} | srcChangingRef=true`);
+      logger.info(
+        `[AudioSrcChange] newSrc=${src?.slice(-60)} | oldSrc=${audioSrc?.slice(-60)} | cancelledRetry=${!!retryTimeoutRef.current} | retryCount=${retryCountRef.current} | srcChangingRef=true`,
+      );
       cancelRetry();
       retryCountRef.current = 0;
       rangeFallbackRef.current = false;
@@ -112,12 +114,7 @@ export function AudioPlayer({
 
       setAudioSrc(src || undefined);
     }
-  }, [
-    audioSrc,
-    cancelRetry,
-    src,
-    songId,
-  ]);
+  }, [audioSrc, cancelRetry, src, songId]);
 
   const audioVolume = useMemo(
     () => (isIOS() ? 1 : perceptualToGain(volume)),
@@ -173,7 +170,9 @@ export function AudioPlayer({
   const safePlay = useCallback(
     (audio: HTMLAudioElement, contextLabel: string) => {
       const state = usePlayerStore.getState();
-      logger.info(`[safePlay] source=${contextLabel} | readyState=${audio.readyState} | currentTime=${audio.currentTime.toFixed(2)} | paused=${audio.paused} | ended=${audio.ended} | src=${audio.src?.slice(-60)}`);
+      logger.info(
+        `[safePlay] source=${contextLabel} | readyState=${audio.readyState} | currentTime=${audio.currentTime.toFixed(2)} | paused=${audio.paused} | ended=${audio.ended} | src=${audio.src?.slice(-60)}`,
+      );
       if (state.playerState.isPlaying && !state.remoteControl.active) {
         manageMediaSession.ensurePlaybackStatePlaying();
       }
@@ -186,16 +185,22 @@ export function AudioPlayer({
             if (playPromiseRef.current === promise) {
               playPromiseRef.current = null;
             }
-            logger.info(`[safePlay:OK] source=${contextLabel} | currentTime=${audio.currentTime.toFixed(2)}`);
+            logger.info(
+              `[safePlay:OK] source=${contextLabel} | currentTime=${audio.currentTime.toFixed(2)}`,
+            );
           })
           .catch((error) => {
             if (playPromiseRef.current === promise) {
               playPromiseRef.current = null;
             }
             if (error.name === "AbortError") {
-              logger.info(`[safePlay:ABORTED] source=${contextLabel} | expected=${contextLabel === "LoopRestartSync" || contextLabel === "Song" ? "check" : "unknown"}`);
+              logger.info(
+                `[safePlay:ABORTED] source=${contextLabel} | expected=${contextLabel === "LoopRestartSync" || contextLabel === "Song" ? "check" : "unknown"}`,
+              );
             } else {
-              logger.error(`[safePlay:ERROR] source=${contextLabel} | error=${error.name} ${error.message}`);
+              logger.error(
+                `[safePlay:ERROR] source=${contextLabel} | error=${error.name} ${error.message}`,
+              );
             }
           });
       }
@@ -204,7 +209,9 @@ export function AudioPlayer({
   );
 
   const pauseAudio = useCallback((audio: HTMLAudioElement) => {
-    logger.info(`[pauseAudio] currentTime=${audio.currentTime.toFixed(2)} | duration=${audio.duration?.toFixed(2)} | src=${audio.src?.slice(-60)}`);
+    logger.info(
+      `[pauseAudio] currentTime=${audio.currentTime.toFixed(2)} | duration=${audio.duration?.toFixed(2)} | src=${audio.src?.slice(-60)}`,
+    );
     const pending = playPromiseRef.current;
     if (pending) {
       pending.catch(() => {});
@@ -234,7 +241,10 @@ export function AudioPlayer({
           const fallbackPosition = Math.max(audio.currentTime, storeProgress);
           pendingResumePositionRef.current = fallbackPosition;
           resumeGuardActiveRef.current = true;
-          logger.info("[scheduleRetry] All retries failed — retrying from position 0", { fallbackPosition, generation: retryGenerationRef.current });
+          logger.info(
+            "[scheduleRetry] All retries failed — retrying from position 0",
+            { fallbackPosition, generation: retryGenerationRef.current },
+          );
           audio.currentTime = 0;
           setStoreProgress(0);
           audio.load();
@@ -258,7 +268,9 @@ export function AudioPlayer({
 
       retryCountRef.current += 1;
       const delay = Math.pow(2, retryCountRef.current - 1) * 1000;
-      logger.info(`[scheduleRetry] attempt=${retryCountRef.current}/${MAX_RETRIES} | delay=${delay}ms | fromPosition=${resumePosition.toFixed(2)} | generation=${retryGenerationRef.current}`);
+      logger.info(
+        `[scheduleRetry] attempt=${retryCountRef.current}/${MAX_RETRIES} | delay=${delay}ms | fromPosition=${resumePosition.toFixed(2)} | generation=${retryGenerationRef.current}`,
+      );
 
       const currentSrc = audio.src;
       const retryGeneration = retryGenerationRef.current;
@@ -299,7 +311,9 @@ export function AudioPlayer({
     if (!audio) return;
 
     const errorCode = audio.error?.code;
-    logger.info(`[onError] code=${errorCode} | message=${audio.error?.message} | mediaType=${isSong ? "song" : isRadio ? "radio" : "unknown"} | retryAttempt=${retryCountRef.current + 1}/5 | src=${audio.src?.slice(-60)}`);
+    logger.info(
+      `[onError] code=${errorCode} | message=${audio.error?.message} | mediaType=${isSong ? "song" : isRadio ? "radio" : "unknown"} | retryAttempt=${retryCountRef.current + 1}/5 | src=${audio.src?.slice(-60)}`,
+    );
 
     switch (errorCode) {
       case MediaError.MEDIA_ERR_ABORTED:
@@ -418,23 +432,31 @@ export function AudioPlayer({
 
       if (!audioSrc) return;
 
-      logger.info(`[PlayEffect] isPlaying=${isPlaying} | seekToStart=${seekToStart} | audio.paused=${audio.paused} | audio.ended=${audio.ended} | audio.currentTime=${audio.currentTime.toFixed(2)} | audio.readyState=${audio.readyState} | syncPlayHandled=${syncPlayHandledRef.current} | srcChanging=${srcChangingRef.current} | src=${audio.src?.slice(-60)}`);
+      logger.info(
+        `[PlayEffect] isPlaying=${isPlaying} | seekToStart=${seekToStart} | audio.paused=${audio.paused} | audio.ended=${audio.ended} | audio.currentTime=${audio.currentTime.toFixed(2)} | audio.readyState=${audio.readyState} | syncPlayHandled=${syncPlayHandledRef.current} | srcChanging=${srcChangingRef.current} | src=${audio.src?.slice(-60)}`,
+      );
 
       try {
         if (isPlaying) {
           if (songId !== loadedSongIdRef.current) {
-            logger.info(`[PlayEffect:SKIP] reason=songIdMismatch | songId=${songId} | loadedSongId=${loadedSongIdRef.current}`);
+            logger.info(
+              `[PlayEffect:SKIP] reason=songIdMismatch | songId=${songId} | loadedSongId=${loadedSongIdRef.current}`,
+            );
             return;
           }
           if (seekToStart) {
-            logger.info(`[PlayEffect:seekToStart] songId=${songId} | setting currentTime=0`);
+            logger.info(
+              `[PlayEffect:seekToStart] songId=${songId} | setting currentTime=0`,
+            );
             loopRestartingRef.current = true;
             audio.currentTime = 0;
             usePlayerStore.setState((state) => {
               state.playerState.seekToStart = false;
             });
           } else if (audio.ended && songId === loadedSongIdRef.current) {
-            logger.info(`[PlayEffect:endedRestart] songId=${songId} | setting currentTime=0`);
+            logger.info(
+              `[PlayEffect:endedRestart] songId=${songId} | setting currentTime=0`,
+            );
             loopRestartingRef.current = true;
             audio.currentTime = 0;
           }
@@ -443,12 +465,14 @@ export function AudioPlayer({
           }
 
           if (syncPlayHandledRef.current) {
-            logger.info("[PlayEffect:SKIP] reason=syncPlayHandledAlready | clearing flag");
+            logger.info(
+              "[PlayEffect:SKIP] reason=syncPlayHandledAlready | clearing flag",
+            );
             syncPlayHandledRef.current = false;
             return;
           }
 
-          logger.info("[PlayEffect:play] → calling safePlay(\"Song\")");
+          logger.info('[PlayEffect:play] → calling safePlay("Song")');
           safePlay(audio, "Song");
         } else {
           syncPlayHandledRef.current = false;
@@ -560,7 +584,9 @@ export function AudioPlayer({
       onDurationChange={(e) => props.onDurationChange?.(e)}
       onCanPlay={handleCanPlay}
       onPlay={(e) => {
-        logger.info(`[onPlay] currentTime=${e.currentTarget.currentTime.toFixed(2)} | duration=${e.currentTarget.duration?.toFixed(2)} | loopRestarting=${loopRestartingRef.current} | syncPlayHandled=${syncPlayHandledRef.current}`);
+        logger.info(
+          `[onPlay] currentTime=${e.currentTarget.currentTime.toFixed(2)} | duration=${e.currentTarget.duration?.toFixed(2)} | loopRestarting=${loopRestartingRef.current} | syncPlayHandled=${syncPlayHandledRef.current}`,
+        );
         loopRestartingRef.current = false;
         handlePlaySuccess();
         onPlay?.(e);
@@ -568,14 +594,20 @@ export function AudioPlayer({
       onPause={(e) => {
         const audio = e.currentTarget;
         const storeState = usePlayerStore.getState();
-        logger.info(`[onPause] currentTime=${audio.currentTime.toFixed(2)} | duration=${audio.duration?.toFixed(2)} | paused=${audio.paused} | ended=${audio.ended} | loopRestarting=${loopRestartingRef.current} | srcChanging=${srcChangingRef.current} | effectPausing=${effectPausingRef.current} | isPlaying_store=${storeState.playerState.isPlaying} | audioError=${!!audio.error} | error=${audio.error?.code}`);
+        logger.info(
+          `[onPause] currentTime=${audio.currentTime.toFixed(2)} | duration=${audio.duration?.toFixed(2)} | paused=${audio.paused} | ended=${audio.ended} | loopRestarting=${loopRestartingRef.current} | srcChanging=${srcChangingRef.current} | effectPausing=${effectPausingRef.current} | isPlaying_store=${storeState.playerState.isPlaying} | audioError=${!!audio.error} | error=${audio.error?.code}`,
+        );
 
         if (loopRestartingRef.current || audio.ended) {
           if (srcChangingRef.current) {
-            logger.info(`[onPause:SKIP] reason=${loopRestartingRef.current ? 'loopRestarting' : 'ended'} | clearing srcChangingRef | currentTime=${audio.currentTime.toFixed(2)}`);
+            logger.info(
+              `[onPause:SKIP] reason=${loopRestartingRef.current ? "loopRestarting" : "ended"} | clearing srcChangingRef | currentTime=${audio.currentTime.toFixed(2)}`,
+            );
             srcChangingRef.current = false;
           } else {
-            logger.info(`[onPause:SKIP] reason=${loopRestartingRef.current ? 'loopRestarting' : 'ended'} | currentTime=${audio.currentTime.toFixed(2)}`);
+            logger.info(
+              `[onPause:SKIP] reason=${loopRestartingRef.current ? "loopRestarting" : "ended"} | currentTime=${audio.currentTime.toFixed(2)}`,
+            );
           }
           return;
         }
@@ -585,22 +617,27 @@ export function AudioPlayer({
           if (state.playerState.isPlaying && !state.remoteControl.active) {
             manageMediaSession.ensurePlaybackStatePlaying();
           }
-          logger.info(`[onPause:SKIP] reason=srcChanging | ⚠️mediaSessionKeptPlaying=${state.playerState.isPlaying && !state.remoteControl.active}`);
+          logger.info(
+            `[onPause:SKIP] reason=srcChanging | ⚠️mediaSessionKeptPlaying=${state.playerState.isPlaying && !state.remoteControl.active}`,
+          );
           return;
         }
         if (effectPausingRef.current) {
           effectPausingRef.current = false;
-          logger.info(`[onPause:SKIP] reason=effectPausing | currentTime=${audio.currentTime.toFixed(2)}`);
+          logger.info(
+            `[onPause:SKIP] reason=effectPausing | currentTime=${audio.currentTime.toFixed(2)}`,
+          );
           return;
         }
-        if (
-          usePlayerStore.getState().playerState.isPlaying &&
-          audio.error
-        ) {
-          logger.info(`[onPause:SKIP] reason=audioError | errorCode=${audio.error.code}`);
+        if (usePlayerStore.getState().playerState.isPlaying && audio.error) {
+          logger.info(
+            `[onPause:SKIP] reason=audioError | errorCode=${audio.error.code}`,
+          );
           return;
         }
-        logger.info(`[onPause:FORWARD] currentTime=${audio.currentTime.toFixed(2)} | duration=${audio.duration?.toFixed(2)} | isPlaying_store=${usePlayerStore.getState().playerState.isPlaying}`);
+        logger.info(
+          `[onPause:FORWARD] currentTime=${audio.currentTime.toFixed(2)} | duration=${audio.duration?.toFixed(2)} | isPlaying_store=${usePlayerStore.getState().playerState.isPlaying}`,
+        );
         onPause?.(e);
       }}
       onEnded={(e) => {
@@ -612,14 +649,19 @@ export function AudioPlayer({
           ? songlist.userQueue.songs.length - 1
           : songlist.userQueue.songs.length;
 
-        const hasNext = loopState === LoopState.One ? userQueueRemaining > 0 : false;
+        const hasNext =
+          loopState === LoopState.One ? userQueueRemaining > 0 : false;
 
-        logger.info(`[onEnded] loopState=${loopState} | hasNext=${hasNext} | songId=${songId} | currentTime=${e.currentTarget.currentTime.toFixed(2)} | duration=${e.currentTarget.duration?.toFixed(2)}`);
+        logger.info(
+          `[onEnded] loopState=${loopState} | hasNext=${hasNext} | songId=${songId} | currentTime=${e.currentTarget.currentTime.toFixed(2)} | duration=${e.currentTarget.duration?.toFixed(2)}`,
+        );
 
         // LoopState.One means repeat the current song indefinitely;
         // user queue songs are not advanced to in this mode.
         if (!hasNext && loopState === LoopState.One) {
-          logger.info(`[onEnded → LoopRestartSync] songId=${songId} | loopRestartingRef=true | syncPlayHandledRef=true | currentTime→0 | calling safePlay`);
+          logger.info(
+            `[onEnded → LoopRestartSync] songId=${songId} | loopRestartingRef=true | syncPlayHandledRef=true | currentTime→0 | calling safePlay`,
+          );
           loopRestartingRef.current = true;
           syncPlayHandledRef.current = true;
           e.currentTarget.currentTime = 0;
@@ -633,7 +675,9 @@ export function AudioPlayer({
           if (state.songlist.currentSong) {
             manageMediaSession.setMediaSession(state.songlist.currentSong);
           }
-          logger.info(`[onEnded → forward] reason=${hasNext ? 'hasNext' : 'notLoopOne'} | calling handleSongEnded`);
+          logger.info(
+            `[onEnded → forward] reason=${hasNext ? "hasNext" : "notLoopOne"} | calling handleSongEnded`,
+          );
         }
 
         onEnded?.(e);

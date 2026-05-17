@@ -8,7 +8,6 @@ import { useLocation, useParams } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
 import { Keyboard } from "@/app/components/command/keyboard-key";
 import { Button } from "@/app/components/ui/button";
-import { cn } from "@/lib/utils";
 import {
   Command,
   CommandDialog,
@@ -17,6 +16,7 @@ import {
   CommandList,
 } from "@/app/components/ui/command";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
 import { useIsOnline } from "@/store/cache.store";

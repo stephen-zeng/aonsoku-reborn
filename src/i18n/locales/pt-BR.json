@@ -511,6 +511,14 @@
           "label": "Habilitar tela cheia automática"
         },
         "group": "Geral"
+      },
+      "queue": {
+        "colors": {
+          "info": "Si activé, l'application utilisera la couleur dominante de la pochette de l'album actuel comme couleur de fond.",
+          "label": "Activer la couleur de fond dynamique"
+        },
+        "description": "Personnaliser la page de la file d'attente et des paroles.",
+        "group": "File d'attente et paroles"
       }
     },
     "audio": {
@@ -581,6 +589,22 @@
           "track": "Ganho da faixa"
         },
         "preAmp": "Pré-amplificador (dB)"
+      },
+      "hapticFeedback": {
+        "description": "Control vibration feedback when interacting with the app.",
+        "enabled": {
+          "info": "When enabled, the device will vibrate when dragging queue items on mobile.",
+          "label": "Enable haptic feedback"
+        },
+        "group": "Haptic Feedback"
+      },
+      "pip": {
+        "group": "Picture-in-Picture",
+        "description": "Control how the app responds to picture-in-picture requests from the browser.",
+        "acceptBrowserRequest": {
+          "label": "Accept browser PiP requests",
+          "info": "When enabled, the app will respond to picture-in-picture requests from the browser. When disabled, the mini-player can only be opened manually via the PiP button."
+        }
       }
     },
     "content": {
@@ -887,7 +911,8 @@
             "label": "Capas",
             "description": "Imagens de álbuns · artistas · playlists"
           }
-        }
+        },
+        "downloading": "Baixando {{count}} músicas"
       }
     }
   },
@@ -1036,7 +1061,9 @@
     "system": "Sistema",
     "tinacious-design": "Tinacious Design",
     "vim-dark-soft": "Vim Dark Soft",
-    "vue-dark": "Vue Dark"
+    "vue-dark": "Vue Dark",
+    "cool": "Cool",
+    "huacat-pink": "Huacat Pink"
   },
   "time": {
     "days_many": "{{days}} dias",

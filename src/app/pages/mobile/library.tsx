@@ -9,14 +9,14 @@ import {
 import { ElementType } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
-import { EmptyPlaylistsMessage } from "@/app/components/playlist/empty-message";
 import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
-import { ROUTES } from "@/routes/routesList";
+import { EmptyPlaylistsMessage } from "@/app/components/playlist/empty-message";
 import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
+import { cn } from "@/lib/utils";
+import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { useAppPages } from "@/store/app.store";
 import { queryKeys } from "@/utils/queryKeys";
-import { cn } from "@/lib/utils";
 
 interface LibraryRowProps {
   icon: ElementType;

@@ -80,6 +80,7 @@ export interface IPlayerState {
   areLyricsAligned: boolean;
   seekToStart: boolean;
   isTransitioning: boolean;
+  pipWindowOpen: boolean;
 }
 
 export interface IPlayerProgress {
@@ -105,8 +106,13 @@ export interface SelectedCustomLyrics {
   id?: string;
   title?: string;
   artist?: string;
+}
+
+export interface SelectedCustomLyricsInput extends SelectedCustomLyrics {
   lyrics: string;
 }
+
+export const MAX_SELECTED_CUSTOM_LYRICS = 50;
 
 interface IReplayGainData {
   enabled: boolean;
@@ -155,7 +161,7 @@ interface ILyrics {
   selectedCustomLyrics?: Record<string, SelectedCustomLyrics>;
   setSelectedCustomLyrics: (
     songKey: string,
-    lyrics: SelectedCustomLyrics,
+    lyrics: SelectedCustomLyricsInput,
   ) => void;
 }
 
@@ -174,6 +180,11 @@ interface IHapticSettings {
   setHapticFeedbackEnabled: (value: boolean) => void;
 }
 
+interface IPipSettings {
+  acceptBrowserPipRequest: boolean;
+  setAcceptBrowserPipRequest: (value: boolean) => void;
+}
+
 export interface IPlayerSettings {
   volume: IVolumeSettings;
   fullscreen: IFullscreen;
@@ -183,6 +194,7 @@ export interface IPlayerSettings {
   privacy: IPrivacySettings;
   colors: IColorsSettings;
   hapticFeedback: IHapticSettings;
+  pip: IPipSettings;
 }
 
 export interface IRemoteControlState {
@@ -261,6 +273,8 @@ export interface IPlayerActions {
   setIsTransitioning: (value: boolean) => void;
   setCurrentSongColor: (value: string | null) => void;
   setCurrentSongIntensity: (value: number) => void;
+  openPipWindow: () => void;
+  closePipWindow: () => void;
   enterRemoteControl: (device: RemoteDeviceInfo | null) => void;
   exitRemoteControl: () => void;
   registerRemoteSender: (

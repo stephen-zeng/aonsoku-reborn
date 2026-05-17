@@ -17,6 +17,7 @@ export function createSettingsActions(shared: SharedDeps) {
         state.settings.coverArt.useAlbumCoverForSongs = false;
         state.settings.lyrics.preferSyncedLyrics = false;
         state.settings.hapticFeedback.hapticFeedbackEnabled = true;
+        state.settings.pip.acceptBrowserPipRequest = false;
         state.settings.replayGain.values = {
           enabled: false,
           type: "track",

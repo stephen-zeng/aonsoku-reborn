@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
-import {
-  LRC_METADATA_REGEX,
-  LRC_TIMESTAMP_REGEX,
-  areLyricsSynced,
-  buildTranslationMap,
-  convertLrcToAMLL,
-  convertStructuredToAMLL,
-} from "./lrc-converter";
 import type {
   IStructuredLyric,
   IStructuredLyricLine,
 } from "@/types/responses/song";
+import {
+  areLyricsSynced,
+  buildTranslationMap,
+  convertLrcToAMLL,
+  convertStructuredToAMLL,
+  LRC_METADATA_REGEX,
+  LRC_TIMESTAMP_REGEX,
+} from "./lrc-converter";
 
 describe("LRC_TIMESTAMP_REGEX", () => {
   it("matches standard LRC timestamps", () => {

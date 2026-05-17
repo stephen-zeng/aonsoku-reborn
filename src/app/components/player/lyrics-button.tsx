@@ -5,8 +5,8 @@ import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useIsXl } from "@/app/hooks/use-is-xl";
-import { useLyricsState, useMainDrawerState } from "@/store/player.store";
 import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
+import { useLyricsState, useMainDrawerState } from "@/store/player.store";
 
 interface PlayerLyricsButtonProps {
   disabled?: boolean;

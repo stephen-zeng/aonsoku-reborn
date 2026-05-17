@@ -13,12 +13,12 @@ import { Popover, PopoverContent } from "@/app/components/ui/popover";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { useIsXl } from "@/app/hooks/use-is-xl";
 import { cn } from "@/lib/utils";
+import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import {
   useMainDrawerState,
   usePlayerActions,
   useQueueState,
 } from "@/store/player.store";
-import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 
 interface PlayerSongListButtonProps {
   disabled: boolean;

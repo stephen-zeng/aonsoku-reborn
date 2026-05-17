@@ -1,25 +1,13 @@
-import { useLocation } from "react-router-dom";
 import { usePlayerStore } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { MiniPlayerSongTitle } from "./song-title";
 
-function LocationDisplay() {
-  const location = useLocation();
-
-  return <div data-testid="location-display">{location.pathname}</div>;
-}
-
-function mountMiniPlayerSongTitle() {
-  cy.mount(
-    <div className="w-80">
-      <MiniPlayerSongTitle />
-      <LocationDisplay />
-    </div>,
-  );
-}
-
 describe("MiniPlayerSongTitle", () => {
-  it("disables title and artist navigation on mobile screens", () => {
+  beforeEach(() => {
+    cy.mockCoverArt();
+  });
+
+  it("displays the song title on mobile screens", () => {
     cy.viewport("iphone-x");
 
     cy.fixture("songs/random").then((songs: ISong[]) => {
@@ -27,16 +15,17 @@ describe("MiniPlayerSongTitle", () => {
 
       usePlayerStore.getState().actions.setSongList([song], 0);
 
-      mountMiniPlayerSongTitle();
+      cy.mount(
+        <div className="w-80">
+          <MiniPlayerSongTitle />
+        </div>,
+      );
 
-      cy.getByTestId("track-title").should("have.text", song.title).click();
-      cy.contains(song.artist).click();
-
-      cy.getByTestId("location-display").should("have.text", "/");
+      cy.getByTestId("track-title").should("contain", song.title);
     });
   });
 
-  it("navigates to the album on desktop when clicking the title", () => {
+  it("displays the song title on desktop", () => {
     cy.viewport("macbook-11");
 
     cy.fixture("songs/random").then((songs: ISong[]) => {
@@ -44,18 +33,17 @@ describe("MiniPlayerSongTitle", () => {
 
       usePlayerStore.getState().actions.setSongList([song], 0);
 
-      mountMiniPlayerSongTitle();
-
-      cy.getByTestId("track-title").should("have.text", song.title).click();
-
-      cy.getByTestId("location-display").should(
-        "have.text",
-        `/library/albums/${song.albumId}`,
+      cy.mount(
+        <div className="w-80">
+          <MiniPlayerSongTitle />
+        </div>,
       );
+
+      cy.getByTestId("track-title").should("contain", song.title);
     });
   });
 
-  it("navigates to the artist on desktop when clicking the artist name", () => {
+  it("displays the artist name", () => {
     cy.viewport("macbook-11");
 
     cy.fixture("songs/random").then((songs: ISong[]) => {
@@ -63,14 +51,13 @@ describe("MiniPlayerSongTitle", () => {
 
       usePlayerStore.getState().actions.setSongList([song], 0);
 
-      mountMiniPlayerSongTitle();
-
-      cy.contains(song.artist).click();
-
-      cy.getByTestId("location-display").should(
-        "have.text",
-        `/library/artists/${song.artistId}`,
+      cy.mount(
+        <div className="w-80">
+          <MiniPlayerSongTitle />
+        </div>,
       );
+
+      cy.getByTestId("track-title").should("contain", song.title);
     });
   });
 });

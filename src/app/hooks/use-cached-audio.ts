@@ -29,7 +29,12 @@ export function useCachedAudioUrl(songId?: string) {
   useEffect(() => {
     if (!songId) {
       revokePreviousBlobUrl();
-      setState({ url: "", resolvedSongId: undefined, isCached: false, isLoading: false });
+      setState({
+        url: "",
+        resolvedSongId: undefined,
+        isCached: false,
+        isLoading: false,
+      });
       return;
     }
 

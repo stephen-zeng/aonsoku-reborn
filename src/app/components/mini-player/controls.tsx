@@ -1,6 +1,6 @@
 import { clsx } from "clsx";
-import { Heart } from "lucide-react";
 import {
+  Heart,
   Pause,
   Play,
   Repeat,
@@ -10,43 +10,34 @@ import {
 } from "lucide-react";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { Button } from "@/app/components/ui/button";
-import { usePlaybackControls } from "@/app/hooks/use-playback-controls";
-import { usePlayerActions, usePlayerSongStarred } from "@/store/player.store";
 import { cn } from "@/lib/utils";
+import { LoopState } from "@/types/playerContext";
+import { useMiniPlayerContext } from "./context";
 
 export function MiniPlayerControls() {
-  const {
-    isPlaying,
-    isShuffleActive,
-    cannotSkipPrev,
-    cannotSkipNext,
-    isLoopOff,
-    isLoopAll,
-    isLoopOne,
-    isPlayingOneSong,
-    toggleShuffle,
-    playPrevSong,
-    togglePlayPause,
-    playNextSong,
-    toggleLoop,
-    hasNext,
-  } = usePlaybackControls();
+  const { state, actions } = useMiniPlayerContext();
+
+  if (!state) return null;
+
+  const isLoopOff = state.loopState === LoopState.Off;
+  const isLoopAll = state.loopState === LoopState.All;
+  const isLoopOne = state.loopState === LoopState.One;
 
   return (
     <div className="flex items-center">
       <Button
         size="icon"
         variant="ghost"
-        data-state={isShuffleActive && "active"}
+        data-state={state.shuffleActive && "active"}
         className={clsx(
           buttonsStyle.secondary,
           buttonsStyle.removeRing,
-          isShuffleActive && buttonsStyle.activeDot,
+          state.shuffleActive && buttonsStyle.activeDot,
           "mini-player:hidden",
         )}
         style={{ ...buttonsStyle.style }}
-        onClick={() => toggleShuffle()}
-        disabled={isPlayingOneSong() || !hasNext}
+        onClick={() => actions.toggleShuffle()}
+        disabled={state.isPlaying && !state.hasNext}
         unfocusable
       >
         <Shuffle size={18} />
@@ -60,8 +51,8 @@ export function MiniPlayerControls() {
           "mini-player:hidden",
         )}
         style={{ ...buttonsStyle.style }}
-        onClick={() => playPrevSong()}
-        disabled={cannotSkipPrev}
+        onClick={() => actions.playPrevSong()}
+        disabled={!state.hasPrev}
         unfocusable
       >
         <SkipBack className={buttonsStyle.secondaryIconFilled} width={20} />
@@ -75,9 +66,9 @@ export function MiniPlayerControls() {
           "mini-player:w-8 mini-player:h-8",
         )}
         style={{ ...buttonsStyle.style }}
-        onClick={() => togglePlayPause()}
+        onClick={() => actions.togglePlayPause()}
       >
-        {isPlaying ? (
+        {state.isPlaying ? (
           <Pause
             className={buttonsStyle.mainIcon}
             size={20}
@@ -98,8 +89,8 @@ export function MiniPlayerControls() {
           "mini-player:w-8 mini-player:h-8",
         )}
         style={{ ...buttonsStyle.style }}
-        onClick={() => playNextSong()}
-        disabled={cannotSkipNext}
+        onClick={() => actions.playNextSong()}
+        disabled={!state.hasNext && state.loopState !== LoopState.All}
         unfocusable
       >
         <SkipForward className={buttonsStyle.secondaryIconFilled} size={20} />
@@ -113,7 +104,7 @@ export function MiniPlayerControls() {
           !isLoopOff && buttonsStyle.activeDot,
           "mini-player:hidden",
         )}
-        onClick={() => toggleLoop()}
+        onClick={() => actions.toggleLoop()}
         style={{ ...buttonsStyle.style }}
         unfocusable
       >
@@ -126,8 +117,9 @@ export function MiniPlayerControls() {
 }
 
 export function MiniPlayerLikeButton() {
-  const isSongStarred = usePlayerSongStarred();
-  const { starCurrentSong } = usePlayerActions();
+  const { state, actions } = useMiniPlayerContext();
+
+  if (!state) return null;
 
   return (
     <Button
@@ -138,12 +130,12 @@ export function MiniPlayerLikeButton() {
         buttonsStyle.removeRing,
         "mini-player:hidden",
       )}
-      onClick={starCurrentSong}
+      onClick={() => actions.starCurrentSong()}
       style={{ ...buttonsStyle.style }}
       unfocusable
     >
       <Heart
-        className={clsx(isSongStarred && "text-red-500 fill-red-500")}
+        className={clsx(state.isSongStarred && "text-red-500 fill-red-500")}
         size={18}
       />
     </Button>
@@ -154,7 +146,7 @@ const buttonsStyle = {
   main: "w-9 h-9 p-0 rounded-full bg-secondary-foreground",
   mainIcon: "text-secondary fill-secondary",
   secondary:
-     "relative w-9 h-9 p-0 rounded-full text-secondary-foreground hover-supported:text-secondary-foreground data-[state=active]:text-primary hover-supported:bg-transparent",
+    "relative w-9 h-9 p-0 rounded-full text-secondary-foreground hover-supported:text-secondary-foreground data-[state=active]:text-primary hover-supported:bg-transparent",
   secondaryIconFilled: "text-secondary-foreground fill-secondary-foreground",
   activeDot: "mini-player-button-active",
   style: {

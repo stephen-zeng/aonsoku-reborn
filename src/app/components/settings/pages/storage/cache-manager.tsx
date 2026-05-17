@@ -14,6 +14,10 @@ import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
 import { ConfirmationDialog } from "@/app/components/ui/confirmation-dialog";
 import {
+  ScrollArea,
+  scrollAreaViewportSelector,
+} from "@/app/components/ui/scroll-area";
+import {
   Select,
   SelectContent,
   SelectGroup,
@@ -23,15 +27,11 @@ import {
 } from "@/app/components/ui/select";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import {
-  ScrollArea,
-  scrollAreaViewportSelector,
-} from "@/app/components/ui/scroll-area";
-import {
-  cacheManager,
   type CachedItemDetail,
+  cacheManager,
 } from "@/service/cache/cache-manager";
-import { formatBytes } from "@/utils/formatBytes";
 import dateTime from "@/utils/dateTime";
+import { formatBytes } from "@/utils/formatBytes";
 
 type CacheFilter =
   | "all"

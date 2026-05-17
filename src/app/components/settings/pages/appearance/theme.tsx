@@ -4,10 +4,10 @@ import { useTranslation } from "react-i18next";
 import { ContentItemTitle } from "@/app/components/settings/section";
 import { useTheme } from "@/store/theme.store";
 import {
-  Theme,
-  ThemeMode,
   darkThemes,
   lightThemes,
+  Theme,
+  ThemeMode,
   themeGroups,
   themeModeItems,
 } from "@/types/themeContext";

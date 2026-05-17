@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { pingServer, probeServerConnection } from "./pingServer";
 import { AuthType } from "@/types/serverConfig";
+import { pingServer, probeServerConnection } from "./pingServer";
 
 const originalFetch = globalThis.fetch;
 

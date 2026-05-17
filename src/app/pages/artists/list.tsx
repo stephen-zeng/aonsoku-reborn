@@ -1,6 +1,5 @@
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
-import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 import { ShadowHeader } from "@/app/components/album/shadow-header";
 import { ArtistGridCard } from "@/app/components/artist/artist-grid-card";
 import { ArtistsFallback } from "@/app/components/fallbacks/artists.tsx";
@@ -12,6 +11,7 @@ import { DataTableList } from "@/app/components/ui/data-table-list";
 import { useIsMobile } from "@/app/hooks/use-mobile";
 import { useSongList } from "@/app/hooks/use-song-list";
 import { artistsColumns } from "@/app/tables/artists-columns";
+import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 import { subsonic } from "@/service/subsonic";
 import { useAppArtistsViewType } from "@/store/app.store";
 import { usePlayerActions } from "@/store/player.store";

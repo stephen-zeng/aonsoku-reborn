@@ -38,8 +38,12 @@ export function useFullscreenContrast() {
 
     return {
       isBackdropDark: isDark,
-      hoverBg: isDark ? "hover-supported:bg-white/20" : "hover-supported:bg-foreground/20",
-      hoverBg10: isDark ? "hover-supported:bg-white/10" : "hover-supported:bg-foreground/10",
+      hoverBg: isDark
+        ? "hover-supported:bg-white/20"
+        : "hover-supported:bg-foreground/20",
+      hoverBg10: isDark
+        ? "hover-supported:bg-white/10"
+        : "hover-supported:bg-foreground/10",
       sliderTrackColor: isDark ? "bg-white/30" : "bg-muted-foreground/70",
       sliderRangeColor: isDark ? "bg-white" : "bg-secondary-foreground",
       sliderThumbColor: isDark

@@ -1,7 +1,7 @@
+import { cacheManager } from "@/service/cache";
 import { usePlayerStore } from "@/store/player.store";
 import { LanControlMessageType } from "@/types/lanControl";
 import { ISong } from "@/types/responses/song";
-import { cacheManager } from "@/service/cache";
 import { getCoverArtUrlFromSongPreference, resolveCacheKeys } from "./coverArt";
 import { isValidDuration } from "./duration";
 import { logger } from "./logger";
@@ -35,7 +35,9 @@ function removeMediaSession() {
   if (!isMediaSessionSupported()) return;
 
   const callStack = new Error().stack?.split("\n").slice(1, 4).join(" | ");
-  logger.info(`[MediaSession.remove] sessionId=${currentSessionId} | stackTrace=${callStack}`);
+  logger.info(
+    `[MediaSession.remove] sessionId=${currentSessionId} | stackTrace=${callStack}`,
+  );
 
   if (removeDebounceTimer) {
     clearTimeout(removeDebounceTimer);
@@ -87,7 +89,9 @@ async function setMediaSession(
 
   currentSessionId++;
   const sessionId = currentSessionId;
-  logger.info(`[MediaSession.set] songId=${(song as { id?: string }).id ?? song.title} | title="${song.title}" | artist="${song.artist}" | sessionId=${sessionId}`);
+  logger.info(
+    `[MediaSession.set] songId=${(song as { id?: string }).id ?? song.title} | title="${song.title}" | artist="${song.artist}" | sessionId=${sessionId}`,
+  );
 
   const title = song.title || "Unknown Title";
   const artist = song.artist || "Unknown Artist";
@@ -236,7 +240,9 @@ function ensurePlaybackStatePlaying() {
   if (prevState !== "playing") {
     navigator.mediaSession.playbackState = "playing";
   }
-  logger.info(`[MediaSession.ensurePlaying] prevState=${prevState} → playing | cancelledRemove=${hadPendingRemove} | sessionId=${currentSessionId}`);
+  logger.info(
+    `[MediaSession.ensurePlaying] prevState=${prevState} → playing | cancelledRemove=${hadPendingRemove} | sessionId=${currentSessionId}`,
+  );
 }
 
 function setPlaybackState(state: boolean | null) {
@@ -253,7 +259,9 @@ function setPlaybackState(state: boolean | null) {
     }
 
     const prevState = navigator.mediaSession.playbackState;
-    logger.info(`[MediaSession.setPlaybackState] isPlaying=${state} | prevState=${prevState} → newState=${newState}`);
+    logger.info(
+      `[MediaSession.setPlaybackState] isPlaying=${state} | prevState=${prevState} → newState=${newState}`,
+    );
     navigator.mediaSession.playbackState = newState;
 
     if (navigator.mediaSession.playbackState !== newState) {
@@ -296,9 +304,13 @@ function setPositionState(
       playbackRate: playbackRate,
       position: position,
     });
-    logger.info(`[MediaSession.setPosition] duration=${duration} | position=${position} | playbackRate=${playbackRate} | clamped=${position > duration ? duration : position}`);
+    logger.info(
+      `[MediaSession.setPosition] duration=${duration} | position=${position} | playbackRate=${playbackRate} | clamped=${position > duration ? duration : position}`,
+    );
   } catch (error) {
-    logger.info(`[MediaSession.setPosition:ERROR] ${error instanceof Error ? error.message : String(error)}`);
+    logger.info(
+      `[MediaSession.setPosition:ERROR] ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 
@@ -369,7 +381,9 @@ function setHandlers() {
     });
 
     mediaSession.setActionHandler("pause", () => {
-      logger.info("[MediaSession.handler] action=pause | isRemote=false→toggle");
+      logger.info(
+        "[MediaSession.handler] action=pause | isRemote=false→toggle",
+      );
       const state = usePlayerStore.getState();
       if (state.remoteControl.active && state.remoteControl.sendCommand) {
         state.remoteControl.sendCommand(LanControlMessageType.PAUSE);
@@ -389,7 +403,9 @@ function setHandlers() {
     });
 
     mediaSession.setActionHandler("seekto", (details) => {
-      logger.info(`[MediaSession.handler] action=seekto | seekTime=${details.seekTime}`);
+      logger.info(
+        `[MediaSession.handler] action=seekto | seekTime=${details.seekTime}`,
+      );
       if (details.seekTime !== undefined) {
         const state = usePlayerStore.getState();
         if (state.remoteControl.active && state.remoteControl.sendCommand) {
@@ -403,6 +419,21 @@ function setHandlers() {
             state.actions.setProgress(Math.floor(details.seekTime));
           }
         }
+      }
+    });
+
+    mediaSession.setActionHandler("enterpictureinpicture", (details) => {
+      const reason = (details as Record<string, unknown>)?.reason ?? "unknown";
+      logger.info(
+        `[MediaSession.handler] action=enterpictureinpicture | reason=${reason}`,
+      );
+      const state = usePlayerStore.getState();
+      if (
+        state.settings.pip.acceptBrowserPipRequest &&
+        !state.playerState.pipWindowOpen &&
+        "documentPictureInPicture" in window
+      ) {
+        state.actions.openPipWindow();
       }
     });
 

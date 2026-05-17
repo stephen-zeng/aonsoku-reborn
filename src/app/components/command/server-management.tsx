@@ -7,8 +7,8 @@ import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
 import { useIsOnline } from "@/store/cache.store";
 import dateTime from "@/utils/dateTime";
-import { checkServerType } from "@/utils/servers";
 import { queryKeys } from "@/utils/queryKeys";
+import { checkServerType } from "@/utils/servers";
 
 async function delayedFn<T>(callback: () => T): Promise<T> {
   await new Promise((resolve) => setTimeout(resolve, 1000));

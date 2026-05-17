@@ -3,6 +3,7 @@ import { app, globalShortcut } from "electron";
 import { updateElectronApp } from "update-electron-app";
 import { LanControlManager } from "./core/lanControlManager";
 import { createAppMenu } from "./core/menu";
+import { destroyMiniPlayerWindow } from "./mini-player";
 import { createWindow, mainWindow } from "./window";
 
 let lanControlManager: LanControlManager | null = null;
@@ -80,10 +81,10 @@ if (!instanceLock) {
   });
 
   app.on("before-quit", () => {
-    // Set flag to allow quitting on macOS
     isQuitting = true;
 
-    // Ensure LAN Control server is stopped before quitting
+    destroyMiniPlayerWindow();
+
     if (lanControlManager) {
       lanControlManager.cleanup();
       lanControlManager = null;

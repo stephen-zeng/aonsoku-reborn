@@ -1,18 +1,18 @@
+import type { Row } from "@tanstack/react-table";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { Row } from "@tanstack/react-table";
 import ImageHeader from "@/app/components/album/image-header";
+import { FavoritesFallback } from "@/app/components/fallbacks/song-fallbacks";
 import {
   FavoritesButtons,
   FavoritesIcon,
 } from "@/app/components/favorites/buttons";
-import { FavoritesFallback } from "@/app/components/fallbacks/song-fallbacks";
-import { BadgesData } from "@/app/components/header-info";
 import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
+import { BadgesData } from "@/app/components/header-info";
 import ListWrapper from "@/app/components/list-wrapper";
 import { DataTable } from "@/app/components/ui/data-table";
-import { useIsMobile } from "@/app/hooks/use-mobile";
 import { useHasHover } from "@/app/hooks/use-input-mode";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import { songsColumns } from "@/app/tables/songs-columns";
 import { offlineData, useOfflineQuery } from "@/lib/offlineQueryClient";
 import { subsonic } from "@/service/subsonic";

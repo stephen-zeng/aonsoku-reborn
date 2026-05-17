@@ -108,5 +108,17 @@ export function createUiActions(shared: SharedDeps) {
         state.playerState.areLyricsAligned = aligned;
       });
     },
+
+    openPipWindow: () => {
+      set((state) => {
+        state.playerState.pipWindowOpen = true;
+      });
+    },
+
+    closePipWindow: () => {
+      set((state) => {
+        state.playerState.pipWindowOpen = false;
+      });
+    },
   } satisfies Partial<IPlayerActions>;
 }
