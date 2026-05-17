@@ -21,10 +21,10 @@ class NativeSourceResolver {
             }
         }
 
-        let hashedName = hashSongId(song.id)
+        let cacheId = cacheId(for: song.id)
         let extensions = ["mp3", "flac", "m4a", "aac", "ogg", "opus", "wav"]
         for ext in extensions {
-            let fileUrl = cacheDirectory.appendingPathComponent("\(hashedName).\(ext)")
+            let fileUrl = cacheDirectory.appendingPathComponent("\(cacheId).\(ext)")
             if FileManager.default.fileExists(atPath: fileUrl.path) {
                 return (fileUrl, "native-file")
             }
@@ -65,11 +65,11 @@ class NativeSourceResolver {
         return components.url
     }
 
-    private func hashSongId(_ songId: String) -> String {
-        var hash: UInt64 = 5381
-        for byte in songId.utf8 {
-            hash = ((hash &<< 5) &+ hash) &+ UInt64(byte)
-        }
-        return String(hash, radix: 16)
+    private func cacheId(for songId: String) -> String {
+        Data(songId.utf8)
+            .base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
     }
 }
