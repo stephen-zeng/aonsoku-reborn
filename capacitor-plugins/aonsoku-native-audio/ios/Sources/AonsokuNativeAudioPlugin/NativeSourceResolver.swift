@@ -43,21 +43,14 @@ class NativeSourceResolver {
     private func buildAuthenticatedStreamUrl(songId: String) -> URL? {
         guard let credentials = KeychainManager.retrieve() else { return nil }
 
-        var params: [String: String] = [
-            "id": songId,
-            "estimateContentLength": "false",
-            "v": credentials.protocolVersion,
-            "c": "Aonsoku",
-            "f": "json",
-            "u": credentials.username,
-        ]
-
-        if credentials.authType == "token" {
-            params["t"] = credentials.password
-            params["s"] = "40n50kuPl4y3r"
-        } else {
-            params["p"] = credentials.password
-        }
+        var params = SubsonicAuthBuilder.buildQueryParams(
+            username: credentials.username,
+            password: credentials.password,
+            authType: credentials.authType,
+            protocolVersion: credentials.protocolVersion
+        )
+        params["id"] = songId
+        params["estimateContentLength"] = "false"
 
         let baseString = "\(credentials.serverUrl)/rest/stream"
         guard var components = URLComponents(string: baseString) else { return nil }
