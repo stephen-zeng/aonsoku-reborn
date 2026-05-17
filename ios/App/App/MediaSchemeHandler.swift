@@ -2,16 +2,17 @@ import Foundation
 import WebKit
 import AonsokuNativeBridgePlugin
 
-class MediaSchemeHandler: NSObject, WKURLSchemeHandler {
-    private let session: URLSession
-
-    override init() {
+class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
+    private lazy var session: URLSession = {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30
         config.timeoutIntervalForResource = 600
-        self.session = URLSession(configuration: config)
-        super.init()
-    }
+        return URLSession(configuration: config, delegate: self, delegateQueue: nil)
+    }()
+
+    private var activeTasks: [Int: WKURLSchemeTask] = [:]
+    private var originalURLs: [Int: URL] = [:]
+    private let lock = NSLock()
 
     func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
         guard let url = urlSchemeTask.request.url,
@@ -53,55 +54,93 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler {
             return
         }
 
-        let task = session.dataTask(with: realURL) { [weak self] data, response, error in
-            guard self != nil else { return }
-
-            if let error = error {
-                urlSchemeTask.didFailWithError(error)
-                return
-            }
-
-            guard let httpResponse = response as? HTTPURLResponse,
-                  let data = data else {
-                urlSchemeTask.didFailWithError(SchemeError.invalidResponse)
-                return
-            }
-
-            let headers: [String: String] = [
-                "Content-Type": httpResponse.value(forHTTPHeaderField: "Content-Type") ?? "application/octet-stream",
-                "Content-Length": "\(data.count)",
-                "Cache-Control": httpResponse.value(forHTTPHeaderField: "Cache-Control") ?? "max-age=3600",
-            ]
-
-            let schemeResponse = HTTPURLResponse(
-                url: url,
-                statusCode: httpResponse.statusCode,
-                httpVersion: "HTTP/1.1",
-                headerFields: headers
-            )!
-
-            urlSchemeTask.didReceive(schemeResponse)
-            urlSchemeTask.didReceive(data)
-            urlSchemeTask.didFinish()
-        }
-
-        task.resume()
-        objc_setAssociatedObject(urlSchemeTask, &AssociatedKeys.dataTask, task, .OBJC_ASSOCIATION_RETAIN)
+        let dataTask = session.dataTask(with: realURL)
+        lock.lock()
+        activeTasks[dataTask.taskIdentifier] = urlSchemeTask
+        originalURLs[dataTask.taskIdentifier] = url
+        lock.unlock()
+        dataTask.resume()
     }
 
     func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
-        if let task = objc_getAssociatedObject(urlSchemeTask, &AssociatedKeys.dataTask) as? URLSessionDataTask {
-            task.cancel()
+        lock.lock()
+        let taskId = activeTasks.first(where: { $0.value === urlSchemeTask })?.key
+        lock.unlock()
+
+        guard let taskId else { return }
+        session.getAllTasks { tasks in
+            tasks.first(where: { $0.taskIdentifier == taskId })?.cancel()
         }
     }
-}
 
-private struct AssociatedKeys {
-    static var dataTask = "mediaSchemeDataTask"
+    // MARK: - URLSessionDataDelegate
+
+    func urlSession(
+        _ session: URLSession,
+        dataTask: URLSessionDataTask,
+        didReceive response: URLResponse,
+        completionHandler: @escaping (URLSession.ResponseDisposition) -> Void
+    ) {
+        lock.lock()
+        guard let schemeTask = activeTasks[dataTask.taskIdentifier],
+              let originalURL = originalURLs[dataTask.taskIdentifier] else {
+            lock.unlock()
+            completionHandler(.cancel)
+            return
+        }
+        lock.unlock()
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            completionHandler(.cancel)
+            return
+        }
+
+        var headers: [String: String] = [
+            "Content-Type": httpResponse.value(forHTTPHeaderField: "Content-Type") ?? "application/octet-stream",
+            "Cache-Control": httpResponse.value(forHTTPHeaderField: "Cache-Control") ?? "max-age=3600",
+        ]
+        if let contentLength = httpResponse.value(forHTTPHeaderField: "Content-Length") {
+            headers["Content-Length"] = contentLength
+        }
+
+        let schemeResponse = HTTPURLResponse(
+            url: originalURL,
+            statusCode: httpResponse.statusCode,
+            httpVersion: "HTTP/1.1",
+            headerFields: headers
+        )!
+
+        schemeTask.didReceive(schemeResponse)
+        completionHandler(.allow)
+    }
+
+    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+        lock.lock()
+        guard let schemeTask = activeTasks[dataTask.taskIdentifier] else {
+            lock.unlock()
+            return
+        }
+        lock.unlock()
+        schemeTask.didReceive(data)
+    }
+
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        lock.lock()
+        let schemeTask = activeTasks.removeValue(forKey: task.taskIdentifier)
+        originalURLs.removeValue(forKey: task.taskIdentifier)
+        lock.unlock()
+
+        guard let schemeTask else { return }
+
+        if let error, (error as NSError).code != NSURLErrorCancelled {
+            schemeTask.didFailWithError(error)
+        } else if error == nil {
+            schemeTask.didFinish()
+        }
+    }
 }
 
 private enum SchemeError: Error {
     case invalidURL
     case noCredentials
-    case invalidResponse
 }
