@@ -1,5 +1,5 @@
 import Foundation
-import Security
+import AonsokuNativeBridgePlugin
 
 class NativeSourceResolver {
     private let cacheDirectory: URL
@@ -41,7 +41,7 @@ class NativeSourceResolver {
     }
 
     private func buildAuthenticatedStreamUrl(songId: String) -> URL? {
-        guard let credentials = readKeychainCredentials() else { return nil }
+        guard let credentials = KeychainManager.retrieve() else { return nil }
 
         var params: [String: String] = [
             "id": songId,
@@ -63,30 +63,6 @@ class NativeSourceResolver {
         guard var components = URLComponents(string: baseString) else { return nil }
         components.queryItems = params.map { URLQueryItem(name: $0.key, value: $0.value) }
         return components.url
-    }
-
-    private func readKeychainCredentials() -> (serverUrl: String, username: String, password: String, authType: String, protocolVersion: String)? {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: "github.realtvop.aonsoku.credentials",
-            kSecAttrAccount as String: "server-credentials",
-            kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-        ]
-
-        var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
-        guard status == errSecSuccess, let data = result as? Data else { return nil }
-
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
-
-        guard let serverUrl = json["serverUrl"] as? String,
-              let username = json["username"] as? String,
-              let password = json["password"] as? String,
-              let authType = json["authType"] as? String,
-              let protocolVersion = json["protocolVersion"] as? String else { return nil }
-
-        return (serverUrl, username, password, authType, protocolVersion)
     }
 
     private func hashSongId(_ songId: String) -> String {
