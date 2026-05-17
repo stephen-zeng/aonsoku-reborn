@@ -1,6 +1,5 @@
 import Foundation
 import WebKit
-import AonsokuNativeBridgePlugin
 
 class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
     private lazy var session: URLSession = {
@@ -21,7 +20,7 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
             return
         }
 
-        guard let credentials = KeychainManager.retrieve() else {
+        guard let credentials = MediaKeychainHelper.retrieve() else {
             urlSchemeTask.didFailWithError(SchemeError.noCredentials)
             return
         }
@@ -29,12 +28,7 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
         let endpoint = components.host ?? components.path
         var queryItems = components.queryItems ?? []
 
-        let authParams = SubsonicAuthBuilder.buildQueryParams(
-            username: credentials.username,
-            password: credentials.password,
-            authType: credentials.authType,
-            protocolVersion: credentials.protocolVersion
-        )
+        let authParams = MediaKeychainHelper.buildAuthParams(credentials: credentials)
         for (key, value) in authParams {
             queryItems.append(URLQueryItem(name: key, value: value))
         }
