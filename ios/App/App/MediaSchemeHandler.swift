@@ -10,6 +10,7 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
     }()
 
     private var activeTasks: [Int: WKURLSchemeTask] = [:]
+    private var urlSessionTasks: [Int: URLSessionDataTask] = [:]
     private var originalURLs: [Int: URL] = [:]
     private let lock = NSLock()
 
@@ -51,6 +52,7 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
         let dataTask = session.dataTask(with: realURL)
         lock.lock()
         activeTasks[dataTask.taskIdentifier] = urlSchemeTask
+        urlSessionTasks[dataTask.taskIdentifier] = dataTask
         originalURLs[dataTask.taskIdentifier] = url
         lock.unlock()
         dataTask.resume()
@@ -59,12 +61,14 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
     func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
         lock.lock()
         let taskId = activeTasks.first(where: { $0.value === urlSchemeTask })?.key
+        let dataTask = taskId.flatMap { urlSessionTasks.removeValue(forKey: $0) }
+        if let taskId {
+            activeTasks.removeValue(forKey: taskId)
+            originalURLs.removeValue(forKey: taskId)
+        }
         lock.unlock()
 
-        guard let taskId else { return }
-        session.getAllTasks { tasks in
-            tasks.first(where: { $0.taskIdentifier == taskId })?.cancel()
-        }
+        dataTask?.cancel()
     }
 
     // MARK: - URLSessionDataDelegate
@@ -121,6 +125,7 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         lock.lock()
         let schemeTask = activeTasks.removeValue(forKey: task.taskIdentifier)
+        urlSessionTasks.removeValue(forKey: task.taskIdentifier)
         originalURLs.removeValue(forKey: task.taskIdentifier)
         lock.unlock()
 
