@@ -1,7 +1,6 @@
 import UIKit
 import Capacitor
 import WebKit
-import AonsokuNativeBridgePlugin
 
 class AonsokuViewController: CAPBridgeViewController {
     private let mediaSchemeHandler = MediaSchemeHandler()

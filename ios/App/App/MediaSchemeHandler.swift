@@ -1,10 +1,11 @@
 import Foundation
 import WebKit
+import Security
 
-public class MediaSchemeHandler: NSObject, WKURLSchemeHandler {
+class MediaSchemeHandler: NSObject, WKURLSchemeHandler {
     private let session: URLSession
 
-    public override init() {
+    override init() {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30
         config.timeoutIntervalForResource = 600
@@ -12,14 +13,14 @@ public class MediaSchemeHandler: NSObject, WKURLSchemeHandler {
         super.init()
     }
 
-    public func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
+    func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
         guard let url = urlSchemeTask.request.url,
               let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
             urlSchemeTask.didFailWithError(SchemeError.invalidURL)
             return
         }
 
-        guard let credentials = KeychainManager.retrieve() else {
+        guard let credentials = readCredentials() else {
             urlSchemeTask.didFailWithError(SchemeError.noCredentials)
             return
         }
@@ -27,13 +28,7 @@ public class MediaSchemeHandler: NSObject, WKURLSchemeHandler {
         let endpoint = components.host ?? components.path
         var queryItems = components.queryItems ?? []
 
-        let authParams = SubsonicAuthBuilder.buildQueryParams(
-            username: credentials.username,
-            password: credentials.password,
-            authType: credentials.authType,
-            protocolVersion: credentials.protocolVersion
-        )
-
+        let authParams = buildAuthParams(credentials: credentials)
         for (key, value) in authParams {
             queryItems.append(URLQueryItem(name: key, value: value))
         }
@@ -89,10 +84,67 @@ public class MediaSchemeHandler: NSObject, WKURLSchemeHandler {
         objc_setAssociatedObject(urlSchemeTask, &AssociatedKeys.dataTask, task, .OBJC_ASSOCIATION_RETAIN)
     }
 
-    public func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
+    func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
         if let task = objc_getAssociatedObject(urlSchemeTask, &AssociatedKeys.dataTask) as? URLSessionDataTask {
             task.cancel()
         }
+    }
+
+    // MARK: - Keychain Access
+
+    private struct Credentials {
+        let serverUrl: String
+        let username: String
+        let password: String
+        let authType: String
+        let protocolVersion: String
+    }
+
+    private func readCredentials() -> Credentials? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: "github.realtvop.aonsoku.credentials",
+            kSecAttrAccount as String: "server-credentials",
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne,
+        ]
+
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        guard status == errSecSuccess, let data = result as? Data else { return nil }
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+
+        guard let serverUrl = json["serverUrl"] as? String,
+              let username = json["username"] as? String,
+              let password = json["password"] as? String,
+              let authType = json["authType"] as? String,
+              let protocolVersion = json["protocolVersion"] as? String else { return nil }
+
+        return Credentials(
+            serverUrl: serverUrl,
+            username: username,
+            password: password,
+            authType: authType,
+            protocolVersion: protocolVersion
+        )
+    }
+
+    private func buildAuthParams(credentials: Credentials) -> [String: String] {
+        var params: [String: String] = [
+            "u": credentials.username,
+            "v": credentials.protocolVersion,
+            "c": "Aonsoku",
+            "f": "json",
+        ]
+
+        if credentials.authType == "token" {
+            params["t"] = credentials.password
+            params["s"] = "40n50kuPl4y3r"
+        } else {
+            params["p"] = credentials.password
+        }
+
+        return params
     }
 }
 
