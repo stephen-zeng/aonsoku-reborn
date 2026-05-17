@@ -182,14 +182,15 @@ private final class MediaSchemeTaskState {
     }
 
     private func safePerform(_ block: @escaping () -> Void) {
-        DispatchQueue.main.async { [self] in
-            self.lock.lock()
-            guard !self.isStopped else {
-                self.lock.unlock()
+        let state = self
+        DispatchQueue.main.async {
+            state.lock.lock()
+            guard !state.isStopped else {
+                state.lock.unlock()
                 return
             }
-            self.lock.unlock()
-            ObjCExceptionCatcher.performBlock({ block() }, error: nil)
+            state.lock.unlock()
+            try? ObjCExceptionCatcher.perform { block() }
         }
     }
 
