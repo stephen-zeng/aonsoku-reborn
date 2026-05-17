@@ -101,9 +101,7 @@ class MemoryPlaybackBackend implements PlaybackBackend {
     const listeners =
       this.listeners.get(event) ??
       new Set<PlaybackBackendListener<PlaybackBackendEvent>>();
-    listeners.add(
-      listener as PlaybackBackendListener<PlaybackBackendEvent>,
-    );
+    listeners.add(listener as PlaybackBackendListener<PlaybackBackendEvent>);
     this.listeners.set(event, listeners);
 
     return () => {
@@ -244,10 +242,7 @@ describe("PlaybackBackend contract", () => {
     const progressListener = vi.fn();
     const bufferingListener = vi.fn();
 
-    const unsubscribeProgress = backend.subscribe(
-      "progress",
-      progressListener,
-    );
+    const unsubscribeProgress = backend.subscribe("progress", progressListener);
     backend.subscribe("buffering", bufferingListener);
 
     backend.emit("progress", {

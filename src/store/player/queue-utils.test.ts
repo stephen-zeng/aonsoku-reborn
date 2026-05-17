@@ -385,11 +385,10 @@ describe("initSonglistState", () => {
 describe("clearSonglistState", () => {
   it("resets all songlist fields to initial values", () => {
     const state = makeSonglist({
-      contextQueue: makeContextQueue(
-        [makeSong("a"), makeSong("b")],
-        1,
-        { sourceId: { type: "album", id: "x" }, sourceName: "Album X" },
-      ),
+      contextQueue: makeContextQueue([makeSong("a"), makeSong("b")], 1, {
+        sourceId: { type: "album", id: "x" },
+        sourceName: "Album X",
+      }),
       userQueue: { songs: [makeSong("u1")] },
       currentSong: makeSong("a"),
       isShuffleActive: true,
@@ -475,17 +474,27 @@ describe("applyShuffleOn", () => {
     });
     applyShuffleOn(songlist as ISongList);
     expect(songlist.isShuffleActive).toBe(true);
-    expect(songlist.userQueue.songs.sort((a, b) => a.id.localeCompare(b.id)).map((s) => s.id)).toEqual(
-      ["u1", "u2", "u3"],
-    );
+    expect(
+      songlist.userQueue.songs
+        .sort((a, b) => a.id.localeCompare(b.id))
+        .map((s) => s.id),
+    ).toEqual(["u1", "u2", "u3"]);
   });
 });
 
 describe("applyShuffleOff", () => {
   it("restores original context songs and finds current song in original", () => {
-    const original = [makeSong("a"), makeSong("b"), makeSong("c"), makeSong("d")];
+    const original = [
+      makeSong("a"),
+      makeSong("b"),
+      makeSong("c"),
+      makeSong("d"),
+    ];
     const songlist = makeSonglist({
-      contextQueue: makeContextQueue([makeSong("a"), makeSong("d"), makeSong("b"), makeSong("c")], 2),
+      contextQueue: makeContextQueue(
+        [makeSong("a"), makeSong("d"), makeSong("b"), makeSong("c")],
+        2,
+      ),
       originalContextSongs: [...original],
       isShuffleActive: true,
       isInUserQueue: false,
@@ -663,7 +672,8 @@ describe("reshuffleContextForWrap", () => {
       shuffleHistory: [],
     });
     reshuffleContextForWrap(songlist as ISongList, "d");
-    const lastSong = songlist.contextQueue.songs[songlist.contextQueue.songs.length - 1];
+    const lastSong =
+      songlist.contextQueue.songs[songlist.contextQueue.songs.length - 1];
     expect(lastSong.id).toBe("d");
   });
 });
@@ -746,7 +756,10 @@ describe("applyStarToAllLists", () => {
   });
 
   it("unstars when newStarred is undefined", () => {
-    const songA = { ...makeSong("a"), starred: "2024-01-01" as string | undefined };
+    const songA = {
+      ...makeSong("a"),
+      starred: "2024-01-01" as string | undefined,
+    };
     const songlist = makeSonglist({
       contextQueue: makeContextQueue([songA], 0),
       userQueue: { songs: [] },

@@ -26,10 +26,7 @@ import {
   type PlaybackSource,
   PlaybackSession,
 } from "@/player/playback";
-import {
-  type AudioSourceDescriptor,
-  getAudioSourceUrl,
-} from "@/service/cache";
+import { type AudioSourceDescriptor, getAudioSourceUrl } from "@/service/cache";
 import { useCacheStore } from "@/store/cache.store";
 import {
   useIsRemoteControlActive,
@@ -260,7 +257,10 @@ export function AudioPlayer({
   }, [audioRef, getPlaybackBackend, metadata]);
 
   const audioVolume = useMemo(
-    () => (getPlaybackCapabilities().requiresSystemVolume ? 1 : perceptualToGain(volume)),
+    () =>
+      getPlaybackCapabilities().requiresSystemVolume
+        ? 1
+        : perceptualToGain(volume),
     [volume],
   );
 
@@ -348,23 +348,26 @@ export function AudioPlayer({
     [getPlaybackBackend],
   );
 
-  const pauseAudio = useCallback((audio: HTMLAudioElement) => {
-    logger.info(
-      `[pauseAudio] currentTime=${audio.currentTime.toFixed(2)} | duration=${audio.duration?.toFixed(2)} | src=${audio.src?.slice(-60)}`,
-    );
-    const pending = sessionRef.current.consumePlayPromise();
-    if (pending) {
-      pending.catch(() => {});
-    }
-    sessionRef.current.beginEffectPause();
-    const backend = getPlaybackBackend(audio);
-    if (backend) {
-      backend.pause();
-    } else {
-      audio.pause();
-    }
-    sessionRef.current.clearEffectPauseIfPaused(audio.paused);
-  }, [getPlaybackBackend]);
+  const pauseAudio = useCallback(
+    (audio: HTMLAudioElement) => {
+      logger.info(
+        `[pauseAudio] currentTime=${audio.currentTime.toFixed(2)} | duration=${audio.duration?.toFixed(2)} | src=${audio.src?.slice(-60)}`,
+      );
+      const pending = sessionRef.current.consumePlayPromise();
+      if (pending) {
+        pending.catch(() => {});
+      }
+      sessionRef.current.beginEffectPause();
+      const backend = getPlaybackBackend(audio);
+      if (backend) {
+        backend.pause();
+      } else {
+        audio.pause();
+      }
+      sessionRef.current.clearEffectPauseIfPaused(audio.paused);
+    },
+    [getPlaybackBackend],
+  );
 
   const scheduleRetry = useCallback(
     (audio: HTMLAudioElement) => {
@@ -394,9 +397,12 @@ export function AudioPlayer({
       if (result.type === "offline") {
         logger.info("[scheduleRetry] Offline, skipping retry");
       } else if (result.type === "rangeFallback") {
-        logger.info("[scheduleRetry] All retries failed — retrying from position 0", {
-          fallbackPosition: result.fallbackPosition,
-        });
+        logger.info(
+          "[scheduleRetry] All retries failed — retrying from position 0",
+          {
+            fallbackPosition: result.fallbackPosition,
+          },
+        );
       } else if (result.type === "scheduled") {
         logger.info(
           `[scheduleRetry] attempt=${result.attempt}/5 | delay=${result.delay}ms | fromPosition=${result.resumePosition.toFixed(2)}`,
@@ -737,7 +743,10 @@ export function AudioPlayer({
             usePlayerStore.setState((state) => {
               state.playerState.seekToStart = false;
             });
-          } else if (audio.ended && sessionRef.current.hasLoadedSource(songId)) {
+          } else if (
+            audio.ended &&
+            sessionRef.current.hasLoadedSource(songId)
+          ) {
             logger.info(
               `[PlayEffect:endedRestart] songId=${songId} | setting currentTime=0`,
             );

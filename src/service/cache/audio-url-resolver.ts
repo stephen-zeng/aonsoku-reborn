@@ -1,8 +1,5 @@
 import { getSongStreamUrl } from "@/api/httpClient";
-import type {
-  CacheAudioPurpose,
-  CacheAudioUrlResolver,
-} from "./contracts";
+import type { CacheAudioPurpose, CacheAudioUrlResolver } from "./contracts";
 
 /**
  * Build a URL for fetching audio.

@@ -61,9 +61,7 @@ describe("playback error mapping", () => {
     expect(shouldRetryPlaybackError(networkError)).toBe(true);
     expect(shouldRetryPlaybackError(unknownError)).toBe(true);
     expect(shouldRetryPlaybackError(decodeError)).toBe(false);
-    expect(shouldRetryPlaybackError(decodeError, { isRadio: true })).toBe(
-      true,
-    );
+    expect(shouldRetryPlaybackError(decodeError, { isRadio: true })).toBe(true);
     expect(shouldRetryPlaybackError(unsupportedError)).toBe(false);
   });
 });

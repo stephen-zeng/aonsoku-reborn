@@ -31,8 +31,7 @@ describe("platform detection", () => {
       vi.stubGlobal("window", {
         navigator: {
           platform: "iPhone",
-          userAgent:
-            "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)",
+          userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)",
         },
       });
       vi.stubGlobal("document", { ontouchend: undefined });
@@ -44,8 +43,7 @@ describe("platform detection", () => {
       vi.stubGlobal("window", {
         navigator: {
           platform: "iPad",
-          userAgent:
-            "Mozilla/5.0 (iPad; CPU OS 16_0 like Mac OS X)",
+          userAgent: "Mozilla/5.0 (iPad; CPU OS 16_0 like Mac OS X)",
         },
       });
       vi.stubGlobal("document", { ontouchend: undefined });
@@ -70,8 +68,7 @@ describe("platform detection", () => {
       vi.stubGlobal("window", {
         navigator: {
           platform: "MacIntel",
-          userAgent:
-            "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)",
+          userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)",
         },
       });
       vi.stubGlobal("document", { ontouchend: undefined });
@@ -96,8 +93,7 @@ describe("platform detection", () => {
       vi.stubGlobal("window", {
         navigator: {
           platform: "Win32",
-          userAgent:
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+          userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
         },
       });
       vi.stubGlobal("document", { ontouchend: undefined });
@@ -124,8 +120,7 @@ describe("platform detection", () => {
       vi.stubGlobal("window", {
         navigator: {
           platform: "iPad",
-          userAgent:
-            "Mozilla/5.0 (iPad; CPU OS 16_0 like Mac OS X)",
+          userAgent: "Mozilla/5.0 (iPad; CPU OS 16_0 like Mac OS X)",
         },
       });
       vi.stubGlobal("document", { ontouchend: undefined });
@@ -137,8 +132,7 @@ describe("platform detection", () => {
       vi.stubGlobal("window", {
         navigator: {
           platform: "MacIntel",
-          userAgent:
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+          userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
         },
       });
       vi.stubGlobal("document", { ontouchend: () => {} });
@@ -150,8 +144,7 @@ describe("platform detection", () => {
       vi.stubGlobal("window", {
         navigator: {
           platform: "iPhone",
-          userAgent:
-            "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)",
+          userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)",
         },
       });
       vi.stubGlobal("document", { ontouchend: undefined });
@@ -163,8 +156,7 @@ describe("platform detection", () => {
       vi.stubGlobal("window", {
         navigator: {
           platform: "Win32",
-          userAgent:
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+          userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
         },
       });
       vi.stubGlobal("document", { ontouchend: undefined });
@@ -190,8 +182,7 @@ describe("platform detection", () => {
       vi.stubGlobal("window", {
         navigator: {
           platform: "Win32",
-          userAgent:
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+          userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
         },
       });
       vi.stubGlobal("document", { ontouchend: undefined });

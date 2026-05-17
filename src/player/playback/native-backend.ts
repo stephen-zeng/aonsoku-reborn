@@ -7,10 +7,7 @@ import type {
   NativeAudioPlugin,
   NativeAudioSource,
 } from "@/native/audio";
-import {
-  nativePlaybackErrorKind,
-  playbackErrorCodeFromKind,
-} from "./errors";
+import { nativePlaybackErrorKind, playbackErrorCodeFromKind } from "./errors";
 import {
   type PlaybackBackend,
   type PlaybackBackendEvent,
@@ -30,9 +27,8 @@ type ListenerMap = {
 export class NativeAudioPlaybackBackend implements PlaybackBackend {
   readonly #plugin: NativeAudioPlugin;
   readonly #listeners: ListenerMap;
-  readonly #nativeListenerHandles: Array<
-    Promise<PluginListenerHandle | null>
-  > = [];
+  readonly #nativeListenerHandles: Array<Promise<PluginListenerHandle | null>> =
+    [];
   #loadSequence = 0;
   #activeRequestId: string | null = null;
   #disposed = false;
@@ -316,7 +312,9 @@ function toPlaybackErrorEvent(
   };
 }
 
-function isNativeAudioErrorEvent(error: unknown): error is NativeAudioErrorEvent {
+function isNativeAudioErrorEvent(
+  error: unknown,
+): error is NativeAudioErrorEvent {
   return (
     typeof error === "object" &&
     error !== null &&

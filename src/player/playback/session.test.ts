@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 import type { ISongList } from "@/types/playerContext";
 import { LoopState } from "@/types/playerContext";
 import type { ISong } from "@/types/responses/song";
-import { emptyContextQueue, initSonglistState } from "@/store/player/queue-utils";
+import {
+  emptyContextQueue,
+  initSonglistState,
+} from "@/store/player/queue-utils";
 import {
   getAudioDurationSeconds,
   getAudioProgressSnapshot,

@@ -44,7 +44,7 @@ export function playbackErrorKindFromCode(
       return "source-not-supported";
     default:
       return typeof code === "string"
-        ? nativeErrorKindByCode.get(code) ?? "unknown"
+        ? (nativeErrorKindByCode.get(code) ?? "unknown")
         : "unknown";
   }
 }

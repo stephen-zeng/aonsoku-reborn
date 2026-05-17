@@ -2,7 +2,11 @@ import { Capacitor } from "@capacitor/core";
 import { hasElectronBridge, isDesktop } from "./desktop";
 import { isIOS } from "./platform";
 
-export type PlatformRuntime = "web" | "electron" | "capacitor-ios" | "capacitor-android";
+export type PlatformRuntime =
+  | "web"
+  | "electron"
+  | "capacitor-ios"
+  | "capacitor-android";
 
 export interface PlaybackCapabilities {
   canSetVolume: boolean;
@@ -109,8 +113,7 @@ export function getDesktopCapabilities(): DesktopCapabilities {
       typeof window.api?.lanControl !== "undefined",
     hasMiniPlayer:
       isDesktop() ||
-      (typeof window !== "undefined" &&
-        "documentPictureInPicture" in window),
+      (typeof window !== "undefined" && "documentPictureInPicture" in window),
     hasNativeThemeSync: hasBridge,
     hasUpdateCheck: hasBridge,
   };

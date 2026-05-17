@@ -220,7 +220,9 @@ export function partializePlayerStoreState(state: IPlayerContext) {
   );
   if (evictedKeys.length > 0) {
     import("@/service/lyrics")
-      .then(({ deleteCustomLyricsBodies }) => deleteCustomLyricsBodies(evictedKeys))
+      .then(({ deleteCustomLyricsBodies }) =>
+        deleteCustomLyricsBodies(evictedKeys),
+      )
       .catch(() => {});
   }
 

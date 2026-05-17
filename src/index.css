@@ -168,7 +168,8 @@
     --shadow-header-distance: calc(var(--shadow-header-height) + 1.5rem);
 
     --toastify-toast-top: calc(
-      max(var(--header-height), var(--safe-area-top)) + 0.25rem
+      max(var(--header-height), var(--safe-area-top)) +
+      0.25rem
     );
     --toastify-toast-container-height: calc(
       var(--shadow-header-height) -

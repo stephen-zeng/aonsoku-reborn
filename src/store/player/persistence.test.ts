@@ -16,10 +16,7 @@ import {
   partializePlayerStoreState,
   trimSonglistForIdb,
 } from "./persistence";
-import {
-  MAX_QUEUE_SIZE,
-  MAX_USER_QUEUE_IDB_SIZE,
-} from "./queue-utils";
+import { MAX_QUEUE_SIZE, MAX_USER_QUEUE_IDB_SIZE } from "./queue-utils";
 
 function makeSong(id: string): ISong {
   return { id, duration: 180 } as ISong;
@@ -153,8 +150,6 @@ describe("player IDB songlist trimming", () => {
     expect(trimmed.playedUserQueueHistory).toHaveLength(
       MAX_USER_QUEUE_IDB_SIZE,
     );
-    expect(trimmed.shuffleStartHistory).toHaveLength(
-      MAX_SHUFFLE_START_HISTORY,
-    );
+    expect(trimmed.shuffleStartHistory).toHaveLength(MAX_SHUFFLE_START_HISTORY);
   });
 });

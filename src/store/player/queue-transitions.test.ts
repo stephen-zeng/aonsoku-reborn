@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { IContextQueue, ISongList, QueueSourceId } from "@/types/playerContext";
+import type {
+  IContextQueue,
+  ISongList,
+  QueueSourceId,
+} from "@/types/playerContext";
 import { LoopState } from "@/types/playerContext";
 import type { ISong } from "@/types/responses/song";
 import type { Radio } from "@/types/responses/radios";
@@ -136,7 +140,10 @@ describe("transitionNextSong", () => {
 
   it("drops back to context queue when last user song consumed", () => {
     const songlist = makeSonglist({
-      contextQueue: makeContextQueue([makeSong("a"), makeSong("b"), makeSong("c")], 0),
+      contextQueue: makeContextQueue(
+        [makeSong("a"), makeSong("b"), makeSong("c")],
+        0,
+      ),
       userQueue: { songs: [makeSong("u1")] },
       isInUserQueue: true,
       playedUserQueueHistory: [],
@@ -190,7 +197,11 @@ describe("transitionPrevSong", () => {
     const songlist = makeSonglist({
       contextQueue: makeContextQueue([makeSong("a"), makeSong("b")], 1),
     });
-    const result = transitionPrevSong(songlist, PREV_SEEK_THRESHOLD, LoopState.Off);
+    const result = transitionPrevSong(
+      songlist,
+      PREV_SEEK_THRESHOLD,
+      LoopState.Off,
+    );
     expect(result).not.toBeNull();
     expect(result!.seekToStart).toBe(false);
     expect(result!.songlist.contextQueue.currentIndex).toBe(0);
@@ -441,19 +452,25 @@ describe("transitionReorderQueue", () => {
     });
     const result = transitionReorderQueue(songlist, 1, 2);
     expect(result!.songlist.userQueue.songs).toHaveLength(0);
-    expect(
-      result!.songlist.contextQueue.songs.map((s) => s.id),
-    ).toContain("u1");
+    expect(result!.songlist.contextQueue.songs.map((s) => s.id)).toContain(
+      "u1",
+    );
   });
 
   it("moves song from upcoming context to user queue", () => {
     const songlist = makeSonglist({
-      contextQueue: makeContextQueue([makeSong("a"), makeSong("b"), makeSong("c")], 0),
+      contextQueue: makeContextQueue(
+        [makeSong("a"), makeSong("b"), makeSong("c")],
+        0,
+      ),
       userQueue: { songs: [makeSong("u1")] },
     });
     const result = transitionReorderQueue(songlist, 2, 1);
     expect(result).not.toBeNull();
-    expect(result!.songlist.userQueue.songs.map((s) => s.id)).toEqual(["b", "u1"]);
+    expect(result!.songlist.userQueue.songs.map((s) => s.id)).toEqual([
+      "b",
+      "u1",
+    ]);
     expect(result!.songlist.contextQueue.songs.map((s) => s.id)).toEqual([
       "a",
       "c",
@@ -602,10 +619,7 @@ describe("transitionHandleSongEnded", () => {
 describe("transitionUpdatePrevNextFlags", () => {
   it("returns hasPrev false and hasNext true for first song with multiple context songs", () => {
     const songlist = makeSonglist({
-      contextQueue: makeContextQueue(
-        [makeSong("a"), makeSong("b")],
-        0,
-      ),
+      contextQueue: makeContextQueue([makeSong("a"), makeSong("b")], 0),
       playedUserQueueHistory: [],
     });
     const result = transitionUpdatePrevNextFlags(songlist, LoopState.Off);
@@ -628,7 +642,11 @@ describe("transitionSetSongList", () => {
   const identityShuffle: (items: ISong[], _history: string[]) => ISong[] = (
     items,
   ) => items;
-  const pickStartIndex = (_len: number, _history: string[], _idFn: (i: number) => string) => 0;
+  const pickStartIndex = (
+    _len: number,
+    _history: string[],
+    _idFn: (i: number) => string,
+  ) => 0;
   const sourceId: QueueSourceId = { type: "album", id: "test-album" };
 
   it("sets context queue with songs at given index", () => {
@@ -680,9 +698,7 @@ describe("transitionSetSongList", () => {
 
   it("trims large song lists to max window", () => {
     const songlist = make3SongList();
-    const bigList = Array.from({ length: 600 }, (_, i) =>
-      makeSong(`s${i}`),
-    );
+    const bigList = Array.from({ length: 600 }, (_, i) => makeSong(`s${i}`));
     const result = transitionSetSongList(
       songlist,
       bigList,

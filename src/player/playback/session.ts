@@ -32,7 +32,12 @@ export interface PlaybackRetryContext<TAudio extends PlaybackSessionAudio> {
 
 export type PlaybackRetryResult =
   | { type: "offline" }
-  | { type: "scheduled"; attempt: number; delay: number; resumePosition: number }
+  | {
+      type: "scheduled";
+      attempt: number;
+      delay: number;
+      resumePosition: number;
+    }
   | { type: "rangeFallback"; fallbackPosition: number }
   | { type: "failed" };
 
@@ -49,7 +54,15 @@ export interface PlaybackRetryEvent {
 }
 
 export type PlaybackPauseDecision =
-  | { type: "skip"; reason: "loopRestarting" | "ended" | "srcChanging" | "effectPausing" | "audioError" }
+  | {
+      type: "skip";
+      reason:
+        | "loopRestarting"
+        | "ended"
+        | "srcChanging"
+        | "effectPausing"
+        | "audioError";
+    }
   | { type: "forward" };
 
 export interface PlaybackEndedInput {

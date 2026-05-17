@@ -88,7 +88,10 @@ export function transitionNextSong(
     return withSeekToStart(withResetProgress(baseTransition(next)));
   }
 
-  if (songlist.contextQueue.currentIndex < songlist.contextQueue.songs.length - 1) {
+  if (
+    songlist.contextQueue.currentIndex <
+    songlist.contextQueue.songs.length - 1
+  ) {
     next.contextQueue.currentIndex = songlist.contextQueue.currentIndex + 1;
     next.currentSong = getCurrentSong(next);
     return withTransitioning(withResetProgress(baseTransition(next)));
@@ -116,10 +119,7 @@ function transitionConsumeUserQueue(
   loopState: LoopState,
 ): QueueTransition {
   const consumed = original.userQueue.songs[0];
-  next.playedUserQueueHistory = [
-    ...original.playedUserQueueHistory,
-    consumed,
-  ];
+  next.playedUserQueueHistory = [...original.playedUserQueueHistory, consumed];
   next.userQueue.songs = original.userQueue.songs.slice(1);
 
   if (next.userQueue.songs.length > 0) {
@@ -234,10 +234,7 @@ export function transitionRemoveFromContextQueue(
       );
     }
   }
-  next.contextQueue.currentIndex = Math.max(
-    next.contextQueue.currentIndex,
-    0,
-  );
+  next.contextQueue.currentIndex = Math.max(next.contextQueue.currentIndex, 0);
 
   const shouldResetProgress =
     removedIndex === contextQueue.currentIndex && !isInUserQueue;
@@ -289,8 +286,7 @@ export function transitionReorderQueue(
     toIndex < contextPlayedCount + userQueue.songs.length;
   const fromInUpcoming =
     fromIndex >= contextPlayedCount + userQueue.songs.length;
-  const toInUpcoming =
-    toIndex >= contextPlayedCount + userQueue.songs.length;
+  const toInUpcoming = toIndex >= contextPlayedCount + userQueue.songs.length;
 
   const next = cloneSonglist(songlist);
 
@@ -353,9 +349,7 @@ export function transitionEnterUserQueueMode(
   return withResetProgress(baseTransition(next));
 }
 
-export function transitionClearUserQueue(
-  songlist: ISongList,
-): QueueTransition {
+export function transitionClearUserQueue(songlist: ISongList): QueueTransition {
   const next = cloneSonglist(songlist);
   next.userQueue.songs = [];
   next.playedUserQueueHistory = [];
@@ -369,10 +363,7 @@ export function transitionClearUserQueue(
 export function transitionHandleSongEnded(
   songlist: ISongList,
   loopState: LoopState,
-):
-  | { action: "playNext" }
-  | { action: "seekToStart" }
-  | { action: "stop" } {
+): { action: "playNext" } | { action: "seekToStart" } | { action: "stop" } {
   const userQueueRemaining = songlist.isInUserQueue
     ? songlist.userQueue.songs.length - 1
     : songlist.userQueue.songs.length;
@@ -400,18 +391,29 @@ export function transitionSetSongList(
   shuffle: boolean,
   existingStartHistory: string[],
   shuffleFn: (items: ISong[], history: string[]) => ISong[],
-  pickStartIndex: (length: number, history: string[], idFn: (i: number) => string) => number,
+  pickStartIndex: (
+    length: number,
+    history: string[],
+    idFn: (i: number) => string,
+  ) => number,
 ): QueueTransition {
   index = Math.max(0, Math.min(index, newSongs.length - 1));
   const next = cloneSonglist(songlist);
 
   if (shuffle) {
-    const randomIndex = pickStartIndex(newSongs.length, existingStartHistory, (i) => newSongs[i].id);
+    const randomIndex = pickStartIndex(
+      newSongs.length,
+      existingStartHistory,
+      (i) => newSongs[i].id,
+    );
     const startSong = newSongs[randomIndex];
     const remaining = newSongs.filter((_, i) => i !== randomIndex);
     const shuffledRemaining = shuffleFn(remaining, []);
     shuffledRemaining.unshift(startSong);
-    const updatedStartHistory = [...existingStartHistory.slice(-99), startSong.id];
+    const updatedStartHistory = [
+      ...existingStartHistory.slice(-99),
+      startSong.id,
+    ];
     next.contextQueue = {
       songs: shuffledRemaining,
       currentIndex: 0,

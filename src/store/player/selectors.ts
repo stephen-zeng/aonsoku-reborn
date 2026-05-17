@@ -1,8 +1,5 @@
 import { shallow } from "zustand/shallow";
-import {
-  getEffectiveIndex,
-  getEffectiveQueue,
-} from "./queue-utils";
+import { getEffectiveIndex, getEffectiveQueue } from "./queue-utils";
 import { usePlayerStore } from "./store";
 
 export const usePlayerActions = () => usePlayerStore((state) => state.actions);
