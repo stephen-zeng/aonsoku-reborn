@@ -21,7 +21,12 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "skipToPrevious", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateMetadata", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "preload", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "clear", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "clear", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "storeAudioFile", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "resolveAudioFile", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getAudioFileSize", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "deleteAudioFile", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "clearAudioFiles", returnType: CAPPluginReturnPromise)
     ]
 
     private var player: AVPlayer?
@@ -253,6 +258,362 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             self.resetControlState()
             call.resolve()
         }
+    }
+
+    @objc func storeAudioFile(_ call: CAPPluginCall) {
+        guard let songId = call.getString("songId"), !songId.isEmpty else {
+            reject(call, code: "invalid_cache_request", message: "Missing songId for native audio cache storage.")
+            return
+        }
+
+        guard let dataBase64 = call.getString("dataBase64"), !dataBase64.isEmpty else {
+            reject(call, code: "invalid_cache_request", message: "Missing base64 audio data for native audio cache storage.")
+            return
+        }
+
+        let contentType = call.getString("contentType") ?? "audio/mpeg"
+
+        DispatchQueue.global(qos: .utility).async {
+            do {
+                let file = try self.storeCachedAudioFile(
+                    songId: songId,
+                    dataBase64: dataBase64,
+                    contentType: contentType
+                )
+                DispatchQueue.main.async {
+                    call.resolve(self.jsObject(from: file))
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.reject(call, error: error)
+                }
+            }
+        }
+    }
+
+    @objc func resolveAudioFile(_ call: CAPPluginCall) {
+        guard let songId = call.getString("songId"), !songId.isEmpty else {
+            reject(call, code: "invalid_cache_request", message: "Missing songId for native audio cache resolution.")
+            return
+        }
+
+        DispatchQueue.global(qos: .utility).async {
+            do {
+                let file = try self.resolveCachedAudioFile(songId: songId)
+                DispatchQueue.main.async {
+                    call.resolve([
+                        "file": file.map { self.jsObject(from: $0) } ?? NSNull(),
+                    ])
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.reject(call, error: error)
+                }
+            }
+        }
+    }
+
+    @objc func getAudioFileSize(_ call: CAPPluginCall) {
+        guard let songId = call.getString("songId"), !songId.isEmpty else {
+            reject(call, code: "invalid_cache_request", message: "Missing songId for native audio cache size lookup.")
+            return
+        }
+
+        DispatchQueue.global(qos: .utility).async {
+            do {
+                let file = try self.resolveCachedAudioFile(songId: songId)
+                DispatchQueue.main.async {
+                    call.resolve([
+                        "sizeBytes": file?.sizeBytes.map { NSNumber(value: $0) } ?? NSNull(),
+                    ])
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.reject(call, error: error)
+                }
+            }
+        }
+    }
+
+    @objc func deleteAudioFile(_ call: CAPPluginCall) {
+        guard let songId = call.getString("songId"), !songId.isEmpty else {
+            reject(call, code: "invalid_cache_request", message: "Missing songId for native audio cache deletion.")
+            return
+        }
+
+        DispatchQueue.global(qos: .utility).async {
+            do {
+                let deleted = try self.deleteCachedAudioFile(songId: songId)
+                DispatchQueue.main.async {
+                    call.resolve(["deleted": deleted])
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.reject(call, error: error)
+                }
+            }
+        }
+    }
+
+    @objc func clearAudioFiles(_ call: CAPPluginCall) {
+        DispatchQueue.global(qos: .utility).async {
+            do {
+                let deletedCount = try self.clearCachedAudioFiles()
+                DispatchQueue.main.async {
+                    call.resolve(["deletedCount": deletedCount])
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.reject(call, error: error)
+                }
+            }
+        }
+    }
+
+    private func storeCachedAudioFile(
+        songId: String,
+        dataBase64: String,
+        contentType: String
+    ) throws -> NativeCachedAudioFile {
+        guard let data = Data(base64Encoded: dataBase64) else {
+            throw NativeAudioPluginError.invalidCacheRequest("Native audio cache data is not valid base64.")
+        }
+
+        let directory = try cacheDirectoryURL(createIfNeeded: true)
+        _ = try deleteCachedAudioFile(songId: songId)
+
+        let fileName = "\(cacheId(for: songId)).\(fileExtension(for: contentType))"
+        let fileURL = directory.appendingPathComponent(fileName, isDirectory: false)
+        try data.write(to: fileURL, options: [.atomic])
+
+        let metadata = NativeCachedAudioFileMetadata(
+            songId: songId,
+            fileName: fileName,
+            contentType: contentType,
+            lastModifiedAt: Date().timeIntervalSince1970 * 1000
+        )
+        let metadataData = try JSONEncoder().encode(metadata)
+        try metadataData.write(to: metadataURL(for: songId, in: directory), options: [.atomic])
+
+        return try cachedAudioFile(
+            songId: songId,
+            directory: directory,
+            metadata: metadata
+        ) ?? NativeCachedAudioFile(
+            songId: songId,
+            uri: fileURL.absoluteString,
+            contentType: contentType,
+            sizeBytes: Int64(data.count),
+            lastModifiedAt: metadata.lastModifiedAt
+        )
+    }
+
+    private func resolveCachedAudioFile(songId: String) throws -> NativeCachedAudioFile? {
+        let directory = try cacheDirectoryURL(createIfNeeded: false)
+        guard FileManager.default.fileExists(atPath: directory.path) else {
+            return nil
+        }
+
+        return try cachedAudioFile(songId: songId, directory: directory)
+    }
+
+    private func deleteCachedAudioFile(songId: String) throws -> Bool {
+        let directory = try cacheDirectoryURL(createIfNeeded: false)
+        guard FileManager.default.fileExists(atPath: directory.path) else {
+            return false
+        }
+
+        let cacheId = cacheId(for: songId)
+        let fileManager = FileManager.default
+        let urls = try fileManager.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil
+        )
+        var deleted = false
+
+        for url in urls where url.lastPathComponent.hasPrefix("\(cacheId).") {
+            try fileManager.removeItem(at: url)
+            deleted = true
+        }
+
+        return deleted
+    }
+
+    private func clearCachedAudioFiles() throws -> Int {
+        let directory = try cacheDirectoryURL(createIfNeeded: false)
+        guard FileManager.default.fileExists(atPath: directory.path) else {
+            return 0
+        }
+
+        let fileManager = FileManager.default
+        let urls = try fileManager.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil
+        )
+        var deletedAudioFileCount = 0
+
+        for url in urls {
+            if url.pathExtension != "json" {
+                deletedAudioFileCount += 1
+            }
+            try fileManager.removeItem(at: url)
+        }
+
+        return deletedAudioFileCount
+    }
+
+    private func cachedAudioFile(
+        songId: String,
+        directory: URL,
+        metadata: NativeCachedAudioFileMetadata? = nil
+    ) throws -> NativeCachedAudioFile? {
+        let resolvedMetadata: NativeCachedAudioFileMetadata?
+        if let metadata {
+            resolvedMetadata = metadata
+        } else {
+            resolvedMetadata = try readCachedAudioFileMetadata(
+                songId: songId,
+                directory: directory
+            )
+        }
+        var fileURL: URL?
+
+        if let fileName = resolvedMetadata?.fileName {
+            let candidate = directory.appendingPathComponent(fileName, isDirectory: false)
+            if FileManager.default.fileExists(atPath: candidate.path) {
+                fileURL = candidate
+            }
+        }
+
+        if fileURL == nil {
+            fileURL = try findCachedAudioFileURL(songId: songId, directory: directory)
+        }
+
+        guard let fileURL else {
+            return nil
+        }
+
+        let attributes = try? FileManager.default.attributesOfItem(atPath: fileURL.path)
+        let sizeBytes = (attributes?[.size] as? NSNumber)?.int64Value
+        let modifiedAt = (attributes?[.modificationDate] as? Date)?
+            .timeIntervalSince1970
+
+        return NativeCachedAudioFile(
+            songId: songId,
+            uri: fileURL.absoluteString,
+            contentType: resolvedMetadata?.contentType,
+            sizeBytes: sizeBytes,
+            lastModifiedAt: resolvedMetadata?.lastModifiedAt ?? modifiedAt.map { $0 * 1000 }
+        )
+    }
+
+    private func readCachedAudioFileMetadata(
+        songId: String,
+        directory: URL
+    ) throws -> NativeCachedAudioFileMetadata? {
+        let url = metadataURL(for: songId, in: directory)
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return nil
+        }
+
+        let data = try Data(contentsOf: url)
+        return try JSONDecoder().decode(NativeCachedAudioFileMetadata.self, from: data)
+    }
+
+    private func findCachedAudioFileURL(songId: String, directory: URL) throws -> URL? {
+        let cacheId = cacheId(for: songId)
+        let urls = try FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil
+        )
+
+        return urls.first {
+            $0.lastPathComponent.hasPrefix("\(cacheId).") && $0.pathExtension != "json"
+        }
+    }
+
+    private func cacheDirectoryURL(createIfNeeded: Bool) throws -> URL {
+        guard let applicationSupport = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        ).first else {
+            throw NativeAudioPluginError.cacheFailure("Unable to locate Application Support directory.")
+        }
+
+        let directory = applicationSupport
+            .appendingPathComponent("Aonsoku", isDirectory: true)
+            .appendingPathComponent("AudioCache", isDirectory: true)
+
+        if createIfNeeded {
+            try FileManager.default.createDirectory(
+                at: directory,
+                withIntermediateDirectories: true
+            )
+            var resourceURL = directory
+            var resourceValues = URLResourceValues()
+            resourceValues.isExcludedFromBackup = true
+            try? resourceURL.setResourceValues(resourceValues)
+        }
+
+        return directory
+    }
+
+    private func metadataURL(for songId: String, in directory: URL) -> URL {
+        directory.appendingPathComponent("\(cacheId(for: songId)).json", isDirectory: false)
+    }
+
+    private func cacheId(for songId: String) -> String {
+        Data(songId.utf8)
+            .base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+    }
+
+    private func fileExtension(for contentType: String) -> String {
+        let normalized = contentType
+            .split(separator: ";", maxSplits: 1)
+            .first?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased() ?? ""
+
+        switch normalized {
+        case "audio/mpeg", "audio/mp3":
+            return "mp3"
+        case "audio/flac", "audio/x-flac":
+            return "flac"
+        case "audio/mp4", "audio/m4a", "audio/x-m4a":
+            return "m4a"
+        case "audio/aac":
+            return "aac"
+        case "audio/ogg", "application/ogg":
+            return "ogg"
+        case "audio/opus":
+            return "opus"
+        case "audio/wav", "audio/x-wav":
+            return "wav"
+        default:
+            return "audio"
+        }
+    }
+
+    private func jsObject(from file: NativeCachedAudioFile) -> JSObject {
+        var object: JSObject = [
+            "songId": file.songId,
+            "uri": file.uri,
+        ]
+
+        if let contentType = file.contentType {
+            object["contentType"] = contentType
+        }
+        if let sizeBytes = file.sizeBytes {
+            object["sizeBytes"] = NSNumber(value: sizeBytes)
+        }
+        if let lastModifiedAt = file.lastModifiedAt {
+            object["lastModifiedAt"] = lastModifiedAt
+        }
+
+        return object
     }
 
     private func configureAudioSession() throws {
@@ -640,10 +1001,28 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         case "blob":
             throw NativeAudioPluginError.unsupportedSource("Blob URLs are not supported by native iOS playback yet.")
         case "native-file":
-            throw NativeAudioPluginError.unsupportedSource("Native cached files are not supported until Phase 4 cached playback work lands.")
+            guard let uri = source["uri"] as? String, !uri.isEmpty else {
+                throw NativeAudioPluginError.invalidSource("Invalid native cached audio URI.")
+            }
+            let url = try fileURL(from: uri)
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                throw NativeAudioPluginError.invalidSource("Native cached audio file does not exist.")
+            }
+            return ResolvedAudioSource(kind: kind, url: url, radioId: nil)
         default:
             throw NativeAudioPluginError.unsupportedSource("Unsupported audio source kind: \(kind).")
         }
+    }
+
+    private func fileURL(from uri: String) throws -> URL {
+        if let url = URL(string: uri), url.scheme != nil {
+            guard url.isFileURL else {
+                throw NativeAudioPluginError.invalidSource("Native cached audio URI must be a file URL.")
+            }
+            return url
+        }
+
+        return URL(fileURLWithPath: uri)
     }
 
     private func addObservers(for item: AVPlayerItem, player: AVPlayer) {
@@ -942,9 +1321,26 @@ private struct NativeAudioMetadata {
     var artworkUrl: String?
 }
 
+private struct NativeCachedAudioFile {
+    var songId: String
+    var uri: String
+    var contentType: String?
+    var sizeBytes: Int64?
+    var lastModifiedAt: Double?
+}
+
+private struct NativeCachedAudioFileMetadata: Codable {
+    var songId: String
+    var fileName: String
+    var contentType: String?
+    var lastModifiedAt: Double
+}
+
 private enum NativeAudioPluginError: LocalizedError {
     case invalidSource(String)
     case unsupportedSource(String)
+    case invalidCacheRequest(String)
+    case cacheFailure(String)
 
     var code: String {
         switch self {
@@ -952,6 +1348,10 @@ private enum NativeAudioPluginError: LocalizedError {
             return "invalid_source"
         case .unsupportedSource:
             return "unsupported_source"
+        case .invalidCacheRequest:
+            return "invalid_cache_request"
+        case .cacheFailure:
+            return "cache_failure"
         }
     }
 
@@ -960,6 +1360,10 @@ private enum NativeAudioPluginError: LocalizedError {
         case .invalidSource(let message):
             return message
         case .unsupportedSource(let message):
+            return message
+        case .invalidCacheRequest(let message):
+            return message
+        case .cacheFailure(let message):
             return message
         }
     }

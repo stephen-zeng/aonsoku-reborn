@@ -99,7 +99,12 @@ export interface NativeFileResolver {
 }
 
 export interface NativeCacheAdapter extends NativeFileResolver {
-  storeAudioFile(songId: string, data: Blob, contentType: string): Promise<NativeCachedAudioFile>;
+  storeAudioFile(
+    songId: string,
+    data: Blob,
+    contentType: string,
+  ): Promise<NativeCachedAudioFile>;
   getAudioFileSize(songId: string): Promise<number | null>;
   evictAudioFile(songId: string): Promise<boolean>;
+  clearAudioFiles(): Promise<void>;
 }

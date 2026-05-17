@@ -4,6 +4,7 @@ import {
   NATIVE_AUDIO_PLUGIN_NAME,
   type NativeAudioEventName,
   type NativeAudioEvents,
+  type NativeAudioFileOptions,
   type NativeAudioLoadOptions,
   type NativeAudioMetadata,
   type NativeAudioPlugin,
@@ -12,6 +13,7 @@ import {
   type NativeAudioSeekOptions,
   type NativeAudioShuffleOptions,
   type NativeAudioSource,
+  type NativeAudioStoreFileOptions,
 } from "./types";
 
 export type NativeAudioUnavailableReason =
@@ -35,10 +37,7 @@ export function createNativeAudioUnavailableError(method: string) {
   );
 }
 
-class UnavailableNativeAudioWeb
-  extends WebPlugin
-  implements NativeAudioPlugin
-{
+class UnavailableNativeAudioWeb extends WebPlugin implements NativeAudioPlugin {
   load(_options: NativeAudioLoadOptions): Promise<void> {
     return Promise.reject(createNativeAudioUnavailableError("load"));
   }
@@ -89,6 +88,30 @@ class UnavailableNativeAudioWeb
 
   clear(): Promise<void> {
     return Promise.reject(createNativeAudioUnavailableError("clear"));
+  }
+
+  storeAudioFile(_options: NativeAudioStoreFileOptions) {
+    return Promise.reject(createNativeAudioUnavailableError("storeAudioFile"));
+  }
+
+  resolveAudioFile(_options: NativeAudioFileOptions) {
+    return Promise.reject(
+      createNativeAudioUnavailableError("resolveAudioFile"),
+    );
+  }
+
+  getAudioFileSize(_options: NativeAudioFileOptions) {
+    return Promise.reject(
+      createNativeAudioUnavailableError("getAudioFileSize"),
+    );
+  }
+
+  deleteAudioFile(_options: NativeAudioFileOptions) {
+    return Promise.reject(createNativeAudioUnavailableError("deleteAudioFile"));
+  }
+
+  clearAudioFiles() {
+    return Promise.reject(createNativeAudioUnavailableError("clearAudioFiles"));
   }
 }
 

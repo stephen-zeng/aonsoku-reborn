@@ -22,6 +22,11 @@ const nativeAudioMethods = [
   "updateMetadata",
   "preload",
   "clear",
+  "storeAudioFile",
+  "resolveAudioFile",
+  "getAudioFileSize",
+  "deleteAudioFile",
+  "clearAudioFiles",
 ] as const;
 
 interface PackageJson {
@@ -98,7 +103,10 @@ describe("Aonsoku native audio plugin skeleton", () => {
     expect(swift).toContain("private var queueItemCount = 0");
     expect(swift).toContain("private var currentSourceKind: String?");
     expect(swift).toContain("private var currentRadioId: String?");
-    expect(swift).toContain("private var currentMetadata = NativeAudioMetadata()");
+    expect(swift).toContain(
+      "private var currentMetadata = NativeAudioMetadata()",
+    );
+    expect(swift).toContain("private struct NativeCachedAudioFile");
     expect(swift).toContain("@objc(AonsokuNativeAudioPlugin)");
     expect(swift).toContain(
       `public let jsName = "${NATIVE_AUDIO_PLUGIN_NAME}"`,
@@ -209,15 +217,39 @@ describe("Aonsoku native audio plugin skeleton", () => {
       ),
     );
 
-    expect(swift).toContain("case \"radio\":");
+    expect(swift).toContain('case "radio":');
+    expect(swift).toContain('case "native-file":');
     expect(swift).toContain("Invalid radio stream URL.");
+    expect(swift).toContain("Native cached audio file does not exist.");
     expect(swift).toContain("self.currentSourceKind = resolvedSource.kind");
     expect(swift).toContain("self.currentRadioId = resolvedSource.radioId");
     expect(swift).toContain("private func resetControlState()");
-    expect(swift).toContain("repeatMode = \"off\"");
+    expect(swift).toContain('repeatMode = "off"');
     expect(swift).toContain("shuffleEnabled = false");
     expect(swift).toContain("queueItemCount = 0");
     expect(swift).toContain("queueIndex = 0");
+  });
+
+  it("stores and resolves iOS native cached audio files", () => {
+    const swift = readText(
+      path.join(
+        pluginRoot,
+        "ios/Sources/AonsokuNativeAudioPlugin/AonsokuNativeAudioPlugin.swift",
+      ),
+    );
+
+    expect(swift).toContain("@objc func storeAudioFile");
+    expect(swift).toContain("@objc func resolveAudioFile");
+    expect(swift).toContain("@objc func getAudioFileSize");
+    expect(swift).toContain("@objc func deleteAudioFile");
+    expect(swift).toContain("@objc func clearAudioFiles");
+    expect(swift).toContain("Application Support directory");
+    expect(swift).toContain('.appendingPathComponent("AudioCache"');
+    expect(swift).toContain("Data(base64Encoded: dataBase64)");
+    expect(swift).toContain("isExcludedFromBackup = true");
+    expect(swift).toContain("NativeCachedAudioFileMetadata");
+    expect(swift).toContain("fileExtension(for: contentType)");
+    expect(swift).toContain("jsObject(from file: NativeCachedAudioFile)");
   });
 
   it("is wired into the generated Capacitor iOS Swift package", () => {

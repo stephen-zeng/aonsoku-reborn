@@ -50,6 +50,11 @@ const mocks = vi.hoisted(() => {
     updateMetadata: vi.fn(),
     preload: vi.fn(),
     clear: vi.fn(),
+    storeAudioFile: vi.fn(),
+    resolveAudioFile: vi.fn(),
+    getAudioFileSize: vi.fn(),
+    deleteAudioFile: vi.fn(),
+    clearAudioFiles: vi.fn(),
     addListener: vi.fn(),
     removeAllListeners: vi.fn(),
   };
@@ -96,12 +101,9 @@ describe("Aonsoku native audio facade", () => {
   });
 
   it("registers the typed Capacitor plugin with a web fallback", async () => {
-    expect(mockRegisterPlugin).toHaveBeenCalledWith(
-      NATIVE_AUDIO_PLUGIN_NAME,
-      {
-        web: expect.any(Function),
-      },
-    );
+    expect(mockRegisterPlugin).toHaveBeenCalledWith(NATIVE_AUDIO_PLUGIN_NAME, {
+      web: expect.any(Function),
+    });
     expect(AonsokuNativeAudio).toBe(mockPlugin);
 
     const implementations = mockRegisterPlugin.mock.calls[0]?.[1] ?? {};
@@ -172,9 +174,9 @@ describe("Aonsoku native audio facade", () => {
     mockGetPlatform.mockReturnValue("ios");
     mockIsPluginAvailable.mockReturnValue(true);
 
-    await expect(
-      addNativeAudioListener("progress", listener),
-    ).resolves.toBe(handle);
+    await expect(addNativeAudioListener("progress", listener)).resolves.toBe(
+      handle,
+    );
 
     expect(mockPlugin.addListener).toHaveBeenCalledWith(
       "progress" satisfies NativeAudioEventName,

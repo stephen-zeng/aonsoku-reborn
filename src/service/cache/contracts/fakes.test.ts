@@ -275,4 +275,15 @@ describe("FakeNativeCacheAdapter", () => {
     const resolved = await adapter.resolveAudioFile("song-1");
     expect(resolved!.sizeBytes).toBe(data2.size);
   });
+
+  it("clears all stored native audio files", async () => {
+    const adapter = new FakeNativeCacheAdapter();
+    await adapter.storeAudioFile("song-1", new Blob(["one"]), "audio/mpeg");
+    await adapter.storeAudioFile("song-2", new Blob(["two"]), "audio/mpeg");
+
+    await adapter.clearAudioFiles();
+
+    expect(await adapter.resolveAudioFile("song-1")).toBeNull();
+    expect(await adapter.resolveAudioFile("song-2")).toBeNull();
+  });
 });

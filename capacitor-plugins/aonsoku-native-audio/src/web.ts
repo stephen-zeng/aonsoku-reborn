@@ -1,6 +1,7 @@
 import { WebPlugin } from "@capacitor/core";
 import type {
   AonsokuNativeAudioPlugin,
+  NativeAudioFileOptions,
   NativeAudioLoadOptions,
   NativeAudioMetadata,
   NativeAudioQueueOptions,
@@ -8,6 +9,7 @@ import type {
   NativeAudioSeekOptions,
   NativeAudioShuffleOptions,
   NativeAudioSource,
+  NativeAudioStoreFileOptions,
 } from "./definitions";
 import { NATIVE_AUDIO_PLUGIN_NAME } from "./definitions";
 
@@ -71,5 +73,29 @@ export class AonsokuNativeAudioWeb
 
   clear(): Promise<void> {
     return Promise.reject(createNativeAudioUnavailableError("clear"));
+  }
+
+  storeAudioFile(_options: NativeAudioStoreFileOptions) {
+    return Promise.reject(createNativeAudioUnavailableError("storeAudioFile"));
+  }
+
+  resolveAudioFile(_options: NativeAudioFileOptions) {
+    return Promise.reject(
+      createNativeAudioUnavailableError("resolveAudioFile"),
+    );
+  }
+
+  getAudioFileSize(_options: NativeAudioFileOptions) {
+    return Promise.reject(
+      createNativeAudioUnavailableError("getAudioFileSize"),
+    );
+  }
+
+  deleteAudioFile(_options: NativeAudioFileOptions) {
+    return Promise.reject(createNativeAudioUnavailableError("deleteAudioFile"));
+  }
+
+  clearAudioFiles() {
+    return Promise.reject(createNativeAudioUnavailableError("clearAudioFiles"));
   }
 }

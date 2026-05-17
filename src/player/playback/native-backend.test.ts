@@ -31,6 +31,14 @@ function createPlugin() {
     updateMetadata: vi.fn(async () => {}),
     preload: vi.fn(async () => {}),
     clear: vi.fn(async () => {}),
+    storeAudioFile: vi.fn(async () => ({
+      songId: "song-1",
+      uri: "file:///native-cache/song-1.mp3",
+    })),
+    resolveAudioFile: vi.fn(async () => ({ file: null })),
+    getAudioFileSize: vi.fn(async () => ({ sizeBytes: null })),
+    deleteAudioFile: vi.fn(async () => ({ deleted: false })),
+    clearAudioFiles: vi.fn(async () => ({ deletedCount: 0 })),
     addListener: vi.fn(async (eventName, listener) => {
       listeners[eventName] ??= [];
       listeners[eventName]?.push(listener);

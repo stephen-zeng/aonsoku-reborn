@@ -61,6 +61,40 @@ export interface NativeAudioQueueOptions {
   index: number;
 }
 
+export interface NativeAudioCachedAudioFile {
+  songId: string;
+  uri: string;
+  contentType?: string;
+  sizeBytes?: number;
+  lastModifiedAt?: number;
+}
+
+export interface NativeAudioStoreFileOptions {
+  songId: string;
+  dataBase64: string;
+  contentType: string;
+}
+
+export interface NativeAudioFileOptions {
+  songId: string;
+}
+
+export interface NativeAudioResolveFileResult {
+  file: NativeAudioCachedAudioFile | null;
+}
+
+export interface NativeAudioFileSizeResult {
+  sizeBytes: number | null;
+}
+
+export interface NativeAudioDeleteFileResult {
+  deleted: boolean;
+}
+
+export interface NativeAudioClearFilesResult {
+  deletedCount: number;
+}
+
 export interface NativeAudioPlaybackStateChangedEvent {
   state:
     | "idle"
@@ -145,6 +179,19 @@ export interface AonsokuNativeAudioPlugin extends Plugin {
   updateMetadata(metadata: NativeAudioMetadata): Promise<void>;
   preload(options: { source: NativeAudioSource }): Promise<void>;
   clear(): Promise<void>;
+  storeAudioFile(
+    options: NativeAudioStoreFileOptions,
+  ): Promise<NativeAudioCachedAudioFile>;
+  resolveAudioFile(
+    options: NativeAudioFileOptions,
+  ): Promise<NativeAudioResolveFileResult>;
+  getAudioFileSize(
+    options: NativeAudioFileOptions,
+  ): Promise<NativeAudioFileSizeResult>;
+  deleteAudioFile(
+    options: NativeAudioFileOptions,
+  ): Promise<NativeAudioDeleteFileResult>;
+  clearAudioFiles(): Promise<NativeAudioClearFilesResult>;
   addListener<TEvent extends NativeAudioEventName>(
     eventName: TEvent,
     listenerFunc: (event: NativeAudioEvents[TEvent]) => void,

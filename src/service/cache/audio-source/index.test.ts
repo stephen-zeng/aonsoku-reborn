@@ -37,13 +37,15 @@ function createBlobUrls() {
   };
 }
 
-function createResolver(options: {
-  storage?: FakeCacheStorage;
-  index?: FakeCacheIndex;
-  metadata?: FakeCacheMetadataPersistence;
-  nativeFileResolver?: FakeNativeFileResolver | FakeNativeCacheAdapter;
-  now?: () => number;
-} = {}) {
+function createResolver(
+  options: {
+    storage?: FakeCacheStorage;
+    index?: FakeCacheIndex;
+    metadata?: FakeCacheMetadataPersistence;
+    nativeFileResolver?: FakeNativeFileResolver | FakeNativeCacheAdapter;
+    now?: () => number;
+  } = {},
+) {
   const blobUrls = createBlobUrls();
   const resolver = new CacheAudioSourceResolver({
     storage: options.storage ?? new FakeCacheStorage(),
@@ -191,6 +193,74 @@ describe("CacheAudioSourceResolver", () => {
     expect(getAudioSourceUrl(source)).toBe("file:///cache/song-1.flac");
   });
 
+  it("recovers native-file metadata when the startup index is empty", async () => {
+    const index = new FakeCacheIndex({ loaded: false });
+    const metadata = new FakeCacheMetadataPersistence();
+    await metadata.put(audioKey("song-1"), {
+      key: audioKey("song-1"),
+      ...audioMeta({
+        source: "smart",
+        triggers: ["favorite"],
+        lastAccessedAt: 2,
+      }),
+    });
+    const nativeFileResolver = new FakeNativeFileResolver();
+    nativeFileResolver.setAudioFile({
+      songId: "song-1",
+      uri: "file:///cache/song-1.flac",
+      sizeBytes: 10,
+      lastModifiedAt: 3,
+    });
+    const { resolver } = createResolver({
+      index,
+      metadata,
+      nativeFileResolver,
+      now: () => 99,
+    });
+
+    const source = await resolver.resolveSongSource("song-1");
+
+    expect(source.kind).toBe("native-file");
+    expect(index.getItem(audioKey("song-1"))).toEqual({
+      ...audioMeta({
+        source: "smart",
+        triggers: ["favorite"],
+        lastAccessedAt: 99,
+      }),
+    });
+  });
+
+  it("writes synthetic metadata when a native file has no saved row", async () => {
+    const index = new FakeCacheIndex({ loaded: false });
+    const metadata = new FakeCacheMetadataPersistence();
+    const nativeFileResolver = new FakeNativeFileResolver();
+    nativeFileResolver.setAudioFile({
+      songId: "song-1",
+      uri: "file:///cache/song-1.flac",
+      sizeBytes: 10,
+      lastModifiedAt: 12,
+    });
+    const { resolver } = createResolver({
+      index,
+      metadata,
+      nativeFileResolver,
+      now: () => 99,
+    });
+
+    const source = await resolver.resolveSongSource("song-1");
+
+    expect(source.kind).toBe("native-file");
+    expect(await metadata.get(audioKey("song-1"))).toEqual({
+      key: audioKey("song-1"),
+      id: "song-1",
+      type: "audio",
+      source: "explicit",
+      sizeBytes: 10,
+      cachedAt: 12,
+      lastAccessedAt: 99,
+    });
+  });
+
   it("returns a native-file descriptor when a NativeCacheAdapter has stored a file", async () => {
     const nativeCacheAdapter = new FakeNativeCacheAdapter();
     await nativeCacheAdapter.storeAudioFile(
@@ -198,7 +268,9 @@ describe("CacheAudioSourceResolver", () => {
       new Blob(["audio data"]),
       "audio/mpeg",
     );
-    const { resolver } = createResolver({ nativeFileResolver: nativeCacheAdapter });
+    const { resolver } = createResolver({
+      nativeFileResolver: nativeCacheAdapter,
+    });
 
     const source = await resolver.resolveSongSource("song-1");
 
@@ -218,7 +290,11 @@ describe("CacheAudioSourceResolver", () => {
     const index = new FakeCacheIndex({
       items: { [audioKey("song-1")]: audioMeta() },
     });
-    await storage.put(audioKey("song-1"), new Blob(["web audio"]), "audio/mpeg");
+    await storage.put(
+      audioKey("song-1"),
+      new Blob(["web audio"]),
+      "audio/mpeg",
+    );
 
     const nativeCacheAdapter = new FakeNativeCacheAdapter();
     await nativeCacheAdapter.storeAudioFile(

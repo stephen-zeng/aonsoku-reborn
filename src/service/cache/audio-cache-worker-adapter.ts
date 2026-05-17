@@ -14,7 +14,9 @@ import {
 import { libraryDb } from "@/store/library-db";
 import type { CachedItemMeta, CacheTask } from "@/types/cache";
 import type { AuthType } from "@/types/serverConfig";
+import { getRuntime } from "@/utils/capabilities";
 import type { AudioDownloadService } from "./contracts";
+import { storeNativeAudioFileIfAvailable } from "./native-cache-adapter";
 
 /* ── Types ─────────────────────────────────────────────────────── */
 
@@ -196,14 +198,20 @@ class MainThreadAudioCacheEngine implements AudioCacheDownloader {
     );
 
     const key = audioKey(songId);
-    await cacheStorage.put(key, blob, blob.type || "audio/mpeg");
+    const contentType = blob.type || "audio/mpeg";
+    await cacheStorage.put(key, blob, contentType);
+    const nativeFile = await storeNativeAudioFileIfAvailable(
+      songId,
+      blob,
+      contentType,
+    );
 
     const meta: CachedItemMeta = {
       id: songId,
       type: "audio",
       source,
       triggers,
-      sizeBytes: blob.size,
+      sizeBytes: nativeFile?.sizeBytes ?? blob.size,
       cachedAt: Date.now(),
       lastAccessedAt: Date.now(),
     };
@@ -357,7 +365,9 @@ class AudioCacheWorkerAdapter implements AudioCacheDownloader {
 let audioCacheService: AudioCacheDownloader;
 
 try {
-  if (typeof Worker !== "undefined") {
+  if (getRuntime() === "capacitor-ios") {
+    audioCacheService = new MainThreadAudioCacheEngine();
+  } else if (typeof Worker !== "undefined") {
     audioCacheService = new AudioCacheWorkerAdapter();
   } else {
     audioCacheService = new MainThreadAudioCacheEngine();

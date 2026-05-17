@@ -8,13 +8,11 @@ import type {
   CacheMetadataPersistence,
   CacheMetadataRecord,
   CacheStorageAdapter,
+  NativeCachedAudioFile,
   NativeFileResolver,
 } from "../contracts";
 
-export type BlobAudioSource = Extract<
-  AudioSourceDescriptor,
-  { kind: "blob" }
->;
+export type BlobAudioSource = Extract<AudioSourceDescriptor, { kind: "blob" }>;
 
 export interface BlobUrlAdapter {
   createObjectURL(blob: Blob): string;
@@ -50,6 +48,22 @@ function createStreamSource(
     kind: "stream",
     songId,
     url: urlResolver.buildAudioUrl(songId, "stream"),
+  };
+}
+
+function syntheticAudioMeta(
+  songId: string,
+  sizeBytes: number,
+  cachedAt: number,
+  lastAccessedAt = cachedAt,
+): CachedItemMeta {
+  return {
+    id: songId,
+    type: "audio",
+    source: "explicit",
+    sizeBytes,
+    cachedAt,
+    lastAccessedAt,
   };
 }
 
@@ -89,6 +103,7 @@ export class CacheAudioSourceResolver implements AudioSourceResolver {
   async resolveSongSource(songId: string): Promise<AudioSourceDescriptor> {
     const nativeFile = await this.nativeFileResolver?.resolveAudioFile(songId);
     if (nativeFile) {
+      await this.ensureNativeFileIndexed(nativeFile);
       return {
         kind: "native-file",
         songId,
@@ -104,7 +119,9 @@ export class CacheAudioSourceResolver implements AudioSourceResolver {
     return { kind: "radio", url, radioId };
   }
 
-  async resolveCachedBlobSource(songId: string): Promise<BlobAudioSource | null> {
+  async resolveCachedBlobSource(
+    songId: string,
+  ): Promise<BlobAudioSource | null> {
     const key = audioKey(songId);
     const { loaded } = this.index.getSnapshot();
 
@@ -147,5 +164,33 @@ export class CacheAudioSourceResolver implements AudioSourceResolver {
       url,
       revoke: () => this.blobUrls.revokeObjectURL(url),
     };
+  }
+
+  private async ensureNativeFileIndexed(
+    file: NativeCachedAudioFile,
+  ): Promise<void> {
+    const key = audioKey(file.songId);
+
+    if (!this.index.hasItem(key)) {
+      const existing = await this.metadata.get(key);
+      if (existing) {
+        this.index.addItem(key, cacheMetaFromRecord(existing, this.now()));
+        return;
+      }
+
+      const now = this.now();
+      const cachedAt = file.lastModifiedAt ?? now;
+      const meta = syntheticAudioMeta(
+        file.songId,
+        file.sizeBytes ?? 0,
+        cachedAt,
+        now,
+      );
+      this.index.addItem(key, meta);
+      await this.metadata.put(key, { key, ...meta });
+      return;
+    }
+
+    this.index.touchItem(key);
   }
 }

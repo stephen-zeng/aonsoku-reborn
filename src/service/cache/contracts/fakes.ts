@@ -20,11 +20,7 @@ import type {
 export class FakeCacheStorage implements CacheStorageAdapter {
   readonly entries = new Map<CacheItemKey, Blob>();
 
-  async put(
-    key: CacheItemKey,
-    data: Blob,
-    contentType: string,
-  ): Promise<void> {
+  async put(key: CacheItemKey, data: Blob, contentType: string): Promise<void> {
     this.entries.set(key, data.slice(0, data.size, contentType));
   }
 
@@ -125,9 +121,7 @@ export class FakeCacheIndex implements CacheIndexAdapter {
   }
 }
 
-export class FakeCacheMetadataPersistence
-  implements CacheMetadataPersistence
-{
+export class FakeCacheMetadataPersistence implements CacheMetadataPersistence {
   readonly records = new Map<CacheItemKey, CacheMetadataRecord>();
 
   async get(key: CacheItemKey): Promise<CacheMetadataRecord | undefined> {
@@ -138,10 +132,7 @@ export class FakeCacheMetadataPersistence
     return Array.from(this.records.values());
   }
 
-  async put(
-    key: CacheItemKey,
-    meta: CacheMetadataRecord,
-  ): Promise<void> {
+  async put(key: CacheItemKey, meta: CacheMetadataRecord): Promise<void> {
     this.records.set(key, { ...meta, key });
   }
 
@@ -283,9 +274,7 @@ export class FakeNativeFileResolver implements NativeFileResolver {
   }
 }
 
-export class FakeNativeCacheAdapter
-  implements NativeCacheAdapter
-{
+export class FakeNativeCacheAdapter implements NativeCacheAdapter {
   private readonly files = new Map<
     string,
     NativeCachedAudioFile & { data: Blob }
@@ -330,5 +319,9 @@ export class FakeNativeCacheAdapter
 
   async evictAudioFile(songId: string): Promise<boolean> {
     return this.files.delete(songId);
+  }
+
+  async clearAudioFiles(): Promise<void> {
+    this.files.clear();
   }
 }

@@ -1,7 +1,4 @@
-import {
-  getAvatarUrl,
-  getCoverArtUrl,
-} from "@/api/httpClient";
+import { getAvatarUrl, getCoverArtUrl } from "@/api/httpClient";
 import { asyncPool } from "@/service/cache/concurrency";
 import { subsonic } from "@/service/subsonic";
 import { useCacheStore } from "@/store/cache.store";
@@ -27,9 +24,14 @@ import {
   coverKey,
   isOldCoverKey,
   playlistKey,
+  songIdFromKey,
 } from "./cache-keys";
 import { cacheStorage } from "./cache-storage";
 import { computeEvictionPlan } from "./eviction";
+import {
+  clearNativeAudioFilesIfAvailable,
+  evictNativeAudioFileIfAvailable,
+} from "./native-cache-adapter";
 import {
   bulkDeleteCacheMeta,
   deleteCacheMeta,
@@ -573,13 +575,21 @@ class CacheManager {
   }
 
   async evictItem(key: string): Promise<void> {
-    await cacheStorage.delete(key);
+    await this.deleteCachedStorageItem(key);
     getCacheIndexActions().removeItem(key);
 
     await libraryDb.cacheMeta.delete(key);
 
     this.scheduleStatsRefresh();
     deleteCacheMeta(key);
+  }
+
+  private async deleteCachedStorageItem(key: string): Promise<void> {
+    const songId = songIdFromKey(key);
+    if (songId) {
+      await evictNativeAudioFileIfAvailable(songId);
+    }
+    await cacheStorage.delete(key);
   }
 
   /**
@@ -597,7 +607,9 @@ class CacheManager {
       )
       .map(([key]) => key);
 
-    await Promise.all(keysToDelete.map((key) => cacheStorage.delete(key)));
+    await Promise.all(
+      keysToDelete.map((key) => this.deleteCachedStorageItem(key)),
+    );
     for (const key of keysToDelete) {
       getCacheIndexActions().removeItem(key);
     }
@@ -687,6 +699,7 @@ class CacheManager {
     // stale cacheMeta rows after we clear them.
     audioCacheService.cancelAll();
     syncService.cancel();
+    await clearNativeAudioFilesIfAvailable();
     await cacheStorage.clear();
     getCacheIndexActions().clear();
     await libraryDb.lyrics.clear();
