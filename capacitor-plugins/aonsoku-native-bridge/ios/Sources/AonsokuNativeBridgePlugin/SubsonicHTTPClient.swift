@@ -1,6 +1,6 @@
 import Foundation
 
-enum SubsonicHTTPError: Error {
+public enum SubsonicHTTPError: Error {
     case networkUnreachable(String)
     case httpError(Int, String)
     case parseError(String)
@@ -8,26 +8,26 @@ enum SubsonicHTTPError: Error {
     case authFailed(String)
 }
 
-struct SubsonicResponse {
-    let data: [String: Any]
-    let count: Int
+public struct SubsonicResponse {
+    public let data: [String: Any]
+    public let count: Int
 }
 
-final class SubsonicHTTPClient {
+public final class SubsonicHTTPClient {
     private let session: URLSession
 
-    init() {
+    public init() {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30
         config.timeoutIntervalForResource = 300
         self.session = URLSession(configuration: config)
     }
 
-    func request(
+    public func request(
         baseUrl: String,
         path: String,
         credentials: ServerCredentials,
-        extraQuery: [String: String] = [],
+        extraQuery: [String: String] = [:],
         method: String = "GET"
     ) async throws -> SubsonicResponse {
         let url = try buildURL(
@@ -82,7 +82,7 @@ final class SubsonicHTTPClient {
         return SubsonicResponse(data: subsonicResponse, count: count)
     }
 
-    func ping(
+    public func ping(
         baseUrl: String,
         username: String,
         password: String,
@@ -115,7 +115,7 @@ final class SubsonicHTTPClient {
         }
     }
 
-    func queryServerInfo(baseUrl: String) async -> (protocolVersion: String, serverType: String) {
+    public func queryServerInfo(baseUrl: String) async -> (protocolVersion: String, serverType: String) {
         let dummyCredentials = ServerCredentials(
             serverUrl: baseUrl,
             username: "probe",

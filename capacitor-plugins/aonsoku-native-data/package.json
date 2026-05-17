@@ -1,0 +1,19 @@
+{
+  "name": "@aonsoku/native-data",
+  "version": "0.0.0",
+  "description": "Capacitor native data layer plugin for Aonsoku iOS — SQLite persistence and sync engine.",
+  "type": "module",
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/definitions.ts",
+  "files": ["ios/Sources", "src", "Package.swift"],
+  "peerDependencies": {
+    "@capacitor/core": ">=8.0.0"
+  },
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    }
+  }
+}
+

@@ -7,7 +7,7 @@ let package = Package(
     platforms: [.iOS(.v15)],
     products: [
         .library(
-            name: "AonsokuNativeBridge",
+            name: "AonsokuNativeBridgePlugin",
             targets: ["AonsokuNativeBridgePlugin"])
     ],
     dependencies: [

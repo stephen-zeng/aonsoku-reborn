@@ -1,22 +1,22 @@
 import Foundation
 import CommonCrypto
 
-struct SubsonicAuthBuilder {
-    static let salt = "40n50kuPl4y3r"
-    static let clientName = "Aonsoku"
-    static let defaultVersion = "1.16.0"
+public struct SubsonicAuthBuilder {
+    public static let salt = "40n50kuPl4y3r"
+    public static let clientName = "Aonsoku"
+    public static let defaultVersion = "1.16.0"
 
-    static func generateToken(password: String) -> String {
+    public static func generateToken(password: String) -> String {
         let input = password + salt
         return md5(input)
     }
 
-    static func encodePassword(password: String) -> String {
+    public static func encodePassword(password: String) -> String {
         let hex = password.utf8.map { String(format: "%02x", $0) }.joined()
         return "enc:\(hex)"
     }
 
-    static func buildQueryParams(
+    public static func buildQueryParams(
         username: String,
         password: String,
         authType: String,
@@ -39,7 +39,7 @@ struct SubsonicAuthBuilder {
         return params
     }
 
-    static func hashPasswordForStorage(rawPassword: String, authType: String) -> String {
+    public static func hashPasswordForStorage(rawPassword: String, authType: String) -> String {
         if authType == "token" {
             return generateToken(password: rawPassword)
         } else {

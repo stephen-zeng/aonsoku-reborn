@@ -1,0 +1,11 @@
+{
+	"appId": "github.realtvop.aonsoku",
+	"appName": "Aonsoku",
+	"webDir": "dist",
+	"packageClassList": [
+		"AonsokuNativeAudioPlugin",
+		"AonsokuNativeBridgePlugin",
+		"AonsokuNativeDataPlugin",
+		"KeyboardPlugin"
+	]
+}

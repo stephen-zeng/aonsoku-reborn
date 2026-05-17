@@ -14,6 +14,9 @@ importers:
       '@aonsoku/native-bridge':
         specifier: file:capacitor-plugins/aonsoku-native-bridge
         version: file:capacitor-plugins/aonsoku-native-bridge(@capacitor/core@8.3.4)
+      '@aonsoku/native-data':
+        specifier: file:capacitor-plugins/aonsoku-native-data
+        version: file:capacitor-plugins/aonsoku-native-data(@capacitor/core@8.3.4)
       '@applemusic-like-lyrics/core':
         specifier: 0.2.0
         version: 0.2.0(@pixi/app@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3)))(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))(@pixi/filter-blur@7.4.3(@pixi/core@7.4.3))(@pixi/filter-bulge-pinch@5.1.1(@pixi/core@7.4.3))(@pixi/filter-color-matrix@7.4.3(@pixi/core@7.4.3))(@pixi/sprite@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3)))
@@ -431,6 +434,11 @@ packages:
 
   '@aonsoku/native-bridge@file:capacitor-plugins/aonsoku-native-bridge':
     resolution: {directory: capacitor-plugins/aonsoku-native-bridge, type: directory}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
+  '@aonsoku/native-data@file:capacitor-plugins/aonsoku-native-data':
+    resolution: {directory: capacitor-plugins/aonsoku-native-data, type: directory}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
@@ -5888,6 +5896,10 @@ snapshots:
       '@capacitor/core': 8.3.4
 
   '@aonsoku/native-bridge@file:capacitor-plugins/aonsoku-native-bridge(@capacitor/core@8.3.4)':
+    dependencies:
+      '@capacitor/core': 8.3.4
+
+  '@aonsoku/native-data@file:capacitor-plugins/aonsoku-native-data(@capacitor/core@8.3.4)':
     dependencies:
       '@capacitor/core': 8.3.4
 

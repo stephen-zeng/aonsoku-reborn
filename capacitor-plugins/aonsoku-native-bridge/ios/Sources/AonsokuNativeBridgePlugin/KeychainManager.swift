@@ -1,21 +1,39 @@
 import Foundation
 import Security
 
-struct ServerCredentials: Codable {
-    let serverUrl: String
-    let username: String
-    let password: String
-    let authType: String
-    let protocolVersion: String
-    let serverType: String
-    let fallbackUrl: String?
+public struct ServerCredentials: Codable {
+    public let serverUrl: String
+    public let username: String
+    public let password: String
+    public let authType: String
+    public let protocolVersion: String
+    public let serverType: String
+    public let fallbackUrl: String?
+
+    public init(
+        serverUrl: String,
+        username: String,
+        password: String,
+        authType: String,
+        protocolVersion: String,
+        serverType: String,
+        fallbackUrl: String?
+    ) {
+        self.serverUrl = serverUrl
+        self.username = username
+        self.password = password
+        self.authType = authType
+        self.protocolVersion = protocolVersion
+        self.serverType = serverType
+        self.fallbackUrl = fallbackUrl
+    }
 }
 
-final class KeychainManager {
+public final class KeychainManager {
     private static let service = "github.realtvop.aonsoku.credentials"
     private static let account = "server-credentials"
 
-    static func store(_ credentials: ServerCredentials) throws {
+    public static func store(_ credentials: ServerCredentials) throws {
         let data = try JSONEncoder().encode(credentials)
 
         let query: [String: Any] = [
@@ -43,7 +61,7 @@ final class KeychainManager {
         }
     }
 
-    static func retrieve() -> ServerCredentials? {
+    public static func retrieve() -> ServerCredentials? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -62,7 +80,7 @@ final class KeychainManager {
         return try? JSONDecoder().decode(ServerCredentials.self, from: data)
     }
 
-    static func delete() {
+    public static func delete() {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -71,7 +89,7 @@ final class KeychainManager {
         SecItemDelete(query as CFDictionary)
     }
 
-    static func exists() -> Bool {
+    public static func exists() -> Bool {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -84,6 +102,6 @@ final class KeychainManager {
     }
 }
 
-enum KeychainError: Error {
+public enum KeychainError: Error {
     case unableToStore(OSStatus)
 }
