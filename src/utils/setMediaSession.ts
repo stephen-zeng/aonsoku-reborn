@@ -371,24 +371,22 @@ function setHandlers() {
     });
 
     mediaSession.setActionHandler("play", () => {
-      logger.info("[MediaSession.handler] action=play | isRemote=false→toggle");
+      logger.info("[MediaSession.handler] action=play");
       const state = usePlayerStore.getState();
       if (state.remoteControl.active && state.remoteControl.sendCommand) {
         state.remoteControl.sendCommand(LanControlMessageType.PLAY);
-      } else {
-        state.actions.togglePlayPause();
+      } else if (!state.playerState.isPlaying) {
+        state.actions.setPlayingState(true);
       }
     });
 
     mediaSession.setActionHandler("pause", () => {
-      logger.info(
-        "[MediaSession.handler] action=pause | isRemote=false→toggle",
-      );
+      logger.info("[MediaSession.handler] action=pause");
       const state = usePlayerStore.getState();
       if (state.remoteControl.active && state.remoteControl.sendCommand) {
         state.remoteControl.sendCommand(LanControlMessageType.PAUSE);
-      } else {
-        state.actions.togglePlayPause();
+      } else if (state.playerState.isPlaying) {
+        state.actions.setPlayingState(false);
       }
     });
 
