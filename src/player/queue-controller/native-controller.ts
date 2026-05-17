@@ -1,12 +1,10 @@
 import type { PluginListenerHandle } from "@capacitor/core";
-import { getSongStreamUrl } from "@/api/httpClient";
 import { getNativeAudioPluginAvailability } from "@/native/audio/facade";
 import type {
   NativeAudioEvents,
   NativeAudioPlugin,
   NativeQueueSong,
 } from "@/native/audio/types";
-import { useAppStore } from "@/store/app.store";
 import { usePlayerStore } from "@/store/player.store";
 import { getCurrentSong } from "@/store/player/queue-utils";
 import { LoopState } from "@/types/playerContext";
@@ -42,7 +40,7 @@ function songToNativeQueueSong(song: ISong): NativeQueueSong {
     albumId: song.albumId,
     duration: song.duration,
     coverArtId: song.coverArt,
-    streamUrl: getSongStreamUrl(song.id),
+    streamUrl: song.id,
   };
 }
 
@@ -62,7 +60,6 @@ export class NativeQueueController implements QueueController {
     }
     this.#plugin = availability.plugin;
     this.#wireNativeEvents();
-    this.#syncAuthConfig();
   }
 
   setSongList(
@@ -364,21 +361,6 @@ export class NativeQueueController implements QueueController {
     } catch (err) {
       logger.error("[NativeQueueController] syncFromNative failed", err);
     }
-  }
-
-  #syncAuthConfig() {
-    const data = useAppStore.getState().data;
-    if (!data.url || !data.username) return;
-
-    this.#plugin
-      .setAuthConfig({
-        serverUrl: data.url,
-        username: data.username,
-        password: data.password,
-        authType: data.authType === 0 ? "password" : "token",
-        protocolVersion: data.protocolVersion,
-      })
-      .catch(() => {});
   }
 
   #wireNativeEvents() {
