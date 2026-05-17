@@ -12,8 +12,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.3.4"),
-        .package(name: "CapacitorKeyboard", path: "../../../node_modules/@capacitor/keyboard"),
-        .package(name: "AonsokuNativeAudio", path: "../../../node_modules/@aonsoku/native-audio")
+        .package(name: "AonsokuNativeAudio", path: "../../../node_modules/@aonsoku/native-audio"),
+        .package(name: "CapacitorKeyboard", path: "../../../node_modules/@capacitor/keyboard")
     ],
     targets: [
         .target(
@@ -21,8 +21,8 @@ let package = Package(
             dependencies: [
                 .product(name: "Capacitor", package: "capacitor-swift-pm"),
                 .product(name: "Cordova", package: "capacitor-swift-pm"),
-                .product(name: "CapacitorKeyboard", package: "CapacitorKeyboard"),
-                .product(name: "AonsokuNativeAudio", package: "AonsokuNativeAudio")
+                .product(name: "AonsokuNativeAudio", package: "AonsokuNativeAudio"),
+                .product(name: "CapacitorKeyboard", package: "CapacitorKeyboard")
             ]
         )
     ]
