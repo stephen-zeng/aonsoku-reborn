@@ -18,6 +18,7 @@
 		A1B2C3D42026050100AABB01 /* AonsokuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D32026050100AABB01 /* AonsokuViewController.swift */; };
 		A1B2C3D62026050100AABB02 /* MediaSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D52026050100AABB02 /* MediaSchemeHandler.swift */; };
 		A1B2C3D82026050100AABB03 /* MediaKeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D72026050100AABB03 /* MediaKeychainHelper.swift */; };
+		A1B2C3DA2026050100AABB04 /* ObjCExceptionCatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D92026050100AABB04 /* ObjCExceptionCatcher.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,6 +35,9 @@
 		A1B2C3D32026050100AABB01 /* AonsokuViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AonsokuViewController.swift; sourceTree = "<group>"; };
 		A1B2C3D52026050100AABB02 /* MediaSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSchemeHandler.swift; sourceTree = "<group>"; };
 		A1B2C3D72026050100AABB03 /* MediaKeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaKeychainHelper.swift; sourceTree = "<group>"; };
+		A1B2C3D92026050100AABB04 /* ObjCExceptionCatcher.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ObjCExceptionCatcher.m; sourceTree = "<group>"; };
+		A1B2C3DB2026050100AABB05 /* ObjCExceptionCatcher.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ObjCExceptionCatcher.h; sourceTree = "<group>"; };
+		A1B2C3DD2026050100AABB06 /* App-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "App-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,6 +77,9 @@
 				A1B2C3D32026050100AABB01 /* AonsokuViewController.swift */,
 				A1B2C3D52026050100AABB02 /* MediaSchemeHandler.swift */,
 				A1B2C3D72026050100AABB03 /* MediaKeychainHelper.swift */,
+				A1B2C3DB2026050100AABB05 /* ObjCExceptionCatcher.h */,
+				A1B2C3D92026050100AABB04 /* ObjCExceptionCatcher.m */,
+				A1B2C3DD2026050100AABB06 /* App-Bridging-Header.h */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
@@ -168,6 +175,7 @@
 				A1B2C3D42026050100AABB01 /* AonsokuViewController.swift in Sources */,
 				A1B2C3D62026050100AABB02 /* MediaSchemeHandler.swift in Sources */,
 				A1B2C3D82026050100AABB03 /* MediaKeychainHelper.swift in Sources */,
+				A1B2C3DA2026050100AABB04 /* ObjCExceptionCatcher.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -321,6 +329,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = github.realtvop.aonsoku;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OBJC_BRIDGING_HEADER = "App/App-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -343,6 +352,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = github.realtvop.aonsoku;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "App/App-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

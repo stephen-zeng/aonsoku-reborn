@@ -14,14 +14,19 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
     private let lock = NSLock()
 
     func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
+        let taskState = MediaSchemeTaskState(
+            schemeTask: urlSchemeTask,
+            originalURL: urlSchemeTask.request.url ?? URL(string: "about:blank")!
+        )
+
         guard let url = urlSchemeTask.request.url,
               let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-            urlSchemeTask.didFailWithError(SchemeError.invalidURL)
+            taskState.didFail(with: SchemeError.invalidURL)
             return
         }
 
         guard let credentials = MediaKeychainHelper.retrieve() else {
-            urlSchemeTask.didFailWithError(SchemeError.noCredentials)
+            taskState.didFail(with: SchemeError.noCredentials)
             return
         }
 
@@ -37,23 +42,21 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
         let serverUrlString = "\(credentials.serverUrl)/rest/\(cleanEndpoint)"
 
         guard var realComponents = URLComponents(string: serverUrlString) else {
-            urlSchemeTask.didFailWithError(SchemeError.invalidURL)
+            taskState.didFail(with: SchemeError.invalidURL)
             return
         }
 
         realComponents.queryItems = queryItems
 
         guard let realURL = realComponents.url else {
-            urlSchemeTask.didFailWithError(SchemeError.invalidURL)
+            taskState.didFail(with: SchemeError.invalidURL)
             return
         }
 
+        taskState.originalURL = url
         let dataTask = session.dataTask(with: realURL)
         lock.lock()
-        activeTasks[dataTask.taskIdentifier] = MediaSchemeTaskState(
-            schemeTask: urlSchemeTask,
-            originalURL: url
-        )
+        activeTasks[dataTask.taskIdentifier] = taskState
         urlSessionTasks[dataTask.taskIdentifier] = dataTask
         lock.unlock()
         dataTask.resume()
@@ -157,7 +160,7 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
 
 private final class MediaSchemeTaskState {
     let schemeTask: WKURLSchemeTask
-    let originalURL: URL
+    var originalURL: URL
 
     private let lock = NSLock()
     private var isStopped = false
@@ -174,51 +177,76 @@ private final class MediaSchemeTaskState {
         lock.unlock()
     }
 
+    private var isInvalid: Bool {
+        isStopped || isCompleted
+    }
+
+    private func safePerform(_ block: @escaping () -> Void) {
+        DispatchQueue.main.async { [self] in
+            self.lock.lock()
+            guard !self.isStopped else {
+                self.lock.unlock()
+                return
+            }
+            self.lock.unlock()
+            ObjCExceptionCatcher.performBlock({ block() }, error: nil)
+        }
+    }
+
     @discardableResult
     func didReceive(_ response: URLResponse) -> Bool {
         lock.lock()
-        defer { lock.unlock() }
-
-        guard !isStopped, !isCompleted else { return false }
+        guard !isInvalid else {
+            lock.unlock()
+            return false
+        }
+        lock.unlock()
 
         let task = schemeTask
-        DispatchQueue.main.async { task.didReceive(response) }
+        safePerform { task.didReceive(response) }
         return true
     }
 
     func didReceive(_ data: Data) {
         lock.lock()
-        defer { lock.unlock() }
-
-        guard !isStopped, !isCompleted else { return }
+        guard !isInvalid else {
+            lock.unlock()
+            return
+        }
+        lock.unlock()
 
         let task = schemeTask
-        DispatchQueue.main.async { task.didReceive(data) }
+        safePerform { task.didReceive(data) }
     }
 
     @discardableResult
     func didFinish() -> Bool {
         lock.lock()
-        defer { lock.unlock() }
-
-        guard !isStopped, !isCompleted else { return false }
-
+        guard !isInvalid else {
+            lock.unlock()
+            return false
+        }
         isCompleted = true
+        lock.unlock()
+
         let task = schemeTask
-        DispatchQueue.main.async { task.didFinish() }
+        safePerform { task.didFinish() }
         return true
     }
 
     @discardableResult
     func didFail(with error: Error) -> Bool {
         lock.lock()
-        defer { lock.unlock() }
-
-        guard !isStopped, !isCompleted else { return false }
-
+        guard !isInvalid else {
+            lock.unlock()
+            return false
+        }
         isCompleted = true
+        lock.unlock()
+
         let task = schemeTask
-        DispatchQueue.main.async { task.didFailWithError(error) }
+        let nsError = error as NSError
+        safePerform { task.didFailWithError(nsError) }
         return true
     }
 }
