@@ -11,6 +11,7 @@ import {
   type PlaybackBackendEvent,
   type PlaybackBackendEvents,
   type PlaybackBackendListener,
+  type PlaybackMetadata,
   type PlaybackRepeatMode,
   type PlaybackSource,
   WebAudioPlaybackBackend,
@@ -18,6 +19,7 @@ import {
 
 class MemoryPlaybackBackend implements PlaybackBackend {
   source: PlaybackSource | null = null;
+  metadata: PlaybackMetadata | null = null;
   preloadedSource: PlaybackSource | null = null;
   isPlaying = false;
   currentTime = 0;
@@ -33,8 +35,9 @@ class MemoryPlaybackBackend implements PlaybackBackend {
     Set<PlaybackBackendListener<PlaybackBackendEvent>>
   >();
 
-  load(source: PlaybackSource) {
+  load(source: PlaybackSource, metadata?: PlaybackMetadata) {
     this.source = source;
+    this.metadata = metadata ?? null;
   }
 
   async play() {
@@ -76,6 +79,10 @@ class MemoryPlaybackBackend implements PlaybackBackend {
 
   setVolume(value: number) {
     this.volume = value;
+  }
+
+  updateMetadata(metadata: PlaybackMetadata) {
+    this.metadata = metadata;
   }
 
   preload(source: PlaybackSource) {
@@ -189,8 +196,15 @@ describe("PlaybackBackend contract", () => {
     const backend = new MemoryPlaybackBackend();
     const source = createUrlPlaybackSource("https://server/song.mp3");
     const preloadSource = createUrlPlaybackSource("https://server/next.mp3");
+    const metadata = {
+      title: "Song",
+      artist: "Artist",
+      album: "Album",
+      duration: 123,
+      artworkUrl: "https://server/art.jpg",
+    };
 
-    backend.load(source);
+    backend.load(source, metadata);
     await backend.play();
     backend.seek(42);
     backend.setLoop(true);
@@ -199,9 +213,11 @@ describe("PlaybackBackend contract", () => {
     backend.skipToNext();
     backend.skipToPrevious();
     backend.setVolume(0.4);
+    backend.updateMetadata({ title: "Updated Song" });
     backend.preload(preloadSource);
 
     expect(backend.source).toBe(source);
+    expect(backend.metadata).toEqual({ title: "Updated Song" });
     expect(backend.isPlaying).toBe(true);
     expect(backend.currentTime).toBe(42);
     expect(backend.loop).toBe(true);

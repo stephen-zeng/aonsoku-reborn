@@ -2,6 +2,7 @@ import type { PluginListenerHandle } from "@capacitor/core";
 import type {
   NativeAudioEventName,
   NativeAudioEvents,
+  NativeAudioMetadata,
   NativeAudioPlugin,
   NativeAudioSource,
 } from "@/native/audio";
@@ -11,6 +12,7 @@ import {
   type PlaybackBackendEvents,
   type PlaybackBackendListener,
   type PlaybackErrorEvent,
+  type PlaybackMetadata,
   type PlaybackRepeatMode,
   type PlaybackSource,
   type UnsubscribePlaybackEvent,
@@ -38,13 +40,17 @@ export class NativeAudioPlaybackBackend implements PlaybackBackend {
       play: new Set(),
       pause: new Set(),
       error: new Set(),
+      remoteCommand: new Set(),
     };
     this.#wireNativeEvents();
   }
 
-  load(source: PlaybackSource) {
+  load(source: PlaybackSource, metadata?: PlaybackMetadata) {
     this.#assertActive();
-    return this.#plugin.load({ source: toNativeAudioSource(source) });
+    return this.#plugin.load({
+      source: toNativeAudioSource(source),
+      metadata: metadata ? toNativeAudioMetadata(metadata) : undefined,
+    });
   }
 
   play() {
@@ -94,6 +100,11 @@ export class NativeAudioPlaybackBackend implements PlaybackBackend {
   setVolume(_value: number) {
     this.#assertActive();
     return Promise.resolve();
+  }
+
+  updateMetadata(metadata: PlaybackMetadata) {
+    this.#assertActive();
+    return this.#plugin.updateMetadata(toNativeAudioMetadata(metadata));
   }
 
   preload(source: PlaybackSource) {
@@ -163,6 +174,12 @@ export class NativeAudioPlaybackBackend implements PlaybackBackend {
         this.#emit("pause", undefined);
       }
     });
+    this.#addNativeListener("remoteCommand", (event) => {
+      this.#emit("remoteCommand", {
+        command: event.command,
+        position: event.position,
+      });
+    });
   }
 
   #addNativeListener<TEvent extends NativeAudioEventName>(
@@ -199,6 +216,18 @@ export class NativeAudioPlaybackBackend implements PlaybackBackend {
 
 export function createNativeAudioPlaybackBackend(plugin: NativeAudioPlugin) {
   return new NativeAudioPlaybackBackend(plugin);
+}
+
+export function toNativeAudioMetadata(
+  metadata: PlaybackMetadata,
+): NativeAudioMetadata {
+  return {
+    title: metadata.title,
+    artist: metadata.artist,
+    album: metadata.album,
+    duration: metadata.duration,
+    artworkUrl: metadata.artworkUrl,
+  };
 }
 
 export function toNativeAudioSource(source: PlaybackSource): NativeAudioSource {

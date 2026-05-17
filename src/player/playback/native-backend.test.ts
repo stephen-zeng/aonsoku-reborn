@@ -3,6 +3,7 @@ import type { NativeAudioEvents, NativeAudioPlugin } from "@/native/audio";
 import {
   createUrlPlaybackSource,
   NativeAudioPlaybackBackend,
+  toNativeAudioMetadata,
   toNativeAudioSource,
   type PlaybackBackendEvent,
   type PlaybackBackendListener,
@@ -95,6 +96,24 @@ describe("NativeAudioPlaybackBackend", () => {
     });
   });
 
+  it("maps playback metadata to native audio metadata", () => {
+    expect(
+      toNativeAudioMetadata({
+        title: "Song",
+        artist: "Artist",
+        album: "Album",
+        duration: 123,
+        artworkUrl: "https://server/art.jpg",
+      }),
+    ).toEqual({
+      title: "Song",
+      artist: "Artist",
+      album: "Album",
+      duration: 123,
+      artworkUrl: "https://server/art.jpg",
+    });
+  });
+
   it("delegates backend controls to the native plugin", async () => {
     const { plugin } = createPlugin();
     const backend = new NativeAudioPlaybackBackend(plugin);
@@ -104,8 +123,15 @@ describe("NativeAudioPlaybackBackend", () => {
     const preloadSource = createUrlPlaybackSource("https://server/next.mp3", {
       songId: "song-2",
     });
+    const metadata = {
+      title: "Song",
+      artist: "Artist",
+      album: "Album",
+      duration: 120,
+      artworkUrl: "https://server/art.jpg",
+    };
 
-    await backend.load(source);
+    await backend.load(source, metadata);
     await backend.play();
     await backend.pause();
     await backend.stop();
@@ -116,6 +142,7 @@ describe("NativeAudioPlaybackBackend", () => {
     await backend.skipToNext();
     await backend.skipToPrevious();
     await backend.setVolume(0.5);
+    await backend.updateMetadata({ title: "Updated Song" });
     await backend.preload(preloadSource);
 
     expect(plugin.load).toHaveBeenCalledWith({
@@ -124,6 +151,7 @@ describe("NativeAudioPlaybackBackend", () => {
         url: "https://server/song.mp3",
         songId: "song-1",
       },
+      metadata,
     });
     expect(plugin.play).toHaveBeenCalledTimes(1);
     expect(plugin.pause).toHaveBeenCalledTimes(1);
@@ -134,6 +162,13 @@ describe("NativeAudioPlaybackBackend", () => {
     expect(plugin.setShuffle).toHaveBeenCalledWith({ enabled: true });
     expect(plugin.skipToNext).toHaveBeenCalledTimes(1);
     expect(plugin.skipToPrevious).toHaveBeenCalledTimes(1);
+    expect(plugin.updateMetadata).toHaveBeenCalledWith({
+      title: "Updated Song",
+      artist: undefined,
+      album: undefined,
+      duration: undefined,
+      artworkUrl: undefined,
+    });
     expect(plugin.preload).toHaveBeenCalledWith({
       source: {
         kind: "stream",
@@ -175,6 +210,7 @@ describe("NativeAudioPlaybackBackend", () => {
     backend.subscribe("pause", listeners.pause);
     backend.subscribe("ended", listeners.ended);
     backend.subscribe("error", listeners.error);
+    backend.subscribe("remoteCommand", listeners.remoteCommand);
 
     await Promise.resolve();
 
@@ -189,6 +225,7 @@ describe("NativeAudioPlaybackBackend", () => {
     emit("playbackStateChanged", { state: "paused" });
     emit("ended", { reason: "finished" });
     emit("error", { code: "network", message: "Native stream failed" });
+    emit("remoteCommand", { command: "seek", position: 42 });
 
     expect(listeners.progress).toHaveBeenCalledWith({
       currentTime: 32,
@@ -207,6 +244,10 @@ describe("NativeAudioPlaybackBackend", () => {
       },
       code: "network",
       message: "Native stream failed",
+    });
+    expect(listeners.remoteCommand).toHaveBeenCalledWith({
+      command: "seek",
+      position: 42,
     });
   });
 
@@ -237,6 +278,7 @@ function makePlaybackListeners() {
     play: vi.fn() as PlaybackBackendListener<"play">,
     pause: vi.fn() as PlaybackBackendListener<"pause">,
     error: vi.fn() as PlaybackBackendListener<"error">,
+    remoteCommand: vi.fn() as PlaybackBackendListener<"remoteCommand">,
   } satisfies {
     [TEvent in PlaybackBackendEvent]: PlaybackBackendListener<TEvent>;
   };

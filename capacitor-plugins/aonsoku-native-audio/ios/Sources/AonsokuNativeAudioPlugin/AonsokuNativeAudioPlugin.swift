@@ -1,6 +1,7 @@
 import Foundation
 import AVFoundation
 import Capacitor
+import MediaPlayer
 import UIKit
 
 @objc(AonsokuNativeAudioPlugin)
@@ -45,10 +46,15 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var queueIndex = 0
     private var currentSourceKind: String?
     private var currentRadioId: String?
+    private var currentMetadata = NativeAudioMetadata()
+    private var artworkTask: URLSessionDataTask?
+    private var nowPlayingRevision = 0
+    private var remoteCommandTargets: [(command: MPRemoteCommand, target: Any)] = []
 
     public override func load() {
         super.load()
         registerLifecycleObservers()
+        registerRemoteCommands()
 
         do {
             try configureAudioSession()
@@ -58,6 +64,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     deinit {
+        unregisterRemoteCommands()
         removeLifecycleObservers()
         clearPlayer(sendIdleEvent: false, deactivateSession: true)
     }
@@ -74,6 +81,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 let player = AVPlayer(playerItem: item)
                 let startTime = max(0, call.getDouble("startTime") ?? 0)
                 let autoplay = call.getBool("autoplay") ?? false
+                let metadata = self.metadata(from: call.getObject("metadata"))
 
                 try self.configureAudioSession()
                 self.clearPlayer(sendIdleEvent: false)
@@ -81,8 +89,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 self.playerItem = item
                 self.currentSourceKind = resolvedSource.kind
                 self.currentRadioId = resolvedSource.radioId
+                self.currentMetadata = metadata
                 self.addObservers(for: item, player: player)
                 self.addProgressObserver(to: player)
+                self.updateNowPlayingInfo()
 
                 self.emitPlaybackState("loading")
 
@@ -213,20 +223,24 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func skipToNext(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
-            self.notifyListeners("remoteCommand", data: ["command": "next"])
+            self.emitRemoteCommand("next")
             call.resolve()
         }
     }
 
     @objc func skipToPrevious(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
-            self.notifyListeners("remoteCommand", data: ["command": "previous"])
+            self.emitRemoteCommand("previous")
             call.resolve()
         }
     }
 
     @objc func updateMetadata(_ call: CAPPluginCall) {
-        call.resolve()
+        DispatchQueue.main.async {
+            self.currentMetadata = self.metadata(from: call)
+            self.updateNowPlayingInfo()
+            call.resolve()
+        }
     }
 
     @objc func preload(_ call: CAPPluginCall) {
@@ -335,6 +349,80 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         didBecomeActiveObserver = nil
     }
 
+    private func registerRemoteCommands() {
+        guard remoteCommandTargets.isEmpty else {
+            return
+        }
+
+        let commandCenter = MPRemoteCommandCenter.shared()
+
+        commandCenter.playCommand.isEnabled = true
+        remoteCommandTargets.append((
+            commandCenter.playCommand,
+            commandCenter.playCommand.addTarget { [weak self] _ in
+                self?.emitRemoteCommand("play")
+                return .success
+            }
+        ))
+
+        commandCenter.pauseCommand.isEnabled = true
+        remoteCommandTargets.append((
+            commandCenter.pauseCommand,
+            commandCenter.pauseCommand.addTarget { [weak self] _ in
+                self?.emitRemoteCommand("pause")
+                return .success
+            }
+        ))
+
+        commandCenter.togglePlayPauseCommand.isEnabled = true
+        remoteCommandTargets.append((
+            commandCenter.togglePlayPauseCommand,
+            commandCenter.togglePlayPauseCommand.addTarget { [weak self] _ in
+                self?.emitRemoteCommand("togglePlayPause")
+                return .success
+            }
+        ))
+
+        commandCenter.nextTrackCommand.isEnabled = true
+        remoteCommandTargets.append((
+            commandCenter.nextTrackCommand,
+            commandCenter.nextTrackCommand.addTarget { [weak self] _ in
+                self?.emitRemoteCommand("next")
+                return .success
+            }
+        ))
+
+        commandCenter.previousTrackCommand.isEnabled = true
+        remoteCommandTargets.append((
+            commandCenter.previousTrackCommand,
+            commandCenter.previousTrackCommand.addTarget { [weak self] _ in
+                self?.emitRemoteCommand("previous")
+                return .success
+            }
+        ))
+
+        commandCenter.changePlaybackPositionCommand.isEnabled = true
+        remoteCommandTargets.append((
+            commandCenter.changePlaybackPositionCommand,
+            commandCenter.changePlaybackPositionCommand.addTarget { [weak self] event in
+                guard let event = event as? MPChangePlaybackPositionCommandEvent else {
+                    return .commandFailed
+                }
+
+                self?.emitRemoteCommand("seek", position: event.positionTime)
+                return .success
+            }
+        ))
+    }
+
+    private func unregisterRemoteCommands() {
+        for target in remoteCommandTargets {
+            target.command.removeTarget(target.target)
+        }
+
+        remoteCommandTargets = []
+    }
+
     private func handleAudioSessionInterruption(_ notification: Notification) {
         guard
             let rawType = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
@@ -391,6 +479,146 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private func handleApplicationVisibilityChanged() {
         emitCurrentPlaybackState()
         emitProgress()
+    }
+
+    private func metadata(from call: CAPPluginCall) -> NativeAudioMetadata {
+        NativeAudioMetadata(
+            title: call.getString("title"),
+            artist: call.getString("artist"),
+            album: call.getString("album"),
+            duration: positiveDuration(call.getDouble("duration")),
+            artworkUrl: call.getString("artworkUrl")
+        )
+    }
+
+    private func metadata(from object: JSObject?) -> NativeAudioMetadata {
+        guard let object else {
+            return NativeAudioMetadata()
+        }
+
+        return NativeAudioMetadata(
+            title: object["title"] as? String,
+            artist: object["artist"] as? String,
+            album: object["album"] as? String,
+            duration: positiveDuration(numberValue(object["duration"])),
+            artworkUrl: object["artworkUrl"] as? String
+        )
+    }
+
+    private func numberValue(_ value: Any?) -> Double? {
+        switch value {
+        case let value as Double:
+            return value
+        case let value as Int:
+            return Double(value)
+        case let value as NSNumber:
+            return value.doubleValue
+        default:
+            return nil
+        }
+    }
+
+    private func positiveDuration(_ duration: Double?) -> Double? {
+        guard let duration, duration.isFinite, duration > 0 else {
+            return nil
+        }
+
+        return duration
+    }
+
+    private func updateNowPlayingInfo() {
+        nowPlayingRevision += 1
+        let revision = nowPlayingRevision
+        artworkTask?.cancel()
+        artworkTask = nil
+
+        var info = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
+        apply(currentMetadata.title, forKey: MPMediaItemPropertyTitle, to: &info)
+        apply(currentMetadata.artist, forKey: MPMediaItemPropertyArtist, to: &info)
+        apply(currentMetadata.album, forKey: MPMediaItemPropertyAlbumTitle, to: &info)
+        applyNowPlayingPlaybackFields(to: &info)
+
+        if currentMetadata.artworkUrl == nil {
+            info.removeValue(forKey: MPMediaItemPropertyArtwork)
+        }
+
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+
+        if let artworkUrl = currentMetadata.artworkUrl {
+            loadNowPlayingArtwork(artworkUrl, revision: revision)
+        }
+    }
+
+    private func updateNowPlayingPlaybackInfo() {
+        guard var info = MPNowPlayingInfoCenter.default().nowPlayingInfo else {
+            return
+        }
+
+        applyNowPlayingPlaybackFields(to: &info)
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+    }
+
+    private func apply(_ value: String?, forKey key: String, to info: inout [String: Any]) {
+        if let value, !value.isEmpty {
+            info[key] = value
+        } else {
+            info.removeValue(forKey: key)
+        }
+    }
+
+    private func applyNowPlayingPlaybackFields(to info: inout [String: Any]) {
+        let duration = currentMetadata.duration ?? durationSeconds()
+        if duration > 0 {
+            info[MPMediaItemPropertyPlaybackDuration] = duration
+        } else {
+            info.removeValue(forKey: MPMediaItemPropertyPlaybackDuration)
+        }
+
+        info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = seconds(
+            from: player?.currentTime() ?? .zero
+        )
+        info[MPNowPlayingInfoPropertyPlaybackRate] =
+            player?.timeControlStatus == .playing ? 1.0 : 0.0
+        info[MPNowPlayingInfoPropertyDefaultPlaybackRate] = 1.0
+    }
+
+    private func loadNowPlayingArtwork(_ urlString: String, revision: Int) {
+        guard let url = URL(string: urlString) else {
+            return
+        }
+
+        artworkTask = URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+            guard
+                let self,
+                let data,
+                let image = UIImage(data: data)
+            else {
+                return
+            }
+
+            let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in
+                image
+            }
+
+            DispatchQueue.main.async {
+                guard self.nowPlayingRevision == revision else {
+                    return
+                }
+
+                var info = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
+                info[MPMediaItemPropertyArtwork] = artwork
+                MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+            }
+        }
+        artworkTask?.resume()
+    }
+
+    private func clearNowPlayingInfo() {
+        nowPlayingRevision += 1
+        artworkTask?.cancel()
+        artworkTask = nil
+        currentMetadata = NativeAudioMetadata()
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
     }
 
     private func resolveSource(from source: JSObject) throws -> ResolvedAudioSource {
@@ -535,6 +763,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
         if deactivateSession {
             deactivateAudioSession()
+            clearNowPlayingInfo()
         }
     }
 
@@ -547,11 +776,13 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     private func emitPlaybackState(_ state: String) {
         notifyListeners("playbackStateChanged", data: ["state": state])
+        updateNowPlayingPlaybackInfo()
     }
 
     private func emitProgress() {
         guard let player = player else {
             notifyListeners("progress", data: ["currentTime": 0, "duration": 0, "bufferedTime": 0])
+            updateNowPlayingPlaybackInfo()
             return
         }
 
@@ -563,6 +794,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             "duration": duration,
             "bufferedTime": bufferedTime(),
         ])
+        updateNowPlayingPlaybackInfo()
     }
 
     private func emitDuration(for item: AVPlayerItem) {
@@ -572,6 +804,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         notifyListeners("durationChanged", data: ["duration": duration])
+        updateNowPlayingPlaybackInfo()
     }
 
     private func emitBuffering(_ isBuffering: Bool) {
@@ -605,6 +838,16 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             "code": code,
             "message": message,
         ])
+    }
+
+    private func emitRemoteCommand(_ command: String, position: Double? = nil) {
+        var data: JSObject = ["command": command]
+
+        if let position {
+            data["position"] = position
+        }
+
+        notifyListeners("remoteCommand", data: data)
     }
 
     private func reject(_ call: CAPPluginCall, error: Error) {
@@ -689,6 +932,14 @@ private struct ResolvedAudioSource {
     let kind: String
     let url: URL
     let radioId: String?
+}
+
+private struct NativeAudioMetadata {
+    var title: String?
+    var artist: String?
+    var album: String?
+    var duration: Double?
+    var artworkUrl: String?
 }
 
 private enum NativeAudioPluginError: LocalizedError {

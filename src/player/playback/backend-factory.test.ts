@@ -23,6 +23,7 @@ function makeBackend(): PlaybackBackend {
     skipToNext: vi.fn(),
     skipToPrevious: vi.fn(),
     setVolume: vi.fn(),
+    updateMetadata: vi.fn(),
     preload: vi.fn(),
     dispose: vi.fn(),
     subscribe: vi.fn(() => vi.fn()),

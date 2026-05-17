@@ -36,10 +36,31 @@ export interface PlaybackBufferingEvent {
   isBuffering: boolean;
 }
 
+export interface PlaybackMetadata {
+  title?: string;
+  artist?: string;
+  album?: string;
+  duration?: number;
+  artworkUrl?: string;
+}
+
 export interface PlaybackErrorEvent {
   error: unknown;
   code?: number | string;
   message?: string;
+}
+
+export type PlaybackRemoteCommand =
+  | "play"
+  | "pause"
+  | "togglePlayPause"
+  | "next"
+  | "previous"
+  | "seek";
+
+export interface PlaybackRemoteCommandEvent {
+  command: PlaybackRemoteCommand;
+  position?: number;
 }
 
 export interface PlaybackBackendEvents {
@@ -50,6 +71,7 @@ export interface PlaybackBackendEvents {
   play: void;
   pause: void;
   error: PlaybackErrorEvent;
+  remoteCommand: PlaybackRemoteCommandEvent;
 }
 
 export type PlaybackBackendEvent = keyof PlaybackBackendEvents;
@@ -63,7 +85,10 @@ export type UnsubscribePlaybackEvent = () => void;
 export type PlaybackRepeatMode = "off" | "one" | "all";
 
 export interface PlaybackBackend {
-  load(source: PlaybackSource): void | Promise<void>;
+  load(
+    source: PlaybackSource,
+    metadata?: PlaybackMetadata,
+  ): void | Promise<void>;
   play(): Promise<void>;
   pause(): void | Promise<void>;
   stop(): void | Promise<void>;
@@ -74,6 +99,7 @@ export interface PlaybackBackend {
   skipToNext(): void | Promise<void>;
   skipToPrevious(): void | Promise<void>;
   setVolume(value: number): void | Promise<void>;
+  updateMetadata(metadata: PlaybackMetadata): void | Promise<void>;
   preload(source: PlaybackSource): void | Promise<void>;
   dispose(): void;
   subscribe<TEvent extends PlaybackBackendEvent>(

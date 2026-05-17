@@ -91,12 +91,14 @@ describe("Aonsoku native audio plugin skeleton", () => {
     );
 
     expect(swift).toContain("import AVFoundation");
+    expect(swift).toContain("import MediaPlayer");
     expect(swift).toContain("private var player: AVPlayer?");
     expect(swift).toContain('private var repeatMode = "off"');
     expect(swift).toContain("private var shuffleEnabled = false");
     expect(swift).toContain("private var queueItemCount = 0");
     expect(swift).toContain("private var currentSourceKind: String?");
     expect(swift).toContain("private var currentRadioId: String?");
+    expect(swift).toContain("private var currentMetadata = NativeAudioMetadata()");
     expect(swift).toContain("@objc(AonsokuNativeAudioPlugin)");
     expect(swift).toContain(
       `public let jsName = "${NATIVE_AUDIO_PLUGIN_NAME}"`,
@@ -156,6 +158,47 @@ describe("Aonsoku native audio plugin skeleton", () => {
     expect(swift).toContain("UIApplication.didBecomeActiveNotification");
     expect(swift).toContain("handleAudioSessionInterruption");
     expect(swift).toContain("handleAudioSessionRouteChange");
+  });
+
+  it("updates iOS Now Playing metadata, artwork, and remote commands", () => {
+    const swift = readText(
+      path.join(
+        pluginRoot,
+        "ios/Sources/AonsokuNativeAudioPlugin/AonsokuNativeAudioPlugin.swift",
+      ),
+    );
+
+    for (const command of [
+      "playCommand",
+      "pauseCommand",
+      "togglePlayPauseCommand",
+      "nextTrackCommand",
+      "previousTrackCommand",
+      "changePlaybackPositionCommand",
+    ]) {
+      expect(swift).toContain(`commandCenter.${command}.isEnabled = true`);
+    }
+
+    for (const command of [
+      '"play"',
+      '"pause"',
+      '"togglePlayPause"',
+      '"next"',
+      '"previous"',
+      '"seek"',
+    ]) {
+      expect(swift).toContain(`emitRemoteCommand(${command}`);
+    }
+
+    expect(swift).toContain("MPNowPlayingInfoCenter.default().nowPlayingInfo");
+    expect(swift).toContain("MPMediaItemPropertyTitle");
+    expect(swift).toContain("MPMediaItemPropertyArtist");
+    expect(swift).toContain("MPMediaItemPropertyAlbumTitle");
+    expect(swift).toContain("MPMediaItemPropertyPlaybackDuration");
+    expect(swift).toContain("MPNowPlayingInfoPropertyElapsedPlaybackTime");
+    expect(swift).toContain("MPNowPlayingInfoPropertyPlaybackRate");
+    expect(swift).toContain("MPMediaItemArtwork");
+    expect(swift).toContain("URLSession.shared.dataTask");
   });
 
   it("tracks radio sources and resets native state on clear", () => {

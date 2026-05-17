@@ -13,12 +13,14 @@ import {
   createPlaybackBackend,
   createUrlPlaybackSource,
   getPlaybackEndedDecision,
+  handlePlaybackRemoteCommand,
   playbackRepeatModeFromLoopState,
   registerPlaybackBackend,
   shouldUseNativePlaybackBackend,
   type PlaybackBackend,
   type PlaybackBackendKind,
   type PlaybackErrorEvent,
+  type PlaybackMetadata,
   type PlaybackSource,
   PlaybackSession,
 } from "@/player/playback";
@@ -49,6 +51,7 @@ type AudioPlayerProps = ComponentPropsWithoutRef<"audio"> & {
   audioRef: RefObject<HTMLAudioElement>;
   audioSource?: AudioSourceDescriptor | null;
   replayGain?: ReplayGainParams;
+  metadata?: PlaybackMetadata | null;
   onPlaybackError?: () => void;
   onReplayGainError?: () => void;
   songId?: string;
@@ -57,6 +60,7 @@ type AudioPlayerProps = ComponentPropsWithoutRef<"audio"> & {
 export function AudioPlayer({
   audioRef,
   replayGain,
+  metadata,
   audioSource,
   onPlaybackError,
   onReplayGainError,
@@ -105,6 +109,9 @@ export function AudioPlayer({
     setIsBuffering: setStoreIsBuffering,
     setPlayingState: setStorePlayingState,
     setProgress: setStoreProgress,
+    togglePlayPause,
+    playNextSong,
+    playPrevSong,
   } = usePlayerActions();
 
   const getPlaybackBackendEntry = useCallback(
@@ -189,12 +196,12 @@ export function AudioPlayer({
 
       const backend = getPlaybackBackend(audio);
       if (backend) {
-        backend.load(createPlaybackSource(sourceUrl));
+        backend.load(createPlaybackSource(sourceUrl), metadata ?? undefined);
       } else {
         audio.load();
       }
     },
-    [audioSrc, createPlaybackSource, getPlaybackBackend],
+    [audioSrc, createPlaybackSource, getPlaybackBackend, metadata],
   );
 
   const seekAudio = useCallback(
@@ -227,7 +234,10 @@ export function AudioPlayer({
       setAudioSrc(src || undefined);
       const audio = audioRef.current;
       if (audio && src) {
-        getPlaybackBackend(audio)?.load(createPlaybackSource(src));
+        getPlaybackBackend(audio)?.load(
+          createPlaybackSource(src),
+          metadata ?? undefined,
+        );
       }
     }
   }, [
@@ -235,9 +245,17 @@ export function AudioPlayer({
     audioSrc,
     createPlaybackSource,
     getPlaybackBackend,
+    metadata,
     src,
     songId,
   ]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !metadata) return;
+
+    getPlaybackBackend(audio)?.updateMetadata(metadata);
+  }, [audioRef, getPlaybackBackend, metadata]);
 
   const audioVolume = useMemo(
     () => (getPlaybackCapabilities().requiresSystemVolume ? 1 : perceptualToGain(volume)),
@@ -476,6 +494,33 @@ export function AudioPlayer({
     [audioRef, isRadio, isSong, onPlaybackError, scheduleRetry],
   );
 
+  const handleNativeRemoteCommand = useCallback(
+    (event: Parameters<typeof handlePlaybackRemoteCommand>[0]) => {
+      const audio = audioRef.current;
+
+      handlePlaybackRemoteCommand(event, {
+        isPlaying: () => usePlayerStore.getState().playerState.isPlaying,
+        togglePlayPause,
+        playNextSong,
+        playPrevSong,
+        seek: (position) => {
+          if (!audio) return;
+
+          seekAudio(audio, position);
+          setStoreProgress(position);
+        },
+      });
+    },
+    [
+      audioRef,
+      playNextSong,
+      playPrevSong,
+      seekAudio,
+      setStoreProgress,
+      togglePlayPause,
+    ],
+  );
+
   const handleAudioErrorRef = useRef(handleAudioError);
   handleAudioErrorRef.current = handleAudioError;
 
@@ -591,6 +636,10 @@ export function AudioPlayer({
       "error",
       handleNativeBackendError,
     );
+    const unsubscribeRemoteCommand = backendEntry.backend.subscribe(
+      "remoteCommand",
+      handleNativeRemoteCommand,
+    );
 
     return () => {
       unsubscribeProgress();
@@ -600,12 +649,14 @@ export function AudioPlayer({
       unsubscribePause();
       unsubscribeEnded();
       unsubscribeError();
+      unsubscribeRemoteCommand();
     };
   }, [
     applyPendingResume,
     audioRef,
     getPlaybackBackendEntry,
     handleNativeBackendError,
+    handleNativeRemoteCommand,
     onEnded,
     safePlay,
     seekAudio,

@@ -15,6 +15,7 @@ import {
   getAudioDurationSeconds,
   getAudioProgressSnapshot,
   getBufferedTime,
+  type PlaybackMetadata,
 } from "@/player/playback";
 import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import {
@@ -32,6 +33,7 @@ import {
 import { LoopState } from "@/types/playerContext";
 import { hasMiniPlayerSupport } from "@/utils/browser";
 import { logger } from "@/utils/logger";
+import { getCoverArtUrlFromSongPreference } from "@/utils/coverArt";
 import {
   type ReplayGainParams,
   resolveReplayGainParams,
@@ -64,6 +66,7 @@ const MemoAudioPlayer = memo(AudioPlayer);
 
 export function Player() {
   const { t } = useTranslation();
+  const radioLabel = t("radios.label");
   const audioRef = useRef<HTMLAudioElement>(null);
   const radioRef = useRef<HTMLAudioElement>(null);
   const isMobile = usePlayerBreakpoint();
@@ -121,6 +124,31 @@ export function Player() {
 
     return audioSourceResolver.resolveRadioSource(radio.streamUrl, radio.id);
   }, [radio]);
+  const songMetadata = useMemo<PlaybackMetadata | null>(() => {
+    if (!song) return null;
+
+    return {
+      title: song.title,
+      artist: song.artist,
+      album: song.album,
+      duration: song.duration,
+      artworkUrl: getCoverArtUrlFromSongPreference({
+        coverArt: song.coverArt,
+        coverArtType: "song",
+        albumId: song.albumId,
+        size: "300",
+      }),
+    };
+  }, [song]);
+  const radioMetadata = useMemo<PlaybackMetadata | null>(() => {
+    if (!radio) return null;
+
+    return {
+      title: radio.name,
+      artist: radioLabel,
+      album: "",
+    };
+  }, [radio, radioLabel]);
 
   const getAudioRef = useCallback(() => {
     if (isRadio) return radioRef;
@@ -392,6 +420,7 @@ export function Player() {
         <MemoAudioPlayer
           audioSource={audioSource}
           replayGain={trackReplayGain}
+          metadata={songMetadata}
           src={audioSrc}
           songId={resolvedSongId}
           autoPlay={isPlaying}
@@ -416,6 +445,7 @@ export function Player() {
       {isRadio && radio && !isRemoteControlActive && (
         <MemoAudioPlayer
           audioSource={radioSource}
+          metadata={radioMetadata}
           src={radio.streamUrl}
           autoPlay={isPlaying}
           audioRef={radioRef}

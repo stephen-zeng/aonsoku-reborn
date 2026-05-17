@@ -6,6 +6,7 @@ import {
   type PlaybackBackendEvents,
   type PlaybackBackendListener,
   type PlaybackErrorEvent,
+  type PlaybackMetadata,
   type PlaybackProgressEvent,
   type PlaybackRepeatMode,
   type PlaybackSource,
@@ -45,11 +46,12 @@ export class WebAudioPlaybackBackend implements PlaybackBackend {
       play: new Set(),
       pause: new Set(),
       error: new Set(),
+      remoteCommand: new Set(),
     };
     this.#wireAudioEvents();
   }
 
-  load(source: PlaybackSource) {
+  load(source: PlaybackSource, _metadata?: PlaybackMetadata) {
     this.#assertActive();
     this.#audio.src = getPlaybackSourceUrl(source);
     this.#audio.load();
@@ -101,6 +103,10 @@ export class WebAudioPlaybackBackend implements PlaybackBackend {
   setVolume(value: number) {
     this.#assertActive();
     this.#audio.volume = Math.min(Math.max(value, 0), 1);
+  }
+
+  updateMetadata(_metadata: PlaybackMetadata) {
+    this.#assertActive();
   }
 
   preload(source: PlaybackSource) {
