@@ -1,6 +1,7 @@
 import Foundation
 import AVFoundation
 import Capacitor
+import UIKit
 
 @objc(AonsokuNativeAudioPlugin)
 public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
@@ -24,12 +25,20 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     private var player: AVPlayer?
     private var playerItem: AVPlayerItem?
+    private let audioSession = AVAudioSession.sharedInstance()
     private var statusObservation: NSKeyValueObservation?
     private var durationObservation: NSKeyValueObservation?
     private var timeControlStatusObservation: NSKeyValueObservation?
     private var timeObserverToken: Any?
     private var endObserver: NSObjectProtocol?
     private var failedEndObserver: NSObjectProtocol?
+    private var interruptionObserver: NSObjectProtocol?
+    private var routeChangeObserver: NSObjectProtocol?
+    private var didEnterBackgroundObserver: NSObjectProtocol?
+    private var willEnterForegroundObserver: NSObjectProtocol?
+    private var didBecomeActiveObserver: NSObjectProtocol?
+    private var isAudioSessionConfigured = false
+    private var wasPlayingBeforeInterruption = false
     private var repeatMode = "off"
     private var shuffleEnabled = false
     private var queueItemCount = 0
@@ -37,8 +46,20 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var currentSourceKind: String?
     private var currentRadioId: String?
 
+    public override func load() {
+        super.load()
+        registerLifecycleObservers()
+
+        do {
+            try configureAudioSession()
+        } catch {
+            emitError(code: "audio_session_failed", message: error.localizedDescription)
+        }
+    }
+
     deinit {
-        clearPlayer(sendIdleEvent: false)
+        removeLifecycleObservers()
+        clearPlayer(sendIdleEvent: false, deactivateSession: true)
     }
 
     @objc func load(_ call: CAPPluginCall) {
@@ -54,6 +75,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 let startTime = max(0, call.getDouble("startTime") ?? 0)
                 let autoplay = call.getBool("autoplay") ?? false
 
+                try self.configureAudioSession()
                 self.clearPlayer(sendIdleEvent: false)
                 self.player = player
                 self.playerItem = item
@@ -69,6 +91,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 }
 
                 if autoplay {
+                    try self.activateAudioSession()
                     player.play()
                     self.emitPlaybackState("playing")
                 }
@@ -82,14 +105,19 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func play(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
-            guard let player = self.player else {
-                self.reject(call, code: "no_source", message: "No audio source is loaded.")
-                return
-            }
+            do {
+                guard let player = self.player else {
+                    self.reject(call, code: "no_source", message: "No audio source is loaded.")
+                    return
+                }
 
-            player.play()
-            self.emitPlaybackState("playing")
-            call.resolve()
+                try self.activateAudioSession()
+                player.play()
+                self.emitPlaybackState("playing")
+                call.resolve()
+            } catch {
+                self.reject(call, error: error)
+            }
         }
     }
 
@@ -107,6 +135,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             self.player?.seek(to: .zero)
             self.emitPlaybackState("stopped")
             self.emitProgress()
+            self.deactivateAudioSession()
             call.resolve()
         }
     }
@@ -206,10 +235,162 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func clear(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
-            self.clearPlayer(sendIdleEvent: true)
+            self.clearPlayer(sendIdleEvent: true, deactivateSession: true)
             self.resetControlState()
             call.resolve()
         }
+    }
+
+    private func configureAudioSession() throws {
+        guard !isAudioSessionConfigured else {
+            return
+        }
+
+        try audioSession.setCategory(.playback, mode: .default)
+        isAudioSessionConfigured = true
+    }
+
+    private func activateAudioSession() throws {
+        try configureAudioSession()
+        try audioSession.setActive(true)
+    }
+
+    private func deactivateAudioSession() {
+        try? audioSession.setActive(false, options: [.notifyOthersOnDeactivation])
+    }
+
+    private func registerLifecycleObservers() {
+        let center = NotificationCenter.default
+
+        if interruptionObserver == nil {
+            interruptionObserver = center.addObserver(
+                forName: AVAudioSession.interruptionNotification,
+                object: audioSession,
+                queue: .main
+            ) { [weak self] notification in
+                self?.handleAudioSessionInterruption(notification)
+            }
+        }
+
+        if routeChangeObserver == nil {
+            routeChangeObserver = center.addObserver(
+                forName: AVAudioSession.routeChangeNotification,
+                object: audioSession,
+                queue: .main
+            ) { [weak self] notification in
+                self?.handleAudioSessionRouteChange(notification)
+            }
+        }
+
+        if didEnterBackgroundObserver == nil {
+            didEnterBackgroundObserver = center.addObserver(
+                forName: UIApplication.didEnterBackgroundNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                self?.handleApplicationVisibilityChanged()
+            }
+        }
+
+        if willEnterForegroundObserver == nil {
+            willEnterForegroundObserver = center.addObserver(
+                forName: UIApplication.willEnterForegroundNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                self?.handleApplicationVisibilityChanged()
+            }
+        }
+
+        if didBecomeActiveObserver == nil {
+            didBecomeActiveObserver = center.addObserver(
+                forName: UIApplication.didBecomeActiveNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                self?.handleApplicationVisibilityChanged()
+            }
+        }
+    }
+
+    private func removeLifecycleObservers() {
+        let center = NotificationCenter.default
+
+        for observer in [
+            interruptionObserver,
+            routeChangeObserver,
+            didEnterBackgroundObserver,
+            willEnterForegroundObserver,
+            didBecomeActiveObserver,
+        ] {
+            if let observer {
+                center.removeObserver(observer)
+            }
+        }
+
+        interruptionObserver = nil
+        routeChangeObserver = nil
+        didEnterBackgroundObserver = nil
+        willEnterForegroundObserver = nil
+        didBecomeActiveObserver = nil
+    }
+
+    private func handleAudioSessionInterruption(_ notification: Notification) {
+        guard
+            let rawType = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+            let type = AVAudioSession.InterruptionType(rawValue: rawType)
+        else {
+            return
+        }
+
+        switch type {
+        case .began:
+            wasPlayingBeforeInterruption = player?.timeControlStatus == .playing
+            player?.pause()
+            notifyListeners("interruptionChanged", data: ["type": "began"])
+            emitBuffering(false)
+            emitPlaybackState("paused")
+            emitProgress()
+        case .ended:
+            let rawOptions = notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
+            let options = AVAudioSession.InterruptionOptions(rawValue: rawOptions)
+            let shouldResume = options.contains(.shouldResume)
+
+            notifyListeners("interruptionChanged", data: [
+                "type": "ended",
+                "shouldResume": shouldResume,
+            ])
+
+            if shouldResume, wasPlayingBeforeInterruption, let player = player {
+                do {
+                    try activateAudioSession()
+                    player.play()
+                    emitPlaybackState("playing")
+                } catch {
+                    emitError(code: "audio_session_failed", message: error.localizedDescription)
+                    emitCurrentPlaybackState()
+                }
+            } else {
+                emitCurrentPlaybackState()
+            }
+
+            wasPlayingBeforeInterruption = false
+        @unknown default:
+            emitError(code: "unknown_interruption", message: "Native audio received an unknown interruption.")
+        }
+    }
+
+    private func handleAudioSessionRouteChange(_ notification: Notification) {
+        let reason = routeChangeReason(from: notification)
+
+        notifyListeners("routeChanged", data: ["reason": reason])
+        emitCurrentPlaybackState()
+        emitProgress()
+    }
+
+    private func handleApplicationVisibilityChanged() {
+        emitCurrentPlaybackState()
+        emitProgress()
     }
 
     private func resolveSource(from source: JSObject) throws -> ResolvedAudioSource {
@@ -320,7 +501,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         notifyListeners("ended", data: ["reason": "finished"])
     }
 
-    private func clearPlayer(sendIdleEvent: Bool) {
+    private func clearPlayer(sendIdleEvent: Bool, deactivateSession: Bool = false) {
         if let token = timeObserverToken {
             player?.removeTimeObserver(token)
             timeObserverToken = nil
@@ -350,6 +531,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         if sendIdleEvent {
             emitPlaybackState("idle")
             emitBuffering(false)
+        }
+
+        if deactivateSession {
+            deactivateAudioSession()
         }
     }
 
@@ -391,6 +576,28 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     private func emitBuffering(_ isBuffering: Bool) {
         notifyListeners("bufferingChanged", data: ["isBuffering": isBuffering])
+    }
+
+    private func emitCurrentPlaybackState() {
+        guard let player = player else {
+            emitPlaybackState("idle")
+            emitBuffering(false)
+            return
+        }
+
+        switch player.timeControlStatus {
+        case .playing:
+            emitBuffering(false)
+            emitPlaybackState("playing")
+        case .paused:
+            emitBuffering(false)
+            emitPlaybackState("paused")
+        case .waitingToPlayAtSpecifiedRate:
+            emitBuffering(true)
+            emitPlaybackState("loading")
+        @unknown default:
+            emitBuffering(false)
+        }
     }
 
     private func emitError(code: String, message: String) {
@@ -445,6 +652,36 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     private func makeTime(_ seconds: Double) -> CMTime {
         CMTime(seconds: seconds, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+    }
+
+    private func routeChangeReason(from notification: Notification) -> String {
+        guard
+            let rawReason = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,
+            let reason = AVAudioSession.RouteChangeReason(rawValue: rawReason)
+        else {
+            return "unknown"
+        }
+
+        switch reason {
+        case .unknown:
+            return "unknown"
+        case .newDeviceAvailable:
+            return "newDeviceAvailable"
+        case .oldDeviceUnavailable:
+            return "oldDeviceUnavailable"
+        case .categoryChange:
+            return "categoryChange"
+        case .override:
+            return "override"
+        case .wakeFromSleep:
+            return "wakeFromSleep"
+        case .noSuitableRouteForCategory:
+            return "noSuitableRouteForCategory"
+        case .routeConfigurationChange:
+            return "routeConfigurationChange"
+        @unknown default:
+            return "unknown"
+        }
     }
 }
 

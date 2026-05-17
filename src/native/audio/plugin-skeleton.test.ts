@@ -126,9 +126,36 @@ describe("Aonsoku native audio plugin skeleton", () => {
       "ended",
       "error",
       "remoteCommand",
+      "interruptionChanged",
+      "routeChanged",
     ]) {
       expect(swift).toContain(`notifyListeners("${eventName}"`);
     }
+  });
+
+  it("enables iOS background audio and native audio session handling", () => {
+    const infoPlist = readText(
+      path.join(process.cwd(), "ios/App/App/Info.plist"),
+    );
+    const swift = readText(
+      path.join(
+        pluginRoot,
+        "ios/Sources/AonsokuNativeAudioPlugin/AonsokuNativeAudioPlugin.swift",
+      ),
+    );
+
+    expect(infoPlist).toContain("<key>UIBackgroundModes</key>");
+    expect(infoPlist).toContain("<string>audio</string>");
+    expect(swift).toContain("AVAudioSession.sharedInstance()");
+    expect(swift).toContain("setCategory(.playback");
+    expect(swift).toContain("setActive(true)");
+    expect(swift).toContain("AVAudioSession.interruptionNotification");
+    expect(swift).toContain("AVAudioSession.routeChangeNotification");
+    expect(swift).toContain("UIApplication.didEnterBackgroundNotification");
+    expect(swift).toContain("UIApplication.willEnterForegroundNotification");
+    expect(swift).toContain("UIApplication.didBecomeActiveNotification");
+    expect(swift).toContain("handleAudioSessionInterruption");
+    expect(swift).toContain("handleAudioSessionRouteChange");
   });
 
   it("tracks radio sources and resets native state on clear", () => {
