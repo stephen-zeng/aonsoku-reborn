@@ -11,6 +11,7 @@ import { usePlayHistory } from "@/app/hooks/use-play-history";
 import { usePlayerBreakpoint } from "@/app/hooks/use-player-breakpoint";
 import { usePreloadAudio } from "@/app/hooks/use-preload-audio";
 import { useScrobble } from "@/app/hooks/use-scrobble";
+import { useNativeForegroundSync } from "@/app/hooks/use-native-foreground-sync";
 import {
   getAudioDurationSeconds,
   getAudioProgressSnapshot,
@@ -97,6 +98,7 @@ export function Player() {
   usePlayHistory();
   useScrobble();
   usePreloadAudio();
+  useNativeForegroundSync();
 
   const isTransitioning = usePlayerIsTransitioning();
 

@@ -341,7 +341,8 @@ export class NativeQueueController implements QueueController {
           );
           if (song) {
             s.songlist.currentSong = song;
-            s.songlist.contextQueue.currentIndex = state.contextQueue.currentIndex;
+            s.songlist.contextQueue.currentIndex =
+              state.contextQueue.currentIndex;
           }
         }
 
