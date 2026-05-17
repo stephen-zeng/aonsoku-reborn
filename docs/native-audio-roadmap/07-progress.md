@@ -8,7 +8,7 @@ commit that contains the change.
 
 - Roadmap status: Phase 4 in progress.
 - Active implementation phase: Phase 4 - Complete iOS Native Implementation.
-- Next step: Phase 4 Step 8, error recovery and lifecycle hardening.
+- Next step: Phase 4 Step 9, iOS regression pass.
 - Android status: blocked until the full iOS native implementation is complete.
 
 ## Completed Work
@@ -35,6 +35,7 @@ commit that contains the change.
 | 2026-05-17 | Phase 4.5 - Background audio and audio session | Enabled iOS background audio mode, configured the native plugin's `AVAudioSession` for playback, activated the session on native play/autoplay, handled audio interruptions with optional resume, emitted route-change and interruption bridge events, and resynced playback state/progress on background and foreground transitions. No Android dependency or project file was added. | `pnpm exec vitest run src/native/audio/facade.test.ts src/native/audio/plugin-skeleton.test.ts src/player/playback/native-backend.test.ts src/player/playback/backend-factory.test.ts` 24/24 passed. `pnpm run lint` passed. `xcodebuild -project ios/App/App.xcodeproj -scheme App -destination generic/platform=iOS -derivedDataPath /private/tmp/aonsoku-ios-derived-data CODE_SIGNING_ALLOWED=NO build` succeeded. `pnpm run test:unit` 740/740 passed. `pnpm run build` succeeded with existing Vite warnings. Manual iOS checklist for background, lock screen, interruption resume, and route switching was not run in this non-interactive session. Commit hook Biome lint passed. | `94724936 feat(ios): enable background audio session` |
 | 2026-05-17 | Phase 4.6 - Lock screen and remote controls | Extended the shared playback backend with metadata and remote-command events, passed song/radio metadata and artwork URLs into native playback, mapped iOS remote commands back through TypeScript player actions, and implemented `MPNowPlayingInfoCenter` plus `MPRemoteCommandCenter` support in the iOS plugin. No Android dependency or project file was added. | `pnpm exec vitest run src/player/playback/remote-command.test.ts src/player/playback/native-backend.test.ts src/player/playback/playback-backend.test.ts src/native/audio/plugin-skeleton.test.ts` 26/26 passed. `pnpm run lint` passed. `pnpm run test:unit` 744/744 passed. `pnpm run build` succeeded with existing Vite warnings. `xcodebuild -project ios/App/App.xcodeproj -scheme App -destination generic/platform=iOS -derivedDataPath /private/tmp/aonsoku-ios-derived-data CODE_SIGNING_ALLOWED=NO build` succeeded. Manual iOS checklist for lock screen metadata/artwork, Control Center transport/seek, and headset/Bluetooth controls was not run in this non-interactive session. Commit hook Biome lint passed. | `6e1e7a16 feat(ios): add now playing and remote controls` |
 | 2026-05-17 | Phase 4.7 - Native cached/offline playback | Implemented the Capacitor iOS native cache bridge, storing downloaded audio files in Application Support with sidecar metadata and resolving them as native-playable file URIs. Capacitor iOS cache downloads now use the main-thread downloader so the native plugin can persist files, source resolution recovers/touches native cache metadata on startup, and cache eviction/clear paths remove native audio files. Web/Electron Cache API behavior remains unchanged; Android remains untouched. | `pnpm exec vitest run src/service/cache/native-cache-adapter.test.ts src/service/cache/audio-source/index.test.ts src/service/cache/cache-manager.test.ts src/native/audio/facade.test.ts src/native/audio/plugin-skeleton.test.ts src/player/playback/native-backend.test.ts` 73/73 passed. `pnpm run test:unit` 757/757 passed. `pnpm run lint` passed. `pnpm run build` succeeded with existing Vite warnings. `pnpm exec cap sync ios` succeeded. `xcodebuild -project ios/App/App.xcodeproj -scheme App -destination generic/platform=iOS -derivedDataPath /private/tmp/aonsoku-ios-derived-data CODE_SIGNING_ALLOWED=NO build` succeeded after fixing the Swift backup-exclusion API call. Manual iOS offline playback checklist was not run in this non-interactive session. Commit hook Biome lint passed. | `5a29970d feat(ios): support native cached audio playback` |
+| 2026-05-17 | Phase 4.8 - Error recovery and lifecycle hardening | Added shared playback error classification for native iOS failures, mapped native plugin errors to the same retry categories as web audio, routed retryable native song/radio failures through `PlaybackSession`, and added request-scoped native events so source changes, app lifecycle resyncs, and delayed AVPlayer callbacks cannot update the active player from stale loads. The iOS plugin now guards KVO/notification/progress callbacks by playback generation and still removes the periodic time observer during clear/dispose. No Android dependency or project file was added. | `pnpm exec vitest run src/player/playback/errors.test.ts src/player/playback/native-backend.test.ts src/player/playback/session.test.ts src/native/audio/plugin-skeleton.test.ts` 36/36 passed. `pnpm run lint` passed. `pnpm run test:unit` 762/762 passed. `pnpm run build` succeeded with existing Vite warnings. `pnpm exec cap sync ios` succeeded. `xcodebuild -project ios/App/App.xcodeproj -scheme App -destination generic/platform=iOS -derivedDataPath /private/tmp/aonsoku-ios-derived-data CODE_SIGNING_ALLOWED=NO build` succeeded. Manual iOS smoke tests for network loss and source switching were not run in this non-interactive session. Commit hook Biome lint passed. | `5db40485 fix(ios): harden native playback lifecycle` |
 
 ## Phase Checklist
 
@@ -44,7 +45,7 @@ commit that contains the change.
 | Phase 1 - Playback And Queue Modularization | Complete | Phase 1.1 through 1.4 are complete. Cypress was not run in this session because the local Cypress installation has a known host issue and the user requested not to run or repair it. |
 | Phase 2 - Cache Modularization | Complete for Phase 3 handoff | Phase 2.1 through 2.3 are complete per `01-roadmap.md`. Detailed cache follow-ups in `03-cache-modularization.md` remain useful future hardening work. |
 | Phase 3 - Capacitor Bridge Foundation | Complete | Phase 3.1 and 3.2 are complete. Native playback is selected only for Capacitor iOS when the facade reports the plugin is available; otherwise web playback remains the fallback. |
-| Phase 4 - Complete iOS Native Implementation | In progress | Steps 1 through 7 are complete. Next: Step 8 error recovery and lifecycle hardening. Must finish before Android begins. |
+| Phase 4 - Complete iOS Native Implementation | In progress | Steps 1 through 8 are complete. Next: Step 9 iOS regression pass. Must finish before Android begins. |
 | Phase 5 - Android Platform Support | Blocked | Do not add `@capacitor/android` or Android project files yet. |
 | Phase 6 - Stabilization | Not started | Runs after platform implementation work. |
 
@@ -146,6 +147,13 @@ Record test commands and outcomes here as the roadmap progresses.
 | 2026-05-17 | `pnpm exec cap sync ios` | Succeeded | Capacitor found `@aonsoku/native-audio` and `@capacitor/keyboard` and rewrote the generated iOS SPM package. |
 | 2026-05-17 | `xcodebuild -project ios/App/App.xcodeproj -scheme App -destination generic/platform=iOS -derivedDataPath /private/tmp/aonsoku-ios-derived-data CODE_SIGNING_ALLOWED=NO build` | Succeeded | First run caught an invalid `URL.setResourceValue` call; rerun after switching to `URLResourceValues` compiled the native cache bridge. |
 | 2026-05-17 | iOS simulator/device offline playback checklist | Not run | Manual cache song, disable network, restart app, and play cached song checks need an interactive iOS simulator/device session. |
+| 2026-05-17 | `pnpm exec vitest run src/player/playback/errors.test.ts src/player/playback/native-backend.test.ts src/player/playback/session.test.ts src/native/audio/plugin-skeleton.test.ts` | 36 passed | Phase 4.8 shared error mapping, native retry/stale-event filtering, existing session retry behavior, and Swift lifecycle guard coverage. |
+| 2026-05-17 | `pnpm run lint` | Passed | Biome lint after Phase 4.8; commit hook also ran Biome and passed. |
+| 2026-05-17 | `pnpm run test:unit` | 762 passed | Full unit suite after Phase 4.8. |
+| 2026-05-17 | `pnpm run build` | Succeeded | Build succeeds; existing Vite chunking and non-module `env-config.js` warnings remain. |
+| 2026-05-17 | `pnpm exec cap sync ios` | Succeeded | Capacitor found `@aonsoku/native-audio` and `@capacitor/keyboard` and rewrote the generated iOS SPM package. |
+| 2026-05-17 | `xcodebuild -project ios/App/App.xcodeproj -scheme App -destination generic/platform=iOS -derivedDataPath /private/tmp/aonsoku-ios-derived-data CODE_SIGNING_ALLOWED=NO build` | Succeeded | Compiled the updated native error mapping, request-scoped event payloads, playback-generation guards, and time-observer cleanup path. |
+| 2026-05-17 | iOS simulator/device error recovery checklist | Not run | Manual network-loss retry and rapid source-switching smoke checks need an interactive iOS simulator/device session. |
 
 ### Phase 0.1 - Baseline Test Coverage Added
 
@@ -572,13 +580,21 @@ side effects. This makes queue behavior fully testable without a store.
   download engine for cache writes; web/Electron behavior remains on the Cache
   API and Android remains untouched. Manual offline playback checks still need
   an interactive iOS simulator/device session.
+- Phase 4.8 is complete. Native iOS errors now normalize to shared playback
+  error kinds/media codes, retryable native song and radio failures go through
+  the shared `PlaybackSession`, and native events carry request IDs so delayed
+  AVPlayer callbacks from older loads are ignored by the TypeScript backend.
+  The Swift plugin also guards KVO/notification/progress callbacks with a
+  playback generation and removes the periodic time observer during player
+  clear/dispose. Manual network-loss and rapid source-switching checks still
+  need an interactive iOS simulator/device session.
 - Public imports from `@/store/player.store` remain stable.
 - Public imports of `buildAudioUrl` from `@/service/cache` remain stable.
 - Cypress component tests were intentionally not run after user instruction:
   this machine has a known Cypress host issue, and Cypress repair is out of
   scope for this roadmap work.
-- The next implementation session should begin Phase 4 Step 8 from
-  `04-ios-native-implementation.md`: error recovery and lifecycle hardening.
+- The next implementation session should begin Phase 4 Step 9 from
+  `04-ios-native-implementation.md`: iOS regression pass.
 - Keep every sub-step small, tested, and committed independently.
 - Keep Android blocked until the iOS done criteria in `00-requirements.md` and
   `04-ios-native-implementation.md` are satisfied.
