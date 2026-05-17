@@ -91,10 +91,22 @@ export class NativeQueueController implements QueueController {
         logger.error("[NativeQueueController] setSongList failed", err),
       );
 
+    const clampedIndex = Math.max(0, Math.min(index, songs.length - 1));
     usePlayerStore.setState((state) => {
       state.playerState.isPlaying = true;
       state.playerState.mediaType = "song";
+      state.playerProgress.progress = 0;
+      state.playerProgress.bufferedProgress = 0;
       state.songlist.isShuffleActive = Boolean(shuffle);
+      state.songlist.contextQueue.songs = songs;
+      state.songlist.contextQueue.currentIndex = clampedIndex;
+      state.songlist.currentSong = songs[clampedIndex] ?? null;
+      state.songlist.userQueue = { songs: [] };
+      state.songlist.isInUserQueue = false;
+      state.songlist.playedUserQueueHistory = [];
+      state.playerState.currentDuration = songs[clampedIndex]?.duration
+        ? Math.round(songs[clampedIndex].duration)
+        : 0;
     });
   }
 
@@ -320,7 +332,33 @@ export class NativeQueueController implements QueueController {
       usePlayerStore.setState((s) => {
         s.playerState.isPlaying = state.isPlaying;
         s.playerProgress.progress = state.currentTime;
+        s.playerProgress.bufferedProgress = state.currentTime;
         s.playerState.currentDuration = state.duration;
+
+        if (state.currentSongId) {
+          const song = s.songlist.contextQueue.songs.find(
+            (song) => song.id === state.currentSongId,
+          );
+          if (song) {
+            s.songlist.currentSong = song;
+            s.songlist.contextQueue.currentIndex = state.contextQueue.currentIndex;
+          }
+        }
+
+        s.songlist.isInUserQueue = state.isInUserQueue;
+        s.songlist.isShuffleActive = state.isShuffleActive;
+
+        switch (state.loopState) {
+          case "off":
+            s.playerState.loopState = LoopState.Off;
+            break;
+          case "one":
+            s.playerState.loopState = LoopState.One;
+            break;
+          case "all":
+            s.playerState.loopState = LoopState.All;
+            break;
+        }
       });
     } catch (err) {
       logger.error("[NativeQueueController] syncFromNative failed", err);
@@ -347,9 +385,27 @@ export class NativeQueueController implements QueueController {
       logger.info(
         `[NativeQueueController] queueStateChanged: index=${event.currentIndex} song=${event.songId} reason=${event.reason}`,
       );
+
+      usePlayerStore.setState((state) => {
+        state.songlist.contextQueue.currentIndex = event.currentIndex;
+        state.playerProgress.progress = 0;
+        state.playerProgress.bufferedProgress = 0;
+        state.playerState.isPlaying = true;
+
+        const song = state.songlist.contextQueue.songs.find(
+          (s) => s.id === event.songId,
+        );
+        if (song) {
+          state.songlist.currentSong = song;
+          state.playerState.currentDuration = song.duration
+            ? Math.round(song.duration)
+            : 0;
+        }
+      });
     });
 
     this.#addNativeListener("progress", (event) => {
+      if (usePlayerStore.getState().playerProgress.isScrubbing) return;
       usePlayerStore.setState((state) => {
         state.playerProgress.progress = event.currentTime;
         state.playerState.currentDuration = event.duration;
@@ -363,12 +419,23 @@ export class NativeQueueController implements QueueController {
       if (event.state === "playing") {
         usePlayerStore.setState((s) => {
           s.playerState.isPlaying = true;
+          s.playerState.isBuffering = false;
         });
       } else if (event.state === "paused" || event.state === "stopped") {
         usePlayerStore.setState((s) => {
           s.playerState.isPlaying = false;
         });
+      } else if (event.state === "loading") {
+        usePlayerStore.setState((s) => {
+          s.playerState.isBuffering = true;
+        });
       }
+    });
+
+    this.#addNativeListener("bufferingChanged", (event) => {
+      usePlayerStore.setState((s) => {
+        s.playerState.isBuffering = event.isBuffering;
+      });
     });
   }
 
