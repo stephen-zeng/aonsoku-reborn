@@ -43,6 +43,7 @@ export interface LoginResult {
   serverType?: string;
   activeUrl?: string;
   activeServerType?: "primary" | "fallback";
+  password?: string;
   error?: string;
 }
 

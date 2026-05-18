@@ -1,4 +1,5 @@
 import type { PluginListenerHandle } from "@capacitor/core";
+import { getSongStreamUrl } from "@/api/httpClient";
 import { getNativeAudioPluginAvailability } from "@/native/audio/facade";
 import type {
   NativeAudioEvents,
@@ -40,7 +41,7 @@ function songToNativeQueueSong(song: ISong): NativeQueueSong {
     albumId: song.albumId,
     duration: song.duration,
     coverArtId: song.coverArt,
-    streamUrl: song.id,
+    streamUrl: getSongStreamUrl(song.id),
   };
 }
 

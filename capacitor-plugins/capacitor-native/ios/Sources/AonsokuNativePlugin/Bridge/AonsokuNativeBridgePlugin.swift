@@ -23,11 +23,21 @@ public class AonsokuNativeBridgePlugin: CAPPlugin, CAPBridgedPlugin {
     @objc func storeCredentials(_ call: CAPPluginCall) {
         guard let serverUrl = call.getString("serverUrl"),
               let username = call.getString("username"),
-              let password = call.getString("password"),
               let authType = call.getString("authType"),
               let protocolVersion = call.getString("protocolVersion"),
               let serverType = call.getString("serverType") else {
             call.reject("Missing required credential fields")
+            return
+        }
+
+        let existingCredentials = KeychainManager.retrieve()
+        let password: String
+        if let callPassword = call.getString("password"), !callPassword.isEmpty {
+            password = callPassword
+        } else if let existingPassword = existingCredentials?.password {
+            password = existingPassword
+        } else {
+            call.reject("Missing password and no existing credentials found")
             return
         }
 
@@ -235,7 +245,14 @@ public class AonsokuNativeBridgePlugin: CAPPlugin, CAPBridgedPlugin {
                     serverType: serverInfo.serverType,
                     fallbackUrl: fallbackUrl
                 )
-                try? KeychainManager.store(credentials)
+                do {
+                    try KeychainManager.store(credentials)
+                } catch {
+                    return [
+                        "success": false,
+                        "error": "keychain_store_failed: \(error.localizedDescription)",
+                    ]
+                }
 
                 return [
                     "success": true,
@@ -244,6 +261,7 @@ public class AonsokuNativeBridgePlugin: CAPPlugin, CAPBridgedPlugin {
                     "serverType": serverInfo.serverType,
                     "activeUrl": primaryUrl,
                     "activeServerType": "primary",
+                    "password": hashedPassword,
                 ]
             }
         }
@@ -274,7 +292,14 @@ public class AonsokuNativeBridgePlugin: CAPPlugin, CAPBridgedPlugin {
                         serverType: serverInfo.serverType,
                         fallbackUrl: nil
                     )
-                    try? KeychainManager.store(credentials)
+                    do {
+                        try KeychainManager.store(credentials)
+                    } catch {
+                        return [
+                            "success": false,
+                            "error": "keychain_store_failed: \(error.localizedDescription)",
+                        ]
+                    }
 
                     return [
                         "success": true,
@@ -283,6 +308,7 @@ public class AonsokuNativeBridgePlugin: CAPPlugin, CAPBridgedPlugin {
                         "serverType": serverInfo.serverType,
                         "activeUrl": fallbackUrl,
                         "activeServerType": "fallback",
+                        "password": hashedPassword,
                     ]
                 }
             }

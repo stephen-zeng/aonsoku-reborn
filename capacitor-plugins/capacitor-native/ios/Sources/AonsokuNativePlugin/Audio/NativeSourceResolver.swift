@@ -29,14 +29,30 @@ class NativeSourceResolver {
             }
         }
 
-        if let url = buildAuthenticatedStreamUrl(songId: song.id) {
+        // Extract songId from aonsoku-media://stream?id=... URLs if present
+        let effectiveSongId: String
+        if song.streamUrl.hasPrefix("aonsoku-media://stream"),
+           let components = URLComponents(string: song.streamUrl),
+           let queryItems = components.queryItems,
+           let idItem = queryItems.first(where: { $0.name == "id" }),
+           let idValue = idItem.value, !idValue.isEmpty {
+            effectiveSongId = idValue
+        } else {
+            effectiveSongId = song.id
+        }
+
+        if let url = buildAuthenticatedStreamUrl(songId: effectiveSongId) {
             return (url, "stream")
         }
 
-        guard let streamUrl = URL(string: song.streamUrl) else {
-            return nil
+        // Fallback: if streamUrl itself is a valid absolute URL, try to use it directly
+        if let streamUrl = URL(string: song.streamUrl),
+           streamUrl.scheme != nil,
+           streamUrl.host != nil {
+            return (streamUrl, "stream")
         }
-        return (streamUrl, "stream")
+
+        return nil
     }
 
     private func buildAuthenticatedStreamUrl(songId: String) -> URL? {

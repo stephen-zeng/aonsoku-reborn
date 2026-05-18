@@ -61,6 +61,10 @@ public final class KeychainManager {
         }
     }
 
+    public static func storeIfPossible(_ credentials: ServerCredentials) -> Bool {
+        return (try? store(credentials)) != nil
+    }
+
     public static func retrieve() -> ServerCredentials? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,

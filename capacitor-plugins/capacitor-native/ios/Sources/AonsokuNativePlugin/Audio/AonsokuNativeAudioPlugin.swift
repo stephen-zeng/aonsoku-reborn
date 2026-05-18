@@ -1694,7 +1694,11 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
         }
 
         guard let resolved = sourceResolver.resolveSource(for: song) else {
-            emitError(code: "invalid_source", message: "Cannot resolve audio source for song: \(song.id)")
+            if KeychainManager.retrieve() == nil {
+                emitError(code: "missing_credentials", message: "Cannot resolve audio source: Keychain credentials are missing. Please re-configure the server.")
+            } else {
+                emitError(code: "invalid_source", message: "Cannot resolve audio source for song: \(song.id)")
+            }
             return
         }
 

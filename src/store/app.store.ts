@@ -103,6 +103,30 @@ function applyConfiguredServerState(
   data.isServerConfigured = true;
 }
 
+async function syncCredentialsToKeychain(data: IAppContext["data"]) {
+  if (getRuntime() !== "capacitor-ios") return;
+  if (!data.url || !data.username || !data.password || data.authType === null) {
+    return;
+  }
+
+  try {
+    const { AonsokuNativeBridge } = await import(
+      "@aonsoku/capacitor-native/bridge"
+    );
+    await AonsokuNativeBridge.storeCredentials({
+      serverUrl: data.url,
+      username: data.username,
+      password: data.password,
+      authType: data.authType === AuthType.TOKEN ? "token" : "password",
+      protocolVersion: data.protocolVersion || "1.16.0",
+      serverType: data.serverType || "subsonic",
+      fallbackUrl: data.fallbackUrl || undefined,
+    });
+  } catch (err) {
+    logger.error("[syncCredentialsToKeychain] failed", err);
+  }
+}
+
 async function resolveConfiguredServer({
   primaryUrl,
   fallbackUrl,
@@ -339,7 +363,8 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                     state.data.primaryUrl = primaryUrl;
                     state.data.fallbackUrl = normalizedFallbackUrl;
                     state.data.activeServerType =
-                      (result.activeServerType as ActiveServerType) || "primary";
+                      (result.activeServerType as ActiveServerType) ||
+                      "primary";
                     state.data.username = username;
                     state.data.password = "";
                     state.data.authType =
@@ -415,7 +440,11 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
 
               const { username, password, authType } = get().data;
 
-              if (!username || !password || authType === null) {
+              if (
+                !username ||
+                (!password && getRuntime() !== "capacitor-ios") ||
+                authType === null
+              ) {
                 return false;
               }
 
@@ -435,6 +464,8 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
               set((state) => {
                 applyConfiguredServerState(state.data, resolvedServer);
               });
+
+              await syncCredentialsToKeychain(get().data);
 
               return true;
             },
@@ -462,7 +493,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
               if (
                 !configuredPrimaryUrl ||
                 !username ||
-                !password ||
+                (!password && getRuntime() !== "capacitor-ios") ||
                 authType === null
               ) {
                 return false;
@@ -491,6 +522,8 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
               set((state) => {
                 applyConfiguredServerState(state.data, resolvedServer);
               });
+
+              await syncCredentialsToKeychain(get().data);
 
               return true;
             },
