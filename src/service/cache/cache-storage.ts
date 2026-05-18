@@ -1,6 +1,11 @@
+import { getRuntime } from "@/utils/capabilities";
 import type { CacheStorageAdapter } from "./contracts";
 
 const CACHE_NAME = "aonsoku-media-cache";
+
+function isIosNative(): boolean {
+  return getRuntime() === "capacitor-ios";
+}
 
 class CacheStorageService implements CacheStorageAdapter {
   private async getCache(): Promise<Cache> {
@@ -16,6 +21,7 @@ class CacheStorageService implements CacheStorageAdapter {
   }
 
   async put(key: string, data: Blob, contentType: string): Promise<void> {
+    if (isIosNative()) return;
     const cache = await this.getCache();
     const response = new Response(data, {
       headers: {
@@ -27,6 +33,7 @@ class CacheStorageService implements CacheStorageAdapter {
   }
 
   async get(key: string): Promise<Blob | null> {
+    if (isIosNative()) return null;
     const cache = await this.getCache();
     // Try the new encoded URL first, then fall back to the legacy unencoded
     // URL for backwards compatibility with existing cached entries.
@@ -39,6 +46,7 @@ class CacheStorageService implements CacheStorageAdapter {
   }
 
   async delete(key: string): Promise<boolean> {
+    if (isIosNative()) return false;
     const cache = await this.getCache();
     const deleted = await cache.delete(this.buildUrl(key));
     if (deleted) return true;
@@ -46,6 +54,7 @@ class CacheStorageService implements CacheStorageAdapter {
   }
 
   async has(key: string): Promise<boolean> {
+    if (isIosNative()) return false;
     const cache = await this.getCache();
     const response = await cache.match(this.buildUrl(key));
     if (response) return true;
@@ -54,10 +63,12 @@ class CacheStorageService implements CacheStorageAdapter {
   }
 
   async clear(): Promise<void> {
+    if (isIosNative()) return;
     await caches.delete(CACHE_NAME);
   }
 
   async keys(): Promise<string[]> {
+    if (isIosNative()) return [];
     const cache = await this.getCache();
     const requests = await cache.keys();
     const prefix = "/_cache/";
