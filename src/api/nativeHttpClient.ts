@@ -1,4 +1,4 @@
-import { AonsokuNativeBridge } from "@aonsoku/native-bridge";
+import { AonsokuNativeBridge } from "@aonsoku/capacitor-native/bridge";
 import { AppRequestError } from "./errors";
 import type { FetchOptions } from "./httpClient";
 

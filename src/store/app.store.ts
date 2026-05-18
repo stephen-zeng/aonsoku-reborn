@@ -324,7 +324,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
 
               if (getRuntime() === "capacitor-ios") {
                 const { AonsokuNativeBridge } = await import(
-                  "@aonsoku/native-bridge"
+                  "@aonsoku/capacitor-native/bridge"
                 );
                 const result = await AonsokuNativeBridge.login({
                   url: primaryUrl,
@@ -496,7 +496,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
             },
             removeConfig: () => {
               if (getRuntime() === "capacitor-ios") {
-                import("@aonsoku/native-bridge").then(
+                import("@aonsoku/capacitor-native/bridge").then(
                   ({ AonsokuNativeBridge }) => {
                     AonsokuNativeBridge.clearCredentials();
                   },

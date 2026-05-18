@@ -5,7 +5,7 @@ import { NATIVE_AUDIO_PLUGIN_NAME } from ".";
 
 const pluginRoot = path.join(
   process.cwd(),
-  "capacitor-plugins/aonsoku-native-audio",
+  "capacitor-plugins/capacitor-native",
 );
 
 const nativeAudioMethods = [
@@ -73,7 +73,7 @@ describe("Aonsoku native audio plugin skeleton", () => {
     const manifest = readPackageJson(path.join(pluginRoot, "package.json"));
 
     expect(manifest).toMatchObject({
-      name: "@aonsoku/native-audio",
+      name: "@aonsoku/capacitor-native",
       peerDependencies: {
         "@capacitor/core": ">=8.0.0",
       },
@@ -89,19 +89,19 @@ describe("Aonsoku native audio plugin skeleton", () => {
   it("is included by the app through a local file dependency", () => {
     const manifest = readPackageJson(path.join(process.cwd(), "package.json"));
 
-    expect(manifest.dependencies?.["@aonsoku/native-audio"]).toBe(
-      "file:capacitor-plugins/aonsoku-native-audio",
+    expect(manifest.dependencies?.["@aonsoku/capacitor-native"]).toBe(
+      "file:capacitor-plugins/capacitor-native",
     );
   });
 
   it("declares an iOS Swift package without Android targets", () => {
     const packageSwift = readText(path.join(pluginRoot, "Package.swift"));
 
-    expect(packageSwift).toContain('name: "AonsokuNativeAudio"');
+    expect(packageSwift).toContain('name: "AonsokuCapacitorNative"');
     expect(packageSwift).toContain("platforms: [.iOS(.v15)]");
-    expect(packageSwift).toContain('name: "AonsokuNativeAudioPlugin"');
+    expect(packageSwift).toContain('name: "AonsokuNativePlugin"');
     expect(packageSwift).toContain(
-      'path: "ios/Sources/AonsokuNativeAudioPlugin"',
+      'path: "ios/Sources/AonsokuNativePlugin"',
     );
     expect(packageSwift).not.toContain("Android");
   });
@@ -110,7 +110,7 @@ describe("Aonsoku native audio plugin skeleton", () => {
     const swift = readText(
       path.join(
         pluginRoot,
-        "ios/Sources/AonsokuNativeAudioPlugin/AonsokuNativeAudioPlugin.swift",
+        "ios/Sources/AonsokuNativePlugin/Audio/AonsokuNativeAudioPlugin.swift",
       ),
     );
 
@@ -143,7 +143,7 @@ describe("Aonsoku native audio plugin skeleton", () => {
     const swift = readText(
       path.join(
         pluginRoot,
-        "ios/Sources/AonsokuNativeAudioPlugin/AonsokuNativeAudioPlugin.swift",
+        "ios/Sources/AonsokuNativePlugin/Audio/AonsokuNativeAudioPlugin.swift",
       ),
     );
 
@@ -157,12 +157,12 @@ describe("Aonsoku native audio plugin skeleton", () => {
       path.join(process.cwd(), "src/native/audio/types.ts"),
     );
     const packageDefinitions = readText(
-      path.join(pluginRoot, "src/definitions.ts"),
+      path.join(pluginRoot, "src/audio/definitions.ts"),
     );
     const swift = readText(
       path.join(
         pluginRoot,
-        "ios/Sources/AonsokuNativeAudioPlugin/AonsokuNativeAudioPlugin.swift",
+        "ios/Sources/AonsokuNativePlugin/Audio/AonsokuNativeAudioPlugin.swift",
       ),
     );
 
@@ -191,7 +191,7 @@ describe("Aonsoku native audio plugin skeleton", () => {
     const swift = readText(
       path.join(
         pluginRoot,
-        "ios/Sources/AonsokuNativeAudioPlugin/AonsokuNativeAudioPlugin.swift",
+        "ios/Sources/AonsokuNativePlugin/Audio/AonsokuNativeAudioPlugin.swift",
       ),
     );
 
@@ -213,7 +213,7 @@ describe("Aonsoku native audio plugin skeleton", () => {
     const swift = readText(
       path.join(
         pluginRoot,
-        "ios/Sources/AonsokuNativeAudioPlugin/AonsokuNativeAudioPlugin.swift",
+        "ios/Sources/AonsokuNativePlugin/Audio/AonsokuNativeAudioPlugin.swift",
       ),
     );
 
@@ -254,7 +254,7 @@ describe("Aonsoku native audio plugin skeleton", () => {
     const swift = readText(
       path.join(
         pluginRoot,
-        "ios/Sources/AonsokuNativeAudioPlugin/AonsokuNativeAudioPlugin.swift",
+        "ios/Sources/AonsokuNativePlugin/Audio/AonsokuNativeAudioPlugin.swift",
       ),
     );
 
@@ -275,7 +275,7 @@ describe("Aonsoku native audio plugin skeleton", () => {
     const swift = readText(
       path.join(
         pluginRoot,
-        "ios/Sources/AonsokuNativeAudioPlugin/AonsokuNativeAudioPlugin.swift",
+        "ios/Sources/AonsokuNativePlugin/Audio/AonsokuNativeAudioPlugin.swift",
       ),
     );
 
@@ -297,7 +297,7 @@ describe("Aonsoku native audio plugin skeleton", () => {
     const swift = readText(
       path.join(
         pluginRoot,
-        "ios/Sources/AonsokuNativeAudioPlugin/AonsokuNativeAudioPlugin.swift",
+        "ios/Sources/AonsokuNativePlugin/Audio/AonsokuNativeAudioPlugin.swift",
       ),
     );
 
@@ -320,10 +320,10 @@ describe("Aonsoku native audio plugin skeleton", () => {
     );
 
     expect(packageSwift).toContain(
-      '.package(name: "AonsokuNativeAudio", path: "../../../node_modules/@aonsoku/native-audio")',
+      '.package(name: "AonsokuCapacitorNative", path: "../../../node_modules/@aonsoku/capacitor-native")',
     );
     expect(packageSwift).toContain(
-      '.product(name: "AonsokuNativeAudio", package: "AonsokuNativeAudio")',
+      '.product(name: "AonsokuCapacitorNative", package: "AonsokuCapacitorNative")',
     );
   });
 });

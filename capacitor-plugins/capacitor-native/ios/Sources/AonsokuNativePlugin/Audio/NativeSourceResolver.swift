@@ -1,5 +1,4 @@
 import Foundation
-import AonsokuNativeBridgePlugin
 
 class NativeSourceResolver {
     private let cacheDirectory: URL

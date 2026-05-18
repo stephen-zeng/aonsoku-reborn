@@ -3,7 +3,7 @@ import {
   AonsokuNativeBridge,
   NATIVE_BRIDGE_PLUGIN_NAME,
   type AonsokuNativeBridgePlugin,
-} from "@aonsoku/native-bridge";
+} from "@aonsoku/capacitor-native/bridge";
 
 export type NativeBridgeAvailability =
   | { available: true; plugin: AonsokuNativeBridgePlugin }
@@ -31,10 +31,10 @@ export function isNativeBridgeAvailable(): boolean {
   return getNativeBridgeAvailability().available;
 }
 
-export { AonsokuNativeBridge } from "@aonsoku/native-bridge";
+export { AonsokuNativeBridge } from "@aonsoku/capacitor-native/bridge";
 export type {
   AonsokuNativeBridgePlugin,
   LoginOptions,
   LoginResult,
   StoredCredentials,
-} from "@aonsoku/native-bridge";
+} from "@aonsoku/capacitor-native/bridge";

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { AonsokuNativeBridge } from "@aonsoku/native-bridge";
+import { AonsokuNativeBridge } from "@aonsoku/capacitor-native/bridge";
 import { useAppStore } from "@/store/app.store";
 import { AuthType } from "@/types/serverConfig";
 import { getRuntime } from "@/utils/capabilities";

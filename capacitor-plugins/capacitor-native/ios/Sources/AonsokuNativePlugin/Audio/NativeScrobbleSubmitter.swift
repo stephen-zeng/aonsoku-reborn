@@ -1,5 +1,4 @@
 import Foundation
-import AonsokuNativeBridgePlugin
 
 class NativeScrobbleSubmitter {
     private let httpClient = SubsonicHTTPClient()

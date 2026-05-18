@@ -1,5 +1,4 @@
 import Foundation
-import AonsokuNativeBridgePlugin
 
 protocol NativeDownloadManagerDelegate: AnyObject {
     func downloadManager(_ manager: NativeDownloadManager, didProgress songId: String, loaded: Int64, total: Int64)

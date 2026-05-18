@@ -1,5 +1,5 @@
 import { queryClient } from "@/lib/queryClient";
-import { AonsokuNativeData } from "@aonsoku/native-data";
+import { AonsokuNativeData } from "@aonsoku/capacitor-native/data";
 import { useCacheStore } from "@/store/cache.store";
 import type { SyncState } from "@/types/cache";
 

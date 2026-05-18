@@ -1642,7 +1642,7 @@ private struct NativeCachedAudioFile {
     var lastModifiedAt: Double?
 }
 
-private struct NativeCachedAudioFileMetadata: Codable {
+struct NativeCachedAudioFileMetadata: Codable {
     var songId: String
     var fileName: String
     var contentType: String?

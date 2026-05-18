@@ -3,7 +3,7 @@ import {
   AonsokuNativeData,
   NATIVE_DATA_PLUGIN_NAME,
   type AonsokuNativeDataPlugin,
-} from "@aonsoku/native-data";
+} from "@aonsoku/capacitor-native/data";
 
 export type NativeDataAvailability =
   | { available: true; plugin: AonsokuNativeDataPlugin }
@@ -31,5 +31,5 @@ export function isNativeDataAvailable(): boolean {
   return getNativeDataAvailability().available;
 }
 
-export { AonsokuNativeData } from "@aonsoku/native-data";
-export type { AonsokuNativeDataPlugin } from "@aonsoku/native-data";
+export { AonsokuNativeData } from "@aonsoku/capacitor-native/data";
+export type { AonsokuNativeDataPlugin } from "@aonsoku/capacitor-native/data";

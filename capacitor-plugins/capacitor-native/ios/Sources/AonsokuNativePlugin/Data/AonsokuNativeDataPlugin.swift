@@ -1,7 +1,6 @@
 import Foundation
 import Capacitor
 import GRDB
-import AonsokuNativeBridgePlugin
 
 @objc(AonsokuNativeDataPlugin)
 public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {

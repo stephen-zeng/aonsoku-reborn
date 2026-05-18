@@ -1,6 +1,5 @@
 import Foundation
 import GRDB
-import AonsokuNativeBridgePlugin
 
 final class SyncEngine {
     private let db: DatabasePool
