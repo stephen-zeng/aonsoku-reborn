@@ -27,6 +27,12 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "storeLyrics", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getCacheStats", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "isDataAvailableOffline", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "storeCoverImage", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "resolveCoverImage", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getCoverImageSize", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "deleteCoverImage", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "clearCoverImages", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "downloadCoverImage", returnType: CAPPluginReturnPromise),
     ]
 
     private var dbManager: DatabaseManager!
@@ -408,5 +414,163 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
             "available": lastSynced != nil,
             "lastSyncedAt": lastSynced as Any,
         ])
+    }
+
+    // MARK: - Cover Image Cache
+
+    @objc func storeCoverImage(_ call: CAPPluginCall) {
+        guard let coverArtId = call.getString("coverArtId"), !coverArtId.isEmpty else {
+            call.reject("Missing coverArtId")
+            return
+        }
+        guard let dataBase64 = call.getString("dataBase64"), !dataBase64.isEmpty else {
+            call.reject("Missing dataBase64")
+            return
+        }
+        let contentType = call.getString("contentType") ?? "image/jpeg"
+        let coverSize = call.getString("coverSize") ?? "700"
+
+        DispatchQueue.global(qos: .utility).async {
+            do {
+                guard let data = Data(base64Encoded: dataBase64) else {
+                    call.reject("Invalid base64 data")
+                    return
+                }
+                let manager = ImageCacheManager(db: self.dbManager.dbPool)
+                let fileURL = try manager.storeCoverImage(
+                    coverArtId: coverArtId,
+                    data: data,
+                    contentType: contentType,
+                    coverSize: coverSize
+                )
+                DispatchQueue.main.async {
+                    call.resolve([
+                        "file": [
+                            "coverArtId": coverArtId,
+                            "uri": fileURL.absoluteString,
+                            "contentType": contentType,
+                            "sizeBytes": data.count,
+                            "coverSize": coverSize,
+                        ] as [String: Any],
+                    ])
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    call.reject("Failed to store cover image: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    @objc func resolveCoverImage(_ call: CAPPluginCall) {
+        guard let coverArtId = call.getString("coverArtId"), !coverArtId.isEmpty else {
+            call.reject("Missing coverArtId")
+            return
+        }
+
+        DispatchQueue.global(qos: .utility).async {
+            let manager = ImageCacheManager(db: self.dbManager.dbPool)
+            guard let fileURL = manager.resolveCoverImage(coverArtId: coverArtId) else {
+                DispatchQueue.main.async {
+                    call.resolve(["file": NSNull()])
+                }
+                return
+            }
+
+            let attrs = try? FileManager.default.attributesOfItem(atPath: fileURL.path)
+            let sizeBytes = (attrs?[.size] as? NSNumber)?.intValue
+
+            DispatchQueue.main.async {
+                call.resolve([
+                    "file": [
+                        "coverArtId": coverArtId,
+                        "uri": fileURL.absoluteString,
+                        "sizeBytes": sizeBytes as Any,
+                    ] as [String: Any],
+                ])
+            }
+        }
+    }
+
+    @objc func getCoverImageSize(_ call: CAPPluginCall) {
+        guard let coverArtId = call.getString("coverArtId"), !coverArtId.isEmpty else {
+            call.reject("Missing coverArtId")
+            return
+        }
+
+        DispatchQueue.global(qos: .utility).async {
+            let manager = ImageCacheManager(db: self.dbManager.dbPool)
+            let result = manager.getCoverImageSize(coverArtId: coverArtId)
+            DispatchQueue.main.async {
+                call.resolve([
+                    "sizeBytes": result?.sizeBytes.map { NSNumber(value: $0) } ?? NSNull(),
+                    "coverSize": result?.coverSize ?? NSNull(),
+                ])
+            }
+        }
+    }
+
+    @objc func deleteCoverImage(_ call: CAPPluginCall) {
+        guard let coverArtId = call.getString("coverArtId"), !coverArtId.isEmpty else {
+            call.reject("Missing coverArtId")
+            return
+        }
+
+        DispatchQueue.global(qos: .utility).async {
+            do {
+                let manager = ImageCacheManager(db: self.dbManager.dbPool)
+                let deleted = try manager.deleteCoverImage(coverArtId: coverArtId)
+                DispatchQueue.main.async {
+                    call.resolve(["deleted": deleted])
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    call.reject("Failed to delete cover image: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    @objc func clearCoverImages(_ call: CAPPluginCall) {
+        DispatchQueue.global(qos: .utility).async {
+            do {
+                let manager = ImageCacheManager(db: self.dbManager.dbPool)
+                let deletedCount = try manager.clearCoverImages()
+                DispatchQueue.main.async {
+                    call.resolve(["deletedCount": deletedCount])
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    call.reject("Failed to clear cover images: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    @objc func downloadCoverImage(_ call: CAPPluginCall) {
+        guard let coverArtId = call.getString("coverArtId"), !coverArtId.isEmpty else {
+            call.reject("Missing coverArtId")
+            return
+        }
+        let size = call.getString("size") ?? "700"
+
+        Task {
+            do {
+                let manager = ImageCacheManager(db: self.dbManager.dbPool)
+                let fileURL = try await manager.downloadCoverImage(coverArtId: coverArtId, size: size)
+                let attrs = try? FileManager.default.attributesOfItem(atPath: fileURL.path)
+                let sizeBytes = (attrs?[.size] as? NSNumber)?.intValue
+                call.resolve([
+                    "file": [
+                        "coverArtId": coverArtId,
+                        "uri": fileURL.absoluteString,
+                        "sizeBytes": sizeBytes as Any,
+                        "coverSize": size,
+                    ] as [String: Any],
+                ])
+            } catch {
+                call.reject("Failed to download cover image: \(error.localizedDescription)")
+            }
+        }
     }
 }

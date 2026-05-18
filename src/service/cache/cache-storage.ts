@@ -7,6 +7,10 @@ function isIosNative(): boolean {
   return getRuntime() === "capacitor-ios";
 }
 
+// NOTE: On iOS, cover art caching is handled by the native ImageCacheManager
+// via IosNativeImageCacheAdapter in cache-manager.ts, not through this
+// CacheStorageService. This service is intentionally no-op on iOS for images.
+
 class CacheStorageService implements CacheStorageAdapter {
   private async getCache(): Promise<Cache> {
     return caches.open(CACHE_NAME);

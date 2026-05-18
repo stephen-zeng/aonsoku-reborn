@@ -230,6 +230,45 @@ export interface NativeCacheStats {
   coverCount: number;
 }
 
+// --- Cover Image Cache ---
+
+export interface NativeStoreCoverImageOptions {
+  coverArtId: string;
+  dataBase64: string;
+  contentType: string;
+  coverSize: string;
+}
+
+export interface NativeCachedCoverImageFile {
+  coverArtId: string;
+  uri: string;
+  contentType?: string;
+  sizeBytes?: number;
+  coverSize?: string;
+}
+
+export interface NativeResolveCoverImageResult {
+  file: NativeCachedCoverImageFile | null;
+}
+
+export interface NativeCoverImageSizeResult {
+  sizeBytes: number | null;
+  coverSize: string | null;
+}
+
+export interface NativeDeleteCoverImageResult {
+  deleted: boolean;
+}
+
+export interface NativeClearCoverImagesResult {
+  deletedCount: number;
+}
+
+export interface NativeDownloadCoverImageOptions {
+  coverArtId: string;
+  size: string;
+}
+
 // --- Plugin Interface ---
 
 export interface AonsokuNativeDataPlugin extends Plugin {
@@ -278,4 +317,22 @@ export interface AonsokuNativeDataPlugin extends Plugin {
     available: boolean;
     lastSyncedAt: number | null;
   }>;
+
+  // Cover Image Cache
+  storeCoverImage(
+    options: NativeStoreCoverImageOptions,
+  ): Promise<NativeResolveCoverImageResult>;
+  resolveCoverImage(options: {
+    coverArtId: string;
+  }): Promise<NativeResolveCoverImageResult>;
+  getCoverImageSize(options: {
+    coverArtId: string;
+  }): Promise<NativeCoverImageSizeResult>;
+  deleteCoverImage(options: {
+    coverArtId: string;
+  }): Promise<NativeDeleteCoverImageResult>;
+  clearCoverImages(): Promise<NativeClearCoverImagesResult>;
+  downloadCoverImage(
+    options: NativeDownloadCoverImageOptions,
+  ): Promise<NativeResolveCoverImageResult>;
 }

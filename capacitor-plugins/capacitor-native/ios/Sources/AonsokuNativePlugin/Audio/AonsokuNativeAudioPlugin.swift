@@ -1104,6 +1104,31 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func loadNowPlayingArtwork(_ urlString: String, revision: Int) {
+        // Try to extract coverArtId from aonsoku-media://getCoverArt?id=...&size=...
+        var coverArtId: String?
+        if let components = URLComponents(string: urlString),
+           components.scheme == "aonsoku-media",
+           let queryItems = components.queryItems {
+            coverArtId = queryItems.first(where: { $0.name == "id" })?.value
+        }
+
+        // 1. Check local image cache first
+        if let coverArtId, !coverArtId.isEmpty {
+            let imageCache = ImageCacheManager(db: DatabaseManager.shared.dbPool)
+            if let localURL = imageCache.resolveCoverImage(coverArtId: coverArtId),
+               let data = try? Data(contentsOf: localURL),
+               let image = UIImage(data: data) {
+                let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+                DispatchQueue.main.async { [weak self] in
+                    guard let self, self.nowPlayingRevision == revision else { return }
+                    var info = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
+                    info[MPMediaItemPropertyArtwork] = artwork
+                    MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+                }
+                return
+            }
+        }
+
         guard let url = URL(string: urlString) else {
             return
         }
