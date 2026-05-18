@@ -418,7 +418,14 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
 
     // MARK: - Cover Image Cache
 
+    private func ensureInitialized() {
+        if dbManager == nil {
+            dbManager = DatabaseManager.shared
+        }
+    }
+
     @objc func storeCoverImage(_ call: CAPPluginCall) {
+        ensureInitialized()
         guard let coverArtId = call.getString("coverArtId"), !coverArtId.isEmpty else {
             call.reject("Missing coverArtId")
             return
@@ -463,6 +470,7 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func resolveCoverImage(_ call: CAPPluginCall) {
+        ensureInitialized()
         guard let coverArtId = call.getString("coverArtId"), !coverArtId.isEmpty else {
             call.reject("Missing coverArtId")
             return
@@ -493,6 +501,7 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func getCoverImageSize(_ call: CAPPluginCall) {
+        ensureInitialized()
         guard let coverArtId = call.getString("coverArtId"), !coverArtId.isEmpty else {
             call.reject("Missing coverArtId")
             return
@@ -511,6 +520,7 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func deleteCoverImage(_ call: CAPPluginCall) {
+        ensureInitialized()
         guard let coverArtId = call.getString("coverArtId"), !coverArtId.isEmpty else {
             call.reject("Missing coverArtId")
             return
@@ -532,6 +542,7 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func clearCoverImages(_ call: CAPPluginCall) {
+        ensureInitialized()
         DispatchQueue.global(qos: .utility).async {
             do {
                 let manager = ImageCacheManager(db: self.dbManager.dbPool)
@@ -548,6 +559,7 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func downloadCoverImage(_ call: CAPPluginCall) {
+        ensureInitialized()
         guard let coverArtId = call.getString("coverArtId"), !coverArtId.isEmpty else {
             call.reject("Missing coverArtId")
             return
