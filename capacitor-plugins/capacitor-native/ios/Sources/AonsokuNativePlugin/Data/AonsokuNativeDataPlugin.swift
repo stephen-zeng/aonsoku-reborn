@@ -503,7 +503,7 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
             let result = manager.getCoverImageSize(coverArtId: coverArtId)
             DispatchQueue.main.async {
                 call.resolve([
-                    "sizeBytes": result?.sizeBytes.map { NSNumber(value: $0) } ?? NSNull(),
+                    "sizeBytes": result.map { NSNumber(value: $0.sizeBytes) } ?? NSNull(),
                     "coverSize": result?.coverSize ?? NSNull(),
                 ])
             }
