@@ -42,7 +42,7 @@ function AlbumHeaderContent({
       {showArtistAboveCover && <ArtistAboveCoverFallback />}
 
       <div className="flex flex-col items-center md:flex-row md:items-center w-full gap-3 md:gap-6 lg:gap-8">
-        <Skeleton className="rounded shadow-header-image w-[200px] h-[200px] min-w-[200px] min-h-[200px] 2xl:w-[250px] 2xl:h-[250px] 2xl:min-w-[250px] 2xl:min-h-[250px] aspect-square" />
+        <Skeleton className="rounded shadow-header-image w-[168px] h-[168px] min-w-[168px] min-h-[168px] sm:w-[200px] sm:h-[200px] sm:min-w-[200px] sm:min-h-[200px] 2xl:w-[250px] 2xl:h-[250px] 2xl:min-w-[250px] 2xl:min-h-[250px] aspect-square" />
         <div className="flex w-full items-center flex-col md:items-start md:max-w-[calc(100%-216px)] 2xl:max-w-[calc(100%-266px)] md:justify-end">
           <Skeleton className="text-[10px] md:text-xs 2xl:text-sm h-3 md:h-4 2xl:h-5 w-16 mb-2" />
           <Skeleton className="h-6 md:h-12 w-[200px] md:w-[260px] mb-2" />
@@ -89,8 +89,12 @@ export function AlbumHeaderFallback({
     <div
       className={cn(
         IMAGE_HEADER_MAIN_GRADIENT,
-        "w-full px-3 py-3 md:px-8 md:py-6 bg-background-foreground flex flex-col gap-2 md:gap-4",
+        "w-full px-3 pb-3 pt-album-header md:px-8 md:py-6 bg-background-foreground flex flex-col gap-2 md:gap-4",
       )}
+      style={{
+        paddingLeft: "max(var(--safe-area-left), 0.75rem)",
+        paddingRight: "max(var(--safe-area-right), 0.75rem)",
+      }}
     >
       <AlbumHeaderContent
         showSecondaryBadges={showSecondaryBadges}
@@ -112,7 +116,7 @@ export function HeaderWithImageEffect({
         <div
           className={cn(
             IMAGE_HEADER_MAIN_GRADIENT,
-            "w-full px-3 pb-3 pt-[calc(var(--safe-area-top)+3.25rem)] md:px-8 md:py-6 bg-background-foreground flex flex-col gap-2 md:gap-4 relative md:absolute md:inset-0",
+            "w-full px-3 pb-3 pt-album-header md:px-8 md:py-6 bg-background-foreground flex flex-col gap-2 md:gap-4 relative md:absolute md:inset-0",
           )}
           style={{
             paddingLeft: "max(var(--safe-area-left), 0.75rem)",

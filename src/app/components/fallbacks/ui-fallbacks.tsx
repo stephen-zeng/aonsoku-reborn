@@ -17,7 +17,7 @@ export function ShadowHeaderFallback({
   return (
     <div
       className={cn(
-        "flex items-center justify-start px-4 md:px-8 h-[--shadow-header-height] border-b bg-background",
+        "flex items-center justify-start px-4 md:px-8 h-[--shadow-header-height] border-b bg-background pt-[var(--safe-area-top)]",
         "fixed top-header right-0 left-0 md:left-mini-sidebar z-30",
         isCollapsed ? "xl:left-mini-sidebar" : "xl:left-sidebar",
         "backdrop-blur-lg supports-[backdrop-filter]:bg-background/80",

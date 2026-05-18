@@ -85,6 +85,16 @@
     );
   }
 
+  .pt-album-header {
+    padding-top: calc(var(--safe-area-top) + 3.25rem);
+  }
+
+  @media (min-width: 768px) {
+    .pt-album-header {
+      padding-top: 1.5rem;
+    }
+  }
+
   /* Mobile optimization: no header, smaller player height + bottom nav */
   @media (max-width: 767px) {
     :root {

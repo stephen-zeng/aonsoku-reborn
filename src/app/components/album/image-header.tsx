@@ -193,7 +193,7 @@ export default function ImageHeader({
             "w-full px-3 pb-3 md:px-8 md:py-6 flex gap-2 md:gap-4 relative md:absolute md:inset-0",
             IMAGE_HEADER_MAIN_GRADIENT,
             "flex-col",
-            "pt-[calc(var(--safe-area-top)+3.25rem)] md:pt-6",
+            "pt-album-header",
             !loaded && "bg-background-foreground",
           )}
           style={{
