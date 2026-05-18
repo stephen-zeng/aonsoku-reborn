@@ -12,7 +12,6 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.3.4"),
-        .package(url: "https://github.com/groue/GRDB.swift.git", from: "7.0.0"),
         .package(name: "AonsokuCapacitorNative", path: "../../../node_modules/@aonsoku/capacitor-native"),
         .package(name: "CapacitorKeyboard", path: "../../../node_modules/@capacitor/keyboard")
     ],
