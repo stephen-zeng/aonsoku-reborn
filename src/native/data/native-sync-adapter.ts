@@ -29,7 +29,10 @@ class NativeSyncAdapter {
           songs: [["songs"], ["favorites", "count"], ["favorites", "list"]],
           playlists: [["playlists"], ["playlists", "single"]],
           genres: [["genres"]],
-          favorites: [["favorites", "count"], ["favorites", "list"]],
+          favorites: [
+            ["favorites", "count"],
+            ["favorites", "list"],
+          ],
         };
 
         for (const table of event.tables) {

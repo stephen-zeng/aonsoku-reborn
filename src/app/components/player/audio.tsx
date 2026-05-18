@@ -12,19 +12,19 @@ import { getNetworkStatus } from "@/app/hooks/use-network-status";
 import {
   createPlaybackBackend,
   createUrlPlaybackSource,
-  getPlaybackErrorKind,
   getPlaybackEndedDecision,
+  getPlaybackErrorKind,
   handlePlaybackRemoteCommand,
-  playbackRepeatModeFromLoopState,
-  registerPlaybackBackend,
-  shouldRetryPlaybackError,
-  shouldUseNativePlaybackBackend,
   type PlaybackBackend,
   type PlaybackBackendKind,
   type PlaybackErrorEvent,
   type PlaybackMetadata,
-  type PlaybackSource,
   PlaybackSession,
+  type PlaybackSource,
+  playbackRepeatModeFromLoopState,
+  registerPlaybackBackend,
+  shouldRetryPlaybackError,
+  shouldUseNativePlaybackBackend,
 } from "@/player/playback";
 import { type AudioSourceDescriptor, getAudioSourceUrl } from "@/service/cache";
 import { useCacheStore } from "@/store/cache.store";
@@ -40,8 +40,8 @@ import {
   useReplayGainActions,
   useReplayGainState,
 } from "@/store/player.store";
-import { logger } from "@/utils/logger";
 import { getPlaybackCapabilities } from "@/utils/capabilities";
+import { logger } from "@/utils/logger";
 import { calculateReplayGain, ReplayGainParams } from "@/utils/replayGain";
 import { manageMediaSession } from "@/utils/setMediaSession";
 import { perceptualToGain } from "@/utils/volume";
@@ -85,9 +85,14 @@ export function AudioPlayer({
   const isShuffleActive = usePlayerShuffle();
   const seekToStart = usePlayerStore((s) => s.playerState.seekToStart);
   const isRemoteControlActive = useIsRemoteControlActive();
+  const playbackCapabilities = useMemo(() => getPlaybackCapabilities(), []);
 
   const shouldUseWebAudioReplayGain =
-    isSong && replayGainEnabled && !replayGainError && !isRemoteControlActive;
+    playbackCapabilities.supportsWebAudioReplayGain &&
+    isSong &&
+    replayGainEnabled &&
+    !replayGainError &&
+    !isRemoteControlActive;
   const shouldUseNativeAudio = !shouldUseWebAudioReplayGain;
 
   const backendRef = useRef<{
@@ -258,10 +263,8 @@ export function AudioPlayer({
 
   const audioVolume = useMemo(
     () =>
-      getPlaybackCapabilities().requiresSystemVolume
-        ? 1
-        : perceptualToGain(volume),
-    [volume],
+      playbackCapabilities.requiresSystemVolume ? 1 : perceptualToGain(volume),
+    [playbackCapabilities.requiresSystemVolume, volume],
   );
 
   const gainValue = useMemo(() => {

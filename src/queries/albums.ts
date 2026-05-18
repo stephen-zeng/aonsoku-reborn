@@ -89,9 +89,8 @@ export async function getAlbumList(params: Required<AlbumListParams>) {
       limit: params.size,
       offset: params.offset,
       sortBy: sortMap[params.type] || "name",
-      sortOrder: params.type === "newest" || params.type === "recent"
-        ? "desc"
-        : "asc",
+      sortOrder:
+        params.type === "newest" || params.type === "recent" ? "desc" : "asc",
       genre: params.genre,
       fromYear: params.fromYear,
       toYear: params.toYear,

@@ -189,10 +189,7 @@ let syncService: SyncWorkerAdapter | typeof metadataSyncService;
 
 function createSyncService(): SyncWorkerAdapter | typeof metadataSyncService {
   try {
-    if (
-      getRuntime() === "capacitor-ios" ||
-      typeof Worker === "undefined"
-    ) {
+    if (getRuntime() === "capacitor-ios" || typeof Worker === "undefined") {
       return metadataSyncService;
     }
     return new SyncWorkerAdapter();

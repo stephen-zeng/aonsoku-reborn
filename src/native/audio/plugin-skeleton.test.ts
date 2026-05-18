@@ -100,9 +100,7 @@ describe("Aonsoku native audio plugin skeleton", () => {
     expect(packageSwift).toContain('name: "AonsokuCapacitorNative"');
     expect(packageSwift).toContain("platforms: [.iOS(.v15)]");
     expect(packageSwift).toContain('name: "AonsokuNativePlugin"');
-    expect(packageSwift).toContain(
-      'path: "ios/Sources/AonsokuNativePlugin"',
-    );
+    expect(packageSwift).toContain('path: "ios/Sources/AonsokuNativePlugin"');
     expect(packageSwift).not.toContain("Android");
   });
 

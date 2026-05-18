@@ -1149,9 +1149,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
         switch kind {
         case "stream":
-            guard let urlString = source["url"] as? String, let url = URL(string: urlString) else {
-                throw NativeAudioPluginError.invalidSource("Invalid audio URL.")
-            }
+            let url = try resolveStreamURL(from: source)
             return ResolvedAudioSource(kind: kind, url: url, radioId: nil)
         case "radio":
             guard let urlString = source["url"] as? String, let url = URL(string: urlString) else {
@@ -1172,6 +1170,100 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         default:
             throw NativeAudioPluginError.unsupportedSource("Unsupported audio source kind: \(kind).")
         }
+    }
+
+    private func resolveStreamURL(from source: JSObject) throws -> URL {
+        guard let urlString = source["url"] as? String, !urlString.isEmpty else {
+            throw NativeAudioPluginError.invalidSource("Invalid audio URL.")
+        }
+
+        let isNativeMediaURL =
+            URLComponents(string: urlString)?.scheme == "aonsoku-media"
+        if isNativeMediaURL {
+            guard let request = mediaStreamRequest(
+                from: urlString,
+                fallbackSongId: source["songId"] as? String
+            ) else {
+                throw NativeAudioPluginError.invalidSource("Invalid native media stream URL.")
+            }
+
+            guard let url = buildAuthenticatedStreamURL(from: request) else {
+                throw NativeAudioPluginError.invalidSource("Unable to resolve native media stream URL.")
+            }
+
+            return url
+        }
+
+        guard let url = URL(string: urlString) else {
+            throw NativeAudioPluginError.invalidSource("Invalid audio URL.")
+        }
+
+        return url
+    }
+
+    private func mediaStreamRequest(
+        from urlString: String,
+        fallbackSongId: String?
+    ) -> NativeMediaStreamRequest? {
+        guard
+            let components = URLComponents(string: urlString),
+            components.scheme == "aonsoku-media"
+        else {
+            return nil
+        }
+
+        let endpoint =
+            components.host ??
+            components.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard endpoint == "stream" else {
+            return nil
+        }
+
+        let queryItems = components.queryItems ?? []
+        let songId = queryItems.first { $0.name == "id" }?.value ?? fallbackSongId
+        guard let songId, !songId.isEmpty else {
+            return nil
+        }
+
+        return NativeMediaStreamRequest(
+            songId: songId,
+            maxBitRate: queryItems.first { $0.name == "maxBitRate" }?.value,
+            format: queryItems.first { $0.name == "format" }?.value
+        )
+    }
+
+    private func buildAuthenticatedStreamURL(
+        from request: NativeMediaStreamRequest
+    ) -> URL? {
+        guard let credentials = KeychainManager.retrieve() else {
+            return nil
+        }
+
+        var params = SubsonicAuthBuilder.buildQueryParams(
+            username: credentials.username,
+            password: credentials.password,
+            authType: credentials.authType,
+            protocolVersion: credentials.protocolVersion
+        )
+        params["id"] = request.songId
+        params["estimateContentLength"] = "false"
+
+        if let maxBitRate = request.maxBitRate, !maxBitRate.isEmpty {
+            params["maxBitRate"] = maxBitRate
+        }
+        if let format = request.format, !format.isEmpty {
+            params["format"] = format
+        }
+
+        let baseString = "\(credentials.serverUrl)/rest/stream"
+        guard var components = URLComponents(string: baseString) else {
+            return nil
+        }
+
+        components.queryItems = params.map {
+            URLQueryItem(name: $0.key, value: $0.value)
+        }
+        return components.url
     }
 
     private func fileURL(from uri: String) throws -> URL {
@@ -1624,6 +1716,12 @@ private struct ResolvedAudioSource {
     let kind: String
     let url: URL
     let radioId: String?
+}
+
+private struct NativeMediaStreamRequest {
+    let songId: String
+    let maxBitRate: String?
+    let format: String?
 }
 
 private struct NativeAudioMetadata {
