@@ -104,6 +104,8 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
         var headers: [String: String] = [
             "Content-Type": httpResponse.value(forHTTPHeaderField: "Content-Type") ?? "application/octet-stream",
             "Cache-Control": httpResponse.value(forHTTPHeaderField: "Cache-Control") ?? "max-age=3600",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
         ]
         if let contentLength = httpResponse.value(forHTTPHeaderField: "Content-Length") {
             headers["Content-Length"] = contentLength
