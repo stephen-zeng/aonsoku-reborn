@@ -7,7 +7,7 @@ export function useMuteToggle() {
   const { volume: playerVolume, setVolume } = usePlayerVolume();
   const {
     volume: systemVolume,
-    setSystemVolume,
+    commitSystemVolume,
     supportsSystemVolumeControl,
   } = useSystemVolume();
   const volume = supportsSystemVolumeControl ? systemVolume : playerVolume;
@@ -19,7 +19,7 @@ export function useMuteToggle() {
     if (!canSetVolume) return;
 
     const applyVolume = supportsSystemVolumeControl
-      ? setSystemVolume
+      ? commitSystemVolume
       : setVolume;
 
     if (volume === 0) {
@@ -30,7 +30,7 @@ export function useMuteToggle() {
       lastVolumeRef.current = volume;
       applyVolume(0);
     }
-  }, [setSystemVolume, setVolume, supportsSystemVolumeControl, volume]);
+  }, [commitSystemVolume, setVolume, supportsSystemVolumeControl, volume]);
 
   return { volume, handleMuteClick, lastVolumeRef };
 }

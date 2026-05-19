@@ -120,6 +120,7 @@ export function VolumeSlider({
   const {
     volume: systemVolume,
     setSystemVolume,
+    commitSystemVolume,
     handleVolumeWheel: handleSystemWheel,
     supportsSystemVolumeControl,
   } = useSystemVolume();
@@ -156,6 +157,11 @@ export function VolumeSlider({
           setSystemVolume(value);
         } else {
           setPlayerVolume(value);
+        }
+      }}
+      onValueCommit={([value]) => {
+        if (supportsSystemVolumeControl) {
+          commitSystemVolume(value);
         }
       }}
       onWheel={handleWheel}
