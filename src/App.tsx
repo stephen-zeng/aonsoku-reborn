@@ -16,6 +16,7 @@ import { SmartDownloadObserver } from "@/app/observers/smart-download-observer";
 import { ThemeObserver } from "@/app/observers/theme-observer";
 import { KeyboardObserver } from "@/app/observers/keyboard-observer";
 import { NativeAuthObserver } from "@/app/observers/native-auth-observer";
+import { VolumeHUDObserver } from "@/app/observers/volume-hud-observer";
 import { ToastContainer } from "@/app/observers/toast-container";
 import { router } from "@/routes/router";
 import { cacheManager } from "@/service/cache";
@@ -70,6 +71,7 @@ function App() {
       <KeyboardObserver />
       <NativeAuthObserver />
       <LanControlObserver />
+      <VolumeHUDObserver />
       <LibraryMigrationObserver />
       <NetworkMonitorObserver />
       <MetadataSyncObserver />
