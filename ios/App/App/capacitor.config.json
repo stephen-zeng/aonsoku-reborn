@@ -3,6 +3,7 @@
 	"appName": "Aonsoku",
 	"webDir": "dist",
 	"packageClassList": [
+		"AonsokuNativePreferencesPlugin",
 		"AonsokuNativeDataPlugin",
 		"AonsokuNativeBridgePlugin",
 		"AonsokuNativeAudioPlugin",
