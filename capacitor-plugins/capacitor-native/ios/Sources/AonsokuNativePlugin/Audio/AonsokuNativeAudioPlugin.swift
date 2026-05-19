@@ -798,15 +798,17 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         DispatchQueue.main.async { [weak self] in
             guard let self, let viewController = self.bridge?.viewController else { return }
 
-            let volumeView = MPVolumeView(frame: CGRect(x: -1000, y: -1000, width: 1, height: 1))
-            volumeView.isHidden = true
+            let volumeView = MPVolumeView(frame: CGRect(x: -3000, y: -3000, width: 0, height: 0))
+            volumeView.alpha = 0.001
             viewController.view.addSubview(volumeView)
             self.volumeView = volumeView
 
-            for subview in volumeView.subviews {
-                if let slider = subview as? UISlider {
-                    self.volumeSlider = slider
-                    break
+            self.volumeSlider = self.findSlider(in: volumeView)
+
+            if self.volumeSlider == nil {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    guard let self, let volumeView = self.volumeView else { return }
+                    self.volumeSlider = self.findSlider(in: volumeView)
                 }
             }
 
@@ -820,8 +822,24 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
+    private func findSlider(in view: UIView) -> UISlider? {
+        for subview in view.subviews {
+            if let slider = subview as? UISlider {
+                return slider
+            }
+            if let found = findSlider(in: subview) {
+                return found
+            }
+        }
+        return nil
+    }
+
     @objc func setSystemVolume(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
+            if self.volumeSlider == nil, let volumeView = self.volumeView {
+                self.volumeSlider = self.findSlider(in: volumeView)
+            }
+
             guard let slider = self.volumeSlider else {
                 call.reject("System volume control is not available.")
                 return
@@ -832,9 +850,9 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
             self.isSuppressingVolumeEvent = true
             slider.value = clampedValue
-            slider.sendActions(for: .valueChanged)
+            slider.sendActions(for: .touchUpInside)
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 self.isSuppressingVolumeEvent = false
             }
 
