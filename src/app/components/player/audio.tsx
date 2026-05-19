@@ -238,10 +238,16 @@ export function AudioPlayer({
       setAudioSrc(src || undefined);
       const audio = audioRef.current;
       if (audio && src) {
+        const shouldAutoplay =
+          state.playerState.isPlaying && !state.remoteControl.active;
         getPlaybackBackend(audio)?.load(
           createPlaybackSource(src),
           metadata ?? undefined,
+          shouldAutoplay ? { autoplay: true } : undefined,
         );
+        if (shouldAutoplay) {
+          sessionRef.current.markLoopRestartSyncHandled();
+        }
       }
     }
   }, [

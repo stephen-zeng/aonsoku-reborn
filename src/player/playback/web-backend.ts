@@ -51,7 +51,11 @@ export class WebAudioPlaybackBackend implements PlaybackBackend {
     this.#wireAudioEvents();
   }
 
-  load(source: PlaybackSource, _metadata?: PlaybackMetadata) {
+  load(
+    source: PlaybackSource,
+    _metadata?: PlaybackMetadata,
+    _options?: { autoplay?: boolean },
+  ) {
     this.#assertActive();
     this.#audio.src = getPlaybackSourceUrl(source);
     this.#audio.load();

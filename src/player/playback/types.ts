@@ -97,6 +97,7 @@ export interface PlaybackBackend {
   load(
     source: PlaybackSource,
     metadata?: PlaybackMetadata,
+    options?: { autoplay?: boolean },
   ): void | Promise<void>;
   play(): Promise<void>;
   pause(): void | Promise<void>;

@@ -48,7 +48,11 @@ export class NativeAudioPlaybackBackend implements PlaybackBackend {
     this.#wireNativeEvents();
   }
 
-  load(source: PlaybackSource, metadata?: PlaybackMetadata) {
+  load(
+    source: PlaybackSource,
+    metadata?: PlaybackMetadata,
+    options?: { autoplay?: boolean },
+  ) {
     this.#assertActive();
     const requestId = this.#nextRequestId();
 
@@ -56,6 +60,7 @@ export class NativeAudioPlaybackBackend implements PlaybackBackend {
       source: toNativeAudioSource(source),
       metadata: metadata ? toNativeAudioMetadata(metadata) : undefined,
       requestId,
+      autoplay: options?.autoplay,
     });
   }
 
