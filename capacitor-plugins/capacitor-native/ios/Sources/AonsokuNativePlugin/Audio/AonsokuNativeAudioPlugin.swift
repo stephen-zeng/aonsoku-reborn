@@ -80,6 +80,8 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var volumeSliderView: MPVolumeView?
     private var volumeSlider: UISlider?
     private var volumeObservation: NSKeyValueObservation?
+    private var isVolumeHUDEnabled = true
+    private var volumeOperationGen = 0
 
     public override func load() {
         super.load()
@@ -828,9 +830,15 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
             try? self.activateAudioSession()
 
+            self.volumeOperationGen += 1
+            let gen = self.volumeOperationGen
+
             self.resolveVolumeSlider { [weak self] slider in
                 guard let self else { return }
                 guard let slider else {
+                    if self.isVolumeHUDEnabled {
+                        self.removeVolumeSliderView()
+                    }
                     call.reject(
                         "System volume control is unavailable.",
                         "volume_control_unavailable"
@@ -847,6 +855,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                     let volume = self.audioSession.outputVolume
                     self.notifyListeners("systemVolumeChanged", data: ["volume": volume])
                     call.resolve(["volume": volume])
+
+                    if gen == self.volumeOperationGen, self.isVolumeHUDEnabled {
+                        self.removeVolumeSliderView()
+                    }
                 }
             }
         }
@@ -937,11 +949,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         let enabled = call.getBool("enabled") ?? true
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
+            self.isVolumeHUDEnabled = enabled
             if enabled {
                 // Remove hidden slider view that suppresses the HUD
-                self.volumeSlider = nil
-                self.volumeSliderView?.removeFromSuperview()
-                self.volumeSliderView = nil
+                self.removeVolumeSliderView()
 
                 // Restore the HUD view if not already present
                 if self.volumeHUDView == nil, let containerView = self.bridge?.viewController?.view {
@@ -960,6 +971,12 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             }
             call.resolve()
         }
+    }
+
+    private func removeVolumeSliderView() {
+        volumeSlider = nil
+        volumeSliderView?.removeFromSuperview()
+        volumeSliderView = nil
     }
 
     private func registerLifecycleObservers() {
