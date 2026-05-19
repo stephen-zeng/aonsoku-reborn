@@ -121,7 +121,6 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 let metadata = self.metadata(from: call.getObject("metadata"))
                 let requestId = call.getString("requestId")
 
-                try self.configureAudioSession()
                 self.clearPlayer(sendIdleEvent: false)
                 self.playbackGeneration += 1
                 let generation = self.playbackGeneration
