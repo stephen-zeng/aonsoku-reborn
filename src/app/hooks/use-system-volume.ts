@@ -5,7 +5,7 @@ import { getPlaybackCapabilities } from "@/utils/capabilities";
 const volumeListeners = new Set<() => void>();
 let systemVolume = 100;
 let isListenerStarted = false;
-let suppressUntil = 0;
+let isDragging = false;
 
 function clampVolume(value: number) {
   if (!Number.isFinite(value)) return 100;
@@ -27,7 +27,7 @@ function emitSystemVolume(value: number) {
 }
 
 function emitFromNative(value: number) {
-  if (Date.now() < suppressUntil) return;
+  if (isDragging) return;
   emitSystemVolume(value);
 }
 
@@ -93,22 +93,30 @@ export function useSystemVolume() {
   const setSystemVolume = useCallback(
     (value: number) => {
       if (!supportsSystemVolumeControl) return;
+      const clamped = clampVolume(value);
+      isDragging = true;
+      emitSystemVolume(clamped);
+    },
+    [supportsSystemVolumeControl],
+  );
+
+  const commitSystemVolume = useCallback(
+    (value: number) => {
+      isDragging = false;
+      if (!supportsSystemVolumeControl) return;
 
       const availability = getNativeAudioPluginAvailability();
       if (!availability.available) return;
 
       const clamped = clampVolume(value);
       emitSystemVolume(clamped);
-      suppressUntil = Date.now() + 600;
 
       availability.plugin
         .setSystemVolume({ value: clamped / 100 })
         .then(({ volume }) => {
-          suppressUntil = 0;
           emitSystemVolume(volumeFromNative(volume));
         })
         .catch(() => {
-          suppressUntil = 0;
           refreshSystemVolume();
         });
     },
@@ -121,14 +129,15 @@ export function useSystemVolume() {
         ? Math.max(0, volume - 5)
         : Math.min(100, volume + 5);
 
-      setSystemVolume(next);
+      commitSystemVolume(next);
     },
-    [setSystemVolume, volume],
+    [commitSystemVolume, volume],
   );
 
   return {
     volume,
     setSystemVolume,
+    commitSystemVolume,
     handleVolumeWheel,
     supportsSystemVolumeControl,
   };

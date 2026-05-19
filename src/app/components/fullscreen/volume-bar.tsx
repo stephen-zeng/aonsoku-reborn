@@ -17,6 +17,7 @@ export function VolumeBar() {
   const {
     volume: systemVolume,
     setSystemVolume,
+    commitSystemVolume,
     handleVolumeWheel: handleSystemWheel,
     supportsSystemVolumeControl,
   } = useSystemVolume();
@@ -54,6 +55,15 @@ export function VolumeBar() {
     [supportsSystemVolumeControl, setSystemVolume, setPlayerVolume],
   );
 
+  const handleSliderCommit = useCallback(
+    ([value]: number[]) => {
+      if (supportsSystemVolumeControl) {
+        commitSystemVolume(value);
+      }
+    },
+    [supportsSystemVolumeControl, commitSystemVolume],
+  );
+
   return (
     <div
       className="flex w-full min-w-0 items-center gap-2"
@@ -86,6 +96,7 @@ export function VolumeBar() {
         step={step}
         className="h-3 w-full min-w-0"
         onValueChange={handleSliderChange}
+        onValueCommit={handleSliderCommit}
         disabled={isDisabled}
         aria-label={t("player.tooltips.volume.mute")}
       />
