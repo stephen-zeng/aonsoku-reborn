@@ -56,7 +56,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var didEnterBackgroundObserver: NSObjectProtocol?
     private var willEnterForegroundObserver: NSObjectProtocol?
     private var didBecomeActiveObserver: NSObjectProtocol?
-    private var isAudioSessionConfigured = false
+    private let loadQueue = DispatchQueue(label: "com.aonsoku.NativeAudio.load", qos: .userInitiated)
     private var wasPlayingBeforeInterruption = false
     private var repeatMode = "off"
     private var shuffleEnabled = false
@@ -107,48 +107,58 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func load(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
+        guard let source = call.getObject("source") else {
+            reject(call, code: "invalid_source", message: "Missing audio source.")
+            return
+        }
+
+        let startTime = max(0, call.getDouble("startTime") ?? 0)
+        let autoplay = call.getBool("autoplay") ?? false
+        let metadata = self.metadata(from: call.getObject("metadata"))
+        let requestId = call.getString("requestId")
+
+        loadQueue.async { [self] in
             do {
-                guard let source = call.getObject("source") else {
-                    throw NativeAudioPluginError.invalidSource("Missing audio source.")
-                }
-
                 let resolvedSource = try self.resolveSource(from: source)
-                let item = AVPlayerItem(url: resolvedSource.url)
-                let player = AVPlayer(playerItem: item)
-                let startTime = max(0, call.getDouble("startTime") ?? 0)
-                let autoplay = call.getBool("autoplay") ?? false
-                let metadata = self.metadata(from: call.getObject("metadata"))
-                let requestId = call.getString("requestId")
-
-                self.clearPlayer(sendIdleEvent: false)
-                self.playbackGeneration += 1
-                let generation = self.playbackGeneration
-                self.player = player
-                self.playerItem = item
-                self.currentSourceKind = resolvedSource.kind
-                self.currentRadioId = resolvedSource.radioId
-                self.currentRequestId = requestId
-                self.currentMetadata = metadata
-                self.addObservers(for: item, player: player, generation: generation, requestId: requestId)
-                self.addProgressObserver(to: player, generation: generation, requestId: requestId)
-                self.updateNowPlayingInfo()
-
-                self.emitPlaybackState("loading", requestId: requestId)
-
-                if startTime > 0 {
-                    player.seek(to: self.makeTime(startTime))
-                }
 
                 if autoplay {
                     try self.activateAudioSession()
-                    player.play()
-                    self.emitPlaybackState("playing", requestId: requestId)
                 }
 
-                call.resolve()
+                DispatchQueue.main.async {
+                    self.clearPlayer(sendIdleEvent: false)
+                    self.playbackGeneration += 1
+                    let generation = self.playbackGeneration
+
+                    let item = AVPlayerItem(url: resolvedSource.url)
+                    let player = AVPlayer(playerItem: item)
+                    self.player = player
+                    self.playerItem = item
+                    self.currentSourceKind = resolvedSource.kind
+                    self.currentRadioId = resolvedSource.radioId
+                    self.currentRequestId = requestId
+                    self.currentMetadata = metadata
+                    self.addObservers(for: item, player: player, generation: generation, requestId: requestId)
+                    self.addProgressObserver(to: player, generation: generation, requestId: requestId)
+                    self.updateNowPlayingInfo()
+
+                    self.emitPlaybackState("loading", requestId: requestId)
+
+                    if startTime > 0 {
+                        player.seek(to: self.makeTime(startTime))
+                    }
+
+                    if autoplay {
+                        player.play()
+                        self.emitPlaybackState("playing", requestId: requestId)
+                    }
+
+                    call.resolve()
+                }
             } catch {
-                self.reject(call, error: error)
+                DispatchQueue.main.async {
+                    self.reject(call, error: error)
+                }
             }
         }
     }
@@ -776,12 +786,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func configureAudioSession() throws {
-        guard !isAudioSessionConfigured else {
-            return
-        }
-
         try audioSession.setCategory(.playback, mode: .default)
-        isAudioSessionConfigured = true
     }
 
     private func activateAudioSession() throws {
@@ -1992,64 +1997,73 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
             )
         }
 
-        guard let resolved = sourceResolver.resolveSource(for: song) else {
-            if KeychainManager.retrieve() == nil {
-                emitError(code: "missing_credentials", message: "Cannot resolve audio source: Keychain credentials are missing. Please re-configure the server.")
-            } else {
-                emitError(code: "invalid_source", message: "Cannot resolve audio source for song: \(song.id)")
-            }
-            return
-        }
-
-        let item = AVPlayerItem(url: resolved.url)
-        let player = AVPlayer(playerItem: item)
-
-        do {
-            try configureAudioSession()
-        } catch {
-            emitError(code: "audio_session_failed", message: error.localizedDescription)
-            return
-        }
-
-        clearPlayer(sendIdleEvent: false)
         playbackGeneration += 1
         let generation = playbackGeneration
-        self.player = player
-        self.playerItem = item
-        self.currentSourceKind = resolved.kind
-        self.currentRadioId = nil
-        self.currentRequestId = nil
 
-        var metadata = NativeAudioMetadata()
-        metadata.title = song.title
-        metadata.artist = song.artist
-        metadata.album = song.album
-        metadata.duration = song.duration
-        if let coverArtId = song.coverArtId, !coverArtId.isEmpty {
-            metadata.artworkUrl = coverArtId
-        }
-        self.currentMetadata = metadata
-
-        addObservers(for: item, player: player, generation: generation, requestId: nil)
-        addProgressObserver(to: player, generation: generation, requestId: nil)
-        updateNowPlayingInfo()
-
-        emitPlaybackState("loading")
-
-        if let startTime = startTime, startTime > 0 {
-            player.seek(to: makeTime(startTime))
-        }
-
-        if autoplay {
-            do {
-                try activateAudioSession()
-            } catch {
-                emitError(code: "audio_session_failed", message: error.localizedDescription)
+        loadQueue.async { [self] in
+            guard let resolved = self.sourceResolver.resolveSource(for: song) else {
+                DispatchQueue.main.async {
+                    if KeychainManager.retrieve() == nil {
+                        self.emitError(code: "missing_credentials", message: "Cannot resolve audio source: Keychain credentials are missing. Please re-configure the server.")
+                    } else {
+                        self.emitError(code: "invalid_source", message: "Cannot resolve audio source for song: \(song.id)")
+                    }
+                }
                 return
             }
-            player.play()
-            emitPlaybackState("playing")
-            scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
+
+            do {
+                try self.configureAudioSession()
+                if autoplay {
+                    try self.activateAudioSession()
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.emitError(code: "audio_session_failed", message: error.localizedDescription)
+                }
+                return
+            }
+
+            DispatchQueue.main.async {
+                guard self.playbackGeneration == generation else { return }
+
+                self.clearPlayer(sendIdleEvent: false)
+                self.playbackGeneration = generation
+
+                let item = AVPlayerItem(url: resolved.url)
+                let player = AVPlayer(playerItem: item)
+                self.player = player
+                self.playerItem = item
+                self.currentSourceKind = resolved.kind
+                self.currentRadioId = nil
+                self.currentRequestId = nil
+
+                var metadata = NativeAudioMetadata()
+                metadata.title = song.title
+                metadata.artist = song.artist
+                metadata.album = song.album
+                metadata.duration = song.duration
+                if let coverArtId = song.coverArtId, !coverArtId.isEmpty {
+                    metadata.artworkUrl = coverArtId
+                }
+                self.currentMetadata = metadata
+
+                self.addObservers(for: item, player: player, generation: generation, requestId: nil)
+                self.addProgressObserver(to: player, generation: generation, requestId: nil)
+                self.updateNowPlayingInfo()
+
+                self.emitPlaybackState("loading")
+
+                if let startTime = startTime, startTime > 0 {
+                    player.seek(to: self.makeTime(startTime))
+                }
+
+                if autoplay {
+                    player.play()
+                    self.emitPlaybackState("playing")
+                    self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
+                }
+            }
         }
     }
 
