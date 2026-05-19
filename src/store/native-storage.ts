@@ -7,6 +7,12 @@ const pendingReads: Array<() => void> = [];
 
 export async function initNativePrefsCache(): Promise<void> {
   if (!isNativePreferencesAvailable()) return;
+
+  const { migrateToNativeStorageIfNeeded } = await import(
+    "@/store/native-migration"
+  );
+  await migrateToNativeStorageIfNeeded();
+
   const { AonsokuNativePreferences } = await import(
     "@aonsoku/capacitor-native/preferences"
   );

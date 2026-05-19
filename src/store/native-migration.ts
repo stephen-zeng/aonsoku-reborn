@@ -1,0 +1,71 @@
+import { isNativePreferencesAvailable } from "@/native/preferences/facade";
+import { logger } from "@/utils/logger";
+
+const MIGRATED_KEY = "__native_storage_migrated__";
+
+export async function migrateToNativeStorageIfNeeded(): Promise<boolean> {
+  if (!isNativePreferencesAvailable()) return false;
+  if (localStorage.getItem(MIGRATED_KEY) === "1") return false;
+
+  const { AonsokuNativePreferences } = await import(
+    "@aonsoku/capacitor-native/preferences"
+  );
+
+  const { preferences } = await AonsokuNativePreferences.getAllPreferences();
+  if (Object.keys(preferences).length > 0) {
+    localStorage.setItem(MIGRATED_KEY, "1");
+    return false;
+  }
+
+  const storeNames = [
+    "app_store",
+    "player_store",
+    "cache_settings",
+    "theme_store",
+    "lang_store",
+    "ui_store",
+    "lan_control_store",
+  ];
+
+  const migrationPayload: Record<string, string> = {};
+
+  for (const name of storeNames) {
+    const raw = localStorage.getItem(name);
+    if (raw) {
+      migrationPayload[name] = raw;
+    }
+  }
+
+  try {
+    const { get: idbGet } = await import("idb-keyval");
+    const songlist = await idbGet("player_songlist");
+    if (songlist) {
+      await AonsokuNativePreferences.setQueueState({
+        state: JSON.stringify(songlist),
+      });
+    }
+
+    const history = await idbGet("player_history");
+    if (history) {
+      migrationPayload.player_history = JSON.stringify(history);
+    }
+  } catch (err) {
+    logger.error("Failed to read IDB during migration", err);
+  }
+
+  if (Object.keys(migrationPayload).length > 0) {
+    await AonsokuNativePreferences.setPreferences({
+      preferences: migrationPayload,
+    });
+  }
+
+  for (const name of storeNames) {
+    localStorage.removeItem(name);
+  }
+
+  localStorage.setItem(MIGRATED_KEY, "1");
+  logger.info(
+    `[native-migration] Migrated ${Object.keys(migrationPayload).length} stores to native storage`,
+  );
+  return true;
+}
