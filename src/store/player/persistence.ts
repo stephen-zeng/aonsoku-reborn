@@ -4,6 +4,8 @@ import merge from "lodash/merge";
 import omit from "lodash/omit";
 import { shallow } from "zustand/shallow";
 import type { IPlayerContext, ISongList } from "@/types/playerContext";
+import { isNativePreferencesAvailable } from "@/native/preferences/facade";
+import { createNativeStorage } from "@/store/native-storage";
 import { logger } from "@/utils/logger";
 import { decodeStoredPassword, genEncodedPassword } from "@/utils/salt";
 import { MAX_SHUFFLE_START_HISTORY } from "@/utils/songListFunctions";
@@ -66,6 +68,7 @@ export function createPlayerPersistOptions(getStore: () => PlayerStoreApi) {
   return {
     name: PLAYER_STORE_NAME,
     version: PLAYER_STORE_VERSION,
+    storage: createNativeStorage<IPlayerContext>(PLAYER_STORE_NAME),
     migrate: migratePlayerStoreState,
     merge: mergePlayerStoreState,
     partialize: partializePlayerStoreState,
@@ -77,31 +80,9 @@ export function createPlayerPersistOptions(getStore: () => PlayerStoreApi) {
           return;
         }
 
-        idbGet<ISongList>(IDB_SONGLIST_KEY)
-          .then((value) => {
-            if (!value) return;
-
-            const store = getStore();
-            const current = store.getState().songlist;
-            if (!value.contextQueue || value.contextQueue.songs.length === 0) {
-              const migrated = migrateLegacySonglist(value);
-              if (migrated) {
-                store.setState({ songlist: migrated });
-              }
-              return;
-            }
-            if (
-              current.contextQueue.songs.length === 0 &&
-              current.userQueue.songs.length === 0
-            ) {
-              const migrated = migrateSonglistFromIdb(value);
-              store.setState({
-                songlist: migrated,
-              });
-            }
-          })
-          .catch((idbError: unknown) => {
-            logger.error("Failed to load songlist from IDB", idbError);
+        loadSonglistFromStorage(getStore)
+          .catch((err: unknown) => {
+            logger.error("Failed to load songlist from storage", err);
           })
           .finally(() => {
             songlistHydrated.value = true;
@@ -109,6 +90,45 @@ export function createPlayerPersistOptions(getStore: () => PlayerStoreApi) {
       };
     },
   };
+}
+
+async function loadSonglistFromStorage(getStore: () => PlayerStoreApi) {
+  let value: ISongList | undefined;
+
+  if (isNativePreferencesAvailable()) {
+    const { AonsokuNativePreferences } = await import(
+      "@aonsoku/capacitor-native/preferences"
+    );
+    const result = await AonsokuNativePreferences.getQueueState();
+    if (result.state) {
+      try {
+        value = JSON.parse(result.state) as ISongList;
+      } catch {
+        // corrupted state, ignore
+      }
+    }
+  } else {
+    value = (await idbGet<ISongList>(IDB_SONGLIST_KEY)) ?? undefined;
+  }
+
+  if (!value) return;
+
+  const store = getStore();
+  const current = store.getState().songlist;
+  if (!value.contextQueue || value.contextQueue.songs.length === 0) {
+    const migrated = migrateLegacySonglist(value);
+    if (migrated) {
+      store.setState({ songlist: migrated });
+    }
+    return;
+  }
+  if (
+    current.contextQueue.songs.length === 0 &&
+    current.userQueue.songs.length === 0
+  ) {
+    const migrated = migrateSonglistFromIdb(value);
+    store.setState({ songlist: migrated });
+  }
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: zustand persist migrate API
@@ -360,22 +380,35 @@ const songlistHydrated = { value: false };
 let idbFlushed = false;
 let persistenceRegistered = false;
 
-const debouncedIdbSonglistWrite = debounce((songlist: ISongList) => {
+function writeSonglistToStorage(songlist: ISongList) {
   const trimmed = trimSonglistForIdb(songlist);
-  idbSet(IDB_SONGLIST_KEY, trimmed).catch((error: unknown) => {
-    logger.error("Failed to write songlist to IndexedDB", error);
-  });
+  if (isNativePreferencesAvailable()) {
+    import("@aonsoku/capacitor-native/preferences").then(
+      ({ AonsokuNativePreferences }) => {
+        AonsokuNativePreferences.setQueueState({
+          state: JSON.stringify(trimmed),
+        }).catch((error: unknown) => {
+          logger.error("Failed to write songlist to native storage", error);
+        });
+      },
+    );
+  } else {
+    idbSet(IDB_SONGLIST_KEY, trimmed).catch((error: unknown) => {
+      logger.error("Failed to write songlist to IndexedDB", error);
+    });
+  }
+}
+
+const debouncedSonglistWrite = debounce((songlist: ISongList) => {
+  writeSonglistToStorage(songlist);
 }, 300);
 
-function flushIdbSonglistWrite(store: PlayerStoreApi) {
+function flushSonglistWrite(store: PlayerStoreApi) {
   if (idbFlushed) return;
   idbFlushed = true;
-  debouncedIdbSonglistWrite.cancel();
+  debouncedSonglistWrite.cancel();
   const songlist = store.getState().songlist;
-  const trimmed = trimSonglistForIdb(songlist);
-  idbSet(IDB_SONGLIST_KEY, trimmed).catch((error: unknown) => {
-    logger.error("Failed to flush songlist to IndexedDB", error);
-  });
+  writeSonglistToStorage(songlist);
 }
 
 export function registerPlayerPersistence(
@@ -390,7 +423,7 @@ export function registerPlayerPersistence(
     ([songlist]) => {
       if (!songlistHydrated.value) return;
       idbFlushed = false;
-      debouncedIdbSonglistWrite(songlist);
+      debouncedSonglistWrite(songlist);
     },
     {
       equalityFn: shallow,
@@ -408,11 +441,11 @@ function registerIdbEventListeners(
 
   const handleVisibilityChange = () => {
     if (document.hidden && songlistHydrated.value) {
-      flushIdbSonglistWrite(store);
+      flushSonglistWrite(store);
     }
   };
   const handleBeforeUnload = () => {
-    if (songlistHydrated.value) flushIdbSonglistWrite(store);
+    if (songlistHydrated.value) flushSonglistWrite(store);
   };
   document.addEventListener("visibilitychange", handleVisibilityChange);
   window.addEventListener("beforeunload", handleBeforeUnload);

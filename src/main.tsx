@@ -13,9 +13,11 @@ import "@/i18n";
 import App from "@/App";
 import { ErrorBoundary } from "@/app/components/error-boundary";
 import { queryClient } from "@/lib/queryClient";
+import { initNativePrefsCache } from "@/store/native-storage";
 import { blockFeatures } from "@/utils/browser";
 
 blockFeatures();
+initNativePrefsCache();
 
 createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>

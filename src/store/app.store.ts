@@ -6,6 +6,7 @@ import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
 import { pingServer } from "@/api/pingServer";
 import { queryServerInfo } from "@/api/queryServerInfo";
+import { createNativeStorage } from "@/store/native-storage";
 import {
   ActiveServerType,
   AuthType,
@@ -569,6 +570,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
       {
         name: "app_store",
         version: 1,
+        storage: createNativeStorage<IAppContext>("app_store"),
         merge: (persistedState, currentState) => {
           try {
             const persisted = persistedState as

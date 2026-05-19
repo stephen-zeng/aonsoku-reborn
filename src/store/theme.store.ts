@@ -7,6 +7,7 @@ import {
   Theme,
   ThemeMode,
 } from "@/types/themeContext";
+import { createNativeStorage } from "@/store/native-storage";
 
 const VALID_THEMES = new Set<string>(Object.values(Theme));
 const VALID_MODES = new Set<string>(Object.values(ThemeMode));
@@ -55,6 +56,7 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
       {
         name: "theme_store",
         version: 2,
+        storage: createNativeStorage<IThemeContext>("theme_store"),
         merge: (persistedState, currentState) => {
           const merged = {
             ...currentState,
