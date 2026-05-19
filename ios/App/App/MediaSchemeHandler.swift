@@ -11,7 +11,7 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
 
     private var activeTasks: [Int: MediaSchemeTaskState] = [:]
     private var urlSessionTasks: [Int: URLSessionDataTask] = [:]
-    private let lock = NSLock()
+    private let syncQueue = DispatchQueue(label: "com.aonsoku.MediaSchemeHandler.sync")
 
     func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
         let taskState = MediaSchemeTaskState(
@@ -55,27 +55,26 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
 
         taskState.originalURL = url
         let dataTask = session.dataTask(with: realURL)
-        lock.lock()
-        activeTasks[dataTask.taskIdentifier] = taskState
-        urlSessionTasks[dataTask.taskIdentifier] = dataTask
-        lock.unlock()
+        syncQueue.sync {
+            activeTasks[dataTask.taskIdentifier] = taskState
+            urlSessionTasks[dataTask.taskIdentifier] = dataTask
+        }
         dataTask.resume()
     }
 
     func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
-        lock.lock()
-        let taskId = activeTasks.first {
-            $0.value.schemeTask === urlSchemeTask
-        }?.key
-        let schemeTaskState = taskId.flatMap {
-            activeTasks[$0]
+        let dataTask: URLSessionDataTask? = syncQueue.sync {
+            let taskId = activeTasks.first {
+                $0.value.schemeTask === urlSchemeTask
+            }?.key
+            let schemeTaskState = taskId.flatMap { activeTasks[$0] }
+            schemeTaskState?.stop()
+            let task = taskId.flatMap { urlSessionTasks.removeValue(forKey: $0) }
+            if let taskId {
+                activeTasks.removeValue(forKey: taskId)
+            }
+            return task
         }
-        schemeTaskState?.stop()
-        let dataTask = taskId.flatMap { urlSessionTasks.removeValue(forKey: $0) }
-        if let taskId {
-            activeTasks.removeValue(forKey: taskId)
-        }
-        lock.unlock()
 
         dataTask?.cancel()
     }
@@ -88,13 +87,14 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
         didReceive response: URLResponse,
         completionHandler: @escaping (URLSession.ResponseDisposition) -> Void
     ) {
-        lock.lock()
-        guard let schemeTaskState = activeTasks[dataTask.taskIdentifier] else {
-            lock.unlock()
+        let schemeTaskState: MediaSchemeTaskState? = syncQueue.sync {
+            activeTasks[dataTask.taskIdentifier]
+        }
+
+        guard let schemeTaskState else {
             completionHandler(.cancel)
             return
         }
-        lock.unlock()
 
         guard let httpResponse = response as? HTTPURLResponse else {
             completionHandler(.cancel)
@@ -126,20 +126,17 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
     }
 
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-        lock.lock()
-        guard let schemeTaskState = activeTasks[dataTask.taskIdentifier] else {
-            lock.unlock()
-            return
+        let schemeTaskState: MediaSchemeTaskState? = syncQueue.sync {
+            activeTasks[dataTask.taskIdentifier]
         }
-        lock.unlock()
-        schemeTaskState.didReceive(data)
+        schemeTaskState?.didReceive(data)
     }
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        lock.lock()
-        let schemeTaskState = activeTasks[task.taskIdentifier]
-        urlSessionTasks.removeValue(forKey: task.taskIdentifier)
-        lock.unlock()
+        let schemeTaskState: MediaSchemeTaskState? = syncQueue.sync {
+            urlSessionTasks.removeValue(forKey: task.taskIdentifier)
+            return activeTasks[task.taskIdentifier]
+        }
 
         guard let schemeTaskState else { return }
 
@@ -151,11 +148,11 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
         }
 
         if didComplete {
-            lock.lock()
-            if activeTasks[task.taskIdentifier] === schemeTaskState {
-                activeTasks.removeValue(forKey: task.taskIdentifier)
+            syncQueue.sync {
+                if activeTasks[task.taskIdentifier] === schemeTaskState {
+                    activeTasks.removeValue(forKey: task.taskIdentifier)
+                }
             }
-            lock.unlock()
         }
     }
 }
@@ -164,7 +161,7 @@ private final class MediaSchemeTaskState {
     let schemeTask: WKURLSchemeTask
     var originalURL: URL
 
-    private let lock = NSLock()
+    private let syncQueue = DispatchQueue(label: "com.aonsoku.MediaSchemeTaskState.sync")
     private var isStopped = false
     private var isCompleted = false
 
@@ -174,9 +171,7 @@ private final class MediaSchemeTaskState {
     }
 
     func stop() {
-        lock.lock()
-        isStopped = true
-        lock.unlock()
+        syncQueue.sync { isStopped = true }
     }
 
     private var isInvalid: Bool {
@@ -184,26 +179,17 @@ private final class MediaSchemeTaskState {
     }
 
     private func safePerform(_ block: @escaping () -> Void) {
-        let state = self
-        DispatchQueue.main.async {
-            state.lock.lock()
-            guard !state.isStopped else {
-                state.lock.unlock()
-                return
-            }
-            state.lock.unlock()
+        DispatchQueue.main.async { [self] in
+            let stopped = syncQueue.sync { isStopped }
+            guard !stopped else { return }
             try? ObjCExceptionCatcher.perform { block() }
         }
     }
 
     @discardableResult
     func didReceive(_ response: URLResponse) -> Bool {
-        lock.lock()
-        guard !isInvalid else {
-            lock.unlock()
-            return false
-        }
-        lock.unlock()
+        let invalid = syncQueue.sync { isInvalid }
+        guard !invalid else { return false }
 
         let task = schemeTask
         safePerform { task.didReceive(response) }
@@ -211,12 +197,8 @@ private final class MediaSchemeTaskState {
     }
 
     func didReceive(_ data: Data) {
-        lock.lock()
-        guard !isInvalid else {
-            lock.unlock()
-            return
-        }
-        lock.unlock()
+        let invalid = syncQueue.sync { isInvalid }
+        guard !invalid else { return }
 
         let task = schemeTask
         safePerform { task.didReceive(data) }
@@ -224,13 +206,12 @@ private final class MediaSchemeTaskState {
 
     @discardableResult
     func didFinish() -> Bool {
-        lock.lock()
-        guard !isInvalid else {
-            lock.unlock()
+        let invalid: Bool = syncQueue.sync {
+            guard !isInvalid else { return true }
+            isCompleted = true
             return false
         }
-        isCompleted = true
-        lock.unlock()
+        guard !invalid else { return false }
 
         let task = schemeTask
         safePerform { task.didFinish() }
@@ -239,13 +220,12 @@ private final class MediaSchemeTaskState {
 
     @discardableResult
     func didFail(with error: Error) -> Bool {
-        lock.lock()
-        guard !isInvalid else {
-            lock.unlock()
+        let invalid: Bool = syncQueue.sync {
+            guard !isInvalid else { return true }
+            isCompleted = true
             return false
         }
-        isCompleted = true
-        lock.unlock()
+        guard !invalid else { return false }
 
         let task = schemeTask
         let nsError = error as NSError
