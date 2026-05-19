@@ -81,6 +81,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var volumeObservation: NSKeyValueObservation?
     private var isVolumeHUDEnabled = true
     private var volumeOperationGen = 0
+    private var lastEmittedPlaybackState: String?
 
     public override func load() {
         super.load()
@@ -150,7 +151,6 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
                     if autoplay {
                         player.play()
-                        self.emitPlaybackState("playing", requestId: requestId)
                     }
 
                     call.resolve()
@@ -173,7 +173,6 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
                 try self.activateAudioSession()
                 player.play()
-                self.emitPlaybackState("playing")
                 call.resolve()
             } catch {
                 self.reject(call, error: error)
@@ -184,7 +183,6 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     @objc func pause(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
             self.player?.pause()
-            self.emitPlaybackState("paused")
             call.resolve()
         }
     }
@@ -1144,7 +1142,6 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             player?.pause()
             notifyListeners("interruptionChanged", data: eventData(["type": "began"]))
             emitBuffering(false)
-            emitPlaybackState("paused")
             emitProgress()
         case .ended:
             let rawOptions = notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
@@ -1160,7 +1157,6 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 do {
                     try activateAudioSession()
                     player.play()
-                    emitPlaybackState("playing")
                 } catch {
                     emitError(code: "audio_session_failed", message: error.localizedDescription)
                     emitCurrentPlaybackState()
@@ -1607,6 +1603,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             emitPlaybackState("playing", requestId: requestId)
         case .paused:
             emitBuffering(false, requestId: requestId)
+            emitPlaybackState("paused", requestId: requestId)
         case .waitingToPlayAtSpecifiedRate:
             emitBuffering(true, requestId: requestId)
         @unknown default:
@@ -1633,6 +1630,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     private func clearPlayer(sendIdleEvent: Bool, deactivateSession: Bool = false) {
         playbackGeneration += 1
+        lastEmittedPlaybackState = nil
 
         if let token = timeObserverToken {
             player?.removeTimeObserver(token)
@@ -1679,7 +1677,9 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         queueIndex = 0
     }
 
-    private func emitPlaybackState(_ state: String, requestId: String? = nil) {
+    private func emitPlaybackState(_ state: String, requestId: String? = nil, force: Bool = false) {
+        if !force && state == lastEmittedPlaybackState { return }
+        lastEmittedPlaybackState = state
         notifyListeners("playbackStateChanged", data: eventData([
             "state": state,
         ], requestId: requestId))
@@ -1736,7 +1736,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     private func emitCurrentPlaybackState() {
         guard let player = player else {
-            emitPlaybackState("idle")
+            emitPlaybackState("idle", force: true)
             emitBuffering(false)
             return
         }
@@ -1744,13 +1744,13 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         switch player.timeControlStatus {
         case .playing:
             emitBuffering(false)
-            emitPlaybackState("playing")
+            emitPlaybackState("playing", force: true)
         case .paused:
             emitBuffering(false)
-            emitPlaybackState("paused")
+            emitPlaybackState("paused", force: true)
         case .waitingToPlayAtSpecifiedRate:
             emitBuffering(true)
-            emitPlaybackState("loading")
+            emitPlaybackState("loading", force: true)
         @unknown default:
             emitBuffering(false)
         }
@@ -2060,7 +2060,6 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
 
                 if autoplay {
                     player.play()
-                    self.emitPlaybackState("playing")
                     self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
                 }
             }
