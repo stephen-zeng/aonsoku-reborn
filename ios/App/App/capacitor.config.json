@@ -6,6 +6,7 @@
 		"AonsokuNativeDataPlugin",
 		"AonsokuNativeBridgePlugin",
 		"AonsokuNativeAudioPlugin",
+		"HapticsPlugin",
 		"KeyboardPlugin"
 	]
 }
