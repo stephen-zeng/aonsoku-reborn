@@ -1918,6 +1918,19 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         CMTime(seconds: seconds, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
     }
 
+    private func resolveCoverArtId(for song: QueueSong) -> String? {
+        let useAlbumCover = PreferencesManager.shared.getBool(
+            "player.coverArt.useAlbumCoverForSongs"
+        ) ?? false
+        if useAlbumCover, let albumId = song.albumId, !albumId.isEmpty {
+            return albumId
+        }
+        if let coverArtId = song.coverArtId, !coverArtId.isEmpty {
+            return coverArtId
+        }
+        return song.albumId
+    }
+
     private func routeChangeReason(from notification: Notification) -> String {
         guard
             let rawReason = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,
@@ -2074,9 +2087,7 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
                 metadata.artist = song.artist
                 metadata.album = song.album
                 metadata.duration = song.duration
-                if let coverArtId = song.coverArtId, !coverArtId.isEmpty {
-                    metadata.artworkUrl = coverArtId
-                }
+                metadata.artworkUrl = self.resolveCoverArtId(for: song)
                 self.currentMetadata = metadata
 
                 self.addObservers(for: item, player: player, generation: generation, requestId: nil)

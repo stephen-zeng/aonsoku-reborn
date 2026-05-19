@@ -257,9 +257,10 @@ export function AudioPlayer({
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !metadata) return;
+    if (playbackCapabilities.supportsNativePlayback) return;
 
     getPlaybackBackend(audio)?.updateMetadata(metadata);
-  }, [audioRef, getPlaybackBackend, metadata]);
+  }, [audioRef, getPlaybackBackend, metadata, playbackCapabilities]);
 
   const audioVolume = useMemo(
     () =>
