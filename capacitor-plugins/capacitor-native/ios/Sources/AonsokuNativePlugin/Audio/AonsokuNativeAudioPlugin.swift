@@ -796,23 +796,12 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     private func setupVolumeControl() {
         DispatchQueue.main.async { [weak self] in
-            guard let self, let viewController = self.bridge?.viewController else { return }
+            guard let self else { return }
 
-            let volumeView = MPVolumeView(frame: CGRect(x: -3000, y: -3000, width: 0, height: 0))
-            volumeView.alpha = 0.001
-            viewController.view.addSubview(volumeView)
-            self.volumeView = volumeView
+            // Ensure audio session is active so outputVolume is observable
+            try? self.audioSession.setActive(true)
 
-            self.volumeSlider = self.findSlider(in: volumeView)
-
-            if self.volumeSlider == nil {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                    guard let self, let volumeView = self.volumeView else { return }
-                    self.volumeSlider = self.findSlider(in: volumeView)
-                }
-            }
-
-            self.volumeObservation = self.audioSession.observe(\.outputVolume, options: [.new]) { [weak self] _, change in
+            self.volumeObservation = self.audioSession.observe(\.outputVolume, options: [.initial, .new]) { [weak self] _, change in
                 guard let self, let newVolume = change.newValue else { return }
                 DispatchQueue.main.async {
                     guard !self.isSuppressingVolumeEvent else { return }
@@ -822,42 +811,61 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    private func findSlider(in view: UIView) -> UISlider? {
-        for subview in view.subviews {
-            if let slider = subview as? UISlider {
-                return slider
-            }
-            if let found = findSlider(in: subview) {
-                return found
-            }
-        }
-        return nil
-    }
-
     @objc func setSystemVolume(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
-            if self.volumeSlider == nil, let volumeView = self.volumeView {
-                self.volumeSlider = self.findSlider(in: volumeView)
-            }
-
-            guard let slider = self.volumeSlider else {
-                call.reject("System volume control is not available.")
-                return
-            }
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
 
             let value = call.getFloat("value") ?? 0.5
             let clampedValue = min(max(value, 0.0), 1.0)
 
             self.isSuppressingVolumeEvent = true
-            slider.value = clampedValue
-            slider.sendActions(for: .touchUpInside)
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                self.isSuppressingVolumeEvent = false
+            // Use MPVolumeView's internal slider — the only Apple-supported way
+            if self.volumeView == nil {
+                let vv = MPVolumeView(frame: CGRect(x: -1000, y: -1000, width: 120, height: 40))
+                vv.showsRouteButton = false
+                self.bridge?.viewController?.view.addSubview(vv)
+                self.volumeView = vv
+            }
+
+            if let slider = self.findVolumeSlider() {
+                slider.value = clampedValue
+                slider.sendActions(for: .valueChanged)
+            } else {
+                // Fallback: set via KVC on the audio session
+                self.audioSession.setValue(clampedValue, forKey: "outputVolume")
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.isSuppressingVolumeEvent = false
             }
 
             call.resolve(["volume": clampedValue])
         }
+    }
+
+    private func findVolumeSlider() -> UISlider? {
+        if let cached = self.volumeSlider {
+            return cached
+        }
+        guard let volumeView = self.volumeView else { return nil }
+        if let slider = findSlider(in: volumeView) {
+            self.volumeSlider = slider
+            return slider
+        }
+        return nil
+    }
+
+    private func findSlider(in view: UIView) -> UISlider? {
+        if let slider = view as? UISlider {
+            return slider
+        }
+        for subview in view.subviews {
+            if let found = findSlider(in: subview) {
+                return found
+            }
+        }
+        return nil
     }
 
     @objc func getSystemVolume(_ call: CAPPluginCall) {
