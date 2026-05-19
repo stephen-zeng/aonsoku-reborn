@@ -802,6 +802,8 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
             try? self.activateAudioSession()
 
+            _ = self.ensureVolumeSlider(forceLayout: true)
+
             self.volumeObservation = self.audioSession.observe(\.outputVolume, options: [.initial, .new]) { [weak self] _, change in
                 guard let self, let newVolume = change.newValue else { return }
                 DispatchQueue.main.async {
@@ -855,10 +857,11 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func resolveVolumeSlider(
-        attemptsRemaining: Int = 8,
+        attemptsRemaining: Int = 4,
+        isFirstAttempt: Bool = true,
         completion: @escaping (UISlider?) -> Void
     ) {
-        if let slider = ensureVolumeSlider() {
+        if let slider = ensureVolumeSlider(forceLayout: isFirstAttempt) {
             completion(slider)
             return
         }
@@ -876,17 +879,19 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
             self.resolveVolumeSlider(
                 attemptsRemaining: attemptsRemaining - 1,
+                isFirstAttempt: false,
                 completion: completion
             )
         }
     }
 
-    private func ensureVolumeSlider() -> UISlider? {
+    private func ensureVolumeSlider(forceLayout: Bool = false) -> UISlider? {
         if let cached = self.volumeSlider, cached.window != nil {
             return cached
         }
         self.volumeSlider = nil
 
+        var needsLayout = forceLayout
         if self.volumeSliderView == nil {
             guard let containerView = self.bridge?.viewController?.view else {
                 return nil
@@ -901,11 +906,14 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             sliderView.clipsToBounds = true
             containerView.addSubview(sliderView)
             self.volumeSliderView = sliderView
+            needsLayout = true
         }
 
         guard let sliderView = self.volumeSliderView else { return nil }
-        sliderView.setNeedsLayout()
-        sliderView.layoutIfNeeded()
+        if needsLayout {
+            sliderView.setNeedsLayout()
+            sliderView.layoutIfNeeded()
+        }
 
         if let slider = findSlider(in: sliderView) {
             self.volumeSlider = slider
