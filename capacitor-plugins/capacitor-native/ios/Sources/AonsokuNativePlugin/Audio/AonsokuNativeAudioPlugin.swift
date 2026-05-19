@@ -1054,7 +1054,16 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         remoteCommandTargets.append((
             commandCenter.playCommand,
             commandCenter.playCommand.addTarget { [weak self] _ in
-                self?.emitRemoteCommand("play")
+                guard let self = self else { return .commandFailed }
+                if self.isQueueEngineActive {
+                    try? self.activateAudioSession()
+                    self.player?.play()
+                    if let song = self.queueEngine.currentSong {
+                        self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
+                    }
+                } else {
+                    self.emitRemoteCommand("play")
+                }
                 return .success
             }
         ))
@@ -1063,7 +1072,12 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         remoteCommandTargets.append((
             commandCenter.pauseCommand,
             commandCenter.pauseCommand.addTarget { [weak self] _ in
-                self?.emitRemoteCommand("pause")
+                guard let self = self else { return .commandFailed }
+                if self.isQueueEngineActive {
+                    self.player?.pause()
+                } else {
+                    self.emitRemoteCommand("pause")
+                }
                 return .success
             }
         ))
@@ -1072,7 +1086,20 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         remoteCommandTargets.append((
             commandCenter.togglePlayPauseCommand,
             commandCenter.togglePlayPauseCommand.addTarget { [weak self] _ in
-                self?.emitRemoteCommand("togglePlayPause")
+                guard let self = self else { return .commandFailed }
+                if self.isQueueEngineActive {
+                    if self.player?.timeControlStatus == .playing {
+                        self.player?.pause()
+                    } else {
+                        try? self.activateAudioSession()
+                        self.player?.play()
+                        if let song = self.queueEngine.currentSong {
+                            self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
+                        }
+                    }
+                } else {
+                    self.emitRemoteCommand("togglePlayPause")
+                }
                 return .success
             }
         ))
@@ -1113,8 +1140,12 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 guard let event = event as? MPChangePlaybackPositionCommandEvent else {
                     return .commandFailed
                 }
-
-                self?.emitRemoteCommand("seek", position: event.positionTime)
+                guard let self = self else { return .commandFailed }
+                if self.isQueueEngineActive {
+                    self.player?.seek(to: self.makeTime(event.positionTime))
+                } else {
+                    self.emitRemoteCommand("seek", position: event.positionTime)
+                }
                 return .success
             }
         ))
