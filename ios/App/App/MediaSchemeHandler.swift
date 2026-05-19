@@ -190,7 +190,7 @@ private final class MediaSchemeTaskState {
     let schemeTask: WKURLSchemeTask
     var originalURL: URL
 
-    private let syncQueue = DispatchQueue(label: "com.aonsoku.MediaSchemeTaskState.sync")
+    private var lock = os_unfair_lock()
     private var isStopped = false
     private var isCompleted = false
 
@@ -200,7 +200,9 @@ private final class MediaSchemeTaskState {
     }
 
     func stop() {
-        syncQueue.sync { isStopped = true }
+        os_unfair_lock_lock(&lock)
+        isStopped = true
+        os_unfair_lock_unlock(&lock)
     }
 
     private var isInvalid: Bool {
@@ -209,7 +211,9 @@ private final class MediaSchemeTaskState {
 
     private func safePerform(_ block: @escaping () -> Void) {
         DispatchQueue.main.async { [self] in
-            let stopped = syncQueue.sync { isStopped }
+            os_unfair_lock_lock(&lock)
+            let stopped = isStopped
+            os_unfair_lock_unlock(&lock)
             guard !stopped else { return }
             try? ObjCExceptionCatcher.perform { block() }
         }
@@ -217,7 +221,9 @@ private final class MediaSchemeTaskState {
 
     @discardableResult
     func didReceive(_ response: URLResponse) -> Bool {
-        let invalid = syncQueue.sync { isInvalid }
+        os_unfair_lock_lock(&lock)
+        let invalid = isInvalid
+        os_unfair_lock_unlock(&lock)
         guard !invalid else { return false }
 
         let task = schemeTask
@@ -226,7 +232,9 @@ private final class MediaSchemeTaskState {
     }
 
     func didReceive(_ data: Data) {
-        let invalid = syncQueue.sync { isInvalid }
+        os_unfair_lock_lock(&lock)
+        let invalid = isInvalid
+        os_unfair_lock_unlock(&lock)
         guard !invalid else { return }
 
         let task = schemeTask
@@ -235,12 +243,13 @@ private final class MediaSchemeTaskState {
 
     @discardableResult
     func didFinish() -> Bool {
-        let invalid: Bool = syncQueue.sync {
-            guard !isInvalid else { return true }
-            isCompleted = true
+        os_unfair_lock_lock(&lock)
+        guard !isInvalid else {
+            os_unfair_lock_unlock(&lock)
             return false
         }
-        guard !invalid else { return false }
+        isCompleted = true
+        os_unfair_lock_unlock(&lock)
 
         let task = schemeTask
         safePerform { task.didFinish() }
@@ -249,12 +258,13 @@ private final class MediaSchemeTaskState {
 
     @discardableResult
     func didFail(with error: Error) -> Bool {
-        let invalid: Bool = syncQueue.sync {
-            guard !isInvalid else { return true }
-            isCompleted = true
+        os_unfair_lock_lock(&lock)
+        guard !isInvalid else {
+            os_unfair_lock_unlock(&lock)
             return false
         }
-        guard !invalid else { return false }
+        isCompleted = true
+        os_unfair_lock_unlock(&lock)
 
         let task = schemeTask
         let nsError = error as NSError
