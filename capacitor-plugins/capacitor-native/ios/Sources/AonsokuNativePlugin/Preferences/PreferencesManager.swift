@@ -38,6 +38,18 @@ final class PreferencesManager {
         return try? JSONSerialization.jsonObject(with: data)
     }
 
+    func getNestedBool(store: String, path: [String]) -> Bool? {
+        guard let json = getJSON(store) as? [String: Any] else { return nil }
+        guard let state = json["state"] as? [String: Any] else { return nil }
+        var current: Any = state
+        for component in path {
+            guard let dict = current as? [String: Any],
+                  let next = dict[component] else { return nil }
+            current = next
+        }
+        return current as? Bool
+    }
+
     func getAll() -> [String: String] {
         queue.sync { cache }
     }

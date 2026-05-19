@@ -1,20 +1,21 @@
+import type { AonsokuNativePreferencesPlugin } from "@aonsoku/capacitor-native/preferences";
 import { isNativePreferencesAvailable } from "@/native/preferences/facade";
 import { logger } from "@/utils/logger";
 
 const MIGRATED_KEY = "__native_storage_migrated__";
 
-export async function migrateToNativeStorageIfNeeded(): Promise<boolean> {
-  if (!isNativePreferencesAvailable()) return false;
-  if (localStorage.getItem(MIGRATED_KEY) === "1") return false;
+export async function migrateToNativeStorageIfNeeded(
+  plugin: AonsokuNativePreferencesPlugin,
+): Promise<Record<string, string>> {
+  if (!isNativePreferencesAvailable()) return {};
 
-  const { AonsokuNativePreferences } = await import(
-    "@aonsoku/capacitor-native/preferences"
-  );
-
-  const { preferences } = await AonsokuNativePreferences.getAllPreferences();
-  if (Object.keys(preferences).length > 0) {
+  const { preferences } = await plugin.getAllPreferences();
+  if (
+    Object.keys(preferences).length > 0 ||
+    localStorage.getItem(MIGRATED_KEY) === "1"
+  ) {
     localStorage.setItem(MIGRATED_KEY, "1");
-    return false;
+    return preferences;
   }
 
   const storeNames = [
@@ -40,7 +41,7 @@ export async function migrateToNativeStorageIfNeeded(): Promise<boolean> {
     const { get: idbGet } = await import("idb-keyval");
     const songlist = await idbGet("player_songlist");
     if (songlist) {
-      await AonsokuNativePreferences.setQueueState({
+      await plugin.setQueueState({
         state: JSON.stringify(songlist),
       });
     }
@@ -54,9 +55,7 @@ export async function migrateToNativeStorageIfNeeded(): Promise<boolean> {
   }
 
   if (Object.keys(migrationPayload).length > 0) {
-    await AonsokuNativePreferences.setPreferences({
-      preferences: migrationPayload,
-    });
+    await plugin.setPreferences({ preferences: migrationPayload });
   }
 
   for (const name of storeNames) {
@@ -67,5 +66,5 @@ export async function migrateToNativeStorageIfNeeded(): Promise<boolean> {
   logger.info(
     `[native-migration] Migrated ${Object.keys(migrationPayload).length} stores to native storage`,
   );
-  return true;
+  return migrationPayload;
 }

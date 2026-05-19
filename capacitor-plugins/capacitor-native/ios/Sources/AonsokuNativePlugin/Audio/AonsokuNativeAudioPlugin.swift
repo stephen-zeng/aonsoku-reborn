@@ -1919,8 +1919,9 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func resolveCoverArtId(for song: QueueSong) -> String? {
-        let useAlbumCover = PreferencesManager.shared.getBool(
-            "player.coverArt.useAlbumCoverForSongs"
+        let useAlbumCover = PreferencesManager.shared.getNestedBool(
+            store: "player_store",
+            path: ["settings", "coverArt", "useAlbumCoverForSongs"]
         ) ?? false
         if useAlbumCover, let albumId = song.albumId, !albumId.isEmpty {
             return albumId
@@ -1928,7 +1929,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         if let coverArtId = song.coverArtId, !coverArtId.isEmpty {
             return coverArtId
         }
-        return song.albumId
+        return nil
     }
 
     private func routeChangeReason(from notification: Notification) -> String {

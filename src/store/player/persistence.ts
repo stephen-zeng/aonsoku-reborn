@@ -5,7 +5,7 @@ import omit from "lodash/omit";
 import { shallow } from "zustand/shallow";
 import type { IPlayerContext, ISongList } from "@/types/playerContext";
 import { isNativePreferencesAvailable } from "@/native/preferences/facade";
-import { createNativeStorage } from "@/store/native-storage";
+import { createNativeStorage, getNativePrefsPlugin } from "@/store/native-storage";
 import { logger } from "@/utils/logger";
 import { decodeStoredPassword, genEncodedPassword } from "@/utils/salt";
 import { MAX_SHUFFLE_START_HISTORY } from "@/utils/songListFunctions";
@@ -383,15 +383,11 @@ let persistenceRegistered = false;
 function writeSonglistToStorage(songlist: ISongList) {
   const trimmed = trimSonglistForIdb(songlist);
   if (isNativePreferencesAvailable()) {
-    import("@aonsoku/capacitor-native/preferences").then(
-      ({ AonsokuNativePreferences }) => {
-        AonsokuNativePreferences.setQueueState({
-          state: JSON.stringify(trimmed),
-        }).catch((error: unknown) => {
-          logger.error("Failed to write songlist to native storage", error);
-        });
-      },
-    );
+    getNativePrefsPlugin()
+      ?.setQueueState({ state: JSON.stringify(trimmed) })
+      .catch((error: unknown) => {
+        logger.error("Failed to write songlist to native storage", error);
+      });
   } else {
     idbSet(IDB_SONGLIST_KEY, trimmed).catch((error: unknown) => {
       logger.error("Failed to write songlist to IndexedDB", error);

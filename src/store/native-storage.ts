@@ -1,23 +1,24 @@
 import type { PersistStorage, StorageValue } from "zustand/middleware";
+import type { AonsokuNativePreferencesPlugin } from "@aonsoku/capacitor-native/preferences";
 import { isNativePreferencesAvailable } from "@/native/preferences/facade";
 
 let nativePrefsCache: Record<string, string> | null = null;
 let cacheReady = false;
+let pluginRef: AonsokuNativePreferencesPlugin | null = null;
 const pendingReads: Array<() => void> = [];
 
 export async function initNativePrefsCache(): Promise<void> {
   if (!isNativePreferencesAvailable()) return;
 
-  const { migrateToNativeStorageIfNeeded } = await import(
-    "@/store/native-migration"
-  );
-  await migrateToNativeStorageIfNeeded();
-
   const { AonsokuNativePreferences } = await import(
     "@aonsoku/capacitor-native/preferences"
   );
-  const result = await AonsokuNativePreferences.getAllPreferences();
-  nativePrefsCache = result.preferences;
+  pluginRef = AonsokuNativePreferences;
+
+  const { migrateToNativeStorageIfNeeded } = await import(
+    "@/store/native-migration"
+  );
+  nativePrefsCache = await migrateToNativeStorageIfNeeded(AonsokuNativePreferences);
   cacheReady = true;
   for (const resolve of pendingReads) resolve();
   pendingReads.length = 0;
@@ -25,6 +26,10 @@ export async function initNativePrefsCache(): Promise<void> {
 
 export function isNativeStorageReady(): boolean {
   return cacheReady;
+}
+
+export function getNativePrefsPlugin(): AonsokuNativePreferencesPlugin | null {
+  return pluginRef;
 }
 
 const writeTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -36,28 +41,26 @@ function debouncedNativeWrite(key: string, value: string) {
 
   writeTimers.set(
     key,
-    setTimeout(async () => {
+    setTimeout(() => {
       writeTimers.delete(key);
-      const { AonsokuNativePreferences } = await import(
-        "@aonsoku/capacitor-native/preferences"
-      );
-      await AonsokuNativePreferences.setPreference({ key, value });
+      pluginRef?.setPreference({ key, value });
     }, WRITE_DEBOUNCE_MS),
   );
 }
 
 export function flushNativeWrites(): void {
+  if (writeTimers.size === 0 || !pluginRef) return;
+  const batch: Record<string, string> = {};
   for (const [key, timer] of writeTimers) {
     clearTimeout(timer);
-    writeTimers.delete(key);
     const value = nativePrefsCache?.[key];
     if (value != null) {
-      import("@aonsoku/capacitor-native/preferences").then(
-        ({ AonsokuNativePreferences }) => {
-          AonsokuNativePreferences.setPreference({ key, value });
-        },
-      );
+      batch[key] = value;
     }
+  }
+  writeTimers.clear();
+  if (Object.keys(batch).length > 0) {
+    pluginRef.setPreferences({ preferences: batch });
   }
 }
 
@@ -117,11 +120,7 @@ export function createNativeStorage<S>(storeName: string): PersistStorage<S> {
       if (nativePrefsCache) {
         delete nativePrefsCache[storeName];
       }
-      import("@aonsoku/capacitor-native/preferences").then(
-        ({ AonsokuNativePreferences }) => {
-          AonsokuNativePreferences.deletePreference({ key: storeName });
-        },
-      );
+      pluginRef?.deletePreference({ key: storeName });
     },
   };
 }
