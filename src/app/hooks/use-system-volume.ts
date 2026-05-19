@@ -5,6 +5,7 @@ import { getPlaybackCapabilities } from "@/utils/capabilities";
 const volumeListeners = new Set<() => void>();
 let systemVolume = 100;
 let isListenerStarted = false;
+let suppressUntil = 0;
 
 function clampVolume(value: number) {
   if (!Number.isFinite(value)) return 100;
@@ -23,6 +24,11 @@ function emitSystemVolume(value: number) {
   for (const listener of volumeListeners) {
     listener();
   }
+}
+
+function emitFromNative(value: number) {
+  if (Date.now() < suppressUntil) return;
+  emitSystemVolume(value);
 }
 
 function subscribeToSystemVolume(listener: () => void) {
@@ -64,7 +70,7 @@ function startSystemVolumeListener() {
 
   availability.plugin
     .addListener("systemVolumeChanged", (event) => {
-      emitSystemVolume(volumeFromNative(event.volume));
+      emitFromNative(volumeFromNative(event.volume));
     })
     .catch(() => {
       isListenerStarted = false;
@@ -93,13 +99,16 @@ export function useSystemVolume() {
 
       const clamped = clampVolume(value);
       emitSystemVolume(clamped);
+      suppressUntil = Date.now() + 600;
 
       availability.plugin
         .setSystemVolume({ value: clamped / 100 })
         .then(({ volume }) => {
+          suppressUntil = 0;
           emitSystemVolume(volumeFromNative(volume));
         })
         .catch(() => {
+          suppressUntil = 0;
           refreshSystemVolume();
         });
     },
