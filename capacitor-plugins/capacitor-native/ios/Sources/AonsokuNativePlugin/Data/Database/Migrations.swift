@@ -153,5 +153,30 @@ enum Migrations {
                 t.column("checkpointJson", .text)
             }
         }
+
+        migrator.registerMigration("v2") { db in
+            try db.create(table: "preferences") { t in
+                t.primaryKey("key", .text)
+                t.column("value", .text).notNull()
+                t.column("updatedAt", .integer).notNull()
+            }
+
+            try db.create(table: "queueState") { t in
+                t.primaryKey("key", .text)
+                t.column("stateJson", .text).notNull()
+                t.column("updatedAt", .integer).notNull()
+            }
+
+            try db.create(table: "playHistory") { t in
+                t.autoIncrementedPrimaryKey("id")
+                t.column("songJson", .text).notNull()
+                t.column("playedAt", .integer).notNull()
+            }
+            try db.create(
+                index: "idx_playHistory_playedAt",
+                on: "playHistory",
+                columns: ["playedAt"]
+            )
+        }
     }
 }
