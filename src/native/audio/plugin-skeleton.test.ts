@@ -154,6 +154,31 @@ describe("Aonsoku native audio plugin skeleton", () => {
     }
   });
 
+  it("leaves the iOS volume HUD unsuppressed outside fullscreen", () => {
+    const swift = readText(
+      path.join(
+        pluginRoot,
+        "ios/Sources/AonsokuNativePlugin/Audio/AonsokuNativeAudioPlugin.swift",
+      ),
+    );
+    const setupVolumeControl =
+      swift.match(
+        /private func setupVolumeControl\(\) \{([\s\S]*?)\n {4}@objc func setSystemVolume/,
+      )?.[1] ?? "";
+    const setVolumeHUDEnabled =
+      swift.match(
+        /@objc func setVolumeHUDEnabled\(_ call: CAPPluginCall\) \{([\s\S]*?)\n {4}private func removeVolumeSliderView/,
+      )?.[1] ?? "";
+    const hudEnabledBranch =
+      setVolumeHUDEnabled.match(/if enabled \{([\s\S]*?)\} else \{/)?.[1] ??
+      "";
+
+    expect(setupVolumeControl).toContain("observe(\\.outputVolume");
+    expect(setupVolumeControl).not.toContain("MPVolumeView(frame:");
+    expect(hudEnabledBranch).toContain("removeVolumeSliderView()");
+    expect(setVolumeHUDEnabled).toContain("ensureVolumeSlider()");
+  });
+
   it("keeps the app facade and plugin package contracts in parity", () => {
     const appTypes = readText(
       path.join(process.cwd(), "src/native/audio/types.ts"),

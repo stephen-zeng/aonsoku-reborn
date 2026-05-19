@@ -76,7 +76,6 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private let scrobbleSubmitter = NativeScrobbleSubmitter()
     private let downloadManager = NativeDownloadManager()
     private var isQueueEngineActive = false
-    private var volumeHUDView: MPVolumeView?
     private var volumeSliderView: MPVolumeView?
     private var volumeSlider: UISlider?
     private var volumeObservation: NSKeyValueObservation?
@@ -104,7 +103,6 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         removeLifecycleObservers()
         clearPlayer(sendIdleEvent: false, deactivateSession: true)
         volumeObservation?.invalidate()
-        volumeHUDView?.removeFromSuperview()
         volumeSliderView?.removeFromSuperview()
     }
 
@@ -804,14 +802,6 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
             try? self.activateAudioSession()
 
-            if let containerView = self.bridge?.viewController?.view {
-                let hud = MPVolumeView(frame: .zero)
-                hud.showsRouteButton = false
-                hud.showsVolumeSlider = false
-                containerView.addSubview(hud)
-                self.volumeHUDView = hud
-            }
-
             self.volumeObservation = self.audioSession.observe(\.outputVolume, options: [.initial, .new]) { [weak self] _, change in
                 guard let self, let newVolume = change.newValue else { return }
                 DispatchQueue.main.async {
@@ -951,22 +941,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             guard let self else { return }
             self.isVolumeHUDEnabled = enabled
             if enabled {
-                // Remove hidden slider view that suppresses the HUD
+                // Let iOS present its own volume overlay outside fullscreen.
                 self.removeVolumeSliderView()
-
-                // Restore the HUD view if not already present
-                if self.volumeHUDView == nil, let containerView = self.bridge?.viewController?.view {
-                    let hud = MPVolumeView(frame: .zero)
-                    hud.showsRouteButton = false
-                    hud.showsVolumeSlider = false
-                    containerView.addSubview(hud)
-                    self.volumeHUDView = hud
-                }
             } else {
-                // Remove HUD view so system doesn't show volume overlay
-                self.volumeHUDView?.removeFromSuperview()
-                self.volumeHUDView = nil
-                // Add hidden slider view to suppress system HUD
+                // Add a hidden slider view to suppress the system HUD.
                 _ = self.ensureVolumeSlider()
             }
             call.resolve()
