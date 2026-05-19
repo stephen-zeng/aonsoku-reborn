@@ -800,6 +800,17 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
             try? self.activateAudioSession()
 
+            // Add a zero-frame MPVolumeView with no slider so iOS shows
+            // the native volume HUD when hardware buttons are pressed.
+            if let containerView = self.bridge?.viewController?.view {
+                let hud = MPVolumeView(frame: .zero)
+                hud.showsRouteButton = false
+                hud.showsVolumeSlider = false
+                hud.tag = 9999
+                containerView.addSubview(hud)
+                self.volumeView = hud
+            }
+
             self.volumeObservation = self.audioSession.observe(\.outputVolume, options: [.initial, .new]) { [weak self] _, change in
                 guard let self, let newVolume = change.newValue else { return }
                 DispatchQueue.main.async {
@@ -928,10 +939,30 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             if enabled {
+                // Remove hidden volume view so iOS shows the system volume HUD
                 self.volumeSlider = nil
                 self.volumeView?.removeFromSuperview()
                 self.volumeView = nil
+
+                // Add a visible MPVolumeView so the system routes volume
+                // indication through it (required when audio session is active)
+                guard let containerView = self.bridge?.viewController?.view else {
+                    call.resolve()
+                    return
+                }
+                let hud = MPVolumeView(frame: .zero)
+                hud.showsRouteButton = false
+                hud.showsVolumeSlider = false
+                hud.tag = 9999
+                containerView.addSubview(hud)
+                self.volumeView = hud
             } else {
+                // Remove any HUD-style volume view
+                if let existing = self.volumeView, existing.tag == 9999 {
+                    existing.removeFromSuperview()
+                    self.volumeView = nil
+                }
+                // Add hidden volume view to suppress system HUD
                 _ = self.ensureVolumeSlider()
             }
             call.resolve()
