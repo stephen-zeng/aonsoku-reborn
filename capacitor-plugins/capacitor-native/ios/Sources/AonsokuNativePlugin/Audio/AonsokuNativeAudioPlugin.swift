@@ -78,7 +78,6 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var volumeView: MPVolumeView?
     private var volumeSlider: UISlider?
     private var volumeObservation: NSKeyValueObservation?
-    private var isSuppressingVolumeEvent = false
 
     public override func load() {
         super.load()
@@ -798,13 +797,14 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
 
-            // Ensure audio session is active so outputVolume is observable
-            try? self.audioSession.setActive(true)
+            // Keep the session active so outputVolume emits hardware button
+            // changes, and prepare MPVolumeView before the first JS request.
+            try? self.activateAudioSession()
+            _ = self.ensureVolumeSlider()
 
             self.volumeObservation = self.audioSession.observe(\.outputVolume, options: [.initial, .new]) { [weak self] _, change in
                 guard let self, let newVolume = change.newValue else { return }
                 DispatchQueue.main.async {
-                    guard !self.isSuppressingVolumeEvent else { return }
                     self.notifyListeners("systemVolumeChanged", data: ["volume": newVolume])
                 }
             }
@@ -818,41 +818,87 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             let value = call.getFloat("value") ?? 0.5
             let clampedValue = min(max(value, 0.0), 1.0)
 
-            self.isSuppressingVolumeEvent = true
+            try? self.activateAudioSession()
 
-            // Use MPVolumeView's internal slider — the only Apple-supported way
-            if self.volumeView == nil {
-                let vv = MPVolumeView(frame: CGRect(x: -1000, y: -1000, width: 120, height: 40))
-                vv.showsRouteButton = false
-                self.bridge?.viewController?.view.addSubview(vv)
-                self.volumeView = vv
-            }
+            self.resolveVolumeSlider { [weak self] slider in
+                guard let self else { return }
+                guard let slider else {
+                    call.reject(
+                        "System volume control is unavailable.",
+                        "volume_control_unavailable"
+                    )
+                    return
+                }
 
-            if let slider = self.findVolumeSlider() {
-                slider.value = clampedValue
+                slider.setValue(clampedValue, animated: false)
                 slider.sendActions(for: .valueChanged)
-            } else {
-                // Fallback: set via KVC on the audio session
-                self.audioSession.setValue(clampedValue, forKey: "outputVolume")
-            }
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.isSuppressingVolumeEvent = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                    guard let self else { return }
+                    let volume = self.audioSession.outputVolume
+                    self.notifyListeners("systemVolumeChanged", data: ["volume": volume])
+                    call.resolve(["volume": volume])
+                }
             }
-
-            call.resolve(["volume": clampedValue])
         }
     }
 
-    private func findVolumeSlider() -> UISlider? {
+    private func resolveVolumeSlider(
+        attemptsRemaining: Int = 8,
+        completion: @escaping (UISlider?) -> Void
+    ) {
+        if let slider = ensureVolumeSlider() {
+            completion(slider)
+            return
+        }
+
+        guard attemptsRemaining > 0 else {
+            completion(nil)
+            return
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+            guard let self else {
+                completion(nil)
+                return
+            }
+
+            self.resolveVolumeSlider(
+                attemptsRemaining: attemptsRemaining - 1,
+                completion: completion
+            )
+        }
+    }
+
+    private func ensureVolumeSlider() -> UISlider? {
         if let cached = self.volumeSlider {
             return cached
         }
+
+        if self.volumeView == nil {
+            guard let containerView = self.bridge?.viewController?.view else {
+                return nil
+            }
+
+            let volumeView = MPVolumeView(frame: CGRect(x: 0, y: 0, width: 1, height: 1))
+            volumeView.showsRouteButton = false
+            volumeView.showsVolumeSlider = true
+            volumeView.alpha = 0.01
+            volumeView.accessibilityElementsHidden = true
+            volumeView.clipsToBounds = true
+            containerView.addSubview(volumeView)
+            self.volumeView = volumeView
+        }
+
         guard let volumeView = self.volumeView else { return nil }
+        volumeView.setNeedsLayout()
+        volumeView.layoutIfNeeded()
+
         if let slider = findSlider(in: volumeView) {
             self.volumeSlider = slider
             return slider
         }
+
         return nil
     }
 
@@ -870,6 +916,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func getSystemVolume(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
+            try? self.activateAudioSession()
             let volume = self.audioSession.outputVolume
             call.resolve(["volume": volume])
         }

@@ -281,6 +281,18 @@ export interface NativeDownloadFailedEvent {
   error: string;
 }
 
+export interface NativeSetSystemVolumeOptions {
+  value: number;
+}
+
+export interface NativeSystemVolumeResult {
+  volume: number;
+}
+
+export interface NativeSystemVolumeChangedEvent {
+  volume: number;
+}
+
 export interface NativeAudioEvents {
   playbackStateChanged: NativeAudioPlaybackStateChangedEvent;
   progress: NativeAudioProgressEvent;
@@ -297,6 +309,7 @@ export interface NativeAudioEvents {
   downloadProgress: NativeDownloadProgressEvent;
   downloadCompleted: NativeDownloadCompletedEvent;
   downloadFailed: NativeDownloadFailedEvent;
+  systemVolumeChanged: NativeSystemVolumeChangedEvent;
 }
 
 export type NativeAudioEventName = keyof NativeAudioEvents;
@@ -342,6 +355,12 @@ export interface AonsokuNativeAudioPlugin extends Plugin {
   // Native Audio Download
   downloadAudioFile(options: NativeDownloadAudioFileOptions): Promise<void>;
   cancelDownload(options?: NativeCancelDownloadOptions): Promise<void>;
+
+  // System Volume Control
+  setSystemVolume(
+    options: NativeSetSystemVolumeOptions,
+  ): Promise<NativeSystemVolumeResult>;
+  getSystemVolume(): Promise<NativeSystemVolumeResult>;
 
   addListener<TEvent extends NativeAudioEventName>(
     eventName: TEvent,

@@ -35,6 +35,9 @@ import {
   type NativeDownloadProgressEvent,
   type NativeDownloadCompletedEvent,
   type NativeDownloadFailedEvent,
+  type NativeSetSystemVolumeOptions,
+  type NativeSystemVolumeResult,
+  type NativeSystemVolumeChangedEvent,
 } from "./definitions";
 import { AonsokuNativeAudioWeb } from "./web";
 
@@ -85,4 +88,7 @@ export type {
   NativeDownloadProgressEvent,
   NativeDownloadCompletedEvent,
   NativeDownloadFailedEvent,
+  NativeSetSystemVolumeOptions,
+  NativeSystemVolumeResult,
+  NativeSystemVolumeChangedEvent,
 };

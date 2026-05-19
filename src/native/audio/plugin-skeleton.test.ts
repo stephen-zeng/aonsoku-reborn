@@ -27,6 +27,8 @@ const nativeAudioMethods = [
   "getAudioFileSize",
   "deleteAudioFile",
   "clearAudioFiles",
+  "setSystemVolume",
+  "getSystemVolume",
 ] as const;
 
 const nativeAudioEventNames = [
@@ -39,6 +41,7 @@ const nativeAudioEventNames = [
   "remoteCommand",
   "interruptionChanged",
   "routeChanged",
+  "systemVolumeChanged",
 ] as const;
 
 const nativeAudioSourceKinds = [

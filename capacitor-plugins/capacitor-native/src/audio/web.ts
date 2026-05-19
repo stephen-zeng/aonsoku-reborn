@@ -11,6 +11,7 @@ import type {
   NativeAudioShuffleOptions,
   NativeAudioSource,
   NativeAudioStoreFileOptions,
+  NativeSetSystemVolumeOptions,
   NativePlayAtIndexOptions,
   NativeRemoveFromUserQueueOptions,
   NativeSetContextQueueOptions,
@@ -151,5 +152,13 @@ export class AonsokuNativeAudioWeb
 
   cancelDownload(): Promise<void> {
     return Promise.reject(createNativeAudioUnavailableError("cancelDownload"));
+  }
+
+  setSystemVolume(_options: NativeSetSystemVolumeOptions) {
+    return Promise.reject(createNativeAudioUnavailableError("setSystemVolume"));
+  }
+
+  getSystemVolume() {
+    return Promise.reject(createNativeAudioUnavailableError("getSystemVolume"));
   }
 }
