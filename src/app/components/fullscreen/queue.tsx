@@ -18,7 +18,8 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { useWebHaptics } from "web-haptics/react";
+import { useHaptic } from "@/app/hooks/use-haptic";
+import { useScrollEndListener } from "@/app/hooks/use-scroll-end-listener";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { useQueueDndSensors } from "@/app/components/queue/dnd-sensors";
 import {
@@ -35,7 +36,6 @@ import { useIsMobile } from "@/app/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import {
   useContextQueue,
-  useHapticSettings,
   useHasQueueSongs,
   usePlayerActions,
   usePlayerCurrentSong,
@@ -145,10 +145,9 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
 
   const { clearHistory: clearPlayHistory } = usePlayHistoryActions();
 
-  const { hapticFeedbackEnabled } = useHapticSettings();
-  const { trigger } = useWebHaptics();
-  const snapHaptic = hapticFeedbackEnabled
-    ? () => trigger([{ duration: 6 }])
+  const { trigger: hapticTrigger } = useHaptic();
+  const snapHaptic = hapticTrigger
+    ? () => hapticTrigger("heavy")
     : undefined;
 
   const upcomingContext = useMemo(
@@ -305,11 +304,10 @@ function UnifiedQueueView({
     };
   }, [useVirtualization]);
 
-  useEffect(() => {
-    if (useVirtualization) return;
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    const handleScrollEnd = () => {
+  useScrollEndListener(
+    () => (useVirtualization ? null : scrollContainerRef.current),
+    () => {
+      const container = scrollContainerRef.current;
       const el = currentSongRef.current;
       const spacer = spacerRef.current;
       if (!el || !container || !spacer) return;
@@ -343,10 +341,9 @@ function UnifiedQueueView({
         });
         snapHaptic?.();
       }
-    };
-    container.addEventListener("scrollend", handleScrollEnd);
-    return () => container.removeEventListener("scrollend", handleScrollEnd);
-  }, [useVirtualization, snapHaptic]);
+    },
+    [useVirtualization, snapHaptic],
+  );
 
   const contextPlayedCount = contextIndex + 1;
   const userQueueStart = contextPlayedCount;
@@ -899,14 +896,11 @@ function VirtualizedQueueView({
     }
   }, [currentSong?.id, currentSongVirtualIndex, virtualizer]);
 
-  useEffect(() => {
-    const scrollEl = getScrollElement();
-    if (!scrollEl) return;
-    const handleScrollEnd = () => {
-      const currentSongEl = scrollEl.querySelector<HTMLElement>(
-        "[data-current-song]",
-      );
-      if (!currentSongEl) return;
+  useScrollEndListener(
+    getScrollElement,
+    () => {
+      const scrollEl = getScrollElement();
+      if (!scrollEl) return;
       if (scrollEl.scrollTop <= 1) return;
       const containerHeight = scrollEl.clientHeight;
       const scrollTop = scrollEl.scrollTop;
@@ -931,16 +925,15 @@ function VirtualizedQueueView({
           snapHaptic?.();
         }
       }
-    };
-    scrollEl.addEventListener("scrollend", handleScrollEnd);
-    return () => scrollEl.removeEventListener("scrollend", handleScrollEnd);
-  }, [
-    currentSongVirtualIndex,
-    virtualizer,
-    getScrollElement,
-    snapHaptic,
-    virtualItems,
-  ]);
+    },
+    [
+      currentSongVirtualIndex,
+      virtualizer,
+      getScrollElement,
+      snapHaptic,
+      virtualItems,
+    ],
+  );
 
   if (virtualItems.length === 0) {
     return (
