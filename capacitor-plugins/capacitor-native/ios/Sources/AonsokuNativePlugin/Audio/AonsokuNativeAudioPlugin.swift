@@ -58,6 +58,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var didBecomeActiveObserver: NSObjectProtocol?
     private let loadQueue = DispatchQueue(label: "com.aonsoku.NativeAudio.load", qos: .userInitiated)
     private let stateQueue = DispatchQueue(label: "com.aonsoku.NativeAudio.state", qos: .userInitiated)
+    private let progressQueue = DispatchQueue(label: "com.aonsoku.NativeAudio.progress", qos: .userInitiated)
     private var wasPlayingBeforeInterruption = false
     private var repeatMode = "off"
     private var shuffleEnabled = false
@@ -1588,7 +1589,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         requestId: String?
     ) {
         let interval = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
-        timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] _ in
+        timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: progressQueue) { [weak self] _ in
             guard self?.isCurrentPlayback(player: player, generation: generation) == true else {
                 return
             }
