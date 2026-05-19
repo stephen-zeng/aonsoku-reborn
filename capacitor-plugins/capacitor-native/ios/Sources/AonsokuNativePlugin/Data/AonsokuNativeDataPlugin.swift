@@ -39,6 +39,7 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
     private var syncEngine: SyncEngine!
     private var syncScheduler: SyncScheduler!
     private var eventEmitter: EventEmitter!
+    private let dataQueue = DispatchQueue(label: "com.aonsoku.data.query", qos: .userInitiated, attributes: .concurrent)
 
     // MARK: - Initialization
 
@@ -116,16 +117,18 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
             sortOrder: call.getString("sortOrder")
         )
 
-        do {
-            let repo = ArtistRepository(db: dbManager.dbPool)
-            let (items, total) = try repo.getAll(limit: limit, offset: offset, filter: filter)
-            call.resolve([
-                "items": items.map { $0.toDictionary().compactMapValues { $0 } },
-                "total": total,
-                "hasMore": offset + limit < total,
-            ])
-        } catch {
-            call.reject("Failed to query artists: \(error.localizedDescription)")
+        dataQueue.async {
+            do {
+                let repo = ArtistRepository(db: self.dbManager.dbPool)
+                let (items, total) = try repo.getAll(limit: limit, offset: offset, filter: filter)
+                call.resolve([
+                    "items": items.map { $0.toDictionary().compactMapValues { $0 } },
+                    "total": total,
+                    "hasMore": offset + limit < total,
+                ])
+            } catch {
+                call.reject("Failed to query artists: \(error.localizedDescription)")
+            }
         }
     }
 
@@ -134,15 +137,17 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
             call.reject("Missing id parameter")
             return
         }
-        do {
-            let repo = ArtistRepository(db: dbManager.dbPool)
-            if let artist = try repo.getById(id) {
-                call.resolve(artist.toDictionary().compactMapValues { $0 })
-            } else {
-                call.resolve([:])
+        dataQueue.async {
+            do {
+                let repo = ArtistRepository(db: self.dbManager.dbPool)
+                if let artist = try repo.getById(id) {
+                    call.resolve(artist.toDictionary().compactMapValues { $0 })
+                } else {
+                    call.resolve([:])
+                }
+            } catch {
+                call.reject("Failed to get artist: \(error.localizedDescription)")
             }
-        } catch {
-            call.reject("Failed to get artist: \(error.localizedDescription)")
         }
     }
 
@@ -160,16 +165,18 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
             sortOrder: call.getString("sortOrder")
         )
 
-        do {
-            let repo = AlbumRepository(db: dbManager.dbPool)
-            let (items, total) = try repo.getAll(limit: limit, offset: offset, filter: filter)
-            call.resolve([
-                "items": items.map { $0.toDictionary().compactMapValues { $0 } },
-                "total": total,
-                "hasMore": offset + limit < total,
-            ])
-        } catch {
-            call.reject("Failed to query albums: \(error.localizedDescription)")
+        dataQueue.async {
+            do {
+                let repo = AlbumRepository(db: self.dbManager.dbPool)
+                let (items, total) = try repo.getAll(limit: limit, offset: offset, filter: filter)
+                call.resolve([
+                    "items": items.map { $0.toDictionary().compactMapValues { $0 } },
+                    "total": total,
+                    "hasMore": offset + limit < total,
+                ])
+            } catch {
+                call.reject("Failed to query albums: \(error.localizedDescription)")
+            }
         }
     }
 
@@ -178,17 +185,19 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
             call.reject("Missing id parameter")
             return
         }
-        do {
-            let repo = AlbumRepository(db: dbManager.dbPool)
-            if let result = try repo.getWithSongs(id) {
-                var dict = result.album.toDictionary().compactMapValues { $0 }
-                dict["song"] = result.songs.map { $0.toDictionary().compactMapValues { $0 } }
-                call.resolve(dict)
-            } else {
-                call.resolve([:])
+        dataQueue.async {
+            do {
+                let repo = AlbumRepository(db: self.dbManager.dbPool)
+                if let result = try repo.getWithSongs(id) {
+                    var dict = result.album.toDictionary().compactMapValues { $0 }
+                    dict["song"] = result.songs.map { $0.toDictionary().compactMapValues { $0 } }
+                    call.resolve(dict)
+                } else {
+                    call.resolve([:])
+                }
+            } catch {
+                call.reject("Failed to get album: \(error.localizedDescription)")
             }
-        } catch {
-            call.reject("Failed to get album: \(error.localizedDescription)")
         }
     }
 
@@ -205,16 +214,18 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
             sortOrder: call.getString("sortOrder")
         )
 
-        do {
-            let repo = SongRepository(db: dbManager.dbPool)
-            let (items, total) = try repo.getAll(limit: limit, offset: offset, filter: filter)
-            call.resolve([
-                "items": items.map { $0.toDictionary().compactMapValues { $0 } },
-                "total": total,
-                "hasMore": offset + limit < total,
-            ])
-        } catch {
-            call.reject("Failed to query songs: \(error.localizedDescription)")
+        dataQueue.async {
+            do {
+                let repo = SongRepository(db: self.dbManager.dbPool)
+                let (items, total) = try repo.getAll(limit: limit, offset: offset, filter: filter)
+                call.resolve([
+                    "items": items.map { $0.toDictionary().compactMapValues { $0 } },
+                    "total": total,
+                    "hasMore": offset + limit < total,
+                ])
+            } catch {
+                call.reject("Failed to query songs: \(error.localizedDescription)")
+            }
         }
     }
 
@@ -222,16 +233,18 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
         let limit = call.getInt("limit") ?? 100
         let offset = call.getInt("offset") ?? 0
 
-        do {
-            let repo = PlaylistRepository(db: dbManager.dbPool)
-            let (items, total) = try repo.getAll(limit: limit, offset: offset)
-            call.resolve([
-                "items": items.map { $0.toDictionary().compactMapValues { $0 } },
-                "total": total,
-                "hasMore": offset + limit < total,
-            ])
-        } catch {
-            call.reject("Failed to query playlists: \(error.localizedDescription)")
+        dataQueue.async {
+            do {
+                let repo = PlaylistRepository(db: self.dbManager.dbPool)
+                let (items, total) = try repo.getAll(limit: limit, offset: offset)
+                call.resolve([
+                    "items": items.map { $0.toDictionary().compactMapValues { $0 } },
+                    "total": total,
+                    "hasMore": offset + limit < total,
+                ])
+            } catch {
+                call.reject("Failed to query playlists: \(error.localizedDescription)")
+            }
         }
     }
 
@@ -240,27 +253,31 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
             call.reject("Missing id parameter")
             return
         }
-        do {
-            let repo = PlaylistRepository(db: dbManager.dbPool)
-            if let detail = try repo.getDetailById(id) {
-                call.resolve(detail.toDictionary().compactMapValues { $0 })
-            } else {
-                call.resolve([:])
+        dataQueue.async {
+            do {
+                let repo = PlaylistRepository(db: self.dbManager.dbPool)
+                if let detail = try repo.getDetailById(id) {
+                    call.resolve(detail.toDictionary().compactMapValues { $0 })
+                } else {
+                    call.resolve([:])
+                }
+            } catch {
+                call.reject("Failed to get playlist: \(error.localizedDescription)")
             }
-        } catch {
-            call.reject("Failed to get playlist: \(error.localizedDescription)")
         }
     }
 
     @objc func getGenres(_ call: CAPPluginCall) {
-        do {
-            let repo = GenreRepository(db: dbManager.dbPool)
-            let items = try repo.getAll()
-            call.resolve([
-                "items": items.map { $0.toDictionary().compactMapValues { $0 } },
-            ])
-        } catch {
-            call.reject("Failed to query genres: \(error.localizedDescription)")
+        dataQueue.async {
+            do {
+                let repo = GenreRepository(db: self.dbManager.dbPool)
+                let items = try repo.getAll()
+                call.resolve([
+                    "items": items.map { $0.toDictionary().compactMapValues { $0 } },
+                ])
+            } catch {
+                call.reject("Failed to query genres: \(error.localizedDescription)")
+            }
         }
     }
 
@@ -269,38 +286,40 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
         let offset = call.getInt("offset") ?? 0
         let type = call.getString("type") ?? "songs"
 
-        do {
-            switch type {
-            case "artists":
-                let repo = ArtistRepository(db: dbManager.dbPool)
-                let filter = ArtistQueryFilter(starredOnly: true, sortBy: "starredAt", sortOrder: "desc")
-                let (items, total) = try repo.getAll(limit: limit, offset: offset, filter: filter)
-                call.resolve([
-                    "items": items.map { $0.toDictionary().compactMapValues { $0 } },
-                    "total": total,
-                    "hasMore": offset + limit < total,
-                ])
-            case "albums":
-                let repo = AlbumRepository(db: dbManager.dbPool)
-                let filter = AlbumQueryFilter(starredOnly: true, sortBy: "starredAt", sortOrder: "desc")
-                let (items, total) = try repo.getAll(limit: limit, offset: offset, filter: filter)
-                call.resolve([
-                    "items": items.map { $0.toDictionary().compactMapValues { $0 } },
-                    "total": total,
-                    "hasMore": offset + limit < total,
-                ])
-            default:
-                let repo = SongRepository(db: dbManager.dbPool)
-                let filter = SongQueryFilter(starredOnly: true, sortBy: "starredAt", sortOrder: "desc")
-                let (items, total) = try repo.getAll(limit: limit, offset: offset, filter: filter)
-                call.resolve([
-                    "items": items.map { $0.toDictionary().compactMapValues { $0 } },
-                    "total": total,
-                    "hasMore": offset + limit < total,
-                ])
+        dataQueue.async {
+            do {
+                switch type {
+                case "artists":
+                    let repo = ArtistRepository(db: self.dbManager.dbPool)
+                    let filter = ArtistQueryFilter(starredOnly: true, sortBy: "starredAt", sortOrder: "desc")
+                    let (items, total) = try repo.getAll(limit: limit, offset: offset, filter: filter)
+                    call.resolve([
+                        "items": items.map { $0.toDictionary().compactMapValues { $0 } },
+                        "total": total,
+                        "hasMore": offset + limit < total,
+                    ])
+                case "albums":
+                    let repo = AlbumRepository(db: self.dbManager.dbPool)
+                    let filter = AlbumQueryFilter(starredOnly: true, sortBy: "starredAt", sortOrder: "desc")
+                    let (items, total) = try repo.getAll(limit: limit, offset: offset, filter: filter)
+                    call.resolve([
+                        "items": items.map { $0.toDictionary().compactMapValues { $0 } },
+                        "total": total,
+                        "hasMore": offset + limit < total,
+                    ])
+                default:
+                    let repo = SongRepository(db: self.dbManager.dbPool)
+                    let filter = SongQueryFilter(starredOnly: true, sortBy: "starredAt", sortOrder: "desc")
+                    let (items, total) = try repo.getAll(limit: limit, offset: offset, filter: filter)
+                    call.resolve([
+                        "items": items.map { $0.toDictionary().compactMapValues { $0 } },
+                        "total": total,
+                        "hasMore": offset + limit < total,
+                    ])
+                }
+            } catch {
+                call.reject("Failed to query favorites: \(error.localizedDescription)")
             }
-        } catch {
-            call.reject("Failed to query favorites: \(error.localizedDescription)")
         }
     }
 
@@ -314,40 +333,42 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
         let albumCount = call.getInt("albumCount") ?? 20
         let songCount = call.getInt("songCount") ?? 20
 
-        do {
-            let searchPattern = "%\(query)%"
+        dataQueue.async {
+            do {
+                let searchPattern = "%\(query)%"
 
-            let artists: [[String: Any]] = try dbManager.dbPool.read { db in
-                try ArtistRecord
-                    .filter(Column("name").like(searchPattern))
-                    .limit(artistCount)
-                    .fetchAll(db)
-                    .map { $0.toDictionary().compactMapValues { $0 } }
+                let artists: [[String: Any]] = try self.dbManager.dbPool.read { db in
+                    try ArtistRecord
+                        .filter(Column("name").like(searchPattern))
+                        .limit(artistCount)
+                        .fetchAll(db)
+                        .map { $0.toDictionary().compactMapValues { $0 } }
+                }
+
+                let albums: [[String: Any]] = try self.dbManager.dbPool.read { db in
+                    try AlbumRecord
+                        .filter(Column("name").like(searchPattern) || Column("artist").like(searchPattern))
+                        .limit(albumCount)
+                        .fetchAll(db)
+                        .map { $0.toDictionary().compactMapValues { $0 } }
+                }
+
+                let songs: [[String: Any]] = try self.dbManager.dbPool.read { db in
+                    try SongRecord
+                        .filter(Column("title").like(searchPattern) || Column("artist").like(searchPattern) || Column("album").like(searchPattern))
+                        .limit(songCount)
+                        .fetchAll(db)
+                        .map { $0.toDictionary().compactMapValues { $0 } }
+                }
+
+                call.resolve([
+                    "artists": artists,
+                    "albums": albums,
+                    "songs": songs,
+                ])
+            } catch {
+                call.reject("Failed to search: \(error.localizedDescription)")
             }
-
-            let albums: [[String: Any]] = try dbManager.dbPool.read { db in
-                try AlbumRecord
-                    .filter(Column("name").like(searchPattern) || Column("artist").like(searchPattern))
-                    .limit(albumCount)
-                    .fetchAll(db)
-                    .map { $0.toDictionary().compactMapValues { $0 } }
-            }
-
-            let songs: [[String: Any]] = try dbManager.dbPool.read { db in
-                try SongRecord
-                    .filter(Column("title").like(searchPattern) || Column("artist").like(searchPattern) || Column("album").like(searchPattern))
-                    .limit(songCount)
-                    .fetchAll(db)
-                    .map { $0.toDictionary().compactMapValues { $0 } }
-            }
-
-            call.resolve([
-                "artists": artists,
-                "albums": albums,
-                "songs": songs,
-            ])
-        } catch {
-            call.reject("Failed to search: \(error.localizedDescription)")
         }
     }
 
@@ -356,16 +377,18 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
             call.reject("Missing songId parameter")
             return
         }
-        do {
-            let repo = LyricsRepository(db: dbManager.dbPool)
-            if let lyrics = try repo.getBySongId(songId) {
-                try? repo.updateAccessTime(songId: songId)
-                call.resolve(lyrics.toDictionary().compactMapValues { $0 })
-            } else {
-                call.resolve([:])
+        dataQueue.async {
+            do {
+                let repo = LyricsRepository(db: self.dbManager.dbPool)
+                if let lyrics = try repo.getBySongId(songId) {
+                    try? repo.updateAccessTime(songId: songId)
+                    call.resolve(lyrics.toDictionary().compactMapValues { $0 })
+                } else {
+                    call.resolve([:])
+                }
+            } catch {
+                call.reject("Failed to get lyrics: \(error.localizedDescription)")
             }
-        } catch {
-            call.reject("Failed to get lyrics: \(error.localizedDescription)")
         }
     }
 
@@ -378,42 +401,48 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
         let synced = call.getBool("synced") ?? false
         let now = Int(Date().timeIntervalSince1970 * 1000)
 
-        do {
-            let repo = LyricsRepository(db: dbManager.dbPool)
-            try repo.upsert(LyricsRecord(
-                songId: songId,
-                content: content,
-                synced: synced,
-                cachedAt: now,
-                lastAccessedAt: now
-            ))
-            call.resolve()
-        } catch {
-            call.reject("Failed to store lyrics: \(error.localizedDescription)")
+        dataQueue.async {
+            do {
+                let repo = LyricsRepository(db: self.dbManager.dbPool)
+                try repo.upsert(LyricsRecord(
+                    songId: songId,
+                    content: content,
+                    synced: synced,
+                    cachedAt: now,
+                    lastAccessedAt: now
+                ))
+                call.resolve()
+            } catch {
+                call.reject("Failed to store lyrics: \(error.localizedDescription)")
+            }
         }
     }
 
     @objc func getCacheStats(_ call: CAPPluginCall) {
-        do {
-            let repo = CacheMetaRepository(db: dbManager.dbPool)
-            let stats = try repo.getStats()
-            call.resolve([
-                "totalItems": stats.totalItems,
-                "totalSizeBytes": stats.totalSizeBytes,
-                "audioCount": stats.audioCount,
-                "coverCount": stats.coverCount,
-            ])
-        } catch {
-            call.reject("Failed to get cache stats: \(error.localizedDescription)")
+        dataQueue.async {
+            do {
+                let repo = CacheMetaRepository(db: self.dbManager.dbPool)
+                let stats = try repo.getStats()
+                call.resolve([
+                    "totalItems": stats.totalItems,
+                    "totalSizeBytes": stats.totalSizeBytes,
+                    "audioCount": stats.audioCount,
+                    "coverCount": stats.coverCount,
+                ])
+            } catch {
+                call.reject("Failed to get cache stats: \(error.localizedDescription)")
+            }
         }
     }
 
     @objc func isDataAvailableOffline(_ call: CAPPluginCall) {
-        let lastSynced = try? SyncStateRepository(db: dbManager.dbPool).getFullSyncTimestamp()
-        call.resolve([
-            "available": lastSynced != nil,
-            "lastSyncedAt": lastSynced as Any,
-        ])
+        dataQueue.async {
+            let lastSynced = try? SyncStateRepository(db: self.dbManager.dbPool).getFullSyncTimestamp()
+            call.resolve([
+                "available": lastSynced != nil,
+                "lastSyncedAt": lastSynced as Any,
+            ])
+        }
     }
 
     // MARK: - Cover Image Cache
