@@ -11,7 +11,30 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
 
     private var activeTasks: [Int: MediaSchemeTaskState] = [:]
     private var urlSessionTasks: [Int: URLSessionDataTask] = [:]
-    private let syncQueue = DispatchQueue(label: "com.aonsoku.MediaSchemeHandler.sync")
+    private let syncQueue = DispatchQueue(
+        label: "com.aonsoku.MediaSchemeHandler.sync",
+        attributes: .concurrent
+    )
+    private let workQueue = DispatchQueue(
+        label: "com.aonsoku.MediaSchemeHandler.work",
+        qos: .userInitiated
+    )
+
+    private var cachedCredentials: MediaCredentials?
+    private var credentialsCacheTime: Date?
+    private let credentialsTTL: TimeInterval = 60
+
+    private func getCredentials() -> MediaCredentials? {
+        if let cached = cachedCredentials,
+           let cacheTime = credentialsCacheTime,
+           Date().timeIntervalSince(cacheTime) < credentialsTTL {
+            return cached
+        }
+        let creds = MediaKeychainHelper.retrieve()
+        cachedCredentials = creds
+        credentialsCacheTime = Date()
+        return creds
+    }
 
     func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
         let taskState = MediaSchemeTaskState(
@@ -19,64 +42,70 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
             originalURL: urlSchemeTask.request.url ?? URL(string: "about:blank")!
         )
 
-        guard let url = urlSchemeTask.request.url,
-              let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-            taskState.didFail(with: SchemeError.invalidURL)
-            return
+        workQueue.async { [self] in
+            guard let url = urlSchemeTask.request.url,
+                  let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+                taskState.didFail(with: SchemeError.invalidURL)
+                return
+            }
+
+            guard let credentials = getCredentials() else {
+                taskState.didFail(with: SchemeError.noCredentials)
+                return
+            }
+
+            let endpoint = components.host ?? components.path
+            var queryItems = components.queryItems ?? []
+
+            let authParams = MediaKeychainHelper.buildAuthParams(credentials: credentials)
+            for (key, value) in authParams {
+                queryItems.append(URLQueryItem(name: key, value: value))
+            }
+
+            let cleanEndpoint = endpoint.hasPrefix("/") ? String(endpoint.dropFirst()) : endpoint
+            let serverUrlString = "\(credentials.serverUrl)/rest/\(cleanEndpoint)"
+
+            guard var realComponents = URLComponents(string: serverUrlString) else {
+                taskState.didFail(with: SchemeError.invalidURL)
+                return
+            }
+
+            realComponents.queryItems = queryItems
+
+            guard let realURL = realComponents.url else {
+                taskState.didFail(with: SchemeError.invalidURL)
+                return
+            }
+
+            taskState.originalURL = url
+            let dataTask = session.dataTask(with: realURL)
+            syncQueue.async(flags: .barrier) { [self] in
+                activeTasks[dataTask.taskIdentifier] = taskState
+                urlSessionTasks[dataTask.taskIdentifier] = dataTask
+            }
+            dataTask.resume()
         }
-
-        guard let credentials = MediaKeychainHelper.retrieve() else {
-            taskState.didFail(with: SchemeError.noCredentials)
-            return
-        }
-
-        let endpoint = components.host ?? components.path
-        var queryItems = components.queryItems ?? []
-
-        let authParams = MediaKeychainHelper.buildAuthParams(credentials: credentials)
-        for (key, value) in authParams {
-            queryItems.append(URLQueryItem(name: key, value: value))
-        }
-
-        let cleanEndpoint = endpoint.hasPrefix("/") ? String(endpoint.dropFirst()) : endpoint
-        let serverUrlString = "\(credentials.serverUrl)/rest/\(cleanEndpoint)"
-
-        guard var realComponents = URLComponents(string: serverUrlString) else {
-            taskState.didFail(with: SchemeError.invalidURL)
-            return
-        }
-
-        realComponents.queryItems = queryItems
-
-        guard let realURL = realComponents.url else {
-            taskState.didFail(with: SchemeError.invalidURL)
-            return
-        }
-
-        taskState.originalURL = url
-        let dataTask = session.dataTask(with: realURL)
-        syncQueue.sync {
-            activeTasks[dataTask.taskIdentifier] = taskState
-            urlSessionTasks[dataTask.taskIdentifier] = dataTask
-        }
-        dataTask.resume()
     }
 
     func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
-        let dataTask: URLSessionDataTask? = syncQueue.sync {
-            let taskId = activeTasks.first {
-                $0.value.schemeTask === urlSchemeTask
-            }?.key
-            let schemeTaskState = taskId.flatMap { activeTasks[$0] }
-            schemeTaskState?.stop()
-            let task = taskId.flatMap { urlSessionTasks.removeValue(forKey: $0) }
-            if let taskId {
-                activeTasks.removeValue(forKey: taskId)
+        workQueue.async { [self] in
+            let found: (taskId: Int, task: URLSessionDataTask)? = syncQueue.sync {
+                guard let taskId = activeTasks.first(where: {
+                    $0.value.schemeTask === urlSchemeTask
+                })?.key else { return nil }
+                activeTasks[taskId]?.stop()
+                let task = urlSessionTasks[taskId]
+                return task.map { (taskId, $0) }
             }
-            return task
-        }
 
-        dataTask?.cancel()
+            guard let found else { return }
+
+            syncQueue.async(flags: .barrier) { [self] in
+                activeTasks.removeValue(forKey: found.taskId)
+                urlSessionTasks.removeValue(forKey: found.taskId)
+            }
+            found.task.cancel()
+        }
     }
 
     // MARK: - URLSessionDataDelegate
@@ -134,8 +163,7 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         let schemeTaskState: MediaSchemeTaskState? = syncQueue.sync {
-            urlSessionTasks.removeValue(forKey: task.taskIdentifier)
-            return activeTasks[task.taskIdentifier]
+            activeTasks[task.taskIdentifier]
         }
 
         guard let schemeTaskState else { return }
@@ -148,10 +176,11 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
         }
 
         if didComplete {
-            syncQueue.sync {
+            syncQueue.async(flags: .barrier) { [self] in
                 if activeTasks[task.taskIdentifier] === schemeTaskState {
                     activeTasks.removeValue(forKey: task.taskIdentifier)
                 }
+                urlSessionTasks.removeValue(forKey: task.taskIdentifier)
             }
         }
     }
