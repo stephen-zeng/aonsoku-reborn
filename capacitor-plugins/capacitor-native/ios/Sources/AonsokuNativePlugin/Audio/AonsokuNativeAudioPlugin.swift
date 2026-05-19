@@ -37,6 +37,8 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "cancelDownload", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getScrobbleBuffer", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "clearScrobbleBuffer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setSystemVolume", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getSystemVolume", returnType: CAPPluginReturnPromise),
     ]
 
     private var player: AVPlayer?
@@ -73,6 +75,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private let scrobbleSubmitter = NativeScrobbleSubmitter()
     private let downloadManager = NativeDownloadManager()
     private var isQueueEngineActive = false
+    private var volumeView: MPVolumeView?
+    private var volumeSlider: UISlider?
+    private var volumeObservation: NSKeyValueObservation?
+    private var isSuppressingVolumeEvent = false
 
     public override func load() {
         super.load()
@@ -86,12 +92,16 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         } catch {
             emitError(code: "audio_session_failed", message: error.localizedDescription)
         }
+
+        setupVolumeControl()
     }
 
     deinit {
         unregisterRemoteCommands()
         removeLifecycleObservers()
         clearPlayer(sendIdleEvent: false, deactivateSession: true)
+        volumeObservation?.invalidate()
+        volumeView?.removeFromSuperview()
     }
 
     @objc func load(_ call: CAPPluginCall) {
@@ -780,6 +790,63 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     private func deactivateAudioSession() {
         try? audioSession.setActive(false, options: [.notifyOthersOnDeactivation])
+    }
+
+    // MARK: - System Volume Control
+
+    private func setupVolumeControl() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let viewController = self.bridge?.viewController else { return }
+
+            let volumeView = MPVolumeView(frame: CGRect(x: -1000, y: -1000, width: 1, height: 1))
+            volumeView.isHidden = true
+            viewController.view.addSubview(volumeView)
+            self.volumeView = volumeView
+
+            for subview in volumeView.subviews {
+                if let slider = subview as? UISlider {
+                    self.volumeSlider = slider
+                    break
+                }
+            }
+
+            self.volumeObservation = self.audioSession.observe(\.outputVolume, options: [.new]) { [weak self] _, change in
+                guard let self, let newVolume = change.newValue else { return }
+                DispatchQueue.main.async {
+                    guard !self.isSuppressingVolumeEvent else { return }
+                    self.notifyListeners("systemVolumeChanged", data: ["volume": newVolume])
+                }
+            }
+        }
+    }
+
+    @objc func setSystemVolume(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            guard let slider = self.volumeSlider else {
+                call.reject("System volume control is not available.")
+                return
+            }
+
+            let value = call.getFloat("value") ?? 0.5
+            let clampedValue = min(max(value, 0.0), 1.0)
+
+            self.isSuppressingVolumeEvent = true
+            slider.value = clampedValue
+            slider.sendActions(for: .valueChanged)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.isSuppressingVolumeEvent = false
+            }
+
+            call.resolve(["volume": clampedValue])
+        }
+    }
+
+    @objc func getSystemVolume(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            let volume = self.audioSession.outputVolume
+            call.resolve(["volume": volume])
+        }
     }
 
     private func registerLifecycleObservers() {

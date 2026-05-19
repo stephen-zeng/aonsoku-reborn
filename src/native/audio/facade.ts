@@ -167,6 +167,18 @@ class UnavailableNativeAudioWeb extends WebPlugin implements NativeAudioPlugin {
   cancelDownload(): Promise<void> {
     return Promise.reject(createNativeAudioUnavailableError("cancelDownload"));
   }
+
+  setSystemVolume(): Promise<never> {
+    return Promise.reject(
+      createNativeAudioUnavailableError("setSystemVolume"),
+    );
+  }
+
+  getSystemVolume(): Promise<never> {
+    return Promise.reject(
+      createNativeAudioUnavailableError("getSystemVolume"),
+    );
+  }
 }
 
 export const AonsokuNativeAudio = registerPlugin<NativeAudioPlugin>(

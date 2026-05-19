@@ -237,6 +237,7 @@ describe("getPlaybackCapabilities", () => {
       [
         "canSetVolume",
         "requiresSystemVolume",
+        "supportsSystemVolumeControl",
         "supportsWebAudioReplayGain",
         "supportsNativePlayback",
         "supportsBackgroundPlayback",

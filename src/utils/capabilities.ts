@@ -11,6 +11,7 @@ export type PlatformRuntime =
 export interface PlaybackCapabilities {
   canSetVolume: boolean;
   requiresSystemVolume: boolean;
+  supportsSystemVolumeControl: boolean;
   supportsWebAudioReplayGain: boolean;
   supportsNativePlayback: boolean;
   supportsBackgroundPlayback: boolean;
@@ -20,6 +21,7 @@ const runtimeCapabilities: Record<PlatformRuntime, PlaybackCapabilities> = {
   electron: {
     canSetVolume: true,
     requiresSystemVolume: false,
+    supportsSystemVolumeControl: false,
     supportsWebAudioReplayGain: true,
     supportsNativePlayback: false,
     supportsBackgroundPlayback: true,
@@ -27,6 +29,7 @@ const runtimeCapabilities: Record<PlatformRuntime, PlaybackCapabilities> = {
   "capacitor-ios": {
     canSetVolume: false,
     requiresSystemVolume: true,
+    supportsSystemVolumeControl: true,
     supportsWebAudioReplayGain: false,
     supportsNativePlayback: true,
     supportsBackgroundPlayback: true,
@@ -34,6 +37,7 @@ const runtimeCapabilities: Record<PlatformRuntime, PlaybackCapabilities> = {
   "capacitor-android": {
     canSetVolume: true,
     requiresSystemVolume: false,
+    supportsSystemVolumeControl: false,
     supportsWebAudioReplayGain: false,
     supportsNativePlayback: true,
     supportsBackgroundPlayback: true,
@@ -41,6 +45,7 @@ const runtimeCapabilities: Record<PlatformRuntime, PlaybackCapabilities> = {
   web: {
     canSetVolume: true,
     requiresSystemVolume: false,
+    supportsSystemVolumeControl: false,
     supportsWebAudioReplayGain: true,
     supportsNativePlayback: false,
     supportsBackgroundPlayback: false,

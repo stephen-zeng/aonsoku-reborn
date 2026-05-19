@@ -7,6 +7,7 @@ import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { Slider } from "@/app/components/ui/slider";
 import { usePlayerHotkeys } from "@/app/hooks/use-audio-hotkeys";
 import { useMuteToggle } from "@/app/hooks/use-mute-toggle";
+import { useSystemVolume } from "@/app/hooks/use-system-volume";
 import { cn } from "@/lib/utils";
 import { usePlayerVolume, useVolumeSettings } from "@/store/player.store";
 import { getPlaybackCapabilities } from "@/utils/capabilities";
@@ -19,17 +20,37 @@ interface PlayerVolumeProps {
 
 export function PlayerVolume({ disabled, audioRef }: PlayerVolumeProps) {
   const { t } = useTranslation();
-  const { volume, handleVolumeWheel } = usePlayerVolume();
+  const { volume: playerVolume, handleVolumeWheel: handlePlayerWheel } =
+    usePlayerVolume();
+  const {
+    volume: systemVolume,
+    handleVolumeWheel: handleSystemWheel,
+    supportsSystemVolumeControl,
+  } = useSystemVolume();
   const { useAudioHotkeys } = usePlayerHotkeys();
   const { requiresSystemVolume } = getPlaybackCapabilities();
-  const displayVolume = requiresSystemVolume ? 100 : volume;
-  const isDisabled = requiresSystemVolume || disabled;
 
-  useAudioHotkeys("mod+up", () => handleVolumeWheel(false));
-  useAudioHotkeys("mod+down", () => handleVolumeWheel(true));
+  const displayVolume = supportsSystemVolumeControl ? systemVolume : playerVolume;
+  const isDisabled =
+    (requiresSystemVolume && !supportsSystemVolumeControl) || disabled;
+
+  useAudioHotkeys("mod+up", () => {
+    if (supportsSystemVolumeControl) {
+      handleSystemWheel(false);
+    } else {
+      handlePlayerWheel(false);
+    }
+  });
+  useAudioHotkeys("mod+down", () => {
+    if (supportsSystemVolumeControl) {
+      handleSystemWheel(true);
+    } else {
+      handlePlayerWheel(true);
+    }
+  });
 
   const tooltipText =
-    volume === 0
+    displayVolume === 0
       ? t("player.tooltips.volume.unmute")
       : t("player.tooltips.volume.mute");
 
@@ -61,10 +82,16 @@ type MuteButtonProps = ComponentPropsWithoutRef<typeof Button>;
 
 export function MuteButton({ className, ...props }: MuteButtonProps) {
   const { handleMuteClick } = useMuteToggle();
-  const { handleVolumeWheel } = usePlayerVolume();
+  const { handleVolumeWheel: handlePlayerWheel } = usePlayerVolume();
+  const { handleVolumeWheel: handleSystemWheel, supportsSystemVolumeControl } =
+    useSystemVolume();
 
   function handleWheel(e: WheelEvent) {
-    handleVolumeWheel(e.deltaY > 0);
+    if (supportsSystemVolumeControl) {
+      handleSystemWheel(e.deltaY > 0);
+    } else {
+      handlePlayerWheel(e.deltaY > 0);
+    }
   }
 
   return (
@@ -87,14 +114,27 @@ export function VolumeSlider({
   className,
   ...props
 }: VolumeSliderProps) {
-  const { volume, setVolume, handleVolumeWheel } = usePlayerVolume();
+  const { volume: playerVolume, setVolume: setPlayerVolume, handleVolumeWheel: handlePlayerWheel } =
+    usePlayerVolume();
   const { min, max, step } = useVolumeSettings();
+  const {
+    volume: systemVolume,
+    setSystemVolume,
+    handleVolumeWheel: handleSystemWheel,
+    supportsSystemVolumeControl,
+  } = useSystemVolume();
   const { requiresSystemVolume } = getPlaybackCapabilities();
-  const displayVolume = requiresSystemVolume ? 100 : volume;
-  const isDisabled = requiresSystemVolume || disabled;
+
+  const displayVolume = supportsSystemVolumeControl ? systemVolume : playerVolume;
+  const isDisabled =
+    (requiresSystemVolume && !supportsSystemVolumeControl) || disabled;
 
   function handleWheel(e: WheelEvent) {
-    handleVolumeWheel(e.deltaY > 0);
+    if (supportsSystemVolumeControl) {
+      handleSystemWheel(e.deltaY > 0);
+    } else {
+      handlePlayerWheel(e.deltaY > 0);
+    }
   }
 
   return (
@@ -111,7 +151,13 @@ export function VolumeSlider({
       max={max}
       step={step}
       disabled={isDisabled}
-      onValueChange={([value]) => setVolume(value)}
+      onValueChange={([value]) => {
+        if (supportsSystemVolumeControl) {
+          setSystemVolume(value);
+        } else {
+          setPlayerVolume(value);
+        }
+      }}
       onWheel={handleWheel}
     />
   );
