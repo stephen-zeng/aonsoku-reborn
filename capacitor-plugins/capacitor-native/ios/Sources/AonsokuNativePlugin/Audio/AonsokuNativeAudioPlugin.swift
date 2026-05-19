@@ -57,6 +57,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var willEnterForegroundObserver: NSObjectProtocol?
     private var didBecomeActiveObserver: NSObjectProtocol?
     private let loadQueue = DispatchQueue(label: "com.aonsoku.NativeAudio.load", qos: .userInitiated)
+    private let stateQueue = DispatchQueue(label: "com.aonsoku.NativeAudio.state", qos: .userInitiated)
     private var wasPlayingBeforeInterruption = false
     private var repeatMode = "off"
     private var shuffleEnabled = false
@@ -218,7 +219,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func setRepeatMode(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
+        stateQueue.async {
             let mode = call.getString("mode") ?? "off"
             guard ["off", "one", "all"].contains(mode) else {
                 self.reject(call, code: "invalid_repeat_mode", message: "Unsupported repeat mode: \(mode).")
@@ -234,7 +235,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func setShuffle(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
+        stateQueue.async {
             let enabled = call.getBool("enabled") ?? false
             self.shuffleEnabled = enabled
             if self.isQueueEngineActive {
@@ -245,7 +246,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func setQueue(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
+        stateQueue.async {
             let items = call.getArray("items") ?? []
             let requestedIndex = call.getInt("index") ?? 0
 
@@ -277,7 +278,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func skipToNext(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
+        stateQueue.async {
             if self.isQueueEngineActive {
                 self.queueEngine.skipToNext()
             } else {
@@ -288,7 +289,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func skipToPrevious(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
+        stateQueue.async {
             if self.isQueueEngineActive {
                 let currentTime = self.player?.currentTime().seconds ?? 0
                 self.queueEngine.skipToPrevious(currentTime: currentTime)
@@ -432,7 +433,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     // MARK: - Native Queue Control
 
     @objc func setContextQueue(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
+        stateQueue.async {
             let songsArray = call.getArray("songs") as? [[String: Any]] ?? []
             let songs = songsArray.map { QueueSong(from: $0) }
             let currentIndex = call.getInt("currentIndex") ?? 0
@@ -457,7 +458,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func addToUserQueue(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
+        stateQueue.async {
             let songsArray = call.getArray("songs") as? [[String: Any]] ?? []
             let songs = songsArray.map { QueueSong(from: $0) }
             let position = call.getString("position") ?? "last"
@@ -468,7 +469,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func removeFromUserQueue(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
+        stateQueue.async {
             let indices = call.getArray("indices") as? [Int] ?? []
             self.queueEngine.removeFromUserQueue(indices: indices)
             call.resolve()
@@ -476,14 +477,14 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func clearUserQueue(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
+        stateQueue.async {
             self.queueEngine.clearUserQueue()
             call.resolve()
         }
     }
 
     @objc func playAtIndex(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
+        stateQueue.async {
             let index = call.getInt("index") ?? 0
             let startTime = call.getDouble("startTime")
             self.queueEngine.playAtIndex(index, startTime: startTime)
@@ -492,7 +493,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func getFullState(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
+        stateQueue.async {
             let currentTime = self.player?.currentTime().seconds ?? 0
             let duration = self.playerItem?.duration.seconds ?? 0
             let isPlaying = self.player?.timeControlStatus == .playing
@@ -507,14 +508,14 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func getScrobbleBuffer(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
+        stateQueue.async {
             let entries = self.scrobbleBuffer.getEntriesAsArray()
             call.resolve(["entries": entries])
         }
     }
 
     @objc func clearScrobbleBuffer(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
+        stateQueue.async {
             self.scrobbleBuffer.clear()
             call.resolve()
         }
@@ -1058,8 +1059,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 if self.isQueueEngineActive {
                     try? self.activateAudioSession()
                     self.player?.play()
-                    if let song = self.queueEngine.currentSong {
-                        self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
+                    self.stateQueue.async {
+                        if let song = self.queueEngine.currentSong {
+                            self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
+                        }
                     }
                 } else {
                     self.emitRemoteCommand("play")
@@ -1093,8 +1096,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                     } else {
                         try? self.activateAudioSession()
                         self.player?.play()
-                        if let song = self.queueEngine.currentSong {
-                            self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
+                        self.stateQueue.async {
+                            if let song = self.queueEngine.currentSong {
+                                self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
+                            }
                         }
                     }
                 } else {
@@ -1110,7 +1115,9 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             commandCenter.nextTrackCommand.addTarget { [weak self] _ in
                 guard let self = self else { return .commandFailed }
                 if self.isQueueEngineActive {
-                    self.queueEngine.skipToNext()
+                    self.stateQueue.async {
+                        self.queueEngine.skipToNext()
+                    }
                 } else {
                     self.emitRemoteCommand("next")
                 }
@@ -1125,7 +1132,9 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 guard let self = self else { return .commandFailed }
                 if self.isQueueEngineActive {
                     let currentTime = self.player?.currentTime().seconds ?? 0
-                    self.queueEngine.skipToPrevious(currentTime: currentTime)
+                    self.stateQueue.async {
+                        self.queueEngine.skipToPrevious(currentTime: currentTime)
+                    }
                 } else {
                     self.emitRemoteCommand("previous")
                 }
@@ -1648,7 +1657,9 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         if isQueueEngineActive {
-            queueEngine.handleEnded()
+            stateQueue.async {
+                self.queueEngine.handleEnded()
+            }
             return
         }
 
@@ -2103,7 +2114,9 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
 
                 if autoplay {
                     player.play()
-                    self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
+                    self.stateQueue.async {
+                        self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
+                    }
                 }
             }
         }
@@ -2130,24 +2143,30 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
                 songDurationSeconds: entry.timestamp
             )
         }
-        emitPlaybackState("ended")
+        DispatchQueue.main.async {
+            self.emitPlaybackState("ended")
+        }
         notifyListeners("ended", data: [
             "reason": "finished",
         ])
     }
 
     func queueEngine(_ engine: NativeQueueEngine, seekToStart song: QueueSong) {
-        guard let player = self.player else { return }
-        player.seek(to: CMTime.zero) { [weak self] finished in
-            guard finished, let self = self else { return }
-            player.play()
-            if let entry = self.scrobbleBuffer.stopTracking() {
-                self.scrobbleSubmitter.submitIfEligible(
-                    entry: ScrobbleEntry(songId: entry.songId, playedDurationMs: entry.playedDurationMs, timestamp: entry.timestamp),
-                    songDurationSeconds: entry.timestamp
-                )
+        DispatchQueue.main.async {
+            guard let player = self.player else { return }
+            player.seek(to: CMTime.zero) { [weak self] finished in
+                guard finished, let self = self else { return }
+                player.play()
+                self.stateQueue.async {
+                    if let entry = self.scrobbleBuffer.stopTracking() {
+                        self.scrobbleSubmitter.submitIfEligible(
+                            entry: ScrobbleEntry(songId: entry.songId, playedDurationMs: entry.playedDurationMs, timestamp: entry.timestamp),
+                            songDurationSeconds: entry.timestamp
+                        )
+                    }
+                    self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
+                }
             }
-            self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
         }
     }
 }
