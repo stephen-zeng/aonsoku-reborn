@@ -33,6 +33,7 @@ import {
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
 import { hasMiniPlayerSupport } from "@/utils/browser";
+import { getPlaybackCapabilities } from "@/utils/capabilities";
 import { logger } from "@/utils/logger";
 import { getCoverArtUrlFromSongPreference } from "@/utils/coverArt";
 import {
@@ -395,6 +396,12 @@ export function Player() {
           >
             <SkipForward className="text-foreground fill-foreground size-5" />
           </Button>
+          {getPlaybackCapabilities().supportsSystemVolumeControl && (
+            <MemoPlayerVolume
+              audioRef={getAudioRef()}
+              disabled={!song && !radio}
+            />
+          )}
         </div>
         {/* Remain Controls and Volume */}
         <div className="hidden md:flex items-center w-full justify-end">
