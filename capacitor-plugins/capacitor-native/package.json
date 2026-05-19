@@ -10,7 +10,8 @@
     ".": "./src/index.ts",
     "./bridge": "./src/bridge/index.ts",
     "./data": "./src/data/index.ts",
-    "./audio": "./src/audio/index.ts"
+    "./audio": "./src/audio/index.ts",
+    "./preferences": "./src/preferences/index.ts"
   },
   "files": ["ios/Sources", "src", "Package.swift"],
   "peerDependencies": {
