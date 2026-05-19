@@ -2,6 +2,9 @@ import Foundation
 
 class NativeSourceResolver {
     private let cacheDirectory: URL
+    private var cachedCredentials: ServerCredentials?
+    private var credentialsCacheTime: Date?
+    private let credentialsTTL: TimeInterval = 30
 
     init() {
         let appSupport = FileManager.default.urls(
@@ -10,6 +13,18 @@ class NativeSourceResolver {
         self.cacheDirectory = appSupport
             .appendingPathComponent("Aonsoku", isDirectory: true)
             .appendingPathComponent("AudioCache", isDirectory: true)
+    }
+
+    private func getCredentials() -> ServerCredentials? {
+        if let cached = cachedCredentials,
+           let cacheTime = credentialsCacheTime,
+           Date().timeIntervalSince(cacheTime) < credentialsTTL {
+            return cached
+        }
+        let creds = KeychainManager.retrieve()
+        cachedCredentials = creds
+        credentialsCacheTime = Date()
+        return creds
     }
 
     func resolveSource(for song: QueueSong) -> (url: URL, kind: String)? {
@@ -56,7 +71,7 @@ class NativeSourceResolver {
     }
 
     private func buildAuthenticatedStreamUrl(songId: String) -> URL? {
-        guard let credentials = KeychainManager.retrieve() else { return nil }
+        guard let credentials = getCredentials() else { return nil }
 
         var params = SubsonicAuthBuilder.buildQueryParams(
             username: credentials.username,
