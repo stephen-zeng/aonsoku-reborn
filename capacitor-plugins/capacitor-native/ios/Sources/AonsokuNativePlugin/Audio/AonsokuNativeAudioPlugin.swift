@@ -831,9 +831,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 }
 
                 slider.setValue(clampedValue, animated: false)
+                slider.sendActions(for: .touchUpInside)
                 slider.sendActions(for: .valueChanged)
 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
                     guard let self else { return }
                     let volume = self.audioSession.outputVolume
                     self.notifyListeners("systemVolumeChanged", data: ["volume": volume])
@@ -871,19 +872,21 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func ensureVolumeSlider() -> UISlider? {
-        if let cached = self.volumeSlider {
+        if let cached = self.volumeSlider, cached.window != nil {
             return cached
         }
+        self.volumeSlider = nil
 
         if self.volumeView == nil {
             guard let containerView = self.bridge?.viewController?.view else {
                 return nil
             }
 
-            let volumeView = MPVolumeView(frame: CGRect(x: 0, y: 0, width: 1, height: 1))
+            let volumeView = MPVolumeView(frame: CGRect(x: -2000, y: -2000, width: 120, height: 40))
             volumeView.showsRouteButton = false
             volumeView.showsVolumeSlider = true
-            volumeView.alpha = 0.01
+            volumeView.alpha = 0.001
+            volumeView.isUserInteractionEnabled = false
             volumeView.accessibilityElementsHidden = true
             volumeView.clipsToBounds = true
             containerView.addSubview(volumeView)
@@ -1140,6 +1143,9 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         emitCurrentPlaybackState()
         emitProgress()
         scrobbleSubmitter.submitPending(buffer: scrobbleBuffer)
+
+        let volume = audioSession.outputVolume
+        notifyListeners("systemVolumeChanged", data: ["volume": volume])
     }
 
     private func metadata(from call: CAPPluginCall) -> NativeAudioMetadata {
