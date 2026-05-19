@@ -76,7 +76,8 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private let scrobbleSubmitter = NativeScrobbleSubmitter()
     private let downloadManager = NativeDownloadManager()
     private var isQueueEngineActive = false
-    private var volumeView: MPVolumeView?
+    private var volumeHUDView: MPVolumeView?
+    private var volumeSliderView: MPVolumeView?
     private var volumeSlider: UISlider?
     private var volumeObservation: NSKeyValueObservation?
 
@@ -101,7 +102,8 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         removeLifecycleObservers()
         clearPlayer(sendIdleEvent: false, deactivateSession: true)
         volumeObservation?.invalidate()
-        volumeView?.removeFromSuperview()
+        volumeHUDView?.removeFromSuperview()
+        volumeSliderView?.removeFromSuperview()
     }
 
     @objc func load(_ call: CAPPluginCall) {
@@ -800,15 +802,12 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
             try? self.activateAudioSession()
 
-            // Add a zero-frame MPVolumeView with no slider so iOS shows
-            // the native volume HUD when hardware buttons are pressed.
             if let containerView = self.bridge?.viewController?.view {
                 let hud = MPVolumeView(frame: .zero)
                 hud.showsRouteButton = false
                 hud.showsVolumeSlider = false
-                hud.tag = 9999
                 containerView.addSubview(hud)
-                self.volumeView = hud
+                self.volumeHUDView = hud
             }
 
             self.volumeObservation = self.audioSession.observe(\.outputVolume, options: [.initial, .new]) { [weak self] _, change in
@@ -886,27 +885,27 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
         self.volumeSlider = nil
 
-        if self.volumeView == nil {
+        if self.volumeSliderView == nil {
             guard let containerView = self.bridge?.viewController?.view else {
                 return nil
             }
 
-            let volumeView = MPVolumeView(frame: CGRect(x: -2000, y: -2000, width: 120, height: 40))
-            volumeView.showsRouteButton = false
-            volumeView.showsVolumeSlider = true
-            volumeView.alpha = 0.001
-            volumeView.isUserInteractionEnabled = false
-            volumeView.accessibilityElementsHidden = true
-            volumeView.clipsToBounds = true
-            containerView.addSubview(volumeView)
-            self.volumeView = volumeView
+            let sliderView = MPVolumeView(frame: CGRect(x: -2000, y: -2000, width: 120, height: 40))
+            sliderView.showsRouteButton = false
+            sliderView.showsVolumeSlider = true
+            sliderView.alpha = 0.001
+            sliderView.isUserInteractionEnabled = false
+            sliderView.accessibilityElementsHidden = true
+            sliderView.clipsToBounds = true
+            containerView.addSubview(sliderView)
+            self.volumeSliderView = sliderView
         }
 
-        guard let volumeView = self.volumeView else { return nil }
-        volumeView.setNeedsLayout()
-        volumeView.layoutIfNeeded()
+        guard let sliderView = self.volumeSliderView else { return nil }
+        sliderView.setNeedsLayout()
+        sliderView.layoutIfNeeded()
 
-        if let slider = findSlider(in: volumeView) {
+        if let slider = findSlider(in: sliderView) {
             self.volumeSlider = slider
             return slider
         }
@@ -939,30 +938,24 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             if enabled {
-                // Remove hidden volume view so iOS shows the system volume HUD
+                // Remove hidden slider view that suppresses the HUD
                 self.volumeSlider = nil
-                self.volumeView?.removeFromSuperview()
-                self.volumeView = nil
+                self.volumeSliderView?.removeFromSuperview()
+                self.volumeSliderView = nil
 
-                // Add a visible MPVolumeView so the system routes volume
-                // indication through it (required when audio session is active)
-                guard let containerView = self.bridge?.viewController?.view else {
-                    call.resolve()
-                    return
+                // Restore the HUD view if not already present
+                if self.volumeHUDView == nil, let containerView = self.bridge?.viewController?.view {
+                    let hud = MPVolumeView(frame: .zero)
+                    hud.showsRouteButton = false
+                    hud.showsVolumeSlider = false
+                    containerView.addSubview(hud)
+                    self.volumeHUDView = hud
                 }
-                let hud = MPVolumeView(frame: .zero)
-                hud.showsRouteButton = false
-                hud.showsVolumeSlider = false
-                hud.tag = 9999
-                containerView.addSubview(hud)
-                self.volumeView = hud
             } else {
-                // Remove any HUD-style volume view
-                if let existing = self.volumeView, existing.tag == 9999 {
-                    existing.removeFromSuperview()
-                    self.volumeView = nil
-                }
-                // Add hidden volume view to suppress system HUD
+                // Remove HUD view so system doesn't show volume overlay
+                self.volumeHUDView?.removeFromSuperview()
+                self.volumeHUDView = nil
+                // Add hidden slider view to suppress system HUD
                 _ = self.ensureVolumeSlider()
             }
             call.resolve()
