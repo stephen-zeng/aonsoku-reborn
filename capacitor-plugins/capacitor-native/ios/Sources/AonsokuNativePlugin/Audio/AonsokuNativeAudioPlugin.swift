@@ -39,6 +39,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "clearScrobbleBuffer", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setSystemVolume", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getSystemVolume", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setVolumeHUDEnabled", returnType: CAPPluginReturnPromise),
     ]
 
     private var player: AVPlayer?
@@ -797,10 +798,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
 
-            // Keep the session active so outputVolume emits hardware button
-            // changes, and prepare MPVolumeView before the first JS request.
             try? self.activateAudioSession()
-            _ = self.ensureVolumeSlider()
 
             self.volumeObservation = self.audioSession.observe(\.outputVolume, options: [.initial, .new]) { [weak self] _, change in
                 guard let self, let newVolume = change.newValue else { return }
@@ -922,6 +920,21 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             try? self.activateAudioSession()
             let volume = self.audioSession.outputVolume
             call.resolve(["volume": volume])
+        }
+    }
+
+    @objc func setVolumeHUDEnabled(_ call: CAPPluginCall) {
+        let enabled = call.getBool("enabled") ?? true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            if enabled {
+                self.volumeSlider = nil
+                self.volumeView?.removeFromSuperview()
+                self.volumeView = nil
+            } else {
+                _ = self.ensureVolumeSlider()
+            }
+            call.resolve()
         }
     }
 

@@ -361,6 +361,7 @@ export interface AonsokuNativeAudioPlugin extends Plugin {
     options: NativeSetSystemVolumeOptions,
   ): Promise<NativeSystemVolumeResult>;
   getSystemVolume(): Promise<NativeSystemVolumeResult>;
+  setVolumeHUDEnabled(options: { enabled: boolean }): Promise<void>;
 
   addListener<TEvent extends NativeAudioEventName>(
     eventName: TEvent,

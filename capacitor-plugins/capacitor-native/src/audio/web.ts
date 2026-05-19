@@ -161,4 +161,8 @@ export class AonsokuNativeAudioWeb
   getSystemVolume() {
     return Promise.reject(createNativeAudioUnavailableError("getSystemVolume"));
   }
+
+  setVolumeHUDEnabled(_options: { enabled: boolean }) {
+    return Promise.resolve();
+  }
 }

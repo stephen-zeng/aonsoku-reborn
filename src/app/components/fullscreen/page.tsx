@@ -7,6 +7,7 @@ import {
 } from "@/app/components/ui/drawer";
 import { useAppWindow } from "@/app/hooks/use-app-window";
 import { useBackdropStyle } from "@/app/hooks/use-backdrop-bg";
+import { getNativeAudioPluginAvailability } from "@/native/audio/facade";
 import { closeFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import {
   useFullscreenPlayerSettings,
@@ -204,6 +205,12 @@ export default function FullscreenMode({
   useEffect(() => {
     return removeFullscreenScrollLock;
   }, [removeFullscreenScrollLock]);
+
+  useEffect(() => {
+    const availability = getNativeAudioPluginAvailability();
+    if (!availability.available) return;
+    availability.plugin.setVolumeHUDEnabled({ enabled: !open });
+  }, [open]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: initial useEffect
   useEffect(() => {

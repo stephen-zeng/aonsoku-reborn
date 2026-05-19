@@ -179,6 +179,10 @@ class UnavailableNativeAudioWeb extends WebPlugin implements NativeAudioPlugin {
       createNativeAudioUnavailableError("getSystemVolume"),
     );
   }
+
+  setVolumeHUDEnabled(): Promise<void> {
+    return Promise.resolve();
+  }
 }
 
 export const AonsokuNativeAudio = registerPlugin<NativeAudioPlugin>(
