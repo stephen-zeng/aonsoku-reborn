@@ -4,7 +4,9 @@ export const NATIVE_PREFERENCES_PLUGIN_NAME = "AonsokuNativePreferences";
 
 export interface AonsokuNativePreferencesPlugin extends Plugin {
   getAllPreferences(): Promise<{ preferences: Record<string, string> }>;
-  setPreferences(options: { preferences: Record<string, string> }): Promise<void>;
+  setPreferences(options: {
+    preferences: Record<string, string>;
+  }): Promise<void>;
   setPreference(options: { key: string; value: string }): Promise<void>;
   deletePreference(options: { key: string }): Promise<void>;
   getQueueState(): Promise<{ state: string | null }>;

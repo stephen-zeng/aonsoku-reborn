@@ -30,7 +30,9 @@ export function PlayerVolume({ disabled, audioRef }: PlayerVolumeProps) {
   const { useAudioHotkeys } = usePlayerHotkeys();
   const { requiresSystemVolume } = getPlaybackCapabilities();
 
-  const displayVolume = supportsSystemVolumeControl ? systemVolume : playerVolume;
+  const displayVolume = supportsSystemVolumeControl
+    ? systemVolume
+    : playerVolume;
   const isDisabled =
     (requiresSystemVolume && !supportsSystemVolumeControl) || disabled;
 
@@ -114,8 +116,11 @@ export function VolumeSlider({
   className,
   ...props
 }: VolumeSliderProps) {
-  const { volume: playerVolume, setVolume: setPlayerVolume, handleVolumeWheel: handlePlayerWheel } =
-    usePlayerVolume();
+  const {
+    volume: playerVolume,
+    setVolume: setPlayerVolume,
+    handleVolumeWheel: handlePlayerWheel,
+  } = usePlayerVolume();
   const { min, max, step } = useVolumeSettings();
   const {
     volume: systemVolume,
@@ -126,7 +131,9 @@ export function VolumeSlider({
   } = useSystemVolume();
   const { requiresSystemVolume } = getPlaybackCapabilities();
 
-  const displayVolume = supportsSystemVolumeControl ? systemVolume : playerVolume;
+  const displayVolume = supportsSystemVolumeControl
+    ? systemVolume
+    : playerVolume;
   const isDisabled =
     (requiresSystemVolume && !supportsSystemVolumeControl) || disabled;
 

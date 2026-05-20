@@ -237,7 +237,7 @@ export function AudioPlayer({
 
       setAudioSrc(src || undefined);
       const audio = audioRef.current;
-      if (audio && src) {
+      if (audio && src && !shouldUseNativePlaybackBackend()) {
         const shouldAutoplay =
           state.playerState.isPlaying && !state.remoteControl.active;
         getPlaybackBackend(audio)?.load(
@@ -720,7 +720,7 @@ export function AudioPlayer({
     const audio = audioRef.current;
     if (!audio || !isSong) return;
 
-    if (!audioSrc) {
+    if (!audioSrc && !shouldUseNativePlaybackBackend()) {
       pauseAudio(audio);
     }
   }, [audioRef, audioSrc, isSong, pauseAudio]);
@@ -767,6 +767,12 @@ export function AudioPlayer({
             await resumeContext();
           }
 
+          if (shouldUseNativePlaybackBackend()) {
+            // The native player manages its own play/pause state; skip redundant play calls
+            // as this is already driven natively.
+            return;
+          }
+
           if (sessionRef.current.consumeSyncPlayHandled()) {
             logger.info(
               "[PlayEffect:SKIP] reason=syncPlayHandledAlready | clearing flag",
@@ -777,6 +783,12 @@ export function AudioPlayer({
           logger.info('[PlayEffect:play] → calling safePlay("Song")');
           safePlay(audio, "Song");
         } else {
+          if (shouldUseNativePlaybackBackend()) {
+            // The native player manages its own play/pause state; skip redundant pause calls
+            // as this is already driven natively.
+            return;
+          }
+
           sessionRef.current.consumeSyncPlayHandled();
           logger.info("[PlayEffect:pause] → calling pauseAudio");
           pauseAudio(audio);

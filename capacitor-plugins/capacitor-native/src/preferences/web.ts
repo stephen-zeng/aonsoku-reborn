@@ -15,9 +15,9 @@ export class AonsokuNativePreferencesWeb
   getAllPreferences(): Promise<{ preferences: Record<string, string> }> {
     return Promise.reject(unavailable("getAllPreferences"));
   }
-  setPreferences(
-    _options: { preferences: Record<string, string> },
-  ): Promise<void> {
+  setPreferences(_options: {
+    preferences: Record<string, string>;
+  }): Promise<void> {
     return Promise.reject(unavailable("setPreferences"));
   }
   setPreference(_options: { key: string; value: string }): Promise<void> {
@@ -32,14 +32,15 @@ export class AonsokuNativePreferencesWeb
   setQueueState(_options: { state: string }): Promise<void> {
     return Promise.reject(unavailable("setQueueState"));
   }
-  getPlayHistory(
-    _options?: { limit?: number },
-  ): Promise<{ history: string[] }> {
+  getPlayHistory(_options?: {
+    limit?: number;
+  }): Promise<{ history: string[] }> {
     return Promise.reject(unavailable("getPlayHistory"));
   }
-  addToPlayHistory(
-    _options: { song: string; maxSize?: number },
-  ): Promise<void> {
+  addToPlayHistory(_options: {
+    song: string;
+    maxSize?: number;
+  }): Promise<void> {
     return Promise.reject(unavailable("addToPlayHistory"));
   }
   clearPlayHistory(): Promise<void> {

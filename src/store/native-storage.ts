@@ -18,7 +18,9 @@ export async function initNativePrefsCache(): Promise<void> {
   const { migrateToNativeStorageIfNeeded } = await import(
     "@/store/native-migration"
   );
-  nativePrefsCache = await migrateToNativeStorageIfNeeded(AonsokuNativePreferences);
+  nativePrefsCache = await migrateToNativeStorageIfNeeded(
+    AonsokuNativePreferences,
+  );
   cacheReady = true;
   for (const resolve of pendingReads) resolve();
   pendingReads.length = 0;

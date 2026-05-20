@@ -26,7 +26,9 @@ export function VolumeBar() {
   const { requiresSystemVolume } = getPlaybackCapabilities();
   const { hoverBg10 } = useFullscreenContrast();
 
-  const displayVolume = supportsSystemVolumeControl ? systemVolume : playerVolume;
+  const displayVolume = supportsSystemVolumeControl
+    ? systemVolume
+    : playerVolume;
   const isDisabled = requiresSystemVolume && !supportsSystemVolumeControl;
 
   const handleWheel = useCallback(
@@ -41,7 +43,12 @@ export function VolumeBar() {
         wheelRafRef.current = null;
       });
     },
-    [handlePlayerWheel, handleSystemWheel, supportsSystemVolumeControl, isDisabled],
+    [
+      handlePlayerWheel,
+      handleSystemWheel,
+      supportsSystemVolumeControl,
+      isDisabled,
+    ],
   );
 
   const handleSliderChange = useCallback(

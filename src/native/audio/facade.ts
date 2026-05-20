@@ -169,15 +169,11 @@ class UnavailableNativeAudioWeb extends WebPlugin implements NativeAudioPlugin {
   }
 
   setSystemVolume(): Promise<never> {
-    return Promise.reject(
-      createNativeAudioUnavailableError("setSystemVolume"),
-    );
+    return Promise.reject(createNativeAudioUnavailableError("setSystemVolume"));
   }
 
   getSystemVolume(): Promise<never> {
-    return Promise.reject(
-      createNativeAudioUnavailableError("getSystemVolume"),
-    );
+    return Promise.reject(createNativeAudioUnavailableError("getSystemVolume"));
   }
 
   setVolumeHUDEnabled(): Promise<void> {

@@ -405,7 +405,11 @@ export class NativeQueueController implements QueueController {
           s.playerState.isPlaying = true;
           s.playerState.isBuffering = false;
         });
-      } else if (event.state === "paused" || event.state === "stopped") {
+      } else if (
+        event.state === "paused" ||
+        event.state === "stopped" ||
+        event.state === "ended"
+      ) {
         usePlayerStore.setState((s) => {
           s.playerState.isPlaying = false;
         });

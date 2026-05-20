@@ -146,9 +146,7 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
   const { clearHistory: clearPlayHistory } = usePlayHistoryActions();
 
   const { trigger: hapticTrigger } = useHaptic();
-  const snapHaptic = hapticTrigger
-    ? () => hapticTrigger("heavy")
-    : undefined;
+  const snapHaptic = hapticTrigger ? () => hapticTrigger("heavy") : undefined;
 
   const upcomingContext = useMemo(
     () => contextSongs.slice(contextIndex + 1),
@@ -304,46 +302,40 @@ function UnifiedQueueView({
     };
   }, [useVirtualization]);
 
-  useScrollEndListener(
-    () => (useVirtualization ? null : scrollContainerRef.current),
-    () => {
-      const container = scrollContainerRef.current;
-      const el = currentSongRef.current;
-      const spacer = spacerRef.current;
-      if (!el || !container || !spacer) return;
-      if (container.scrollTop <= 1) return;
-      const containerRect = container.getBoundingClientRect();
-      const historySection = container.querySelector<HTMLElement>(
-        "[data-history-section]",
-      );
-      let visibleHistoryCount = 0;
-      if (historySection) {
-        const sectionRect = historySection.getBoundingClientRect();
-        const visibleTop = Math.max(sectionRect.top, containerRect.top);
-        const visibleBottom = Math.min(
-          sectionRect.bottom,
-          containerRect.bottom,
-        );
-        const visibleHeight = Math.max(0, visibleBottom - visibleTop);
-        const headerHeight = 32;
-        const itemHeight = 64;
-        const itemsVisibleHeight = visibleHeight - headerHeight;
-        if (itemsVisibleHeight > 0) {
-          visibleHistoryCount = Math.ceil(itemsVisibleHeight / itemHeight);
-        }
+  useScrollEndListener(() =>
+    useVirtualization ? null : scrollContainerRef.current, () => {
+    const container = scrollContainerRef.current;
+    const el = currentSongRef.current;
+    const spacer = spacerRef.current;
+    if (!el || !container || !spacer) return;
+    if (container.scrollTop <= 1) return;
+    const containerRect = container.getBoundingClientRect();
+    const historySection = container.querySelector<HTMLElement>(
+      "[data-history-section]",
+    );
+    let visibleHistoryCount = 0;
+    if (historySection) {
+      const sectionRect = historySection.getBoundingClientRect();
+      const visibleTop = Math.max(sectionRect.top, containerRect.top);
+      const visibleBottom = Math.min(sectionRect.bottom, containerRect.bottom);
+      const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+      const headerHeight = 32;
+      const itemHeight = 64;
+      const itemsVisibleHeight = visibleHeight - headerHeight;
+      if (itemsVisibleHeight > 0) {
+        visibleHistoryCount = Math.ceil(itemsVisibleHeight / itemHeight);
       }
-      if (visibleHistoryCount >= 1 && visibleHistoryCount <= 3) {
-        syncQueueCurrentSongPosition({
-          container,
-          el,
-          spacer,
-          behavior: "smooth",
-        });
-        snapHaptic?.();
-      }
-    },
-    [useVirtualization, snapHaptic],
-  );
+    }
+    if (visibleHistoryCount >= 1 && visibleHistoryCount <= 3) {
+      syncQueueCurrentSongPosition({
+        container,
+        el,
+        spacer,
+        behavior: "smooth",
+      });
+      snapHaptic?.();
+    }
+  }, [useVirtualization, snapHaptic]);
 
   const contextPlayedCount = contextIndex + 1;
   const userQueueStart = contextPlayedCount;
@@ -896,44 +888,40 @@ function VirtualizedQueueView({
     }
   }, [currentSong?.id, currentSongVirtualIndex, virtualizer]);
 
-  useScrollEndListener(
+  useScrollEndListener(getScrollElement, () => {
+    const scrollEl = getScrollElement();
+    if (!scrollEl) return;
+    if (scrollEl.scrollTop <= 1) return;
+    const containerHeight = scrollEl.clientHeight;
+    const scrollTop = scrollEl.scrollTop;
+    const visibleVirtualItems = virtualizer.getVirtualItems();
+    let visibleHistoryCount = 0;
+    for (const vItem of visibleVirtualItems) {
+      const item = virtualItems[vItem.index];
+      if (item?.type === "history") {
+        const itemTop = vItem.start;
+        const itemBottom = vItem.start + vItem.size;
+        if (itemTop < scrollTop + containerHeight && itemBottom > scrollTop) {
+          visibleHistoryCount++;
+        }
+      }
+    }
+    if (visibleHistoryCount >= 1 && visibleHistoryCount <= 3) {
+      if (currentSongVirtualIndex >= 0) {
+        virtualizer.scrollToIndex(currentSongVirtualIndex, {
+          align: "start",
+          behavior: "smooth",
+        });
+        snapHaptic?.();
+      }
+    }
+  }, [
+    currentSongVirtualIndex,
+    virtualizer,
     getScrollElement,
-    () => {
-      const scrollEl = getScrollElement();
-      if (!scrollEl) return;
-      if (scrollEl.scrollTop <= 1) return;
-      const containerHeight = scrollEl.clientHeight;
-      const scrollTop = scrollEl.scrollTop;
-      const visibleVirtualItems = virtualizer.getVirtualItems();
-      let visibleHistoryCount = 0;
-      for (const vItem of visibleVirtualItems) {
-        const item = virtualItems[vItem.index];
-        if (item?.type === "history") {
-          const itemTop = vItem.start;
-          const itemBottom = vItem.start + vItem.size;
-          if (itemTop < scrollTop + containerHeight && itemBottom > scrollTop) {
-            visibleHistoryCount++;
-          }
-        }
-      }
-      if (visibleHistoryCount >= 1 && visibleHistoryCount <= 3) {
-        if (currentSongVirtualIndex >= 0) {
-          virtualizer.scrollToIndex(currentSongVirtualIndex, {
-            align: "start",
-            behavior: "smooth",
-          });
-          snapHaptic?.();
-        }
-      }
-    },
-    [
-      currentSongVirtualIndex,
-      virtualizer,
-      getScrollElement,
-      snapHaptic,
-      virtualItems,
-    ],
-  );
+    snapHaptic,
+    virtualItems,
+  ]);
 
   if (virtualItems.length === 0) {
     return (

@@ -170,8 +170,7 @@ describe("Aonsoku native audio plugin skeleton", () => {
         /@objc func setVolumeHUDEnabled\(_ call: CAPPluginCall\) \{([\s\S]*?)\n {4}private func removeVolumeSliderView/,
       )?.[1] ?? "";
     const hudEnabledBranch =
-      setVolumeHUDEnabled.match(/if enabled \{([\s\S]*?)\} else \{/)?.[1] ??
-      "";
+      setVolumeHUDEnabled.match(/if enabled \{([\s\S]*?)\} else \{/)?.[1] ?? "";
 
     expect(setupVolumeControl).toContain("observe(\\.outputVolume");
     expect(setupVolumeControl).not.toContain("MPVolumeView(frame:");

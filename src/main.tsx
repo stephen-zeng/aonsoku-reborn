@@ -12,7 +12,10 @@ import "@/i18n";
 
 import { ErrorBoundary } from "@/app/components/error-boundary";
 import { queryClient } from "@/lib/queryClient";
-import { flushNativeWrites, initNativePrefsCache } from "@/store/native-storage";
+import {
+  flushNativeWrites,
+  initNativePrefsCache,
+} from "@/store/native-storage";
 import { blockFeatures } from "@/utils/browser";
 
 blockFeatures();

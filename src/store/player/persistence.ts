@@ -5,7 +5,10 @@ import omit from "lodash/omit";
 import { shallow } from "zustand/shallow";
 import type { IPlayerContext, ISongList } from "@/types/playerContext";
 import { isNativePreferencesAvailable } from "@/native/preferences/facade";
-import { createNativeStorage, getNativePrefsPlugin } from "@/store/native-storage";
+import {
+  createNativeStorage,
+  getNativePrefsPlugin,
+} from "@/store/native-storage";
 import { logger } from "@/utils/logger";
 import { decodeStoredPassword, genEncodedPassword } from "@/utils/salt";
 import { MAX_SHUFFLE_START_HISTORY } from "@/utils/songListFunctions";
