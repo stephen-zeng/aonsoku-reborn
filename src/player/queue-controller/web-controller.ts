@@ -140,6 +140,10 @@ export class WebQueueController implements QueueController {
     return this.#getActions().hasPrevSong();
   }
 
+  consumeNativeDrivenTransition(): boolean {
+    return false;
+  }
+
   getState(): QueueControllerState {
     const store = this.#getStore();
     const { songlist, playerState, playerProgress } = store;

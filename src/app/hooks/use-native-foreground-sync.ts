@@ -7,6 +7,8 @@ export function useNativeForegroundSync() {
   useEffect(() => {
     if (getRuntime() !== "capacitor-ios") return;
 
+    syncOnForeground();
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         syncOnForeground();

@@ -107,6 +107,8 @@ export interface QueueController {
 
   hasPrevSong(): boolean;
 
+  consumeNativeDrivenTransition(): boolean;
+
   getState(): QueueControllerState;
 
   subscribe<T extends QueueControllerEvent>(

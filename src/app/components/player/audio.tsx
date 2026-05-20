@@ -26,6 +26,7 @@ import {
   shouldRetryPlaybackError,
   shouldUseNativePlaybackBackend,
 } from "@/player/playback";
+import { getQueueController } from "@/player/queue-controller";
 import { type AudioSourceDescriptor, getAudioSourceUrl } from "@/service/cache";
 import { useCacheStore } from "@/store/cache.store";
 import {
@@ -235,9 +236,20 @@ export function AudioPlayer({
         manageMediaSession.ensurePlaybackStatePlaying();
       }
 
+      const isNativeTransition = getQueueController().consumeNativeDrivenTransition();
+      if (isNativeTransition) {
+        logger.info(
+          `[AudioSrcChange:SKIP] reason=nativeDrivenTransition | songId=${songId} | src=${src?.slice(-60)}`,
+        );
+        sessionRef.current.beginSourceChange(songId);
+        sessionRef.current.markLoopRestartSyncHandled();
+        setAudioSrc(src || undefined);
+        return;
+      }
+
       setAudioSrc(src || undefined);
       const audio = audioRef.current;
-      if (audio && src && !shouldUseNativePlaybackBackend()) {
+      if (audio && src) {
         const shouldAutoplay =
           state.playerState.isPlaying && !state.remoteControl.active;
         getPlaybackBackend(audio)?.load(
@@ -720,10 +732,10 @@ export function AudioPlayer({
     const audio = audioRef.current;
     if (!audio || !isSong) return;
 
-    if (!audioSrc && !shouldUseNativePlaybackBackend()) {
+    if (!audioSrc && !songId) {
       pauseAudio(audio);
     }
-  }, [audioRef, audioSrc, isSong, pauseAudio]);
+  }, [audioRef, audioSrc, songId, isSong, pauseAudio]);
 
   useEffect(() => {
     async function handleSongPlayback() {
@@ -767,12 +779,6 @@ export function AudioPlayer({
             await resumeContext();
           }
 
-          if (shouldUseNativePlaybackBackend()) {
-            // The native player manages its own play/pause state; skip redundant play calls
-            // as this is already driven natively.
-            return;
-          }
-
           if (sessionRef.current.consumeSyncPlayHandled()) {
             logger.info(
               "[PlayEffect:SKIP] reason=syncPlayHandledAlready | clearing flag",
@@ -783,12 +789,6 @@ export function AudioPlayer({
           logger.info('[PlayEffect:play] → calling safePlay("Song")');
           safePlay(audio, "Song");
         } else {
-          if (shouldUseNativePlaybackBackend()) {
-            // The native player manages its own play/pause state; skip redundant pause calls
-            // as this is already driven natively.
-            return;
-          }
-
           sessionRef.current.consumeSyncPlayHandled();
           logger.info("[PlayEffect:pause] → calling pauseAudio");
           pauseAudio(audio);

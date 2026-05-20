@@ -113,8 +113,9 @@ export class NativeAudioPlaybackBackend implements PlaybackBackend {
     return Promise.resolve();
   }
 
-  updateMetadata(_metadata: PlaybackMetadata) {
-    return Promise.resolve();
+  updateMetadata(metadata: PlaybackMetadata) {
+    this.#assertActive();
+    return this.#plugin.updateMetadata(toNativeAudioMetadata(metadata));
   }
 
   preload(source: PlaybackSource) {

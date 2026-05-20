@@ -53,6 +53,8 @@ export class NativeQueueController implements QueueController {
   > = new Map();
   #nativeListenerHandles: PluginListenerHandle[] = [];
   #disposed = false;
+  #nativeDrivenTransition = false;
+  #queueSynced = false;
 
   constructor() {
     const availability = getNativeAudioPluginAvailability();
@@ -70,6 +72,7 @@ export class NativeQueueController implements QueueController {
     sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     _sourceName?: string,
   ): void {
+    this.#queueSynced = true;
     const nativeSongs = songs.map(songToNativeQueueSong);
     const loopState = usePlayerStore.getState().playerState.loopState;
 
@@ -176,11 +179,20 @@ export class NativeQueueController implements QueueController {
   }
 
   play(): void {
+    const state = usePlayerStore.getState();
+    const songs = state.songlist.contextQueue.songs;
+    const index = state.songlist.contextQueue.currentIndex;
+
+    if (!this.#queueSynced && songs.length > 0) {
+      this.setSongList(songs, index, state.songlist.isShuffleActive);
+      return;
+    }
+
     this.#plugin
       .play()
       .catch((err) => logger.error("[NativeQueueController] play failed", err));
-    usePlayerStore.setState((state) => {
-      state.playerState.isPlaying = true;
+    usePlayerStore.setState((s) => {
+      s.playerState.isPlaying = true;
     });
   }
 
@@ -259,6 +271,7 @@ export class NativeQueueController implements QueueController {
   }
 
   clearPlayerState(): void {
+    this.#queueSynced = false;
     this.#plugin
       .clear()
       .catch((err) =>
@@ -276,6 +289,12 @@ export class NativeQueueController implements QueueController {
 
   hasPrevSong(): boolean {
     return true;
+  }
+
+  consumeNativeDrivenTransition(): boolean {
+    const val = this.#nativeDrivenTransition;
+    this.#nativeDrivenTransition = false;
+    return val;
   }
 
   getState(): QueueControllerState {
@@ -327,6 +346,9 @@ export class NativeQueueController implements QueueController {
   async syncFromNative(): Promise<void> {
     try {
       const state = await this.#plugin.getFullState();
+      if (state.currentSongId) {
+        this.#queueSynced = true;
+      }
       usePlayerStore.setState((s) => {
         s.playerState.isPlaying = state.isPlaying;
         s.playerProgress.progress = state.currentTime;
@@ -370,6 +392,7 @@ export class NativeQueueController implements QueueController {
         `[NativeQueueController] queueStateChanged: index=${event.currentIndex} song=${event.songId} reason=${event.reason}`,
       );
 
+      this.#nativeDrivenTransition = true;
       usePlayerStore.setState((state) => {
         state.songlist.contextQueue.currentIndex = event.currentIndex;
         state.playerProgress.progress = 0;

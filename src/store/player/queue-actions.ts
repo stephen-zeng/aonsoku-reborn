@@ -37,6 +37,8 @@ import {
   trimQueueToWindow,
 } from "./queue-utils";
 import { transitionHandleSongEnded } from "./queue-transitions";
+import { getRuntime } from "@/utils/capabilities";
+import { getQueueController } from "@/player/queue-controller";
 
 interface SharedDeps {
   set: (fn: (state: Draft<IPlayerContext>) => void) => void;
@@ -137,6 +139,11 @@ export function createQueueActions(shared: SharedDeps) {
       sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
       sourceName?: string,
     ) => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().setSongList(songlist, index, shuffle, sourceId, sourceName);
+        return;
+      }
+
       if (!songlist || songlist.length === 0) return;
       index = Math.max(0, Math.min(index, songlist.length - 1));
 
@@ -329,6 +336,11 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     playSong: (song: ISong, sourceName?: string) => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().playSong(song, sourceName);
+        return;
+      }
+
       if (remoteSend(LanControlMessageType.PLAY_SONG, { songId: song.id })) {
         return;
       }
@@ -366,6 +378,11 @@ export function createQueueActions(shared: SharedDeps) {
       list: ISong[],
       sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     ) => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().addToQueueNext(list, sourceId);
+        return;
+      }
+
       if (isRemoteActive()) {
         if (list.length === 0) return;
         sendAddToQueueRemote(remoteSend, sourceId, list);
@@ -385,6 +402,11 @@ export function createQueueActions(shared: SharedDeps) {
       list: ISong[],
       sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     ) => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().addToQueueLast(list, sourceId);
+        return;
+      }
+
       if (isRemoteActive()) {
         if (list.length === 0) return;
         sendAddToQueueRemote(remoteSend, sourceId, list);
@@ -401,6 +423,11 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     removeSongFromQueue: (id: string, tier?: QueueTier) => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().removeFromQueue(id, tier);
+        return;
+      }
+
       if (isRemoteActive()) return;
       const detectedTier = tier ?? findSongTier(get().songlist, id);
       if (!detectedTier) return;
@@ -470,6 +497,11 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     clearUserQueue: () => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().clearUserQueue();
+        return;
+      }
+
       set((state) => {
         state.songlist.userQueue.songs = [];
         state.songlist.playedUserQueueHistory = [];
@@ -480,6 +512,11 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     reorderQueue: (fromIndex: number, toIndex: number) => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().reorderQueue(fromIndex, toIndex);
+        return;
+      }
+
       if (isRemoteActive()) return;
       if (fromIndex === toIndex) return;
 
@@ -556,6 +593,11 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     toggleShuffle: () => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().toggleShuffle();
+        return;
+      }
+
       if (isRemoteActive()) {
         remoteSend(LanControlMessageType.TOGGLE_SHUFFLE);
         set((state) => {
@@ -577,6 +619,11 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     playNextSong: () => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().playNext();
+        return;
+      }
+
       if (isRemoteActive()) {
         if (remoteSend(LanControlMessageType.NEXT)) return;
       }
@@ -713,6 +760,11 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     playPrevSong: () => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().playPrev();
+        return;
+      }
+
       if (isRemoteActive()) {
         if (remoteSend(LanControlMessageType.PREVIOUS)) return;
       }
@@ -886,6 +938,11 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     clearPlayerState: () => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().clearPlayerState();
+        return;
+      }
+
       if (isRemoteActive()) return;
       set((state) => {
         clearSonglistState(state.songlist);

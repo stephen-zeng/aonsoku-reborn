@@ -2,8 +2,9 @@ import type { Draft } from "immer";
 import clamp from "lodash/clamp";
 import { LanControlMessageType } from "@/types/lanControl";
 import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
-import { getPlaybackCapabilities } from "@/utils/capabilities";
+import { getPlaybackCapabilities, getRuntime } from "@/utils/capabilities";
 import { logger } from "@/utils/logger";
+import { getQueueController } from "@/player/queue-controller";
 
 interface SharedDeps {
   set: (fn: (state: Draft<IPlayerContext>) => void) => void;
@@ -17,6 +18,15 @@ export function createPlaybackActions(shared: SharedDeps) {
 
   return {
     setPlayingState: (status: boolean) => {
+      if (getRuntime() === "capacitor-ios") {
+        if (status) {
+          getQueueController().play();
+        } else {
+          getQueueController().pause();
+        }
+        return;
+      }
+
       const prev = get().playerState.isPlaying;
       logger.info(
         `[setPlayingState] ${prev} → ${status} | isRemote=${!!isRemoteActive()}`,
@@ -32,6 +42,11 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     togglePlayPause: () => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().togglePlayPause();
+        return;
+      }
+
       const prev = get().playerState.isPlaying;
       logger.info(`[togglePlayPause] isPlaying: ${prev} → ${!prev}`);
       remoteSend(LanControlMessageType.PLAY_PAUSE);
@@ -41,6 +56,11 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     toggleLoop: () => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().toggleLoop();
+        return;
+      }
+
       const { loopState } = get().playerState;
       const newState = (loopState + 1) % (2 + 1);
 
@@ -59,6 +79,11 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     setProgress: (progress: number) => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().seek(progress);
+        return;
+      }
+
       remoteSend(LanControlMessageType.SEEK, {
         time: progress,
       });
