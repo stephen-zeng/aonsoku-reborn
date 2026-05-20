@@ -829,6 +829,32 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             self.volumeOperationGen += 1
             let gen = self.volumeOperationGen
 
+            if self.isVolumeHUDEnabled {
+                let tempVolumeView = MPVolumeView(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+                self.resolveTempVolumeSlider(tempVolumeView: tempVolumeView) { [weak self] slider in
+                    guard let self else { return }
+                    guard let slider else {
+                        call.reject(
+                            "System volume control is unavailable.",
+                            "volume_control_unavailable"
+                        )
+                        return
+                    }
+
+                    slider.setValue(clampedValue, animated: false)
+                    slider.sendActions(for: .touchUpInside)
+                    slider.sendActions(for: .valueChanged)
+
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                        guard let self else { return }
+                        let volume = self.audioSession.outputVolume
+                        self.notifyListeners("systemVolumeChanged", data: ["volume": volume])
+                        call.resolve(["volume": volume])
+                    }
+                }
+                return
+            }
+
             self.resolveVolumeSlider { [weak self] slider in
                 guard let self else { return }
                 guard let slider else {
@@ -884,6 +910,36 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             self.resolveVolumeSlider(
                 attemptsRemaining: attemptsRemaining - 1,
                 isFirstAttempt: false,
+                completion: completion
+            )
+        }
+    }
+
+    private func resolveTempVolumeSlider(
+        tempVolumeView: MPVolumeView,
+        attemptsRemaining: Int = 4,
+        completion: @escaping (UISlider?) -> Void
+    ) {
+        tempVolumeView.setNeedsLayout()
+        tempVolumeView.layoutIfNeeded()
+        if let slider = findSlider(in: tempVolumeView) {
+            completion(slider)
+            return
+        }
+
+        guard attemptsRemaining > 0 else {
+            completion(nil)
+            return
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+            guard let self else {
+                completion(nil)
+                return
+            }
+            self.resolveTempVolumeSlider(
+                tempVolumeView: tempVolumeView,
+                attemptsRemaining: attemptsRemaining - 1,
                 completion: completion
             )
         }
