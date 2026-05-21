@@ -411,17 +411,6 @@ export class NativeQueueController implements QueueController {
       });
     });
 
-    this.#addNativeListener("progress", (event) => {
-      if (usePlayerStore.getState().playerProgress.isScrubbing) return;
-      usePlayerStore.setState((state) => {
-        state.playerProgress.progress = event.currentTime;
-        state.playerState.currentDuration = event.duration;
-        if (event.bufferedTime !== undefined) {
-          state.playerProgress.bufferedProgress = event.bufferedTime;
-        }
-      });
-    });
-
     this.#addNativeListener("playbackStateChanged", (event) => {
       if (event.state === "playing") {
         usePlayerStore.setState((s) => {
