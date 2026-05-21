@@ -13,15 +13,14 @@ enum AudioCacheUtils {
     }
 
     static func cacheDirectoryURL(createIfNeeded: Bool) throws -> URL {
-        guard let applicationSupport = FileManager.default.urls(
-            for: .applicationSupportDirectory,
+        guard let documents = FileManager.default.urls(
+            for: .documentDirectory,
             in: .userDomainMask
         ).first else {
             throw AudioCacheError.directoryNotFound
         }
 
-        let directory = applicationSupport
-            .appendingPathComponent(appSupportSubdirectory, isDirectory: true)
+        let directory = documents
             .appendingPathComponent(cacheDirectoryName, isDirectory: true)
 
         if createIfNeeded {
