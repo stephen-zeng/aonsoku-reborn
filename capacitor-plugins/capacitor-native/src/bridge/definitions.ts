@@ -2,7 +2,7 @@ import type { Plugin } from "@capacitor/core";
 
 export const NATIVE_BRIDGE_PLUGIN_NAME = "AonsokuNativeBridge";
 
-// --- Credential Management ---
+// MARK: Credential Management
 
 export interface StoreCredentialsOptions {
   serverUrl: string;
@@ -27,7 +27,7 @@ export interface HasCredentialsResult {
   stored: boolean;
 }
 
-// --- Login & Server Validation ---
+// MARK: Login & Server Validation
 
 export interface LoginOptions {
   url: string;
@@ -69,7 +69,7 @@ export interface ServerInfoResult {
   serverType: string;
 }
 
-// --- API Request Proxy ---
+// MARK: API Request Proxy
 
 export interface APIRequestOptions {
   path: string;
@@ -83,7 +83,7 @@ export interface APIResponse {
   data: Record<string, unknown>;
 }
 
-// --- Plugin Interface ---
+// MARK: Plugin Interface
 
 export interface AonsokuNativeBridgePlugin extends Plugin {
   storeCredentials(options: StoreCredentialsOptions): Promise<void>;
