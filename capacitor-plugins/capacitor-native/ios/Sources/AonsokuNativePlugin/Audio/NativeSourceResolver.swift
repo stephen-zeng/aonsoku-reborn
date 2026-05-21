@@ -82,7 +82,10 @@ class NativeSourceResolver {
             protocolVersion: credentials.protocolVersion
         )
         params["id"] = songId
-        params["estimateContentLength"] = "false"
+        // Must be "true" for native AVPlayer: without Content-Length, AVPlayer cannot
+        // issue HTTP Range requests, causing buffer stalls and seek failures.
+        // (Web uses "false" to work around browser-specific streaming quirks.)
+        params["estimateContentLength"] = "true"
 
         let baseString = "\(credentials.serverUrl)/rest/stream"
         guard var components = URLComponents(string: baseString) else { return nil }

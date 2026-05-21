@@ -1547,7 +1547,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             protocolVersion: credentials.protocolVersion
         )
         params["id"] = request.songId
-        params["estimateContentLength"] = "false"
+        // Must be "true" for native AVPlayer: without Content-Length, AVPlayer cannot
+        // issue HTTP Range requests, causing buffer stalls and seek failures.
+        // (Web uses "false" to work around browser-specific streaming quirks.)
+        params["estimateContentLength"] = "true"
 
         if let maxBitRate = request.maxBitRate, !maxBitRate.isEmpty {
             params["maxBitRate"] = maxBitRate

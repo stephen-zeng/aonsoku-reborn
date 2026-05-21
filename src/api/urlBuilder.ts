@@ -82,6 +82,8 @@ export function buildSongStreamUrl(
     id,
     maxBitRate,
     format,
-    estimateContentLength: "false", // enabling may cause http/2 issues
+    // "false" avoids HTTP/2 framing issues in browsers; native AVPlayer uses "true"
+    // (set in NativeSourceResolver) so it can issue Range requests for seek/buffering.
+    estimateContentLength: "false",
   });
 }

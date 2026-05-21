@@ -20,7 +20,7 @@ describe("iOS native audio source resolution", () => {
     expect(swift).toContain('fallbackSongId: source["songId"] as? String');
     expect(swift).toContain('guard endpoint == "stream"');
     expect(swift).toContain('params["id"] = request.songId');
-    expect(swift).toContain('params["estimateContentLength"] = "false"');
+    expect(swift).toContain('params["estimateContentLength"] = "true"');
   });
 
   it("preserves optional stream transcoding parameters for native playback", () => {
