@@ -3,14 +3,41 @@ import { AonsokuNativeBridge } from "@aonsoku/capacitor-native/bridge";
 import { useAppStore } from "@/store/app.store";
 import { AuthType } from "@/types/serverConfig";
 import { getRuntime } from "@/utils/capabilities";
+import { logger } from "@/utils/logger";
+
+function nativeAuthType(authType: AuthType | null): "token" | "password" {
+  return authType === AuthType.TOKEN ? "token" : "password";
+}
 
 export function NativeAuthObserver() {
   useEffect(() => {
     if (getRuntime() !== "capacitor-ios") return;
 
     AonsokuNativeBridge.getCredentials()
-      .then((credentials) => {
-        if (!credentials || !credentials.serverUrl) return;
+      .then(async (credentials) => {
+        if (!credentials || !credentials.serverUrl) {
+          const data = useAppStore.getState().data;
+          if (
+            !data.isServerConfigured ||
+            !data.url ||
+            !data.username ||
+            !data.password ||
+            data.authType === null
+          ) {
+            return;
+          }
+
+          await AonsokuNativeBridge.storeCredentials({
+            serverUrl: data.url,
+            username: data.username,
+            password: data.password,
+            authType: nativeAuthType(data.authType),
+            protocolVersion: data.protocolVersion || "1.16.0",
+            serverType: data.serverType || "subsonic",
+            fallbackUrl: data.fallbackUrl || undefined,
+          });
+          return;
+        }
 
         useAppStore.setState((state) => {
           state.data.url = credentials.serverUrl;
@@ -28,7 +55,9 @@ export function NativeAuthObserver() {
           state.data.isServerConfigured = true;
         });
       })
-      .catch(() => {});
+      .catch((error) => {
+        logger.error("[NativeAuthObserver] credential sync failed", error);
+      });
   }, []);
 
   return null;

@@ -313,6 +313,56 @@ describe("CacheAudioSourceResolver", () => {
     expect(source.kind).toBe("native-file");
   });
 
+  it("migrates a cached blob into native storage when native cache is available", async () => {
+    const storage = new FakeCacheStorage();
+    const index = new FakeCacheIndex({
+      items: { [audioKey("song-1")]: audioMeta() },
+      now: () => 77,
+    });
+    await storage.put(
+      audioKey("song-1"),
+      new Blob(["web audio"], { type: "audio/flac" }),
+      "audio/flac",
+    );
+
+    const nativeCacheAdapter = new FakeNativeCacheAdapter();
+    const { resolver } = createResolver({
+      storage,
+      index,
+      nativeFileResolver: nativeCacheAdapter,
+    });
+
+    const source = await resolver.resolveSongSource("song-1");
+    const storedFile = await nativeCacheAdapter.resolveAudioFile("song-1");
+
+    expect(source.kind).toBe("native-file");
+    expect(source).toMatchObject({
+      kind: "native-file",
+      songId: "song-1",
+      uri: storedFile?.uri,
+    });
+    expect(storedFile?.contentType).toBe("audio/flac");
+    expect(index.getItem(audioKey("song-1"))?.lastAccessedAt).toBe(77);
+  });
+
+  it("keeps using blob URLs when only a native file resolver is available", async () => {
+    const storage = new FakeCacheStorage();
+    const index = new FakeCacheIndex({
+      items: { [audioKey("song-1")]: audioMeta() },
+    });
+    await storage.put(audioKey("song-1"), new Blob(["audio"]), "audio/mpeg");
+
+    const { resolver } = createResolver({
+      storage,
+      index,
+      nativeFileResolver: new FakeNativeFileResolver(),
+    });
+
+    const source = await resolver.resolveSongSource("song-1");
+
+    expect(source.kind).toBe("blob");
+  });
+
   it("returns a radio descriptor without touching song cache state", () => {
     const index = new FakeCacheIndex({
       items: {

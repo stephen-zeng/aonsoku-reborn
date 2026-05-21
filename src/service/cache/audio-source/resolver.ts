@@ -111,6 +111,24 @@ export class CacheAudioSourceResolver implements AudioSourceResolver {
       };
     }
 
+    const nativeCache = nativeCacheAdapter(this.nativeFileResolver);
+    if (nativeCache) {
+      const blob = await this.getCachedBlobAndEnsureIndexed(songId);
+      if (blob) {
+        const migratedFile = await nativeCache.storeAudioFile(
+          songId,
+          blob,
+          blob.type || "audio/mpeg",
+        );
+        await this.ensureNativeFileIndexed(migratedFile);
+        return {
+          kind: "native-file",
+          songId,
+          uri: migratedFile.uri,
+        };
+      }
+    }
+
     const blobSource = await this.resolveCachedBlobSource(songId);
     return blobSource ?? createStreamSource(songId, this.urlResolver);
   }
@@ -122,6 +140,21 @@ export class CacheAudioSourceResolver implements AudioSourceResolver {
   async resolveCachedBlobSource(
     songId: string,
   ): Promise<BlobAudioSource | null> {
+    const blob = await this.getCachedBlobAndEnsureIndexed(songId);
+    if (!blob) return null;
+
+    const url = this.blobUrls.createObjectURL(blob);
+    return {
+      kind: "blob",
+      songId,
+      url,
+      revoke: () => this.blobUrls.revokeObjectURL(url),
+    };
+  }
+
+  private async getCachedBlobAndEnsureIndexed(
+    songId: string,
+  ): Promise<Blob | null> {
     const key = audioKey(songId);
     const { loaded } = this.index.getSnapshot();
 
@@ -157,13 +190,7 @@ export class CacheAudioSourceResolver implements AudioSourceResolver {
       this.index.touchItem(key);
     }
 
-    const url = this.blobUrls.createObjectURL(blob);
-    return {
-      kind: "blob",
-      songId,
-      url,
-      revoke: () => this.blobUrls.revokeObjectURL(url),
-    };
+    return blob;
   }
 
   private async ensureNativeFileIndexed(
@@ -193,4 +220,23 @@ export class CacheAudioSourceResolver implements AudioSourceResolver {
 
     this.index.touchItem(key);
   }
+}
+
+function nativeCacheAdapter(
+  resolver: NativeFileResolver | undefined,
+): (NativeFileResolver & {
+  storeAudioFile(
+    songId: string,
+    data: Blob,
+    contentType: string,
+  ): Promise<NativeCachedAudioFile>;
+}) | null {
+  if (!resolver || !("storeAudioFile" in resolver)) return null;
+  return resolver as NativeFileResolver & {
+    storeAudioFile(
+      songId: string,
+      data: Blob,
+      contentType: string,
+    ): Promise<NativeCachedAudioFile>;
+  };
 }

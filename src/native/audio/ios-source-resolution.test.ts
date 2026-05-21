@@ -31,4 +31,18 @@ describe("iOS native audio source resolution", () => {
     expect(swift).toContain('params["maxBitRate"] = maxBitRate');
     expect(swift).toContain('params["format"] = format');
   });
+
+  it("accepts file URL cached audio entries in the native queue resolver", () => {
+    const resolver = readFileSync(
+      path.join(
+        process.cwd(),
+        "capacitor-plugins/capacitor-native/ios/Sources/AonsokuNativePlugin/Audio/NativeSourceResolver.swift",
+      ),
+      "utf-8",
+    );
+
+    expect(resolver).toContain("let fileUrl = fileURL(from: cachedUri)");
+    expect(resolver).toContain("if let url = URL(string: uri), url.isFileURL");
+    expect(resolver).toContain("return URL(fileURLWithPath: uri)");
+  });
 });

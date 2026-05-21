@@ -29,7 +29,7 @@ class NativeSourceResolver {
 
     func resolveSource(for song: QueueSong) -> (url: URL, kind: String)? {
         if let cachedUri = song.cachedFileUri, !cachedUri.isEmpty {
-            let fileUrl = URL(fileURLWithPath: cachedUri)
+            let fileUrl = fileURL(from: cachedUri)
             if FileManager.default.fileExists(atPath: fileUrl.path) {
                 return (fileUrl, "native-file")
             }
@@ -92,5 +92,13 @@ class NativeSourceResolver {
 
     private func cacheId(for songId: String) -> String {
         AudioCacheUtils.cacheId(for: songId)
+    }
+
+    private func fileURL(from uri: String) -> URL {
+        if let url = URL(string: uri), url.isFileURL {
+            return url
+        }
+
+        return URL(fileURLWithPath: uri)
     }
 }
