@@ -1792,7 +1792,6 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 "duration": 0,
                 "bufferedTime": 0,
             ], requestId: requestId))
-            updateNowPlayingPlaybackInfo()
             return
         }
 
@@ -1804,7 +1803,6 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             "duration": duration,
             "bufferedTime": bufferedTime(),
         ], requestId: requestId))
-        updateNowPlayingPlaybackInfo()
     }
 
     private func emitDuration(
