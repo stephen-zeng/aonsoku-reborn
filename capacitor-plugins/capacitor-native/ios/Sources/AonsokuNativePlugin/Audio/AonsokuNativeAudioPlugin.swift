@@ -69,6 +69,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var currentRequestId: String?
     private var playbackGeneration = 0
     private var currentMetadata = NativeAudioMetadata()
+    private var loadedDurationSeconds: Double?
     private var artworkTask: URLSessionDataTask?
     private var nowPlayingRevision = 0
     private var remoteCommandTargets: [(command: MPRemoteCommand, target: Any)] = []
@@ -141,6 +142,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                     self.currentRadioId = resolvedSource.radioId
                     self.currentRequestId = requestId
                     self.currentMetadata = metadata
+                    self.loadedDurationSeconds = metadata.duration
                     self.addObservers(for: item, player: player, generation: generation, requestId: requestId)
                     self.addProgressObserver(to: player, generation: generation, requestId: requestId)
                     self.updateNowPlayingInfo()
@@ -495,13 +497,13 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func getFullState(_ call: CAPPluginCall) {
         stateQueue.async {
-            let currentTime = self.player?.currentTime().seconds ?? 0
-            let duration = self.playerItem?.duration.seconds ?? 0
+            let currentTime = self.seconds(from: self.player?.currentTime() ?? .zero)
+            let duration = self.durationSeconds()
             let isPlaying = self.player?.timeControlStatus == .playing
 
             let state = self.queueEngine.getFullState(
                 currentTime: currentTime,
-                duration: duration.isNaN ? 0 : duration,
+                duration: duration,
                 isPlaying: isPlaying
             )
             call.resolve(state)
@@ -1371,7 +1373,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func applyNowPlayingPlaybackFields(to info: inout [String: Any]) {
-        let duration = currentMetadata.duration ?? durationSeconds()
+        let duration = durationSeconds()
         if duration > 0 {
             info[MPMediaItemPropertyPlaybackDuration] = duration
         } else {
@@ -1637,6 +1639,8 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             )
             self?.emitPlaybackState("failed", requestId: requestId)
         }
+
+        loadDurationAsync(for: item, generation: generation, requestId: requestId)
     }
 
     private func addProgressObserver(
@@ -1754,6 +1758,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         player?.replaceCurrentItem(with: nil)
         player = nil
         playerItem = nil
+        loadedDurationSeconds = nil
         currentSourceKind = nil
         currentRadioId = nil
         currentRequestId = nil
@@ -1819,10 +1824,43 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
 
+        loadedDurationSeconds = duration
         notifyListeners("durationChanged", data: eventData([
             "duration": duration,
         ], requestId: requestId))
         updateNowPlayingPlaybackInfo()
+    }
+
+    private func loadDurationAsync(
+        for item: AVPlayerItem,
+        generation: Int,
+        requestId: String?
+    ) {
+        item.asset.loadValuesAsynchronously(forKeys: ["duration"]) { [weak self, weak item] in
+            DispatchQueue.main.async {
+                guard let self, let item else { return }
+                guard self.isCurrentPlayback(item: item, generation: generation) else {
+                    return
+                }
+
+                var error: NSError?
+                let status = item.asset.statusOfValue(forKey: "duration", error: &error)
+                guard status == .loaded else {
+                    return
+                }
+
+                let duration = self.seconds(from: item.asset.duration)
+                guard duration > 0 else {
+                    return
+                }
+
+                self.loadedDurationSeconds = duration
+                self.notifyListeners("durationChanged", data: self.eventData([
+                    "duration": duration,
+                ], requestId: requestId))
+                self.updateNowPlayingPlaybackInfo()
+            }
+        }
     }
 
     private func emitBuffering(_ isBuffering: Bool, requestId: String? = nil) {
@@ -1951,16 +1989,18 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func durationSeconds() -> Double {
-        guard let item = playerItem else {
-            return 0
+        if let duration = currentMetadata.duration, duration > 0 {
+            return duration
         }
 
-        let itemDuration = seconds(from: item.duration)
-        if itemDuration > 0 {
-            return itemDuration
+        if let item = playerItem {
+            let itemDuration = seconds(from: item.duration)
+            if itemDuration > 0 {
+                return itemDuration
+            }
         }
 
-        return seconds(from: item.asset.duration)
+        return loadedDurationSeconds ?? 0
     }
 
     private func bufferedTime() -> Double {
@@ -2156,6 +2196,7 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
                 metadata.duration = song.duration
                 metadata.artworkUrl = self.resolveCoverArtId(for: song)
                 self.currentMetadata = metadata
+                self.loadedDurationSeconds = metadata.duration
 
                 self.addObservers(for: item, player: player, generation: generation, requestId: nil)
                 self.addProgressObserver(to: player, generation: generation, requestId: nil)

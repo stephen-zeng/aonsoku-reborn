@@ -32,6 +32,17 @@ describe("iOS native audio source resolution", () => {
     expect(swift).toContain('params["format"] = format');
   });
 
+  it("loads native asset duration asynchronously", () => {
+    const swift = readNativeAudioPlugin();
+
+    expect(swift).toContain("private var loadedDurationSeconds: Double?");
+    expect(swift).toContain(
+      'item.asset.loadValuesAsynchronously(forKeys: ["duration"])',
+    );
+    expect(swift).toContain('statusOfValue(forKey: "duration"');
+    expect(swift).not.toContain("return seconds(from: item.asset.duration)");
+  });
+
   it("accepts file URL cached audio entries in the native queue resolver", () => {
     const resolver = readFileSync(
       path.join(
