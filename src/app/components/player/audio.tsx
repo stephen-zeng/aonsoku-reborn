@@ -543,18 +543,13 @@ export function AudioPlayer({
           if (!audio) return;
 
           seekAudio(audio, position);
-          setStoreProgress(position);
+          usePlayerStore.setState((state) => {
+            state.playerProgress.progress = position;
+          });
         },
       });
     },
-    [
-      audioRef,
-      playNextSong,
-      playPrevSong,
-      seekAudio,
-      setStoreProgress,
-      togglePlayPause,
-    ],
+    [audioRef, playNextSong, playPrevSong, seekAudio, togglePlayPause],
   );
 
   const handleAudioErrorRef = useRef(handleAudioError);
@@ -609,7 +604,9 @@ export function AudioPlayer({
       "progress",
       (event) => {
         if (!sessionRef.current.shouldSuppressProgressUpdate()) {
-          setStoreProgress(event.currentTime);
+          usePlayerStore.setState((state) => {
+            state.playerProgress.progress = event.currentTime;
+          });
         }
         setStoreBufferedProgress(event.bufferedTime);
       },
@@ -700,7 +697,6 @@ export function AudioPlayer({
     setStoreCurrentDuration,
     setStoreIsBuffering,
     setStorePlayingState,
-    setStoreProgress,
     songId,
   ]);
 
