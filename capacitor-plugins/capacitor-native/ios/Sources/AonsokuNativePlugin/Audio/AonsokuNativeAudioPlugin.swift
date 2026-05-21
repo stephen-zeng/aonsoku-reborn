@@ -48,9 +48,13 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var statusObservation: NSKeyValueObservation?
     private var durationObservation: NSKeyValueObservation?
     private var timeControlStatusObservation: NSKeyValueObservation?
+    private var bufferEmptyObservation: NSKeyValueObservation?
+    private var likelyToKeepUpObservation: NSKeyValueObservation?
     private var timeObserverToken: Any?
     private var endObserver: NSObjectProtocol?
     private var failedEndObserver: NSObjectProtocol?
+    private var stalledObserver: NSObjectProtocol?
+    private var stallRecoveryTimer: DispatchWorkItem?
     private var interruptionObserver: NSObjectProtocol?
     private var routeChangeObserver: NSObjectProtocol?
     private var didEnterBackgroundObserver: NSObjectProtocol?
@@ -1644,6 +1648,28 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         loadDurationAsync(for: item, generation: generation, requestId: requestId)
+
+        stalledObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemPlaybackStalled,
+            object: item,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleStall(player: player, generation: generation)
+        }
+
+        bufferEmptyObservation = item.observe(\.isPlaybackBufferEmpty, options: [.new]) { [weak self] _, change in
+            guard change.newValue == true else { return }
+            DispatchQueue.main.async {
+                self?.handleStall(player: player, generation: generation)
+            }
+        }
+
+        likelyToKeepUpObservation = item.observe(\.isPlaybackLikelyToKeepUp, options: [.new]) { [weak self] _, change in
+            guard change.newValue == true else { return }
+            DispatchQueue.main.async {
+                self?.cancelStallRecovery()
+            }
+        }
     }
 
     private func addProgressObserver(
@@ -1715,6 +1741,34 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
+    private func handleStall(player: AVPlayer, generation: Int) {
+        guard isCurrentPlayback(player: player, generation: generation) else { return }
+        guard player.timeControlStatus == .waitingToPlayAtSpecifiedRate else { return }
+        guard stallRecoveryTimer == nil else { return }
+
+        let work = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+            self.stallRecoveryTimer = nil
+            guard self.isCurrentPlayback(player: player, generation: generation) else { return }
+            guard player.timeControlStatus == .waitingToPlayAtSpecifiedRate else { return }
+
+            // Seek to current position forces AVPlayer to re-establish the connection
+            let currentTime = player.currentTime()
+            player.seek(to: currentTime, toleranceBefore: .zero, toleranceAfter: .zero) { _ in
+                if player.timeControlStatus == .waitingToPlayAtSpecifiedRate {
+                    player.play()
+                }
+            }
+        }
+        stallRecoveryTimer = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: work)
+    }
+
+    private func cancelStallRecovery() {
+        stallRecoveryTimer?.cancel()
+        stallRecoveryTimer = nil
+    }
+
     private func handleEnded(generation: Int, requestId: String?) {
         guard isCurrentPlayback(generation: generation) else {
             return
@@ -1753,9 +1807,17 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             failedEndObserver = nil
         }
 
+        if let observer = stalledObserver {
+            NotificationCenter.default.removeObserver(observer)
+            stalledObserver = nil
+        }
+
+        cancelStallRecovery()
         statusObservation = nil
         durationObservation = nil
         timeControlStatusObservation = nil
+        bufferEmptyObservation = nil
+        likelyToKeepUpObservation = nil
 
         player?.pause()
         player?.replaceCurrentItem(with: nil)
