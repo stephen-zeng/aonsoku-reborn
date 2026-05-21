@@ -1781,6 +1781,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
 
+        player?.seek(to: .zero)
         emitProgress(requestId: requestId)
         emitPlaybackState("ended", requestId: requestId)
         notifyListeners("ended", data: eventData([
@@ -2305,7 +2306,10 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
             )
         }
         DispatchQueue.main.async {
+            self.player?.pause()
+            self.player?.seek(to: .zero)
             self.emitPlaybackState("ended")
+            self.emitProgress()
         }
         notifyListeners("ended", data: [
             "reason": "finished",
