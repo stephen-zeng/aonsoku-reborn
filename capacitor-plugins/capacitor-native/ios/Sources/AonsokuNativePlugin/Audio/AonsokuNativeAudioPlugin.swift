@@ -89,6 +89,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var isVolumeHUDEnabled = true
     private var volumeOperationGen = 0
     private var lastEmittedPlaybackState: String?
+    private var isSeeking = false
 
     public override func load() {
         super.load()
@@ -214,7 +215,9 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             }
 
             let position = max(0, call.getDouble("position") ?? 0)
+            self.isSeeking = true
             player.seek(to: self.makeTime(position), toleranceBefore: .zero, toleranceAfter: .zero) { finished in
+                self.isSeeking = false
                 self.emitProgress()
                 if finished {
                     call.resolve()
@@ -1214,7 +1217,11 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 }
                 guard let self = self else { return .commandFailed }
                 if self.isQueueEngineActive {
-                    self.player?.seek(to: self.makeTime(event.positionTime))
+                    self.isSeeking = true
+                    self.player?.seek(to: self.makeTime(event.positionTime)) { [weak self] _ in
+                        self?.isSeeking = false
+                        self?.emitProgress()
+                    }
                 } else {
                     self.emitRemoteCommand("seek", position: event.positionTime)
                 }
@@ -1679,10 +1686,12 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     ) {
         let interval = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
         timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: progressQueue) { [weak self] _ in
-            guard self?.isCurrentPlayback(player: player, generation: generation) == true else {
+            guard let self = self else { return }
+            guard self.isCurrentPlayback(player: player, generation: generation) else {
                 return
             }
-            self?.emitProgress(requestId: requestId)
+            guard !self.isSeeking else { return }
+            self.emitProgress(requestId: requestId)
         }
     }
 
@@ -1792,6 +1801,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private func clearPlayer(sendIdleEvent: Bool, deactivateSession: Bool = false) {
         playbackGeneration += 1
         lastEmittedPlaybackState = nil
+        isSeeking = false
 
         if let token = timeObserverToken {
             player?.removeTimeObserver(token)
@@ -2319,8 +2329,11 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
     func queueEngine(_ engine: NativeQueueEngine, seekToStart song: QueueSong) {
         DispatchQueue.main.async {
             guard let player = self.player else { return }
+            self.isSeeking = true
             player.seek(to: CMTime.zero) { [weak self] finished in
-                guard finished, let self = self else { return }
+                guard let self = self else { return }
+                self.isSeeking = false
+                guard finished else { return }
                 player.play()
                 self.stateQueue.async {
                     if let entry = self.scrobbleBuffer.stopTracking() {
