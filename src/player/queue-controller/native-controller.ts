@@ -6,10 +6,10 @@ import type {
   NativeAudioPlugin,
   NativeQueueSong,
 } from "@/native/audio/types";
-import { usePlayerStore } from "@/store/player.store";
 import { getCurrentSong } from "@/store/player/queue-utils";
-import { LoopState } from "@/types/playerContext";
+import { usePlayerStore } from "@/store/player.store";
 import type { QueueSourceId } from "@/types/playerContext";
+import { LoopState } from "@/types/playerContext";
 import type { Radio } from "@/types/responses/radios";
 import type { ISong } from "@/types/responses/song";
 import { logger } from "@/utils/logger";
@@ -45,6 +45,8 @@ function songToNativeQueueSong(song: ISong): NativeQueueSong {
   };
 }
 
+const TERMINAL_PLAYBACK_RESET_DELAY_MS = 150;
+
 export class NativeQueueController implements QueueController {
   #plugin: NativeAudioPlugin;
   #listeners: Map<
@@ -55,6 +57,7 @@ export class NativeQueueController implements QueueController {
   #disposed = false;
   #nativeDrivenTransition = false;
   #queueSynced = false;
+  #terminalPlaybackResetTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     const availability = getNativeAudioPluginAvailability();
@@ -336,6 +339,7 @@ export class NativeQueueController implements QueueController {
   dispose(): void {
     if (this.#disposed) return;
     this.#disposed = true;
+    this.#clearTerminalPlaybackResetTimer();
     for (const handle of this.#nativeListenerHandles) {
       handle.remove();
     }
@@ -388,6 +392,7 @@ export class NativeQueueController implements QueueController {
 
   #wireNativeEvents() {
     this.#addNativeListener("queueStateChanged", (event) => {
+      this.#clearTerminalPlaybackResetTimer();
       logger.info(
         `[NativeQueueController] queueStateChanged: index=${event.currentIndex} song=${event.songId} reason=${event.reason}`,
       );
@@ -413,9 +418,15 @@ export class NativeQueueController implements QueueController {
 
     this.#addNativeListener("playbackStateChanged", (event) => {
       if (event.state === "playing") {
+        this.#clearTerminalPlaybackResetTimer();
         usePlayerStore.setState((s) => {
           s.playerState.isPlaying = true;
           s.playerState.isBuffering = false;
+        });
+      } else if (event.state === "loading") {
+        this.#clearTerminalPlaybackResetTimer();
+        usePlayerStore.setState((s) => {
+          s.playerState.isBuffering = true;
         });
       } else if (
         event.state === "paused" ||
@@ -425,10 +436,9 @@ export class NativeQueueController implements QueueController {
         usePlayerStore.setState((s) => {
           s.playerState.isPlaying = false;
         });
-      } else if (event.state === "loading") {
-        usePlayerStore.setState((s) => {
-          s.playerState.isBuffering = true;
-        });
+        if (event.state === "ended" || event.state === "stopped") {
+          this.#scheduleTerminalPlaybackReset();
+        }
       }
     });
 
@@ -458,5 +468,43 @@ export class NativeQueueController implements QueueController {
           err,
         ),
       );
+  }
+
+  #clearTerminalPlaybackResetTimer() {
+    if (!this.#terminalPlaybackResetTimer) return;
+    clearTimeout(this.#terminalPlaybackResetTimer);
+    this.#terminalPlaybackResetTimer = null;
+  }
+
+  #scheduleTerminalPlaybackReset() {
+    this.#clearTerminalPlaybackResetTimer();
+    this.#terminalPlaybackResetTimer = setTimeout(() => {
+      this.#terminalPlaybackResetTimer = null;
+
+      if (this.#disposed) return;
+      if (this.#nativeDrivenTransition) {
+        this.#nativeDrivenTransition = false;
+        return;
+      }
+
+      logger.info(
+        "[NativeQueueController] terminal playback reached end, seeking back to zero",
+      );
+
+      this.#plugin
+        .seek({ position: 0 })
+        .catch((err) =>
+          logger.error(
+            "[NativeQueueController] terminal reset seek failed",
+            err,
+          ),
+        );
+
+      usePlayerStore.setState((state) => {
+        state.playerProgress.progress = 0;
+        state.playerProgress.bufferedProgress = 0;
+        state.playerState.isBuffering = false;
+      });
+    }, TERMINAL_PLAYBACK_RESET_DELAY_MS);
   }
 }
