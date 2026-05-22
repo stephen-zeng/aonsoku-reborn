@@ -5,6 +5,22 @@ class NativeScrobbleSubmitter {
     private let thresholdPercent = 0.5
     private let thresholdMaxSeconds: Double = 240
 
+    func sendNowPlaying(songId: String) {
+        Task {
+            guard let credentials = KeychainManager.retrieve() else { return }
+            _ = try? await httpClient.request(
+                baseUrl: credentials.serverUrl,
+                path: "scrobble",
+                credentials: credentials,
+                extraQuery: [
+                    "id": songId,
+                    "submission": "false",
+                    "time": String(Int(Date().timeIntervalSince1970 * 1000)),
+                ]
+            )
+        }
+    }
+
     func submitIfEligible(entry: ScrobbleEntry, songDurationSeconds: Double) {
         let playedSeconds = Double(entry.playedDurationMs) / 1000.0
         let threshold = min(songDurationSeconds * thresholdPercent, thresholdMaxSeconds)

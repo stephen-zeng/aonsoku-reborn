@@ -1133,11 +1133,6 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                     } else {
                         self.player?.play()
                     }
-                    self.stateQueue.async {
-                        if let song = self.queueEngine.currentSong {
-                            self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
-                        }
-                    }
                 } else {
                     self.emitRemoteCommand("play")
                 }
@@ -1173,11 +1168,6 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                             self.seekToStartAndPlay()
                         } else {
                             self.player?.play()
-                        }
-                        self.stateQueue.async {
-                            if let song = self.queueEngine.currentSong {
-                                self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
-                            }
                         }
                     }
                 } else {
@@ -1752,9 +1742,15 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         case .playing:
             emitBuffering(false, requestId: requestId)
             emitPlaybackState("playing", requestId: requestId)
+            if isQueueEngineActive {
+                stateQueue.async { self.scrobbleBuffer.resumeTracking() }
+            }
         case .paused:
             emitBuffering(false, requestId: requestId)
             emitPlaybackState("paused", requestId: requestId)
+            if isQueueEngineActive {
+                stateQueue.async { self.scrobbleBuffer.pauseTracking() }
+            }
         case .waitingToPlayAtSpecifiedRate:
             emitBuffering(true, requestId: requestId)
         @unknown default:
@@ -2323,6 +2319,7 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
                     self.stateQueue.async {
                         self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
                     }
+                    self.scrobbleSubmitter.sendNowPlaying(songId: song.id)
                 }
             }
         }
@@ -2381,6 +2378,7 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
                     }
                     self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
                 }
+                self.scrobbleSubmitter.sendNowPlaying(songId: song.id)
             }
         }
     }

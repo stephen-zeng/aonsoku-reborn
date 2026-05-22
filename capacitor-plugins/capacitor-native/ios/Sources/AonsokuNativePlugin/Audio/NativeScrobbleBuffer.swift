@@ -19,7 +19,9 @@ class NativeScrobbleBuffer {
     private var entries: [ScrobbleEntry] = []
     private var currentSongId: String?
     private var currentSongDuration: Double?
-    private var currentStartTime: Date?
+    private var accumulatedMs: Int = 0
+    private var segmentStartTime: Date?
+    private var trackingStartTimestamp: Double = 0
 
     init() {
         loadPersistedEntries()
@@ -29,7 +31,20 @@ class NativeScrobbleBuffer {
         flushCurrent()
         currentSongId = songId
         currentSongDuration = duration
-        currentStartTime = Date()
+        accumulatedMs = 0
+        segmentStartTime = Date()
+        trackingStartTimestamp = Date().timeIntervalSince1970 * 1000
+    }
+
+    func pauseTracking() {
+        guard segmentStartTime != nil else { return }
+        accumulatedMs += currentSegmentMs()
+        segmentStartTime = nil
+    }
+
+    func resumeTracking() {
+        guard currentSongId != nil, segmentStartTime == nil else { return }
+        segmentStartTime = Date()
     }
 
     func stopTracking() -> ScrobbleEntry? {
@@ -58,25 +73,33 @@ class NativeScrobbleBuffer {
         return currentSongDuration
     }
 
+    private func currentSegmentMs() -> Int {
+        guard let start = segmentStartTime else { return 0 }
+        return Int(Date().timeIntervalSince(start) * 1000)
+    }
+
     @discardableResult
     private func flushCurrent() -> ScrobbleEntry? {
-        guard let songId = currentSongId, let startTime = currentStartTime else {
+        guard let songId = currentSongId else {
             return nil
         }
 
-        let durationMs = Int(Date().timeIntervalSince(startTime) * 1000)
-        currentSongId = nil
-        currentStartTime = nil
+        let totalMs = accumulatedMs + currentSegmentMs()
+        let timestamp = trackingStartTimestamp
 
-        guard durationMs > 0 else {
+        currentSongId = nil
+        segmentStartTime = nil
+        accumulatedMs = 0
+
+        guard totalMs > 0 else {
             currentSongDuration = nil
             return nil
         }
 
         let entry = ScrobbleEntry(
             songId: songId,
-            playedDurationMs: durationMs,
-            timestamp: startTime.timeIntervalSince1970 * 1000
+            playedDurationMs: totalMs,
+            timestamp: timestamp
         )
         entries.append(entry)
         persistEntries()
