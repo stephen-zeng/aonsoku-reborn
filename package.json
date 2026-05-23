@@ -38,7 +38,7 @@
     "url": "https://github.com/realtvop/aonsoku-reborn.git"
   },
   "dependencies": {
-    "@aonsoku/capacitor-native": "file:capacitor-plugins/capacitor-native",
+    "@aonsoku/capacitor-native": "workspace:*",
     "@applemusic-like-lyrics/core": "0.2.0",
     "@applemusic-like-lyrics/lyric": "0.3.0",
     "@applemusic-like-lyrics/react": "0.2.0",

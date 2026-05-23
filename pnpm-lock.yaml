@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@aonsoku/capacitor-native':
-        specifier: file:capacitor-plugins/capacitor-native
-        version: file:capacitor-plugins/capacitor-native(@capacitor/core@8.3.4)
+        specifier: workspace:*
+        version: link:capacitor-plugins/capacitor-native
       '@applemusic-like-lyrics/core':
         specifier: 0.2.0
         version: 0.2.0(@pixi/app@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3)))(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))(@pixi/filter-blur@7.4.3(@pixi/core@7.4.3))(@pixi/filter-bulge-pinch@5.1.1(@pixi/core@7.4.3))(@pixi/filter-color-matrix@7.4.3(@pixi/core@7.4.3))(@pixi/sprite@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3)))
@@ -418,16 +418,17 @@ importers:
         specifier: 4.1.5
         version: 4.1.5(@types/node@22.19.17)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(vite@6.4.2(@types/node@22.19.17)(jiti@1.21.7)(terser@5.46.2))
 
+  capacitor-plugins/capacitor-native:
+    dependencies:
+      '@capacitor/core':
+        specifier: '>=8.0.0'
+        version: 8.3.4
+
 packages:
 
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
-
-  '@aonsoku/capacitor-native@file:capacitor-plugins/capacitor-native':
-    resolution: {directory: capacitor-plugins/capacitor-native, type: directory}
-    peerDependencies:
-      '@capacitor/core': '>=8.0.0'
 
   '@applemusic-like-lyrics/core@0.2.0':
     resolution: {integrity: sha512-gC3EC8gd6M9ieSk83W/ffTFMjtKknjmSACaKcGcL+/4dmYuPNlaXwRbl5Ggu0cp+LVqH7jQ6zXPYpWJ1cUZ/6g==}
@@ -5882,10 +5883,6 @@ packages:
 snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
-
-  '@aonsoku/capacitor-native@file:capacitor-plugins/capacitor-native(@capacitor/core@8.3.4)':
-    dependencies:
-      '@capacitor/core': 8.3.4
 
   '@applemusic-like-lyrics/core@0.2.0(@pixi/app@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3)))(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))(@pixi/filter-blur@7.4.3(@pixi/core@7.4.3))(@pixi/filter-bulge-pinch@5.1.1(@pixi/core@7.4.3))(@pixi/filter-color-matrix@7.4.3(@pixi/core@7.4.3))(@pixi/sprite@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3)))':
     dependencies:
