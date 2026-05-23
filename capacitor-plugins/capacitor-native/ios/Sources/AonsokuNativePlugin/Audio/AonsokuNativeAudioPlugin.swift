@@ -90,6 +90,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var volumeOperationGen = 0
     private var lastEmittedPlaybackState: String?
     private var isSeeking = false
+    private var isInForeground = true
 
     public override func load() {
         super.load()
@@ -823,6 +824,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
             self.volumeObservation = self.audioSession.observe(\.outputVolume, options: [.initial, .new]) { [weak self] _, change in
                 guard let self, let newVolume = change.newValue else { return }
+                guard self.isInForeground else { return }
                 DispatchQueue.main.async {
                     self.notifyListeners("systemVolumeChanged", data: ["volume": newVolume])
                 }
@@ -1067,7 +1069,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                self?.handleApplicationVisibilityChanged()
+                self?.handleDidEnterBackground()
             }
         }
 
@@ -1077,7 +1079,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                self?.handleApplicationVisibilityChanged()
+                self?.handleWillEnterForeground()
             }
         }
 
@@ -1087,7 +1089,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                self?.handleApplicationVisibilityChanged()
+                self?.handleDidBecomeActive()
             }
         }
     }
@@ -1252,18 +1254,22 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         case .began:
             wasPlayingBeforeInterruption = player?.timeControlStatus == .playing
             player?.pause()
-            notifyListeners("interruptionChanged", data: eventData(["type": "began"]))
-            emitBuffering(false)
-            emitProgress()
+            if isInForeground {
+                notifyListeners("interruptionChanged", data: eventData(["type": "began"]))
+                emitBuffering(false)
+                emitProgress()
+            }
         case .ended:
             let rawOptions = notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
             let options = AVAudioSession.InterruptionOptions(rawValue: rawOptions)
             let shouldResume = options.contains(.shouldResume)
 
-            notifyListeners("interruptionChanged", data: eventData([
-                "type": "ended",
-                "shouldResume": shouldResume,
-            ]))
+            if isInForeground {
+                notifyListeners("interruptionChanged", data: eventData([
+                    "type": "ended",
+                    "shouldResume": shouldResume,
+                ]))
+            }
 
             if shouldResume, wasPlayingBeforeInterruption, let player = player {
                 do {
@@ -1271,10 +1277,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                     player.play()
                 } catch {
                     emitError(code: "audio_session_failed", message: error.localizedDescription)
-                    emitCurrentPlaybackState()
+                    if isInForeground { emitCurrentPlaybackState() }
                 }
             } else {
-                emitCurrentPlaybackState()
+                if isInForeground { emitCurrentPlaybackState() }
             }
 
             wasPlayingBeforeInterruption = false
@@ -1286,16 +1292,31 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private func handleAudioSessionRouteChange(_ notification: Notification) {
         let reason = routeChangeReason(from: notification)
 
+        guard isInForeground else { return }
         notifyListeners("routeChanged", data: eventData(["reason": reason]))
         emitCurrentPlaybackState()
         emitProgress()
     }
 
-    private func handleApplicationVisibilityChanged() {
+    private func handleDidEnterBackground() {
+        isInForeground = false
+        cancelStallRecovery()
+        scrobbleSubmitter.submitPending(buffer: scrobbleBuffer)
+    }
+
+    private func handleWillEnterForeground() {
+        isInForeground = true
         emitCurrentPlaybackState()
         emitProgress()
-        scrobbleSubmitter.submitPending(buffer: scrobbleBuffer)
+        let volume = audioSession.outputVolume
+        notifyListeners("systemVolumeChanged", data: ["volume": volume])
+    }
 
+    private func handleDidBecomeActive() {
+        guard !isInForeground else { return }
+        isInForeground = true
+        emitCurrentPlaybackState()
+        emitProgress()
         let volume = audioSession.outputVolume
         notifyListeners("systemVolumeChanged", data: ["volume": volume])
     }
@@ -1689,6 +1710,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         let interval = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
         timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: progressQueue) { [weak self] _ in
             guard let self = self else { return }
+            guard self.isInForeground else { return }
             guard self.isCurrentPlayback(player: player, generation: generation) else {
                 return
             }
