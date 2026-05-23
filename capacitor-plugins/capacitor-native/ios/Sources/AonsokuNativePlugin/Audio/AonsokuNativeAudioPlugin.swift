@@ -90,6 +90,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var volumeOperationGen = 0
     private var lastEmittedPlaybackState: String?
     private var isSeeking = false
+    private var isQueueTransitioning = false
     private var isInForeground = true
 
     public override func load() {
@@ -293,6 +294,9 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func skipToNext(_ call: CAPPluginCall) {
+        if isQueueEngineActive {
+            isQueueTransitioning = true
+        }
         stateQueue.async {
             if self.isQueueEngineActive {
                 self.queueEngine.skipToNext()
@@ -304,6 +308,9 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func skipToPrevious(_ call: CAPPluginCall) {
+        if isQueueEngineActive {
+            isQueueTransitioning = true
+        }
         stateQueue.async {
             if self.isQueueEngineActive {
                 let currentTime = self.player?.currentTime().seconds ?? 0
@@ -1185,6 +1192,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             commandCenter.nextTrackCommand.addTarget { [weak self] _ in
                 guard let self = self else { return .commandFailed }
                 if self.isQueueEngineActive {
+                    DispatchQueue.main.async { self.isQueueTransitioning = true }
                     self.stateQueue.async {
                         self.queueEngine.skipToNext()
                     }
@@ -1201,6 +1209,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             commandCenter.previousTrackCommand.addTarget { [weak self] _ in
                 guard let self = self else { return .commandFailed }
                 if self.isQueueEngineActive {
+                    DispatchQueue.main.async { self.isQueueTransitioning = true }
                     let currentTime = self.player?.currentTime().seconds ?? 0
                     self.stateQueue.async {
                         self.queueEngine.skipToPrevious(currentTime: currentTime)
@@ -1762,12 +1771,14 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
         switch status {
         case .playing:
+            isQueueTransitioning = false
             emitBuffering(false, requestId: requestId)
             emitPlaybackState("playing", requestId: requestId)
             if isQueueEngineActive {
                 stateQueue.async { self.scrobbleBuffer.resumeTracking() }
             }
         case .paused:
+            if isQueueTransitioning { return }
             emitBuffering(false, requestId: requestId)
             emitPlaybackState("paused", requestId: requestId)
             if isQueueEngineActive {
@@ -1814,6 +1825,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         if isQueueEngineActive {
+            isQueueTransitioning = true
             stateQueue.async {
                 self.queueEngine.handleEnded()
             }
@@ -1832,6 +1844,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func clearPlayer(sendIdleEvent: Bool, deactivateSession: Bool = false) {
+        isQueueTransitioning = false
         playbackGeneration += 1
         lastEmittedPlaybackState = nil
         isSeeking = false
@@ -2282,6 +2295,7 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
         loadQueue.async { [self] in
             guard let resolved = self.sourceResolver.resolveSource(for: song) else {
                 DispatchQueue.main.async {
+                    self.isQueueTransitioning = false
                     if KeychainManager.retrieve() == nil {
                         self.emitError(code: "missing_credentials", message: "Cannot resolve audio source: Keychain credentials are missing. Please re-configure the server.")
                     } else {
@@ -2298,6 +2312,7 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
                 }
             } catch {
                 DispatchQueue.main.async {
+                    self.isQueueTransitioning = false
                     self.emitError(code: "audio_session_failed", message: error.localizedDescription)
                 }
                 return
@@ -2372,6 +2387,7 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
             self.player?.pause()
             self.player?.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
                 guard let self else { return }
+                self.isQueueTransitioning = false
                 self.emitPlaybackState("ended")
                 self.emitProgress()
                 self.updateNowPlayingPlaybackInfo()
