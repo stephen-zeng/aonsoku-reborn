@@ -358,7 +358,7 @@ export function Player() {
     >
       <div className="w-full h-full grid grid-cols-[1fr_auto] gap-3 px-3 md:grid-cols-player md:gap-2 md:px-4">
         {/* Track Info */}
-        <div className="flex items-center gap-1 w-full md:gap-2">
+        <div className="flex items-center gap-1 w-full min-w-0 md:gap-2">
           {isSong && <MemoTrackInfo song={song} />}
           {isRadio && <MemoRadioInfo radio={radio} />}
         </div>
