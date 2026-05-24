@@ -232,6 +232,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             player.seek(to: self.makeTime(position), toleranceBefore: .zero, toleranceAfter: .zero) { finished in
                 self.isSeeking = false
                 self.emitProgress()
+                self.updateNowPlayingPlaybackInfo()
                 if finished {
                     call.resolve()
                 } else {
