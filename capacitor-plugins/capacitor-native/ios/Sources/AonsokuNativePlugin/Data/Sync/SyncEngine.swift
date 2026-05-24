@@ -91,7 +91,7 @@ final class SyncEngine {
             emitState(phase: "cancelled", tier: nil, processed: 0, total: 0)
             forceFlushSyncState()
         } catch {
-            print("[SyncEngine] sync failed: \(error)")
+            NativeLogger.shared.error("sync failed: \(error)", source: "Sync")
             emitState(phase: "error", tier: nil, processed: 0, total: 0)
             forceFlushSyncState()
         }
@@ -315,7 +315,7 @@ final class SyncEngine {
                         details.append(detail)
                     }
                 } catch {
-                    print("[SyncEngine] failed to load playlist detail \(playlist.id): \(error)")
+                    NativeLogger.shared.error("failed to load playlist detail \(playlist.id): \(error)", source: "Sync")
                 }
             }
 

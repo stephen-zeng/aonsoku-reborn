@@ -469,6 +469,40 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
+    // MARK: - Debug
+
+    func debugSnapshot() -> AudioDebugSnapshot {
+        let currentTime = seconds(from: player?.currentTime() ?? .zero)
+        let duration = durationSeconds()
+        let buffered = bufferedTime()
+
+        let recoveryDesc: String
+        switch recoveryController.state {
+        case .idle: recoveryDesc = "idle"
+        case .level1(let attempt): recoveryDesc = "level1 (attempt \(attempt))"
+        case .level2(let attempt): recoveryDesc = "level2 (attempt \(attempt))"
+        case .gaveUp: recoveryDesc = "gaveUp"
+        }
+
+        return AudioDebugSnapshot(
+            title: currentMetadata.title,
+            artist: currentMetadata.artist,
+            album: currentMetadata.album,
+            isPlaying: player?.timeControlStatus == .playing,
+            currentTime: currentTime,
+            duration: duration,
+            bufferedTime: buffered,
+            sourceKind: currentSourceKind,
+            bufferEmpty: playerItem?.isPlaybackBufferEmpty ?? true,
+            likelyToKeepUp: playerItem?.isPlaybackLikelyToKeepUp ?? false,
+            recoveryState: recoveryDesc,
+            repeatMode: repeatMode,
+            shuffleEnabled: shuffleEnabled,
+            queueIndex: queueIndex,
+            queueItemCount: queueItemCount
+        )
+    }
+
     // MARK: - Native Queue Control
 
     @objc func setContextQueue(_ call: CAPPluginCall) {
@@ -1276,6 +1310,8 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
 
+        NativeLogger.shared.info("audio session interruption: \(type == .began ? "began" : "ended")", source: "Audio")
+
         switch type {
         case .began:
             wasPlayingBeforeInterruption = player?.timeControlStatus == .playing
@@ -2062,6 +2098,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         message: String,
         requestId: String? = nil
     ) {
+        NativeLogger.shared.error("[\(code)] \(message)", source: "Audio")
         notifyListeners("error", data: eventData([
             "code": code,
             "message": message,
@@ -2605,12 +2642,14 @@ extension AonsokuNativeAudioPlugin: PlaybackRecoveryDelegate {
     }
 
     func recoveryDidBegin(_ controller: PlaybackRecoveryController) {
+        NativeLogger.shared.warn("playback recovery began", source: "Audio")
         if isQueueEngineActive {
             stateQueue.async { self.scrobbleBuffer.pauseTracking() }
         }
     }
 
     func recoveryDidSucceed(_ controller: PlaybackRecoveryController) {
+        NativeLogger.shared.info("playback recovery succeeded", source: "Audio")
         if isQueueEngineActive {
             stateQueue.async { self.scrobbleBuffer.resumeTracking() }
         }

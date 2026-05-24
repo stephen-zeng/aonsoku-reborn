@@ -23,7 +23,7 @@ final class DatabaseManager {
         var config = Configuration()
         config.prepareDatabase { db in
             #if DEBUG
-            db.trace { print("[SQL] \($0)") }
+            db.trace { NativeLogger.shared.debug("\($0)", source: "SQL") }
             #endif
             db.add(function: DatabaseManager.normalizeFunction)
         }
