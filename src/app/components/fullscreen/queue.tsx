@@ -232,10 +232,22 @@ function UnifiedQueueView({
   snapHaptic?: () => void;
 }) {
   const { t } = useTranslation();
-  const { playSong, playFromQueue, playFromUserQueue, reorderQueue } =
-    usePlayerActions();
+  const {
+    playFromQueue,
+    playFromUserQueue,
+    setNextOnQueue,
+    reorderQueue,
+  } = usePlayerActions();
   const loopState = usePlayerLoop();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
+
+  const playHistorySong = useCallback(
+    (song: ISong) => {
+      setNextOnQueue([song]);
+      playFromUserQueue(0);
+    },
+    [setNextOnQueue, playFromUserQueue],
+  );
 
   const queueItemProps = {
     hideDownload: true as const,
@@ -419,7 +431,7 @@ function UnifiedQueueView({
         onUserDragEnd={handleUserDragEnd}
         onUpcomingDragStart={handleUpcomingDragStart}
         onUpcomingDragEnd={handleUpcomingDragEnd}
-        playSong={playSong}
+        playHistorySong={playHistorySong}
         playFromQueue={playFromQueue}
         playFromUserQueue={playFromUserQueue}
         clearPlayHistory={clearPlayHistory}
@@ -473,7 +485,7 @@ function UnifiedQueueView({
                   key={`${displaySong.id}-${displayIdx}`}
                   song={displaySong}
                   isActive={isCurrent}
-                  onPlay={() => playSong(displaySong)}
+                  onPlay={() => playHistorySong(displaySong)}
                   tier="context"
                   {...queueItemProps}
                 />
@@ -690,7 +702,7 @@ function VirtualizedQueueView({
   onUserDragEnd,
   onUpcomingDragStart,
   onUpcomingDragEnd,
-  playSong,
+  playHistorySong,
   playFromQueue,
   playFromUserQueue,
   clearPlayHistory,
@@ -725,7 +737,7 @@ function VirtualizedQueueView({
   onUserDragEnd: (e: DragEndEvent) => void;
   onUpcomingDragStart: (e: DragStartEvent) => void;
   onUpcomingDragEnd: (e: DragEndEvent) => void;
-  playSong: (song: ISong) => void;
+  playHistorySong: (song: ISong) => void;
   playFromQueue: (songs: ISong[], index: number) => void;
   playFromUserQueue: (index: number) => void;
   clearPlayHistory: () => void;
@@ -991,7 +1003,7 @@ function VirtualizedQueueView({
                           <QueueItemRow
                             song={item.song}
                             isActive={currentSong?.id === item.song.id}
-                            onPlay={() => playSong(item.song)}
+                            onPlay={() => playHistorySong(item.song)}
                             tier="context"
                             {...queueItemProps}
                           />
