@@ -112,7 +112,6 @@ export function AudioPlayer({
     setBufferedProgress: setStoreBufferedProgress,
     setCurrentDuration: setStoreCurrentDuration,
     setIsBuffering: setStoreIsBuffering,
-    setPlayingState: setStorePlayingState,
     setProgress: setStoreProgress,
     togglePlayPause,
     playNextSong,
@@ -639,10 +638,10 @@ export function AudioPlayer({
     );
     const unsubscribePlay = backendEntry.backend.subscribe("play", () => {
       sessionRef.current.handlePlayEvent();
-      setStorePlayingState(true);
     });
     const unsubscribePause = backendEntry.backend.subscribe("pause", () => {
-      setStorePlayingState(false);
+      // native-controller already handles playbackStateChanged → store update.
+      // Sending a pause command back here would race with queue engine transitions.
     });
     const unsubscribeEnded = backendEntry.backend.subscribe("ended", () => {
       const state = usePlayerStore.getState();
@@ -701,7 +700,6 @@ export function AudioPlayer({
     setStoreBufferedProgress,
     setStoreCurrentDuration,
     setStoreIsBuffering,
-    setStorePlayingState,
     songId,
   ]);
 

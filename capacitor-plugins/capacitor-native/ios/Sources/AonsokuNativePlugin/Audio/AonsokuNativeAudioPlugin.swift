@@ -1904,6 +1904,16 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             }
         case .paused:
             if isQueueTransitioning { return }
+            if isQueueEngineActive, let item = playerItem {
+                let duration = item.duration
+                let current = player.currentTime()
+                if duration.isNumeric && current.isNumeric {
+                    let remaining = CMTimeGetSeconds(duration) - CMTimeGetSeconds(current)
+                    if remaining < 0.5 {
+                        return
+                    }
+                }
+            }
             emitBuffering(false, requestId: requestId)
             emitPlaybackState("paused", requestId: requestId)
             if isQueueEngineActive {
