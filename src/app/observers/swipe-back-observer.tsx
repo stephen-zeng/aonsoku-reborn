@@ -15,7 +15,6 @@ const EDGE_ZONE = 20;
 const TRIGGER_RATIO = 0.4;
 const VELOCITY_THRESHOLD = 0.3;
 const DIRECTION_LOCK_DISTANCE = 10;
-const ANIMATE_OUT_MS = 250;
 const SNAP_BACK_MS = 300;
 
 const ROOT_PATHS = new Set([
@@ -43,48 +42,56 @@ export function SwipeBackObserver() {
 
     let tracking = false;
     let directionLocked = false;
-    let navigated = false;
     let startX = 0;
     let startY = 0;
     let startTime = 0;
     let currentX = 0;
-    let snapshot: HTMLDivElement | null = null;
     let overlay: HTMLDivElement | null = null;
-    function createSnapshot() {
-      const shell = document.getElementById("app-shell");
-      if (!shell) return null;
-      const clone = shell.cloneNode(true) as HTMLDivElement;
-      clone.id = "";
-      clone.style.cssText =
-        "position:fixed;top:0;left:0;width:100vw;height:100dvh;z-index:10000;pointer-events:none;overflow:hidden;will-change:transform;transition:none;box-shadow:-8px 0 24px rgba(0,0,0,0.18);";
-      document.body.appendChild(clone);
-      return clone;
-    }
+    let mainEl: HTMLElement | null = null;
 
+    function getMainEl() {
+      if (!mainEl) mainEl = document.querySelector("main");
+      return mainEl;
+    }
     function createOverlay() {
       const el = document.createElement("div");
       el.style.cssText =
-        "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.25);pointer-events:none;transition:none;will-change:opacity;";
+        "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0);pointer-events:none;transition:none;";
       document.body.appendChild(el);
       return el;
     }
 
-    function cleanup() {
-      if (snapshot) {
-        snapshot.remove();
-        snapshot = null;
-      }
+    function removeOverlay() {
       if (overlay) {
         overlay.remove();
         overlay = null;
       }
     }
 
+    function resetMain(animate: boolean) {
+      const el = getMainEl();
+      if (!el) return;
+      if (animate) {
+        el.style.transition = `transform ${SNAP_BACK_MS}ms cubic-bezier(0.2,0.9,0.3,1)`;
+        el.style.transform = "";
+        const cleanup = () => {
+          el.style.transition = "";
+          el.style.transform = "";
+          el.removeEventListener("transitionend", cleanup);
+        };
+        el.addEventListener("transitionend", cleanup, { once: true });
+      } else {
+        el.style.transition = "";
+        el.style.transform = "";
+      }
+    }
+
     function shouldIgnoreTarget(target: EventTarget | null) {
       if (!target || !(target instanceof HTMLElement)) return false;
-      return !!target.closest(
+      const el = target.closest(
         "[data-vaul-no-drag], input, textarea, [contenteditable]",
       );
+      return !!el;
     }
 
     function isFullscreenOpen() {
@@ -109,7 +116,6 @@ export function SwipeBackObserver() {
 
       tracking = true;
       directionLocked = false;
-      navigated = false;
       startX = touch.clientX;
       startY = touch.clientY;
       startTime = Date.now();
@@ -130,32 +136,19 @@ export function SwipeBackObserver() {
           return;
         }
         directionLocked = true;
-
-        if (isFullscreenOpen()) {
-          closeFullscreenPlayerWithHistory();
-          tracking = false;
-          triggerHaptic();
-          return;
-        }
-
-        snapshot = createSnapshot();
-        overlay = createOverlay();
-        navigate(-1);
-        navigated = true;
+        if (!overlay) overlay = createOverlay();
+        const el = getMainEl();
+        if (el) el.style.transition = "none";
       }
 
       e.preventDefault();
-      currentX = Math.max(0, deltaX);
 
-      if (snapshot) {
-        snapshot.style.transform = `translateX(${currentX}px)`;
-      }
+      currentX = Math.max(0, deltaX);
+      const el = getMainEl();
+      if (el) el.style.transform = `translateX(${currentX}px)`;
       if (overlay) {
-        const progress = Math.min(
-          currentX / (window.innerWidth * TRIGGER_RATIO),
-          1,
-        );
-        overlay.style.opacity = String(1 - progress);
+        const progress = Math.min(currentX / (window.innerWidth * TRIGGER_RATIO), 1);
+        overlay.style.background = `rgba(0,0,0,${0.15 * (1 - progress)})`;
       }
     }
 
@@ -163,39 +156,23 @@ export function SwipeBackObserver() {
       if (!tracking) return;
       tracking = false;
 
-      if (!directionLocked || !snapshot) {
-        cleanup();
-        return;
-      }
-
       const elapsed = Date.now() - startTime;
       const velocity = currentX / elapsed;
       const triggered =
         currentX > window.innerWidth * TRIGGER_RATIO ||
         velocity > VELOCITY_THRESHOLD;
 
-      if (triggered) {
+      if (triggered && currentX > 20) {
         triggerHaptic();
-        snapshot.style.transition = `transform ${ANIMATE_OUT_MS}ms cubic-bezier(0.2,0.9,0.3,1)`;
-        snapshot.style.transform = "translateX(100vw)";
-        if (overlay) {
-          overlay.style.transition = `opacity ${ANIMATE_OUT_MS}ms ease`;
-          overlay.style.opacity = "0";
+        if (isFullscreenOpen()) {
+          closeFullscreenPlayerWithHistory();
+        } else {
+          navigate(-1);
         }
-        setTimeout(cleanup, ANIMATE_OUT_MS);
-      } else {
-        snapshot.style.transition = `transform ${SNAP_BACK_MS}ms cubic-bezier(0.2,0.9,0.3,1)`;
-        snapshot.style.transform = "translateX(0)";
-        if (overlay) {
-          overlay.style.transition = `opacity ${SNAP_BACK_MS}ms ease`;
-          overlay.style.opacity = "1";
-        }
-        setTimeout(() => {
-          cleanup();
-          if (navigated) navigate(1);
-        }, SNAP_BACK_MS);
       }
 
+      resetMain(!triggered || !isFullscreenOpen());
+      removeOverlay();
       directionLocked = false;
       currentX = 0;
     }
@@ -210,7 +187,9 @@ export function SwipeBackObserver() {
       document.removeEventListener("touchmove", onTouchMove);
       document.removeEventListener("touchend", onTouchEnd);
       document.removeEventListener("touchcancel", onTouchEnd);
-      cleanup();
+      removeOverlay();
+      resetMain(false);
+      mainEl = null;
     };
   }, [isMobile, navigate]);
 
