@@ -306,26 +306,6 @@ export function transitionReorderQueue(
     return baseTransition(next);
   }
 
-  if (fromInUser && toInUpcoming) {
-    const localFrom = fromIndex - contextPlayedCount;
-    const song = next.userQueue.songs[localFrom];
-    if (!song) return null;
-    next.userQueue.songs.splice(localFrom, 1);
-    const contextInsertAt = toIndex - userQueue.songs.length;
-    next.contextQueue.songs.splice(contextInsertAt, 0, song);
-    return baseTransition(next);
-  }
-
-  if (fromInUpcoming && toInUser) {
-    const localFrom = fromIndex - userQueue.songs.length;
-    const song = next.contextQueue.songs[localFrom];
-    if (!song) return null;
-    next.contextQueue.songs.splice(localFrom, 1);
-    const localTo = toIndex - contextPlayedCount;
-    next.userQueue.songs.splice(localTo, 0, song);
-    return baseTransition(next);
-  }
-
   return null;
 }
 

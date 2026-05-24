@@ -558,38 +558,6 @@ export function createQueueActions(shared: SharedDeps) {
         });
         return;
       }
-
-      if (fromInUser && toInUpcoming) {
-        const localFrom = fromIndex - contextPlayedCount;
-        const song = userQueue.songs[localFrom];
-        if (!song) return;
-        const newUserSongs = [...userQueue.songs];
-        newUserSongs.splice(localFrom, 1);
-        const contextInsertAt = toIndex - userQueue.songs.length;
-        const newContextSongs = [...contextQueue.songs];
-        newContextSongs.splice(contextInsertAt, 0, song);
-        set((state) => {
-          state.songlist.userQueue.songs = newUserSongs;
-          state.songlist.contextQueue.songs = newContextSongs;
-        });
-        return;
-      }
-
-      if (fromInUpcoming && toInUser) {
-        const localFrom = fromIndex - userQueue.songs.length;
-        const song = contextQueue.songs[localFrom];
-        if (!song) return;
-        const newContextSongs = [...contextQueue.songs];
-        newContextSongs.splice(localFrom, 1);
-        const localTo = toIndex - contextPlayedCount;
-        const newUserSongs = [...userQueue.songs];
-        newUserSongs.splice(localTo, 0, song);
-        set((state) => {
-          state.songlist.contextQueue.songs = newContextSongs;
-          state.songlist.userQueue.songs = newUserSongs;
-        });
-        return;
-      }
     },
 
     toggleShuffle: () => {

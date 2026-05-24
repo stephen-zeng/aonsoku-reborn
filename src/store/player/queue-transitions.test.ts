@@ -445,19 +445,16 @@ describe("transitionReorderQueue", () => {
     ]);
   });
 
-  it("moves song from user queue to upcoming context", () => {
+  it("returns null for cross-tier move from user queue to upcoming context", () => {
     const songlist = makeSonglist({
       contextQueue: makeContextQueue([makeSong("a"), makeSong("b")], 0),
       userQueue: { songs: [makeSong("u1")] },
     });
     const result = transitionReorderQueue(songlist, 1, 2);
-    expect(result!.songlist.userQueue.songs).toHaveLength(0);
-    expect(result!.songlist.contextQueue.songs.map((s) => s.id)).toContain(
-      "u1",
-    );
+    expect(result).toBeNull();
   });
 
-  it("moves song from upcoming context to user queue", () => {
+  it("returns null for cross-tier move from upcoming context to user queue", () => {
     const songlist = makeSonglist({
       contextQueue: makeContextQueue(
         [makeSong("a"), makeSong("b"), makeSong("c")],
@@ -466,15 +463,7 @@ describe("transitionReorderQueue", () => {
       userQueue: { songs: [makeSong("u1")] },
     });
     const result = transitionReorderQueue(songlist, 2, 1);
-    expect(result).not.toBeNull();
-    expect(result!.songlist.userQueue.songs.map((s) => s.id)).toEqual([
-      "b",
-      "u1",
-    ]);
-    expect(result!.songlist.contextQueue.songs.map((s) => s.id)).toEqual([
-      "a",
-      "c",
-    ]);
+    expect(result).toBeNull();
   });
 
   it("returns null when from and to are same", () => {

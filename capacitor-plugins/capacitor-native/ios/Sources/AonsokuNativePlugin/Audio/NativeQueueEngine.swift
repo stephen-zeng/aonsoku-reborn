@@ -176,6 +176,13 @@ class NativeQueueEngine {
 
     func handleEnded() {
         if loopState == .one {
+            let userQueueRemaining = isInUserQueue
+                ? userQueue.count - 1
+                : userQueue.count
+            if userQueueRemaining > 0 {
+                advanceToNext(reason: .ended)
+                return
+            }
             if let song = currentSong {
                 delegate?.queueEngine(self, seekToStart: song)
             }

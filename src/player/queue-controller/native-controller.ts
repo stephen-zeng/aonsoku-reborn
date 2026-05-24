@@ -347,6 +347,64 @@ export class NativeQueueController implements QueueController {
           s.songlist.isInUserQueue = false;
         }
       });
+      return;
+    }
+
+    if (detectedTier === "context") {
+      const { contextQueue, isInUserQueue } = state.songlist;
+      const removedIndex = contextQueue.songs.findIndex(
+        (s) => s.id === id,
+      );
+      if (removedIndex === -1) return;
+
+      const newSongs = [...contextQueue.songs];
+      newSongs.splice(removedIndex, 1);
+
+      if (newSongs.length === 0) return;
+
+      let newIndex: number;
+      if (isInUserQueue) {
+        newIndex =
+          contextQueue.currentIndex -
+          (removedIndex <= contextQueue.currentIndex ? 1 : 0);
+      } else if (removedIndex < contextQueue.currentIndex) {
+        newIndex = contextQueue.currentIndex - 1;
+      } else if (removedIndex === contextQueue.currentIndex) {
+        newIndex = Math.min(
+          contextQueue.currentIndex,
+          newSongs.length - 1,
+        );
+      } else {
+        newIndex = contextQueue.currentIndex;
+      }
+      newIndex = Math.max(newIndex, 0);
+
+      usePlayerStore.setState((s) => {
+        s.songlist.contextQueue.songs = newSongs;
+        s.songlist.contextQueue.currentIndex = newIndex;
+        s.songlist.originalContextSongs =
+          s.songlist.originalContextSongs.filter((s) => s.id !== id);
+        if (removedIndex === contextQueue.currentIndex && !isInUserQueue) {
+          s.playerProgress.progress = 0;
+          s.playerProgress.bufferedProgress = 0;
+        }
+      });
+
+      const nativeSongs = newSongs.map(songToNativeQueueSong);
+      const loopState = state.playerState.loopState;
+      this.#plugin
+        .setContextQueue({
+          songs: nativeSongs,
+          currentIndex: newIndex,
+          autoplay: true,
+          repeatMode: loopStateToNative(loopState),
+        })
+        .catch((err) =>
+          logger.error(
+            "[NativeQueueController] removeFromQueue context failed",
+            err,
+          ),
+        );
     }
   }
 
@@ -501,6 +559,22 @@ export class NativeQueueController implements QueueController {
           nativeState.contextQueue.currentIndex;
         s.songlist.isInUserQueue = nativeState.isInUserQueue;
         s.songlist.isShuffleActive = nativeState.isShuffleActive;
+
+        // Reorder context queue to match native's order
+        const nativeContextIds = nativeState.contextQueue.songs.map(
+          (ns) => ns.id,
+        );
+        if (nativeContextIds.length > 0) {
+          const songMap = new Map(
+            s.songlist.contextQueue.songs.map((song) => [song.id, song]),
+          );
+          const reordered = nativeContextIds
+            .map((id) => songMap.get(id))
+            .filter((song): song is ISong => song != null);
+          if (reordered.length === s.songlist.contextQueue.songs.length) {
+            s.songlist.contextQueue.songs = reordered;
+          }
+        }
 
         const nativeUserQueueIds = new Set(
           nativeState.userQueue.map((ns) => ns.id),
