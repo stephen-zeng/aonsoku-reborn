@@ -130,9 +130,10 @@ class PlaybackRecoveryController {
         self.isBackground = isBackground
     }
 
-    func startProgressMonitoring(generation: Int) {
+    func startProgressMonitoring(generation: Int, sourceKind: RecoverySourceKind) {
         stopProgressMonitoring()
         self.generation = generation
+        self.sourceKind = sourceKind
         lastProgressAdvanceDate = Date()
         isMonitoringProgress = true
 

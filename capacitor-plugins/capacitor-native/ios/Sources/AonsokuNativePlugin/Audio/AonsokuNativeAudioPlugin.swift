@@ -154,7 +154,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                     self.loadedDurationSeconds = metadata.duration
                     self.addObservers(for: item, player: player, generation: generation, requestId: requestId)
                     self.addProgressObserver(to: player, generation: generation, requestId: requestId)
-                    self.recoveryController.startProgressMonitoring(generation: generation)
+                    self.recoveryController.startProgressMonitoring(generation: generation, sourceKind: self.recoverySourceKind())
                     self.updateNowPlayingInfo()
 
                     self.emitPlaybackState("loading", requestId: requestId)
@@ -2386,7 +2386,7 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
 
                 self.addObservers(for: item, player: player, generation: generation, requestId: nil)
                 self.addProgressObserver(to: player, generation: generation, requestId: nil)
-                self.recoveryController.startProgressMonitoring(generation: generation)
+                self.recoveryController.startProgressMonitoring(generation: generation, sourceKind: self.recoverySourceKind())
                 self.updateNowPlayingInfo()
 
                 self.emitPlaybackState("loading")
@@ -2606,6 +2606,6 @@ extension AonsokuNativeAudioPlugin: PlaybackRecoveryDelegate {
         if isQueueEngineActive {
             stateQueue.async { self.scrobbleBuffer.resumeTracking() }
         }
-        recoveryController.startProgressMonitoring(generation: playbackGeneration)
+        recoveryController.startProgressMonitoring(generation: playbackGeneration, sourceKind: recoverySourceKind())
     }
 }
