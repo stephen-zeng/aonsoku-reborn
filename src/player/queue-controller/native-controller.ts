@@ -149,6 +149,19 @@ export class NativeQueueController implements QueueController {
       });
     } else {
       const clampedIndex = Math.max(0, Math.min(index, songs.length - 1));
+
+      const { contextQueue } = usePlayerStore.getState().songlist;
+      if (
+        contextQueue.songs.length === songs.length &&
+        contextQueue.currentIndex === clampedIndex &&
+        contextQueue.songs.every((s, i) => s.id === songs[i].id)
+      ) {
+        usePlayerStore.setState((state) => {
+          state.playerState.isPlaying = true;
+        });
+        return;
+      }
+
       const nativeSongs = songs.map(songToNativeQueueSong);
       this.#plugin
         .setContextQueue({
