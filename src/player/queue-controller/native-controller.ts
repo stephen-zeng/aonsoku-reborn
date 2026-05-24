@@ -9,6 +9,7 @@ import type {
 import {
   findSongTier,
   getCurrentSong,
+  normalizeSourceId,
   setLastOnUserQueue,
   setNextOnUserQueue,
 } from "@/store/player/queue-utils";
@@ -85,12 +86,13 @@ export class NativeQueueController implements QueueController {
     index: number,
     shuffle?: boolean,
     sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
-    _sourceName?: string,
+    sourceName?: string,
   ): void {
     this.#queueSynced = true;
     if (!songs || songs.length === 0) return;
 
     const loopState = usePlayerStore.getState().playerState.loopState;
+    const normalizedId = normalizeSourceId(sourceId);
 
     if (shuffle && songs.length > 1) {
       const startHistory =
@@ -136,6 +138,11 @@ export class NativeQueueController implements QueueController {
         state.songlist.isShuffleActive = true;
         state.songlist.contextQueue.songs = shuffledSongs;
         state.songlist.contextQueue.currentIndex = 0;
+        state.songlist.contextQueue.sourceId = normalizedId;
+        state.songlist.contextQueue.sourceName =
+          sourceName !== undefined
+            ? sourceName || null
+            : state.songlist.contextQueue.sourceName;
         state.songlist.currentSong = startSong;
         state.songlist.originalContextSongs = [...songs];
         state.songlist.userQueue = { songs: [] };
@@ -182,6 +189,11 @@ export class NativeQueueController implements QueueController {
         state.songlist.isShuffleActive = false;
         state.songlist.contextQueue.songs = songs;
         state.songlist.contextQueue.currentIndex = clampedIndex;
+        state.songlist.contextQueue.sourceId = normalizedId;
+        state.songlist.contextQueue.sourceName =
+          sourceName !== undefined
+            ? sourceName || null
+            : state.songlist.contextQueue.sourceName;
         state.songlist.currentSong = songs[clampedIndex] ?? null;
         state.songlist.originalContextSongs = [];
         state.songlist.userQueue = { songs: [] };
