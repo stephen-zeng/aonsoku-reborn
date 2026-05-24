@@ -163,6 +163,7 @@ export interface NativeFullState {
     sourceName: string | null;
   };
   userQueue: NativeQueueSong[];
+  originalContextSongs: NativeQueueSong[];
   isInUserQueue: boolean;
   isShuffleActive: boolean;
   loopState: "off" | "one" | "all";

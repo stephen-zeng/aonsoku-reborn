@@ -267,6 +267,11 @@ export class NativeQueueController implements QueueController {
       );
 
     usePlayerStore.setState((state) => {
+      if (!current) {
+        state.songlist.originalContextSongs = [
+          ...state.songlist.contextQueue.songs,
+        ];
+      }
       state.songlist.isShuffleActive = !current;
     });
   }
@@ -687,6 +692,26 @@ export class NativeQueueController implements QueueController {
           case "all":
             s.playerState.loopState = LoopState.All;
             break;
+        }
+
+        if (nativeState.isShuffleActive) {
+          const nativeOriginalIds = nativeState.originalContextSongs.map(
+            (ns) => ns.id,
+          );
+          if (nativeOriginalIds.length > 0) {
+            const origMap = new Map(
+              s.songlist.originalContextSongs.map((song) => [song.id, song]),
+            );
+            const synced = nativeOriginalIds
+              .map((id) => origMap.get(id))
+              .filter((song): song is ISong => song != null);
+            if (synced.length === nativeOriginalIds.length) {
+              s.songlist.originalContextSongs = synced;
+            }
+          }
+        } else {
+          s.songlist.originalContextSongs = [];
+          s.songlist.shuffleHistory = [];
         }
       });
     } catch (err) {

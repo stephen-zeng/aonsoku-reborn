@@ -423,6 +423,7 @@ class NativeQueueEngine {
                 "sourceName": NSNull(),
             ],
             "userQueue": userQueue.map { $0.toDict() },
+            "originalContextSongs": originalContextSongs.map { $0.toDict() },
             "isInUserQueue": isInUserQueue,
             "isShuffleActive": isShuffleActive,
             "loopState": loopState.rawValue,
