@@ -15,6 +15,11 @@ class NativeSourceResolver {
             .appendingPathComponent("AudioCache", isDirectory: true)
     }
 
+    func invalidateCredentialsCache() {
+        cachedCredentials = nil
+        credentialsCacheTime = nil
+    }
+
     private func getCredentials() -> ServerCredentials? {
         if let cached = cachedCredentials,
            let cacheTime = credentialsCacheTime,

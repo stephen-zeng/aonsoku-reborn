@@ -296,6 +296,13 @@ export interface NativeSystemVolumeChangedEvent {
   volume: number;
 }
 
+export interface NativeAudioRecoveryAttemptEvent {
+  requestId?: string;
+  level: number;
+  attempt: number;
+  maxAttempts: number;
+}
+
 export interface NativeAudioEvents {
   playbackStateChanged: NativeAudioPlaybackStateChangedEvent;
   progress: NativeAudioProgressEvent;
@@ -313,6 +320,7 @@ export interface NativeAudioEvents {
   downloadCompleted: NativeDownloadCompletedEvent;
   downloadFailed: NativeDownloadFailedEvent;
   systemVolumeChanged: NativeSystemVolumeChangedEvent;
+  recoveryAttempt: NativeAudioRecoveryAttemptEvent;
 }
 
 export type NativeAudioEventName = keyof NativeAudioEvents;

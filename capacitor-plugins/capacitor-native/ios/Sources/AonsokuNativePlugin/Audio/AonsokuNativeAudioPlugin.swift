@@ -55,7 +55,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var endObserver: NSObjectProtocol?
     private var failedEndObserver: NSObjectProtocol?
     private var stalledObserver: NSObjectProtocol?
-    private var stallRecoveryTimer: DispatchWorkItem?
+    private let recoveryController = PlaybackRecoveryController()
     private var interruptionObserver: NSObjectProtocol?
     private var routeChangeObserver: NSObjectProtocol?
     private var didEnterBackgroundObserver: NSObjectProtocol?
@@ -98,6 +98,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         super.load()
         queueEngine.delegate = self
         downloadManager.delegate = self
+        recoveryController.delegate = self
         registerLifecycleObservers()
         registerRemoteCommands()
 
@@ -153,6 +154,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                     self.loadedDurationSeconds = metadata.duration
                     self.addObservers(for: item, player: player, generation: generation, requestId: requestId)
                     self.addProgressObserver(to: player, generation: generation, requestId: requestId)
+                    self.recoveryController.startProgressMonitoring(generation: generation)
                     self.updateNowPlayingInfo()
 
                     self.emitPlaybackState("loading", requestId: requestId)
@@ -198,6 +200,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func pause(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
+            self.recoveryController.reportUserPause()
             self.player?.pause()
             call.resolve()
         }
@@ -221,6 +224,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 return
             }
 
+            self.recoveryController.reportUserSeek()
             let position = max(0, call.getDouble("position") ?? 0)
             self.isSeeking = true
             player.seek(to: self.makeTime(position), toleranceBefore: .zero, toleranceAfter: .zero) { finished in
@@ -1320,12 +1324,13 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     private func handleDidEnterBackground() {
         isInForeground = false
-        cancelStallRecovery()
+        recoveryController.setBackground(true)
         scrobbleSubmitter.submitPending(buffer: scrobbleBuffer)
     }
 
     private func handleWillEnterForeground() {
         isInForeground = true
+        recoveryController.setBackground(false)
         emitCurrentPlaybackState()
         emitProgress()
         let volume = audioSession.outputVolume
@@ -1684,17 +1689,16 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             forName: .AVPlayerItemFailedToPlayToEndTime,
             object: item,
             queue: .main
-        ) { [weak self] notification in
-            guard self?.isCurrentPlayback(item: item, generation: generation) == true else {
+        ) { [weak self] _ in
+            guard let self, self.isCurrentPlayback(item: item, generation: generation) else {
                 return
             }
-            let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error
-            self?.emitError(
-                code: self?.playbackErrorCode(for: error, fallback: "playback_failed") ?? "playback_failed",
-                message: error?.localizedDescription ?? "Native playback failed.",
-                requestId: requestId
+            let currentTime = self.player?.currentTime() ?? .zero
+            self.recoveryController.triggerRecovery(
+                currentTime: currentTime,
+                generation: generation,
+                sourceKind: self.recoverySourceKind()
             )
-            self?.emitPlaybackState("failed", requestId: requestId)
         }
 
         loadDurationAsync(for: item, generation: generation, requestId: requestId)
@@ -1717,7 +1721,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         likelyToKeepUpObservation = item.observe(\.isPlaybackLikelyToKeepUp, options: [.new]) { [weak self] _, change in
             guard change.newValue == true else { return }
             DispatchQueue.main.async {
-                self?.cancelStallRecovery()
+                self?.recoveryController.reportLikelyToKeepUp(generation: generation)
             }
         }
     }
@@ -1735,6 +1739,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 return
             }
             guard !self.isSeeking else { return }
+            let currentTime = player.currentTime()
+            DispatchQueue.main.async {
+                self.recoveryController.reportProgress(at: currentTime, generation: generation)
+            }
             self.emitProgress(requestId: requestId)
         }
     }
@@ -1753,12 +1761,12 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             emitDuration(for: item, generation: generation, requestId: requestId)
             emitBuffering(false, requestId: requestId)
         case .failed:
-            emitError(
-                code: playbackErrorCode(for: item.error, fallback: "load_failed"),
-                message: item.error?.localizedDescription ?? "Native audio failed to load.",
-                requestId: requestId
+            let currentTime = player?.currentTime() ?? .zero
+            recoveryController.triggerRecovery(
+                currentTime: currentTime,
+                generation: generation,
+                sourceKind: recoverySourceKind()
             )
-            emitPlaybackState("failed", requestId: requestId)
         case .unknown:
             emitPlaybackState("loading", requestId: requestId)
         @unknown default:
@@ -1783,6 +1791,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         switch status {
         case .playing:
             isQueueTransitioning = false
+            recoveryController.reportPlaybackResumed(generation: generation)
             emitBuffering(false, requestId: requestId)
             emitPlaybackState("playing", requestId: requestId)
             if isQueueEngineActive {
@@ -1805,29 +1814,50 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private func handleStall(player: AVPlayer, generation: Int) {
         guard isCurrentPlayback(player: player, generation: generation) else { return }
         guard player.timeControlStatus == .waitingToPlayAtSpecifiedRate else { return }
-        guard stallRecoveryTimer == nil else { return }
 
-        let work = DispatchWorkItem { [weak self] in
-            guard let self = self else { return }
-            self.stallRecoveryTimer = nil
-            guard self.isCurrentPlayback(player: player, generation: generation) else { return }
-            guard player.timeControlStatus == .waitingToPlayAtSpecifiedRate else { return }
-
-            // Seek to current position forces AVPlayer to re-establish the connection
-            let currentTime = player.currentTime()
-            player.seek(to: currentTime, toleranceBefore: .zero, toleranceAfter: .zero) { _ in
-                if player.timeControlStatus == .waitingToPlayAtSpecifiedRate {
-                    player.play()
-                }
-            }
-        }
-        stallRecoveryTimer = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: work)
+        let currentTime = player.currentTime()
+        recoveryController.triggerRecovery(
+            currentTime: currentTime,
+            generation: generation,
+            sourceKind: recoverySourceKind()
+        )
     }
 
     private func cancelStallRecovery() {
-        stallRecoveryTimer?.cancel()
-        stallRecoveryTimer = nil
+        recoveryController.reset()
+    }
+
+    private func recoverySourceKind() -> RecoverySourceKind {
+        switch currentSourceKind {
+        case "radio": return .radio
+        case "native-file": return .nativeFile
+        default: return .stream
+        }
+    }
+
+    private func removeItemObservers() {
+        statusObservation = nil
+        durationObservation = nil
+        bufferEmptyObservation = nil
+        likelyToKeepUpObservation = nil
+
+        if let token = timeObserverToken {
+            player?.removeTimeObserver(token)
+            timeObserverToken = nil
+        }
+
+        if let observer = endObserver {
+            NotificationCenter.default.removeObserver(observer)
+            endObserver = nil
+        }
+        if let observer = failedEndObserver {
+            NotificationCenter.default.removeObserver(observer)
+            failedEndObserver = nil
+        }
+        if let observer = stalledObserver {
+            NotificationCenter.default.removeObserver(observer)
+            stalledObserver = nil
+        }
     }
 
     private func handleEnded(generation: Int, requestId: String?) {
@@ -1881,6 +1911,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         cancelStallRecovery()
+        recoveryController.stopProgressMonitoring()
         statusObservation = nil
         durationObservation = nil
         timeControlStatusObservation = nil
@@ -2355,6 +2386,7 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
 
                 self.addObservers(for: item, player: player, generation: generation, requestId: nil)
                 self.addProgressObserver(to: player, generation: generation, requestId: nil)
+                self.recoveryController.startProgressMonitoring(generation: generation)
                 self.updateNowPlayingInfo()
 
                 self.emitPlaybackState("loading")
@@ -2460,5 +2492,121 @@ extension AonsokuNativeAudioPlugin: NativeDownloadManagerDelegate {
             "songId": songId,
             "error": error.localizedDescription,
         ])
+    }
+}
+
+// MARK: - PlaybackRecoveryDelegate
+
+extension AonsokuNativeAudioPlugin: PlaybackRecoveryDelegate {
+    func recoverySeek(_ controller: PlaybackRecoveryController, to time: CMTime, generation: Int) {
+        guard isCurrentPlayback(generation: generation), let player else { return }
+
+        if case .level1(let attempt) = controller.state {
+            notifyListeners("recoveryAttempt", data: [
+                "level": 1,
+                "attempt": attempt,
+                "maxAttempts": 3,
+            ])
+        }
+
+        player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
+            guard let self, self.isCurrentPlayback(generation: generation) else { return }
+            if player.timeControlStatus == .waitingToPlayAtSpecifiedRate {
+                player.play()
+            }
+        }
+    }
+
+    func recoveryReload(_ controller: PlaybackRecoveryController, generation: Int, savedPosition: CMTime) {
+        guard isCurrentPlayback(generation: generation) else {
+            controller.reloadDidComplete(success: false, generation: generation)
+            return
+        }
+
+        guard isQueueEngineActive, let song = queueEngine.currentSong else {
+            controller.reloadDidComplete(success: false, generation: generation)
+            return
+        }
+
+        if case .level2(let attempt) = controller.state {
+            notifyListeners("recoveryAttempt", data: [
+                "level": 2,
+                "attempt": attempt,
+                "maxAttempts": 2,
+            ])
+        }
+
+        sourceResolver.invalidateCredentialsCache()
+
+        loadQueue.async { [self] in
+            guard let resolved = self.sourceResolver.resolveSource(for: song) else {
+                DispatchQueue.main.async {
+                    controller.reloadDidComplete(success: false, generation: generation)
+                }
+                return
+            }
+
+            DispatchQueue.main.async {
+                guard self.isCurrentPlayback(generation: generation) else {
+                    controller.reloadDidComplete(success: false, generation: generation)
+                    return
+                }
+
+                self.removeItemObservers()
+
+                let item = AVPlayerItem(url: resolved.url)
+                self.player?.replaceCurrentItem(with: item)
+                self.playerItem = item
+                self.currentSourceKind = resolved.kind
+
+                self.addObservers(for: item, player: self.player!, generation: generation, requestId: self.currentRequestId)
+                self.addProgressObserver(to: self.player!, generation: generation, requestId: self.currentRequestId)
+
+                self.player?.seek(to: savedPosition, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
+                    guard let self, self.isCurrentPlayback(generation: generation) else {
+                        controller.reloadDidComplete(success: false, generation: generation)
+                        return
+                    }
+                    self.player?.play()
+                    controller.reloadDidComplete(success: true, generation: generation)
+                }
+            }
+        }
+    }
+
+    func recoveryExhausted(_ controller: PlaybackRecoveryController, generation: Int) {
+        guard isCurrentPlayback(generation: generation) else { return }
+
+        if isQueueEngineActive {
+            if queueEngine.hasNext {
+                isQueueTransitioning = true
+                stateQueue.async {
+                    self.queueEngine.skipToNext()
+                }
+            } else {
+                emitError(code: "recovery_failed", message: "Playback recovery exhausted all attempts.")
+                emitPlaybackState("failed")
+            }
+        } else {
+            emitError(code: "recovery_failed", message: "Playback recovery exhausted all attempts.")
+            emitPlaybackState("failed")
+        }
+    }
+
+    func recoverySetBuffering(_ controller: PlaybackRecoveryController, isBuffering: Bool) {
+        emitBuffering(isBuffering)
+    }
+
+    func recoveryDidBegin(_ controller: PlaybackRecoveryController) {
+        if isQueueEngineActive {
+            stateQueue.async { self.scrobbleBuffer.pauseTracking() }
+        }
+    }
+
+    func recoveryDidSucceed(_ controller: PlaybackRecoveryController) {
+        if isQueueEngineActive {
+            stateQueue.async { self.scrobbleBuffer.resumeTracking() }
+        }
+        recoveryController.startProgressMonitoring(generation: playbackGeneration)
     }
 }
