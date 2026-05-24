@@ -287,7 +287,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
         ref={ref}
         aria-busy={isBuffering || undefined}
         className={cn(
-          "group relative h-3 flex w-full touch-none select-none items-center cursor-pointer",
+          "group relative h-3 flex w-full touch-none select-none items-center cursor-pointer [-webkit-touch-callout:none]",
           className,
         )}
         {...props}
