@@ -41,6 +41,14 @@
     overscroll-behavior: none;
   }
 
+  html.keyboard-scroll-lock,
+  body.keyboard-scroll-lock {
+    overflow: hidden;
+    overscroll-behavior: none;
+    position: fixed;
+    width: 100%;
+  }
+
   body.windows-linux {
     @apply antialiased;
   }

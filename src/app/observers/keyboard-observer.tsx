@@ -1,17 +1,36 @@
 import { Keyboard } from "@capacitor/keyboard";
+import { Capacitor } from "@capacitor/core";
 import { useEffect } from "react";
 
-/**
- * Observer to handle keyboard related configurations for mobile/Capacitor.
- */
+const SCROLL_LOCK_CLASS = "keyboard-scroll-lock";
+
+function addScrollLock() {
+  document.documentElement.classList.add(SCROLL_LOCK_CLASS);
+  document.body.classList.add(SCROLL_LOCK_CLASS);
+}
+
+function removeScrollLock() {
+  document.documentElement.classList.remove(SCROLL_LOCK_CLASS);
+  document.body.classList.remove(SCROLL_LOCK_CLASS);
+}
+
 export function KeyboardObserver() {
   useEffect(() => {
-    // Hide the accessory bar (the bar with arrows and "Done" above the keyboard on iOS)
-    // This only affects iOS as Android doesn't have an accessory bar.
+    if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== "ios") {
+      return;
+    }
+
     Keyboard.setAccessoryBarVisible({ isVisible: false }).catch((err) => {
-      // Silently catch errors if the plugin is not available or supported on the current platform
       console.debug("[KeyboardObserver] setAccessoryBarVisible failed:", err);
     });
+
+    Keyboard.addListener("keyboardWillShow", addScrollLock);
+    Keyboard.addListener("keyboardDidHide", removeScrollLock);
+
+    return () => {
+      removeScrollLock();
+      Keyboard.removeAllListeners();
+    };
   }, []);
 
   return null;
