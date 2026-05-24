@@ -2367,6 +2367,7 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
             "currentIndex": index,
             "songId": songId,
             "reason": reason.rawValue,
+            "isInUserQueue": engine.isInUserQueue,
         ])
     }
 

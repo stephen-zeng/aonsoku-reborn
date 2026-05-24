@@ -173,6 +173,7 @@ export interface NativeAudioQueueStateChangedEvent {
   currentIndex: number;
   songId: string;
   reason: "next" | "previous" | "ended" | "skip";
+  isInUserQueue: boolean;
 }
 
 export interface NativeAudioQueueContentsChangedEvent {

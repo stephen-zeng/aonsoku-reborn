@@ -6,7 +6,12 @@ import type {
   NativeAudioPlugin,
   NativeQueueSong,
 } from "@/native/audio/types";
-import { getCurrentSong } from "@/store/player/queue-utils";
+import {
+  findSongTier,
+  getCurrentSong,
+  setLastOnUserQueue,
+  setNextOnUserQueue,
+} from "@/store/player/queue-utils";
 import { usePlayerStore } from "@/store/player.store";
 import type { QueueSourceId } from "@/types/playerContext";
 import { LoopState } from "@/types/playerContext";
@@ -56,6 +61,7 @@ export class NativeQueueController implements QueueController {
   #nativeListenerHandles: PluginListenerHandle[] = [];
   #disposed = false;
   #nativeDrivenTransition = false;
+  #suppressNextQueueStateChanged = false;
   #queueSynced = false;
   #terminalPlaybackResetTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -126,8 +132,49 @@ export class NativeQueueController implements QueueController {
     });
   }
 
-  playFromUserQueue(_userQueueIndex: number): void {
-    logger.info("[NativeQueueController] playFromUserQueue not yet supported");
+  playFromUserQueue(userQueueIndex: number): void {
+    const state = usePlayerStore.getState();
+    const { userQueue, isInUserQueue } = state.songlist;
+    if (userQueueIndex < 0 || userQueueIndex >= userQueue.songs.length) return;
+
+    const songsBefore = userQueue.songs.slice(0, userQueueIndex);
+    const songsFromTarget = userQueue.songs.slice(userQueueIndex);
+
+    usePlayerStore.setState((s) => {
+      s.songlist.playedUserQueueHistory.push(...songsBefore);
+      s.songlist.userQueue.songs = songsFromTarget;
+      s.songlist.isInUserQueue = true;
+      s.playerProgress.progress = 0;
+      s.playerProgress.bufferedProgress = 0;
+      s.playerState.isPlaying = true;
+      s.songlist.currentSong = songsFromTarget[0] ?? null;
+      s.playerState.currentDuration = songsFromTarget[0]?.duration
+        ? Math.round(songsFromTarget[0].duration)
+        : 0;
+    });
+
+    const nativeSongs = songsFromTarget.map(songToNativeQueueSong);
+    this.#suppressNextQueueStateChanged = true;
+    this.#plugin
+      .clearUserQueue()
+      .then(() =>
+        this.#plugin.addToUserQueue({
+          songs: nativeSongs,
+          position: "last",
+        }),
+      )
+      .then(() => {
+        if (!isInUserQueue) {
+          return this.#plugin.skipToNext();
+        }
+      })
+      .catch((err) => {
+        this.#suppressNextQueueStateChanged = false;
+        logger.error(
+          "[NativeQueueController] playFromUserQueue native sync failed",
+          err,
+        );
+      });
   }
 
   playSong(song: ISong, _sourceName?: string): void {
@@ -246,6 +293,13 @@ export class NativeQueueController implements QueueController {
       .catch((err) =>
         logger.error("[NativeQueueController] addToQueueNext failed", err),
       );
+
+    usePlayerStore.setState((state) => {
+      state.songlist.userQueue.songs = setNextOnUserQueue(
+        state.songlist.userQueue.songs,
+        songs,
+      );
+    });
   }
 
   addToQueueLast(songs: ISong[]): void {
@@ -255,14 +309,90 @@ export class NativeQueueController implements QueueController {
       .catch((err) =>
         logger.error("[NativeQueueController] addToQueueLast failed", err),
       );
+
+    usePlayerStore.setState((state) => {
+      state.songlist.userQueue.songs = setLastOnUserQueue(
+        state.songlist.userQueue.songs,
+        songs,
+      );
+    });
   }
 
-  removeFromQueue(id: string, _tier?: "context" | "user"): void {
-    logger.info(`[NativeQueueController] removeFromQueue: ${id}`);
+  removeFromQueue(id: string, tier?: "context" | "user"): void {
+    const state = usePlayerStore.getState();
+    const detectedTier = tier ?? findSongTier(state.songlist, id);
+
+    if (detectedTier === "user") {
+      const index = state.songlist.userQueue.songs.findIndex(
+        (s) => s.id === id,
+      );
+      if (index === -1) return;
+
+      this.#plugin
+        .removeFromUserQueue({ indices: [index] })
+        .catch((err) =>
+          logger.error(
+            "[NativeQueueController] removeFromQueue failed",
+            err,
+          ),
+        );
+
+      usePlayerStore.setState((s) => {
+        s.songlist.userQueue.songs.splice(index, 1);
+        if (
+          s.songlist.isInUserQueue &&
+          index === 0 &&
+          s.songlist.userQueue.songs.length === 0
+        ) {
+          s.songlist.isInUserQueue = false;
+        }
+      });
+    }
   }
 
-  reorderQueue(_fromIndex: number, _toIndex: number): void {
-    logger.info("[NativeQueueController] reorderQueue");
+  reorderQueue(fromIndex: number, toIndex: number): void {
+    if (fromIndex === toIndex) return;
+
+    const state = usePlayerStore.getState();
+    const { contextQueue, userQueue } = state.songlist;
+    const contextPlayedCount = contextQueue.currentIndex + 1;
+
+    const fromInUser =
+      fromIndex >= contextPlayedCount &&
+      fromIndex < contextPlayedCount + userQueue.songs.length;
+    const toInUser =
+      toIndex >= contextPlayedCount &&
+      toIndex < contextPlayedCount + userQueue.songs.length;
+
+    if (fromInUser && toInUser) {
+      const localFrom = fromIndex - contextPlayedCount;
+      const localTo = toIndex - contextPlayedCount;
+      const newUserSongs = [...userQueue.songs];
+      const [moved] = newUserSongs.splice(localFrom, 1);
+      newUserSongs.splice(localTo, 0, moved);
+
+      usePlayerStore.setState((s) => {
+        s.songlist.userQueue.songs = newUserSongs;
+      });
+
+      const nativeSongs = newUserSongs.map(songToNativeQueueSong);
+      this.#plugin
+        .clearUserQueue()
+        .then(() => {
+          if (nativeSongs.length > 0) {
+            return this.#plugin.addToUserQueue({
+              songs: nativeSongs,
+              position: "last",
+            });
+          }
+        })
+        .catch((err) =>
+          logger.error(
+            "[NativeQueueController] reorderQueue failed",
+            err,
+          ),
+        );
+    }
   }
 
   clearUserQueue(): void {
@@ -271,6 +401,14 @@ export class NativeQueueController implements QueueController {
       .catch((err) =>
         logger.error("[NativeQueueController] clearUserQueue failed", err),
       );
+
+    usePlayerStore.setState((state) => {
+      state.songlist.userQueue.songs = [];
+      state.songlist.playedUserQueueHistory = [];
+      if (state.songlist.isInUserQueue) {
+        state.songlist.isInUserQueue = false;
+      }
+    });
   }
 
   clearPlayerState(): void {
@@ -349,31 +487,43 @@ export class NativeQueueController implements QueueController {
 
   async syncFromNative(): Promise<void> {
     try {
-      const state = await this.#plugin.getFullState();
-      if (state.currentSongId) {
+      const nativeState = await this.#plugin.getFullState();
+      if (nativeState.currentSongId) {
         this.#queueSynced = true;
       }
       usePlayerStore.setState((s) => {
-        s.playerState.isPlaying = state.isPlaying;
-        s.playerProgress.progress = state.currentTime;
-        s.playerProgress.bufferedProgress = state.currentTime;
-        s.playerState.currentDuration = state.duration;
+        s.playerState.isPlaying = nativeState.isPlaying;
+        s.playerProgress.progress = nativeState.currentTime;
+        s.playerProgress.bufferedProgress = nativeState.currentTime;
+        s.playerState.currentDuration = nativeState.duration;
 
-        if (state.currentSongId) {
-          const song = s.songlist.contextQueue.songs.find(
-            (song) => song.id === state.currentSongId,
+        s.songlist.contextQueue.currentIndex =
+          nativeState.contextQueue.currentIndex;
+        s.songlist.isInUserQueue = nativeState.isInUserQueue;
+        s.songlist.isShuffleActive = nativeState.isShuffleActive;
+
+        const nativeUserQueueIds = new Set(
+          nativeState.userQueue.map((ns) => ns.id),
+        );
+        s.songlist.userQueue.songs = s.songlist.userQueue.songs.filter(
+          (song) => nativeUserQueueIds.has(song.id),
+        );
+
+        if (nativeState.currentSongId) {
+          let song = s.songlist.userQueue.songs.find(
+            (song) => song.id === nativeState.currentSongId,
           );
+          if (!song) {
+            song = s.songlist.contextQueue.songs.find(
+              (song) => song.id === nativeState.currentSongId,
+            );
+          }
           if (song) {
             s.songlist.currentSong = song;
-            s.songlist.contextQueue.currentIndex =
-              state.contextQueue.currentIndex;
           }
         }
 
-        s.songlist.isInUserQueue = state.isInUserQueue;
-        s.songlist.isShuffleActive = state.isShuffleActive;
-
-        switch (state.loopState) {
+        switch (nativeState.loopState) {
           case "off":
             s.playerState.loopState = LoopState.Off;
             break;
@@ -393,8 +543,14 @@ export class NativeQueueController implements QueueController {
   #wireNativeEvents() {
     this.#addNativeListener("queueStateChanged", (event) => {
       this.#clearTerminalPlaybackResetTimer();
+
+      if (this.#suppressNextQueueStateChanged) {
+        this.#suppressNextQueueStateChanged = false;
+        return;
+      }
+
       logger.info(
-        `[NativeQueueController] queueStateChanged: index=${event.currentIndex} song=${event.songId} reason=${event.reason}`,
+        `[NativeQueueController] queueStateChanged: index=${event.currentIndex} song=${event.songId} isInUserQueue=${event.isInUserQueue} reason=${event.reason}`,
       );
 
       this.#nativeDrivenTransition = true;
@@ -404,9 +560,49 @@ export class NativeQueueController implements QueueController {
         state.playerProgress.bufferedProgress = 0;
         state.playerState.isPlaying = true;
 
-        const song = state.songlist.contextQueue.songs.find(
+        const wasInUserQueue = state.songlist.isInUserQueue;
+        state.songlist.isInUserQueue = event.isInUserQueue;
+
+        if (
+          event.reason === "next" ||
+          event.reason === "ended"
+        ) {
+          if (
+            wasInUserQueue &&
+            state.songlist.userQueue.songs.length > 0
+          ) {
+            const consumed = state.songlist.userQueue.songs.shift()!;
+            state.songlist.playedUserQueueHistory.push(consumed);
+          }
+        } else if (event.reason === "previous") {
+          if (event.isInUserQueue && !wasInUserQueue) {
+            const restored =
+              state.songlist.playedUserQueueHistory.pop();
+            if (restored) {
+              state.songlist.userQueue.songs.unshift(restored);
+            }
+          } else if (
+            event.isInUserQueue &&
+            wasInUserQueue &&
+            state.songlist.playedUserQueueHistory.length > 0
+          ) {
+            const restored =
+              state.songlist.playedUserQueueHistory.pop();
+            if (restored) {
+              state.songlist.userQueue.songs.unshift(restored);
+            }
+          }
+        }
+
+        let song = state.songlist.userQueue.songs.find(
           (s) => s.id === event.songId,
         );
+        if (!song) {
+          song = state.songlist.contextQueue.songs.find(
+            (s) => s.id === event.songId,
+          );
+        }
+
         if (song) {
           state.songlist.currentSong = song;
           state.playerState.currentDuration = song.duration
@@ -439,6 +635,15 @@ export class NativeQueueController implements QueueController {
         if (event.state === "ended" || event.state === "stopped") {
           this.#scheduleTerminalPlaybackReset();
         }
+      }
+    });
+
+    this.#addNativeListener("queueContentsChanged", (event) => {
+      logger.info(
+        `[NativeQueueController] queueContentsChanged: reason=${event.reason}`,
+      );
+      if (event.reason === "shuffle" || event.reason === "unshuffle") {
+        this.syncFromNative();
       }
     });
 

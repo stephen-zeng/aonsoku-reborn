@@ -101,6 +101,8 @@ const mocks = vi.hoisted(() => {
         sourceId: undefined,
         sourceName: null,
       },
+      userQueue: { songs: [] },
+      playedUserQueueHistory: [],
       currentSong: null,
       isInUserQueue: false,
       isShuffleActive: false,
