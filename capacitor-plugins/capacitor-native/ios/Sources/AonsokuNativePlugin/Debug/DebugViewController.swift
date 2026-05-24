@@ -34,6 +34,9 @@ public final class DebugViewController: UIViewController {
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .close, target: self, action: #selector(closeTapped)
         )
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .refresh, target: self, action: #selector(refreshTapped)
+        )
 
         setupSegmentedControl()
         setupTableView()
@@ -49,7 +52,13 @@ public final class DebugViewController: UIViewController {
     private func setupSegmentedControl() {
         segmentedControl.selectedSegmentIndex = 0
         segmentedControl.addTarget(self, action: #selector(tabChanged), for: .valueChanged)
-        navigationItem.titleView = segmentedControl
+        segmentedControl.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(segmentedControl)
+        NSLayoutConstraint.activate([
+            segmentedControl.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            segmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+        ])
     }
 
     private func setupTableView() {
@@ -64,7 +73,7 @@ public final class DebugViewController: UIViewController {
         tableView.sectionHeaderTopPadding = 4
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            tableView.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 8),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -87,6 +96,7 @@ public final class DebugViewController: UIViewController {
     }
 
     @objc private func closeTapped() { dismiss(animated: true) }
+    @objc private func refreshTapped() { refreshData() }
 
     @objc private func tabChanged() {
         currentTab = Tab(rawValue: segmentedControl.selectedSegmentIndex) ?? .playback

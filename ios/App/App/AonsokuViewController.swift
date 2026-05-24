@@ -25,9 +25,8 @@ class AonsokuViewController: CAPBridgeViewController {
         let nav = UINavigationController(rootViewController: debugVC)
         nav.modalPresentationStyle = .pageSheet
         if let sheet = nav.sheetPresentationController {
-            sheet.detents = [.medium(), .large()]
+            sheet.detents = [.large()]
             sheet.prefersGrabberVisible = true
-            sheet.prefersScrollingExpandsWhenScrolledToEdge = true
         }
         present(nav, animated: true)
     }
