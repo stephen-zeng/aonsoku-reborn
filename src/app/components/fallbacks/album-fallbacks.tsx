@@ -6,8 +6,10 @@ import {
   DetailButtonsFallback,
   ShadowHeaderFallback,
 } from "@/app/components/fallbacks/ui-fallbacks";
+import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import ListWrapper from "@/app/components/list-wrapper";
 import { Skeleton } from "@/app/components/ui/skeleton";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import { songDetailColumnIds } from "@/app/tables/column-layouts";
 import { cn } from "@/lib/utils";
 
@@ -149,14 +151,67 @@ function AlbumInfoFallback() {
   );
 }
 
+export function MobileSongListFallback({
+  length = 8,
+}: { length?: number }) {
+  return (
+    <div className="flex flex-col gap-1">
+      {Array.from({ length }).map((_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-3 rounded-lg px-3 py-2 min-h-14"
+        >
+          <Skeleton className="size-10 rounded shrink-0" />
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <Skeleton className="h-4 w-3/5" />
+            <Skeleton className="h-3 w-2/5" />
+          </div>
+          <Skeleton className="size-11 rounded-full" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function MobileAlbumTrackListFallback({
+  length = 10,
+}: { length?: number }) {
+  return (
+    <div className="flex flex-col gap-1">
+      {Array.from({ length }).map((_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-3 rounded-lg px-3 py-2 min-h-14"
+        >
+          <Skeleton className="w-5 h-4 rounded shrink-0" />
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <Skeleton className="h-4 w-3/5" />
+            <Skeleton className="h-3 w-2/5" />
+          </div>
+          <Skeleton className="size-11 rounded-full" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function AlbumFallback() {
+  const isMobile = useIsMobile();
+
   return (
     <div className="w-full bg-background min-h-content">
+      {isMobile && (
+        <MobilePageHeader variant="sub" title="" showSpacer={false} />
+      )}
       <HeaderWithImageEffect showSecondaryBadges showArtistAboveCover />
       <ListWrapper>
         <PlayButtonsFallback />
         <AlbumInfoFallback />
-        <TableFallback variant="modern" columnIds={songDetailColumnIds} />
+        {isMobile ? (
+          <MobileAlbumTrackListFallback />
+        ) : (
+          <TableFallback variant="modern" columnIds={songDetailColumnIds} />
+        )}
       </ListWrapper>
     </div>
   );

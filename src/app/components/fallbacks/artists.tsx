@@ -1,10 +1,15 @@
-import { HeaderWithImageEffect } from "@/app/components/fallbacks/album-fallbacks";
+import {
+  HeaderWithImageEffect,
+  MobileSongListFallback,
+} from "@/app/components/fallbacks/album-fallbacks";
 import { PreviewListFallback } from "@/app/components/fallbacks/home-fallbacks";
 import { ArtistsTableFallback } from "@/app/components/fallbacks/song-fallbacks";
 import { TopSongsTableFallback } from "@/app/components/fallbacks/table-fallbacks";
 import { DetailButtonsFallback } from "@/app/components/fallbacks/ui-fallbacks";
+import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import ListWrapper from "@/app/components/list-wrapper";
 import { Skeleton } from "@/app/components/ui/skeleton";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 
 function ArtistInfoFallback() {
   return (
@@ -29,12 +34,17 @@ function ArtistInfoFallback() {
 }
 
 function ArtistFallback() {
+  const isMobile = useIsMobile();
+
   return (
     <div className="w-full bg-background min-h-content">
+      {isMobile && (
+        <MobilePageHeader variant="sub" title="" showSpacer={false} />
+      )}
       <HeaderWithImageEffect showMobileSubtitle={false} />
       <ListWrapper>
         <ArtistInfoFallback />
-        <TopSongsTableFallback />
+        {isMobile ? <MobileSongListFallback /> : <TopSongsTableFallback />}
         <PreviewListFallback />
         <PreviewListFallback />
       </ListWrapper>

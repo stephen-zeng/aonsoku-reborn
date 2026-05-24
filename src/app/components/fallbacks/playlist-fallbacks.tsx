@@ -1,8 +1,13 @@
-import { HeaderWithImageEffect } from "@/app/components/fallbacks/album-fallbacks";
+import {
+  HeaderWithImageEffect,
+  MobileSongListFallback,
+} from "@/app/components/fallbacks/album-fallbacks";
 import { TableFallback } from "@/app/components/fallbacks/table-fallbacks";
 import { ButtonsBarFallback } from "@/app/components/fallbacks/ui-fallbacks";
+import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import ListWrapper from "@/app/components/list-wrapper";
 import { Skeleton } from "@/app/components/ui/skeleton";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 import { songCollectionColumnIds } from "@/app/tables/column-layouts";
 
 function PlaylistButtonsFallback() {
@@ -16,13 +21,22 @@ function PlaylistButtonsFallback() {
 }
 
 export function PlaylistFallback() {
+  const isMobile = useIsMobile();
+
   return (
     <div className="w-full bg-background min-h-content">
+      {isMobile && (
+        <MobilePageHeader variant="sub" title="" showSpacer={false} />
+      )}
       <HeaderWithImageEffect />
 
       <ListWrapper>
         <PlaylistButtonsFallback />
-        <TableFallback variant="modern" columnIds={songCollectionColumnIds} />
+        {isMobile ? (
+          <MobileSongListFallback />
+        ) : (
+          <TableFallback variant="modern" columnIds={songCollectionColumnIds} />
+        )}
       </ListWrapper>
     </div>
   );
