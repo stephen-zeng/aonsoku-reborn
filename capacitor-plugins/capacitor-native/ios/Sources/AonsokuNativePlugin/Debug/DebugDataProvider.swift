@@ -1,6 +1,14 @@
 import AVFoundation
 import Capacitor
 
+struct QueueItemInfo {
+    let id: String
+    let title: String
+    let artist: String
+    let duration: Double
+    let isCurrent: Bool
+}
+
 struct AudioDebugSnapshot {
     let title: String?
     let artist: String?
@@ -17,6 +25,8 @@ struct AudioDebugSnapshot {
     let shuffleEnabled: Bool
     let queueIndex: Int
     let queueItemCount: Int
+    let queue: [QueueItemInfo]
+    let userQueue: [QueueItemInfo]
 }
 
 struct ConnectionDebugSnapshot {
@@ -45,11 +55,24 @@ final class DebugDataProvider {
         self.bridge = bridge
     }
 
+    private var audioPlugin: AonsokuNativeAudioPlugin? {
+        bridge?.plugin(withName: "AonsokuNativeAudio") as? AonsokuNativeAudioPlugin
+    }
+
     func audioSnapshot() -> AudioDebugSnapshot? {
-        guard let plugin = bridge?.plugin(withName: "AonsokuNativeAudio") as? AonsokuNativeAudioPlugin else {
-            return nil
-        }
-        return plugin.debugSnapshot()
+        audioPlugin?.debugSnapshot()
+    }
+
+    func playPause() {
+        audioPlugin?.debugPlayPause()
+    }
+
+    func skipNext() {
+        audioPlugin?.debugSkipNext()
+    }
+
+    func skipPrevious() {
+        audioPlugin?.debugSkipPrevious()
     }
 
     func connectionSnapshot() -> ConnectionDebugSnapshot? {

@@ -6,14 +6,10 @@ public final class DebugViewController: UIViewController {
     private let dataProvider: DebugDataProvider
     private var refreshTimer: Timer?
     private let tableView = UITableView(frame: .zero, style: .grouped)
+    private let segmentedControl = UISegmentedControl(items: ["Playback", "Info", "Logs"])
 
-    private enum Section: Int, CaseIterable {
-        case playback
-        case buffer
-        case connection
-        case audioSession
-        case logs
-    }
+    private enum Tab: Int { case playback, info, logs }
+    private var currentTab: Tab = .playback
 
     private var audioSnapshot: AudioDebugSnapshot?
     private var connectionSnapshot: ConnectionDebugSnapshot?
@@ -38,10 +34,8 @@ public final class DebugViewController: UIViewController {
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .close, target: self, action: #selector(closeTapped)
         )
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .refresh, target: self, action: #selector(refreshTapped)
-        )
 
+        setupSegmentedControl()
         setupTableView()
         refreshData()
         startAutoRefresh()
@@ -52,18 +46,25 @@ public final class DebugViewController: UIViewController {
         refreshTimer?.invalidate()
         refreshTimer = nil
     }
+    private func setupSegmentedControl() {
+        segmentedControl.selectedSegmentIndex = 0
+        segmentedControl.addTarget(self, action: #selector(tabChanged), for: .valueChanged)
+        navigationItem.titleView = segmentedControl
+    }
+
     private func setupTableView() {
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
         tableView.delegate = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "kv")
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "log")
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "controls")
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 32
         tableView.sectionHeaderTopPadding = 4
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -85,12 +86,11 @@ public final class DebugViewController: UIViewController {
         tableView.reloadData()
     }
 
-    @objc private func closeTapped() {
-        dismiss(animated: true)
-    }
+    @objc private func closeTapped() { dismiss(animated: true) }
 
-    @objc private func refreshTapped() {
-        refreshData()
+    @objc private func tabChanged() {
+        currentTab = Tab(rawValue: segmentedControl.selectedSegmentIndex) ?? .playback
+        tableView.reloadData()
     }
 
     private func formatTime(_ seconds: Double) -> String {
@@ -120,67 +120,174 @@ public final class DebugViewController: UIViewController {
 
 extension DebugViewController: UITableViewDataSource, UITableViewDelegate {
     public func numberOfSections(in tableView: UITableView) -> Int {
-        Section.allCases.count
+        switch currentTab {
+        case .playback: return 3
+        case .info: return 3
+        case .logs: return 1
+        }
     }
 
     public func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        switch Section(rawValue: section)! {
-        case .playback: return "PLAYBACK"
-        case .buffer: return "BUFFER"
-        case .connection: return "CONNECTION"
-        case .audioSession: return "AUDIO SESSION"
-        case .logs: return "LOGS (\(logEntries.count))"
+        switch currentTab {
+        case .playback:
+            switch section {
+            case 0: return "NOW PLAYING"
+            case 1: return "QUEUE (\(audioSnapshot?.queueItemCount ?? 0))"
+            case 2: return audioSnapshot?.userQueue.isEmpty == false ? "USER QUEUE (\(audioSnapshot?.userQueue.count ?? 0))" : nil
+            default: return nil
+            }
+        case .info:
+            switch section {
+            case 0: return "BUFFER"
+            case 1: return "CONNECTION"
+            case 2: return "AUDIO SESSION"
+            default: return nil
+            }
+        case .logs:
+            return "LOGS (\(logEntries.count))"
         }
     }
 
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        switch Section(rawValue: section)! {
-        case .playback: return 4
-        case .buffer: return 3
-        case .connection: return connectionSnapshot != nil ? 4 : 1
-        case .audioSession: return 4
-        case .logs: return max(logEntries.count, 1)
+        switch currentTab {
+        case .playback:
+            switch section {
+            case 0: return 4
+            case 1: return max(audioSnapshot?.queue.count ?? 0, 1)
+            case 2: return audioSnapshot?.userQueue.count ?? 0
+            default: return 0
+            }
+        case .info:
+            switch section {
+            case 0: return 3
+            case 1: return connectionSnapshot != nil ? 4 : 1
+            case 2: return 4
+            default: return 0
+            }
+        case .logs:
+            return max(logEntries.count, 1)
         }
     }
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        switch Section(rawValue: indexPath.section)! {
-        case .playback: return playbackCell(tableView, row: indexPath.row)
-        case .buffer: return bufferCell(tableView, row: indexPath.row)
-        case .connection: return connectionCell(tableView, row: indexPath.row)
-        case .audioSession: return audioSessionCell(tableView, row: indexPath.row)
+        switch currentTab {
+        case .playback: return playbackTabCell(tableView, section: indexPath.section, row: indexPath.row)
+        case .info: return infoTabCell(tableView, section: indexPath.section, row: indexPath.row)
         case .logs: return logCell(tableView, row: indexPath.row)
         }
     }
 
-    // MARK: - Playback
+    // MARK: - Playback Tab
 
-    private func playbackCell(_ tableView: UITableView, row: Int) -> UITableViewCell {
+    private func playbackTabCell(_ tableView: UITableView, section: Int, row: Int) -> UITableViewCell {
+        switch section {
+        case 0: return nowPlayingCell(tableView, row: row)
+        case 1: return queueCell(tableView, row: row, items: audioSnapshot?.queue ?? [])
+        case 2: return queueCell(tableView, row: row, items: audioSnapshot?.userQueue ?? [])
+        default: return kvCell(tableView, key: "", value: "")
+        }
+    }
+
+    private func nowPlayingCell(_ tableView: UITableView, row: Int) -> UITableViewCell {
         let snap = audioSnapshot
         switch row {
         case 0:
-            let title = snap?.title ?? "(none)"
+            let title = snap?.title ?? "(idle)"
             let artist = snap?.artist ?? ""
             let display = artist.isEmpty ? title : "\(title) — \(artist)"
             return kvCell(tableView, key: "Track", value: display)
         case 1:
-            return kvCell(tableView, key: "Album", value: snap?.album ?? "(none)")
-        case 2:
-            let state = snap?.isPlaying == true ? "▶ playing" : "⏸ paused"
             let cur = formatTime(snap?.currentTime ?? 0)
             let dur = formatTime(snap?.duration ?? 0)
-            return kvCell(tableView, key: state, value: "\(cur) / \(dur)")
-        case 3:
+            let buf = formatTime(snap?.bufferedTime ?? 0)
+            return kvCell(tableView, key: "Time", value: "\(cur) / \(dur)  buf:\(buf)")
+        case 2:
             let kind = snap?.sourceKind ?? "none"
-            let idx = "\(snap?.queueIndex ?? 0)/\(snap?.queueItemCount ?? 0)"
             let r = snap?.repeatMode ?? "off"
             let s = snap?.shuffleEnabled == true ? "on" : "off"
-            return kvCell(tableView, key: "Source", value: "\(kind) [\(idx)] r:\(r) s:\(s)")
+            return kvCell(tableView, key: "Mode", value: "\(kind) repeat:\(r) shuffle:\(s)")
+        case 3:
+            return controlsCell(tableView)
         default:
             return kvCell(tableView, key: "", value: "")
         }
     }
 
-    // MARK: - Buffer
+    private func controlsCell(_ tableView: UITableView) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "controls")!
+        cell.selectionStyle = .none
+        for v in cell.contentView.subviews { v.removeFromSuperview() }
+
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.distribution = .equalSpacing
+        stack.alignment = .center
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        let prev = UIButton(type: .system)
+        prev.setImage(UIImage(systemName: "backward.fill"), for: .normal)
+        prev.addTarget(self, action: #selector(prevTapped), for: .touchUpInside)
+
+        let playPause = UIButton(type: .system)
+        let isPlaying = audioSnapshot?.isPlaying == true
+        playPause.setImage(UIImage(systemName: isPlaying ? "pause.fill" : "play.fill"), for: .normal)
+        playPause.addTarget(self, action: #selector(playPauseTapped), for: .touchUpInside)
+
+        let next = UIButton(type: .system)
+        next.setImage(UIImage(systemName: "forward.fill"), for: .normal)
+        next.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
+
+        for btn in [prev, playPause, next] {
+            btn.configuration = .plain()
+            btn.configuration?.preferredSymbolConfigurationForImage = .init(pointSize: 22)
+        }
+
+        stack.addArrangedSubview(prev)
+        stack.addArrangedSubview(playPause)
+        stack.addArrangedSubview(next)
+
+        cell.contentView.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.centerXAnchor.constraint(equalTo: cell.contentView.centerXAnchor),
+            stack.topAnchor.constraint(equalTo: cell.contentView.topAnchor, constant: 8),
+            stack.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor, constant: -8),
+            stack.widthAnchor.constraint(equalToConstant: 180),
+        ])
+        return cell
+    }
+
+    private func queueCell(_ tableView: UITableView, row: Int, items: [QueueItemInfo]) -> UITableViewCell {
+        guard !items.isEmpty else {
+            return kvCell(tableView, key: "", value: "empty", color: .secondaryLabel)
+        }
+        let item = items[row]
+        let cell = tableView.dequeueReusableCell(withIdentifier: "kv")!
+        var config = UIListContentConfiguration.valueCell()
+        let prefix = item.isCurrent ? "▶ " : "  "
+        config.text = "\(prefix)\(item.title)"
+        config.secondaryText = formatTime(item.duration)
+        config.textProperties.font = .systemFont(ofSize: 13, weight: item.isCurrent ? .semibold : .regular)
+        config.textProperties.color = item.isCurrent ? .systemBlue : .label
+        config.secondaryTextProperties.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        config.secondaryTextProperties.color = .secondaryLabel
+        config.directionalLayoutMargins = .init(top: 4, leading: 16, bottom: 4, trailing: 16)
+        cell.contentConfiguration = config
+        cell.selectionStyle = .none
+        return cell
+    }
+
+    @objc private func prevTapped() { dataProvider.skipPrevious(); refreshData() }
+    @objc private func playPauseTapped() { dataProvider.playPause(); refreshData() }
+    @objc private func nextTapped() { dataProvider.skipNext(); refreshData() }
+    // MARK: - Info Tab
+
+    private func infoTabCell(_ tableView: UITableView, section: Int, row: Int) -> UITableViewCell {
+        switch section {
+        case 0: return bufferCell(tableView, row: row)
+        case 1: return connectionCell(tableView, row: row)
+        case 2: return audioSessionCell(tableView, row: row)
+        default: return kvCell(tableView, key: "", value: "")
+        }
+    }
 
     private func bufferCell(_ tableView: UITableView, row: Int) -> UITableViewCell {
         let snap = audioSnapshot
@@ -202,8 +309,6 @@ extension DebugViewController: UITableViewDataSource, UITableViewDelegate {
         }
     }
 
-    // MARK: - Connection
-
     private func connectionCell(_ tableView: UITableView, row: Int) -> UITableViewCell {
         guard let snap = connectionSnapshot else {
             return kvCell(tableView, key: "Status", value: "no credentials", color: .secondaryLabel)
@@ -216,8 +321,6 @@ extension DebugViewController: UITableViewDataSource, UITableViewDelegate {
         default: return kvCell(tableView, key: "", value: "")
         }
     }
-
-    // MARK: - Audio Session
 
     private func audioSessionCell(_ tableView: UITableView, row: Int) -> UITableViewCell {
         let snap = sessionSnapshot ?? dataProvider.audioSessionSnapshot()
@@ -236,7 +339,7 @@ extension DebugViewController: UITableViewDataSource, UITableViewDelegate {
         }
     }
 
-    // MARK: - Logs
+    // MARK: - Logs Tab
 
     private func logCell(_ tableView: UITableView, row: Int) -> UITableViewCell {
         guard !logEntries.isEmpty else {
@@ -274,7 +377,7 @@ extension DebugViewController: UITableViewDataSource, UITableViewDelegate {
     }()
 
     public func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-        guard Section(rawValue: section) == .logs, !logEntries.isEmpty else { return nil }
+        guard currentTab == .logs, !logEntries.isEmpty else { return nil }
         let button = UIButton(type: .system)
         button.setTitle("Clear", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 13)

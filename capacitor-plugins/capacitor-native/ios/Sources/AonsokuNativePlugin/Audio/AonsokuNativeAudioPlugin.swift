@@ -484,6 +484,26 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         case .gaveUp: recoveryDesc = "gaveUp"
         }
 
+        let queueItems = queueEngine.contextSongs.enumerated().map { i, song in
+            QueueItemInfo(
+                id: song.id,
+                title: song.title,
+                artist: song.artist,
+                duration: song.duration,
+                isCurrent: !queueEngine.isInUserQueue && i == queueEngine.currentIndex
+            )
+        }
+
+        let userQueueItems = queueEngine.userQueue.map { song in
+            QueueItemInfo(
+                id: song.id,
+                title: song.title,
+                artist: song.artist,
+                duration: song.duration,
+                isCurrent: false
+            )
+        }
+
         return AudioDebugSnapshot(
             title: currentMetadata.title,
             artist: currentMetadata.artist,
@@ -499,8 +519,34 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             repeatMode: repeatMode,
             shuffleEnabled: shuffleEnabled,
             queueIndex: queueIndex,
-            queueItemCount: queueItemCount
+            queueItemCount: queueItemCount,
+            queue: queueItems,
+            userQueue: userQueueItems
         )
+    }
+
+    func debugPlayPause() {
+        if player?.timeControlStatus == .playing {
+            player?.pause()
+            emitPlaybackState("paused")
+        } else {
+            do { try activateAudioSession() } catch { return }
+            player?.play()
+            emitPlaybackState("playing")
+        }
+    }
+
+    func debugSkipNext() {
+        if isQueueEngineActive {
+            stateQueue.async { self.queueEngine.skipToNext() }
+        }
+    }
+
+    func debugSkipPrevious() {
+        if isQueueEngineActive {
+            let time = seconds(from: player?.currentTime() ?? .zero)
+            stateQueue.async { self.queueEngine.skipToPrevious(currentTime: time) }
+        }
     }
 
     // MARK: - Native Queue Control
