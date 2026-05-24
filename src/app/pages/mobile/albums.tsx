@@ -1,6 +1,7 @@
 import { DiscAlbumIcon, SearchIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import { AlbumGridCard } from "@/app/components/albums/album-grid-card";
 import { CardSkeleton } from "@/app/components/fallbacks/ui-fallbacks";
 import { InfiniteScroll } from "@/app/components/infinite-scroll";
@@ -9,6 +10,8 @@ import { MobileSearchBar } from "@/app/components/mobile/search-bar";
 import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import { Button } from "@/app/components/ui/button";
 import { Skeleton } from "@/app/components/ui/skeleton";
+import { AlbumsFilters, AlbumsSearchParams } from "@/utils/albumsFilter";
+import { SearchParamsHandler } from "@/utils/searchParamsHandler";
 import { useAlbumsListModel } from "../albums/list.model";
 
 function MobileAlbumsFallback() {
@@ -37,6 +40,8 @@ function MobileAlbumsFallback() {
 
 export default function MobileAlbumsList() {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+  const { getSearchParam } = new SearchParamsHandler(searchParams);
   const [searchOpen, setSearchOpen] = useState(false);
   const handleSearchOpenChange = useCallback(
     (v: boolean) => setSearchOpen(v),
@@ -52,8 +57,16 @@ export default function MobileAlbumsList() {
     isFetchingNextPage,
   } = useAlbumsListModel();
 
+  const currentFilter = getSearchParam<string>(
+    AlbumsSearchParams.MainFilter,
+    "",
+  );
+  const query = getSearchParam<string>(AlbumsSearchParams.Query, "");
+  const hasSearchFilter =
+    currentFilter === AlbumsFilters.Search && query !== "";
+
   if (isLoading && albums.length === 0) return <MobileAlbumsFallback />;
-  if (isEmpty) {
+  if (isEmpty && !hasSearchFilter) {
     return (
       <MobileEmptyState
         headerTitle={t("sidebar.albums")}
@@ -98,11 +111,19 @@ export default function MobileAlbumsList() {
           onOpenChange={handleSearchOpenChange}
           placeholder={t("album.list.search.placeholder")}
         />
-        <div className="grid grid-cols-2 gap-x-4 gap-y-6">
-          {albums.map((album) => (
-            <AlbumGridCard key={album.id} album={album} />
-          ))}
-        </div>
+        {albums.length === 0 ? (
+          <div className="flex justify-center items-center py-16">
+            <p className="text-sm text-muted-foreground">
+              {t("common.noResults")}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-x-4 gap-y-6">
+            {albums.map((album) => (
+              <AlbumGridCard key={album.id} album={album} />
+            ))}
+          </div>
+        )}
         <InfiniteScroll
           fetchNextPage={fetchNextPage}
           hasNextPage={hasNextPage}

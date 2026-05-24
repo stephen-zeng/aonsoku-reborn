@@ -144,7 +144,9 @@ export default function MobileSongsList() {
     ? t("songs.list.byArtist", { artist: artistName })
     : t("sidebar.songs");
 
-  if (songlist.length === 0) {
+  const hasSearchFilter = filter === AlbumsFilters.Search && query !== "";
+
+  if (songlist.length === 0 && !hasSearchFilter) {
     return (
       <MobileEmptyState
         headerTitle={title}
@@ -201,15 +203,23 @@ export default function MobileSongsList() {
           onOpenChange={handleSearchOpenChange}
           placeholder={t("songs.list.search.placeholder")}
         />
-        {songlist.map((song, index) => (
-          <MobileSongRow
-            key={`${song.id}-${index}`}
-            song={song}
-            onClick={() =>
-              setSongList(songlist, index, false, undefined, title)
-            }
-          />
-        ))}
+        {songlist.length === 0 ? (
+          <div className="flex justify-center items-center py-16">
+            <p className="text-sm text-muted-foreground">
+              {t("common.noResults")}
+            </p>
+          </div>
+        ) : (
+          songlist.map((song, index) => (
+            <MobileSongRow
+              key={`${song.id}-${index}`}
+              song={song}
+              onClick={() =>
+                setSongList(songlist, index, false, undefined, title)
+              }
+            />
+          ))
+        )}
         <InfiniteScroll
           fetchNextPage={fetchNextPage}
           hasNextPage={!!hasNextPage}
