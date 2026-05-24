@@ -311,6 +311,11 @@ class NativeQueueEngine {
         }
     }
 
+    func markAsShuffled(originalSongs: [QueueSong]) {
+        isShuffleActive = true
+        originalContextSongs = originalSongs
+    }
+
     func setLoopState(_ state: LoopState) {
         self.loopState = state
     }

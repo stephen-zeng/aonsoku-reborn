@@ -16,6 +16,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "seek", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setRepeatMode", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setShuffle", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "markAsShuffled", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setQueue", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "skipToNext", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "skipToPrevious", returnType: CAPPluginReturnPromise),
@@ -257,6 +258,16 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             if self.isQueueEngineActive {
                 self.queueEngine.setShuffleActive(enabled)
             }
+            call.resolve()
+        }
+    }
+
+    @objc func markAsShuffled(_ call: CAPPluginCall) {
+        stateQueue.async {
+            let songsArray = call.getArray("originalSongs") as? [[String: Any]] ?? []
+            let originalSongs = songsArray.map { QueueSong(from: $0) }
+            self.shuffleEnabled = true
+            self.queueEngine.markAsShuffled(originalSongs: originalSongs)
             call.resolve()
         }
     }

@@ -127,6 +127,10 @@ export type NativeQueueSourceId =
   | { type: "artist"; id: string }
   | { type: "genre"; id: string };
 
+export interface NativeMarkAsShuffledOptions {
+  originalSongs: NativeQueueSong[];
+}
+
 export interface NativeAddToUserQueueOptions {
   songs: NativeQueueSong[];
   position: "next" | "last";
@@ -321,6 +325,7 @@ export interface NativeAudioPlugin extends Plugin {
   seek(options: NativeAudioSeekOptions): Promise<void>;
   setRepeatMode(options: NativeAudioRepeatModeOptions): Promise<void>;
   setShuffle(options: NativeAudioShuffleOptions): Promise<void>;
+  markAsShuffled(options: NativeMarkAsShuffledOptions): Promise<void>;
   setQueue(options: NativeAudioQueueOptions): Promise<void>;
   skipToNext(): Promise<void>;
   skipToPrevious(): Promise<void>;
