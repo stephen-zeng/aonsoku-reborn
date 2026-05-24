@@ -12,12 +12,17 @@ import {
   getOfflineSearchResults,
   useOfflineQuery,
 } from "@/lib/offlineQueryClient";
+import {
+  AonsokuNativeData,
+  isNativeDataAvailable,
+} from "@/native/data/facade";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
 import { CoverArt } from "@/types/coverArtType";
 import { Albums } from "@/types/responses/album";
 import { ISimilarArtist } from "@/types/responses/artist";
+import { Search } from "@/types/responses/search";
 import { ISong } from "@/types/responses/song";
 import { byteLength } from "@/utils/byteLength";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
@@ -106,6 +111,28 @@ function ResultSection({ title, seeMoreHref, children }: SectionProps) {
   );
 }
 
+async function nativeSearch(query: string, count: number): Promise<Search> {
+  if (isNativeDataAvailable()) {
+    const result = await AonsokuNativeData.search({
+      query,
+      artistCount: count,
+      albumCount: count,
+      songCount: count,
+    });
+    return {
+      artist: result.artists as unknown as ISimilarArtist[],
+      album: result.albums as unknown as Albums[],
+      song: result.songs as unknown as ISong[],
+    };
+  }
+  return getOfflineSearchResults({
+    query,
+    artistCount: count,
+    albumCount: count,
+    songCount: count,
+  });
+}
+
 export default function MobileSearch() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -126,13 +153,7 @@ export default function MobileSearch() {
         songCount: 6,
       }),
     {
-      offlineFn: () =>
-        getOfflineSearchResults({
-          query,
-          artistCount: 6,
-          albumCount: 6,
-          songCount: 6,
-        }),
+      offlineFn: () => nativeSearch(query, 6),
       enabled: enableQuery,
       staleTime: convertMinutesToMs(5),
     },
