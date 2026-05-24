@@ -140,7 +140,13 @@ export function createQueueActions(shared: SharedDeps) {
       sourceName?: string,
     ) => {
       if (getRuntime() === "capacitor-ios") {
-        getQueueController().setSongList(songlist, index, shuffle, sourceId, sourceName);
+        getQueueController().setSongList(
+          songlist,
+          index,
+          shuffle,
+          sourceId,
+          sourceName,
+        );
         return;
       }
 
@@ -948,9 +954,7 @@ export function createQueueActions(shared: SharedDeps) {
           state.songlist.shuffleHistory = pushToHistory(
             state.songlist.shuffleHistory,
             song.id,
-            getMaxShuffleHistory(
-              state.songlist.contextQueue.songs.length,
-            ),
+            getMaxShuffleHistory(state.songlist.contextQueue.songs.length),
           );
         }
       });

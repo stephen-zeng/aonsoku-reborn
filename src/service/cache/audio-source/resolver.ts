@@ -222,15 +222,15 @@ export class CacheAudioSourceResolver implements AudioSourceResolver {
   }
 }
 
-function nativeCacheAdapter(
-  resolver: NativeFileResolver | undefined,
-): (NativeFileResolver & {
-  storeAudioFile(
-    songId: string,
-    data: Blob,
-    contentType: string,
-  ): Promise<NativeCachedAudioFile>;
-}) | null {
+function nativeCacheAdapter(resolver: NativeFileResolver | undefined):
+  | (NativeFileResolver & {
+      storeAudioFile(
+        songId: string,
+        data: Blob,
+        contentType: string,
+      ): Promise<NativeCachedAudioFile>;
+    })
+  | null {
   if (!resolver || !("storeAudioFile" in resolver)) return null;
   return resolver as NativeFileResolver & {
     storeAudioFile(

@@ -236,7 +236,8 @@ export function AudioPlayer({
         manageMediaSession.ensurePlaybackStatePlaying();
       }
 
-      const isNativeTransition = getQueueController().consumeNativeDrivenTransition();
+      const isNativeTransition =
+        getQueueController().consumeNativeDrivenTransition();
       if (isNativeTransition) {
         logger.info(
           `[AudioSrcChange:SKIP] reason=nativeDrivenTransition | songId=${songId} | src=${src?.slice(-60)}`,

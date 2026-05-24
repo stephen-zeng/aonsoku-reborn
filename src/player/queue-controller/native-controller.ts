@@ -392,10 +392,7 @@ export class NativeQueueController implements QueueController {
       this.#plugin
         .removeFromUserQueue({ indices: [index] })
         .catch((err) =>
-          logger.error(
-            "[NativeQueueController] removeFromQueue failed",
-            err,
-          ),
+          logger.error("[NativeQueueController] removeFromQueue failed", err),
         );
 
       usePlayerStore.setState((s) => {
@@ -413,9 +410,7 @@ export class NativeQueueController implements QueueController {
 
     if (detectedTier === "context") {
       const { contextQueue, isInUserQueue } = state.songlist;
-      const removedIndex = contextQueue.songs.findIndex(
-        (s) => s.id === id,
-      );
+      const removedIndex = contextQueue.songs.findIndex((s) => s.id === id);
       if (removedIndex === -1) return;
 
       const newSongs = [...contextQueue.songs];
@@ -431,10 +426,7 @@ export class NativeQueueController implements QueueController {
       } else if (removedIndex < contextQueue.currentIndex) {
         newIndex = contextQueue.currentIndex - 1;
       } else if (removedIndex === contextQueue.currentIndex) {
-        newIndex = Math.min(
-          contextQueue.currentIndex,
-          newSongs.length - 1,
-        );
+        newIndex = Math.min(contextQueue.currentIndex, newSongs.length - 1);
       } else {
         newIndex = contextQueue.currentIndex;
       }
@@ -506,10 +498,7 @@ export class NativeQueueController implements QueueController {
           }
         })
         .catch((err) =>
-          logger.error(
-            "[NativeQueueController] reorderQueue failed",
-            err,
-          ),
+          logger.error("[NativeQueueController] reorderQueue failed", err),
         );
     }
   }
@@ -640,8 +629,8 @@ export class NativeQueueController implements QueueController {
         const nativeUserQueueIds = new Set(
           nativeState.userQueue.map((ns) => ns.id),
         );
-        s.songlist.userQueue.songs = s.songlist.userQueue.songs.filter(
-          (song) => nativeUserQueueIds.has(song.id),
+        s.songlist.userQueue.songs = s.songlist.userQueue.songs.filter((song) =>
+          nativeUserQueueIds.has(song.id),
         );
 
         if (nativeState.currentSongId) {
@@ -698,21 +687,14 @@ export class NativeQueueController implements QueueController {
         const wasInUserQueue = state.songlist.isInUserQueue;
         state.songlist.isInUserQueue = event.isInUserQueue;
 
-        if (
-          event.reason === "next" ||
-          event.reason === "ended"
-        ) {
-          if (
-            wasInUserQueue &&
-            state.songlist.userQueue.songs.length > 0
-          ) {
+        if (event.reason === "next" || event.reason === "ended") {
+          if (wasInUserQueue && state.songlist.userQueue.songs.length > 0) {
             const consumed = state.songlist.userQueue.songs.shift()!;
             state.songlist.playedUserQueueHistory.push(consumed);
           }
         } else if (event.reason === "previous") {
           if (event.isInUserQueue && !wasInUserQueue) {
-            const restored =
-              state.songlist.playedUserQueueHistory.pop();
+            const restored = state.songlist.playedUserQueueHistory.pop();
             if (restored) {
               state.songlist.userQueue.songs.unshift(restored);
             }
@@ -721,8 +703,7 @@ export class NativeQueueController implements QueueController {
             wasInUserQueue &&
             state.songlist.playedUserQueueHistory.length > 0
           ) {
-            const restored =
-              state.songlist.playedUserQueueHistory.pop();
+            const restored = state.songlist.playedUserQueueHistory.pop();
             if (restored) {
               state.songlist.userQueue.songs.unshift(restored);
             }
