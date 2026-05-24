@@ -60,6 +60,8 @@ class PlaybackRecoveryController {
             savedPosition = currentTime
             delegate?.recoveryDidBegin(self)
             delegate?.recoverySetBuffering(self, isBuffering: true)
+        } else if recoveryTimer != nil {
+            return
         }
 
         switch sourceKind {
