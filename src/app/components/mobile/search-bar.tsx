@@ -3,10 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
 import { Input } from "@/app/components/ui/input";
-import {
-  Collapsible,
-  CollapsibleContent,
-} from "@/app/components/ui/collapsible";
 import { Button } from "@/app/components/ui/button";
 import { AlbumsFilters, AlbumsSearchParams } from "@/utils/albumsFilter";
 import { SearchParamsHandler } from "@/utils/searchParamsHandler";
@@ -61,7 +57,7 @@ export function MobileSearchBar({
 
   useEffect(() => {
     if (open && inputRef.current) {
-      setTimeout(() => inputRef.current?.focus(), 100);
+      setTimeout(() => inputRef.current?.focus(), 150);
     }
   }, [open]);
 
@@ -73,8 +69,11 @@ export function MobileSearchBar({
   }, [filter, query, onOpenChange]);
 
   return (
-    <Collapsible open={open} onOpenChange={onOpenChange}>
-      <CollapsibleContent>
+    <div
+      className="grid transition-[grid-template-rows] duration-200 ease-in-out"
+      style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
+    >
+      <div className="overflow-hidden">
         <div
           className="px-4 pb-3"
           style={{
@@ -88,7 +87,7 @@ export function MobileSearchBar({
               ref={inputRef}
               value={inputValue}
               placeholder={placeholder}
-              className="pl-9 pr-9"
+              className="pl-9 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary"
               autoCorrect="off"
               autoCapitalize="off"
               spellCheck={false}
@@ -125,7 +124,7 @@ export function MobileSearchBar({
             )}
           </div>
         </div>
-      </CollapsibleContent>
-    </Collapsible>
+      </div>
+    </div>
   );
 }
