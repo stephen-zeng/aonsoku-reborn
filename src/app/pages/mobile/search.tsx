@@ -116,25 +116,27 @@ export default function MobileSearch() {
 
   const enableQuery = byteLength(query) >= 3;
 
-  const { data: searchResult } = useOfflineQuery({
-    queryKey: [...queryKeys.search, query],
-    onlineFn: () =>
+  const { data: searchResult } = useOfflineQuery(
+    [...queryKeys.search, query],
+    () =>
       subsonic.search.get({
         query,
         albumCount: 6,
         artistCount: 6,
         songCount: 6,
       }),
-    offlineFn: () =>
-      getOfflineSearchResults({
-        query,
-        artistCount: 6,
-        albumCount: 6,
-        songCount: 6,
-      }),
-    enabled: enableQuery,
-    staleTime: convertMinutesToMs(5),
-  });
+    {
+      offlineFn: () =>
+        getOfflineSearchResults({
+          query,
+          artistCount: 6,
+          albumCount: 6,
+          songCount: 6,
+        }),
+      enabled: enableQuery,
+      staleTime: convertMinutesToMs(5),
+    },
+  );
 
   const albums: Albums[] = searchResult?.album ?? [];
   const artists: ISimilarArtist[] = searchResult?.artist ?? [];
