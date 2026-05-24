@@ -307,6 +307,18 @@ export class NativeQueueController implements QueueController {
         state.songlist.originalContextSongs = [
           ...state.songlist.contextQueue.songs,
         ];
+        if (state.songlist.userQueue.songs.length > 0) {
+          state.songlist.originalUserSongs = [
+            ...state.songlist.userQueue.songs,
+          ];
+        }
+      } else {
+        if (state.songlist.originalUserSongs?.length) {
+          state.songlist.userQueue.songs = [
+            ...state.songlist.originalUserSongs,
+          ];
+        }
+        state.songlist.originalUserSongs = undefined;
       }
       state.songlist.isShuffleActive = !current;
     });
@@ -697,12 +709,24 @@ export class NativeQueueController implements QueueController {
           }
         }
 
-        const nativeUserQueueIds = new Set(
-          nativeState.userQueue.map((ns) => ns.id),
-        );
-        s.songlist.userQueue.songs = s.songlist.userQueue.songs.filter((song) =>
-          nativeUserQueueIds.has(song.id),
-        );
+        const nativeUserQueueIds = nativeState.userQueue.map((ns) => ns.id);
+        if (nativeUserQueueIds.length > 0) {
+          const userSongMap = new Map(
+            s.songlist.userQueue.songs.map((song) => [song.id, song]),
+          );
+          const reorderedUser = nativeUserQueueIds
+            .map((id) => userSongMap.get(id))
+            .filter((song): song is ISong => song != null);
+          if (reorderedUser.length === s.songlist.userQueue.songs.length) {
+            s.songlist.userQueue.songs = reorderedUser;
+          } else {
+            s.songlist.userQueue.songs = s.songlist.userQueue.songs.filter(
+              (song) => new Set(nativeUserQueueIds).has(song.id),
+            );
+          }
+        } else {
+          s.songlist.userQueue.songs = [];
+        }
 
         if (nativeState.currentSongId) {
           let song = s.songlist.userQueue.songs.find(
@@ -745,8 +769,29 @@ export class NativeQueueController implements QueueController {
               s.songlist.originalContextSongs = synced;
             }
           }
+
+          const nativeOriginalUserIds = nativeState.originalUserSongs.map(
+            (ns) => ns.id,
+          );
+          if (nativeOriginalUserIds.length > 0) {
+            const origUserMap = new Map(
+              (s.songlist.originalUserSongs ?? []).map((song) => [
+                song.id,
+                song,
+              ]),
+            );
+            const syncedUser = nativeOriginalUserIds
+              .map((id) => origUserMap.get(id))
+              .filter((song): song is ISong => song != null);
+            if (syncedUser.length === nativeOriginalUserIds.length) {
+              s.songlist.originalUserSongs = syncedUser;
+            }
+          } else {
+            s.songlist.originalUserSongs = undefined;
+          }
         } else {
           s.songlist.originalContextSongs = [];
+          s.songlist.originalUserSongs = undefined;
           s.songlist.shuffleHistory = [];
         }
       });

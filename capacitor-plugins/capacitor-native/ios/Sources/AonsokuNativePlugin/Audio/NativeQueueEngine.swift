@@ -71,6 +71,7 @@ class NativeQueueEngine {
     private(set) var currentIndex: Int = 0
 
     private(set) var userQueue: [QueueSong] = []
+    private(set) var originalUserSongs: [QueueSong] = []
     private(set) var isInUserQueue: Bool = false
     private(set) var playedUserQueueHistory: [QueueSong] = []
 
@@ -127,6 +128,7 @@ class NativeQueueEngine {
         self.originalContextSongs = []
         self.currentIndex = max(0, min(currentIndex, songs.count - 1))
         self.userQueue = []
+        self.originalUserSongs = []
         self.isInUserQueue = false
         self.playedUserQueueHistory = []
         self.isShuffleActive = false
@@ -189,6 +191,7 @@ class NativeQueueEngine {
 
     func clearUserQueue() {
         userQueue = []
+        originalUserSongs = []
         playedUserQueueHistory = []
         if isInUserQueue {
             isInUserQueue = false
@@ -365,6 +368,11 @@ class NativeQueueEngine {
             contextSongs = Array(contextSongs.prefix(currentIndex + 1)) + shuffled
         }
 
+        if !userQueue.isEmpty {
+            originalUserSongs = userQueue
+            userQueue = shuffleEngine.shuffleWithGapAvoidance(userQueue, history: shuffleHistory)
+        }
+
         isShuffleActive = true
         delegate?.queueEngine(self, didChangeContents: "shuffle")
     }
@@ -383,6 +391,11 @@ class NativeQueueEngine {
         } else {
             contextSongs = originalContextSongs
             currentIndex = min(currentIndex, contextSongs.count - 1)
+        }
+
+        if !originalUserSongs.isEmpty {
+            userQueue = originalUserSongs
+            originalUserSongs = []
         }
 
         originalContextSongs = []
@@ -423,6 +436,7 @@ class NativeQueueEngine {
             ],
             "userQueue": userQueue.map { $0.toDict() },
             "originalContextSongs": originalContextSongs.map { $0.toDict() },
+            "originalUserSongs": originalUserSongs.map { $0.toDict() },
             "isInUserQueue": isInUserQueue,
             "isShuffleActive": isShuffleActive,
             "loopState": loopState.rawValue,
