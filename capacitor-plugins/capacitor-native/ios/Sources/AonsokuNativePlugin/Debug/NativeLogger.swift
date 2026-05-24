@@ -14,8 +14,8 @@ final class NativeLogger {
         }
     }
 
-    private var entries: [Entry] = []
-    private let maxEntries = 200
+    private var buckets: [String: [Entry]] = [:]
+    private let maxEntriesPerSource = 200
     private let queue = DispatchQueue(label: "com.aonsoku.NativeLogger")
 
     private init() {}
@@ -23,10 +23,13 @@ final class NativeLogger {
     func log(_ level: Entry.Level, _ message: String, source: String = "") {
         queue.async {
             let entry = Entry(timestamp: Date(), level: level, message: message, source: source)
-            if self.entries.count >= self.maxEntries {
-                self.entries.removeFirst()
+            let key = source.isEmpty ? "_default" : source
+            var bucket = self.buckets[key] ?? []
+            if bucket.count >= self.maxEntriesPerSource {
+                bucket.removeFirst()
             }
-            self.entries.append(entry)
+            bucket.append(entry)
+            self.buckets[key] = bucket
         }
     }
 
@@ -47,10 +50,12 @@ final class NativeLogger {
     }
 
     func getEntries() -> [Entry] {
-        queue.sync { entries }
+        queue.sync {
+            buckets.values.flatMap { $0 }.sorted { $0.timestamp < $1.timestamp }
+        }
     }
 
     func clear() {
-        queue.async { self.entries.removeAll() }
+        queue.async { self.buckets.removeAll() }
     }
 }
