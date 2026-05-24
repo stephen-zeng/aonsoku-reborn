@@ -28,6 +28,6 @@ export function useScrollEndListener(
       clearTimeout(timer);
       el.removeEventListener("scroll", listener);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // biome-ignore lint/correctness/useExhaustiveDependencies: deps forwarded from caller
   }, deps);
 }
