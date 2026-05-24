@@ -22,10 +22,13 @@ export function shuffleSongList<T>(list: T[], index: number, isRandom = false) {
   return array;
 }
 
-const MAX_SHUFFLE_HISTORY = 50;
-const MAX_SHUFFLE_START_HISTORY = 20;
+export function getMaxShuffleHistory(queueLength: number): number {
+  return Math.max(20, Math.min(Math.floor(queueLength / 2), 200));
+}
 
-export { MAX_SHUFFLE_HISTORY, MAX_SHUFFLE_START_HISTORY };
+export function getMaxShuffleStartHistory(queueLength: number): number {
+  return Math.max(10, Math.min(Math.floor(queueLength / 4), 50));
+}
 
 export function pushToHistory(
   history: string[],

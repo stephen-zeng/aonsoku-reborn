@@ -9,7 +9,7 @@ import type {
 import { LoopState } from "@/types/playerContext";
 import type { ISong } from "@/types/responses/song";
 import {
-  MAX_SHUFFLE_START_HISTORY,
+  getMaxShuffleStartHistory,
   pushToHistory,
   shuffleWithGapAvoidance,
 } from "@/utils/songListFunctions";
@@ -114,7 +114,7 @@ export function applyShuffleOn(state: Draft<ISongList>): void {
     state.shuffleStartHistory = pushToHistory(
       state.shuffleStartHistory,
       currentSong.id,
-      MAX_SHUFFLE_START_HISTORY,
+      getMaxShuffleStartHistory(state.contextQueue.songs.length),
     );
   }
 

@@ -81,8 +81,14 @@ class NativeQueueEngine {
 
     private let shuffleEngine = NativeShuffleEngine()
     private let prevSeekThreshold: Double = 3.0
-    private let maxShuffleHistory = 50
-    private let maxShuffleStartHistory = 20
+
+    private var maxShuffleHistory: Int {
+        max(20, min(contextSongs.count / 2, 200))
+    }
+
+    private var maxShuffleStartHistory: Int {
+        max(10, min(contextSongs.count / 4, 50))
+    }
 
     var currentSong: QueueSong? {
         if isInUserQueue, !userQueue.isEmpty {

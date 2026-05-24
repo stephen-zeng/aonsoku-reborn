@@ -14,8 +14,8 @@ import type { ISong } from "@/types/responses/song";
 import { areSongListsEqual } from "@/utils/compareSongLists";
 import { logger } from "@/utils/logger";
 import {
-  MAX_SHUFFLE_HISTORY,
-  MAX_SHUFFLE_START_HISTORY,
+  getMaxShuffleHistory,
+  getMaxShuffleStartHistory,
   pickRandomStartIndex,
   pushToHistory,
   shuffleWithGapAvoidance,
@@ -210,7 +210,7 @@ export function createQueueActions(shared: SharedDeps) {
         const updatedStartHistory = pushToHistory(
           startHistory,
           startSong.id,
-          MAX_SHUFFLE_START_HISTORY,
+          getMaxShuffleStartHistory(songlist.length),
         );
 
         set((state) => {
@@ -948,7 +948,9 @@ export function createQueueActions(shared: SharedDeps) {
           state.songlist.shuffleHistory = pushToHistory(
             state.songlist.shuffleHistory,
             song.id,
-            MAX_SHUFFLE_HISTORY,
+            getMaxShuffleHistory(
+              state.songlist.contextQueue.songs.length,
+            ),
           );
         }
       });

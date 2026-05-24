@@ -11,7 +11,7 @@ import {
 } from "@/store/native-storage";
 import { logger } from "@/utils/logger";
 import { decodeStoredPassword, genEncodedPassword } from "@/utils/salt";
-import { MAX_SHUFFLE_START_HISTORY } from "@/utils/songListFunctions";
+import { getMaxShuffleStartHistory } from "@/utils/songListFunctions";
 import {
   migrateCustomLyricsBodiesToIdb,
   stripCustomLyricsBodies,
@@ -375,7 +375,9 @@ export function trimSonglistForIdb(songlist: ISongList): ISongList {
     ),
     originalUserSongs: rest.originalUserSongs?.slice(-MAX_USER_QUEUE_IDB_SIZE),
     shuffleStartHistory:
-      rest.shuffleStartHistory?.slice(-MAX_SHUFFLE_START_HISTORY) ?? [],
+      rest.shuffleStartHistory?.slice(
+        -getMaxShuffleStartHistory(contextQueue.songs.length),
+      ) ?? [],
   };
 }
 

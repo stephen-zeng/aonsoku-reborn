@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { IPlayerContext, ISongList } from "@/types/playerContext";
 import type { ISong } from "@/types/responses/song";
-import { MAX_SHUFFLE_START_HISTORY } from "@/utils/songListFunctions";
+import { getMaxShuffleStartHistory } from "@/utils/songListFunctions";
 import {
   createInitialSettings,
   initialPlayerProgress,
@@ -124,6 +124,9 @@ describe("player IDB songlist trimming", () => {
       { length: MAX_USER_QUEUE_IDB_SIZE + 10 },
       (_, i) => makeSong(`user-${i}`),
     );
+    const expectedMaxStartHistory = getMaxShuffleStartHistory(
+      contextSongs.length,
+    );
     const songlist: ISongList = {
       ...initialSonglist,
       contextQueue: {
@@ -135,7 +138,7 @@ describe("player IDB songlist trimming", () => {
       originalContextSongs: contextSongs,
       playedUserQueueHistory: userSongs,
       shuffleStartHistory: Array.from(
-        { length: MAX_SHUFFLE_START_HISTORY + 5 },
+        { length: expectedMaxStartHistory + 5 },
         (_, i) => `song-${i}`,
       ),
     };
@@ -150,6 +153,6 @@ describe("player IDB songlist trimming", () => {
     expect(trimmed.playedUserQueueHistory).toHaveLength(
       MAX_USER_QUEUE_IDB_SIZE,
     );
-    expect(trimmed.shuffleStartHistory).toHaveLength(MAX_SHUFFLE_START_HISTORY);
+    expect(trimmed.shuffleStartHistory).toHaveLength(expectedMaxStartHistory);
   });
 });
