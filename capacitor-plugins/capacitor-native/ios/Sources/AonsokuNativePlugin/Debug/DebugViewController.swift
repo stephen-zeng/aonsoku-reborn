@@ -7,6 +7,12 @@ public final class DebugViewController: UIViewController {
     private var refreshTimer: Timer?
     private let tableView = UITableView(frame: .zero, style: .grouped)
     private let segmentedControl = UISegmentedControl(items: ["Playback", "Info", "Logs"])
+    private let searchBar = UISearchBar()
+    private let filterStack = UIStackView()
+    private var filterScrollView: UIScrollView!
+
+    private var tableTopToSegment: NSLayoutConstraint!
+    private var tableTopToFilter: NSLayoutConstraint!
 
     private enum Tab: Int { case playback, info, logs }
     private var currentTab: Tab = .playback
@@ -16,6 +22,12 @@ public final class DebugViewController: UIViewController {
     private var sessionSnapshot: AudioSessionSnapshot?
     private var memoryMB: Double = 0
     private var logEntries: [NativeLogger.Entry] = []
+    private var filteredLogEntries: [NativeLogger.Entry] = []
+
+    private var searchText: String = ""
+    private var activeLevels: Set<NativeLogger.Entry.Level> = [.debug, .info, .warn, .error]
+    private var activeSources: Set<String> = []
+    private var allSources: [String] = []
 
     public init(bridge: (any CAPBridgeProtocol)?) {
         self.dataProvider = DebugDataProvider(bridge: bridge)
@@ -39,6 +51,7 @@ public final class DebugViewController: UIViewController {
         )
 
         setupSegmentedControl()
+        setupSearchAndFilter()
         setupTableView()
         refreshData()
         startAutoRefresh()
@@ -61,6 +74,43 @@ public final class DebugViewController: UIViewController {
         ])
     }
 
+    private func setupSearchAndFilter() {
+        searchBar.placeholder = "Search logs..."
+        searchBar.searchBarStyle = .minimal
+        searchBar.delegate = self
+        searchBar.translatesAutoresizingMaskIntoConstraints = false
+        searchBar.isHidden = true
+        view.addSubview(searchBar)
+
+        filterStack.axis = .horizontal
+        filterStack.spacing = 6
+        filterStack.translatesAutoresizingMaskIntoConstraints = false
+
+        filterScrollView = UIScrollView()
+        filterScrollView.translatesAutoresizingMaskIntoConstraints = false
+        filterScrollView.showsHorizontalScrollIndicator = false
+        filterScrollView.addSubview(filterStack)
+        filterScrollView.isHidden = true
+        view.addSubview(filterScrollView)
+
+        NSLayoutConstraint.activate([
+            searchBar.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 4),
+            searchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
+            searchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
+
+            filterScrollView.topAnchor.constraint(equalTo: searchBar.bottomAnchor),
+            filterScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            filterScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            filterScrollView.heightAnchor.constraint(equalToConstant: 32),
+
+            filterStack.topAnchor.constraint(equalTo: filterScrollView.topAnchor),
+            filterStack.leadingAnchor.constraint(equalTo: filterScrollView.leadingAnchor),
+            filterStack.trailingAnchor.constraint(equalTo: filterScrollView.trailingAnchor),
+            filterStack.bottomAnchor.constraint(equalTo: filterScrollView.bottomAnchor),
+            filterStack.heightAnchor.constraint(equalTo: filterScrollView.heightAnchor),
+        ])
+    }
+
     private func setupTableView() {
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
@@ -71,9 +121,14 @@ public final class DebugViewController: UIViewController {
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 32
         tableView.sectionHeaderTopPadding = 4
+        tableView.keyboardDismissMode = .onDrag
         view.addSubview(tableView)
+
+        tableTopToSegment = tableView.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 8)
+        tableTopToFilter = tableView.topAnchor.constraint(equalTo: filterScrollView.bottomAnchor, constant: 4)
+        tableTopToSegment.isActive = true
+
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 8),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -92,6 +147,8 @@ public final class DebugViewController: UIViewController {
         sessionSnapshot = dataProvider.audioSessionSnapshot()
         memoryMB = dataProvider.memoryUsageMB()
         logEntries = NativeLogger.shared.getEntries().reversed()
+        updateSources()
+        applyLogFilter()
         tableView.reloadData()
     }
 
@@ -100,7 +157,91 @@ public final class DebugViewController: UIViewController {
 
     @objc private func tabChanged() {
         currentTab = Tab(rawValue: segmentedControl.selectedSegmentIndex) ?? .playback
+        let showLogFilters = currentTab == .logs
+        searchBar.isHidden = !showLogFilters
+        filterScrollView.isHidden = !showLogFilters
+        tableTopToSegment.isActive = !showLogFilters
+        tableTopToFilter.isActive = showLogFilters
         tableView.reloadData()
+    }
+
+    private func updateSources() {
+        let sources = Set(logEntries.compactMap { $0.source.isEmpty ? nil : $0.source })
+        let sorted = sources.sorted()
+        if sorted != allSources {
+            allSources = sorted
+            if activeSources.isEmpty { activeSources = sources }
+            rebuildFilterChips()
+        }
+    }
+
+    private func applyLogFilter() {
+        filteredLogEntries = logEntries.filter { entry in
+            guard activeLevels.contains(entry.level) else { return false }
+            if !activeSources.isEmpty && !entry.source.isEmpty {
+                guard activeSources.contains(entry.source) else { return false }
+            }
+            if !searchText.isEmpty {
+                let haystack = "\(entry.source) \(entry.message)".lowercased()
+                guard haystack.contains(searchText.lowercased()) else { return false }
+            }
+            return true
+        }
+    }
+
+    private func rebuildFilterChips() {
+        filterStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+
+        for level in NativeLogger.Entry.Level.allCases {
+            let btn = makeChip(title: level.rawValue.uppercased(), isActive: activeLevels.contains(level))
+            btn.tag = level.hashValue
+            btn.addAction(UIAction { [weak self] _ in
+                guard let self else { return }
+                if self.activeLevels.contains(level) {
+                    self.activeLevels.remove(level)
+                } else {
+                    self.activeLevels.insert(level)
+                }
+                self.rebuildFilterChips()
+                self.applyLogFilter()
+                self.tableView.reloadData()
+            }, for: .touchUpInside)
+            filterStack.addArrangedSubview(btn)
+        }
+
+        let separator = UIView()
+        separator.translatesAutoresizingMaskIntoConstraints = false
+        separator.widthAnchor.constraint(equalToConstant: 1).isActive = true
+        separator.backgroundColor = .separator
+        filterStack.addArrangedSubview(separator)
+
+        for source in allSources {
+            let btn = makeChip(title: source, isActive: activeSources.contains(source))
+            btn.addAction(UIAction { [weak self] _ in
+                guard let self else { return }
+                if self.activeSources.contains(source) {
+                    self.activeSources.remove(source)
+                } else {
+                    self.activeSources.insert(source)
+                }
+                self.rebuildFilterChips()
+                self.applyLogFilter()
+                self.tableView.reloadData()
+            }, for: .touchUpInside)
+            filterStack.addArrangedSubview(btn)
+        }
+    }
+
+    private func makeChip(title: String, isActive: Bool) -> UIButton {
+        var config = UIButton.Configuration.filled()
+        config.title = title
+        config.cornerStyle = .capsule
+        config.buttonSize = .mini
+        config.baseBackgroundColor = isActive ? .systemBlue : .systemGray5
+        config.baseForegroundColor = isActive ? .white : .secondaryLabel
+        config.contentInsets = .init(top: 4, leading: 8, bottom: 4, trailing: 8)
+        let btn = UIButton(configuration: config)
+        return btn
     }
 
     private func formatTime(_ seconds: Double) -> String {
@@ -154,7 +295,7 @@ extension DebugViewController: UITableViewDataSource, UITableViewDelegate {
             default: return nil
             }
         case .logs:
-            return "LOGS (\(logEntries.count))"
+            return "LOGS (\(filteredLogEntries.count)/\(logEntries.count))"
         }
     }
 
@@ -175,7 +316,7 @@ extension DebugViewController: UITableViewDataSource, UITableViewDelegate {
             default: return 0
             }
         case .logs:
-            return max(logEntries.count, 1)
+            return max(filteredLogEntries.count, 1)
         }
     }
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -352,10 +493,10 @@ extension DebugViewController: UITableViewDataSource, UITableViewDelegate {
     // MARK: - Logs Tab
 
     private func logCell(_ tableView: UITableView, row: Int) -> UITableViewCell {
-        guard !logEntries.isEmpty else {
+        guard !filteredLogEntries.isEmpty else {
             return kvCell(tableView, key: "", value: "no entries", color: .secondaryLabel)
         }
-        let entry = logEntries[row]
+        let entry = filteredLogEntries[row]
         let cell = tableView.dequeueReusableCell(withIdentifier: "log")!
         var config = UIListContentConfiguration.subtitleCell()
         let time = Self.timeFormatter.string(from: entry.timestamp)
@@ -387,7 +528,7 @@ extension DebugViewController: UITableViewDataSource, UITableViewDelegate {
     }()
 
     public func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-        guard currentTab == .logs, !logEntries.isEmpty else { return nil }
+        guard currentTab == .logs, !filteredLogEntries.isEmpty else { return nil }
         let button = UIButton(type: .system)
         button.setTitle("Clear", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 13)
@@ -409,3 +550,16 @@ extension DebugViewController: UITableViewDataSource, UITableViewDelegate {
     }
 }
 
+// MARK: - UISearchBarDelegate
+
+extension DebugViewController: UISearchBarDelegate {
+    public func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        self.searchText = searchText
+        applyLogFilter()
+        tableView.reloadData()
+    }
+
+    public func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
+    }
+}

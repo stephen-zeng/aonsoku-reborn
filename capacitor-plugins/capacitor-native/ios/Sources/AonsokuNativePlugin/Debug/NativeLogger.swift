@@ -9,7 +9,7 @@ final class NativeLogger {
         let message: String
         let source: String
 
-        enum Level: String {
+        enum Level: String, CaseIterable {
             case debug, info, warn, error
         }
     }
