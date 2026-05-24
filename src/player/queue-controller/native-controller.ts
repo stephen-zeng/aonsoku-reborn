@@ -203,6 +203,17 @@ export class NativeQueueController implements QueueController {
 
     usePlayerStore.setState((state) => {
       state.playerState.isPlaying = true;
+      state.playerProgress.progress = 0;
+      state.playerProgress.bufferedProgress = 0;
+      state.songlist.contextQueue.currentIndex = contextIndex;
+      state.songlist.isInUserQueue = false;
+      const song = state.songlist.contextQueue.songs[contextIndex] ?? null;
+      if (song) {
+        state.songlist.currentSong = song;
+        state.playerState.currentDuration = song.duration
+          ? Math.round(song.duration)
+          : 0;
+      }
     });
   }
 
