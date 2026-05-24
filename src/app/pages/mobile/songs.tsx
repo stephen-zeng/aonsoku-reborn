@@ -23,7 +23,6 @@ import {
 } from "@/app/components/ui/dropdown-menu";
 import { Skeleton } from "@/app/components/ui/skeleton";
 import { useTotalSongs } from "@/app/hooks/use-total-songs";
-import { cn } from "@/lib/utils";
 import {
   getOfflineSongsList,
   useOfflineInfiniteQuery,
@@ -266,12 +265,7 @@ function MobileSongRow({
         isCurrentPlaying={isCurrentPlaying}
       />
       <div className="flex-1 min-w-0">
-        <h3
-          className={cn(
-            "font-medium text-sm truncate",
-            isCurrentPlaying && "text-primary",
-          )}
-        >
+        <h3 className="font-medium text-sm truncate">
           {song.title}
         </h3>
         <p className="text-xs text-muted-foreground truncate">
