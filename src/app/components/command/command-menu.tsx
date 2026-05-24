@@ -168,6 +168,8 @@ export default function CommandMenu() {
     [clear, setOpen],
   );
 
+  const composingRef = useRef(false);
+
   const debounced = useDebouncedCallback((value: string) => {
     setQuery(value);
   }, 500);
@@ -180,6 +182,7 @@ export default function CommandMenu() {
 
   const handleSearchChange = useCallback(
     (value: string) => {
+      if (composingRef.current) return;
       if (activePage === "PLAYLISTS") {
         setQuery(value);
       } else {
@@ -300,6 +303,18 @@ export default function CommandMenu() {
             spellCheck="false"
             onValueChange={handleSearchChange}
             onKeyDown={handleInputKeyDown}
+            onCompositionStart={() => {
+              composingRef.current = true;
+            }}
+            onCompositionEnd={(e) => {
+              composingRef.current = false;
+              const value = e.currentTarget.value;
+              if (activePage === "PLAYLISTS") {
+                setQuery(value);
+              } else {
+                debounced(value);
+              }
+            }}
           />
           <ScrollArea className="max-h-[500px] 2xl:max-h-[700px]">
             <CommandList className="max-h-fit pr-1">

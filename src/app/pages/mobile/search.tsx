@@ -146,6 +146,8 @@ export default function MobileSearch() {
     albums.length > 0 || artists.length > 0 || songs.length > 0;
   const showNoResults = enableQuery && !hasResults;
 
+  const composingRef = useRef(false);
+
   const debounced = useDebouncedCallback((value: string) => {
     setQuery(value);
   }, 500);
@@ -185,7 +187,18 @@ export default function MobileSearch() {
               autoCorrect="off"
               autoCapitalize="off"
               spellCheck={false}
-              onChange={(e) => debounced(e.target.value)}
+              onCompositionStart={() => {
+                composingRef.current = true;
+              }}
+              onCompositionEnd={(e) => {
+                composingRef.current = false;
+                debounced(e.currentTarget.value);
+              }}
+              onChange={(e) => {
+                if (!composingRef.current) {
+                  debounced(e.target.value);
+                }
+              }}
             />
           </div>
         </div>
