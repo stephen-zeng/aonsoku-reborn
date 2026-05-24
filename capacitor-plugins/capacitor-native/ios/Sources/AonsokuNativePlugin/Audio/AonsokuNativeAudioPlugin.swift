@@ -1734,7 +1734,6 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         let interval = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
         timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: progressQueue) { [weak self] _ in
             guard let self = self else { return }
-            guard self.isInForeground else { return }
             guard self.isCurrentPlayback(player: player, generation: generation) else {
                 return
             }
@@ -1743,6 +1742,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             DispatchQueue.main.async {
                 self.recoveryController.reportProgress(at: currentTime, generation: generation)
             }
+            guard self.isInForeground else { return }
             self.emitProgress(requestId: requestId)
         }
     }
