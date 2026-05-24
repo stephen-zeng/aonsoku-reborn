@@ -70,6 +70,14 @@ export const useUiStore = createWithEqualityFn<IUiContext>()(
               });
             },
           },
+          mobileSearch: {
+            query: "",
+            setQuery: (query: string) => {
+              set((state) => {
+                state.mobileSearch.query = query;
+              });
+            },
+          },
         })),
         {
           name: "ui_store",
@@ -115,3 +123,4 @@ export const useUiStore = createWithEqualityFn<IUiContext>()(
 export const useSongInfo = () => useUiStore((state) => state.songInfo);
 export const useSidebar = () => useUiStore((state) => state.sidebar);
 export const useRightPanel = () => useUiStore((state) => state.rightPanel);
+export const useMobileSearch = () => useUiStore((state) => state.mobileSearch);

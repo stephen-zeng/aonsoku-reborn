@@ -1,5 +1,5 @@
 import { Play, SearchIcon } from "lucide-react";
-import { startTransition, useRef, useState } from "react";
+import { startTransition, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
@@ -19,6 +19,7 @@ import {
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
+import { useMobileSearch } from "@/store/ui.store";
 import { CoverArt } from "@/types/coverArtType";
 import { Albums } from "@/types/responses/album";
 import { ISimilarArtist } from "@/types/responses/artist";
@@ -137,7 +138,7 @@ export default function MobileSearch() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [query, setQuery] = useState("");
+  const { query, setQuery } = useMobileSearch();
   const { playSong, setSongList } = usePlayerActions();
   const { getAlbumSongs, getArtistAllSongs } = useSongList();
 
@@ -173,6 +174,11 @@ export default function MobileSearch() {
     setQuery(value);
   }, 500);
 
+  function navigateWithFlush(to: string) {
+    debounced.flush();
+    navigate(to);
+  }
+
   async function handlePlayAlbum(albumId: string, albumName: string) {
     const albumSongs = await getAlbumSongs(albumId);
     if (albumSongs) setSongList(albumSongs, 0, false, { albumId }, albumName);
@@ -203,6 +209,7 @@ export default function MobileSearch() {
             <Input
               ref={inputRef}
               autoFocus
+              defaultValue={query}
               placeholder={t("command.inputPlaceholder")}
               className="pl-9"
               autoCorrect="off"
@@ -253,7 +260,7 @@ export default function MobileSearch() {
                 coverArtType="album"
                 title={album.name}
                 subtitle={album.artist}
-                onRowClick={() => navigate(ROUTES.ALBUM.PAGE(album.id))}
+                onRowClick={() => navigateWithFlush(ROUTES.ALBUM.PAGE(album.id))}
                 onPlayClick={() => handlePlayAlbum(album.id, album.name)}
               />
             ))}
@@ -273,7 +280,7 @@ export default function MobileSearch() {
                 albumId={song.albumId}
                 title={song.title}
                 subtitle={song.artist}
-                onRowClick={() => navigate(ROUTES.ALBUM.PAGE(song.albumId))}
+                onRowClick={() => navigateWithFlush(ROUTES.ALBUM.PAGE(song.albumId))}
                 onPlayClick={() => playSong(song)}
               />
             ))}
@@ -291,7 +298,7 @@ export default function MobileSearch() {
                 subtitle={t("artist.info.albumsCount", {
                   count: artist.albumCount,
                 })}
-                onRowClick={() => navigate(ROUTES.ARTIST.PAGE(artist.id))}
+                onRowClick={() => navigateWithFlush(ROUTES.ARTIST.PAGE(artist.id))}
                 onPlayClick={() => handlePlayArtist(artist)}
               />
             ))}
