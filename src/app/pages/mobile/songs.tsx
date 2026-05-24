@@ -200,11 +200,13 @@ export default function MobileSongsList() {
             </Button>
           </div>
         </div>
-        <MobileSearchBar
-          open={searchOpen}
-          onOpenChange={handleSearchOpenChange}
-          placeholder={t("songs.list.search.placeholder")}
-        />
+        <div className="px-4">
+          <MobileSearchBar
+            open={searchOpen}
+            onOpenChange={handleSearchOpenChange}
+            placeholder={t("songs.list.search.placeholder")}
+          />
+        </div>
         {songlist.length === 0 ? (
           <div className="flex justify-center items-center py-16">
             <p className="text-sm text-muted-foreground">
