@@ -37,3 +37,4 @@ out/
 dist/
 coverage/
 .build/
+.swiftpm/
