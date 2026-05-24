@@ -94,7 +94,7 @@ describe("Aonsoku native audio plugin skeleton", () => {
     const manifest = readPackageJson(path.join(process.cwd(), "package.json"));
 
     expect(manifest.dependencies?.["@aonsoku/capacitor-native"]).toBe(
-      "file:capacitor-plugins/capacitor-native",
+      "workspace:*",
     );
   });
 
