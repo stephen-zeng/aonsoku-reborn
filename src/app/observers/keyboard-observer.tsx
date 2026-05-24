@@ -1,6 +1,7 @@
 import { Keyboard } from "@capacitor/keyboard";
 import { Capacitor } from "@capacitor/core";
 import { useEffect } from "react";
+import { useAppStore } from "@/store/app.store";
 
 const SCROLL_LOCK_CLASS = "keyboard-scroll-lock";
 
@@ -15,6 +16,8 @@ function removeScrollLock() {
 }
 
 export function KeyboardObserver() {
+  const commandOpen = useAppStore((state) => state.command.open);
+
   useEffect(() => {
     if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== "ios") {
       return;
@@ -24,6 +27,11 @@ export function KeyboardObserver() {
       console.debug("[KeyboardObserver] setAccessoryBarVisible failed:", err);
     });
 
+    if (commandOpen) {
+      removeScrollLock();
+      return;
+    }
+
     Keyboard.addListener("keyboardWillShow", addScrollLock);
     Keyboard.addListener("keyboardDidHide", removeScrollLock);
 
@@ -31,7 +39,7 @@ export function KeyboardObserver() {
       removeScrollLock();
       Keyboard.removeAllListeners();
     };
-  }, []);
+  }, [commandOpen]);
 
   return null;
 }
