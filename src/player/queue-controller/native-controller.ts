@@ -18,6 +18,11 @@ import { LoopState } from "@/types/playerContext";
 import type { Radio } from "@/types/responses/radios";
 import type { ISong } from "@/types/responses/song";
 import { logger } from "@/utils/logger";
+import {
+  getMaxShuffleStartHistory,
+  pickRandomStartIndex,
+  pushToHistory,
+} from "@/utils/songListFunctions";
 import type {
   QueueController,
   QueueControllerEvent,
@@ -82,13 +87,34 @@ export class NativeQueueController implements QueueController {
     _sourceName?: string,
   ): void {
     this.#queueSynced = true;
-    const nativeSongs = songs.map(songToNativeQueueSong);
-    const loopState = usePlayerStore.getState().playerState.loopState;
+    if (!songs || songs.length === 0) return;
 
+    const loopState = usePlayerStore.getState().playerState.loopState;
+    let effectiveIndex = Math.max(0, Math.min(index, songs.length - 1));
+
+    if (shuffle && songs.length > 1) {
+      const startHistory =
+        usePlayerStore.getState().songlist.shuffleStartHistory ?? [];
+      effectiveIndex = pickRandomStartIndex(
+        songs.length,
+        startHistory,
+        (i) => songs[i].id,
+      );
+      const updatedStartHistory = pushToHistory(
+        startHistory,
+        songs[effectiveIndex].id,
+        getMaxShuffleStartHistory(songs.length),
+      );
+      usePlayerStore.setState((state) => {
+        state.songlist.shuffleStartHistory = updatedStartHistory;
+      });
+    }
+
+    const nativeSongs = songs.map(songToNativeQueueSong);
     this.#plugin
       .setContextQueue({
         songs: nativeSongs,
-        currentIndex: Math.max(0, Math.min(index, songs.length - 1)),
+        currentIndex: effectiveIndex,
         autoplay: true,
         repeatMode: loopStateToNative(loopState),
       })
@@ -101,7 +127,6 @@ export class NativeQueueController implements QueueController {
         logger.error("[NativeQueueController] setSongList failed", err),
       );
 
-    const clampedIndex = Math.max(0, Math.min(index, songs.length - 1));
     usePlayerStore.setState((state) => {
       state.playerState.isPlaying = true;
       state.playerState.mediaType = "song";
@@ -109,13 +134,14 @@ export class NativeQueueController implements QueueController {
       state.playerProgress.bufferedProgress = 0;
       state.songlist.isShuffleActive = Boolean(shuffle);
       state.songlist.contextQueue.songs = songs;
-      state.songlist.contextQueue.currentIndex = clampedIndex;
-      state.songlist.currentSong = songs[clampedIndex] ?? null;
+      state.songlist.contextQueue.currentIndex = effectiveIndex;
+      state.songlist.currentSong = songs[effectiveIndex] ?? null;
+      state.songlist.originalContextSongs = shuffle ? [...songs] : [];
       state.songlist.userQueue = { songs: [] };
       state.songlist.isInUserQueue = false;
       state.songlist.playedUserQueueHistory = [];
-      state.playerState.currentDuration = songs[clampedIndex]?.duration
-        ? Math.round(songs[clampedIndex].duration)
+      state.playerState.currentDuration = songs[effectiveIndex]?.duration
+        ? Math.round(songs[effectiveIndex].duration)
         : 0;
     });
   }
