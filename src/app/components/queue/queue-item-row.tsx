@@ -96,10 +96,11 @@ export const QueueItemRow = forwardRef<
     <div
       ref={ref}
       className={clsx([
-        "group/queuerow flex items-center w-full h-16 text-sm rounded-md px-3 gap-2",
+        "group/queuerow flex items-center w-full h-16 text-sm rounded-md px-3 gap-2 cursor-pointer",
         "hover-supported:bg-muted",
       ])}
       style={style}
+      onClick={onPlay}
       {...dragAttributes}
     >
       {dragListeners && !isMobile && (
