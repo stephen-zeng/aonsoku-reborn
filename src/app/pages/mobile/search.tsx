@@ -208,6 +208,13 @@ export default function MobileSearch() {
               autoCorrect="off"
               autoCapitalize="off"
               spellCheck={false}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !composingRef.current) {
+                  e.preventDefault();
+                  debounced.flush();
+                  inputRef.current?.blur();
+                }
+              }}
               onCompositionStart={() => {
                 composingRef.current = true;
               }}
