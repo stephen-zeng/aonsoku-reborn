@@ -21,11 +21,12 @@ final class DatabaseManager {
         let dbPath = dbDirectory.appendingPathComponent("library.sqlite").path
 
         var config = Configuration()
-        #if DEBUG
         config.prepareDatabase { db in
+            #if DEBUG
             db.trace { print("[SQL] \($0)") }
+            #endif
+            db.add(function: DatabaseManager.normalizeFunction)
         }
-        #endif
 
         dbPool = try! DatabasePool(path: dbPath, configuration: config)
 
@@ -36,4 +37,14 @@ final class DatabaseManager {
 
     var reader: DatabaseReader { dbPool }
     var writer: DatabaseWriter { dbPool }
+
+    static let normalizeFunction = DatabaseFunction(
+        "normalize", argumentCount: 1, pure: true
+    ) { args in
+        guard let text = String.fromDatabaseValue(args[0]) else { return nil }
+        return text.folding(
+            options: [.diacriticInsensitive, .caseInsensitive, .widthInsensitive],
+            locale: nil
+        )
+    }
 }
