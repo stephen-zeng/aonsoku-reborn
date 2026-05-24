@@ -80,13 +80,7 @@ export function MobileSearchBar({
       style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
     >
       <div className="overflow-hidden">
-        <div
-          className="px-4 pb-3"
-          style={{
-            paddingLeft: "max(1rem, var(--safe-area-left))",
-            paddingRight: "max(1rem, var(--safe-area-right))",
-          }}
-        >
+        <div className="px-4 pb-3">
           <div className="relative flex items-center">
             <SearchIcon className="absolute left-3 w-4 h-4 text-muted-foreground pointer-events-none" />
             <Input
