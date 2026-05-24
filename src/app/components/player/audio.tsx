@@ -582,17 +582,21 @@ export function AudioPlayer({
     const audio = audioRef.current;
     if (!audio) return;
 
-    const backend = getPlaybackBackend(audio);
-    if (!backend) return;
+    const entry = getPlaybackBackendEntry(audio);
+    if (!entry) return;
 
     const repeatMode = playbackRepeatModeFromLoopState(loopState);
-    Promise.resolve(backend.setRepeatMode(repeatMode)).catch((error) => {
+    Promise.resolve(entry.backend.setRepeatMode(repeatMode)).catch((error) => {
       logger.info("[PlaybackBackend] repeat sync failed", error);
     });
-    Promise.resolve(backend.setShuffle(isShuffleActive)).catch((error) => {
-      logger.info("[PlaybackBackend] shuffle sync failed", error);
-    });
-  }, [audioRef, getPlaybackBackend, isShuffleActive, loopState]);
+    if (entry.kind !== "native") {
+      Promise.resolve(entry.backend.setShuffle(isShuffleActive)).catch(
+        (error) => {
+          logger.info("[PlaybackBackend] shuffle sync failed", error);
+        },
+      );
+    }
+  }, [audioRef, getPlaybackBackendEntry, isShuffleActive, loopState]);
 
   useEffect(() => {
     const audio = audioRef.current;
