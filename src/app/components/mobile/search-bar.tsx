@@ -35,11 +35,14 @@ export function MobileSearchBar({
   function applySearch(value: string) {
     const trimmed = value.trim();
     if (trimmed) {
-      setSearchParams((params) => {
-        params.set(AlbumsSearchParams.MainFilter, AlbumsFilters.Search);
-        params.set(AlbumsSearchParams.Query, trimmed);
-        return params;
-      });
+      setSearchParams(
+        (params) => {
+          params.set(AlbumsSearchParams.MainFilter, AlbumsFilters.Search);
+          params.set(AlbumsSearchParams.Query, trimmed);
+          return params;
+        },
+        { replace: true },
+      );
     } else {
       clearSearch();
     }
@@ -47,11 +50,14 @@ export function MobileSearchBar({
 
   function clearSearch() {
     setInputValue("");
-    setSearchParams((params) => {
-      params.delete(AlbumsSearchParams.MainFilter);
-      params.delete(AlbumsSearchParams.Query);
-      return params;
-    });
+    setSearchParams(
+      (params) => {
+        params.delete(AlbumsSearchParams.MainFilter);
+        params.delete(AlbumsSearchParams.Query);
+        return params;
+      },
+      { replace: true },
+    );
     inputRef.current?.focus();
   }
 
