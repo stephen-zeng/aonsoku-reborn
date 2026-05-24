@@ -11,30 +11,88 @@ import {
 import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import ListWrapper from "@/app/components/list-wrapper";
 import { Skeleton } from "@/app/components/ui/skeleton";
-import { useIsMobile } from "@/app/hooks/use-mobile";
-import {
-  artistMobileColumnIds,
-  songCollectionColumnIds,
-} from "@/app/tables/column-layouts";
+import { songCollectionColumnIds } from "@/app/tables/column-layouts";
+
+function MobileListHeaderFallback() {
+  return (
+    <div className="flex flex-col">
+      <div className="px-4 py-4 flex items-center justify-between">
+        <div className="flex flex-col">
+          <Skeleton id="detail-page-title" className="h-8 w-32 mb-1" />
+          <Skeleton className="h-3 w-16" />
+        </div>
+        <div className="flex gap-1">
+          <Skeleton className="size-10 rounded-md" />
+          <Skeleton className="size-10 rounded-md" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MobileSongsListFallback() {
+  return (
+    <div className="flex flex-col">
+      {Array.from({ length: 12 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 px-4 py-2">
+          <Skeleton className="size-12 rounded shadow shrink-0" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-1/2" />
+          </div>
+          <Skeleton className="size-10 rounded-md" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MobileArtistsListFallback() {
+  return (
+    <div className="flex flex-col">
+      {Array.from({ length: 12 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 px-4 py-2">
+          <Skeleton className="size-11 rounded-full shrink-0" />
+          <div className="flex-1 space-y-1.5">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-1/2" />
+          </div>
+          <Skeleton className="size-9 rounded-md" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export function InfinitySongListFallback() {
   return (
-    <div className="w-full h-content">
-      <ShadowHeaderFallback
-        actions={
-          <>
-            <Skeleton className="w-8 h-8 rounded-md" />
-            <Skeleton className="w-32 h-9 rounded-md" />
-            <Skeleton className="w-8 h-8 rounded-md" />
-            <Skeleton className="w-8 h-8 rounded-md" />
-          </>
-        }
-      />
-
-      <div className="w-full h-[calc(100%-80px)] overflow-auto">
-        <TableFallback variant="modern" length={20} type="infinity" />
+    <>
+      <div className="w-full flex flex-col md:hidden">
+        <MobilePageHeader
+          variant="sub"
+          title=""
+          transparentTheme="default"
+        />
+        <MobileListHeaderFallback />
+        <MobileSongsListFallback />
       </div>
-    </div>
+      <div className="w-full h-content hidden md:block">
+        <ShadowHeaderFallback
+          actions={
+            <>
+              <Skeleton className="w-8 h-8 rounded-md" />
+              <Skeleton className="w-32 h-9 rounded-md" />
+              <Skeleton className="w-8 h-8 rounded-md" />
+              <Skeleton className="w-8 h-8 rounded-md" />
+            </>
+          }
+        />
+
+        <div className="w-full h-[calc(100%-80px)] overflow-auto">
+          <TableFallback variant="modern" length={20} type="infinity" />
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -98,23 +156,31 @@ export function MobileLibraryFallback() {
 }
 
 export function ArtistsTableFallback() {
-  const isMobile = useIsMobile();
-
   return (
-    <div className="w-full h-content">
-      <ShadowHeaderFallback
-        actions={<Skeleton className="w-9 h-9 rounded-md" />}
-      />
-
-      <div className="w-full h-[calc(100%-80px)] overflow-auto">
-        <TableFallback
-          columns="artists"
-          variant="modern"
-          type="infinity"
-          columnIds={isMobile ? artistMobileColumnIds : undefined}
+    <>
+      <div className="w-full flex flex-col md:hidden">
+        <MobilePageHeader
+          variant="sub"
+          title=""
+          transparentTheme="default"
         />
+        <MobileListHeaderFallback />
+        <MobileArtistsListFallback />
       </div>
-    </div>
+      <div className="w-full h-content hidden md:block">
+        <ShadowHeaderFallback
+          actions={<Skeleton className="w-9 h-9 rounded-md" />}
+        />
+
+        <div className="w-full h-[calc(100%-80px)] overflow-auto">
+          <TableFallback
+            columns="artists"
+            variant="modern"
+            type="infinity"
+          />
+        </div>
+      </div>
+    </>
   );
 }
 

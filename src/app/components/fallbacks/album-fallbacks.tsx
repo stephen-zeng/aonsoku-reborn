@@ -215,20 +215,40 @@ export function AlbumFallback() {
 
 export function AlbumsFallback() {
   return (
-    <div className="w-full h-full">
-      <ShadowHeaderFallback
-        actions={
-          <div className="flex gap-2">
-            <Skeleton className="w-8 h-8 rounded-md" />
-            <Skeleton className="w-32 h-9 rounded-md" />
+    <>
+      <div className="w-full flex flex-col md:hidden">
+        <MobilePageHeader
+          variant="sub"
+          title=""
+          transparentTheme="default"
+        />
+        <div className="px-4 py-4">
+          <div className="flex flex-col mb-4">
+            <Skeleton id="detail-page-title" className="h-8 w-32 mb-1" />
+            <Skeleton className="h-3 w-16" />
           </div>
-        }
-      />
+          <div className="grid grid-cols-2 gap-x-4 gap-y-6">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <CardSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="w-full h-full hidden md:block">
+        <ShadowHeaderFallback
+          actions={
+            <div className="flex gap-2">
+              <Skeleton className="w-8 h-8 rounded-md" />
+              <Skeleton className="w-32 h-9 rounded-md" />
+            </div>
+          }
+        />
 
-      <ListWrapper className="pt-[--shadow-header-distance] px-0">
-        <GridFallback />
-      </ListWrapper>
-    </div>
+        <ListWrapper className="pt-[--shadow-header-distance] px-0">
+          <GridFallback />
+        </ListWrapper>
+      </div>
+    </>
   );
 }
 
