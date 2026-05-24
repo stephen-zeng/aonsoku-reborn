@@ -157,6 +157,16 @@ class NativeQueueEngine {
         }
     }
 
+    func reorderContextQueue(fromIndex: Int, toIndex: Int) {
+        guard fromIndex != toIndex,
+              fromIndex >= 0, fromIndex < contextSongs.count,
+              toIndex >= 0, toIndex < contextSongs.count else { return }
+
+        let song = contextSongs.remove(at: fromIndex)
+        contextSongs.insert(song, at: toIndex)
+        delegate?.queueEngine(self, didChangeContents: "queue-edit")
+    }
+
     func addToUserQueue(songs: [QueueSong], position: String) {
         if position == "next" {
             let insertIndex = isInUserQueue ? 1 : 0

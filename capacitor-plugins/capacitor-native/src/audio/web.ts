@@ -13,6 +13,7 @@ import type {
   NativeAudioStoreFileOptions,
   NativeSetSystemVolumeOptions,
   NativePlayAtIndexOptions,
+  NativeReorderContextQueueOptions,
   NativeRemoveFromUserQueueOptions,
   NativeSetContextQueueOptions,
   NativeUpdateContextQueueOptions,
@@ -114,6 +115,14 @@ export class AonsokuNativeAudioWeb
   ): Promise<void> {
     return Promise.reject(
       createNativeAudioUnavailableError("updateContextQueue"),
+    );
+  }
+
+  reorderContextQueue(
+    _options: NativeReorderContextQueueOptions,
+  ): Promise<void> {
+    return Promise.reject(
+      createNativeAudioUnavailableError("reorderContextQueue"),
     );
   }
 

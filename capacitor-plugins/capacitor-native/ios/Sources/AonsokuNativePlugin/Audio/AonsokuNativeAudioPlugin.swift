@@ -33,6 +33,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "removeFromUserQueue", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "clearUserQueue", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateContextQueue", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "reorderContextQueue", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "playAtIndex", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getFullState", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "downloadAudioFile", returnType: CAPPluginReturnPromise),
@@ -616,6 +617,16 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             let currentIndex = call.getInt("currentIndex") ?? 0
 
             self.queueEngine.updateContextQueue(songs: songs, currentIndex: currentIndex)
+            call.resolve()
+        }
+    }
+
+    @objc func reorderContextQueue(_ call: CAPPluginCall) {
+        stateQueue.async {
+            let fromIndex = call.getInt("fromIndex") ?? 0
+            let toIndex = call.getInt("toIndex") ?? 0
+
+            self.queueEngine.reorderContextQueue(fromIndex: fromIndex, toIndex: toIndex)
             call.resolve()
         }
     }

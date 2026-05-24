@@ -478,6 +478,10 @@ export class NativeQueueController implements QueueController {
     const toInUser =
       toIndex >= contextPlayedCount &&
       toIndex < contextPlayedCount + userQueue.songs.length;
+    const fromInUpcoming =
+      fromIndex >= contextPlayedCount + userQueue.songs.length;
+    const toInUpcoming =
+      toIndex >= contextPlayedCount + userQueue.songs.length;
 
     if (fromInUser && toInUser) {
       const localFrom = fromIndex - contextPlayedCount;
@@ -503,6 +507,28 @@ export class NativeQueueController implements QueueController {
         })
         .catch((err) =>
           logger.error("[NativeQueueController] reorderQueue failed", err),
+        );
+      return;
+    }
+
+    if (fromInUpcoming && toInUpcoming) {
+      const actualFrom = fromIndex - userQueue.songs.length;
+      const actualTo = toIndex - userQueue.songs.length;
+      const newContextSongs = [...contextQueue.songs];
+      const [moved] = newContextSongs.splice(actualFrom, 1);
+      newContextSongs.splice(actualTo, 0, moved);
+
+      usePlayerStore.setState((s) => {
+        s.songlist.contextQueue.songs = newContextSongs;
+      });
+
+      this.#plugin
+        .reorderContextQueue({ fromIndex: actualFrom, toIndex: actualTo })
+        .catch((err) =>
+          logger.error(
+            "[NativeQueueController] reorderQueue context failed",
+            err,
+          ),
         );
     }
   }
