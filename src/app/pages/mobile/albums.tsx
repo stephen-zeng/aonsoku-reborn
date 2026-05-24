@@ -1,10 +1,13 @@
-import { DiscAlbumIcon } from "lucide-react";
+import { DiscAlbumIcon, SearchIcon } from "lucide-react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AlbumGridCard } from "@/app/components/albums/album-grid-card";
 import { CardSkeleton } from "@/app/components/fallbacks/ui-fallbacks";
 import { InfiniteScroll } from "@/app/components/infinite-scroll";
 import { MobileEmptyState } from "@/app/components/mobile/empty-state";
+import { MobileSearchBar } from "@/app/components/mobile/search-bar";
 import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
+import { Button } from "@/app/components/ui/button";
 import { Skeleton } from "@/app/components/ui/skeleton";
 import { useAlbumsListModel } from "../albums/list.model";
 
@@ -34,6 +37,11 @@ function MobileAlbumsFallback() {
 
 export default function MobileAlbumsList() {
   const { t } = useTranslation();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const handleSearchOpenChange = useCallback(
+    (v: boolean) => setSearchOpen(v),
+    [],
+  );
   const {
     isLoading,
     isEmpty,
@@ -64,17 +72,32 @@ export default function MobileAlbumsList() {
         transparentTheme="default"
       />
       <div className="px-4 py-4">
-        <div className="flex flex-col mb-4">
-          <h1
-            id="detail-page-title"
-            className="text-2xl font-bold tracking-tight"
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col">
+            <h1
+              id="detail-page-title"
+              className="text-2xl font-bold tracking-tight"
+            >
+              {t("sidebar.albums")}
+            </h1>
+            <span className="text-xs text-muted-foreground font-medium">
+              {albumsCount}
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-10"
+            onClick={() => setSearchOpen(!searchOpen)}
           >
-            {t("sidebar.albums")}
-          </h1>
-          <span className="text-xs text-muted-foreground font-medium">
-            {albumsCount}
-          </span>
+            <SearchIcon className="size-5" />
+          </Button>
         </div>
+        <MobileSearchBar
+          open={searchOpen}
+          onOpenChange={handleSearchOpenChange}
+          placeholder={t("album.list.search.placeholder")}
+        />
         <div className="grid grid-cols-2 gap-x-4 gap-y-6">
           {albums.map((album) => (
             <AlbumGridCard key={album.id} album={album} />

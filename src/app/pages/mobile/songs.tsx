@@ -4,10 +4,13 @@ import {
   SearchIcon,
   SortAscIcon,
 } from "lucide-react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { InfiniteScroll } from "@/app/components/infinite-scroll";
 import { MobileEmptyState } from "@/app/components/mobile/empty-state";
+import { MobileSearchBar } from "@/app/components/mobile/search-bar";
+import { MobileSortDrawer } from "@/app/components/mobile/sort-drawer";
 import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import { SongMenuOptions } from "@/app/components/song/menu-options";
 import { CachedIndicator } from "@/app/components/table/cached-indicator";
@@ -80,6 +83,13 @@ export default function MobileSongsList() {
   const { getSearchParam } = new SearchParamsHandler(searchParams);
   const { setSongList } = usePlayerActions();
   const { data: songCountData } = useTotalSongs();
+
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
+  const handleSearchOpenChange = useCallback(
+    (v: boolean) => setSearchOpen(v),
+    [],
+  );
 
   const filter = getSearchParam<string>(AlbumsSearchParams.MainFilter, "");
   const query = getSearchParam<string>(AlbumsSearchParams.Query, "");
@@ -168,14 +178,29 @@ export default function MobileSongsList() {
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="size-10">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-10"
+              onClick={() => setSearchOpen(!searchOpen)}
+            >
               <SearchIcon className="size-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="size-10">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-10"
+              onClick={() => setSortOpen(true)}
+            >
               <SortAscIcon className="size-5" />
             </Button>
           </div>
         </div>
+        <MobileSearchBar
+          open={searchOpen}
+          onOpenChange={handleSearchOpenChange}
+          placeholder={t("songs.list.search.placeholder")}
+        />
         {songlist.map((song, index) => (
           <MobileSongRow
             key={`${song.id}-${index}`}
@@ -191,6 +216,7 @@ export default function MobileSongsList() {
           isLoading={isFetchingNextPage}
         />
       </div>
+      <MobileSortDrawer open={sortOpen} onOpenChange={setSortOpen} />
     </div>
   );
 }
