@@ -10,6 +10,7 @@ import { MiniSidebar } from "@/app/layout/mini-sidebar";
 import { Sidebar } from "@/app/layout/sidebar";
 import { FullscreenPlayerRouter } from "@/routes/fullscreenRouter";
 import { useUiStore } from "@/store/ui.store";
+import { SwipeBackObserver } from "@/app/observers/swipe-back-observer";
 import { MainRoutes } from "./main";
 
 const MemoHeader = memo(Header);
@@ -58,6 +59,7 @@ export default function BaseLayout() {
       <MemoRemovePlaylistDialog />
       <MemoMainDrawerPage />
       <FullscreenPlayerRouter />
+      <SwipeBackObserver />
     </div>
   );
 }
