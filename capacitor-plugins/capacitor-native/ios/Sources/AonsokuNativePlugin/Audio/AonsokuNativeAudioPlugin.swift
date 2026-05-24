@@ -70,6 +70,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var queueItemCount = 0
     private var queueIndex = 0
     private var currentSourceKind: String?
+    private var currentSourceUrl: URL?
     private var currentRadioId: String?
     private var currentRequestId: String?
     private var playbackGeneration = 0
@@ -148,6 +149,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                     self.player = player
                     self.playerItem = item
                     self.currentSourceKind = resolvedSource.kind
+                    self.currentSourceUrl = resolvedSource.url
                     self.currentRadioId = resolvedSource.radioId
                     self.currentRequestId = requestId
                     self.currentMetadata = metadata
@@ -2372,6 +2374,7 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
                 self.player = player
                 self.playerItem = item
                 self.currentSourceKind = resolved.kind
+                self.currentSourceUrl = resolved.url
                 self.currentRadioId = nil
                 self.currentRequestId = nil
 
@@ -2523,11 +2526,6 @@ extension AonsokuNativeAudioPlugin: PlaybackRecoveryDelegate {
             return
         }
 
-        guard isQueueEngineActive, let song = queueEngine.currentSong else {
-            controller.reloadDidComplete(success: false, generation: generation)
-            return
-        }
-
         if case .level2(let attempt) = controller.state {
             notifyListeners("recoveryAttempt", data: [
                 "level": 2,
@@ -2536,40 +2534,50 @@ extension AonsokuNativeAudioPlugin: PlaybackRecoveryDelegate {
             ])
         }
 
-        loadQueue.async { [self] in
-            self.sourceResolver.invalidateCredentialsCache()
-            guard let resolved = self.sourceResolver.resolveSource(for: song) else {
-                DispatchQueue.main.async {
-                    controller.reloadDidComplete(success: false, generation: generation)
-                }
-                return
-            }
-
-            DispatchQueue.main.async {
-                guard self.isCurrentPlayback(generation: generation) else {
-                    controller.reloadDidComplete(success: false, generation: generation)
+        if isQueueEngineActive, let song = queueEngine.currentSong {
+            loadQueue.async { [self] in
+                self.sourceResolver.invalidateCredentialsCache()
+                guard let resolved = self.sourceResolver.resolveSource(for: song) else {
+                    DispatchQueue.main.async {
+                        controller.reloadDidComplete(success: false, generation: generation)
+                    }
                     return
                 }
-
-                self.removeItemObservers()
-
-                let item = AVPlayerItem(url: resolved.url)
-                self.player?.replaceCurrentItem(with: item)
-                self.playerItem = item
-                self.currentSourceKind = resolved.kind
-
-                self.addObservers(for: item, player: self.player!, generation: generation, requestId: self.currentRequestId)
-                self.addProgressObserver(to: self.player!, generation: generation, requestId: self.currentRequestId)
-
-                self.player?.seek(to: savedPosition, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
-                    guard let self, self.isCurrentPlayback(generation: generation) else {
-                        controller.reloadDidComplete(success: false, generation: generation)
-                        return
-                    }
-                    self.player?.play()
-                    controller.reloadDidComplete(success: true, generation: generation)
+                DispatchQueue.main.async {
+                    self.applyReloadedSource(url: resolved.url, kind: resolved.kind, generation: generation, savedPosition: savedPosition, controller: controller)
                 }
             }
+        } else if let sourceUrl = currentSourceUrl {
+            applyReloadedSource(url: sourceUrl, kind: currentSourceKind, generation: generation, savedPosition: savedPosition, controller: controller)
+        } else {
+            controller.reloadDidComplete(success: false, generation: generation)
+        }
+    }
+
+    private func applyReloadedSource(url: URL, kind: String?, generation: Int, savedPosition: CMTime, controller: PlaybackRecoveryController) {
+        guard isCurrentPlayback(generation: generation) else {
+            controller.reloadDidComplete(success: false, generation: generation)
+            return
+        }
+
+        removeItemObservers()
+
+        let item = AVPlayerItem(url: url)
+        player?.replaceCurrentItem(with: item)
+        playerItem = item
+        currentSourceKind = kind
+        currentSourceUrl = url
+
+        addObservers(for: item, player: player!, generation: generation, requestId: currentRequestId)
+        addProgressObserver(to: player!, generation: generation, requestId: currentRequestId)
+
+        player?.seek(to: savedPosition, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
+            guard let self, self.isCurrentPlayback(generation: generation) else {
+                controller.reloadDidComplete(success: false, generation: generation)
+                return
+            }
+            self.player?.play()
+            controller.reloadDidComplete(success: true, generation: generation)
         }
     }
 
