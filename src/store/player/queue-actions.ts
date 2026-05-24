@@ -268,6 +268,11 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     playFromQueue: (contextSongs: ISong[], contextIndex: number) => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().playFromQueue(contextSongs, contextIndex);
+        return;
+      }
+
       if (!contextSongs || contextSongs.length === 0) return;
       contextIndex = Math.max(
         0,
@@ -317,6 +322,11 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     playFromUserQueue: (userQueueIndex: number) => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().playFromUserQueue(userQueueIndex);
+        return;
+      }
+
       if (isRemoteActive()) {
         const { userQueue } = get().songlist;
         const song = userQueue.songs[userQueueIndex];
