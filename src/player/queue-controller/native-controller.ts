@@ -355,11 +355,18 @@ export class NativeQueueController implements QueueController {
         logger.error("[NativeQueueController] addToQueueNext failed", err),
       );
 
+    const { isInUserQueue } = usePlayerStore.getState().songlist;
     usePlayerStore.setState((state) => {
-      state.songlist.userQueue.songs = setNextOnUserQueue(
-        state.songlist.userQueue.songs,
-        songs,
-      );
+      if (isInUserQueue) {
+        const queue = state.songlist.userQueue.songs;
+        const insertAt = Math.min(1, queue.length);
+        queue.splice(insertAt, 0, ...songs);
+      } else {
+        state.songlist.userQueue.songs = setNextOnUserQueue(
+          state.songlist.userQueue.songs,
+          songs,
+        );
+      }
     });
   }
 
