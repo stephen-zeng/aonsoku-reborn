@@ -45,7 +45,7 @@ function CSSVariableSync() {
 
 export default function BaseLayout() {
   return (
-    <div className="min-h-screen w-screen">
+    <div id="app-shell" className="min-h-screen w-screen">
       <CSSVariableSync />
       <SettingsHotkeyProvider />
       <MemoHeader />
