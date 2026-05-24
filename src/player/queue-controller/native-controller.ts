@@ -444,13 +444,10 @@ export class NativeQueueController implements QueueController {
       });
 
       const nativeSongs = newSongs.map(songToNativeQueueSong);
-      const loopState = state.playerState.loopState;
       this.#plugin
-        .setContextQueue({
+        .updateContextQueue({
           songs: nativeSongs,
           currentIndex: newIndex,
-          autoplay: true,
-          repeatMode: loopStateToNative(loopState),
         })
         .catch((err) =>
           logger.error(

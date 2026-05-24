@@ -15,6 +15,7 @@ import type {
   NativePlayAtIndexOptions,
   NativeRemoveFromUserQueueOptions,
   NativeSetContextQueueOptions,
+  NativeUpdateContextQueueOptions,
 } from "./definitions";
 import { NATIVE_AUDIO_PLUGIN_NAME } from "./definitions";
 
@@ -106,6 +107,14 @@ export class AonsokuNativeAudioWeb
 
   setContextQueue(_options: NativeSetContextQueueOptions): Promise<void> {
     return Promise.reject(createNativeAudioUnavailableError("setContextQueue"));
+  }
+
+  updateContextQueue(
+    _options: NativeUpdateContextQueueOptions,
+  ): Promise<void> {
+    return Promise.reject(
+      createNativeAudioUnavailableError("updateContextQueue"),
+    );
   }
 
   addToUserQueue(_options: NativeAddToUserQueueOptions): Promise<void> {

@@ -145,6 +145,11 @@ export interface NativePlayAtIndexOptions {
   startTime?: number;
 }
 
+export interface NativeUpdateContextQueueOptions {
+  songs: NativeQueueSong[];
+  currentIndex: number;
+}
+
 export interface NativeFullState {
   contextQueue: {
     songs: NativeQueueSong[];
@@ -356,6 +361,7 @@ export interface NativeAudioPlugin extends Plugin {
 
   // Native Queue Control
   setContextQueue(options: NativeSetContextQueueOptions): Promise<void>;
+  updateContextQueue(options: NativeUpdateContextQueueOptions): Promise<void>;
   addToUserQueue(options: NativeAddToUserQueueOptions): Promise<void>;
   removeFromUserQueue(options: NativeRemoveFromUserQueueOptions): Promise<void>;
   clearUserQueue(): Promise<void>;

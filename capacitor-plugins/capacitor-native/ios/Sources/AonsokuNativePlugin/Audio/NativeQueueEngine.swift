@@ -138,6 +138,25 @@ class NativeQueueEngine {
         }
     }
 
+    func updateContextQueue(songs: [QueueSong], currentIndex: Int) {
+        let previousSongId = self.currentSong?.id
+        self.contextSongs = songs
+        self.currentIndex = max(0, min(currentIndex, songs.count - 1))
+        self.originalContextSongs = originalContextSongs.filter { orig in
+            songs.contains { $0.id == orig.id }
+        }
+
+        let newSongId = self.currentSong?.id
+        if previousSongId != newSongId {
+            if let song = self.currentSong {
+                delegate?.queueEngine(self, loadSong: song, autoplay: true, startTime: nil)
+                delegate?.queueEngine(self, didAdvanceTo: self.currentIndex, songId: song.id, reason: .skip)
+            }
+        } else {
+            delegate?.queueEngine(self, didChangeContents: "queue-edit")
+        }
+    }
+
     func addToUserQueue(songs: [QueueSong], position: String) {
         if position == "next" {
             let insertIndex = isInUserQueue ? 1 : 0
