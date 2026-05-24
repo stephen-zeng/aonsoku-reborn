@@ -3,18 +3,6 @@ import { Capacitor } from "@capacitor/core";
 import { useEffect } from "react";
 import { useAppStore } from "@/store/app.store";
 
-const SCROLL_LOCK_CLASS = "keyboard-scroll-lock";
-
-function addScrollLock() {
-  document.documentElement.classList.add(SCROLL_LOCK_CLASS);
-  document.body.classList.add(SCROLL_LOCK_CLASS);
-}
-
-function removeScrollLock() {
-  document.documentElement.classList.remove(SCROLL_LOCK_CLASS);
-  document.body.classList.remove(SCROLL_LOCK_CLASS);
-}
-
 export function KeyboardObserver() {
   const commandOpen = useAppStore((state) => state.command.open);
 
@@ -28,15 +16,31 @@ export function KeyboardObserver() {
     });
 
     if (commandOpen) {
-      removeScrollLock();
       return;
     }
 
-    Keyboard.addListener("keyboardWillShow", addScrollLock);
-    Keyboard.addListener("keyboardDidHide", removeScrollLock);
+    let keyboardVisible = false;
+
+    const onShow = () => {
+      keyboardVisible = true;
+    };
+
+    const onHide = () => {
+      keyboardVisible = false;
+    };
+
+    const onScroll = () => {
+      if (keyboardVisible) {
+        Keyboard.hide();
+      }
+    };
+
+    Keyboard.addListener("keyboardWillShow", onShow);
+    Keyboard.addListener("keyboardDidHide", onHide);
+    document.addEventListener("scroll", onScroll, { capture: true });
 
     return () => {
-      removeScrollLock();
+      document.removeEventListener("scroll", onScroll, { capture: true });
       Keyboard.removeAllListeners();
     };
   }, [commandOpen]);
