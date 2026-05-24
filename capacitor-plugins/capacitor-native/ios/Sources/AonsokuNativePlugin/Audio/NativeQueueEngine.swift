@@ -105,7 +105,6 @@ class NativeQueueEngine {
         if !isInUserQueue && !userQueue.isEmpty { return true }
         if currentIndex < contextSongs.count - 1 { return true }
         if loopState == .all && !contextSongs.isEmpty { return true }
-        if loopState == .one { return true }
         return false
     }
 
