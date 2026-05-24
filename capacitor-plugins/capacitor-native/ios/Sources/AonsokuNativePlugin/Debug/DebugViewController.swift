@@ -5,7 +5,7 @@ import Capacitor
 public final class DebugViewController: UIViewController {
     private let dataProvider: DebugDataProvider
     private var refreshTimer: Timer?
-    private let tableView = UITableView(frame: .zero, style: .insetGrouped)
+    private let tableView = UITableView(frame: .zero, style: .grouped)
 
     private enum Section: Int, CaseIterable {
         case playback
@@ -33,7 +33,7 @@ public final class DebugViewController: UIViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         title = "Debug"
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .systemGroupedBackground
 
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .close, target: self, action: #selector(closeTapped)
@@ -52,12 +52,15 @@ public final class DebugViewController: UIViewController {
         refreshTimer?.invalidate()
         refreshTimer = nil
     }
-
     private func setupTableView() {
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
         tableView.delegate = self
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "kv")
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "log")
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 32
+        tableView.sectionHeaderTopPadding = 4
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -96,7 +99,23 @@ public final class DebugViewController: UIViewController {
         let secs = Int(seconds) % 60
         return String(format: "%d:%02d", mins, secs)
     }
+
+    private func kvCell(_ tableView: UITableView, key: String, value: String, color: UIColor = .label) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "kv")!
+        var config = UIListContentConfiguration.valueCell()
+        config.text = key
+        config.secondaryText = value
+        config.textProperties.font = .monospacedSystemFont(ofSize: 12, weight: .medium)
+        config.textProperties.color = .secondaryLabel
+        config.secondaryTextProperties.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        config.secondaryTextProperties.color = color
+        config.directionalLayoutMargins = .init(top: 6, leading: 16, bottom: 6, trailing: 16)
+        cell.contentConfiguration = config
+        cell.selectionStyle = .none
+        return cell
+    }
 }
+
 // MARK: - UITableViewDataSource
 
 extension DebugViewController: UITableViewDataSource, UITableViewDelegate {
@@ -106,192 +125,167 @@ extension DebugViewController: UITableViewDataSource, UITableViewDelegate {
 
     public func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         switch Section(rawValue: section)! {
-        case .playback: return "Playback"
-        case .buffer: return "Buffer"
-        case .connection: return "Connection"
-        case .audioSession: return "Audio Session"
-        case .logs: return "Logs (\(logEntries.count))"
+        case .playback: return "PLAYBACK"
+        case .buffer: return "BUFFER"
+        case .connection: return "CONNECTION"
+        case .audioSession: return "AUDIO SESSION"
+        case .logs: return "LOGS (\(logEntries.count))"
         }
     }
 
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch Section(rawValue: section)! {
-        case .playback: return 6
-        case .buffer: return 4
-        case .connection: return connectionSnapshot != nil ? 5 : 1
-        case .audioSession: return 6
+        case .playback: return 4
+        case .buffer: return 3
+        case .connection: return connectionSnapshot != nil ? 4 : 1
+        case .audioSession: return 4
         case .logs: return max(logEntries.count, 1)
         }
     }
-
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-        var config = cell.defaultContentConfiguration()
-        config.textProperties.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
-        config.secondaryTextProperties.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
-        config.secondaryTextProperties.color = .secondaryLabel
-
         switch Section(rawValue: indexPath.section)! {
-        case .playback:
-            configurePlaybackCell(&config, row: indexPath.row)
-        case .buffer:
-            configureBufferCell(&config, row: indexPath.row)
-        case .connection:
-            configureConnectionCell(&config, row: indexPath.row)
-        case .audioSession:
-            configureAudioSessionCell(&config, row: indexPath.row)
-        case .logs:
-            configureLogCell(&config, row: indexPath.row)
+        case .playback: return playbackCell(tableView, row: indexPath.row)
+        case .buffer: return bufferCell(tableView, row: indexPath.row)
+        case .connection: return connectionCell(tableView, row: indexPath.row)
+        case .audioSession: return audioSessionCell(tableView, row: indexPath.row)
+        case .logs: return logCell(tableView, row: indexPath.row)
         }
+    }
+
+    // MARK: - Playback
+
+    private func playbackCell(_ tableView: UITableView, row: Int) -> UITableViewCell {
+        let snap = audioSnapshot
+        switch row {
+        case 0:
+            let title = snap?.title ?? "(none)"
+            let artist = snap?.artist ?? ""
+            let display = artist.isEmpty ? title : "\(title) — \(artist)"
+            return kvCell(tableView, key: "Track", value: display)
+        case 1:
+            return kvCell(tableView, key: "Album", value: snap?.album ?? "(none)")
+        case 2:
+            let state = snap?.isPlaying == true ? "▶ playing" : "⏸ paused"
+            let cur = formatTime(snap?.currentTime ?? 0)
+            let dur = formatTime(snap?.duration ?? 0)
+            return kvCell(tableView, key: state, value: "\(cur) / \(dur)")
+        case 3:
+            let kind = snap?.sourceKind ?? "none"
+            let idx = "\(snap?.queueIndex ?? 0)/\(snap?.queueItemCount ?? 0)"
+            let r = snap?.repeatMode ?? "off"
+            let s = snap?.shuffleEnabled == true ? "on" : "off"
+            return kvCell(tableView, key: "Source", value: "\(kind) [\(idx)] r:\(r) s:\(s)")
+        default:
+            return kvCell(tableView, key: "", value: "")
+        }
+    }
+
+    // MARK: - Buffer
+
+    private func bufferCell(_ tableView: UITableView, row: Int) -> UITableViewCell {
+        let snap = audioSnapshot
+        switch row {
+        case 0:
+            let empty = snap?.bufferEmpty == true
+            let keepUp = snap?.likelyToKeepUp == true
+            let status = empty ? "EMPTY" : (keepUp ? "OK" : "LOW")
+            let color: UIColor = empty ? .systemRed : (keepUp ? .systemGreen : .systemOrange)
+            return kvCell(tableView, key: "Status", value: status, color: color)
+        case 1:
+            return kvCell(tableView, key: "Buffered", value: formatTime(snap?.bufferedTime ?? 0))
+        case 2:
+            let state = snap?.recoveryState ?? "idle"
+            let color: UIColor = state == "idle" ? .label : .systemOrange
+            return kvCell(tableView, key: "Recovery", value: state, color: color)
+        default:
+            return kvCell(tableView, key: "", value: "")
+        }
+    }
+
+    // MARK: - Connection
+
+    private func connectionCell(_ tableView: UITableView, row: Int) -> UITableViewCell {
+        guard let snap = connectionSnapshot else {
+            return kvCell(tableView, key: "Status", value: "no credentials", color: .secondaryLabel)
+        }
+        switch row {
+        case 0: return kvCell(tableView, key: "Server", value: snap.serverUrl)
+        case 1: return kvCell(tableView, key: "User", value: snap.username)
+        case 2: return kvCell(tableView, key: "Auth", value: "\(snap.authType) · \(snap.protocolVersion)")
+        case 3: return kvCell(tableView, key: "Type", value: "\(snap.serverType)\(snap.hasFallbackUrl ? " +fallback" : "")")
+        default: return kvCell(tableView, key: "", value: "")
+        }
+    }
+
+    // MARK: - Audio Session
+
+    private func audioSessionCell(_ tableView: UITableView, row: Int) -> UITableViewCell {
+        let snap = sessionSnapshot ?? dataProvider.audioSessionSnapshot()
+        switch row {
+        case 0: return kvCell(tableView, key: "Category", value: "\(snap.category) / \(snap.mode)")
+        case 1:
+            let vol = String(format: "%.0f%%", snap.outputVolume * 100)
+            let rate = String(format: "%.0fHz", snap.sampleRate)
+            return kvCell(tableView, key: "Output", value: "\(vol) · \(rate)")
+        case 2:
+            let latency = String(format: "%.1fms", snap.outputLatency * 1000)
+            let buf = String(format: "%.1fms", snap.ioBufferDuration * 1000)
+            return kvCell(tableView, key: "Latency", value: "\(latency) buf:\(buf)")
+        case 3: return kvCell(tableView, key: "Memory", value: String(format: "%.1f MB", memoryMB))
+        default: return kvCell(tableView, key: "", value: "")
+        }
+    }
+
+    // MARK: - Logs
+
+    private func logCell(_ tableView: UITableView, row: Int) -> UITableViewCell {
+        guard !logEntries.isEmpty else {
+            return kvCell(tableView, key: "", value: "no entries", color: .secondaryLabel)
+        }
+        let entry = logEntries[row]
+        let cell = tableView.dequeueReusableCell(withIdentifier: "log")!
+        var config = UIListContentConfiguration.subtitleCell()
+        let time = Self.timeFormatter.string(from: entry.timestamp)
+        let src = entry.source.isEmpty ? "" : "[\(entry.source)] "
+        config.text = "\(time) \(entry.level.rawValue.uppercased()) \(src)"
+        config.textProperties.font = .monospacedSystemFont(ofSize: 10, weight: .medium)
+        config.secondaryText = entry.message
+        config.secondaryTextProperties.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        config.secondaryTextProperties.numberOfLines = 2
+        config.directionalLayoutMargins = .init(top: 4, leading: 16, bottom: 4, trailing: 16)
+
+        switch entry.level {
+        case .error: config.textProperties.color = .systemRed
+        case .warn: config.textProperties.color = .systemOrange
+        case .debug: config.textProperties.color = .tertiaryLabel
+        case .info: config.textProperties.color = .secondaryLabel
+        }
+        config.secondaryTextProperties.color = .label
 
         cell.contentConfiguration = config
         cell.selectionStyle = .none
         return cell
     }
-    private func configurePlaybackCell(_ config: inout UIListContentConfiguration, row: Int) {
-        let snap = audioSnapshot
-        switch row {
-        case 0:
-            config.text = "Title"
-            config.secondaryText = snap?.title ?? "(none)"
-        case 1:
-            config.text = "Artist"
-            config.secondaryText = snap?.artist ?? "(none)"
-        case 2:
-            config.text = "Album"
-            config.secondaryText = snap?.album ?? "(none)"
-        case 3:
-            config.text = "State"
-            let state = snap?.isPlaying == true ? "playing" : "paused"
-            config.secondaryText = state
-        case 4:
-            config.text = "Progress"
-            let cur = formatTime(snap?.currentTime ?? 0)
-            let dur = formatTime(snap?.duration ?? 0)
-            config.secondaryText = "\(cur) / \(dur)"
-        case 5:
-            config.text = "Source"
-            let kind = snap?.sourceKind ?? "none"
-            let queue = "[\(snap?.queueIndex ?? 0)/\(snap?.queueItemCount ?? 0)]"
-            config.secondaryText = "\(kind) \(queue) repeat=\(snap?.repeatMode ?? "off") shuffle=\(snap?.shuffleEnabled == true ? "on" : "off")"
-        default: break
-        }
-    }
-
-    private func configureBufferCell(_ config: inout UIListContentConfiguration, row: Int) {
-        let snap = audioSnapshot
-        switch row {
-        case 0:
-            config.text = "Buffer Empty"
-            config.secondaryText = snap?.bufferEmpty == true ? "YES" : "NO"
-            config.textProperties.color = snap?.bufferEmpty == true ? .systemRed : .label
-        case 1:
-            config.text = "Likely To Keep Up"
-            config.secondaryText = snap?.likelyToKeepUp == true ? "YES" : "NO"
-            config.textProperties.color = snap?.likelyToKeepUp == true ? .label : .systemOrange
-        case 2:
-            config.text = "Buffered Time"
-            config.secondaryText = formatTime(snap?.bufferedTime ?? 0)
-        case 3:
-            config.text = "Recovery"
-            config.secondaryText = snap?.recoveryState ?? "idle"
-            if snap?.recoveryState != "idle" {
-                config.textProperties.color = .systemOrange
-            }
-        default: break
-        }
-    }
-    private func configureConnectionCell(_ config: inout UIListContentConfiguration, row: Int) {
-        guard let snap = connectionSnapshot else {
-            config.text = "No credentials stored"
-            config.textProperties.color = .secondaryLabel
-            return
-        }
-        switch row {
-        case 0:
-            config.text = "Server"
-            config.secondaryText = snap.serverUrl
-        case 1:
-            config.text = "User"
-            config.secondaryText = snap.username
-        case 2:
-            config.text = "Auth"
-            config.secondaryText = snap.authType
-        case 3:
-            config.text = "Protocol"
-            config.secondaryText = "\(snap.protocolVersion) (\(snap.serverType))"
-        case 4:
-            config.text = "Fallback URL"
-            config.secondaryText = snap.hasFallbackUrl ? "configured" : "none"
-        default: break
-        }
-    }
-
-    private func configureAudioSessionCell(_ config: inout UIListContentConfiguration, row: Int) {
-        let snap = sessionSnapshot ?? dataProvider.audioSessionSnapshot()
-        switch row {
-        case 0:
-            config.text = "Category"
-            config.secondaryText = snap.category
-        case 1:
-            config.text = "Mode"
-            config.secondaryText = snap.mode
-        case 2:
-            config.text = "Output Volume"
-            config.secondaryText = String(format: "%.0f%%", snap.outputVolume * 100)
-        case 3:
-            config.text = "Sample Rate"
-            config.secondaryText = String(format: "%.0f Hz", snap.sampleRate)
-        case 4:
-            config.text = "Output Latency"
-            config.secondaryText = String(format: "%.1f ms", snap.outputLatency * 1000)
-        case 5:
-            config.text = "Memory"
-            config.secondaryText = String(format: "%.1f MB", memoryMB)
-        default: break
-        }
-    }
-
-    private func configureLogCell(_ config: inout UIListContentConfiguration, row: Int) {
-        guard !logEntries.isEmpty else {
-            config.text = "No log entries"
-            config.textProperties.color = .secondaryLabel
-            return
-        }
-        let entry = logEntries[row]
-        let formatter = Self.timeFormatter
-        let time = formatter.string(from: entry.timestamp)
-        let src = entry.source.isEmpty ? "" : "[\(entry.source)] "
-        config.text = "\(time) \(entry.level.rawValue.uppercased())"
-        config.secondaryText = "\(src)\(entry.message)"
-        config.secondaryTextProperties.numberOfLines = 3
-
-        switch entry.level {
-        case .error: config.textProperties.color = .systemRed
-        case .warn: config.textProperties.color = .systemOrange
-        case .debug: config.textProperties.color = .secondaryLabel
-        case .info: config.textProperties.color = .label
-        }
-    }
 
     private static let timeFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.dateFormat = "HH:mm:ss.SSS"
+        f.dateFormat = "HH:mm:ss"
         return f
     }()
 
     public func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
         guard Section(rawValue: section) == .logs, !logEntries.isEmpty else { return nil }
         let button = UIButton(type: .system)
-        button.setTitle("Clear Logs", for: .normal)
+        button.setTitle("Clear", for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 13)
         button.addTarget(self, action: #selector(clearLogsTapped), for: .touchUpInside)
         let container = UIView()
         button.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(button)
         NSLayoutConstraint.activate([
             button.centerXAnchor.constraint(equalTo: container.centerXAnchor),
-            button.topAnchor.constraint(equalTo: container.topAnchor, constant: 8),
-            button.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -8),
+            button.topAnchor.constraint(equalTo: container.topAnchor, constant: 4),
+            button.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -4),
         ])
         return container
     }
