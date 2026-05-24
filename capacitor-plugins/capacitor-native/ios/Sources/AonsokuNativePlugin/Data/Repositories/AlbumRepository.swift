@@ -8,8 +8,9 @@ struct AlbumRepository {
         try db.read { db in
             var query = AlbumRecord.all()
 
-            if let search = filter.search, !search.isEmpty {
-                query = query.filter(Column("name").like("%\(search)%"))
+            if let search = filter.search, !search.isEmpty,
+               let condition = SearchHelper.buildCondition(query: search, columns: ["name", "artist"]) {
+                query = query.filter(condition)
             }
             if let artistId = filter.artistId {
                 query = query.filter(Column("artistId") == artistId)

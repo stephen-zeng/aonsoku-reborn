@@ -333,8 +333,10 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
         let albumCount = call.getInt("albumCount") ?? 20
         let songCount = call.getInt("songCount") ?? 20
 
-        let tokens = Self.tokenizeQuery(query)
-        guard !tokens.isEmpty else {
+        guard let artistCondition = SearchHelper.buildCondition(query: query, columns: ["name"]),
+              let albumCondition = SearchHelper.buildCondition(query: query, columns: ["name", "artist"]),
+              let songCondition = SearchHelper.buildCondition(query: query, columns: ["title", "artist", "album"])
+        else {
             call.resolve(["artists": [], "albums": [], "songs": []])
             return
         }
@@ -342,33 +344,24 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
         dataQueue.async {
             do {
                 let artists: [[String: Any]] = try self.dbManager.dbPool.read { db in
-                    let condition = Self.buildTokenCondition(
-                        tokens: tokens, columns: ["name"]
-                    )
-                    return try ArtistRecord
-                        .filter(condition)
+                    try ArtistRecord
+                        .filter(artistCondition)
                         .limit(artistCount)
                         .fetchAll(db)
                         .map { $0.toDictionary().compactMapValues { $0 } }
                 }
 
                 let albums: [[String: Any]] = try self.dbManager.dbPool.read { db in
-                    let condition = Self.buildTokenCondition(
-                        tokens: tokens, columns: ["name", "artist"]
-                    )
-                    return try AlbumRecord
-                        .filter(condition)
+                    try AlbumRecord
+                        .filter(albumCondition)
                         .limit(albumCount)
                         .fetchAll(db)
                         .map { $0.toDictionary().compactMapValues { $0 } }
                 }
 
                 let songs: [[String: Any]] = try self.dbManager.dbPool.read { db in
-                    let condition = Self.buildTokenCondition(
-                        tokens: tokens, columns: ["title", "artist", "album"]
-                    )
-                    return try SongRecord
-                        .filter(condition)
+                    try SongRecord
+                        .filter(songCondition)
                         .limit(songCount)
                         .fetchAll(db)
                         .map { $0.toDictionary().compactMapValues { $0 } }
@@ -383,49 +376,6 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
                 call.reject("Failed to search: \(error.localizedDescription)")
             }
         }
-    }
-
-    private static func tokenizeQuery(_ query: String) -> [String] {
-        query.folding(
-            options: [.diacriticInsensitive, .caseInsensitive, .widthInsensitive],
-            locale: nil
-        )
-        .split(whereSeparator: \.isWhitespace)
-        .map(String.init)
-        .filter { !$0.isEmpty }
-    }
-
-    private static func buildTokenCondition(
-        tokens: [String], columns: [String]
-    ) -> SQLExpression {
-        let normalize = DatabaseManager.normalizeFunction
-
-        var allTokenConditions: SQLExpression?
-
-        for token in tokens {
-            let pattern = "%\(token)%"
-            var columnConditions: SQLExpression?
-
-            for colName in columns {
-                let col = Column(colName)
-                let condition = normalize(col).like(pattern)
-                if let existing = columnConditions {
-                    columnConditions = existing || condition
-                } else {
-                    columnConditions = condition
-                }
-            }
-
-            if let tokenCondition = columnConditions {
-                if let existing = allTokenConditions {
-                    allTokenConditions = existing && tokenCondition
-                } else {
-                    allTokenConditions = tokenCondition
-                }
-            }
-        }
-
-        return allTokenConditions ?? DatabaseValue.null.sqlExpression
     }
 
     @objc func getLyrics(_ call: CAPPluginCall) {

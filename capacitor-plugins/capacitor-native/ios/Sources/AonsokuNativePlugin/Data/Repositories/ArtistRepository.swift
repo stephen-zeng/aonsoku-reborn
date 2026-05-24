@@ -8,8 +8,9 @@ struct ArtistRepository {
         try db.read { db in
             var query = ArtistRecord.all()
 
-            if let search = filter.search, !search.isEmpty {
-                query = query.filter(Column("name").like("%\(search)%"))
+            if let search = filter.search, !search.isEmpty,
+               let condition = SearchHelper.buildCondition(query: search, columns: ["name"]) {
+                query = query.filter(condition)
             }
             if filter.starredOnly == true {
                 query = query.filter(Column("starredAt") != nil)
