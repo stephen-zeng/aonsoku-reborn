@@ -1,10 +1,14 @@
-import { HeaderWithImageEffect } from "@/app/components/fallbacks/album-fallbacks";
+import {
+  HeaderWithImageEffect,
+  MobileSongListFallback,
+} from "@/app/components/fallbacks/album-fallbacks";
 import { TableFallback } from "@/app/components/fallbacks/table-fallbacks";
 import {
   AddButtonSkeleton,
   ButtonsBarFallback,
   ShadowHeaderFallback,
 } from "@/app/components/fallbacks/ui-fallbacks";
+import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import ListWrapper from "@/app/components/list-wrapper";
 import { Skeleton } from "@/app/components/ui/skeleton";
 import { useIsMobile } from "@/app/hooks/use-mobile";
@@ -126,15 +130,21 @@ function FavoritesButtonsFallback() {
 export function FavoritesFallback() {
   return (
     <div className="w-full bg-background min-h-content">
+      <MobilePageHeader variant="sub" title="" showSpacer={false} />
       <HeaderWithImageEffect />
 
       <ListWrapper>
         <FavoritesButtonsFallback />
-        <TableFallback
-          variant="modern"
-          length={20}
-          columnIds={songCollectionColumnIds}
-        />
+        <div className="md:hidden">
+          <MobileSongListFallback />
+        </div>
+        <div className="hidden md:block">
+          <TableFallback
+            variant="modern"
+            length={20}
+            columnIds={songCollectionColumnIds}
+          />
+        </div>
       </ListWrapper>
     </div>
   );
