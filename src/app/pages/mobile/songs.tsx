@@ -138,13 +138,15 @@ export default function MobileSongsList() {
 
   const songlist = data?.pages.flatMap((page) => page.songs) ?? [];
 
-  if (isLoading && songlist.length === 0) return <MobileSongsFallback />;
-
   const title = filterByArtist
     ? t("songs.list.byArtist", { artist: artistName })
     : t("sidebar.songs");
 
   const hasSearchFilter = filter === AlbumsFilters.Search && query !== "";
+
+  if (isLoading && songlist.length === 0 && !hasSearchFilter) {
+    return <MobileSongsFallback />;
+  }
 
   if (songlist.length === 0 && !hasSearchFilter) {
     return (

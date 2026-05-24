@@ -65,7 +65,9 @@ export default function MobileAlbumsList() {
   const hasSearchFilter =
     currentFilter === AlbumsFilters.Search && query !== "";
 
-  if (isLoading && albums.length === 0) return <MobileAlbumsFallback />;
+  if (isLoading && albums.length === 0 && !hasSearchFilter) {
+    return <MobileAlbumsFallback />;
+  }
   if (isEmpty && !hasSearchFilter) {
     return (
       <MobileEmptyState
