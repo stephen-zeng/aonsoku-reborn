@@ -2536,9 +2536,8 @@ extension AonsokuNativeAudioPlugin: PlaybackRecoveryDelegate {
             ])
         }
 
-        sourceResolver.invalidateCredentialsCache()
-
         loadQueue.async { [self] in
+            self.sourceResolver.invalidateCredentialsCache()
             guard let resolved = self.sourceResolver.resolveSource(for: song) else {
                 DispatchQueue.main.async {
                     controller.reloadDidComplete(success: false, generation: generation)
