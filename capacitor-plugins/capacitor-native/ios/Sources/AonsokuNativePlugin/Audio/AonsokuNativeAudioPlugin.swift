@@ -193,6 +193,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 } else {
                     player.play()
                 }
+                self.recoveryController.startProgressMonitoring(
+                    generation: self.playbackGeneration,
+                    sourceKind: self.recoverySourceKind()
+                )
                 call.resolve()
             } catch {
                 self.reject(call, error: error)
@@ -528,6 +532,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     func debugPlayPause() {
         if player?.timeControlStatus == .playing {
+            recoveryController.reportUserPause()
             player?.pause()
             emitPlaybackState("paused")
         } else {
@@ -1240,6 +1245,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                     } else {
                         self.player?.play()
                     }
+                    self.recoveryController.startProgressMonitoring(
+                        generation: self.playbackGeneration,
+                        sourceKind: self.recoverySourceKind()
+                    )
                 } else {
                     self.emitRemoteCommand("play")
                 }
@@ -1253,6 +1262,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             commandCenter.pauseCommand.addTarget { [weak self] _ in
                 guard let self = self else { return .commandFailed }
                 if self.isQueueEngineActive {
+                    self.recoveryController.reportUserPause()
                     self.player?.pause()
                 } else {
                     self.emitRemoteCommand("pause")
@@ -1268,6 +1278,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 guard let self = self else { return .commandFailed }
                 if self.isQueueEngineActive {
                     if self.player?.timeControlStatus == .playing {
+                        self.recoveryController.reportUserPause()
                         self.player?.pause()
                     } else {
                         try? self.activateAudioSession()
@@ -1276,6 +1287,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                         } else {
                             self.player?.play()
                         }
+                        self.recoveryController.startProgressMonitoring(
+                            generation: self.playbackGeneration,
+                            sourceKind: self.recoverySourceKind()
+                        )
                     }
                 } else {
                     self.emitRemoteCommand("togglePlayPause")
@@ -1362,6 +1377,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         switch type {
         case .began:
             wasPlayingBeforeInterruption = player?.timeControlStatus == .playing
+            recoveryController.stopProgressMonitoring()
             player?.pause()
             if isInForeground {
                 notifyListeners("interruptionChanged", data: eventData(["type": "began"]))
@@ -1384,6 +1400,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 do {
                     try activateAudioSession()
                     player.play()
+                    recoveryController.startProgressMonitoring(
+                        generation: playbackGeneration,
+                        sourceKind: recoverySourceKind()
+                    )
                 } catch {
                     emitError(code: "audio_session_failed", message: error.localizedDescription)
                     if isInForeground { emitCurrentPlaybackState() }

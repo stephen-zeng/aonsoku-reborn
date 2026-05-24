@@ -110,6 +110,7 @@ class PlaybackRecoveryController {
     }
 
     func reportUserPause() {
+        stopProgressMonitoring()
         guard state != .idle else { return }
         reset()
     }
