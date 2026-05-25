@@ -2676,7 +2676,6 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             return item
         }
 
-        streamingLoader = nil
         let item = AVPlayerItem(url: url)
         item.preferredForwardBufferDuration = forwardBufferDuration(for: kind)
         return item
