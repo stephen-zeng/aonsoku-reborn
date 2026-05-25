@@ -87,6 +87,8 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private let scrobbleBuffer = NativeScrobbleBuffer()
     private let scrobbleSubmitter = NativeScrobbleSubmitter()
     private let downloadManager = NativeDownloadManager()
+    private var streamingLoader: StreamingResourceLoader?
+    private let loaderQueue = DispatchQueue(label: "com.aonsoku.NativeAudio.loader", qos: .userInitiated)
     private var isQueueEngineActive = false
     private var volumeSliderView: MPVolumeView?
     private var volumeSlider: UISlider?
@@ -155,8 +157,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                     self.playbackGeneration += 1
                     let generation = self.playbackGeneration
 
-                    let item = AVPlayerItem(url: resolvedSource.url)
-                    item.preferredForwardBufferDuration = self.forwardBufferDuration(for: resolvedSource.kind)
+                    let item = self.makePlayerItem(url: resolvedSource.url, kind: resolvedSource.kind, songId: resolvedSource.songId)
                     let player = AVPlayer(playerItem: item)
                     self.player = player
                     self.playerItem = item
@@ -1705,12 +1706,13 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         switch kind {
         case "stream":
             let url = try resolveStreamURL(from: source)
-            return ResolvedAudioSource(kind: kind, url: url, radioId: nil)
+            let songId = source["songId"] as? String
+            return ResolvedAudioSource(kind: kind, url: url, radioId: nil, songId: songId)
         case "radio":
             guard let urlString = source["url"] as? String, let url = URL(string: urlString) else {
                 throw NativeAudioPluginError.invalidSource("Invalid radio stream URL.")
             }
-            return ResolvedAudioSource(kind: kind, url: url, radioId: source["radioId"] as? String)
+            return ResolvedAudioSource(kind: kind, url: url, radioId: source["radioId"] as? String, songId: nil)
         case "blob":
             throw NativeAudioPluginError.unsupportedSource("Blob URLs are not supported by native iOS playback yet.")
         case "native-file":
@@ -1721,7 +1723,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             guard FileManager.default.fileExists(atPath: url.path) else {
                 throw NativeAudioPluginError.invalidSource("Native cached audio file does not exist.")
             }
-            return ResolvedAudioSource(kind: kind, url: url, radioId: nil)
+            return ResolvedAudioSource(kind: kind, url: url, radioId: nil, songId: source["songId"] as? String)
         default:
             throw NativeAudioPluginError.unsupportedSource("Unsupported audio source kind: \(kind).")
         }
@@ -2199,6 +2201,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         lastEmittedPlaybackState = nil
         isSeeking = false
 
+        streamingLoader?.cancel()
+        streamingLoader?.cleanupTempFile()
+        streamingLoader = nil
+
         if let token = timeObserverToken {
             player?.removeTimeObserver(token)
             timeObserverToken = nil
@@ -2657,6 +2663,25 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
+    private func makePlayerItem(url: URL, kind: String?, songId: String?) -> AVPlayerItem {
+        if kind == "stream", let songId, let loaderURL = StreamingResourceLoader.loaderURL(for: url) {
+            let loader = StreamingResourceLoader(songId: songId, originalURL: url)
+            loader.delegate = self
+            streamingLoader = loader
+
+            let asset = AVURLAsset(url: loaderURL)
+            asset.resourceLoader.setDelegate(loader, queue: loaderQueue)
+            let item = AVPlayerItem(asset: asset)
+            item.preferredForwardBufferDuration = forwardBufferDuration(for: kind)
+            return item
+        }
+
+        streamingLoader = nil
+        let item = AVPlayerItem(url: url)
+        item.preferredForwardBufferDuration = forwardBufferDuration(for: kind)
+        return item
+    }
+
     private func makeTime(_ seconds: Double) -> CMTime {
         CMTime(seconds: seconds, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
     }
@@ -2730,6 +2755,7 @@ private struct ResolvedAudioSource {
     let kind: String
     let url: URL
     let radioId: String?
+    let songId: String?
 }
 
 private struct NativeMediaStreamRequest {
@@ -2840,8 +2866,7 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
                 self.clearPlayer(sendIdleEvent: false)
                 self.playbackGeneration = generation
 
-                let item = AVPlayerItem(url: resolved.url)
-                item.preferredForwardBufferDuration = self.forwardBufferDuration(for: resolved.kind)
+                let item = self.makePlayerItem(url: resolved.url, kind: resolved.kind, songId: song.id)
                 let player = AVPlayer(playerItem: item)
                 self.player = player
                 self.playerItem = item
@@ -3038,8 +3063,11 @@ extension AonsokuNativeAudioPlugin: PlaybackRecoveryDelegate {
         removeItemObservers()
         isRecoveryReload = true
 
-        let item = AVPlayerItem(url: url)
-        item.preferredForwardBufferDuration = forwardBufferDuration(for: kind)
+        streamingLoader?.cancel()
+        streamingLoader?.cleanupTempFile()
+
+        let songId = isQueueEngineActive ? queueEngine.currentSong?.id : nil
+        let item = makePlayerItem(url: url, kind: kind, songId: songId)
         player?.replaceCurrentItem(with: item)
         playerItem = item
         currentSourceKind = kind
