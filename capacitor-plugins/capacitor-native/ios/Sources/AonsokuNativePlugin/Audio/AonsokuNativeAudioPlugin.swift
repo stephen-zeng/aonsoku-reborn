@@ -87,6 +87,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private let scrobbleBuffer = NativeScrobbleBuffer()
     private let scrobbleSubmitter = NativeScrobbleSubmitter()
     private let downloadManager = NativeDownloadManager()
+    private var backgroundCacheSongIds = Set<String>()
     private var streamingLoader: StreamingResourceLoader?
     private let loaderQueue = DispatchQueue(label: "com.aonsoku.NativeAudio.loader", qos: .userInitiated)
     private var isQueueEngineActive = false
@@ -2677,22 +2678,43 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func makePlayerItem(url: URL, kind: String?, songId: String?) -> AVPlayerItem {
-        if kind == "stream", let songId, let loaderURL = StreamingResourceLoader.loaderURL(for: url) {
-            NativeLogger.shared.info("StreamingResourceLoader: creating loader for \(songId), loaderURL=\(loaderURL.absoluteString.prefix(80))", source: "Audio")
-            let loader = StreamingResourceLoader(songId: songId, originalURL: url)
-            loader.delegate = self
-            streamingLoader = loader
-
-            let asset = AVURLAsset(url: loaderURL)
-            asset.resourceLoader.setDelegate(loader, queue: loaderQueue)
-            let item = AVPlayerItem(asset: asset)
-            item.preferredForwardBufferDuration = forwardBufferDuration(for: kind)
-            return item
+        // Play directly from URL (reliable), cache in background
+        if kind == "stream", let songId {
+            startBackgroundCache(songId: songId)
         }
 
         let item = AVPlayerItem(url: url)
         item.preferredForwardBufferDuration = forwardBufferDuration(for: kind)
         return item
+    }
+
+    private func startBackgroundCache(songId: String) {
+        let cacheId = AudioCacheUtils.cacheId(for: songId)
+        let extensions = ["mp3", "flac", "m4a", "aac", "ogg", "opus", "wav", "audio"]
+
+        for directory in sourceResolver.cacheDirectories {
+            guard FileManager.default.fileExists(atPath: directory.path) else { continue }
+            for ext in extensions {
+                let fileUrl = directory.appendingPathComponent("\(cacheId).\(ext)")
+                if FileManager.default.fileExists(atPath: fileUrl.path) {
+                    return
+                }
+            }
+        }
+
+        // Also check the primary cache directory (Application Support)
+        if let primaryDir = try? cacheDirectoryURL(createIfNeeded: false),
+           FileManager.default.fileExists(atPath: primaryDir.path) {
+            for ext in extensions {
+                let fileUrl = primaryDir.appendingPathComponent("\(cacheId).\(ext)")
+                if FileManager.default.fileExists(atPath: fileUrl.path) {
+                    return
+                }
+            }
+        }
+
+        backgroundCacheSongIds.insert(songId)
+        downloadManager.download(songId: songId)
     }
 
     private func makeTime(_ seconds: Double) -> CMTime {
@@ -2987,6 +3009,7 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
 
 extension AonsokuNativeAudioPlugin: NativeDownloadManagerDelegate {
     func downloadManager(_ manager: NativeDownloadManager, didProgress songId: String, loaded: Int64, total: Int64) {
+        if backgroundCacheSongIds.contains(songId) { return }
         notifyListeners("downloadProgress", data: [
             "songId": songId,
             "loaded": NSNumber(value: loaded),
@@ -2995,6 +3018,15 @@ extension AonsokuNativeAudioPlugin: NativeDownloadManagerDelegate {
     }
 
     func downloadManager(_ manager: NativeDownloadManager, didComplete songId: String, fileUrl: URL, contentType: String, sizeBytes: Int64) {
+        if backgroundCacheSongIds.remove(songId) != nil {
+            notifyListeners("streamCacheCompleted", data: [
+                "songId": songId,
+                "uri": fileUrl.absoluteString,
+                "contentType": contentType,
+                "sizeBytes": NSNumber(value: sizeBytes),
+            ])
+            return
+        }
         notifyListeners("downloadCompleted", data: [
             "songId": songId,
             "uri": fileUrl.absoluteString,
@@ -3004,6 +3036,10 @@ extension AonsokuNativeAudioPlugin: NativeDownloadManagerDelegate {
     }
 
     func downloadManager(_ manager: NativeDownloadManager, didFail songId: String, error: Error) {
+        if backgroundCacheSongIds.remove(songId) != nil {
+            NativeLogger.shared.warn("background cache failed for \(songId): \(error.localizedDescription)", source: "Audio")
+            return
+        }
         notifyListeners("downloadFailed", data: [
             "songId": songId,
             "error": error.localizedDescription,

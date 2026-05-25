@@ -1,7 +1,7 @@
 import Foundation
 
 class NativeSourceResolver {
-    private let cacheDirectories: [URL]
+    let cacheDirectories: [URL]
     private var cachedCredentials: ServerCredentials?
     private var credentialsCacheTime: Date?
     private let credentialsTTL: TimeInterval = 30
