@@ -38,20 +38,34 @@ final class StreamingResourceLoader: NSObject, AVAssetResourceLoaderDelegate {
     // MARK: - Public
 
     static func loaderURL(for originalURL: URL) -> URL? {
-        guard let encoded = originalURL.absoluteString.data(using: .utf8)?.base64EncodedString() else {
+        guard let encoded = originalURL.absoluteString.data(using: .utf8)?
+            .base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "") else {
             return nil
         }
         var components = URLComponents()
         components.scheme = scheme
         components.host = "stream"
-        components.queryItems = [URLQueryItem(name: "u", value: encoded)]
+        components.path = "/\(encoded)"
         return components.url
     }
 
     static func originalURL(from loaderURL: URL) -> URL? {
-        guard let components = URLComponents(url: loaderURL, resolvingAgainstBaseURL: false),
-              let encoded = components.queryItems?.first(where: { $0.name == "u" })?.value,
-              let data = Data(base64Encoded: encoded),
+        guard let components = URLComponents(url: loaderURL, resolvingAgainstBaseURL: false) else {
+            return nil
+        }
+        var encoded = String(components.path.dropFirst()) // remove leading "/"
+        encoded = encoded
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        // Re-add padding
+        let remainder = encoded.count % 4
+        if remainder > 0 {
+            encoded += String(repeating: "=", count: 4 - remainder)
+        }
+        guard let data = Data(base64Encoded: encoded),
               let urlString = String(data: data, encoding: .utf8) else {
             return nil
         }
@@ -118,25 +132,27 @@ final class StreamingResourceLoader: NSObject, AVAssetResourceLoaderDelegate {
         }
 
         guard let dataRequest = loadingRequest.dataRequest else {
-            startDataTask(for: loadingRequest, offset: 0, length: nil)
+            startDataTask(for: loadingRequest, offset: 0, requestsToEnd: true)
             return
         }
 
         let offset = Int64(dataRequest.requestedOffset)
-        let length = Int64(dataRequest.requestedLength)
-        startDataTask(for: loadingRequest, offset: offset, length: length)
+        let requestsToEnd = dataRequest.requestsAllDataToEndOfResource
+        let length: Int64? = requestsToEnd ? nil : Int64(dataRequest.requestedLength)
+        startDataTask(for: loadingRequest, offset: offset, requestsToEnd: requestsToEnd, length: length)
     }
 
-    private func startDataTask(for loadingRequest: AVAssetResourceLoadingRequest, offset: Int64, length: Int64?) {
+    private func startDataTask(for loadingRequest: AVAssetResourceLoadingRequest, offset: Int64, requestsToEnd: Bool, length: Int64? = nil) {
         var request = URLRequest(url: originalURL)
         request.cachePolicy = .reloadIgnoringLocalCacheData
 
-        if let length, offset > 0 || length < Int64.max {
+        if offset > 0 && requestsToEnd {
+            request.setValue("bytes=\(offset)-", forHTTPHeaderField: "Range")
+        } else if offset > 0, let length {
             let end = offset + length - 1
             request.setValue("bytes=\(offset)-\(end)", forHTTPHeaderField: "Range")
-        } else if offset > 0 {
-            request.setValue("bytes=\(offset)-", forHTTPHeaderField: "Range")
         }
+        // offset == 0 with requestsToEnd: no Range header (full file request)
 
         let requestId = nextRequestId
         nextRequestId += 1
@@ -179,7 +195,8 @@ final class StreamingResourceLoader: NSObject, AVAssetResourceLoaderDelegate {
     }
 
     private func fillContentInfo(_ request: AVAssetResourceLoadingContentInformationRequest, contentType: String, contentLength: Int64) {
-        request.contentType = contentTypeToUTType(contentType)
+        let uti = contentTypeToUTType(contentType)
+        request.contentType = uti
         request.contentLength = contentLength
         request.isByteRangeAccessSupported = true
     }
@@ -193,12 +210,32 @@ final class StreamingResourceLoader: NSObject, AVAssetResourceLoaderDelegate {
             return "org.xiph.flac"
         case "audio/mp4", "audio/m4a", "audio/x-m4a", "audio/aac":
             return "public.mpeg-4-audio"
-        case "audio/ogg", "application/ogg":
+        case "audio/ogg", "application/ogg", "audio/opus":
             return "org.xiph.ogg"
         case "audio/wav", "audio/x-wav":
             return "com.microsoft.waveform-audio"
+        case "application/octet-stream", "":
+            return inferUTTypeFromURL()
         default:
             return "public.audio"
+        }
+    }
+
+    private func inferUTTypeFromURL() -> String {
+        let ext = originalURL.pathExtension.lowercased()
+        switch ext {
+        case "mp3":
+            return "public.mp3"
+        case "flac":
+            return "org.xiph.flac"
+        case "m4a", "aac", "mp4":
+            return "public.mpeg-4-audio"
+        case "ogg", "opus":
+            return "org.xiph.ogg"
+        case "wav":
+            return "com.microsoft.waveform-audio"
+        default:
+            return "public.mp3"
         }
     }
 
@@ -227,7 +264,8 @@ extension StreamingResourceLoader: URLSessionDataDelegate {
             }
 
             let statusCode = httpResponse.statusCode
-            guard statusCode >= 200, statusCode < 300 || statusCode == 206 else {
+            guard (200..<300).contains(statusCode) else {
+                NativeLogger.shared.warn("StreamingResourceLoader: HTTP \(statusCode) for \(songId)", source: "Audio")
                 completionHandler(.cancel)
                 return
             }
@@ -239,6 +277,7 @@ extension StreamingResourceLoader: URLSessionDataDelegate {
             if totalContentLength <= 0 {
                 if let contentRange = httpResponse.value(forHTTPHeaderField: "Content-Range"),
                    let totalStr = contentRange.split(separator: "/").last,
+                   totalStr != "*",
                    let total = Int64(totalStr) {
                     totalContentLength = total
                     preallocateTempFile(length: total)
@@ -250,9 +289,20 @@ extension StreamingResourceLoader: URLSessionDataDelegate {
             }
 
             if let entry = pendingRequests.first(where: { $0.value.task?.taskIdentifier == dataTask.taskIdentifier }) {
-                if let contentInfo = entry.value.loadingRequest.contentInformationRequest,
-                   totalContentLength > 0, let contentType {
-                    fillContentInfo(contentInfo, contentType: contentType, contentLength: totalContentLength)
+                // If we requested a Range but got 200, server doesn't support Range.
+                // Reset currentOffset to 0 since data starts from beginning.
+                if statusCode == 200 && entry.value.requestedOffset > 0 {
+                    entry.value.currentOffset = 0
+                }
+
+                if let contentInfo = entry.value.loadingRequest.contentInformationRequest {
+                    if totalContentLength > 0, let contentType {
+                        fillContentInfo(contentInfo, contentType: contentType, contentLength: totalContentLength)
+                    } else if let contentType {
+                        // Unknown length — still fill content type so AVPlayer can decode
+                        contentInfo.contentType = contentTypeToUTType(contentType)
+                        contentInfo.isByteRangeAccessSupported = false
+                    }
                 }
             }
 
