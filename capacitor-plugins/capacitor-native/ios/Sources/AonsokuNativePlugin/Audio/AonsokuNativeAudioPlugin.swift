@@ -97,6 +97,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var isSeeking = false
     private var isQueueTransitioning = false
     private var isRecoveryReload = false
+    private var bufferMismatchFirstSeen: Date?
     private var isInForeground = true
     private let persistence = PlaybackStatePersistence(
         repository: PlaybackStateRepository(db: DatabaseManager.shared.dbPool)
@@ -1947,6 +1948,9 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 if !bufferEmpty {
                     self.recoveryController.reportProgress(at: currentTime, generation: generation)
                 }
+                if !bufferEmpty, let item = self.playerItem {
+                    self.checkBufferPositionCoherence(player: player, item: item, generation: generation)
+                }
             }
             guard self.isInForeground else { return }
             self.emitProgress(requestId: requestId)
@@ -2068,6 +2072,64 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         )
     }
 
+    private func checkBufferPositionCoherence(player: AVPlayer, item: AVPlayerItem, generation: Int) {
+        guard !isSeeking, !isRecoveryReload, !isQueueTransitioning else {
+            bufferMismatchFirstSeen = nil
+            return
+        }
+        guard currentSourceKind != "radio" else { return }
+        guard !isPlayerAtEnd else {
+            bufferMismatchFirstSeen = nil
+            return
+        }
+        guard player.timeControlStatus == .playing else {
+            bufferMismatchFirstSeen = nil
+            return
+        }
+        guard !item.isPlaybackBufferEmpty else {
+            bufferMismatchFirstSeen = nil
+            return
+        }
+
+        let currentSeconds = player.currentTime().seconds
+        guard currentSeconds.isFinite, currentSeconds > 5.0 else {
+            bufferMismatchFirstSeen = nil
+            return
+        }
+
+        if isPositionWithinLoadedRanges(currentSeconds) {
+            bufferMismatchFirstSeen = nil
+            return
+        }
+
+        if let firstSeen = bufferMismatchFirstSeen {
+            if Date().timeIntervalSince(firstSeen) >= 1.5 {
+                bufferMismatchFirstSeen = nil
+                handleBufferPositionMismatch(player: player, generation: generation)
+            }
+        } else {
+            bufferMismatchFirstSeen = Date()
+        }
+    }
+
+    private func handleBufferPositionMismatch(player: AVPlayer, generation: Int) {
+        guard isCurrentPlayback(player: player, generation: generation) else { return }
+
+        NativeLogger.shared.warn(
+            "buffer-position mismatch: currentTime=\(String(format: "%.1f", player.currentTime().seconds))s not within loaded ranges, seeking to 0",
+            source: "Audio"
+        )
+
+        isSeeking = true
+        player.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
+            guard let self, self.isCurrentPlayback(generation: generation) else { return }
+            self.isSeeking = false
+            player.play()
+            self.emitProgress(requestId: self.currentRequestId)
+            self.updateNowPlayingPlaybackInfo()
+        }
+    }
+
     private func cancelStallRecovery() {
         recoveryController.reset()
     }
@@ -2132,6 +2194,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private func clearPlayer(sendIdleEvent: Bool, deactivateSession: Bool = false) {
         isQueueTransitioning = false
         isRecoveryReload = false
+        bufferMismatchFirstSeen = nil
         playbackGeneration += 1
         lastEmittedPlaybackState = nil
         isSeeking = false
@@ -2467,6 +2530,16 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         return isCurrentPlayback(generation: generation) && observedPlayer === currentPlayer
+    }
+
+    private func isPositionWithinLoadedRanges(_ positionSeconds: Double) -> Bool {
+        guard let item = playerItem, !item.loadedTimeRanges.isEmpty else { return true }
+        return item.loadedTimeRanges.contains { range in
+            let tr = range.timeRangeValue
+            let start = CMTimeGetSeconds(tr.start)
+            let end = start + CMTimeGetSeconds(tr.duration)
+            return positionSeconds >= start && positionSeconds < (end + 1.0)
+        }
     }
 
     private func playbackErrorCode(for error: Error?, fallback: String) -> String {
@@ -2981,7 +3054,10 @@ extension AonsokuNativeAudioPlugin: PlaybackRecoveryDelegate {
                 return
             }
 
-            if self.validateSeekResult(savedPosition: savedPosition) {
+            let savedSeconds = CMTimeGetSeconds(savedPosition)
+            let rangeOk = savedSeconds <= 5.0 || self.isPositionWithinLoadedRanges(savedSeconds)
+
+            if rangeOk && self.validateSeekResult(savedPosition: savedPosition) {
                 self.isRecoveryReload = false
                 self.player?.play()
                 controller.reloadDidComplete(success: true, generation: generation)
