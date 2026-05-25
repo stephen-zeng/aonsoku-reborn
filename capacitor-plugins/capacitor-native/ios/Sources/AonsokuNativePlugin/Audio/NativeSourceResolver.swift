@@ -1,18 +1,32 @@
 import Foundation
 
 class NativeSourceResolver {
-    private let cacheDirectory: URL
+    private let cacheDirectories: [URL]
     private var cachedCredentials: ServerCredentials?
     private var credentialsCacheTime: Date?
     private let credentialsTTL: TimeInterval = 30
 
     init() {
+        var dirs: [URL] = []
+
         let appSupport = FileManager.default.urls(
             for: .applicationSupportDirectory, in: .userDomainMask
         ).first!
-        self.cacheDirectory = appSupport
-            .appendingPathComponent("Aonsoku", isDirectory: true)
-            .appendingPathComponent("AudioCache", isDirectory: true)
+        dirs.append(
+            appSupport
+                .appendingPathComponent("Aonsoku", isDirectory: true)
+                .appendingPathComponent("AudioCache", isDirectory: true)
+        )
+
+        if let documents = FileManager.default.urls(
+            for: .documentDirectory, in: .userDomainMask
+        ).first {
+            dirs.append(
+                documents.appendingPathComponent("AudioCache", isDirectory: true)
+            )
+        }
+
+        self.cacheDirectories = dirs
     }
 
     func invalidateCredentialsCache() {
@@ -41,10 +55,11 @@ class NativeSourceResolver {
         }
 
         let cacheId = cacheId(for: song.id)
-        if FileManager.default.fileExists(atPath: cacheDirectory.path) {
-            let extensions = ["mp3", "flac", "m4a", "aac", "ogg", "opus", "wav"]
+        let extensions = ["mp3", "flac", "m4a", "aac", "ogg", "opus", "wav"]
+        for directory in cacheDirectories {
+            guard FileManager.default.fileExists(atPath: directory.path) else { continue }
             for ext in extensions {
-                let fileUrl = cacheDirectory.appendingPathComponent("\(cacheId).\(ext)")
+                let fileUrl = directory.appendingPathComponent("\(cacheId).\(ext)")
                 if FileManager.default.fileExists(atPath: fileUrl.path) {
                     return (fileUrl, "native-file")
                 }
