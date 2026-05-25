@@ -168,31 +168,31 @@ public final class DebugViewController: UIViewController {
     }
 
     private func updateNavBarForTab() {
-        if currentTab == .logs {
+        if currentTab == .logs && isSelectingLogs {
+            let count = selectedLogIndices.count
             navigationItem.rightBarButtonItems = [
-                UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(refreshTapped)),
-                UIBarButtonItem(title: "Select", style: .plain, target: self, action: #selector(selectTapped)),
+                UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(exitSelectMode)),
             ]
+            title = count > 0 ? "Selected \(count)" : "Select Entries"
         } else {
             navigationItem.rightBarButtonItems = [
                 UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(refreshTapped)),
             ]
+            title = "Debug"
         }
     }
 
-    @objc private func selectTapped() {
-        if isSelectingLogs {
-            exitSelectionMode()
-        } else {
-            isSelectingLogs = true
-            selectedLogIndices.removeAll()
-            tableView.allowsMultipleSelection = true
-            navigationItem.rightBarButtonItems = [
-                UIBarButtonItem(title: "Copy", style: .done, target: self, action: #selector(copySelectedLogs)),
-                UIBarButtonItem(title: "All", style: .plain, target: self, action: #selector(selectAllLogs)),
-                UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(selectTapped)),
-            ]
-        }
+    @objc private func exitSelectMode() {
+        exitSelectionMode()
+        updateNavBarForTab()
+        tableView.reloadData()
+    }
+
+    private func enterSelectionMode() {
+        isSelectingLogs = true
+        selectedLogIndices.removeAll()
+        tableView.allowsMultipleSelection = true
+        updateNavBarForTab()
         tableView.reloadData()
     }
 
@@ -202,30 +202,20 @@ public final class DebugViewController: UIViewController {
         tableView.allowsMultipleSelection = false
     }
 
-    @objc private func selectAllLogs() {
-        selectedLogIndices = Set(0..<filteredLogEntries.count)
-        tableView.reloadData()
-    }
-
-    @objc private func copySelectedLogs() {
-        guard !selectedLogIndices.isEmpty else { return }
-        let sorted = selectedLogIndices.sorted()
-        let text = sorted.map { idx -> String in
+    private func copyEntries(_ indices: [Int]) {
+        let text = indices.sorted().map { idx -> String in
             let entry = filteredLogEntries[idx]
             let time = Self.copyTimeFormatter.string(from: entry.timestamp)
             let src = entry.source.isEmpty ? "" : "[\(entry.source)] "
             return "\(time) \(entry.level.rawValue.uppercased()) \(src)\(entry.message)"
         }.joined(separator: "\n")
         UIPasteboard.general.string = text
-        exitSelectionMode()
-        updateNavBarForTab()
-        tableView.reloadData()
+    }
 
-        let alert = UIAlertController(title: nil, message: "Copied \(sorted.count) entries", preferredStyle: .alert)
-        present(alert, animated: true)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            alert.dismiss(animated: true)
-        }
+    private func formatEntryForCopy(_ entry: NativeLogger.Entry) -> String {
+        let time = Self.copyTimeFormatter.string(from: entry.timestamp)
+        let src = entry.source.isEmpty ? "" : "[\(entry.source)] "
+        return "\(time) \(entry.level.rawValue.uppercased()) \(src)\(entry.message)"
     }
 
     private static let copyTimeFormatter: DateFormatter = {
@@ -587,7 +577,7 @@ extension DebugViewController: UITableViewDataSource, UITableViewDelegate {
 
         cell.contentConfiguration = config
         cell.selectionStyle = isSelectingLogs ? .default : .none
-        cell.accessoryType = selectedLogIndices.contains(row) ? .checkmark : .none
+        cell.accessoryType = (isSelectingLogs && selectedLogIndices.contains(row)) ? .checkmark : .none
         return cell
     }
 
@@ -616,26 +606,75 @@ extension DebugViewController: UITableViewDataSource, UITableViewDelegate {
 
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        guard currentTab == .logs, !filteredLogEntries.isEmpty else { return }
+        guard currentTab == .logs, !filteredLogEntries.isEmpty, isSelectingLogs else { return }
 
-        if isSelectingLogs {
-            if selectedLogIndices.contains(indexPath.row) {
-                selectedLogIndices.remove(indexPath.row)
-            } else {
-                selectedLogIndices.insert(indexPath.row)
-            }
-            tableView.reloadRows(at: [indexPath], with: .none)
+        if selectedLogIndices.contains(indexPath.row) {
+            selectedLogIndices.remove(indexPath.row)
         } else {
-            let entry = filteredLogEntries[indexPath.row]
-            let time = Self.copyTimeFormatter.string(from: entry.timestamp)
-            let src = entry.source.isEmpty ? "" : "[\(entry.source)] "
-            let text = "\(time) \(entry.level.rawValue.uppercased()) \(src)\(entry.message)"
-            UIPasteboard.general.string = text
+            selectedLogIndices.insert(indexPath.row)
+        }
+        updateNavBarForTab()
+        tableView.reloadRows(at: [indexPath], with: .none)
+    }
 
-            let cell = tableView.cellForRow(at: indexPath)
-            let original = cell?.backgroundColor
-            cell?.backgroundColor = .systemBlue.withAlphaComponent(0.15)
-            UIView.animate(withDuration: 0.4) { cell?.backgroundColor = original }
+    public func tableView(
+        _ tableView: UITableView,
+        contextMenuConfigurationForRowAt indexPath: IndexPath,
+        point: CGPoint
+    ) -> UIContextMenuConfiguration? {
+        guard currentTab == .logs, !filteredLogEntries.isEmpty else { return nil }
+
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] _ in
+            guard let self else { return nil }
+
+            if self.isSelectingLogs && self.selectedLogIndices.contains(indexPath.row) {
+                let count = self.selectedLogIndices.count
+                let copySelected = UIAction(
+                    title: "Copy \(count) Selected",
+                    image: UIImage(systemName: "doc.on.doc")
+                ) { _ in
+                    self.copyEntries(Array(self.selectedLogIndices))
+                    self.exitSelectionMode()
+                    self.updateNavBarForTab()
+                    self.tableView.reloadData()
+                }
+                let selectAll = UIAction(
+                    title: "Select All",
+                    image: UIImage(systemName: "checkmark.circle")
+                ) { _ in
+                    self.selectedLogIndices = Set(0..<self.filteredLogEntries.count)
+                    self.updateNavBarForTab()
+                    self.tableView.reloadData()
+                }
+                let deselect = UIAction(
+                    title: "Cancel Selection",
+                    image: UIImage(systemName: "xmark.circle"),
+                    attributes: .destructive
+                ) { _ in
+                    self.exitSelectionMode()
+                    self.updateNavBarForTab()
+                    self.tableView.reloadData()
+                }
+                return UIMenu(children: [copySelected, selectAll, deselect])
+            } else {
+                let copy = UIAction(
+                    title: "Copy",
+                    image: UIImage(systemName: "doc.on.clipboard")
+                ) { _ in
+                    let entry = self.filteredLogEntries[indexPath.row]
+                    UIPasteboard.general.string = self.formatEntryForCopy(entry)
+                }
+                let selectMultiple = UIAction(
+                    title: "Select Multiple",
+                    image: UIImage(systemName: "checkmark.circle")
+                ) { _ in
+                    self.enterSelectionMode()
+                    self.selectedLogIndices.insert(indexPath.row)
+                    self.updateNavBarForTab()
+                    self.tableView.reloadData()
+                }
+                return UIMenu(children: [copy, selectMultiple])
+            }
         }
     }
 
