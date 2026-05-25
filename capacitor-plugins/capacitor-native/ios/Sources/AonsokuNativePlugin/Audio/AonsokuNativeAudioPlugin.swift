@@ -88,6 +88,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private let scrobbleSubmitter = NativeScrobbleSubmitter()
     private let downloadManager = NativeDownloadManager()
     private var backgroundCacheSongIds = Set<String>()
+    private var backgroundCacheCompletedSongIds = Set<String>()
     private var streamingLoader: StreamingResourceLoader?
     private let loaderQueue = DispatchQueue(label: "com.aonsoku.NativeAudio.loader", qos: .userInitiated)
     private var isQueueEngineActive = false
@@ -1967,6 +1968,16 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 if !bufferEmpty, let item = self.playerItem {
                     self.checkBufferPositionCoherence(player: player, item: item, generation: generation)
                 }
+                // Detect end-of-stream when download completed but AVPlayer stalled
+                if bufferEmpty,
+                   player.timeControlStatus == .waitingToPlayAtSpecifiedRate,
+                   self.isQueueEngineActive,
+                   let song = self.queueEngine.currentSong,
+                   self.backgroundCacheCompletedSongIds.contains(song.id) {
+                    self.backgroundCacheCompletedSongIds.remove(song.id)
+                    NativeLogger.shared.info("end-of-stream detected via progress check for \(song.id)", source: "Audio")
+                    self.handleEnded(generation: generation, requestId: requestId)
+                }
             }
             guard self.isInForeground else { return }
             self.emitProgress(requestId: requestId)
@@ -2205,6 +2216,21 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         notifyListeners("ended", data: eventData([
             "reason": "finished",
         ], requestId: requestId))
+    }
+
+    private func checkEndOfStreamAfterCacheComplete(songId: String) {
+        guard isQueueEngineActive else { return }
+        guard let currentSong = queueEngine.currentSong, currentSong.id == songId else { return }
+        guard let player, let item = playerItem else { return }
+
+        // If player is waiting for data (stalled) and buffer is empty,
+        // the stream has ended but AVPlayer didn't detect it
+        let isWaiting = player.timeControlStatus == .waitingToPlayAtSpecifiedRate
+        let bufferEmpty = item.isPlaybackBufferEmpty
+        if isWaiting && bufferEmpty {
+            NativeLogger.shared.info("end-of-stream detected via cache completion for \(songId)", source: "Audio")
+            handleEnded(generation: playbackGeneration, requestId: currentRequestId)
+        }
     }
 
     private func clearPlayer(sendIdleEvent: Bool, deactivateSession: Bool = false) {
@@ -3019,12 +3045,14 @@ extension AonsokuNativeAudioPlugin: NativeDownloadManagerDelegate {
 
     func downloadManager(_ manager: NativeDownloadManager, didComplete songId: String, fileUrl: URL, contentType: String, sizeBytes: Int64) {
         if backgroundCacheSongIds.remove(songId) != nil {
+            backgroundCacheCompletedSongIds.insert(songId)
             notifyListeners("streamCacheCompleted", data: [
                 "songId": songId,
                 "uri": fileUrl.absoluteString,
                 "contentType": contentType,
                 "sizeBytes": NSNumber(value: sizeBytes),
             ])
+            checkEndOfStreamAfterCacheComplete(songId: songId)
             return
         }
         notifyListeners("downloadCompleted", data: [
