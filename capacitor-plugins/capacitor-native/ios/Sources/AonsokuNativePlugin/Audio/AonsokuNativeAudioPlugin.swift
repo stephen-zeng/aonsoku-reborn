@@ -3143,3 +3143,51 @@ extension AonsokuNativeAudioPlugin: PlaybackRecoveryDelegate {
         recoveryController.startProgressMonitoring(generation: playbackGeneration, sourceKind: recoverySourceKind())
     }
 }
+
+// MARK: - StreamingResourceLoaderDelegate
+
+extension AonsokuNativeAudioPlugin: StreamingResourceLoaderDelegate {
+    func resourceLoader(_ loader: StreamingResourceLoader, didCompleteCache fileURL: URL, contentType: String, sizeBytes: Int64) {
+        let songId = loader.songId
+
+        DispatchQueue.global(qos: .utility).async {
+            do {
+                let directory = try AudioCacheUtils.cacheDirectoryURL(createIfNeeded: true)
+                let ext = AudioCacheUtils.fileExtension(for: contentType)
+                let cacheId = AudioCacheUtils.cacheId(for: songId)
+                let destURL = directory.appendingPathComponent("\(cacheId).\(ext)", isDirectory: false)
+
+                if FileManager.default.fileExists(atPath: destURL.path) {
+                    try FileManager.default.removeItem(at: destURL)
+                }
+                try FileManager.default.moveItem(at: fileURL, to: destURL)
+
+                let metadata = NativeCachedAudioFileMetadata(
+                    songId: songId,
+                    fileName: "\(cacheId).\(ext)",
+                    contentType: contentType,
+                    lastModifiedAt: Date().timeIntervalSince1970 * 1000
+                )
+                let metadataData = try JSONEncoder().encode(metadata)
+                let metadataURL = directory.appendingPathComponent("\(cacheId).json", isDirectory: false)
+                try metadataData.write(to: metadataURL, options: [.atomic])
+
+                DispatchQueue.main.async {
+                    self.notifyListeners("streamCacheCompleted", data: [
+                        "songId": songId,
+                        "uri": destURL.absoluteString,
+                        "contentType": contentType,
+                        "sizeBytes": NSNumber(value: sizeBytes),
+                    ])
+                }
+            } catch {
+                NativeLogger.shared.warn("stream cache persist failed for \(songId): \(error.localizedDescription)", source: "Audio")
+                try? FileManager.default.removeItem(at: fileURL)
+            }
+        }
+    }
+
+    func resourceLoader(_ loader: StreamingResourceLoader, didFailWithError error: Error) {
+        NativeLogger.shared.warn("stream resource loader failed for \(loader.songId): \(error.localizedDescription)", source: "Audio")
+    }
+}
