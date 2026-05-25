@@ -55,7 +55,7 @@ class NativeSourceResolver {
         }
 
         let cacheId = cacheId(for: song.id)
-        let extensions = ["mp3", "flac", "m4a", "aac", "ogg", "opus", "wav"]
+        let extensions = ["mp3", "flac", "m4a", "aac", "ogg", "opus", "wav", "audio"]
         for directory in cacheDirectories {
             guard FileManager.default.fileExists(atPath: directory.path) else { continue }
             for ext in extensions {
