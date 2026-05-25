@@ -323,7 +323,6 @@ extension StreamingResourceLoader: URLSessionDataDelegate {
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         queue.async { [self] in
             guard let entry = pendingRequests.first(where: { $0.value.task?.taskIdentifier == dataTask.taskIdentifier }) else {
-                NativeLogger.shared.warn("ResourceLoader: received data but no matching request", source: "Audio")
                 return
             }
 
@@ -336,10 +335,6 @@ extension StreamingResourceLoader: URLSessionDataDelegate {
             }
             state.currentOffset += Int64(data.count)
 
-            if rangeTracker.totalBytesDownloaded == 0 {
-                NativeLogger.shared.info("ResourceLoader: first data chunk, size=\(data.count), hasDataRequest=\(hasDataRequest), offset=\(offset)", source: "Audio")
-            }
-
             let range = offset..<(offset + Int64(data.count))
             rangeTracker.insert(range)
 
@@ -348,8 +343,19 @@ extension StreamingResourceLoader: URLSessionDataDelegate {
                     try handle.seek(toOffset: UInt64(offset))
                     handle.write(data)
                 } catch {
-                    // Disk write failed — abandon caching but continue playback
                     closeTempFile()
+                }
+            }
+
+            // If this request has received enough data, finish it immediately
+            if let dataReq = state.loadingRequest.dataRequest,
+               !dataReq.requestsAllDataToEndOfResource {
+                let satisfied = state.currentOffset - Int64(dataReq.requestedOffset)
+                if satisfied >= Int64(dataReq.requestedLength) {
+                    state.loadingRequest.finishLoading()
+                    state.task?.cancel()
+                    pendingRequests.removeValue(forKey: entry.key)
+                    return
                 }
             }
 
