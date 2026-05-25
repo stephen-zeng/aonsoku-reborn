@@ -89,6 +89,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private let downloadManager = NativeDownloadManager()
     private var backgroundCacheSongIds = Set<String>()
     private var backgroundCacheCompletedSongIds = Set<String>()
+    private var stalledSinceDate: Date?
     private var streamingLoader: StreamingResourceLoader?
     private let loaderQueue = DispatchQueue(label: "com.aonsoku.NativeAudio.loader", qos: .userInitiated)
     private var isQueueEngineActive = false
@@ -1975,9 +1976,13 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                    let song = self.queueEngine.currentSong,
                    self.backgroundCacheCompletedSongIds.contains(song.id) {
                     self.backgroundCacheCompletedSongIds.remove(song.id)
+                    self.stalledSinceDate = nil
                     NativeLogger.shared.info("end-of-stream detected via progress check for \(song.id)", source: "Audio")
                     self.handleEnded(generation: generation, requestId: requestId)
+                    return
                 }
+                // Fallback: detect end-of-stream even without download completion
+                self.checkEndOfStreamFallback(player: player, generation: generation, requestId: requestId)
             }
             guard self.isInForeground else { return }
             self.emitProgress(requestId: requestId)
@@ -2223,14 +2228,43 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         guard let currentSong = queueEngine.currentSong, currentSong.id == songId else { return }
         guard let player, let item = playerItem else { return }
 
-        // If player is waiting for data (stalled) and buffer is empty,
-        // the stream has ended but AVPlayer didn't detect it
         let isWaiting = player.timeControlStatus == .waitingToPlayAtSpecifiedRate
         let bufferEmpty = item.isPlaybackBufferEmpty
         if isWaiting && bufferEmpty {
             NativeLogger.shared.info("end-of-stream detected via cache completion for \(songId)", source: "Audio")
             handleEnded(generation: playbackGeneration, requestId: currentRequestId)
         }
+    }
+
+    private func checkEndOfStreamFallback(player: AVPlayer, generation: Int, requestId: String?) {
+        guard isQueueEngineActive else { return }
+        guard player.timeControlStatus == .waitingToPlayAtSpecifiedRate else {
+            stalledSinceDate = nil
+            return
+        }
+        guard let item = playerItem, item.isPlaybackBufferEmpty else {
+            stalledSinceDate = nil
+            return
+        }
+
+        let now = Date()
+        if stalledSinceDate == nil {
+            stalledSinceDate = now
+            return
+        }
+
+        guard let stalledSince = stalledSinceDate,
+              now.timeIntervalSince(stalledSince) >= 3.0 else {
+            return
+        }
+
+        // Stalled with empty buffer for 3+ seconds — stream likely ended
+        let currentSeconds = CMTimeGetSeconds(player.currentTime())
+        guard currentSeconds > 5.0 else { return }
+
+        stalledSinceDate = nil
+        NativeLogger.shared.info("end-of-stream detected via stall timeout at \(String(format: "%.1f", currentSeconds))s", source: "Audio")
+        handleEnded(generation: generation, requestId: requestId)
     }
 
     private func clearPlayer(sendIdleEvent: Bool, deactivateSession: Bool = false) {
