@@ -28,6 +28,8 @@ public final class DebugViewController: UIViewController {
     private var activeLevels: Set<NativeLogger.Entry.Level> = [.debug, .info, .warn, .error]
     private var activeSources: Set<String> = []
     private var allSources: [String] = []
+    private var isSelectingLogs = false
+    private var selectedLogIndices: Set<Int> = []
 
     public init(bridge: (any CAPBridgeProtocol)?) {
         self.dataProvider = DebugDataProvider(bridge: bridge)
@@ -46,13 +48,11 @@ public final class DebugViewController: UIViewController {
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .close, target: self, action: #selector(closeTapped)
         )
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .refresh, target: self, action: #selector(refreshTapped)
-        )
 
         setupSegmentedControl()
         setupSearchAndFilter()
         setupTableView()
+        updateNavBarForTab()
         refreshData()
         startAutoRefresh()
     }
@@ -162,8 +162,77 @@ public final class DebugViewController: UIViewController {
         filterScrollView.isHidden = !showLogFilters
         tableTopToSegment.isActive = !showLogFilters
         tableTopToFilter.isActive = showLogFilters
+        exitSelectionMode()
+        updateNavBarForTab()
         tableView.reloadData()
     }
+
+    private func updateNavBarForTab() {
+        if currentTab == .logs {
+            navigationItem.rightBarButtonItems = [
+                UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(refreshTapped)),
+                UIBarButtonItem(title: "Select", style: .plain, target: self, action: #selector(selectTapped)),
+            ]
+        } else {
+            navigationItem.rightBarButtonItems = [
+                UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(refreshTapped)),
+            ]
+        }
+    }
+
+    @objc private func selectTapped() {
+        if isSelectingLogs {
+            exitSelectionMode()
+        } else {
+            isSelectingLogs = true
+            selectedLogIndices.removeAll()
+            tableView.allowsMultipleSelection = true
+            navigationItem.rightBarButtonItems = [
+                UIBarButtonItem(title: "Copy", style: .done, target: self, action: #selector(copySelectedLogs)),
+                UIBarButtonItem(title: "All", style: .plain, target: self, action: #selector(selectAllLogs)),
+                UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(selectTapped)),
+            ]
+        }
+        tableView.reloadData()
+    }
+
+    private func exitSelectionMode() {
+        isSelectingLogs = false
+        selectedLogIndices.removeAll()
+        tableView.allowsMultipleSelection = false
+    }
+
+    @objc private func selectAllLogs() {
+        selectedLogIndices = Set(0..<filteredLogEntries.count)
+        tableView.reloadData()
+    }
+
+    @objc private func copySelectedLogs() {
+        guard !selectedLogIndices.isEmpty else { return }
+        let sorted = selectedLogIndices.sorted()
+        let text = sorted.map { idx -> String in
+            let entry = filteredLogEntries[idx]
+            let time = Self.copyTimeFormatter.string(from: entry.timestamp)
+            let src = entry.source.isEmpty ? "" : "[\(entry.source)] "
+            return "\(time) \(entry.level.rawValue.uppercased()) \(src)\(entry.message)"
+        }.joined(separator: "\n")
+        UIPasteboard.general.string = text
+        exitSelectionMode()
+        updateNavBarForTab()
+        tableView.reloadData()
+
+        let alert = UIAlertController(title: nil, message: "Copied \(sorted.count) entries", preferredStyle: .alert)
+        present(alert, animated: true)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            alert.dismiss(animated: true)
+        }
+    }
+
+    private static let copyTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
+        return f
+    }()
 
     private func updateSources() {
         let sources = Set(logEntries.compactMap { $0.source.isEmpty ? nil : $0.source })
@@ -517,7 +586,8 @@ extension DebugViewController: UITableViewDataSource, UITableViewDelegate {
         config.secondaryTextProperties.color = .label
 
         cell.contentConfiguration = config
-        cell.selectionStyle = .none
+        cell.selectionStyle = isSelectingLogs ? .default : .none
+        cell.accessoryType = selectedLogIndices.contains(row) ? .checkmark : .none
         return cell
     }
 
@@ -528,7 +598,7 @@ extension DebugViewController: UITableViewDataSource, UITableViewDelegate {
     }()
 
     public func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-        guard currentTab == .logs, !filteredLogEntries.isEmpty else { return nil }
+        guard currentTab == .logs, !filteredLogEntries.isEmpty, !isSelectingLogs else { return nil }
         let button = UIButton(type: .system)
         button.setTitle("Clear", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 13)
@@ -542,6 +612,31 @@ extension DebugViewController: UITableViewDataSource, UITableViewDelegate {
             button.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -4),
         ])
         return container
+    }
+
+    public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        guard currentTab == .logs, !filteredLogEntries.isEmpty else { return }
+
+        if isSelectingLogs {
+            if selectedLogIndices.contains(indexPath.row) {
+                selectedLogIndices.remove(indexPath.row)
+            } else {
+                selectedLogIndices.insert(indexPath.row)
+            }
+            tableView.reloadRows(at: [indexPath], with: .none)
+        } else {
+            let entry = filteredLogEntries[indexPath.row]
+            let time = Self.copyTimeFormatter.string(from: entry.timestamp)
+            let src = entry.source.isEmpty ? "" : "[\(entry.source)] "
+            let text = "\(time) \(entry.level.rawValue.uppercased()) \(src)\(entry.message)"
+            UIPasteboard.general.string = text
+
+            let cell = tableView.cellForRow(at: indexPath)
+            let original = cell?.backgroundColor
+            cell?.backgroundColor = .systemBlue.withAlphaComponent(0.15)
+            UIView.animate(withDuration: 0.4) { cell?.backgroundColor = original }
+        }
     }
 
     @objc private func clearLogsTapped() {
