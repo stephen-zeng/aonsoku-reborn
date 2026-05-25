@@ -15,7 +15,7 @@ final class StreamingResourceLoader: NSObject, AVAssetResourceLoaderDelegate {
 
     private let queue = DispatchQueue(label: "com.aonsoku.StreamingResourceLoader", qos: .userInitiated)
     private var session: URLSession!
-    private var pendingRequests: [Int: RequestState] = []
+    private var pendingRequests: [Int: RequestState] = [:]
     private var rangeTracker = ByteRangeTracker()
     private var totalContentLength: Int64 = -1
     private var contentType: String?
@@ -178,7 +178,7 @@ final class StreamingResourceLoader: NSObject, AVAssetResourceLoaderDelegate {
         tempFileHandle = nil
     }
 
-    private func fillContentInfo(_ request: AVAssetResourceContentInformationRequest, contentType: String, contentLength: Int64) {
+    private func fillContentInfo(_ request: AVAssetResourceLoadingContentInformationRequest, contentType: String, contentLength: Int64) {
         request.contentType = contentTypeToUTType(contentType)
         request.contentLength = contentLength
         request.isByteRangeAccessSupported = true
