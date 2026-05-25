@@ -159,7 +159,18 @@ final class StreamingResourceLoader: NSObject, AVAssetResourceLoaderDelegate {
 
         guard let url = tempFileURL else { return }
         FileManager.default.createFile(atPath: url.path, contents: nil)
-        tempFileHandle = try? FileHandle(forWritingTo: url)
+        tempFileHandle = try? FileHandle(forUpdating: url)
+    }
+
+    private func preallocateTempFile(length: Int64) {
+        guard let handle = tempFileHandle else { return }
+        do {
+            try handle.seek(toOffset: UInt64(length - 1))
+            handle.write(Data([0]))
+            try handle.seek(toOffset: 0)
+        } catch {
+            closeTempFile()
+        }
     }
 
     private func closeTempFile() {
@@ -230,9 +241,11 @@ extension StreamingResourceLoader: URLSessionDataDelegate {
                    let totalStr = contentRange.split(separator: "/").last,
                    let total = Int64(totalStr) {
                     totalContentLength = total
+                    preallocateTempFile(length: total)
                 } else if let cl = httpResponse.value(forHTTPHeaderField: "Content-Length"),
                           let length = Int64(cl), statusCode == 200 {
                     totalContentLength = length
+                    preallocateTempFile(length: length)
                 }
             }
 

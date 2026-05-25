@@ -3150,6 +3150,10 @@ extension AonsokuNativeAudioPlugin: StreamingResourceLoaderDelegate {
     func resourceLoader(_ loader: StreamingResourceLoader, didCompleteCache fileURL: URL, contentType: String, sizeBytes: Int64) {
         let songId = loader.songId
 
+        notifyListeners("bufferComplete", data: eventData([
+            "songId": songId,
+        ]))
+
         DispatchQueue.global(qos: .utility).async {
             do {
                 let directory = try AudioCacheUtils.cacheDirectoryURL(createIfNeeded: true)
