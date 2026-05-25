@@ -199,7 +199,7 @@ final class StreamingResourceLoader: NSObject, AVAssetResourceLoaderDelegate {
         let uti = contentTypeToUTType(contentType)
         request.contentType = uti
         request.contentLength = contentLength
-        request.isByteRangeAccessSupported = true
+        request.isByteRangeAccessSupported = false
     }
 
     private func contentTypeToUTType(_ mimeType: String) -> String {
