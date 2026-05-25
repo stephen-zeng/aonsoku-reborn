@@ -2664,17 +2664,18 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func makePlayerItem(url: URL, kind: String?, songId: String?) -> AVPlayerItem {
-        if kind == "stream", let songId, let loaderURL = StreamingResourceLoader.loaderURL(for: url) {
-            let loader = StreamingResourceLoader(songId: songId, originalURL: url)
-            loader.delegate = self
-            streamingLoader = loader
-
-            let asset = AVURLAsset(url: loaderURL)
-            asset.resourceLoader.setDelegate(loader, queue: loaderQueue)
-            let item = AVPlayerItem(asset: asset)
-            item.preferredForwardBufferDuration = forwardBufferDuration(for: kind)
-            return item
-        }
+        // TODO: Re-enable StreamingResourceLoader after debugging playback issues
+        // if kind == "stream", let songId, let loaderURL = StreamingResourceLoader.loaderURL(for: url) {
+        //     let loader = StreamingResourceLoader(songId: songId, originalURL: url)
+        //     loader.delegate = self
+        //     streamingLoader = loader
+        //
+        //     let asset = AVURLAsset(url: loaderURL)
+        //     asset.resourceLoader.setDelegate(loader, queue: loaderQueue)
+        //     let item = AVPlayerItem(asset: asset)
+        //     item.preferredForwardBufferDuration = forwardBufferDuration(for: kind)
+        //     return item
+        // }
 
         let item = AVPlayerItem(url: url)
         item.preferredForwardBufferDuration = forwardBufferDuration(for: kind)
