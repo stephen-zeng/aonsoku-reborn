@@ -164,7 +164,7 @@ export class CacheAudioSourceResolver implements AudioSourceResolver {
 
     const blob = await this.storage.get(key);
     if (!blob) {
-      if (this.index.hasItem(key)) {
+      if (this.index.hasItem(key) && !this.nativeFileResolver) {
         this.index.removeItem(key);
       }
       return null;
