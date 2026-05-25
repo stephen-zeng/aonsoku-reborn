@@ -9,6 +9,7 @@ import {
   createNativeStorage,
   getNativePrefsPlugin,
 } from "@/store/native-storage";
+import { getRuntime } from "@/utils/capabilities";
 import { logger } from "@/utils/logger";
 import { decodeStoredPassword, genEncodedPassword } from "@/utils/salt";
 import { getMaxShuffleStartHistory } from "@/utils/songListFunctions";
@@ -79,6 +80,11 @@ export function createPlayerPersistOptions(getStore: () => PlayerStoreApi) {
       return (_state: unknown, error: unknown) => {
         if (error) {
           logger.error("Player store rehydration failed", error);
+          songlistHydrated.value = true;
+          return;
+        }
+
+        if (getRuntime() === "capacitor-ios") {
           songlistHydrated.value = true;
           return;
         }
@@ -218,7 +224,7 @@ export function mergePlayerStoreState(
 }
 
 export function partializePlayerStoreState(state: IPlayerContext) {
-  const appStore = omit(state, [
+  const omitKeys = [
     "songlist",
     "actions",
     "playerState.isPlaying",
@@ -236,7 +242,13 @@ export function partializePlayerStoreState(state: IPlayerContext) {
     "playerState.hasNext",
     "playerProgress.bufferedProgress",
     "remoteControl",
-  ]);
+  ];
+
+  if (getRuntime() === "capacitor-ios") {
+    omitKeys.push("playerProgress.progress");
+  }
+
+  const appStore = omit(state, omitKeys);
 
   const { sanitized, evictedKeys } = stripCustomLyricsBodies(
     state.settings.lyrics.selectedCustomLyrics,
@@ -419,19 +431,21 @@ export function registerPlayerPersistence(
   if (persistenceRegistered) return;
   persistenceRegistered = true;
 
-  store.subscribe(
-    (state) => [state.songlist],
-    ([songlist]) => {
-      if (!songlistHydrated.value) return;
-      idbFlushed = false;
-      debouncedSonglistWrite(songlist);
-    },
-    {
-      equalityFn: shallow,
-    },
-  );
+  if (getRuntime() !== "capacitor-ios") {
+    store.subscribe(
+      (state) => [state.songlist],
+      ([songlist]) => {
+        if (!songlistHydrated.value) return;
+        idbFlushed = false;
+        debouncedSonglistWrite(songlist);
+      },
+      {
+        equalityFn: shallow,
+      },
+    );
 
-  registerIdbEventListeners(store, addCleanup);
+    registerIdbEventListeners(store, addCleanup);
+  }
 }
 
 function registerIdbEventListeners(
