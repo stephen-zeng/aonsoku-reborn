@@ -456,6 +456,7 @@ let audioCacheService: AudioCacheDownloader;
 try {
   if (getRuntime() === "capacitor-ios") {
     audioCacheService = new MainThreadAudioCacheEngine();
+    setupStreamCacheListener();
   } else if (typeof Worker !== "undefined") {
     audioCacheService = new AudioCacheWorkerAdapter();
   } else {
@@ -467,6 +468,37 @@ try {
     err,
   );
   audioCacheService = new MainThreadAudioCacheEngine();
+}
+
+function setupStreamCacheListener(): void {
+  const availability = getNativeAudioPluginAvailability();
+  if (!availability.available) return;
+
+  availability.plugin.addListener("streamCacheCompleted", (event) => {
+    const { songId, sizeBytes } = event;
+    const key = audioKey(songId);
+
+    const existing = getCacheIndexItems()[key];
+    if (existing) {
+      const updated = { ...existing, lastAccessedAt: Date.now() };
+      getCacheIndexActions().addItem(key, updated);
+      persistCacheMeta(key, { key, ...updated });
+      return;
+    }
+
+    const meta: CachedItemMeta = {
+      id: songId,
+      type: "audio",
+      source: "lru",
+      sizeBytes,
+      cachedAt: Date.now(),
+      lastAccessedAt: Date.now(),
+    };
+
+    getCacheIndexActions().addItem(key, meta);
+    refreshCacheStatsFromIndex();
+    persistCacheMeta(key, { key, ...meta });
+  });
 }
 
 export { audioCacheService };

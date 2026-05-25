@@ -293,6 +293,18 @@ export interface NativeDownloadFailedEvent {
   error: string;
 }
 
+export interface NativeStreamCacheCompletedEvent {
+  songId: string;
+  uri: string;
+  contentType: string;
+  sizeBytes: number;
+}
+
+export interface NativeAudioBufferCompleteEvent {
+  requestId?: string;
+  songId: string;
+}
+
 export interface NativeSetSystemVolumeOptions {
   value: number;
 }
@@ -321,6 +333,8 @@ export interface NativeAudioEvents {
   downloadProgress: NativeDownloadProgressEvent;
   downloadCompleted: NativeDownloadCompletedEvent;
   downloadFailed: NativeDownloadFailedEvent;
+  streamCacheCompleted: NativeStreamCacheCompletedEvent;
+  bufferComplete: NativeAudioBufferCompleteEvent;
   systemVolumeChanged: NativeSystemVolumeChangedEvent;
 }
 
