@@ -57,14 +57,19 @@ class NativeSourceResolver {
         let cacheId = cacheId(for: song.id)
         let extensions = ["mp3", "flac", "m4a", "aac", "ogg", "opus", "wav", "audio"]
         for directory in cacheDirectories {
-            guard FileManager.default.fileExists(atPath: directory.path) else { continue }
+            guard FileManager.default.fileExists(atPath: directory.path) else {
+                NativeLogger.shared.debug("SourceResolver: directory not found: \(directory.path)", source: "Audio")
+                continue
+            }
             for ext in extensions {
                 let fileUrl = directory.appendingPathComponent("\(cacheId).\(ext)")
                 if FileManager.default.fileExists(atPath: fileUrl.path) {
+                    NativeLogger.shared.info("SourceResolver: found cached file for \(song.id) at \(fileUrl.lastPathComponent)", source: "Audio")
                     return (fileUrl, "native-file")
                 }
             }
         }
+        NativeLogger.shared.debug("SourceResolver: no cache hit for \(song.id), cacheId=\(cacheId)", source: "Audio")
 
         // Extract songId from aonsoku-media://stream?id=... URLs if present
         let effectiveSongId: String
