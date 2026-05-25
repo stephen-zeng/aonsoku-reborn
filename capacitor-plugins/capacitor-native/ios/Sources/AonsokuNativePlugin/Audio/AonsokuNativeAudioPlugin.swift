@@ -801,12 +801,20 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func resolveCachedAudioFile(songId: String) throws -> NativeCachedAudioFile? {
-        let directory = try cacheDirectoryURL(createIfNeeded: false)
-        guard FileManager.default.fileExists(atPath: directory.path) else {
-            return nil
+        let primaryDirectory = try cacheDirectoryURL(createIfNeeded: false)
+        if FileManager.default.fileExists(atPath: primaryDirectory.path) {
+            if let file = try cachedAudioFile(songId: songId, directory: primaryDirectory) {
+                return file
+            }
         }
 
-        return try cachedAudioFile(songId: songId, directory: directory)
+        let secondaryDirectory = try AudioCacheUtils.cacheDirectoryURL(createIfNeeded: false)
+        if secondaryDirectory.path != primaryDirectory.path,
+           FileManager.default.fileExists(atPath: secondaryDirectory.path) {
+            return try cachedAudioFile(songId: songId, directory: secondaryDirectory)
+        }
+
+        return nil
     }
 
     private func deleteCachedAudioFile(songId: String) throws -> Bool {
