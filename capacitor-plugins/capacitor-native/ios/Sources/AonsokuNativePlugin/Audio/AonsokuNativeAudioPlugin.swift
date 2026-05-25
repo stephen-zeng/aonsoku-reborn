@@ -2192,14 +2192,98 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func restorePlaybackState() {
-        guard let persisted = persistence.repository.load() else { return }
-        guard !persisted.contextSongs.isEmpty else { return }
+        if let persisted = persistence.repository.load() {
+            guard !persisted.contextSongs.isEmpty else { return }
+            queueEngine.restoreState(from: persisted)
+            isQueueEngineActive = true
+            savedRestoreTime = persisted.currentTime > 0 ? persisted.currentTime : nil
+            repeatMode = persisted.loopState
+            shuffleEnabled = persisted.isShuffleActive
+            return
+        }
 
-        queueEngine.restoreState(from: persisted)
-        isQueueEngineActive = true
-        savedRestoreTime = persisted.currentTime > 0 ? persisted.currentTime : nil
-        repeatMode = persisted.loopState
-        shuffleEnabled = persisted.isShuffleActive
+        if let migrated = migrateFromLegacyQueueState() {
+            guard !migrated.contextSongs.isEmpty else { return }
+            try? persistence.repository.save(migrated)
+            queueEngine.restoreState(from: migrated)
+            isQueueEngineActive = true
+            savedRestoreTime = migrated.currentTime > 0 ? migrated.currentTime : nil
+            repeatMode = migrated.loopState
+            shuffleEnabled = migrated.isShuffleActive
+        }
+    }
+
+    private func migrateFromLegacyQueueState() -> PlaybackPersistState? {
+        guard let json = try? DatabaseManager.shared.dbPool.read({ db in
+            try String.fetchOne(db, sql: "SELECT stateJson FROM queueState WHERE key = 'current'")
+        }) else { return nil }
+
+        guard let data = json.data(using: .utf8),
+              let raw = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+
+        guard let contextQueue = raw["contextQueue"] as? [String: Any],
+              let songsArray = contextQueue["songs"] as? [[String: Any]],
+              !songsArray.isEmpty else {
+            return nil
+        }
+
+        let songs = songsArray.map { self.legacySongToQueueSong($0) }
+        let currentIndex = contextQueue["currentIndex"] as? Int ?? 0
+
+        let userQueueObj = raw["userQueue"] as? [String: Any]
+        let userQueueSongs = (userQueueObj?["songs"] as? [[String: Any]] ?? []).map { self.legacySongToQueueSong($0) }
+
+        let originalContextSongs = (raw["originalContextSongs"] as? [[String: Any]] ?? []).map { self.legacySongToQueueSong($0) }
+        let originalUserSongs = (raw["originalUserSongs"] as? [[String: Any]] ?? []).map { self.legacySongToQueueSong($0) }
+        let playedHistory = (raw["playedUserQueueHistory"] as? [[String: Any]] ?? []).map { self.legacySongToQueueSong($0) }
+
+        let isShuffleActive = raw["isShuffleActive"] as? Bool ?? false
+        let isInUserQueue = raw["isInUserQueue"] as? Bool ?? false
+        let shuffleHistory = raw["shuffleHistory"] as? [String] ?? []
+        let shuffleStartHistory = raw["shuffleStartHistory"] as? [String] ?? []
+
+        var sourceId: QueueSourceId?
+        if let srcObj = contextQueue["sourceId"] as? [String: Any],
+           let type = srcObj["type"] as? String,
+           let id = srcObj["id"] as? String {
+            sourceId = QueueSourceId(type: type, id: id)
+        }
+        let sourceName = contextQueue["sourceName"] as? String
+
+        var state = PlaybackPersistState(from: queueEngine, currentTime: 0)
+        state.contextSongs = songs
+        state.currentIndex = currentIndex
+        state.userQueue = userQueueSongs
+        state.originalContextSongs = originalContextSongs
+        state.originalUserSongs = originalUserSongs
+        state.isShuffleActive = isShuffleActive
+        state.isInUserQueue = isInUserQueue
+        state.shuffleHistory = shuffleHistory
+        state.shuffleStartHistory = shuffleStartHistory
+        state.playedUserQueueHistory = playedHistory
+        state.sourceId = sourceId
+        state.sourceName = sourceName
+        state.loopState = "off"
+        state.currentTime = 0
+
+        try? DatabaseManager.shared.dbPool.write { db in
+            try db.execute(sql: "DELETE FROM queueState WHERE key = 'current'")
+        }
+
+        return state
+    }
+
+    private func legacySongToQueueSong(_ dict: [String: Any]) -> QueueSong {
+        let id = dict["id"] as? String ?? ""
+        let streamUrl = sourceResolver.buildStreamUrl(songId: id) ?? ""
+        var songDict = dict
+        songDict["streamUrl"] = streamUrl
+        if songDict["coverArtId"] == nil, let coverArt = dict["coverArt"] as? String {
+            songDict["coverArtId"] = coverArt
+        }
+        return QueueSong(from: songDict)
     }
 
     private func setupPersistence() {

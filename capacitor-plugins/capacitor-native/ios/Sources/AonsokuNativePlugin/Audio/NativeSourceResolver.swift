@@ -77,6 +77,10 @@ class NativeSourceResolver {
         return nil
     }
 
+    func buildStreamUrl(songId: String) -> String? {
+        buildAuthenticatedStreamUrl(songId: songId)?.absoluteString
+    }
+
     private func buildAuthenticatedStreamUrl(songId: String) -> URL? {
         guard let credentials = getCredentials() else { return nil }
 
