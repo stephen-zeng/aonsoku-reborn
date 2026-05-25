@@ -97,6 +97,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var isQueueTransitioning = false
     private var isRecoveryReload = false
     private var isInForeground = true
+    private let persistence = PlaybackStatePersistence(
+        repository: PlaybackStateRepository(db: DatabaseManager.shared.dbPool)
+    )
+    private var savedRestoreTime: Double?
 
     public override func load() {
         super.load()
@@ -113,6 +117,8 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         setupVolumeControl()
+        restorePlaybackState()
+        setupPersistence()
     }
 
     deinit {
@@ -186,6 +192,18 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     @objc func play(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
             do {
+                if self.player == nil && self.isQueueEngineActive, let song = self.queueEngine.currentSong {
+                    try self.activateAudioSession()
+                    let startTime = self.savedRestoreTime
+                    self.savedRestoreTime = nil
+                    self.queueEngine.clearRestoredFlag()
+                    self.stateQueue.async {
+                        self.queueEngine.delegate?.queueEngine(self.queueEngine, loadSong: song, autoplay: true, startTime: startTime)
+                    }
+                    call.resolve()
+                    return
+                }
+
                 guard let player = self.player else {
                     self.reject(call, code: "no_source", message: "No audio source is loaded.")
                     return
@@ -212,6 +230,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         DispatchQueue.main.async {
             self.recoveryController.reportUserPause()
             self.player?.pause()
+            self.persistence.flushNow()
             call.resolve()
         }
     }
@@ -241,6 +260,8 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 self.isSeeking = false
                 self.emitProgress()
                 self.updateNowPlayingPlaybackInfo()
+                self.persistence.updateProgress(position)
+                self.persistence.flushNow()
                 if finished {
                     call.resolve()
                 } else {
@@ -261,6 +282,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             self.repeatMode = mode
             if self.isQueueEngineActive, let loopState = LoopState(rawValue: mode) {
                 self.queueEngine.setLoopState(loopState)
+                self.persistence.markStateDirty()
             }
             call.resolve()
         }
@@ -272,6 +294,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             self.shuffleEnabled = enabled
             if self.isQueueEngineActive {
                 self.queueEngine.setShuffleActive(enabled)
+                self.persistence.markStateDirty()
             }
             call.resolve()
         }
@@ -283,6 +306,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             let originalSongs = songsArray.map { QueueSong(from: $0) }
             self.shuffleEnabled = true
             self.queueEngine.markAsShuffled(originalSongs: originalSongs)
+            self.persistence.markStateDirty()
             call.resolve()
         }
     }
@@ -364,6 +388,8 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         DispatchQueue.main.async {
             self.clearPlayer(sendIdleEvent: true, deactivateSession: true)
             self.resetControlState()
+            self.persistence.stopProgressTracking()
+            try? self.persistence.repository.clear()
             call.resolve()
         }
     }
@@ -569,6 +595,14 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             let autoplay = call.getBool("autoplay") ?? true
             let startTime = call.getDouble("startTime")
 
+            var sourceId: QueueSourceId?
+            if let srcObj = call.getObject("sourceId"),
+               let type = srcObj["type"] as? String,
+               let id = srcObj["id"] as? String {
+                sourceId = QueueSourceId(type: type, id: id)
+            }
+            let sourceName = call.getString("sourceName")
+
             self.isQueueEngineActive = true
 
             if let mode = call.getString("repeatMode"), let loopState = LoopState(rawValue: mode) {
@@ -580,8 +614,11 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 songs: songs,
                 currentIndex: currentIndex,
                 autoplay: autoplay,
-                startTime: startTime
+                startTime: startTime,
+                sourceId: sourceId,
+                sourceName: sourceName
             )
+            self.persistence.markStateDirty()
             call.resolve()
         }
     }
@@ -593,6 +630,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             let position = call.getString("position") ?? "last"
 
             self.queueEngine.addToUserQueue(songs: songs, position: position)
+            self.persistence.markStateDirty()
             call.resolve()
         }
     }
@@ -601,6 +639,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         stateQueue.async {
             let indices = call.getArray("indices") as? [Int] ?? []
             self.queueEngine.removeFromUserQueue(indices: indices)
+            self.persistence.markStateDirty()
             call.resolve()
         }
     }
@@ -608,6 +647,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     @objc func clearUserQueue(_ call: CAPPluginCall) {
         stateQueue.async {
             self.queueEngine.clearUserQueue()
+            self.persistence.markStateDirty()
             call.resolve()
         }
     }
@@ -619,6 +659,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             let currentIndex = call.getInt("currentIndex") ?? 0
 
             self.queueEngine.updateContextQueue(songs: songs, currentIndex: currentIndex)
+            self.persistence.markStateDirty()
             call.resolve()
         }
     }
@@ -629,6 +670,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             let toIndex = call.getInt("toIndex") ?? 0
 
             self.queueEngine.reorderContextQueue(fromIndex: fromIndex, toIndex: toIndex)
+            self.persistence.markStateDirty()
             call.resolve()
         }
     }
@@ -638,6 +680,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             let index = call.getInt("index") ?? 0
             let startTime = call.getDouble("startTime")
             self.queueEngine.playAtIndex(index, startTime: startTime)
+            self.persistence.markStateDirty()
             call.resolve()
         }
     }
@@ -1456,6 +1499,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         isInForeground = false
         recoveryController.setBackground(true)
         scrobbleSubmitter.submitPending(buffer: scrobbleBuffer)
+        persistence.flushNow()
     }
 
     private func handleWillEnterForeground() {
@@ -1875,6 +1919,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             guard !self.isSeeking else { return }
             let bufferEmpty = self.playerItem?.isPlaybackBufferEmpty ?? false
             let currentTime = player.currentTime()
+            let currentSeconds = CMTimeGetSeconds(currentTime)
+            if currentSeconds.isFinite {
+                self.persistence.updateProgress(currentSeconds)
+            }
             DispatchQueue.main.async {
                 if !bufferEmpty {
                     self.recoveryController.reportProgress(at: currentTime, generation: generation)
@@ -2121,6 +2169,28 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         shuffleEnabled = false
         queueItemCount = 0
         queueIndex = 0
+    }
+
+    private func restorePlaybackState() {
+        guard let persisted = persistence.repository.load() else { return }
+        guard !persisted.contextSongs.isEmpty else { return }
+
+        queueEngine.restoreState(from: persisted)
+        isQueueEngineActive = true
+        savedRestoreTime = persisted.currentTime > 0 ? persisted.currentTime : nil
+        repeatMode = persisted.loopState
+        shuffleEnabled = persisted.isShuffleActive
+    }
+
+    private func setupPersistence() {
+        persistence.setStateProvider { [weak self] in
+            guard let self, self.isQueueEngineActive else { return nil }
+            let currentTime = self.seconds(from: self.player?.currentTime() ?? .zero)
+            return PlaybackPersistState(from: self.queueEngine, currentTime: currentTime)
+        }
+        if isQueueEngineActive && player != nil {
+            persistence.startProgressTracking()
+        }
     }
 
     private func emitPlaybackState(_ state: String, requestId: String? = nil, force: Bool = false) {
@@ -2625,6 +2695,7 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
 
                 if autoplay {
                     player.play()
+                    self.persistence.startProgressTracking()
                     self.stateQueue.async {
                         self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
                     }
@@ -2635,6 +2706,7 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
     }
 
     func queueEngine(_ engine: NativeQueueEngine, didAdvanceTo index: Int, songId: String, reason: QueueAdvanceReason) {
+        persistence.markStateDirty()
         notifyListeners("queueStateChanged", data: [
             "currentIndex": index,
             "songId": songId,
@@ -2644,6 +2716,7 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
     }
 
     func queueEngine(_ engine: NativeQueueEngine, didChangeContents reason: String) {
+        persistence.markStateDirty()
         notifyListeners("queueContentsChanged", data: [
             "reason": reason,
         ])
