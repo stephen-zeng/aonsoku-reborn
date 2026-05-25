@@ -19,7 +19,7 @@ export function ContextMenuProvider({
   const hasOptions = options !== undefined;
 
   return (
-    <ContextMenu modal={false} onOpenChange={onOpenChange}>
+    <ContextMenu onOpenChange={onOpenChange}>
       <ContextMenuTrigger asChild disabled={!hasOptions}>
         {children}
       </ContextMenuTrigger>
