@@ -98,6 +98,7 @@ final class StreamingResourceLoader: NSObject, AVAssetResourceLoaderDelegate {
 
     func resourceLoader(_ resourceLoader: AVAssetResourceLoader,
                         shouldWaitForLoadingOfRequestedResource loadingRequest: AVAssetResourceLoadingRequest) -> Bool {
+        NativeLogger.shared.info("ResourceLoader: shouldWaitForLoading called, url=\(loadingRequest.request.url?.absoluteString.prefix(60) ?? "nil")", source: "Audio")
         queue.async { [self] in
             guard !isCancelled else {
                 loadingRequest.finishLoading(with: URLError(.cancelled))
@@ -259,11 +260,13 @@ extension StreamingResourceLoader: URLSessionDataDelegate {
                     completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
         queue.async { [self] in
             guard let httpResponse = response as? HTTPURLResponse else {
+                NativeLogger.shared.warn("ResourceLoader: non-HTTP response", source: "Audio")
                 completionHandler(.cancel)
                 return
             }
 
             let statusCode = httpResponse.statusCode
+            NativeLogger.shared.info("ResourceLoader: HTTP \(statusCode), Content-Type=\(httpResponse.value(forHTTPHeaderField: "Content-Type") ?? "nil"), Content-Length=\(httpResponse.value(forHTTPHeaderField: "Content-Length") ?? "nil")", source: "Audio")
             guard (200..<300).contains(statusCode) else {
                 NativeLogger.shared.warn("StreamingResourceLoader: HTTP \(statusCode) for \(songId)", source: "Audio")
                 completionHandler(.cancel)
