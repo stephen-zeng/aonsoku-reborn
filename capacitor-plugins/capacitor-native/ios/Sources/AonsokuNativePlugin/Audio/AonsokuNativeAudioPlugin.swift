@@ -1841,10 +1841,15 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             self?.handleStall(player: player, generation: generation)
         }
 
-        bufferEmptyObservation = item.observe(\.isPlaybackBufferEmpty, options: [.new]) { [weak self] _, change in
+        bufferEmptyObservation = item.observe(\.isPlaybackBufferEmpty, options: [.new]) { [weak self] observedItem, change in
             guard change.newValue == true else { return }
             DispatchQueue.main.async {
-                self?.handleStall(player: player, generation: generation)
+                guard let self, self.isCurrentPlayback(item: observedItem, generation: generation) else { return }
+                if player.timeControlStatus == .waitingToPlayAtSpecifiedRate {
+                    self.handleStall(player: player, generation: generation)
+                } else if player.timeControlStatus == .playing {
+                    self.handleGhostPlayback(player: player, item: observedItem, generation: generation)
+                }
             }
         }
 
@@ -1868,9 +1873,12 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 return
             }
             guard !self.isSeeking else { return }
+            let bufferEmpty = self.playerItem?.isPlaybackBufferEmpty ?? false
             let currentTime = player.currentTime()
             DispatchQueue.main.async {
-                self.recoveryController.reportProgress(at: currentTime, generation: generation)
+                if !bufferEmpty {
+                    self.recoveryController.reportProgress(at: currentTime, generation: generation)
+                }
             }
             guard self.isInForeground else { return }
             self.emitProgress(requestId: requestId)
@@ -1955,6 +1963,35 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         guard isCurrentPlayback(player: player, generation: generation) else { return }
         guard player.timeControlStatus == .waitingToPlayAtSpecifiedRate else { return }
 
+        let currentTime = player.currentTime()
+        recoveryController.triggerRecovery(
+            currentTime: currentTime,
+            generation: generation,
+            sourceKind: recoverySourceKind()
+        )
+    }
+
+    private func handleGhostPlayback(player: AVPlayer, item: AVPlayerItem, generation: Int) {
+        guard isCurrentPlayback(player: player, generation: generation) else { return }
+        guard !isPlayerAtEnd else { return }
+        guard currentSourceKind != "radio" else { return }
+        guard item.isPlaybackBufferEmpty else { return }
+
+        let currentSeconds = player.currentTime().seconds
+        let isPositionBuffered = item.loadedTimeRanges.contains { range in
+            let timeRange = range.timeRangeValue
+            let start = CMTimeGetSeconds(timeRange.start)
+            let end = start + CMTimeGetSeconds(timeRange.duration)
+            return currentSeconds >= start && currentSeconds < end
+        }
+        guard !isPositionBuffered else { return }
+
+        NativeLogger.shared.warn(
+            "ghost playback detected: buffer empty at \(String(format: "%.1f", currentSeconds))s but status is .playing",
+            source: "Audio"
+        )
+
+        player.pause()
         let currentTime = player.currentTime()
         recoveryController.triggerRecovery(
             currentTime: currentTime,

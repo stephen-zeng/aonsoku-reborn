@@ -78,7 +78,11 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
             }
 
             taskState.originalURL = url
-            let dataTask = session.dataTask(with: realURL)
+            var request = URLRequest(url: realURL)
+            if let rangeHeader = urlSchemeTask.request.value(forHTTPHeaderField: "Range") {
+                request.setValue(rangeHeader, forHTTPHeaderField: "Range")
+            }
+            let dataTask = session.dataTask(with: request)
             syncQueue.async(flags: .barrier) { [self] in
                 activeTasks[dataTask.taskIdentifier] = taskState
                 urlSessionTasks[dataTask.taskIdentifier] = dataTask
@@ -138,6 +142,12 @@ class MediaSchemeHandler: NSObject, WKURLSchemeHandler, URLSessionDataDelegate {
         ]
         if let contentLength = httpResponse.value(forHTTPHeaderField: "Content-Length") {
             headers["Content-Length"] = contentLength
+        }
+        if let acceptRanges = httpResponse.value(forHTTPHeaderField: "Accept-Ranges") {
+            headers["Accept-Ranges"] = acceptRanges
+        }
+        if let contentRange = httpResponse.value(forHTTPHeaderField: "Content-Range") {
+            headers["Content-Range"] = contentRange
         }
 
         let schemeResponse = HTTPURLResponse(
