@@ -89,9 +89,25 @@
     padding-top: calc(var(--safe-area-top) + 3.25rem);
   }
 
+  .px-album-header {
+    padding-left: max(var(--safe-area-left), 0.75rem);
+    padding-right: max(var(--safe-area-right), 0.75rem);
+  }
+
+  .px-content-area {
+    padding-left: max(var(--safe-area-left), 1rem);
+    padding-right: max(var(--safe-area-right), 1rem);
+  }
+
   @media (min-width: 768px) {
     .pt-album-header {
       padding-top: 1.5rem;
+    }
+
+    .px-album-header,
+    .px-content-area {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
     }
   }
 

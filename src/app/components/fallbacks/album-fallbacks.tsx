@@ -90,12 +90,8 @@ export function AlbumHeaderFallback({
     <div
       className={cn(
         IMAGE_HEADER_MAIN_GRADIENT,
-        "w-full px-3 pb-3 pt-album-header md:px-8 md:py-6 bg-background-foreground flex flex-col gap-2 md:gap-4",
+        "w-full pb-3 pt-album-header px-album-header md:py-6 bg-background-foreground flex flex-col gap-2 md:gap-4",
       )}
-      style={{
-        paddingLeft: "max(var(--safe-area-left), 0.75rem)",
-        paddingRight: "max(var(--safe-area-right), 0.75rem)",
-      }}
     >
       <AlbumHeaderContent
         showSecondaryBadges={showSecondaryBadges}
@@ -117,12 +113,8 @@ export function HeaderWithImageEffect({
         <div
           className={cn(
             IMAGE_HEADER_MAIN_GRADIENT,
-            "w-full px-3 pb-3 pt-album-header md:px-8 md:py-6 bg-background-foreground flex flex-col gap-2 md:gap-4 relative md:absolute md:inset-0",
+            "w-full pb-3 pt-album-header px-album-header md:py-6 bg-background-foreground flex flex-col gap-2 md:gap-4 relative md:absolute md:inset-0",
           )}
-          style={{
-            paddingLeft: "max(var(--safe-area-left), 0.75rem)",
-            paddingRight: "max(var(--safe-area-right), 0.75rem)",
-          }}
         >
           <AlbumHeaderContent
             showSecondaryBadges={showSecondaryBadges}
