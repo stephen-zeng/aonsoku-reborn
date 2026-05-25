@@ -5,6 +5,7 @@ import type {
   NativeAudioEvents,
   NativeAudioPlugin,
   NativeQueueSong,
+  NativeQueueSourceId,
 } from "@/native/audio/types";
 import {
   findSongTier,
@@ -55,6 +56,46 @@ function songToNativeQueueSong(song: ISong): NativeQueueSong {
     coverArtId: song.coverArt,
     streamUrl: getSongStreamUrl(song.id),
   };
+}
+
+function nativeQueueSongToISong(ns: NativeQueueSong): ISong {
+  return {
+    id: ns.id,
+    title: ns.title,
+    artist: ns.artist,
+    artistId: ns.artistId ?? "",
+    album: ns.album,
+    albumId: ns.albumId ?? "",
+    coverArt: ns.coverArtId ?? "",
+    duration: ns.duration,
+    parent: "",
+    isDir: false,
+    track: 0,
+    year: 0,
+    size: 0,
+    contentType: "",
+    suffix: "",
+    bitRate: 0,
+    path: "",
+    discNumber: 0,
+    created: "",
+    type: "music",
+    isVideo: false,
+    bpm: 0,
+    comment: "",
+    sortName: "",
+    mediaType: "song",
+    musicBrainzId: "",
+    genres: [],
+    replayGain: {},
+  } as ISong;
+}
+
+function nativeSourceIdToQueueSourceId(
+  sourceId: NativeQueueSourceId | null,
+): QueueSourceId | null {
+  if (!sourceId) return null;
+  return { type: sourceId.type, id: sourceId.id } as QueueSourceId;
 }
 
 const TERMINAL_PLAYBACK_RESET_DELAY_MS = 150;
@@ -122,6 +163,8 @@ export class NativeQueueController implements QueueController {
           currentIndex: 0,
           autoplay: true,
           repeatMode: loopStateToNative(loopState),
+          sourceId: normalizedId,
+          sourceName,
         })
         .then(() =>
           this.#plugin.markAsShuffled({ originalSongs: originalNativeSongs }),
@@ -176,6 +219,8 @@ export class NativeQueueController implements QueueController {
           currentIndex: clampedIndex,
           autoplay: true,
           repeatMode: loopStateToNative(loopState),
+          sourceId: normalizedId,
+          sourceName,
         })
         .catch((err) =>
           logger.error("[NativeQueueController] setSongList failed", err),
@@ -343,15 +388,6 @@ export class NativeQueueController implements QueueController {
   }
 
   play(): void {
-    const state = usePlayerStore.getState();
-    const songs = state.songlist.contextQueue.songs;
-    const index = state.songlist.contextQueue.currentIndex;
-
-    if (!this.#queueSynced && songs.length > 0) {
-      this.setSongList(songs, index, state.songlist.isShuffleActive);
-      return;
-    }
-
     this.#plugin
       .play()
       .catch((err) => logger.error("[NativeQueueController] play failed", err));
@@ -682,6 +718,11 @@ export class NativeQueueController implements QueueController {
       if (nativeState.currentSongId) {
         this.#queueSynced = true;
       }
+
+      const isRestoredColdStart =
+        nativeState.isRestored &&
+        usePlayerStore.getState().songlist.contextQueue.songs.length === 0;
+
       usePlayerStore.setState((s) => {
         s.playerState.isPlaying = nativeState.isPlaying;
         s.playerProgress.progress = nativeState.currentTime;
@@ -693,39 +734,63 @@ export class NativeQueueController implements QueueController {
         s.songlist.isInUserQueue = nativeState.isInUserQueue;
         s.songlist.isShuffleActive = nativeState.isShuffleActive;
 
-        // Reorder context queue to match native's order
-        const nativeContextIds = nativeState.contextQueue.songs.map(
-          (ns) => ns.id,
-        );
-        if (nativeContextIds.length > 0) {
-          const songMap = new Map(
-            s.songlist.contextQueue.songs.map((song) => [song.id, song]),
+        if (nativeState.contextQueue.sourceId) {
+          s.songlist.contextQueue.sourceId = nativeSourceIdToQueueSourceId(
+            nativeState.contextQueue.sourceId,
           );
-          const reordered = nativeContextIds
-            .map((id) => songMap.get(id))
-            .filter((song): song is ISong => song != null);
-          if (reordered.length === s.songlist.contextQueue.songs.length) {
-            s.songlist.contextQueue.songs = reordered;
-          }
+        }
+        if (nativeState.contextQueue.sourceName !== null) {
+          s.songlist.contextQueue.sourceName =
+            nativeState.contextQueue.sourceName;
         }
 
-        const nativeUserQueueIds = nativeState.userQueue.map((ns) => ns.id);
-        if (nativeUserQueueIds.length > 0) {
-          const userSongMap = new Map(
-            s.songlist.userQueue.songs.map((song) => [song.id, song]),
-          );
-          const reorderedUser = nativeUserQueueIds
-            .map((id) => userSongMap.get(id))
-            .filter((song): song is ISong => song != null);
-          if (reorderedUser.length === s.songlist.userQueue.songs.length) {
-            s.songlist.userQueue.songs = reorderedUser;
-          } else {
-            s.songlist.userQueue.songs = s.songlist.userQueue.songs.filter(
-              (song) => new Set(nativeUserQueueIds).has(song.id),
-            );
-          }
+        if (isRestoredColdStart) {
+          s.songlist.contextQueue.songs =
+            nativeState.contextQueue.songs.map(nativeQueueSongToISong);
+          s.songlist.userQueue.songs =
+            nativeState.userQueue.map(nativeQueueSongToISong);
+          s.songlist.originalContextSongs =
+            nativeState.originalContextSongs.map(nativeQueueSongToISong);
+          s.songlist.originalUserSongs =
+            nativeState.originalUserSongs.map(nativeQueueSongToISong);
+          s.songlist.playedUserQueueHistory =
+            nativeState.playedUserQueueHistory.map(nativeQueueSongToISong);
+          s.songlist.shuffleHistory = nativeState.shuffleHistory;
+          s.songlist.shuffleStartHistory = nativeState.shuffleStartHistory;
         } else {
-          s.songlist.userQueue.songs = [];
+          const nativeContextIds = nativeState.contextQueue.songs.map(
+            (ns) => ns.id,
+          );
+          if (nativeContextIds.length > 0) {
+            const songMap = new Map(
+              s.songlist.contextQueue.songs.map((song) => [song.id, song]),
+            );
+            const reordered = nativeContextIds
+              .map((id) => songMap.get(id))
+              .filter((song): song is ISong => song != null);
+            if (reordered.length === s.songlist.contextQueue.songs.length) {
+              s.songlist.contextQueue.songs = reordered;
+            }
+          }
+
+          const nativeUserQueueIds = nativeState.userQueue.map((ns) => ns.id);
+          if (nativeUserQueueIds.length > 0) {
+            const userSongMap = new Map(
+              s.songlist.userQueue.songs.map((song) => [song.id, song]),
+            );
+            const reorderedUser = nativeUserQueueIds
+              .map((id) => userSongMap.get(id))
+              .filter((song): song is ISong => song != null);
+            if (reorderedUser.length === s.songlist.userQueue.songs.length) {
+              s.songlist.userQueue.songs = reorderedUser;
+            } else {
+              s.songlist.userQueue.songs = s.songlist.userQueue.songs.filter(
+                (song) => new Set(nativeUserQueueIds).has(song.id),
+              );
+            }
+          } else {
+            s.songlist.userQueue.songs = [];
+          }
         }
 
         if (nativeState.currentSongId) {
@@ -754,7 +819,7 @@ export class NativeQueueController implements QueueController {
             break;
         }
 
-        if (nativeState.isShuffleActive) {
+        if (nativeState.isShuffleActive && !isRestoredColdStart) {
           const nativeOriginalIds = nativeState.originalContextSongs.map(
             (ns) => ns.id,
           );
@@ -789,14 +854,68 @@ export class NativeQueueController implements QueueController {
           } else {
             s.songlist.originalUserSongs = undefined;
           }
-        } else {
+        } else if (!nativeState.isShuffleActive && !isRestoredColdStart) {
           s.songlist.originalContextSongs = [];
           s.songlist.originalUserSongs = undefined;
           s.songlist.shuffleHistory = [];
         }
       });
+
+      if (isRestoredColdStart) {
+        this.#resolveFullSongs();
+      }
     } catch (err) {
       logger.error("[NativeQueueController] syncFromNative failed", err);
+    }
+  }
+
+  async #resolveFullSongs(): Promise<void> {
+    try {
+      const state = usePlayerStore.getState().songlist;
+      const allIds = new Set<string>();
+      for (const song of state.contextQueue.songs) allIds.add(song.id);
+      for (const song of state.userQueue.songs) allIds.add(song.id);
+
+      if (allIds.size === 0) return;
+
+      const result = await this.#plugin.resolveSongs({
+        ids: [...allIds],
+      });
+
+      const resolvedMap = new Map<string, ISong>();
+      for (const raw of result.songs) {
+        const song = raw as unknown as ISong;
+        if (song.id) resolvedMap.set(song.id, song);
+      }
+
+      if (resolvedMap.size === 0) return;
+
+      usePlayerStore.setState((s) => {
+        s.songlist.contextQueue.songs = s.songlist.contextQueue.songs.map(
+          (song) => resolvedMap.get(song.id) ?? song,
+        );
+        s.songlist.userQueue.songs = s.songlist.userQueue.songs.map(
+          (song) => resolvedMap.get(song.id) ?? song,
+        );
+        s.songlist.originalContextSongs = s.songlist.originalContextSongs.map(
+          (song) => resolvedMap.get(song.id) ?? song,
+        );
+        if (s.songlist.originalUserSongs) {
+          s.songlist.originalUserSongs = s.songlist.originalUserSongs.map(
+            (song) => resolvedMap.get(song.id) ?? song,
+          );
+        }
+        s.songlist.playedUserQueueHistory =
+          s.songlist.playedUserQueueHistory.map(
+            (song) => resolvedMap.get(song.id) ?? song,
+          );
+        if (s.songlist.currentSong) {
+          s.songlist.currentSong =
+            resolvedMap.get(s.songlist.currentSong.id) ?? s.songlist.currentSong;
+        }
+      });
+    } catch (err) {
+      logger.error("[NativeQueueController] resolveFullSongs failed", err);
     }
   }
 

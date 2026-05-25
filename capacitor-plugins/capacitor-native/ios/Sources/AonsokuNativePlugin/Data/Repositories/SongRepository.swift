@@ -69,6 +69,14 @@ struct SongRepository {
         }
     }
 
+    func getByIds(ids: [String]) throws -> [SongRecord] {
+        try db.read { db in
+            try SongRecord
+                .filter(ids.contains(Column("id")))
+                .fetchAll(db)
+        }
+    }
+
     func getByAlbumId(_ albumId: String) throws -> [SongRecord] {
         try db.read { db in
             try SongRecord

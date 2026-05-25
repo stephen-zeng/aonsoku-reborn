@@ -36,6 +36,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "reorderContextQueue", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "playAtIndex", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getFullState", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "resolveSongs", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "downloadAudioFile", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "cancelDownload", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getScrobbleBuffer", returnType: CAPPluginReturnPromise),
@@ -697,6 +698,25 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 isPlaying: isPlaying
             )
             call.resolve(state)
+        }
+    }
+
+    @objc func resolveSongs(_ call: CAPPluginCall) {
+        let ids = call.getArray("ids") as? [String] ?? []
+        guard !ids.isEmpty else {
+            call.resolve(["songs": []])
+            return
+        }
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let repo = SongRepository(db: DatabaseManager.shared.dbPool)
+                let records = try repo.getByIds(ids: ids)
+                let songs = records.map { $0.toDictionary() }
+                call.resolve(["songs": songs])
+            } catch {
+                call.resolve(["songs": []])
+            }
         }
     }
 

@@ -118,6 +118,7 @@ export interface NativeSetContextQueueOptions {
   sourceName?: string | null;
   autoplay?: boolean;
   startTime?: number;
+  repeatMode?: "off" | "one" | "all";
 }
 
 export type NativeQueueSourceId =
@@ -164,6 +165,10 @@ export interface NativeFullState {
   };
   userQueue: NativeQueueSong[];
   originalContextSongs: NativeQueueSong[];
+  originalUserSongs: NativeQueueSong[];
+  shuffleHistory: string[];
+  shuffleStartHistory: string[];
+  playedUserQueueHistory: NativeQueueSong[];
   isInUserQueue: boolean;
   isShuffleActive: boolean;
   loopState: "off" | "one" | "all";
@@ -171,6 +176,7 @@ export interface NativeFullState {
   currentTime: number;
   duration: number;
   currentSongId: string | null;
+  isRestored: boolean;
 }
 
 export interface NativeScrobbleEntry {
@@ -181,6 +187,10 @@ export interface NativeScrobbleEntry {
 
 export interface NativeScrobbleBufferResult {
   entries: NativeScrobbleEntry[];
+}
+
+export interface NativeResolveSongsResult {
+  songs: Record<string, unknown>[];
 }
 
 export interface NativeAudioQueueStateChangedEvent {
@@ -374,6 +384,7 @@ export interface NativeAudioPlugin extends Plugin {
   clearUserQueue(): Promise<void>;
   playAtIndex(options: NativePlayAtIndexOptions): Promise<void>;
   getFullState(): Promise<NativeFullState>;
+  resolveSongs(options: { ids: string[] }): Promise<NativeResolveSongsResult>;
   getScrobbleBuffer(): Promise<NativeScrobbleBufferResult>;
   clearScrobbleBuffer(): Promise<void>;
 
