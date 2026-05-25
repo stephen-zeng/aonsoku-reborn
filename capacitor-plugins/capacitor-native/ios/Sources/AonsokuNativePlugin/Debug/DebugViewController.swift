@@ -678,6 +678,20 @@ extension DebugViewController: UITableViewDataSource, UITableViewDelegate {
         }
     }
 
+    public func tableView(
+        _ tableView: UITableView,
+        previewForHighlightingContextMenuWithConfiguration configuration: UIContextMenuConfiguration
+    ) -> UITargetedPreview? {
+        return nil
+    }
+
+    public func tableView(
+        _ tableView: UITableView,
+        previewForDismissingContextMenuWithConfiguration configuration: UIContextMenuConfiguration
+    ) -> UITargetedPreview? {
+        return nil
+    }
+
     @objc private func clearLogsTapped() {
         NativeLogger.shared.clear()
         refreshData()
