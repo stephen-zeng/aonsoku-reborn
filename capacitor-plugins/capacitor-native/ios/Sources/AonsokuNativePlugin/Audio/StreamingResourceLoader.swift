@@ -122,6 +122,13 @@ final class StreamingResourceLoader: NSObject, AVAssetResourceLoaderDelegate {
     // MARK: - Private
 
     private func handleLoadingRequest(_ loadingRequest: AVAssetResourceLoadingRequest) {
+        let hasContentReq = loadingRequest.contentInformationRequest != nil
+        let hasDataReq = loadingRequest.dataRequest != nil
+        let offset = loadingRequest.dataRequest.map { Int64($0.requestedOffset) } ?? -1
+        let length = loadingRequest.dataRequest.map { Int64($0.requestedLength) } ?? -1
+        let toEnd = loadingRequest.dataRequest?.requestsAllDataToEndOfResource ?? false
+        NativeLogger.shared.info("ResourceLoader: handleRequest contentInfo=\(hasContentReq) dataReq=\(hasDataReq) offset=\(offset) length=\(length) toEnd=\(toEnd)", source: "Audio")
+
         if let contentRequest = loadingRequest.contentInformationRequest {
             if totalContentLength > 0, let contentType {
                 fillContentInfo(contentRequest, contentType: contentType, contentLength: totalContentLength)
@@ -137,10 +144,10 @@ final class StreamingResourceLoader: NSObject, AVAssetResourceLoaderDelegate {
             return
         }
 
-        let offset = Int64(dataRequest.requestedOffset)
+        let reqOffset = Int64(dataRequest.requestedOffset)
         let requestsToEnd = dataRequest.requestsAllDataToEndOfResource
-        let length: Int64? = requestsToEnd ? nil : Int64(dataRequest.requestedLength)
-        startDataTask(for: loadingRequest, offset: offset, requestsToEnd: requestsToEnd, length: length)
+        let reqLength: Int64? = requestsToEnd ? nil : Int64(dataRequest.requestedLength)
+        startDataTask(for: loadingRequest, offset: reqOffset, requestsToEnd: requestsToEnd, length: reqLength)
     }
 
     private func startDataTask(for loadingRequest: AVAssetResourceLoadingRequest, offset: Int64, requestsToEnd: Bool, length: Int64? = nil) {
@@ -316,14 +323,22 @@ extension StreamingResourceLoader: URLSessionDataDelegate {
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         queue.async { [self] in
             guard let entry = pendingRequests.first(where: { $0.value.task?.taskIdentifier == dataTask.taskIdentifier }) else {
+                NativeLogger.shared.warn("ResourceLoader: received data but no matching request", source: "Audio")
                 return
             }
 
             let state = entry.value
             let offset = state.currentOffset
+            let hasDataRequest = state.loadingRequest.dataRequest != nil
 
-            state.loadingRequest.dataRequest?.respond(with: data)
+            if hasDataRequest {
+                state.loadingRequest.dataRequest?.respond(with: data)
+            }
             state.currentOffset += Int64(data.count)
+
+            if rangeTracker.totalBytesDownloaded == 0 {
+                NativeLogger.shared.info("ResourceLoader: first data chunk, size=\(data.count), hasDataRequest=\(hasDataRequest), offset=\(offset)", source: "Audio")
+            }
 
             let range = offset..<(offset + Int64(data.count))
             rangeTracker.insert(range)
@@ -354,12 +369,14 @@ extension StreamingResourceLoader: URLSessionDataDelegate {
 
             if let error {
                 if (error as NSError).code != NSURLErrorCancelled {
+                    NativeLogger.shared.warn("ResourceLoader: task failed: \(error.localizedDescription)", source: "Audio")
                     state.loadingRequest.finishLoading(with: error)
                     if pendingRequests.isEmpty && !cacheCompleted {
                         delegate?.resourceLoader(self, didFailWithError: error)
                     }
                 }
             } else {
+                NativeLogger.shared.info("ResourceLoader: task completed, totalBytes=\(rangeTracker.totalBytesDownloaded)", source: "Audio")
                 state.loadingRequest.finishLoading()
                 checkCacheCompletion()
             }
