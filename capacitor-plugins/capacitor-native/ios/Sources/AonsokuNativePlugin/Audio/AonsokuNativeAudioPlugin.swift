@@ -95,6 +95,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var lastEmittedPlaybackState: String?
     private var isSeeking = false
     private var isQueueTransitioning = false
+    private var isRecoveryReload = false
     private var isInForeground = true
 
     public override func load() {
@@ -2025,6 +2026,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     private func clearPlayer(sendIdleEvent: Bool, deactivateSession: Bool = false) {
         isQueueTransitioning = false
+        isRecoveryReload = false
         playbackGeneration += 1
         lastEmittedPlaybackState = nil
         isSeeking = false
@@ -2127,6 +2129,11 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
 
+        if isRecoveryReload, let metaDuration = currentMetadata.duration, metaDuration > 0 {
+            let deviation = abs(duration - metaDuration) / metaDuration
+            if deviation > 0.1 { return }
+        }
+
         loadedDurationSeconds = duration
         notifyListeners("durationChanged", data: eventData([
             "duration": duration,
@@ -2155,6 +2162,11 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 let duration = self.seconds(from: item.asset.duration)
                 guard duration > 0 else {
                     return
+                }
+
+                if self.isRecoveryReload, let metaDuration = self.currentMetadata.duration, metaDuration > 0 {
+                    let deviation = abs(duration - metaDuration) / metaDuration
+                    if deviation > 0.1 { return }
                 }
 
                 self.loadedDurationSeconds = duration
@@ -2313,6 +2325,34 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         return seconds(from: range.start) + seconds(from: range.duration)
+    }
+
+    private func validateSeekResult(savedPosition: CMTime) -> Bool {
+        let expectedTime = CMTimeGetSeconds(savedPosition)
+        let actualTime = seconds(from: player?.currentTime() ?? .zero)
+
+        if expectedTime <= 2.0 { return true }
+
+        let timeDelta = abs(actualTime - expectedTime)
+        if timeDelta > 2.0 { return false }
+
+        if let metaDuration = currentMetadata.duration, metaDuration > 0,
+           let item = playerItem {
+            let itemDuration = seconds(from: item.duration)
+            if itemDuration > 0 {
+                let deviation = abs(itemDuration - metaDuration) / metaDuration
+                if deviation > 0.1 { return false }
+            }
+        }
+
+        return true
+    }
+
+    private func emitCorrectDurationFromMetadata() {
+        guard let metaDuration = currentMetadata.duration, metaDuration > 0 else { return }
+        loadedDurationSeconds = metaDuration
+        notifyListeners("durationChanged", data: eventData(["duration": metaDuration], requestId: currentRequestId))
+        updateNowPlayingPlaybackInfo()
     }
 
     private func seconds(from time: CMTime) -> Double {
@@ -2709,6 +2749,7 @@ extension AonsokuNativeAudioPlugin: PlaybackRecoveryDelegate {
         }
 
         removeItemObservers()
+        isRecoveryReload = true
 
         let item = AVPlayerItem(url: url)
         item.preferredForwardBufferDuration = forwardBufferDuration(for: kind)
@@ -2725,12 +2766,28 @@ extension AonsokuNativeAudioPlugin: PlaybackRecoveryDelegate {
                 controller.reloadDidComplete(success: false, generation: generation)
                 return
             }
-            self.player?.play()
-            controller.reloadDidComplete(success: true, generation: generation)
+
+            if self.validateSeekResult(savedPosition: savedPosition) {
+                self.isRecoveryReload = false
+                self.player?.play()
+                controller.reloadDidComplete(success: true, generation: generation)
+            } else {
+                self.player?.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
+                    guard let self, self.isCurrentPlayback(generation: generation) else {
+                        controller.reloadDidComplete(success: false, generation: generation)
+                        return
+                    }
+                    self.isRecoveryReload = false
+                    self.emitCorrectDurationFromMetadata()
+                    self.player?.play()
+                    controller.reloadDidComplete(success: true, generation: generation)
+                }
+            }
         }
     }
 
     func recoveryExhausted(_ controller: PlaybackRecoveryController, generation: Int) {
+        isRecoveryReload = false
         guard isCurrentPlayback(generation: generation) else { return }
 
         if isQueueEngineActive {
