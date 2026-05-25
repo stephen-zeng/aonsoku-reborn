@@ -134,6 +134,11 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func load(_ call: CAPPluginCall) {
+        if isQueueEngineActive {
+            call.resolve()
+            return
+        }
+
         guard let source = call.getObject("source") else {
             reject(call, code: "invalid_source", message: "Missing audio source.")
             return
