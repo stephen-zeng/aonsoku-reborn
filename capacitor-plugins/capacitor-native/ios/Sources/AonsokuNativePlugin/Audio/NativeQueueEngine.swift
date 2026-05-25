@@ -79,6 +79,8 @@ class NativeQueueEngine {
     private(set) var isShuffleActive: Bool = false
     private(set) var shuffleHistory: [String] = []
     private(set) var shuffleStartHistory: [String] = []
+    private(set) var sourceId: QueueSourceId?
+    private(set) var sourceName: String?
 
     private let shuffleEngine = NativeShuffleEngine()
     private let prevSeekThreshold: Double = 3.0
@@ -122,7 +124,9 @@ class NativeQueueEngine {
         songs: [QueueSong],
         currentIndex: Int,
         autoplay: Bool,
-        startTime: Double?
+        startTime: Double?,
+        sourceId: QueueSourceId? = nil,
+        sourceName: String? = nil
     ) {
         self.contextSongs = songs
         self.originalContextSongs = []
@@ -133,6 +137,8 @@ class NativeQueueEngine {
         self.playedUserQueueHistory = []
         self.isShuffleActive = false
         self.shuffleHistory = []
+        self.sourceId = sourceId
+        self.sourceName = sourceName
 
         if let song = self.currentSong {
             delegate?.queueEngine(self, loadSong: song, autoplay: autoplay, startTime: startTime)
@@ -424,26 +430,58 @@ class NativeQueueEngine {
         shuffleHistory = shuffleEngine.pushToHistory(shuffleHistory, id: id, maxLen: maxShuffleHistory)
     }
 
+    // MARK: - State Restoration
+
+    private(set) var isRestored: Bool = false
+
+    func restoreState(from persisted: PlaybackPersistState) {
+        contextSongs = persisted.contextSongs
+        currentIndex = persisted.currentIndex
+        userQueue = persisted.userQueue
+        originalContextSongs = persisted.originalContextSongs
+        originalUserSongs = persisted.originalUserSongs
+        isShuffleActive = persisted.isShuffleActive
+        shuffleHistory = persisted.shuffleHistory
+        shuffleStartHistory = persisted.shuffleStartHistory
+        loopState = LoopState(rawValue: persisted.loopState) ?? .off
+        isInUserQueue = persisted.isInUserQueue
+        playedUserQueueHistory = persisted.playedUserQueueHistory
+        sourceId = persisted.sourceId
+        sourceName = persisted.sourceName
+        isRestored = true
+    }
+
+    func clearRestoredFlag() {
+        isRestored = false
+    }
+
     // MARK: - State Export
 
     func getFullState(currentTime: Double, duration: Double, isPlaying: Bool) -> [String: Any] {
+        let sourceIdValue: Any = sourceId.map { ["type": $0.type, "id": $0.id] } ?? NSNull()
+        let sourceNameValue: Any = sourceName ?? NSNull()
+
         return [
             "contextQueue": [
                 "songs": contextSongs.map { $0.toDict() },
                 "currentIndex": currentIndex,
-                "sourceId": NSNull(),
-                "sourceName": NSNull(),
+                "sourceId": sourceIdValue,
+                "sourceName": sourceNameValue,
             ],
             "userQueue": userQueue.map { $0.toDict() },
             "originalContextSongs": originalContextSongs.map { $0.toDict() },
             "originalUserSongs": originalUserSongs.map { $0.toDict() },
             "isInUserQueue": isInUserQueue,
             "isShuffleActive": isShuffleActive,
+            "shuffleHistory": shuffleHistory,
+            "shuffleStartHistory": shuffleStartHistory,
+            "playedUserQueueHistory": playedUserQueueHistory.map { $0.toDict() },
             "loopState": loopState.rawValue,
             "isPlaying": isPlaying,
             "currentTime": currentTime,
             "duration": duration,
             "currentSongId": currentSong?.id ?? NSNull(),
+            "isRestored": isRestored,
         ]
     }
 }
