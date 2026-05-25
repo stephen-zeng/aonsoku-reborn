@@ -147,6 +147,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                     let generation = self.playbackGeneration
 
                     let item = AVPlayerItem(url: resolvedSource.url)
+                    item.preferredForwardBufferDuration = self.forwardBufferDuration(for: resolvedSource.kind)
                     let player = AVPlayer(playerItem: item)
                     self.player = player
                     self.playerItem = item
@@ -2323,6 +2324,15 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         return seconds
     }
 
+    private func forwardBufferDuration(for sourceKind: String?) -> TimeInterval {
+        switch sourceKind {
+        case "radio":
+            return 0
+        default:
+            return .greatestFiniteMagnitude
+        }
+    }
+
     private func makeTime(_ seconds: Double) -> CMTime {
         CMTime(seconds: seconds, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
     }
@@ -2507,6 +2517,7 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
                 self.playbackGeneration = generation
 
                 let item = AVPlayerItem(url: resolved.url)
+                item.preferredForwardBufferDuration = self.forwardBufferDuration(for: resolved.kind)
                 let player = AVPlayer(playerItem: item)
                 self.player = player
                 self.playerItem = item
@@ -2700,6 +2711,7 @@ extension AonsokuNativeAudioPlugin: PlaybackRecoveryDelegate {
         removeItemObservers()
 
         let item = AVPlayerItem(url: url)
+        item.preferredForwardBufferDuration = forwardBufferDuration(for: kind)
         player?.replaceCurrentItem(with: item)
         playerItem = item
         currentSourceKind = kind
