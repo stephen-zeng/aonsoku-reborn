@@ -178,5 +178,14 @@ enum Migrations {
                 columns: ["playedAt"]
             )
         }
+
+        migrator.registerMigration("v3") { db in
+            try db.create(table: "playbackState") { t in
+                t.primaryKey("key", .text)
+                t.column("stateJson", .text).notNull()
+                t.column("currentTime", .double).notNull().defaults(to: 0)
+                t.column("updatedAt", .integer).notNull()
+            }
+        }
     }
 }
