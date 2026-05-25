@@ -500,16 +500,14 @@ function UnifiedQueueView({
           </div>
         )}
 
+        {!hideModeButtons && (
+          <div className="pt-1 pb-1">
+            <QueueModeButtons />
+          </div>
+        )}
+
         {isRepeatOne && userQueueSongs.length === 0 && (
           <div>
-            <div
-              className={cn(
-                FULLSCREEN_QUEUE_BG_CLASS,
-                "sticky top-0 z-10 pt-1 pb-1",
-              )}
-            >
-              {!hideModeButtons && <QueueModeButtons />}
-            </div>
             {!hideRepeatIndicator && (
               <RepeatIndicator
                 icon={RepeatOne}
@@ -536,14 +534,6 @@ function UnifiedQueueView({
               sticky
               queueItemProps={queueItemProps}
             />
-            <div
-              className={cn(
-                FULLSCREEN_QUEUE_BG_CLASS,
-                "sticky top-0 z-10 pt-1 pb-1",
-              )}
-            >
-              {!hideModeButtons && <QueueModeButtons />}
-            </div>
             {!hideRepeatIndicator && (
               <RepeatIndicator
                 icon={RepeatOne}
@@ -579,14 +569,6 @@ function UnifiedQueueView({
 
             {hasNoUpcoming && !isRepeatAll ? (
               <div>
-                <div
-                  className={cn(
-                    FULLSCREEN_QUEUE_BG_CLASS,
-                    "sticky top-0 z-10 pt-1 pb-1",
-                  )}
-                >
-                  {!hideModeButtons && <QueueModeButtons />}
-                </div>
                 <div className="flex items-center justify-center py-4">
                   <span className="text-foreground/50 text-xs">
                     {t("fullscreen.emptyQueue")}
@@ -601,10 +583,7 @@ function UnifiedQueueView({
                     "sticky top-0 z-10 pt-1 pb-1",
                   )}
                 >
-                  {!hideModeButtons && <QueueModeButtons />}
-                  <div
-                    className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
-                  >
+                  <div className="flex items-center justify-between px-2 pt-1">
                     <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
                       {t("fullscreen.queueContinue")}
                     </h3>
@@ -763,6 +742,7 @@ function VirtualizedQueueView({
   type VirtualItem =
     | { type: "history"; song: ISong; key: string }
     | { type: "currentSong" }
+    | { type: "modeButtons" }
     | { type: "queueHeader" }
     | { type: "userQueueSong"; song: ISong; userQueueIndex: number }
     | { type: "queueDivider" }
@@ -786,6 +766,10 @@ function VirtualizedQueueView({
 
     if (!hideCurrentSong) {
       items.push({ type: "currentSong" });
+    }
+
+    if (!hideModeButtons) {
+      items.push({ type: "modeButtons" });
     }
 
     const filteredUserQueueSongs = userQueueSongs.filter(
@@ -844,6 +828,7 @@ function VirtualizedQueueView({
   }, [
     hideHistory,
     hideCurrentSong,
+    hideModeButtons,
     hideRepeatIndicator,
     playHistory,
     userQueueSongs,
@@ -869,6 +854,8 @@ function VirtualizedQueueView({
           return 64;
         case "currentSong":
           return 56;
+        case "modeButtons":
+          return 40;
         case "queueHeader":
           return 36;
         case "queueDivider":
@@ -1015,6 +1002,12 @@ function VirtualizedQueueView({
                           </div>
                         )}
 
+                        {item.type === "modeButtons" && (
+                          <div className="pt-1 pb-1">
+                            <QueueModeButtons />
+                          </div>
+                        )}
+
                         {item.type === "queueHeader" && (
                           <div className="flex items-center justify-between px-2 py-1">
                             <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
@@ -1056,10 +1049,7 @@ function VirtualizedQueueView({
 
                         {item.type === "continueHeader" && (
                           <div>
-                            {!hideModeButtons && <QueueModeButtons />}
-                            <div
-                              className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
-                            >
+                            <div className="flex items-center justify-between px-2 pt-1">
                               <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
                                 {t("fullscreen.queueContinue")}
                               </h3>
@@ -1070,7 +1060,6 @@ function VirtualizedQueueView({
 
                         {item.type === "emptyQueueMessage" && (
                           <div>
-                            {!hideModeButtons && <QueueModeButtons />}
                             <div className="flex items-center justify-center py-4">
                               <span className="text-foreground/50 text-xs">
                                 {t("fullscreen.emptyQueue")}
