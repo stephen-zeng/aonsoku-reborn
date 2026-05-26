@@ -91,6 +91,9 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var backgroundCacheSongIds = Set<String>()
     private var backgroundCacheCompletedSongIds = Set<String>()
     private var stalledSinceDate: Date?
+    private var pendingStartTime: Double?
+    private var pendingAutoplay = false
+    private var pendingStartSong: QueueSong?
     private var streamingLoader: StreamingResourceLoader?
     private let loaderQueue = DispatchQueue(label: "com.aonsoku.NativeAudio.loader", qos: .userInitiated)
     private var isQueueEngineActive = false
@@ -2027,6 +2030,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         case .readyToPlay:
             emitDuration(for: item, generation: generation, requestId: requestId)
             emitBuffering(false, requestId: requestId)
+            handlePendingSeekAndPlay(generation: generation)
         case .failed:
             let currentTime = player?.currentTime() ?? .zero
             recoveryController.triggerRecovery(
@@ -2318,6 +2322,34 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         handleEnded(generation: generation, requestId: requestId)
     }
 
+    private func handlePendingSeekAndPlay(generation: Int) {
+        guard let startTime = pendingStartTime else { return }
+        let autoplay = pendingAutoplay
+        let song = pendingStartSong
+        pendingStartTime = nil
+        pendingAutoplay = false
+        pendingStartSong = nil
+
+        guard let player, isCurrentPlayback(generation: generation) else { return }
+
+        player.seek(to: makeTime(startTime), toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] finished in
+            guard let self, self.isCurrentPlayback(generation: generation) else { return }
+            if !finished {
+                player.seek(to: .zero)
+            }
+            if autoplay {
+                player.play()
+                self.persistence.startProgressTracking()
+                if let song {
+                    self.stateQueue.async {
+                        self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
+                    }
+                    self.scrobbleSubmitter.sendNowPlaying(songId: song.id)
+                }
+            }
+        }
+    }
+
     private func clearPlayer(sendIdleEvent: Bool, deactivateSession: Bool = false) {
         isQueueTransitioning = false
         isRecoveryReload = false
@@ -2325,6 +2357,9 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         playbackGeneration += 1
         lastEmittedPlaybackState = nil
         isSeeking = false
+        pendingStartTime = nil
+        pendingAutoplay = false
+        pendingStartSong = nil
 
         streamingLoader?.cancel()
         streamingLoader?.cleanupTempFile()
@@ -3041,23 +3076,14 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
                 self.emitPlaybackState("loading")
 
                 if let startTime = startTime, startTime > 0 {
-                    player.seek(to: self.makeTime(startTime), toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] finished in
-                        guard let self, self.isCurrentPlayback(generation: generation) else { return }
-                        if !finished {
-                            // Seek failed (e.g. position not buffered yet for stream)
-                            // Fall back to playing from beginning
-                            player.seek(to: .zero)
-                        }
-                        if autoplay {
-                            player.play()
-                            self.persistence.startProgressTracking()
-                            self.stateQueue.async {
-                                self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
-                            }
-                            self.scrobbleSubmitter.sendNowPlaying(songId: song.id)
-                        }
-                    }
+                    // Defer seek + play until item is ready
+                    self.pendingStartTime = startTime
+                    self.pendingAutoplay = autoplay
+                    self.pendingStartSong = song
                 } else if autoplay {
+                    self.pendingStartTime = nil
+                    self.pendingAutoplay = false
+                    self.pendingStartSong = nil
                     player.play()
                     self.persistence.startProgressTracking()
                     self.stateQueue.async {
