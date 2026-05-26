@@ -2270,8 +2270,21 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private func handleBufferPositionMismatch(player: AVPlayer, generation: Int) {
         guard isCurrentPlayback(player: player, generation: generation) else { return }
 
+        let currentSeconds = player.currentTime().seconds
+        let trackDuration = durationSeconds()
+        let isNearEnd = currentSeconds > 0 && trackDuration > 0 && (trackDuration - currentSeconds) < 10.0
+
+        if isNearEnd && isQueueEngineActive {
+            NativeLogger.shared.info(
+                "buffer-position mismatch near end (\(String(format: "%.1f", currentSeconds))s / \(String(format: "%.1f", trackDuration))s) — treating as end-of-stream",
+                source: "Audio"
+            )
+            handleEnded(generation: generation, requestId: currentRequestId)
+            return
+        }
+
         NativeLogger.shared.warn(
-            "buffer-position mismatch: currentTime=\(String(format: "%.1f", player.currentTime().seconds))s not within loaded ranges, seeking to 0",
+            "buffer-position mismatch: currentTime=\(String(format: "%.1f", currentSeconds))s not within loaded ranges, seeking to 0",
             source: "Audio"
         )
 
