@@ -3373,15 +3373,27 @@ extension AonsokuNativeAudioPlugin: PlaybackRecoveryDelegate {
                 self.player?.play()
                 controller.reloadDidComplete(success: true, generation: generation)
             } else {
-                self.player?.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
-                    guard let self, self.isCurrentPlayback(generation: generation) else {
-                        controller.reloadDidComplete(success: false, generation: generation)
-                        return
-                    }
+                let trackDuration = self.durationSeconds()
+                let isNearEnd = savedSeconds > 0 && trackDuration > 0 && (trackDuration - savedSeconds) < 10.0
+
+                if isNearEnd && self.isQueueEngineActive {
+                    NativeLogger.shared.info(
+                        "recovery reload near end (\(String(format: "%.1f", savedSeconds))s / \(String(format: "%.1f", trackDuration))s) — treating as end-of-stream",
+                        source: "Audio"
+                    )
                     self.isRecoveryReload = false
-                    self.emitCorrectDurationFromMetadata()
-                    self.player?.play()
-                    controller.reloadDidComplete(success: true, generation: generation)
+                    self.handleEnded(generation: generation, requestId: self.currentRequestId)
+                } else {
+                    self.player?.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
+                        guard let self, self.isCurrentPlayback(generation: generation) else {
+                            controller.reloadDidComplete(success: false, generation: generation)
+                            return
+                        }
+                        self.isRecoveryReload = false
+                        self.emitCorrectDurationFromMetadata()
+                        self.player?.play()
+                        controller.reloadDidComplete(success: true, generation: generation)
+                    }
                 }
             }
         }
