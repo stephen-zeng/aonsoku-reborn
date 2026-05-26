@@ -29,7 +29,6 @@ import {
   DrawerClose,
   DrawerContent,
   DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
@@ -287,7 +286,6 @@ export function UserDropdown() {
                   <span>{t("menu.about")}</span>
                 </button>
               </DrawerClose>
-              {swStatus === "waiting" && <div className="border-t my-1" />}
               {swStatus === "waiting" && (
                 <DrawerClose asChild>
                   <button
@@ -299,21 +297,18 @@ export function UserDropdown() {
                   </button>
                 </DrawerClose>
               )}
-            </div>
-
-            {!lockUser && (
-              <DrawerFooter className="mt-0 border-t pt-4">
+              {!lockUser && (
                 <DrawerClose asChild>
                   <button
                     onClick={() => setLogoutDialogState(true)}
-                    className="flex items-center justify-center gap-2 rounded-md bg-destructive/10 px-3 py-3.5 text-sm font-medium text-destructive hover-supported:bg-destructive/20 w-full"
+                    className="flex items-center gap-3 rounded-md px-3 py-4 text-sm text-destructive hover-supported:bg-accent w-full text-left"
                   >
                     <LogOut className="h-4 w-4" />
                     <span>{t("menu.serverLogout")}</span>
                   </button>
                 </DrawerClose>
-              </DrawerFooter>
-            )}
+              )}
+            </div>
           </DrawerContent>
         </Drawer>
       ) : (
