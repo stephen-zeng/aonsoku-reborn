@@ -202,6 +202,15 @@ final class StreamingResourceLoader: NSObject, AVAssetResourceLoaderDelegate {
         tempFileHandle = nil
     }
 
+    private func truncateTempFile(to length: Int64) {
+        guard let handle = tempFileHandle else { return }
+        do {
+            try handle.truncate(atOffset: UInt64(length))
+        } catch {
+            NativeLogger.shared.warn("ResourceLoader: failed to truncate temp file: \(error.localizedDescription)", source: "Audio")
+        }
+    }
+
     private func fillContentInfo(_ request: AVAssetResourceLoadingContentInformationRequest, contentType: String, contentLength: Int64) {
         let uti = contentTypeToUTType(contentType)
         request.contentType = uti
@@ -255,7 +264,8 @@ final class StreamingResourceLoader: NSObject, AVAssetResourceLoaderDelegate {
         closeTempFile()
 
         guard let tempURL = tempFileURL, let contentType else { return }
-        delegate?.resourceLoader(self, didCompleteCache: tempURL, contentType: contentType, sizeBytes: totalContentLength)
+        let actualSize = rangeTracker.totalBytesDownloaded
+        delegate?.resourceLoader(self, didCompleteCache: tempURL, contentType: contentType, sizeBytes: actualSize)
     }
 }
 
@@ -382,8 +392,20 @@ extension StreamingResourceLoader: URLSessionDataDelegate {
                     }
                 }
             } else {
-                NativeLogger.shared.info("ResourceLoader: task completed, totalBytes=\(rangeTracker.totalBytesDownloaded)", source: "Audio")
+                let actualBytes = rangeTracker.totalBytesDownloaded
+                NativeLogger.shared.info("ResourceLoader: task completed, totalBytes=\(actualBytes)", source: "Audio")
                 state.loadingRequest.finishLoading()
+
+                if state.requestedOffset == 0 && pendingRequests.isEmpty && actualBytes > 0 {
+                    if totalContentLength != actualBytes {
+                        NativeLogger.shared.info("ResourceLoader: correcting totalContentLength from \(totalContentLength) to \(actualBytes)", source: "Audio")
+                        if totalContentLength > actualBytes {
+                            truncateTempFile(to: actualBytes)
+                        }
+                        totalContentLength = actualBytes
+                    }
+                }
+
                 checkCacheCompletion()
             }
         }
