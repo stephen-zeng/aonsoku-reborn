@@ -232,12 +232,8 @@ function UnifiedQueueView({
   snapHaptic?: () => void;
 }) {
   const { t } = useTranslation();
-  const {
-    playFromQueue,
-    playFromUserQueue,
-    setNextOnQueue,
-    reorderQueue,
-  } = usePlayerActions();
+  const { playFromQueue, playFromUserQueue, setNextOnQueue, reorderQueue } =
+    usePlayerActions();
   const loopState = usePlayerLoop();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
 

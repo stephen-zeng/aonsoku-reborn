@@ -78,9 +78,8 @@ export const usePinnedHomeActions = () =>
   usePinnedHomeStore((state) => state.actions, shallow);
 
 export const useIsPinnedHomeItem = (item: PinnedHomeItem) =>
-  usePinnedHomeStore(
-    (state) =>
-      state.items.some(
-        (current) => current.id === item.id && current.type === item.type,
-      ),
+  usePinnedHomeStore((state) =>
+    state.items.some(
+      (current) => current.id === item.id && current.type === item.type,
+    ),
   );

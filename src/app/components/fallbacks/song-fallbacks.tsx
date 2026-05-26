@@ -68,11 +68,7 @@ export function InfinitySongListFallback() {
   return (
     <>
       <div className="w-full flex flex-col md:hidden">
-        <MobilePageHeader
-          variant="sub"
-          title=""
-          transparentTheme="default"
-        />
+        <MobilePageHeader variant="sub" title="" transparentTheme="default" />
         <MobileListHeaderFallback />
         <MobileSongsListFallback />
       </div>
@@ -159,11 +155,7 @@ export function ArtistsTableFallback() {
   return (
     <>
       <div className="w-full flex flex-col md:hidden">
-        <MobilePageHeader
-          variant="sub"
-          title=""
-          transparentTheme="default"
-        />
+        <MobilePageHeader variant="sub" title="" transparentTheme="default" />
         <MobileListHeaderFallback />
         <MobileArtistsListFallback />
       </div>
@@ -173,11 +165,7 @@ export function ArtistsTableFallback() {
         />
 
         <div className="w-full h-[calc(100%-80px)] overflow-auto">
-          <TableFallback
-            columns="artists"
-            variant="modern"
-            type="infinity"
-          />
+          <TableFallback columns="artists" variant="modern" type="infinity" />
         </div>
       </div>
     </>

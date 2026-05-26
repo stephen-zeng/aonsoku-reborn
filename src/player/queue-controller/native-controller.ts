@@ -569,8 +569,7 @@ export class NativeQueueController implements QueueController {
       toIndex < contextPlayedCount + userQueue.songs.length;
     const fromInUpcoming =
       fromIndex >= contextPlayedCount + userQueue.songs.length;
-    const toInUpcoming =
-      toIndex >= contextPlayedCount + userQueue.songs.length;
+    const toInUpcoming = toIndex >= contextPlayedCount + userQueue.songs.length;
 
     if (fromInUser && toInUser) {
       const localFrom = fromIndex - contextPlayedCount;
@@ -745,14 +744,17 @@ export class NativeQueueController implements QueueController {
         }
 
         if (isRestoredColdStart) {
-          s.songlist.contextQueue.songs =
-            nativeState.contextQueue.songs.map(nativeQueueSongToISong);
-          s.songlist.userQueue.songs =
-            nativeState.userQueue.map(nativeQueueSongToISong);
+          s.songlist.contextQueue.songs = nativeState.contextQueue.songs.map(
+            nativeQueueSongToISong,
+          );
+          s.songlist.userQueue.songs = nativeState.userQueue.map(
+            nativeQueueSongToISong,
+          );
           s.songlist.originalContextSongs =
             nativeState.originalContextSongs.map(nativeQueueSongToISong);
-          s.songlist.originalUserSongs =
-            nativeState.originalUserSongs.map(nativeQueueSongToISong);
+          s.songlist.originalUserSongs = nativeState.originalUserSongs.map(
+            nativeQueueSongToISong,
+          );
           s.songlist.playedUserQueueHistory =
             nativeState.playedUserQueueHistory.map(nativeQueueSongToISong);
           s.songlist.shuffleHistory = nativeState.shuffleHistory;
@@ -911,7 +913,8 @@ export class NativeQueueController implements QueueController {
           );
         if (s.songlist.currentSong) {
           s.songlist.currentSong =
-            resolvedMap.get(s.songlist.currentSong.id) ?? s.songlist.currentSong;
+            resolvedMap.get(s.songlist.currentSong.id) ??
+            s.songlist.currentSong;
         }
       });
     } catch (err) {

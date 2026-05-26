@@ -110,9 +110,7 @@ export class AonsokuNativeAudioWeb
     return Promise.reject(createNativeAudioUnavailableError("setContextQueue"));
   }
 
-  updateContextQueue(
-    _options: NativeUpdateContextQueueOptions,
-  ): Promise<void> {
+  updateContextQueue(_options: NativeUpdateContextQueueOptions): Promise<void> {
     return Promise.reject(
       createNativeAudioUnavailableError("updateContextQueue"),
     );

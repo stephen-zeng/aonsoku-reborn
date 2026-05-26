@@ -145,7 +145,8 @@ export function isDarkColor(hsl: string) {
     const s = val / 255;
     return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
   };
-  const L = 0.2126 * getLinear(r) + 0.7152 * getLinear(g) + 0.0722 * getLinear(b);
+  const L =
+    0.2126 * getLinear(r) + 0.7152 * getLinear(g) + 0.0722 * getLinear(b);
   return L < 0.43;
 }
 
@@ -158,7 +159,8 @@ export function isDarkHex(hex: string) {
     const s = val / 255;
     return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
   };
-  const L = 0.2126 * getLinear(r) + 0.7152 * getLinear(g) + 0.0722 * getLinear(b);
+  const L =
+    0.2126 * getLinear(r) + 0.7152 * getLinear(g) + 0.0722 * getLinear(b);
   return L < 0.43;
 }
 

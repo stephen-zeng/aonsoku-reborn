@@ -80,9 +80,7 @@ export default function MobileAlbumsList() {
     }
 
     if (savedFilter === AlbumsFilters.ByYear) {
-      const savedYear = localStorage.getItem(
-        PersistedAlbumListKeys.YearFilter,
-      );
+      const savedYear = localStorage.getItem(PersistedAlbumListKeys.YearFilter);
       if (savedYear) {
         navigate(ROUTES.ALBUMS.YEAR(savedYear), { replace: true });
         return;

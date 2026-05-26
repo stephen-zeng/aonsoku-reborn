@@ -142,9 +142,7 @@ function AlbumInfoFallback() {
   );
 }
 
-export function MobileSongListFallback({
-  length = 8,
-}: { length?: number }) {
+export function MobileSongListFallback({ length = 8 }: { length?: number }) {
   return (
     <div className="flex flex-col gap-1">
       {Array.from({ length }).map((_, i) => (
@@ -166,7 +164,9 @@ export function MobileSongListFallback({
 
 export function MobileAlbumTrackListFallback({
   length = 10,
-}: { length?: number }) {
+}: {
+  length?: number;
+}) {
   return (
     <div className="flex flex-col gap-1">
       {Array.from({ length }).map((_, i) => (
@@ -209,11 +209,7 @@ export function AlbumsFallback() {
   return (
     <>
       <div className="w-full flex flex-col md:hidden">
-        <MobilePageHeader
-          variant="sub"
-          title=""
-          transparentTheme="default"
-        />
+        <MobilePageHeader variant="sub" title="" transparentTheme="default" />
         <div className="px-4 py-4">
           <div className="flex flex-col mb-4">
             <Skeleton id="detail-page-title" className="h-8 w-32 mb-1" />

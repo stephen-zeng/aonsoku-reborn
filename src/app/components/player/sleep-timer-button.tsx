@@ -53,11 +53,7 @@ export function SleepTimerButton({ disabled }: SleepTimerButtonProps) {
           </Button>
         </PopoverTrigger>
       </SimpleTooltip>
-      <PopoverContent
-        side="top"
-        align="center"
-        className="w-48 p-2"
-      >
+      <PopoverContent side="top" align="center" className="w-48 p-2">
         <div className="flex flex-col gap-1">
           <p className="text-xs font-medium text-muted-foreground px-2 py-1">
             {t("player.sleepTimer.title")}

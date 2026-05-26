@@ -89,8 +89,11 @@ export const QueueItemRow = forwardRef<
   },
   ref,
 ) {
-  const { open: dropdownOpen, setOpen: setDropdownOpen, triggerProps } =
-    useTouchMenuGuard();
+  const {
+    open: dropdownOpen,
+    setOpen: setDropdownOpen,
+    triggerProps,
+  } = useTouchMenuGuard();
   const { trigger } = useHaptic();
   const hapticTrigger = trigger ? () => trigger() : undefined;
 

@@ -552,7 +552,14 @@ svg#bars .eq-bar--4 {
 }
 
 /* Fix synced lyrics visibility on light themes and light player backdrops */
-:is(.light, .night-owl-light, .noctis-lilac, .achiever, .tinacious-design, .backdrop-light)
+:is(
+    .light,
+    .night-owl-light,
+    .noctis-lilac,
+    .achiever,
+    .tinacious-design,
+    .backdrop-light
+  )
   .lrc-box
   .amll-lyric-player {
   --amll-lp-color: hsl(var(--foreground));

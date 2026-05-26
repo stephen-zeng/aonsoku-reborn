@@ -265,9 +265,7 @@ function MobileSongRow({
         isCurrentPlaying={isCurrentPlaying}
       />
       <div className="flex-1 min-w-0">
-        <h3 className="font-medium text-sm truncate">
-          {song.title}
-        </h3>
+        <h3 className="font-medium text-sm truncate">{song.title}</h3>
         <p className="text-xs text-muted-foreground truncate">
           {song.artist} • {song.album}
         </p>

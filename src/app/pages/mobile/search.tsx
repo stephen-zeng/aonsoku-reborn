@@ -12,10 +12,7 @@ import {
   getOfflineSearchResults,
   useOfflineQuery,
 } from "@/lib/offlineQueryClient";
-import {
-  AonsokuNativeData,
-  isNativeDataAvailable,
-} from "@/native/data/facade";
+import { AonsokuNativeData, isNativeDataAvailable } from "@/native/data/facade";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
@@ -260,7 +257,9 @@ export default function MobileSearch() {
                 coverArtType="album"
                 title={album.name}
                 subtitle={album.artist}
-                onRowClick={() => navigateWithFlush(ROUTES.ALBUM.PAGE(album.id))}
+                onRowClick={() =>
+                  navigateWithFlush(ROUTES.ALBUM.PAGE(album.id))
+                }
                 onPlayClick={() => handlePlayAlbum(album.id, album.name)}
               />
             ))}
@@ -280,7 +279,9 @@ export default function MobileSearch() {
                 albumId={song.albumId}
                 title={song.title}
                 subtitle={song.artist}
-                onRowClick={() => navigateWithFlush(ROUTES.ALBUM.PAGE(song.albumId))}
+                onRowClick={() =>
+                  navigateWithFlush(ROUTES.ALBUM.PAGE(song.albumId))
+                }
                 onPlayClick={() => playSong(song)}
               />
             ))}
@@ -298,7 +299,9 @@ export default function MobileSearch() {
                 subtitle={t("artist.info.albumsCount", {
                   count: artist.albumCount,
                 })}
-                onRowClick={() => navigateWithFlush(ROUTES.ARTIST.PAGE(artist.id))}
+                onRowClick={() =>
+                  navigateWithFlush(ROUTES.ARTIST.PAGE(artist.id))
+                }
                 onPlayClick={() => handlePlayArtist(artist)}
               />
             ))}
