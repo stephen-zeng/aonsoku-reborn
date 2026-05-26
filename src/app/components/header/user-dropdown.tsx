@@ -254,7 +254,9 @@ export function UserDropdown() {
               </div>
             </DrawerHeader>
 
+            <div className="border-t" />
             <SyncSection variant="mobile" />
+            <div className="border-t" />
 
             <div className="flex flex-col gap-1.5 px-4 pb-2">
               {!isServerRunning && (
