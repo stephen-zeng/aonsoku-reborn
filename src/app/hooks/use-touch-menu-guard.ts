@@ -20,6 +20,7 @@ export function useTouchMenuGuard(options?: UseTouchMenuGuardOptions) {
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const openedByLongPress = useRef(false);
   const hasMoved = useRef(false);
+  const allowOpen = useRef(false);
 
   const clearTimer = useCallback(() => {
     if (longPressTimer.current) {
@@ -34,18 +35,28 @@ export function useTouchMenuGuard(options?: UseTouchMenuGuardOptions) {
     };
   }, []);
 
+  const guardedSetOpen = useCallback((state: boolean) => {
+    if (state) {
+      if (!allowOpen.current) return;
+      allowOpen.current = false;
+    }
+    setOpen(state);
+  }, []);
+
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
       if (e.pointerType !== "touch") return;
       startPos.current = { x: e.clientX, y: e.clientY };
       openedByLongPress.current = false;
       hasMoved.current = false;
+      e.preventDefault();
       e.stopPropagation();
 
       clearTimer();
       longPressTimer.current = setTimeout(() => {
         if (startPos.current && !hasMoved.current) {
           openedByLongPress.current = true;
+          allowOpen.current = true;
           setOpen(true);
           if (hapticOnLongPress && hapticTrigger) hapticTrigger("medium");
         }
@@ -81,6 +92,7 @@ export function useTouchMenuGuard(options?: UseTouchMenuGuardOptions) {
       if (openedByLongPress.current) return;
 
       e.stopPropagation();
+      allowOpen.current = true;
       setOpen(true);
     },
     [clearTimer, moveThreshold],
@@ -101,6 +113,7 @@ export function useTouchMenuGuard(options?: UseTouchMenuGuardOptions) {
       return;
     }
     e.stopPropagation();
+    allowOpen.current = true;
     setOpen(true);
   }, []);
 
@@ -110,7 +123,7 @@ export function useTouchMenuGuard(options?: UseTouchMenuGuardOptions) {
 
   return {
     open,
-    setOpen,
+    setOpen: guardedSetOpen,
     triggerProps: {
       onPointerDown,
       onPointerMove,
