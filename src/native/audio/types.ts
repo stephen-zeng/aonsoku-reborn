@@ -325,6 +325,19 @@ export interface NativeAudioRecoveryAttemptEvent {
   maxAttempts: number;
 }
 
+export interface NativeSleepTimerFiredEvent {
+  reason: "duration" | "endOfTrack";
+}
+
+export interface NativeSleepTimerRemainingResult {
+  remainingSeconds: number;
+}
+
+export interface NativeSetSleepTimerOptions {
+  seconds: number;
+  mode: "duration" | "endOfTrack";
+}
+
 export interface NativeAudioEvents {
   playbackStateChanged: NativeAudioPlaybackStateChangedEvent;
   progress: NativeAudioProgressEvent;
@@ -343,6 +356,7 @@ export interface NativeAudioEvents {
   downloadFailed: NativeDownloadFailedEvent;
   systemVolumeChanged: NativeSystemVolumeChangedEvent;
   recoveryAttempt: NativeAudioRecoveryAttemptEvent;
+  sleepTimerFired: NativeSleepTimerFiredEvent;
 }
 
 export type NativeAudioEventName = keyof NativeAudioEvents;
@@ -400,6 +414,11 @@ export interface NativeAudioPlugin extends Plugin {
   getSystemVolume(): Promise<NativeSystemVolumeResult>;
   setVolumeHUDEnabled(options: { enabled: boolean }): Promise<void>;
   setLikeActive(options: { active: boolean }): Promise<void>;
+
+  // Sleep Timer
+  setSleepTimer(options: NativeSetSleepTimerOptions): Promise<void>;
+  cancelSleepTimer(): Promise<void>;
+  getSleepTimerRemaining(): Promise<NativeSleepTimerRemainingResult>;
 
   addListener<TEvent extends NativeAudioEventName>(
     eventName: TEvent,

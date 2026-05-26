@@ -1,6 +1,7 @@
 import type { Draft } from "immer";
 import { LanControlMessageType } from "@/types/lanControl";
 import { seekPlaybackTarget } from "@/player/playback/backend-registry";
+import { useSleepTimerStore } from "@/store/sleep-timer.store";
 import type {
   IPlayerActions,
   IPlayerContext,
@@ -884,6 +885,20 @@ export function createQueueActions(shared: SharedDeps) {
 
     handleSongEnded: () => {
       if (isRemoteActive()) return;
+
+      const sleepTimer = useSleepTimerStore.getState();
+      if (sleepTimer.isActive && sleepTimer.mode === "end-of-track") {
+        logger.info("[handleSongEnded → sleepTimer end-of-track] pausing");
+        set((state) => {
+          state.playerProgress.progress = 0;
+          state.playerProgress.bufferedProgress = 0;
+          state.playerState.isPlaying = false;
+          state.playerState.isTransitioning = false;
+        });
+        sleepTimer.cancelTimer();
+        return;
+      }
+
       const { loopState } = get().playerState;
       const songlist = get().songlist;
       const transition = transitionHandleSongEnded(songlist, loopState);

@@ -18,6 +18,7 @@ import {
   type NativePlayAtIndexOptions,
   type NativeRemoveFromUserQueueOptions,
   type NativeSetContextQueueOptions,
+  type NativeSetSleepTimerOptions,
 } from "./types";
 
 export type NativeAudioUnavailableReason =
@@ -178,6 +179,22 @@ class UnavailableNativeAudioWeb extends WebPlugin implements NativeAudioPlugin {
 
   setVolumeHUDEnabled(): Promise<void> {
     return Promise.resolve();
+  }
+
+  setSleepTimer(_options: NativeSetSleepTimerOptions): Promise<void> {
+    return Promise.reject(createNativeAudioUnavailableError("setSleepTimer"));
+  }
+
+  cancelSleepTimer(): Promise<void> {
+    return Promise.reject(
+      createNativeAudioUnavailableError("cancelSleepTimer"),
+    );
+  }
+
+  getSleepTimerRemaining() {
+    return Promise.reject(
+      createNativeAudioUnavailableError("getSleepTimerRemaining"),
+    );
   }
 }
 

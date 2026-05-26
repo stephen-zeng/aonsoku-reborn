@@ -404,6 +404,14 @@
         "mute": "Mute",
         "unmute": "Unmute"
       }
+    },
+    "sleepTimer": {
+      "tooltip": "Sleep timer",
+      "title": "Sleep timer",
+      "endOfTrack": "End of current track",
+      "minutes": "{{count}} min",
+      "remaining": "{{time}} remaining",
+      "cancel": "Cancel timer"
     }
   },
   "error": {

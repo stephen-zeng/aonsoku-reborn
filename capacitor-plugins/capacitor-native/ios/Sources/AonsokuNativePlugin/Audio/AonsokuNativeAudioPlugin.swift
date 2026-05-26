@@ -45,6 +45,9 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "getSystemVolume", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setVolumeHUDEnabled", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setLikeActive", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setSleepTimer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "cancelSleepTimer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getSleepTimerRemaining", returnType: CAPPluginReturnPromise),
     ]
 
     private var player: AVPlayer?
@@ -112,6 +115,11 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         repository: PlaybackStateRepository(db: DatabaseManager.shared.dbPool)
     )
     private var savedRestoreTime: Double?
+
+    // Sleep Timer
+    private var sleepTimer: Timer?
+    private var sleepTimerEndDate: Date?
+    private var sleepTimerMode: String = "duration"
 
     public override func load() {
         super.load()
@@ -1267,6 +1275,66 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
+    // MARK: - Sleep Timer
+
+    @objc func setSleepTimer(_ call: CAPPluginCall) {
+        let seconds = call.getDouble("seconds") ?? 0
+        let mode = call.getString("mode") ?? "duration"
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.sleepTimer?.invalidate()
+            self.sleepTimerMode = mode
+
+            if mode == "endOfTrack" {
+                self.sleepTimerEndDate = nil
+            } else {
+                self.sleepTimerEndDate = Date().addingTimeInterval(seconds)
+                self.sleepTimer = Timer.scheduledTimer(
+                    withTimeInterval: seconds,
+                    repeats: false
+                ) { [weak self] _ in
+                    self?.fireSleepTimer()
+                }
+            }
+            call.resolve()
+        }
+    }
+
+    @objc func cancelSleepTimer(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.sleepTimer?.invalidate()
+            self.sleepTimer = nil
+            self.sleepTimerEndDate = nil
+            self.sleepTimerMode = "duration"
+            call.resolve()
+        }
+    }
+
+    @objc func getSleepTimerRemaining(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            var remaining: Double = 0
+            if let endDate = self.sleepTimerEndDate {
+                remaining = max(0, endDate.timeIntervalSinceNow)
+            }
+            call.resolve(["remainingSeconds": remaining])
+        }
+    }
+
+    private func fireSleepTimer() {
+        sleepTimer?.invalidate()
+        sleepTimer = nil
+        sleepTimerEndDate = nil
+        sleepTimerMode = "duration"
+
+        player?.pause()
+        emitPlaybackState("paused", requestId: currentRequestId)
+        updateNowPlayingPlaybackInfo()
+        notifyListeners("sleepTimerFired", data: ["reason": "duration"])
+    }
+
     private func removeVolumeSliderView() {
         volumeSlider = nil
         volumeSliderView?.removeFromSuperview()
@@ -2256,6 +2324,15 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     private func handleEnded(generation: Int, requestId: String?) {
         guard isCurrentPlayback(generation: generation) else {
+            return
+        }
+
+        if sleepTimerMode == "endOfTrack" {
+            sleepTimerMode = "duration"
+            player?.pause()
+            emitPlaybackState("paused", requestId: requestId)
+            updateNowPlayingPlaybackInfo()
+            notifyListeners("sleepTimerFired", data: ["reason": "endOfTrack"])
             return
         }
 
