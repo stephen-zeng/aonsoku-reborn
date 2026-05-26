@@ -197,7 +197,15 @@ class CacheManager {
    */
   async getCachedAudioUrl(songId: string): Promise<string | null> {
     const source = await resolveCachedAudioSource(songId);
-    return source?.url ?? null;
+    if (source) return source.url;
+
+    const key = audioKey(songId);
+    if (getCacheIndexItems()[key]) {
+      getCacheIndexActions().removeItem(key);
+      await deleteCacheMeta(key);
+    }
+
+    return null;
   }
 
   async cacheCover(coverArtId: string, size = "700"): Promise<void> {
