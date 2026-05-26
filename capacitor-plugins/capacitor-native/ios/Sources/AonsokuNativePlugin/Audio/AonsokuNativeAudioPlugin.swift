@@ -1989,7 +1989,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 // Fallback: detect end-of-stream even without download completion
                 self.checkEndOfStreamFallback(player: player, generation: generation, requestId: requestId)
             }
-            guard self.isInForeground else { return }
+            guard self.isInForeground, !self.isQueueTransitioning else { return }
             self.emitProgress(requestId: requestId)
         }
     }
@@ -2819,14 +2819,17 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             return false
         }
         let current = player?.currentTime().seconds ?? 0
-        return (duration.seconds - current) < 0.5
+        return (duration.seconds - current) < 1.0
     }
 
     private func seekToStartAndPlay() {
         guard let player = player else { return }
+        isSeeking = true
         player.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
             guard let self else { return }
+            self.isSeeking = false
             self.player?.play()
+            self.emitProgress()
             self.updateNowPlayingPlaybackInfo()
         }
     }
@@ -3071,9 +3074,11 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
             )
         }
         DispatchQueue.main.async {
+            self.isSeeking = true
             self.player?.pause()
             self.player?.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
                 guard let self else { return }
+                self.isSeeking = false
                 self.isQueueTransitioning = false
                 self.emitPlaybackState("ended")
                 self.emitProgress()
