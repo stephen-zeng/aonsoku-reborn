@@ -45,13 +45,8 @@ export function HeaderItem({ song }: { song: ISong }) {
     }
   }
 
-  return (
-    <div
-      className={clsx(
-        "w-full h-[140px] sm:h-[250px] 2xl:h-[300px] relative",
-        isFirefox && "bg-black/60",
-      )}
-    >
+  const innerContent = (
+    <>
       <div
         data-testid="header-bg"
         className="absolute -inset-10 bg-cover bg-center z-0 bg-skeleton"
@@ -173,6 +168,31 @@ export function HeaderItem({ song }: { song: ISong }) {
           </div>
         </div>
       </div>
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <Link
+        to={ROUTES.ALBUM.PAGE(song.albumId)}
+        className={clsx(
+          "w-full h-[140px] sm:h-[250px] 2xl:h-[300px] relative block",
+          isFirefox && "bg-black/60",
+        )}
+      >
+        {innerContent}
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      className={clsx(
+        "w-full h-[140px] sm:h-[250px] 2xl:h-[300px] relative",
+        isFirefox && "bg-black/60",
+      )}
+    >
+      {innerContent}
     </div>
   );
 }
