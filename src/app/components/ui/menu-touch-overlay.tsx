@@ -20,7 +20,9 @@ export function MenuTouchOverlay() {
         touchAction: "manipulation",
       }}
       onPointerDown={(e) => {
-        if (e.pointerType === "touch") close();
+        if (e.pointerType === "touch") {
+          React.startTransition(() => close());
+        }
       }}
     />
   );
