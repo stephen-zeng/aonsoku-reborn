@@ -302,7 +302,7 @@ export function UserDropdown() {
             </div>
 
             {!lockUser && (
-              <DrawerFooter className="border-t pt-4">
+              <DrawerFooter className="mt-0 border-t pt-4">
                 <DrawerClose asChild>
                   <button
                     onClick={() => setLogoutDialogState(true)}
