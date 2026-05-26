@@ -821,22 +821,27 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func deleteCachedAudioFile(songId: String) throws -> Bool {
-        let directory = try cacheDirectoryURL(createIfNeeded: false)
-        guard FileManager.default.fileExists(atPath: directory.path) else {
-            return false
-        }
-
         let cacheId = cacheId(for: songId)
         let fileManager = FileManager.default
-        let urls = try fileManager.contentsOfDirectory(
-            at: directory,
-            includingPropertiesForKeys: nil
-        )
         var deleted = false
 
-        for url in urls where url.lastPathComponent.hasPrefix("\(cacheId).") {
-            try fileManager.removeItem(at: url)
-            deleted = true
+        let primaryDirectory = try cacheDirectoryURL(createIfNeeded: false)
+        if fileManager.fileExists(atPath: primaryDirectory.path) {
+            let urls = try fileManager.contentsOfDirectory(at: primaryDirectory, includingPropertiesForKeys: nil)
+            for url in urls where url.lastPathComponent.hasPrefix("\(cacheId).") {
+                try fileManager.removeItem(at: url)
+                deleted = true
+            }
+        }
+
+        let secondaryDirectory = try AudioCacheUtils.cacheDirectoryURL(createIfNeeded: false)
+        if secondaryDirectory.path != primaryDirectory.path,
+           fileManager.fileExists(atPath: secondaryDirectory.path) {
+            let urls = try fileManager.contentsOfDirectory(at: secondaryDirectory, includingPropertiesForKeys: nil)
+            for url in urls where url.lastPathComponent.hasPrefix("\(cacheId).") {
+                try fileManager.removeItem(at: url)
+                deleted = true
+            }
         }
 
         return deleted
