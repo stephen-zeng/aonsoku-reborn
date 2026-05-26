@@ -3,7 +3,10 @@ import { useIsTouchPrimary } from "@/app/hooks/use-input-mode";
 
 export const MenuCloseContext = React.createContext<(() => void) | null>(null);
 
-export function MenuTouchOverlay() {
+export const MenuTouchOverlay = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>((props, ref) => {
   const isTouchPrimary = useIsTouchPrimary();
   const close = React.useContext(MenuCloseContext);
 
@@ -11,6 +14,7 @@ export function MenuTouchOverlay() {
 
   return (
     <div
+      ref={ref}
       aria-hidden
       style={{
         position: "fixed",
@@ -24,6 +28,8 @@ export function MenuTouchOverlay() {
           React.startTransition(() => close());
         }
       }}
+      {...props}
     />
   );
-}
+});
+MenuTouchOverlay.displayName = "MenuTouchOverlay";
