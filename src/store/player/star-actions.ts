@@ -1,6 +1,9 @@
 import type { Draft } from "immer";
+import { queryClient } from "@/lib/queryClient";
 import { subsonic } from "@/service/subsonic";
+import { libraryDb, withStarredAt } from "@/store/library-db";
 import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
+import { queryKeys } from "@/utils/queryKeys";
 import { applyStarToAllLists, hasAnySongs } from "./queue-utils";
 
 interface SharedDeps {
@@ -80,6 +83,28 @@ export function createStarActions(shared: SharedDeps) {
         applyStarToAllLists(state.songlist, id, newStarred);
         state.playerState.isSongStarred = !isSongStarred;
       });
+
+      // Update local IndexedDB cache
+      await libraryDb.songs.put(
+        withStarredAt({
+          ...currentSong,
+          starred: newStarred,
+        }),
+      );
+
+      // Invalidate queries so that other UI elements refresh
+      queryClient.invalidateQueries({ queryKey: queryKeys.song.all });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.favorites.count,
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.favorites.list,
+      });
+      if (currentSong.albumId) {
+        queryClient.invalidateQueries({
+          queryKey: [...queryKeys.album.single, currentSong.albumId],
+        });
+      }
     },
   } satisfies Partial<IPlayerActions>;
 }
