@@ -1,16 +1,22 @@
-import { DiscAlbumIcon, SearchIcon } from "lucide-react";
-import { useCallback, useState } from "react";
+import { DiscAlbumIcon, SearchIcon, SortAscIcon } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AlbumGridCard } from "@/app/components/albums/album-grid-card";
 import { CardSkeleton } from "@/app/components/fallbacks/ui-fallbacks";
 import { InfiniteScroll } from "@/app/components/infinite-scroll";
+import { MobileAlbumFilterDrawer } from "@/app/components/mobile/album-filter-drawer";
 import { MobileEmptyState } from "@/app/components/mobile/empty-state";
 import { MobileSearchBar } from "@/app/components/mobile/search-bar";
 import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import { Button } from "@/app/components/ui/button";
 import { Skeleton } from "@/app/components/ui/skeleton";
-import { AlbumsFilters, AlbumsSearchParams } from "@/utils/albumsFilter";
+import { ROUTES } from "@/routes/routesList";
+import {
+  AlbumsFilters,
+  AlbumsSearchParams,
+  PersistedAlbumListKeys,
+} from "@/utils/albumsFilter";
 import { SearchParamsHandler } from "@/utils/searchParamsHandler";
 import { useAlbumsListModel } from "../albums/list.model";
 
@@ -40,9 +46,11 @@ function MobileAlbumsFallback() {
 
 export default function MobileAlbumsList() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { getSearchParam } = new SearchParamsHandler(searchParams);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
   const handleSearchOpenChange = useCallback(
     (v: boolean) => setSearchOpen(v),
     [],
@@ -56,6 +64,33 @@ export default function MobileAlbumsList() {
     hasNextPage,
     isFetchingNextPage,
   } = useAlbumsListModel();
+
+  useEffect(() => {
+    const hasMainFilter = searchParams.has(AlbumsSearchParams.MainFilter);
+    if (hasMainFilter) return;
+
+    const savedFilter = localStorage.getItem(PersistedAlbumListKeys.MainFilter);
+    if (!savedFilter) return;
+
+    if (
+      savedFilter === AlbumsFilters.ByDiscography ||
+      savedFilter === AlbumsFilters.ByGenre
+    ) {
+      return;
+    }
+
+    if (savedFilter === AlbumsFilters.ByYear) {
+      const savedYear = localStorage.getItem(
+        PersistedAlbumListKeys.YearFilter,
+      );
+      if (savedYear) {
+        navigate(ROUTES.ALBUMS.YEAR(savedYear), { replace: true });
+        return;
+      }
+    }
+
+    navigate(ROUTES.ALBUMS.GENERIC(savedFilter), { replace: true });
+  }, [searchParams, navigate]);
 
   const currentFilter = getSearchParam<string>(
     AlbumsSearchParams.MainFilter,
@@ -99,14 +134,24 @@ export default function MobileAlbumsList() {
               {albumsCount}
             </span>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-10"
-            onClick={() => setSearchOpen(!searchOpen)}
-          >
-            <SearchIcon className="size-5" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-10"
+              onClick={() => setSearchOpen(!searchOpen)}
+            >
+              <SearchIcon className="size-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-10"
+              onClick={() => setFilterOpen(true)}
+            >
+              <SortAscIcon className="size-5" />
+            </Button>
+          </div>
         </div>
         <MobileSearchBar
           open={searchOpen}
@@ -132,6 +177,7 @@ export default function MobileAlbumsList() {
           isLoading={isFetchingNextPage}
         />
       </div>
+      <MobileAlbumFilterDrawer open={filterOpen} onOpenChange={setFilterOpen} />
     </div>
   );
 }

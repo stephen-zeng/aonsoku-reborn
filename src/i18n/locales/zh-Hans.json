@@ -32,6 +32,7 @@
         "title": "哎呀，这里没有专辑！"
       },
       "filter": {
+        "label": "筛选",
         "artist": "艺术家",
         "discography": "作品目录",
         "favorites": "收藏",
@@ -42,7 +43,11 @@
         "recentlyAdded": "最近添加",
         "recentlyPlayed": "最近播放",
         "releaseYear": "发行年份",
-        "search": "搜索"
+        "search": "搜索",
+        "year": {
+          "oldest": "最早优先",
+          "newest": "最新优先"
+        }
       },
       "genre": {
         "label": "选择一个流派…",
