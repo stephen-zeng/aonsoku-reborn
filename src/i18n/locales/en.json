@@ -1,5 +1,6 @@
 {
   "home": {
+    "pinned": "Pinned",
     "recentlyPlayed": "Recently played",
     "mostPlayed": "Most played",
     "recentlyAdded": "Recently added",
@@ -421,6 +422,8 @@
     "play": "Play",
     "playNext": "Play next",
     "addLast": "Add last",
+    "pin": "Pin",
+    "unpin": "Unpin",
     "download": "Download",
     "like": "Like",
     "unlike": "Unlike",

@@ -8,6 +8,8 @@ import {
   ListPlus,
   ListX,
   Pencil,
+  Pin,
+  PinOff,
   PlayIcon,
   PlusIcon,
   Trash,
@@ -278,6 +280,32 @@ function DownloadArtist({
   );
 }
 
+function PinItem({ variant = "dropdown", ...props }: DropdownMenuItemProps) {
+  const { t } = useTranslation();
+
+  return (
+    <MenuItemFactory
+      variant={variant}
+      icon={<Pin className="mr-2 h-4 w-4" />}
+      label={t("options.pin")}
+      {...props}
+    />
+  );
+}
+
+function UnpinItem({ variant = "dropdown", ...props }: DropdownMenuItemProps) {
+  const { t } = useTranslation();
+
+  return (
+    <MenuItemFactory
+      variant={variant}
+      icon={<PinOff className="mr-2 h-4 w-4" />}
+      label={t("options.unpin")}
+      {...props}
+    />
+  );
+}
+
 function RemoveDownload({
   variant = "dropdown",
   ...props
@@ -311,5 +339,7 @@ export const OptionsButtons = {
   DownloadAlbum,
   DownloadPlaylist,
   DownloadArtist,
+  PinItem,
+  UnpinItem,
   RemoveDownload,
 };
