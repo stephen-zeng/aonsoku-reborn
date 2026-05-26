@@ -3018,10 +3018,23 @@ extension AonsokuNativeAudioPlugin: NativeQueueEngineDelegate {
                 self.emitPlaybackState("loading")
 
                 if let startTime = startTime, startTime > 0 {
-                    player.seek(to: self.makeTime(startTime))
-                }
-
-                if autoplay {
+                    player.seek(to: self.makeTime(startTime), toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] finished in
+                        guard let self, self.isCurrentPlayback(generation: generation) else { return }
+                        if !finished {
+                            // Seek failed (e.g. position not buffered yet for stream)
+                            // Fall back to playing from beginning
+                            player.seek(to: .zero)
+                        }
+                        if autoplay {
+                            player.play()
+                            self.persistence.startProgressTracking()
+                            self.stateQueue.async {
+                                self.scrobbleBuffer.startTracking(songId: song.id, duration: song.duration)
+                            }
+                            self.scrobbleSubmitter.sendNowPlaying(songId: song.id)
+                        }
+                    }
+                } else if autoplay {
                     player.play()
                     self.persistence.startProgressTracking()
                     self.stateQueue.async {
