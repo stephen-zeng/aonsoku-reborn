@@ -551,8 +551,8 @@ svg#bars .eq-bar--4 {
   @apply w-fit m-auto max-w-[80%] text-balance;
 }
 
-/* Fix synced lyrics visibility on light themes */
-:is(.light, .night-owl-light, .noctis-lilac, .achiever, .tinacious-design)
+/* Fix synced lyrics visibility on light themes and light player backdrops */
+:is(.light, .night-owl-light, .noctis-lilac, .achiever, .tinacious-design, .backdrop-light)
   .lrc-box
   .amll-lyric-player {
   --amll-lp-color: hsl(var(--foreground));

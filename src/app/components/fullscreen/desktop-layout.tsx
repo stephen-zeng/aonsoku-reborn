@@ -56,7 +56,10 @@ export const DesktopLayout = memo(function DesktopLayout() {
 
   return (
     <div
-      className="flex h-full w-full overflow-hidden"
+      className={cn(
+        "flex h-full w-full overflow-hidden text-foreground",
+        contrast.className,
+      )}
       data-testid="fullscreen-desktop-layout"
       style={contrast.style}
     >

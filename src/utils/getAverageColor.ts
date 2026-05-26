@@ -141,10 +141,12 @@ export function isDarkColor(hsl: string) {
   if (!rgb) return true;
 
   const [r, g, b] = rgb;
-  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-  const isDark = luminance < 128;
-
-  return isDark;
+  const getLinear = (val: number) => {
+    const s = val / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  };
+  const L = 0.2126 * getLinear(r) + 0.7152 * getLinear(g) + 0.0722 * getLinear(b);
+  return L < 0.43;
 }
 
 export function isDarkHex(hex: string) {
@@ -152,8 +154,12 @@ export function isDarkHex(hex: string) {
   if (!rgb) return false;
 
   const [r, g, b] = rgb;
-  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-  return luminance < 128;
+  const getLinear = (val: number) => {
+    const s = val / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  };
+  const L = 0.2126 * getLinear(r) + 0.7152 * getLinear(g) + 0.0722 * getLinear(b);
+  return L < 0.43;
 }
 
 /**
