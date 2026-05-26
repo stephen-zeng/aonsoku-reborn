@@ -2067,12 +2067,38 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         guard isCurrentPlayback(player: player, generation: generation) else { return }
         guard player.timeControlStatus == .waitingToPlayAtSpecifiedRate else { return }
 
+        // If the background cache download already completed for this song,
+        // this stall is likely end-of-stream, not a network issue.
+        if isQueueEngineActive,
+           let song = queueEngine.currentSong,
+           backgroundCacheCompletedSongIds.contains(song.id) {
+            return
+        }
+
+        // If currentTime is at the end of loaded ranges and buffer is empty,
+        // this is likely end-of-stream (AVPlayer consumed all available data).
+        // Let the stall timeout handle it instead of aggressive recovery.
+        if let item = playerItem, item.isPlaybackBufferEmpty {
+            let currentSeconds = player.currentTime().seconds
+            if currentSeconds > 5.0, isAtEndOfLoadedRanges(item: item, position: currentSeconds) {
+                return
+            }
+        }
+
         let currentTime = player.currentTime()
         recoveryController.triggerRecovery(
             currentTime: currentTime,
             generation: generation,
             sourceKind: recoverySourceKind()
         )
+    }
+
+    private func isAtEndOfLoadedRanges(item: AVPlayerItem, position: Double) -> Bool {
+        guard let lastRange = item.loadedTimeRanges.last?.timeRangeValue else {
+            return true
+        }
+        let rangeEnd = CMTimeGetSeconds(lastRange.start) + CMTimeGetSeconds(lastRange.duration)
+        return position >= rangeEnd - 1.0
     }
 
     private func handleGhostPlayback(player: AVPlayer, item: AVPlayerItem, generation: Int) {
