@@ -44,6 +44,7 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "setSystemVolume", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getSystemVolume", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setVolumeHUDEnabled", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setLikeActive", returnType: CAPPluginReturnPromise),
     ]
 
     private var player: AVPlayer?
@@ -1255,6 +1256,14 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
+    @objc func setLikeActive(_ call: CAPPluginCall) {
+        let active = call.getBool("active") ?? false
+        DispatchQueue.main.async {
+            MPRemoteCommandCenter.shared().likeCommand.isActive = active
+            call.resolve()
+        }
+    }
+
     private func removeVolumeSliderView() {
         volumeSlider = nil
         volumeSliderView?.removeFromSuperview()
@@ -1462,6 +1471,17 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
                 } else {
                     self.emitRemoteCommand("seek", position: event.positionTime)
                 }
+                return .success
+            }
+        ))
+
+        commandCenter.likeCommand.isEnabled = true
+        commandCenter.likeCommand.localizedTitle = "♥"
+        remoteCommandTargets.append((
+            commandCenter.likeCommand,
+            commandCenter.likeCommand.addTarget { [weak self] _ in
+                guard let self = self else { return .commandFailed }
+                self.emitRemoteCommand("like")
                 return .success
             }
         ))

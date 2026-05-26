@@ -13,6 +13,7 @@ function createContext(isPlaying: boolean) {
       playNextSong: vi.fn(),
       playPrevSong: vi.fn(),
       seek: vi.fn(),
+      starCurrentSong: vi.fn(),
     },
     state,
   };
@@ -45,5 +46,13 @@ describe("handlePlaybackRemoteCommand", () => {
     expect(context.playNextSong).toHaveBeenCalledTimes(1);
     expect(context.playPrevSong).toHaveBeenCalledTimes(1);
     expect(context.seek).toHaveBeenCalledWith(0);
+  });
+
+  it("maps like command to starCurrentSong", () => {
+    const { context } = createContext(true);
+
+    handlePlaybackRemoteCommand({ command: "like" }, context);
+
+    expect(context.starCurrentSong).toHaveBeenCalledTimes(1);
   });
 });

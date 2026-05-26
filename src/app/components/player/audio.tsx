@@ -116,6 +116,7 @@ export function AudioPlayer({
     togglePlayPause,
     playNextSong,
     playPrevSong,
+    starCurrentSong,
   } = usePlayerActions();
 
   const getPlaybackBackendEntry = useCallback(
@@ -547,9 +548,17 @@ export function AudioPlayer({
             state.playerProgress.progress = position;
           });
         },
+        starCurrentSong,
       });
     },
-    [audioRef, playNextSong, playPrevSong, seekAudio, togglePlayPause],
+    [
+      audioRef,
+      playNextSong,
+      playPrevSong,
+      seekAudio,
+      starCurrentSong,
+      togglePlayPause,
+    ],
   );
 
   const handleAudioErrorRef = useRef(handleAudioError);

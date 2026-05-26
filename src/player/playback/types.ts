@@ -65,7 +65,8 @@ export type PlaybackRemoteCommand =
   | "togglePlayPause"
   | "next"
   | "previous"
-  | "seek";
+  | "seek"
+  | "like";
 
 export interface PlaybackRemoteCommandEvent {
   command: PlaybackRemoteCommand;

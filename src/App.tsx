@@ -17,6 +17,7 @@ import { ThemeObserver } from "@/app/observers/theme-observer";
 import { KeyboardObserver } from "@/app/observers/keyboard-observer";
 import { NativeAuthObserver } from "@/app/observers/native-auth-observer";
 import { VolumeHUDObserver } from "@/app/observers/volume-hud-observer";
+import { NowPlayingLikeObserver } from "@/app/observers/now-playing-like-observer";
 import { ToastContainer } from "@/app/observers/toast-container";
 import { router } from "@/routes/router";
 import { cacheManager } from "@/service/cache";
@@ -72,6 +73,7 @@ function App() {
       <NativeAuthObserver />
       <LanControlObserver />
       <VolumeHUDObserver />
+      <NowPlayingLikeObserver />
       <LibraryMigrationObserver />
       <NetworkMonitorObserver />
       <MetadataSyncObserver />

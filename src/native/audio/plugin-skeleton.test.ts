@@ -30,6 +30,7 @@ const nativeAudioMethods = [
   "setSystemVolume",
   "getSystemVolume",
   "setVolumeHUDEnabled",
+  "setLikeActive",
 ] as const;
 
 const nativeAudioEventNames = [

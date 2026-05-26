@@ -246,7 +246,8 @@ export type NativeAudioRemoteCommand =
   | "togglePlayPause"
   | "next"
   | "previous"
-  | "seek";
+  | "seek"
+  | "like";
 
 export interface NativeAudioRemoteCommandEvent {
   requestId?: string;
@@ -390,6 +391,7 @@ export interface AonsokuNativeAudioPlugin extends Plugin {
   ): Promise<NativeSystemVolumeResult>;
   getSystemVolume(): Promise<NativeSystemVolumeResult>;
   setVolumeHUDEnabled(options: { enabled: boolean }): Promise<void>;
+  setLikeActive(options: { active: boolean }): Promise<void>;
 
   addListener<TEvent extends NativeAudioEventName>(
     eventName: TEvent,

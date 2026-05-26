@@ -6,6 +6,7 @@ export interface PlaybackRemoteCommandContext {
   playNextSong: () => void;
   playPrevSong: () => void;
   seek: (position: number) => void;
+  starCurrentSong: () => void;
 }
 
 export function handlePlaybackRemoteCommand(
@@ -34,6 +35,9 @@ export function handlePlaybackRemoteCommand(
       return;
     case "seek":
       context.seek(Math.max(0, event.position ?? 0));
+      return;
+    case "like":
+      context.starCurrentSong();
       return;
   }
 }
