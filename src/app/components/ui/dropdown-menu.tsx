@@ -3,8 +3,43 @@ import { Check, ChevronRight, Circle } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { MenuCloseContext, MenuTouchOverlay } from "./menu-touch-overlay";
 
-const DropdownMenu = DropdownMenuPrimitive.Root;
+const DropdownMenu = ({
+  open: controlledOpen,
+  onOpenChange,
+  children,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Root>) => {
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
+
+  const handleOpenChange = React.useCallback(
+    (nextOpen: boolean) => {
+      if (!isControlled) setUncontrolledOpen(nextOpen);
+      onOpenChange?.(nextOpen);
+    },
+    [isControlled, onOpenChange],
+  );
+
+  const close = React.useCallback(
+    () => handleOpenChange(false),
+    [handleOpenChange],
+  );
+
+  return (
+    <MenuCloseContext.Provider value={open ? close : null}>
+      <DropdownMenuPrimitive.Root
+        open={open}
+        onOpenChange={handleOpenChange}
+        {...props}
+      >
+        {children}
+      </DropdownMenuPrimitive.Root>
+    </MenuCloseContext.Provider>
+  );
+};
 
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
 
@@ -59,6 +94,7 @@ const DropdownMenuContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
 >(({ className, sideOffset = 4, onCloseAutoFocus, ...props }, ref) => (
   <DropdownMenuPrimitive.Portal>
+    <MenuTouchOverlay />
     <DropdownMenuPrimitive.Content
       ref={ref}
       sideOffset={sideOffset}

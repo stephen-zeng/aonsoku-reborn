@@ -3,8 +3,36 @@ import { Check, ChevronRight, Circle } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { MenuCloseContext, MenuTouchOverlay } from "./menu-touch-overlay";
 
-const ContextMenu = ContextMenuPrimitive.Root;
+const ContextMenu = ({
+  onOpenChange,
+  children,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Root>) => {
+  const [open, setOpen] = React.useState(false);
+
+  const handleOpenChange = React.useCallback(
+    (nextOpen: boolean) => {
+      setOpen(nextOpen);
+      onOpenChange?.(nextOpen);
+    },
+    [onOpenChange],
+  );
+
+  const close = React.useCallback(
+    () => handleOpenChange(false),
+    [handleOpenChange],
+  );
+
+  return (
+    <MenuCloseContext.Provider value={open ? close : null}>
+      <ContextMenuPrimitive.Root onOpenChange={handleOpenChange} {...props}>
+        {children}
+      </ContextMenuPrimitive.Root>
+    </MenuCloseContext.Provider>
+  );
+};
 
 const ContextMenuTrigger = ContextMenuPrimitive.Trigger;
 
@@ -57,6 +85,7 @@ const ContextMenuContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Content>
 >(({ className, onCloseAutoFocus, ...props }, ref) => (
   <ContextMenuPrimitive.Portal>
+    <MenuTouchOverlay />
     <ContextMenuPrimitive.Content
       ref={ref}
       onCloseAutoFocus={(e) => {
