@@ -11,6 +11,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
+import { useTouchMenuGuard } from "@/app/hooks/use-touch-menu-guard";
 import { cn } from "@/lib/utils";
 import { useIsCurrentPlaying } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
@@ -132,6 +133,7 @@ function MobileSongRow({
   onPlaySong,
 }: MobileSongRowProps) {
   const isCurrentPlaying = useIsCurrentPlaying(song.id);
+  const { open, setOpen, triggerProps } = useTouchMenuGuard();
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Enter") {
@@ -192,15 +194,23 @@ function MobileSongRow({
 
       <div className="flex shrink-0 items-center gap-1">
         <CachedIndicator songId={song.id} />
-        <DropdownMenu>
+        <DropdownMenu open={open} onOpenChange={setOpen}>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className="size-11 shrink-0 rounded-full"
+              className={cn(
+                "size-11 shrink-0 rounded-full",
+                triggerProps.className,
+              )}
               aria-label="Song options"
               data-testid="mobile-song-options"
-              onClick={(event) => event.stopPropagation()}
+              onPointerDown={triggerProps.onPointerDown}
+              onPointerMove={triggerProps.onPointerMove}
+              onPointerUp={triggerProps.onPointerUp}
+              onPointerCancel={triggerProps.onPointerCancel}
+              onClick={triggerProps.onClick}
+              onContextMenu={triggerProps.onContextMenu}
             >
               <EllipsisVertical className="size-4" />
             </Button>

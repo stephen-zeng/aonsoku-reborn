@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
+import { useTouchMenuGuard } from "@/app/hooks/use-touch-menu-guard";
 import { cn } from "@/lib/utils";
 
 type ActionsContainerProps = ComponentPropsWithoutRef<"div">;
@@ -74,8 +75,10 @@ interface DropdownProps {
 }
 
 function Dropdown({ tooltip, options }: DropdownProps) {
+  const { open, setOpen, triggerProps } = useTouchMenuGuard();
+
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
         asChild
         className="outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:ring-transparent"
@@ -86,8 +89,15 @@ function Dropdown({ tooltip, options }: DropdownProps) {
             "data-[state=open]:bg-foreground/20",
             "hover-supported:bg-foreground/20",
             "ease-linear duration-100 transition",
+            triggerProps.className,
           )}
           variant="ghost"
+          onPointerDown={triggerProps.onPointerDown}
+          onPointerMove={triggerProps.onPointerMove}
+          onPointerUp={triggerProps.onPointerUp}
+          onPointerCancel={triggerProps.onPointerCancel}
+          onClick={triggerProps.onClick}
+          onContextMenu={triggerProps.onContextMenu}
         >
           <SimpleTooltip text={tooltip}>
             <div className="min-w-12 h-12 md:min-w-14 md:h-14 rounded-full flex justify-center items-center">

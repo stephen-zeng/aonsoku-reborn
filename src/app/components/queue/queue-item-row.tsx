@@ -3,7 +3,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
 import { EllipsisVertical, GripVertical, PlayIcon } from "lucide-react";
-import { CSSProperties, forwardRef, useState } from "react";
+import { CSSProperties, forwardRef } from "react";
 import { useHaptic } from "@/app/hooks/use-haptic";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { CacheButton } from "@/app/components/table/cache-button";
@@ -15,6 +15,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
+import { useTouchMenuGuard } from "@/app/hooks/use-touch-menu-guard";
 import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
@@ -88,7 +89,8 @@ export const QueueItemRow = forwardRef<
   },
   ref,
 ) {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { open: dropdownOpen, setOpen: setDropdownOpen, triggerProps } =
+    useTouchMenuGuard();
   const { trigger } = useHaptic();
   const hapticTrigger = trigger ? () => trigger() : undefined;
 
@@ -169,10 +171,14 @@ export const QueueItemRow = forwardRef<
                     "w-8 h-8 p-1 rounded-full",
                     "data-[state=open]:opacity-100",
                     "opacity-0 group-hover-supported/queuerow:opacity-100 transition-opacity",
+                    triggerProps.className,
                   )}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
+                  onPointerDown={triggerProps.onPointerDown}
+                  onPointerMove={triggerProps.onPointerMove}
+                  onPointerUp={triggerProps.onPointerUp}
+                  onPointerCancel={triggerProps.onPointerCancel}
+                  onClick={triggerProps.onClick}
+                  onContextMenu={triggerProps.onContextMenu}
                 >
                   <EllipsisVertical className="w-4 h-4" />
                 </Button>
