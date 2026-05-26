@@ -348,6 +348,37 @@ export const useGetRecentlyPlayed = () => {
 export const useGetRandomAlbums = () =>
   useHomeAlbumQuery([...queryKeys.album.random], "random");
 
+export const useGetCarouselAlbums = () => {
+  const isOnline = useIsOnline();
+
+  return useQuery<AlbumsListData>({
+    queryKey: ["albums", "carousel", isOnline ? "online" : "offline"],
+    queryFn: async () => {
+      if (isOnline) {
+        try {
+          return await subsonic.albums.getAlbumList({
+            size: 10,
+            type: "random",
+          });
+        } catch (err) {
+          console.warn(
+            "[home] Failed to load carousel albums, falling back to IDB:",
+            err,
+          );
+        }
+      }
+
+      const offlineResult = await getOfflineHomeAlbums("random");
+      return {
+        ...offlineResult,
+        list: offlineResult.list.slice(0, 10),
+      };
+    },
+    networkMode: "always",
+    refetchOnReconnect: true,
+  });
+};
+
 export const useGetPinnedHomeItems = () => {
   const isOnline = useIsOnline();
   const pinnedItems = usePinnedHomeItems();

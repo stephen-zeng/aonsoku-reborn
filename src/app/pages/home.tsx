@@ -11,7 +11,7 @@ import {
   useGetPinnedHomeItems,
   useGetMostPlayed,
   useGetRandomAlbums,
-  useGetRandomSongs,
+  useGetCarouselAlbums,
   useGetRecentlyAdded,
   useGetRecentlyPlayed,
 } from "@/app/hooks/use-home";
@@ -20,7 +20,7 @@ import { ROUTES } from "@/routes/routesList";
 export default function Home() {
   const { t } = useTranslation();
 
-  const { data: randomSongs, isLoading, isFetching } = useGetRandomSongs();
+  const { data: carouselAlbums, isLoading, isFetching } = useGetCarouselAlbums();
   const pinnedItems = useGetPinnedHomeItems();
 
   const recentlyPlayed = useGetRecentlyPlayed();
@@ -66,7 +66,7 @@ export default function Home() {
       {isFetching || isLoading ? (
         <HeaderFallback />
       ) : (
-        <HomeHeader songs={randomSongs || []} />
+        <HomeHeader albums={carouselAlbums?.list || []} />
       )}
 
       {pinnedItems.isLoading && <PreviewListFallback />}
