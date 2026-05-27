@@ -174,7 +174,7 @@ describe("NativeQueueController terminal playback reset", () => {
     await vi.runAllTimersAsync();
 
     emit("playbackStateChanged", { state: "ended" });
-    await vi.advanceTimersByTimeAsync(150);
+    await vi.advanceTimersByTimeAsync(1000);
 
     expect(mocks.plugin.seek).toHaveBeenCalledWith({ position: 0 });
     expect(mocks.storeState.playerProgress.progress).toBe(0);
@@ -199,7 +199,7 @@ describe("NativeQueueController terminal playback reset", () => {
       songId: "song-2",
       reason: "ended",
     });
-    await vi.advanceTimersByTimeAsync(150);
+    await vi.advanceTimersByTimeAsync(1000);
 
     expect(mocks.plugin.seek).not.toHaveBeenCalledWith({ position: 0 });
     expect(mocks.storeState.playerProgress.progress).toBe(0);

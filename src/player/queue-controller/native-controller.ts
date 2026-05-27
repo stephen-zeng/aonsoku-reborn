@@ -98,7 +98,7 @@ function nativeSourceIdToQueueSourceId(
   return { type: sourceId.type, id: sourceId.id } as QueueSourceId;
 }
 
-const TERMINAL_PLAYBACK_RESET_DELAY_MS = 150;
+const TERMINAL_PLAYBACK_RESET_DELAY_MS = 1000;
 
 export class NativeQueueController implements QueueController {
   #plugin: NativeAudioPlugin;
