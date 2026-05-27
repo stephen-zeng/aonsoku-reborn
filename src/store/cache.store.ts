@@ -4,6 +4,7 @@ import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
 import { createNativeStorage } from "@/store/native-storage";
+import { getRuntime } from "@/utils/capabilities";
 import {
   CacheSettings,
   CacheStatus,
@@ -53,6 +54,7 @@ const defaultSyncState: SyncState = {
 };
 
 function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
+  const isIosCapacitor = getRuntime() === "capacitor-ios";
   // Pre-P2.3 format (had maxCacheSize but not the per-pool quotas).
   const raw = persisted as Partial<CacheSettings> | undefined;
   if (raw && typeof raw === "object") {
@@ -68,7 +70,7 @@ function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
         assetsQuota: raw.assetsQuota ?? DEFAULT_ASSETS_QUOTA,
         lruQuota: raw.lruQuota ?? legacyCap,
         smartRules: { ...DEFAULT_SMART_RULES, ...(raw.smartRules ?? {}) },
-        libraryCaching: raw.libraryCaching ?? false,
+        libraryCaching: isIosCapacitor ? true : (raw.libraryCaching ?? false),
       };
     }
   }
@@ -80,14 +82,15 @@ function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
     return {
       ...(final as unknown as CacheSettings),
       smartRules: { ...DEFAULT_SMART_RULES },
-      libraryCaching: final.libraryCaching === true,
+      libraryCaching: isIosCapacitor ? true : (final.libraryCaching === true),
     };
   }
 
   return {
     ...(persisted as unknown as CacheSettings),
-    libraryCaching:
-      (persisted as Record<string, unknown>).libraryCaching === true,
+    libraryCaching: isIosCapacitor
+      ? true
+      : (persisted as Record<string, unknown>).libraryCaching === true,
   };
 }
 
@@ -101,7 +104,7 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             assetsQuota: DEFAULT_ASSETS_QUOTA,
             lruQuota: DEFAULT_LRU_QUOTA,
             smartRules: { ...DEFAULT_SMART_RULES },
-            libraryCaching: false,
+            libraryCaching: getRuntime() === "capacitor-ios",
             syncLibrary: true,
             syncCoverArt: false,
             coverArtConcurrency: COVER_ART_CONCURRENCY_DEFAULT,
@@ -139,8 +142,10 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             },
             setLibraryCaching: (enabled) => {
               set((state) => {
-                state.settings.libraryCaching = enabled;
-                state.settings.syncLibrary = enabled;
+                const isIosCapacitor = getRuntime() === "capacitor-ios";
+                const value = isIosCapacitor ? true : enabled;
+                state.settings.libraryCaching = value;
+                state.settings.syncLibrary = value;
               });
             },
             setSyncCoverArt: (enabled) => {
@@ -204,7 +209,12 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
           if (settings) {
             raw.settings = migrateSettings(settings);
           }
-          return merge({}, current, raw);
+          const merged = merge({}, current, raw);
+          if (getRuntime() === "capacitor-ios") {
+            merged.settings.libraryCaching = true;
+            merged.settings.syncLibrary = true;
+          }
+          return merged;
         },
       },
     ),
@@ -257,4 +267,7 @@ export const useLastSyncedAt = () =>
 export const useCacheActions = () => useCacheStore((state) => state.actions);
 
 export const useLibraryCaching = () =>
-  useCacheStore((state) => state.settings.libraryCaching);
+  useCacheStore((state) => {
+    if (getRuntime() === "capacitor-ios") return true;
+    return state.settings.libraryCaching;
+  });

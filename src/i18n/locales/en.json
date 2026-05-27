@@ -788,6 +788,7 @@
         "description": "Sync library metadata for offline browsing. Downloaded songs are always available offline.",
         "libraryCaching": "Library caching",
         "libraryCachingInfo": "When enabled, metadata and optionally songs are cached locally for offline access. When disabled, the app stays in pure online mode and no background sync runs.",
+        "libraryCachingInfoIos": "Library caching is required and always enabled on iOS to support offline playback.",
         "enabled": "Sync library",
         "coverArt": "Include cover art",
         "coverArtInfo": "Download all album and artist images during sync. This may use significant storage and bandwidth.",
