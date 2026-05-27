@@ -890,6 +890,26 @@ export class NativeQueueController implements QueueController {
         if (song.id) resolvedMap.set(song.id, song);
       }
 
+      const unresolvedIds = [...allIds].filter((id) => !resolvedMap.has(id));
+      if (unresolvedIds.length > 0) {
+        try {
+          const { songs } = await import("@/service/songs");
+          const fetchedSongs = await Promise.all(
+            unresolvedIds.map((id) => songs.getSong(id).catch(() => null)),
+          );
+          for (const song of fetchedSongs) {
+            if (song && song.id) {
+              resolvedMap.set(song.id, song);
+            }
+          }
+        } catch (fetchErr) {
+          logger.warn(
+            "[NativeQueueController] resolveFullSongs online fallback failed",
+            fetchErr,
+          );
+        }
+      }
+
       if (resolvedMap.size === 0) return;
 
       usePlayerStore.setState((s) => {
