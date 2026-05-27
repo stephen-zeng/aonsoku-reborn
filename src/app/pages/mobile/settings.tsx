@@ -63,11 +63,11 @@ export default function MobileSettings() {
   const currentPage = searchParams.get("page") as SettingsOptions | null;
 
   function openPage(id: SettingsOptions) {
-    setSearchParams({ page: id });
+    setSearchParams({ page: id }, { replace: true });
   }
 
   function goBack() {
-    setSearchParams({});
+    setSearchParams({}, { replace: true });
   }
 
   if (currentPage && pages[currentPage]) {
