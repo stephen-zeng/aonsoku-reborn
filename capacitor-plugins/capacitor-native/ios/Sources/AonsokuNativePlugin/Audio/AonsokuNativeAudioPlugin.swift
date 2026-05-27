@@ -1750,8 +1750,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = seconds(
             from: player?.currentTime() ?? .zero
         )
-        info[MPNowPlayingInfoPropertyPlaybackRate] =
-            player?.timeControlStatus == .playing ? 1.0 : 0.0
+        let isActivelyPlaying = player?.timeControlStatus == .playing ||
+            player?.timeControlStatus == .waitingToPlayAtSpecifiedRate ||
+            isQueueTransitioning
+        info[MPNowPlayingInfoPropertyPlaybackRate] = isActivelyPlaying ? 1.0 : 0.0
         info[MPNowPlayingInfoPropertyDefaultPlaybackRate] = 1.0
     }
 
