@@ -1,5 +1,4 @@
 import {
-  ChevronLeft,
   ChevronRight,
   CircleUserRound,
   EarthLock,
@@ -25,7 +24,6 @@ import { Language } from "@/app/components/settings/pages/language";
 import { Privacy } from "@/app/components/settings/pages/privacy";
 import { ServerSettings } from "@/app/components/settings/pages/server";
 import { Storage } from "@/app/components/settings/pages/storage";
-import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { isDesktop } from "@/utils/desktop";
 
 interface CategoryItem {
@@ -73,53 +71,63 @@ export default function MobileSettings() {
   }
 
   if (currentPage && pages[currentPage]) {
+    const title = t(`settings.options.${currentPage}`);
     return (
-      <div className="flex flex-col w-full h-full">
-        <div
-          className="flex items-center gap-2 px-4 py-3 border-b"
-          style={{
-            paddingTop: "max(0.75rem, var(--safe-area-top))",
-            paddingLeft: "max(1rem, var(--safe-area-left))",
-            paddingRight: "max(1rem, var(--safe-area-right))",
-          }}
-        >
-          <button
-            type="button"
-            onClick={goBack}
-            className="flex min-h-11 items-center gap-1 text-sm text-muted-foreground active:text-foreground"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            {t("settings.label")}
-          </button>
-          <span className="text-sm font-medium ml-1">
-            {t(`settings.options.${currentPage}`)}
-          </span>
+      <div className="flex flex-col w-full">
+        <MobilePageHeader
+          variant="sub"
+          title={title}
+          onBack={goBack}
+          transparentTheme="default"
+        />
+        <div className="flex flex-col pb-8">
+          <div className="px-4 py-4 flex flex-col">
+            <h1
+              id="detail-page-title"
+              className="text-2xl font-bold tracking-tight"
+            >
+              {title}
+            </h1>
+          </div>
+          <div className="px-4">{pages[currentPage]()}</div>
         </div>
-        <ScrollArea className="flex-1">
-          <div className="p-4">{pages[currentPage]()}</div>
-        </ScrollArea>
       </div>
     );
   }
 
+  const title = t("settings.label");
   return (
     <div className="flex flex-col w-full">
-      <MobilePageHeader variant="root" title={t("settings.label")} />
-      <div className="flex flex-col">
-        {categories.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => openPage(item.id)}
-            className="flex items-center gap-3 px-4 py-3.5 active:bg-accent/50 border-b last:border-b-0"
+      <MobilePageHeader
+        variant="sub"
+        title={title}
+        transparentTheme="default"
+      />
+      <div className="flex flex-col pb-8">
+        <div className="px-4 py-4 flex flex-col">
+          <h1
+            id="detail-page-title"
+            className="text-2xl font-bold tracking-tight"
           >
-            <item.icon className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-            <span className="flex-1 text-sm text-left">
-              {t(`settings.options.${item.id}`)}
-            </span>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-          </button>
-        ))}
+            {title}
+          </h1>
+        </div>
+        <div className="flex flex-col">
+          {categories.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => openPage(item.id)}
+              className="flex items-center gap-3 px-4 py-3.5 active:bg-accent/50 border-b last:border-b-0"
+            >
+              <item.icon className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+              <span className="flex-1 text-sm text-left">
+                {t(`settings.options.${item.id}`)}
+              </span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

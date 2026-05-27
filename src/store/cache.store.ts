@@ -82,7 +82,7 @@ function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
     return {
       ...(final as unknown as CacheSettings),
       smartRules: { ...DEFAULT_SMART_RULES },
-      libraryCaching: isIosCapacitor ? true : (final.libraryCaching === true),
+      libraryCaching: isIosCapacitor ? true : final.libraryCaching === true,
     };
   }
 
