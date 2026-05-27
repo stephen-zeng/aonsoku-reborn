@@ -20,7 +20,11 @@ import { ROUTES } from "@/routes/routesList";
 export default function Home() {
   const { t } = useTranslation();
 
-  const { data: carouselAlbums, isLoading, isFetching } = useGetCarouselAlbums();
+  const {
+    data: carouselAlbums,
+    isLoading,
+    isFetching,
+  } = useGetCarouselAlbums();
   const pinnedItems = useGetPinnedHomeItems();
 
   const recentlyPlayed = useGetRecentlyPlayed();

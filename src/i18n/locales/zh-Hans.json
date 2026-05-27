@@ -893,6 +893,7 @@
         "lastSynced": "上次同步",
         "libraryCaching": "资源库缓存",
         "libraryCachingInfo": "启用后，元数据和歌曲将缓存到本地以供离线访问。禁用后，应用将保持纯在线模式，不会进行后台同步。",
+        "libraryCachingInfoIos": "iOS 端必须启用资源库缓存以支持离线播放，无法关闭。",
         "never": "从未同步",
         "phases": {
           "albums": "正在同步专辑…",

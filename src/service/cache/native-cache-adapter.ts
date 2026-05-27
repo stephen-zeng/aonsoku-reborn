@@ -35,7 +35,7 @@ class WebNullNativeCacheAdapter implements NativeCacheAdapter {
   async clearAudioFiles(): Promise<void> {}
 }
 
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
+async function arrayBufferToBase64(buffer: ArrayBuffer): Promise<string> {
   const bytes = new Uint8Array(buffer);
   const chunkSize = 0x8000;
   let binary = "";
@@ -43,6 +43,10 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   for (let offset = 0; offset < bytes.length; offset += chunkSize) {
     const chunk = bytes.subarray(offset, offset + chunkSize);
     binary += String.fromCharCode(...chunk);
+
+    if (offset % (chunkSize * 16) === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
   }
 
   return btoa(binary);
@@ -56,7 +60,7 @@ export class IosNativeCacheAdapter implements NativeCacheAdapter {
     data: Blob,
     contentType: string,
   ): Promise<NativeCachedAudioFile> {
-    const dataBase64 = arrayBufferToBase64(await data.arrayBuffer());
+    const dataBase64 = await arrayBufferToBase64(await data.arrayBuffer());
     return this.plugin.storeAudioFile({
       songId,
       dataBase64,

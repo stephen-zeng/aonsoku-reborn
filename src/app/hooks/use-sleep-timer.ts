@@ -13,9 +13,6 @@ export function useSleepTimer() {
   const mode = useSleepTimerStore((s) => s.mode);
 
   useEffect(() => {
-    const runtime = getRuntime();
-    if (runtime === "capacitor-ios") return;
-
     if (isActive && mode === "duration") {
       intervalRef.current = setInterval(() => {
         const state = useSleepTimerStore.getState();
@@ -28,7 +25,7 @@ export function useSleepTimer() {
 
         if (state.remainingSeconds <= 1) {
           usePlayerStore.getState().actions.setPlayingState(false);
-          useSleepTimerStore.getState().cancelTimer();
+          cancelSleepTimer();
           if (intervalRef.current) clearInterval(intervalRef.current);
         }
       }, 1000);

@@ -1750,8 +1750,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = seconds(
             from: player?.currentTime() ?? .zero
         )
-        info[MPNowPlayingInfoPropertyPlaybackRate] =
-            player?.timeControlStatus == .playing ? 1.0 : 0.0
+        let isActivelyPlaying = player?.timeControlStatus == .playing ||
+            player?.timeControlStatus == .waitingToPlayAtSpecifiedRate ||
+            isQueueTransitioning
+        info[MPNowPlayingInfoPropertyPlaybackRate] = isActivelyPlaying ? 1.0 : 0.0
         info[MPNowPlayingInfoPropertyDefaultPlaybackRate] = 1.0
     }
 
@@ -2205,6 +2207,10 @@ public class AonsokuNativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         guard item.isPlaybackBufferEmpty else { return }
 
         let currentSeconds = player.currentTime().seconds
+        if currentSeconds > 5.0, isAtEndOfLoadedRanges(item: item, position: currentSeconds) {
+            return
+        }
+
         let isPositionBuffered = item.loadedTimeRanges.contains { range in
             let timeRange = range.timeRangeValue
             let start = CMTimeGetSeconds(timeRange.start)
@@ -3310,9 +3316,7 @@ extension AonsokuNativeAudioPlugin: PlaybackRecoveryDelegate {
 
         player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
             guard let self, self.isCurrentPlayback(generation: generation) else { return }
-            if player.timeControlStatus == .waitingToPlayAtSpecifiedRate {
-                player.play()
-            }
+            player.play()
         }
     }
 
