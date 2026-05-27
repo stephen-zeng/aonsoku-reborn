@@ -10,17 +10,17 @@ import {
   CarouselPrevious,
 } from "@/app/components/ui/carousel";
 import { useEmblaWheelScroll } from "@/app/hooks/use-embla-wheel-scroll";
-import { ISong } from "@/types/responses/song";
+import { Albums } from "@/types/responses/album";
 
 interface HomeHeaderProps {
-  songs: ISong[];
+  albums: Albums[];
 }
 
-export default function HomeHeader({ songs }: HomeHeaderProps) {
+export default function HomeHeader({ albums }: HomeHeaderProps) {
   const [api, setApi] = useState<CarouselApi>();
   const { onWheel } = useEmblaWheelScroll(api);
 
-  if (songs.length === 0) return null;
+  if (albums.length === 0) return null;
 
   return (
     <Carousel
@@ -41,13 +41,13 @@ export default function HomeHeader({ songs }: HomeHeaderProps) {
         className="ml-0 flex transform-gpu"
         style={{ borderRadius: "calc(var(--radius) - 2px)" }}
       >
-        {songs.map((song, index) => (
+        {albums.map((album, index) => (
           <CarouselItem
-            key={song.id}
+            key={album.id}
             className="pl-0 basis-full maskImage-carousel-item"
-            data-testid={`carousel-header-song-${index}`}
+            data-testid={`carousel-header-album-${index}`}
           >
-            <HeaderItem song={song} />
+            <HeaderItem album={album} />
           </CarouselItem>
         ))}
       </CarouselContent>

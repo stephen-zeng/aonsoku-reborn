@@ -1,5 +1,6 @@
 {
   "home": {
+    "pinned": "Pinned",
     "recentlyPlayed": "Recently played",
     "mostPlayed": "Most played",
     "recentlyAdded": "Recently added",
@@ -192,6 +193,7 @@
         "notFound": "No genre found."
       },
       "filter": {
+        "label": "Filter",
         "artist": "Artist",
         "genre": "Genre",
         "favorites": "Favorites",
@@ -202,7 +204,11 @@
         "recentlyPlayed": "Recently played",
         "releaseYear": "Release Year",
         "discography": "Discography",
-        "search": "Search"
+        "search": "Search",
+        "year": {
+          "oldest": "Oldest first",
+          "newest": "Newest first"
+        }
       },
       "search": {
         "placeholder": "Search albums…"
@@ -399,6 +405,14 @@
         "mute": "Mute",
         "unmute": "Unmute"
       }
+    },
+    "sleepTimer": {
+      "tooltip": "Sleep timer",
+      "title": "Sleep timer",
+      "endOfTrack": "End of current track",
+      "minutes": "{{count}} min",
+      "remaining": "{{time}} remaining",
+      "cancel": "Cancel timer"
     }
   },
   "error": {
@@ -408,6 +422,8 @@
     "play": "Play",
     "playNext": "Play next",
     "addLast": "Add last",
+    "pin": "Pin",
+    "unpin": "Unpin",
     "download": "Download",
     "like": "Like",
     "unlike": "Unlike",

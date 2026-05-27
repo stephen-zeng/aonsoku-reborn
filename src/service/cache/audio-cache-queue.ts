@@ -1,4 +1,5 @@
 import type { CacheTask, CacheTaskExecutor } from "@/types/cache";
+import type { AudioDownloadQueue } from "./contracts";
 
 interface QueuedEntry {
   task: CacheTask;
@@ -15,7 +16,7 @@ interface QueuedEntry {
  * Pure scheduler, no DOM / Worker dependencies.  Safe to instantiate
  * in both the main thread and a Web Worker.
  */
-export class AudioCacheQueue {
+export class AudioCacheQueue implements AudioDownloadQueue {
   private readonly concurrency: number;
   private readonly executor: CacheTaskExecutor;
   private running = 0;

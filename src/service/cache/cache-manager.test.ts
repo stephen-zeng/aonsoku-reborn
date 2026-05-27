@@ -19,6 +19,21 @@ const audioCacheServiceMock = {
   cancelAll: vi.fn(),
 };
 
+const nativeCacheAdapterMock = {
+  clearAudioFiles: vi.fn(() => Promise.resolve()),
+  deleteAudioFile: vi.fn(() => Promise.resolve(false)),
+  evictAudioFile: vi.fn(() => Promise.resolve(false)),
+  getAudioFileSize: vi.fn(() => Promise.resolve(null)),
+  resolveAudioFile: vi.fn(() => Promise.resolve(null)),
+  storeAudioFile: vi.fn(() => Promise.reject(new Error("not available"))),
+};
+
+const nativeCacheHelpersMock = {
+  clearNativeAudioFilesIfAvailable: vi.fn(() => Promise.resolve()),
+  evictNativeAudioFileIfAvailable: vi.fn(() => Promise.resolve(false)),
+  getNativeCacheAdapter: vi.fn(() => nativeCacheAdapterMock),
+};
+
 vi.mock("./cache-storage", () => ({
   cacheStorage: cacheStorageMock,
 }));
@@ -26,6 +41,8 @@ vi.mock("./cache-storage", () => ({
 vi.mock("./audio-cache-worker-adapter", () => ({
   audioCacheService: audioCacheServiceMock,
 }));
+
+vi.mock("./native-cache-adapter", () => nativeCacheHelpersMock);
 
 vi.mock("./sync-worker-adapter", () => ({
   syncService: {
@@ -86,6 +103,12 @@ describe("cacheManager", () => {
     audioCacheServiceMock.cancelAll.mockReset();
     audioCacheServiceMock.isQueued.mockReset().mockReturnValue(false);
     audioCacheServiceMock.isInFlight.mockReset().mockReturnValue(false);
+    nativeCacheHelpersMock.clearNativeAudioFilesIfAvailable
+      .mockReset()
+      .mockResolvedValue(undefined);
+    nativeCacheHelpersMock.evictNativeAudioFileIfAvailable
+      .mockReset()
+      .mockResolvedValue(false);
     await idbClear(cacheIndexStore);
     await _resetLibraryDbForTests();
     useCacheIndexStore.setState({ items: {}, loaded: true, downloads: {} });
@@ -254,6 +277,9 @@ describe("cacheManager", () => {
 
     expect(await libraryDb.lyrics.count()).toBe(0);
     expect(cacheStorageMock.clear).toHaveBeenCalled();
+    expect(
+      nativeCacheHelpersMock.clearNativeAudioFilesIfAvailable,
+    ).toHaveBeenCalledTimes(1);
   });
 
   it("clearAssets leaves lyrics rows intact", async () => {
@@ -316,6 +342,29 @@ describe("cacheManager", () => {
     expect(await libraryDb.cacheMeta.get("audio:song-1")).toBeUndefined();
   });
 
+  it("evictItem removes matching native audio files", async () => {
+    useCacheIndexStore.setState({
+      items: {
+        "audio:song-1": {
+          id: "song-1",
+          type: "audio",
+          source: "lru",
+          sizeBytes: 100,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+      },
+      loaded: true,
+    });
+
+    const { cacheManager } = await import("./cache-manager");
+    await cacheManager.evictItem("audio:song-1");
+
+    expect(
+      nativeCacheHelpersMock.evictNativeAudioFileIfAvailable,
+    ).toHaveBeenCalledWith("song-1");
+  });
+
   it("clearAudioBySource removes matching rows from libraryDb.cacheMeta", async () => {
     await libraryDb.cacheMeta.bulkPut([
       {
@@ -365,6 +414,40 @@ describe("cacheManager", () => {
 
     expect(await libraryDb.cacheMeta.get("audio:song-1")).toBeUndefined();
     expect(await libraryDb.cacheMeta.get("audio:song-2")).not.toBeUndefined();
+  });
+
+  it("clearAudioBySource removes matching native audio files", async () => {
+    useCacheIndexStore.setState({
+      items: {
+        "audio:song-1": {
+          id: "song-1",
+          type: "audio",
+          source: "explicit",
+          sizeBytes: 100,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+        "audio:song-2": {
+          id: "song-2",
+          type: "audio",
+          source: "lru",
+          sizeBytes: 200,
+          cachedAt: 1,
+          lastAccessedAt: 1,
+        },
+      },
+      loaded: true,
+    });
+
+    const { cacheManager } = await import("./cache-manager");
+    await cacheManager.clearAudioBySource("explicit");
+
+    expect(
+      nativeCacheHelpersMock.evictNativeAudioFileIfAvailable,
+    ).toHaveBeenCalledWith("song-1");
+    expect(
+      nativeCacheHelpersMock.evictNativeAudioFileIfAvailable,
+    ).not.toHaveBeenCalledWith("song-2");
   });
 
   it("self-heal for audio writes a synthetic row to libraryDb.cacheMeta when missing", async () => {

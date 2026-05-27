@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Actions } from "@/app/components/actions";
 import { OptionsButtons } from "@/app/components/options/buttons";
@@ -31,6 +32,11 @@ export function ArtistButtons({
   const { getArtistAllSongs } = useSongList();
 
   const isArtistStarred = artist.starred !== undefined;
+  const [isStarred, setIsStarred] = useState(isArtistStarred);
+
+  useEffect(() => {
+    setIsStarred(isArtistStarred);
+  }, [isArtistStarred]);
 
   const queryClient = useQueryClient();
 
@@ -40,15 +46,32 @@ export function ArtistButtons({
       queryClient.invalidateQueries({
         queryKey: [...queryKeys.artist.single, artist.id],
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.favorites.count,
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.favorites.list,
+      });
     },
   });
 
   function handleLikeButton() {
-    if (!artist) return;
-    starMutation.mutate({
-      id: artist.id,
-      starred: isArtistStarred,
-    });
+    if (!artist || starMutation.isPending) return;
+
+    const currentStarred = isStarred;
+    setIsStarred(!currentStarred);
+
+    starMutation.mutate(
+      {
+        id: artist.id,
+        starred: currentStarred,
+      },
+      {
+        onError: () => {
+          setIsStarred(currentStarred);
+        },
+      },
+    );
   }
 
   async function handlePlayArtistRadio(shuffle = false) {
@@ -64,7 +87,7 @@ export function ArtistButtons({
     shuffle: t("playlist.buttons.shuffle", { name: artist.name }),
     options: t("playlist.buttons.options", { name: artist.name }),
     like: () => {
-      return isArtistStarred
+      return isStarred
         ? t("album.buttons.dislike", { name: artist.name })
         : t("album.buttons.like", { name: artist.name });
     },
@@ -100,9 +123,10 @@ export function ArtistButtons({
       <Actions.Button
         tooltip={buttonsTooltips.like()}
         className="hidden md:inline-flex"
+        disabled={starMutation.isPending}
         onClick={handleLikeButton}
       >
-        <Actions.LikeIcon isStarred={isArtistStarred} />
+        <Actions.LikeIcon isStarred={isStarred} />
       </Actions.Button>
 
       {showInfoButton && (
@@ -122,8 +146,9 @@ export function ArtistButtons({
             <DropdownMenuGroup className="md:hidden">
               <OptionsButtons.Like
                 onClick={handleLikeButton}
-                isStarred={isArtistStarred}
+                isStarred={isStarred}
                 label={buttonsTooltips.like()}
+                disabled={starMutation.isPending}
               />
             </DropdownMenuGroup>
             <DropdownMenuSeparator className="md:hidden" />

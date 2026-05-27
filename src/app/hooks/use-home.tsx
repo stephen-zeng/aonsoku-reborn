@@ -1,12 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
-import { offlineData } from "@/lib/offlineQueryClient";
+import {
+  getOfflinePlaylistDetail,
+  offlineData,
+} from "@/lib/offlineQueryClient";
 import { subsonic } from "@/service/subsonic";
 import { useIsOnline } from "@/store/cache.store";
+import { usePinnedHomeItems } from "@/store/pinned-home.store";
 import {
   type AlbumListType,
   type Albums,
   type AlbumsListData,
+  type SingleAlbum,
 } from "@/types/responses/album";
+import {
+  type Playlist,
+  type PlaylistWithEntries,
+} from "@/types/responses/playlist";
+import { type PinnedHomeItem } from "@/types/pinnedHome";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
 
@@ -21,11 +31,31 @@ interface AlbumPlayStats {
   playCount: number;
 }
 
+export interface HomePinnedAlbumItem {
+  type: "album";
+  album: Albums;
+  playedAt: number;
+}
+
+export interface HomePinnedPlaylistItem {
+  type: "playlist";
+  playlist: Playlist;
+  detail?: PlaylistWithEntries;
+  playedAt: number;
+}
+
+export type HomePinnedItemData = HomePinnedAlbumItem | HomePinnedPlaylistItem;
+
 function toTimestamp(value?: string) {
   if (!value) return 0;
 
   const timestamp = Date.parse(value);
   return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function toAlbumSummary(album: SingleAlbum): Albums {
+  const { song: _song, ...summary } = album;
+  return summary;
 }
 
 function buildAlbumsListData(list: Albums[]): AlbumsListData {
@@ -83,6 +113,127 @@ function getAlbumPlayedAt(
   statsByAlbumId: Map<string, AlbumPlayStats>,
 ) {
   return statsByAlbumId.get(album.id)?.playedAt ?? toTimestamp(album.played);
+}
+
+export function getPlaylistPlayedAt(
+  playlist: Pick<Playlist, "changed" | "created">,
+  detail?: Pick<PlaylistWithEntries, "entry">,
+) {
+  const mostRecentEntryPlayedAt =
+    detail?.entry.reduce((latest, song) => {
+      return Math.max(latest, toTimestamp(song.played));
+    }, 0) ?? 0;
+
+  return (
+    mostRecentEntryPlayedAt ||
+    toTimestamp(playlist.changed) ||
+    toTimestamp(playlist.created)
+  );
+}
+
+export function sortPinnedHomeItemsByPlayedAt(items: HomePinnedItemData[]) {
+  return [...items].sort((left, right) => {
+    if (right.playedAt !== left.playedAt) {
+      return right.playedAt - left.playedAt;
+    }
+
+    const leftName =
+      left.type === "album" ? left.album.name : left.playlist.name;
+    const rightName =
+      right.type === "album" ? right.album.name : right.playlist.name;
+
+    return leftName.localeCompare(rightName);
+  });
+}
+
+async function getPinnedPlaylistDetail(playlistId: string, isOnline: boolean) {
+  if (isOnline) {
+    try {
+      return await subsonic.playlists.getOne(playlistId);
+    } catch (error) {
+      console.warn(
+        `[home] Failed to load pinned playlist ${playlistId}, falling back to IDB:`,
+        error,
+      );
+    }
+  }
+
+  try {
+    return await getOfflinePlaylistDetail(playlistId);
+  } catch {
+    return null;
+  }
+}
+
+export async function getPinnedHomeItems(
+  items: PinnedHomeItem[],
+  isOnline: boolean,
+): Promise<HomePinnedItemData[]> {
+  if (items.length === 0) return [];
+
+  const pinnedAlbumIds = items
+    .filter((item) => item.type === "album")
+    .map((item) => item.id);
+  const shouldReadSongs = pinnedAlbumIds.length > 0;
+  const [albums, playlists, songs] = await Promise.all([
+    offlineData.albums(),
+    offlineData.playlists(),
+    shouldReadSongs ? offlineData.songs() : Promise.resolve([]),
+  ]);
+
+  const albumsById = new Map(albums.map((album) => [album.id, album]));
+  const playlistsById = new Map(
+    playlists.map((playlist) => [playlist.id, playlist]),
+  );
+  const albumStatsById = getAlbumStatsById(songs);
+
+  const resolvedItems = await Promise.all(
+    items.map(async (item): Promise<HomePinnedItemData | null> => {
+      if (item.type === "album") {
+        let album = albumsById.get(item.id);
+
+        if (!album && isOnline) {
+          try {
+            const response = await subsonic.albums.getOne(item.id);
+            album = response ? toAlbumSummary(response) : undefined;
+          } catch (error) {
+            console.warn(
+              `[home] Failed to load pinned album ${item.id}:`,
+              error,
+            );
+          }
+        }
+
+        if (!album) return null;
+
+        return {
+          type: "album",
+          album,
+          playedAt: getAlbumPlayedAt(album, albumStatsById),
+        };
+      }
+
+      const playlist = playlistsById.get(item.id);
+      const detail = await getPinnedPlaylistDetail(item.id, isOnline);
+
+      if (!playlist && !detail) return null;
+
+      const playlistSummary = playlist ?? detail;
+
+      if (!playlistSummary) return null;
+
+      return {
+        type: "playlist",
+        playlist: playlistSummary,
+        detail: detail ?? undefined,
+        playedAt: getPlaylistPlayedAt(playlistSummary, detail ?? undefined),
+      };
+    }),
+  );
+
+  return sortPinnedHomeItemsByPlayedAt(
+    resolvedItems.filter((item): item is HomePinnedItemData => item !== null),
+  );
 }
 
 async function getOfflineHomeAlbums(type: HomeAlbumListType) {
@@ -196,3 +347,52 @@ export const useGetRecentlyPlayed = () => {
 
 export const useGetRandomAlbums = () =>
   useHomeAlbumQuery([...queryKeys.album.random], "random");
+
+export const useGetCarouselAlbums = () => {
+  const isOnline = useIsOnline();
+
+  return useQuery<AlbumsListData>({
+    queryKey: ["albums", "carousel", isOnline ? "online" : "offline"],
+    queryFn: async () => {
+      if (isOnline) {
+        try {
+          return await subsonic.albums.getAlbumList({
+            size: 10,
+            type: "random",
+          });
+        } catch (err) {
+          console.warn(
+            "[home] Failed to load carousel albums, falling back to IDB:",
+            err,
+          );
+        }
+      }
+
+      const offlineResult = await getOfflineHomeAlbums("random");
+      return {
+        ...offlineResult,
+        list: offlineResult.list.slice(0, 10),
+      };
+    },
+    networkMode: "always",
+    refetchOnReconnect: true,
+  });
+};
+
+export const useGetPinnedHomeItems = () => {
+  const isOnline = useIsOnline();
+  const pinnedItems = usePinnedHomeItems();
+
+  return useQuery<HomePinnedItemData[]>({
+    queryKey: [
+      "home",
+      "pinned",
+      isOnline ? "online" : "offline",
+      pinnedItems.map((item) => `${item.type}:${item.id}`).join("|"),
+    ],
+    queryFn: () => getPinnedHomeItems(pinnedItems, isOnline),
+    enabled: pinnedItems.length > 0,
+    networkMode: "always",
+    refetchOnReconnect: true,
+  });
+};

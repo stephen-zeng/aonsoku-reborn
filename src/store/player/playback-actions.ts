@@ -2,8 +2,9 @@ import type { Draft } from "immer";
 import clamp from "lodash/clamp";
 import { LanControlMessageType } from "@/types/lanControl";
 import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
+import { getPlaybackCapabilities, getRuntime } from "@/utils/capabilities";
 import { logger } from "@/utils/logger";
-import { isIOS } from "@/utils/platform";
+import { getQueueController } from "@/player/queue-controller";
 
 interface SharedDeps {
   set: (fn: (state: Draft<IPlayerContext>) => void) => void;
@@ -17,6 +18,15 @@ export function createPlaybackActions(shared: SharedDeps) {
 
   return {
     setPlayingState: (status: boolean) => {
+      if (getRuntime() === "capacitor-ios") {
+        if (status) {
+          getQueueController().play();
+        } else {
+          getQueueController().pause();
+        }
+        return;
+      }
+
       const prev = get().playerState.isPlaying;
       logger.info(
         `[setPlayingState] ${prev} → ${status} | isRemote=${!!isRemoteActive()}`,
@@ -32,6 +42,11 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     togglePlayPause: () => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().togglePlayPause();
+        return;
+      }
+
       const prev = get().playerState.isPlaying;
       logger.info(`[togglePlayPause] isPlaying: ${prev} → ${!prev}`);
       remoteSend(LanControlMessageType.PLAY_PAUSE);
@@ -41,6 +56,11 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     toggleLoop: () => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().toggleLoop();
+        return;
+      }
+
       const { loopState } = get().playerState;
       const newState = (loopState + 1) % (2 + 1);
 
@@ -59,6 +79,11 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     setProgress: (progress: number) => {
+      if (getRuntime() === "capacitor-ios") {
+        getQueueController().seek(progress);
+        return;
+      }
+
       remoteSend(LanControlMessageType.SEEK, {
         time: progress,
       });
@@ -82,7 +107,7 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     setVolume: (volume: number) => {
-      if (isIOS()) return;
+      if (!getPlaybackCapabilities().canSetVolume) return;
       remoteSend(LanControlMessageType.SET_VOLUME, {
         volume,
       });
@@ -92,7 +117,7 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     handleVolumeWheel: (isScrollingDown: boolean) => {
-      if (isIOS()) return;
+      if (!getPlaybackCapabilities().canSetVolume) return;
       if (isRemoteActive()) return;
       const { min, max, wheelStep } = get().settings.volume;
       const { volume } = get().playerState;

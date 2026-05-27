@@ -5,11 +5,13 @@ import {
 } from "@/app/components/fallbacks/home-fallbacks";
 import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import HomeHeader from "@/app/components/home/carousel/header";
+import PinnedList from "@/app/components/home/pinned-list";
 import PreviewList from "@/app/components/home/preview-list";
 import {
+  useGetPinnedHomeItems,
   useGetMostPlayed,
   useGetRandomAlbums,
-  useGetRandomSongs,
+  useGetCarouselAlbums,
   useGetRecentlyAdded,
   useGetRecentlyPlayed,
 } from "@/app/hooks/use-home";
@@ -18,7 +20,8 @@ import { ROUTES } from "@/routes/routesList";
 export default function Home() {
   const { t } = useTranslation();
 
-  const { data: randomSongs, isLoading, isFetching } = useGetRandomSongs();
+  const { data: carouselAlbums, isLoading, isFetching } = useGetCarouselAlbums();
+  const pinnedItems = useGetPinnedHomeItems();
 
   const recentlyPlayed = useGetRecentlyPlayed();
   const mostPlayed = useGetMostPlayed();
@@ -54,12 +57,21 @@ export default function Home() {
 
   return (
     <div className="w-full px-4 sm:px-8 py-4 sm:py-6">
-      <MobilePageHeader variant="root" title={t("sidebar.home")} />
+      <MobilePageHeader
+        variant="root"
+        title={t("sidebar.home")}
+        showUserDropdown
+      />
 
       {isFetching || isLoading ? (
         <HeaderFallback />
       ) : (
-        <HomeHeader songs={randomSongs || []} />
+        <HomeHeader albums={carouselAlbums?.list || []} />
+      )}
+
+      {pinnedItems.isLoading && <PreviewListFallback />}
+      {!!pinnedItems.data?.length && (
+        <PinnedList list={pinnedItems.data} title={t("home.pinned")} />
       )}
 
       {sections.map((section) => {

@@ -153,6 +153,7 @@ export default function Album() {
         variant="sub"
         title={album.name}
         accentColor={accentColor}
+        showSpacer={false}
       />
       <ImageHeader
         type={t("album.headline")}

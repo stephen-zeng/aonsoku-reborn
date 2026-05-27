@@ -2,8 +2,14 @@ import { checkConfiguredServerConnectivity } from "@/api/checkConfiguredServer";
 import { probeServerConnection } from "@/api/pingServer";
 import { getConfiguredUrls } from "@/app/hooks/use-network-status";
 import { useAppStore } from "@/store/app.store";
+import { getRuntime } from "@/utils/capabilities";
 
 export function hasConfiguredSession() {
+  if (getRuntime() === "capacitor-ios") {
+    const { isServerConfigured } = useAppStore.getState().data;
+    return isServerConfigured;
+  }
+
   const { primaryUrl, url, username, password, authType, isServerConfigured } =
     useAppStore.getState().data;
 
@@ -17,6 +23,10 @@ export function hasConfiguredSession() {
 }
 
 export async function canUseConfiguredSession() {
+  if (getRuntime() === "capacitor-ios") {
+    return hasConfiguredSession();
+  }
+
   const { username, password, authType } = useAppStore.getState().data;
 
   if (!hasConfiguredSession() || !username || !password || authType === null) {

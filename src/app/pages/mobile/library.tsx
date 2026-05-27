@@ -87,7 +87,11 @@ export default function MobileLibrary() {
 
   return (
     <div className="w-full flex flex-col">
-      <MobilePageHeader variant="root" title={t("sidebar.library")} />
+      <MobilePageHeader
+        variant="root"
+        title={t("sidebar.library")}
+        showUserDropdown
+      />
       <div className="px-4 flex flex-col gap-6">
         <div className="flex flex-col gap-1">
           {libraryLinks.map((item) => (

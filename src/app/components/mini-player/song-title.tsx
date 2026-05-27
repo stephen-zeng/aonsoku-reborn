@@ -50,7 +50,10 @@ export function MiniPlayerSongTitle() {
   );
 }
 
-function getArtistsText(song: { artist: string; artists?: { name: string }[] }): string {
+function getArtistsText(song: {
+  artist: string;
+  artists?: { name: string }[];
+}): string {
   if (song.artists && song.artists.length > 0) {
     return song.artists
       .slice(0, ALBUM_ARTISTS_MAX_NUMBER)
@@ -60,6 +63,10 @@ function getArtistsText(song: { artist: string; artists?: { name: string }[] }):
   return song.artist;
 }
 
-function getSongAndArtistText(song: { title: string; artist: string; artists?: { name: string }[] }): string {
+function getSongAndArtistText(song: {
+  title: string;
+  artist: string;
+  artists?: { name: string }[];
+}): string {
   return `${song.title} · ${getArtistsText(song)}`;
 }

@@ -32,6 +32,7 @@
         "title": "哎呀，这里没有专辑！"
       },
       "filter": {
+        "label": "筛选",
         "artist": "艺术家",
         "discography": "作品目录",
         "favorites": "收藏",
@@ -42,7 +43,11 @@
         "recentlyAdded": "最近添加",
         "recentlyPlayed": "最近播放",
         "releaseYear": "发行年份",
-        "search": "搜索"
+        "search": "搜索",
+        "year": {
+          "oldest": "最早优先",
+          "newest": "最新优先"
+        }
       },
       "genre": {
         "label": "选择一个流派…",
@@ -170,6 +175,7 @@
     }
   },
   "home": {
+    "pinned": "已固定",
     "explore": "发现",
     "mostPlayed": "最常播放",
     "recentlyAdded": "最近添加",
@@ -310,6 +316,7 @@
     },
     "info": "获取信息",
     "like": "喜欢",
+    "pin": "固定",
     "play": "播放",
     "playNext": "从下一首开始播放",
     "playlist": {
@@ -323,7 +330,8 @@
     },
     "removeDownload": "移除下载",
     "removeFromQueue": "从队列中移除",
-    "unlike": "取消喜欢"
+    "unlike": "取消喜欢",
+    "unpin": "取消固定"
   },
   "player": {
     "noRadioPlaying": "没有正在播放的电台",

@@ -5,28 +5,70 @@ import { Button } from "@/app/components/ui/button";
 import { Slider } from "@/app/components/ui/slider";
 import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
 import { useMuteToggle } from "@/app/hooks/use-mute-toggle";
+import { useSystemVolume } from "@/app/hooks/use-system-volume";
 import { usePlayerVolume, useVolumeSettings } from "@/store/player.store";
-import { isIOS } from "@/utils/platform";
+import { getPlaybackCapabilities } from "@/utils/capabilities";
 
 export function VolumeBar() {
-  const { volume, handleMuteClick } = useMuteToggle();
-  const { setVolume, handleVolumeWheel } = usePlayerVolume();
+  const { volume: playerVolume, handleMuteClick } = useMuteToggle();
+  const { setVolume: setPlayerVolume, handleVolumeWheel: handlePlayerWheel } =
+    usePlayerVolume();
   const { min, max, step } = useVolumeSettings();
+  const {
+    volume: systemVolume,
+    setSystemVolume,
+    commitSystemVolume,
+    handleVolumeWheel: handleSystemWheel,
+    supportsSystemVolumeControl,
+  } = useSystemVolume();
   const wheelRafRef = useRef<number | null>(null);
   const { t } = useTranslation();
-  const ios = isIOS();
-  const displayVolume = ios ? 100 : volume;
+  const { requiresSystemVolume } = getPlaybackCapabilities();
   const { hoverBg10 } = useFullscreenContrast();
+
+  const displayVolume = supportsSystemVolumeControl
+    ? systemVolume
+    : playerVolume;
+  const isDisabled = requiresSystemVolume && !supportsSystemVolumeControl;
 
   const handleWheel = useCallback(
     (e: WheelEvent<HTMLDivElement>) => {
-      if (ios || wheelRafRef.current !== null) return;
+      if (isDisabled || wheelRafRef.current !== null) return;
       wheelRafRef.current = requestAnimationFrame(() => {
-        handleVolumeWheel(e.deltaY > 0);
+        if (supportsSystemVolumeControl) {
+          handleSystemWheel(e.deltaY > 0);
+        } else {
+          handlePlayerWheel(e.deltaY > 0);
+        }
         wheelRafRef.current = null;
       });
     },
-    [handleVolumeWheel, ios],
+    [
+      handlePlayerWheel,
+      handleSystemWheel,
+      supportsSystemVolumeControl,
+      isDisabled,
+    ],
+  );
+
+  const handleSliderChange = useCallback(
+    ([value]: number[]) => {
+      if (supportsSystemVolumeControl) {
+        setSystemVolume(value);
+      } else {
+        setPlayerVolume(value);
+      }
+    },
+    [supportsSystemVolumeControl, setSystemVolume, setPlayerVolume],
+  );
+
+  const handleSliderCommit = useCallback(
+    ([value]: number[]) => {
+      if (supportsSystemVolumeControl) {
+        commitSystemVolume(value);
+      }
+    },
+    [supportsSystemVolumeControl, commitSystemVolume],
   );
 
   return (
@@ -40,9 +82,9 @@ export function VolumeBar() {
         size="icon"
         className={`size-8 p-0 shrink-0 ${hoverBg10}`}
         onClick={handleMuteClick}
-        disabled={ios}
+        disabled={isDisabled}
         aria-label={
-          volume === 0
+          displayVolume === 0
             ? t("player.tooltips.volume.unmute")
             : t("player.tooltips.volume.mute")
         }
@@ -60,8 +102,9 @@ export function VolumeBar() {
         max={max}
         step={step}
         className="h-3 w-full min-w-0"
-        onValueChange={([value]) => setVolume(value)}
-        disabled={ios}
+        onValueChange={handleSliderChange}
+        onValueCommit={handleSliderCommit}
+        disabled={isDisabled}
         aria-label={t("player.tooltips.volume.mute")}
       />
       <VolumeIcon

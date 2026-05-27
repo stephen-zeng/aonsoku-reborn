@@ -9,7 +9,7 @@ import {
   Table,
   useReactTable,
 } from "@tanstack/react-table";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import clsx from "clsx";
 import debounce from "lodash/debounce";
 import {
@@ -19,6 +19,7 @@ import {
   TouchEvent,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -33,9 +34,12 @@ import { ColumnDefType } from "@/types/react-table/columnDef";
 import { ISong } from "@/types/responses/song";
 import { MouseButton } from "@/utils/browser";
 import { computeMultiSelectedRows } from "@/utils/dataTable";
+import {
+  addPageScrollListener,
+  getPageScrollMetrics,
+} from "@/utils/scrollPageToTop";
 import { DataTableListHeader } from "./data-table-list-header";
 import { TableListRow } from "./data-table-list-row";
-import { ScrollArea, scrollAreaViewportSelector } from "./scroll-area";
 
 const MemoTableListRow = memo(TableListRow) as typeof TableListRow;
 const MemoDataTableListHeader = memo(
@@ -159,20 +163,20 @@ export function DataTableList<TData, TValue>({
 
   const { rows } = table.getRowModel();
 
-  const parentRef = useRef<HTMLDivElement>(null);
-
-  const getScrollElement = () => {
-    if (!parentRef.current) return null;
-
-    return parentRef.current.querySelector(scrollAreaViewportSelector);
-  };
-
   const estimateSize = useCallback(() => 56, []);
 
-  const virtualizer = useVirtualizer({
+  const [scrollMargin, setScrollMargin] = useState(0);
+
+  useLayoutEffect(() => {
+    if (tableContainerRef.current) {
+      setScrollMargin(tableContainerRef.current.offsetTop);
+    }
+  }, []);
+
+  const virtualizer = useWindowVirtualizer({
     count: rows.length,
-    getScrollElement,
     estimateSize,
+    scrollMargin,
     overscan: 5,
   });
 
@@ -372,9 +376,9 @@ export function DataTableList<TData, TValue>({
   });
 
   const handleScroll = useCallback(() => {
-    if (!virtualizer.scrollElement || !hasNextPage || !fetchNextPage) return;
+    if (!hasNextPage || !fetchNextPage) return;
 
-    const { scrollTop, clientHeight, scrollHeight } = virtualizer.scrollElement;
+    const { scrollTop, clientHeight, scrollHeight } = getPageScrollMetrics();
 
     const scrollThreshold = scrollHeight - scrollHeight / 8;
     const isNearBottom = scrollTop + clientHeight >= scrollThreshold;
@@ -382,7 +386,7 @@ export function DataTableList<TData, TValue>({
     if (isNearBottom) {
       fetchNextPage();
     }
-  }, [fetchNextPage, hasNextPage, virtualizer.scrollElement]);
+  }, [fetchNextPage, hasNextPage]);
 
   const debouncedHandleScroll = useMemo(
     () => debounce(handleScroll, 200),
@@ -390,15 +394,8 @@ export function DataTableList<TData, TValue>({
   );
 
   useEffect(() => {
-    if (!virtualizer.scrollElement) return;
-
-    const scrollElement = virtualizer.scrollElement;
-
-    scrollElement.addEventListener("scroll", debouncedHandleScroll);
-    return () => {
-      scrollElement.removeEventListener("scroll", debouncedHandleScroll);
-    };
-  }, [virtualizer.scrollElement, debouncedHandleScroll]);
+    return addPageScrollListener(debouncedHandleScroll);
+  }, [debouncedHandleScroll]);
 
   useEffect(() => {
     if (!scrollToIndex || !currentSongIndex) return;
@@ -412,16 +409,21 @@ export function DataTableList<TData, TValue>({
     <div className="h-full">
       <div
         ref={tableContainerRef}
-        className="relative w-full h-full overflow-hidden cursor-default caption-bottom text-sm bg-transparent"
+        className="relative w-full h-full cursor-default caption-bottom text-sm bg-transparent"
         data-testid="data-table"
         role="table"
         onKeyDown={handleTableKeyDown}
       >
-        <div className={clsx(!showHeader && "hidden")}>
+        <div
+          className={clsx(
+            !showHeader && "hidden",
+            "sticky top-0 md:top-[var(--header-height)] z-10",
+          )}
+        >
           {table.getHeaderGroups().map((headerGroup) => (
             <div
               key={headerGroup.id}
-              className="w-full flex flex-row border-b pr-[10px] bg-muted"
+              className="w-full flex flex-row border-b bg-muted"
               role="row"
               onClick={(e) => {
                 const target = e.target as HTMLElement;
@@ -437,50 +439,43 @@ export function DataTableList<TData, TValue>({
             </div>
           ))}
         </div>
-        <ScrollArea
-          ref={parentRef}
-          type="always"
-          className={clsx(
-            "[&_div:last-child]:border-0 overflow-auto",
-            showHeader ? "h-[calc(100%-41px)]" : "h-full",
-          )}
-          thumbClassName={clsx(pageType === "queue" && "secondary-thumb-bar")}
+        <div
+          className="w-full relative"
+          style={{ height: `${virtualizer.getTotalSize()}px` }}
         >
-          <div
-            className="w-full relative"
-            style={{ height: `${virtualizer.getTotalSize()}px` }}
-          >
-            {virtualizer.getVirtualItems().length ? (
-              virtualizer.getVirtualItems().map((virtualRow) => {
-                const row = rows[virtualRow.index];
+          {virtualizer.getVirtualItems().length ? (
+            virtualizer.getVirtualItems().map((virtualRow) => {
+              const row = rows[virtualRow.index];
 
-                return (
-                  <MemoTableListRow
-                    key={row.id}
-                    row={row}
-                    virtualRow={virtualRow}
-                    handleClicks={handleClicks}
-                    handleRowDbClick={handleRowDbClick}
-                    handleRowTap={handleRowTap}
-                    handleRowKeyDown={handleRowKeyDown}
-                    getContextMenuOptions={getContextMenuOptions}
-                    dataType={dataType}
-                    pageType={pageType}
-                  />
-                );
-              })
-            ) : (
-              <div role="row">
-                <div
-                  className="flex h-24 items-center justify-center p-2"
-                  role="cell"
-                >
-                  {noRowsMessage}
-                </div>
+              return (
+                <MemoTableListRow
+                  key={row.id}
+                  row={row}
+                  virtualRow={{
+                    ...virtualRow,
+                    start: virtualRow.start - virtualizer.options.scrollMargin,
+                  }}
+                  handleClicks={handleClicks}
+                  handleRowDbClick={handleRowDbClick}
+                  handleRowTap={handleRowTap}
+                  handleRowKeyDown={handleRowKeyDown}
+                  getContextMenuOptions={getContextMenuOptions}
+                  dataType={dataType}
+                  pageType={pageType}
+                />
+              );
+            })
+          ) : (
+            <div role="row">
+              <div
+                className="flex h-24 items-center justify-center p-2"
+                role="cell"
+              >
+                {noRowsMessage}
               </div>
-            )}
-          </div>
-        </ScrollArea>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

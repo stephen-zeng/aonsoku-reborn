@@ -1,9 +1,25 @@
 import { AlbumListParams } from "@/service/albums";
 import { subsonic } from "@/service/subsonic";
+import { isNativeDataAvailable, AonsokuNativeData } from "@/native/data/facade";
 
 const emptyResponse = { albums: [], nextOffset: null, albumsCount: 0 };
 
 export async function getArtistDiscography(artistId: string) {
+  if (isNativeDataAvailable()) {
+    const result = await AonsokuNativeData.getAlbums({
+      limit: 500,
+      offset: 0,
+      artistId,
+      sortBy: "year",
+      sortOrder: "desc",
+    });
+    return {
+      albums: result.items,
+      nextOffset: null,
+      albumsCount: result.total,
+    };
+  }
+
   const response = await subsonic.artists.getOne(artistId);
 
   if (!response || !response.album) return emptyResponse;
@@ -22,6 +38,19 @@ interface AlbumSearch {
 }
 
 export async function albumSearch({ query, count, offset }: AlbumSearch) {
+  if (isNativeDataAvailable()) {
+    const result = await AonsokuNativeData.getAlbums({
+      limit: count,
+      offset,
+      search: query,
+    });
+    return {
+      albums: result.items,
+      nextOffset: result.hasMore ? offset + count : null,
+      albumsCount: result.total,
+    };
+  }
+
   const response = await subsonic.search.get({
     query,
     songCount: 0,
@@ -45,6 +74,34 @@ export async function albumSearch({ query, count, offset }: AlbumSearch) {
 }
 
 export async function getAlbumList(params: Required<AlbumListParams>) {
+  if (isNativeDataAvailable()) {
+    const sortMap: Record<string, string> = {
+      alphabeticalByName: "name",
+      alphabeticalByArtist: "artist",
+      newest: "created",
+      recent: "created",
+      frequent: "playCount",
+      starred: "starredAt",
+      byYear: "year",
+      random: "random",
+    };
+    const result = await AonsokuNativeData.getAlbums({
+      limit: params.size,
+      offset: params.offset,
+      sortBy: sortMap[params.type] || "name",
+      sortOrder:
+        params.type === "newest" || params.type === "recent" ? "desc" : "asc",
+      genre: params.genre,
+      fromYear: params.fromYear,
+      toYear: params.toYear,
+    });
+    return {
+      albums: result.items,
+      nextOffset: result.hasMore ? params.offset + params.size : null,
+      albumsCount: result.total,
+    };
+  }
+
   const response = await subsonic.albums.getAlbumList(params);
 
   if (!response) return emptyResponse;

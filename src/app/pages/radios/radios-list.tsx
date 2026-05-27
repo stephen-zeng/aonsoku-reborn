@@ -44,7 +44,9 @@ export default function Radios() {
   const showTable = radios && radios.length > 0;
 
   return (
-    <div className={clsx("w-full", showTable ? "h-content" : "h-content")}>
+    <div
+      className={clsx("w-full", showTable ? "min-h-content" : "min-h-content")}
+    >
       <ShadowHeader
         showGlassEffect={false}
         fixed={false}
@@ -69,7 +71,7 @@ export default function Radios() {
       </ShadowHeader>
 
       {showTable && (
-        <div className="w-full h-[calc(100%-80px)]">
+        <div className="w-full">
           <DataTableList
             columns={columns}
             data={radios}

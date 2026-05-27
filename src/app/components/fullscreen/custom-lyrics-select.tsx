@@ -150,7 +150,7 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
       </div>
 
       {currentSong && customServerReady && (
-        <div className="mb-3 ml-2 mr-6 shrink-0 rounded-2xl border border-white/10 bg-foreground/[0.06] p-3 backdrop-blur-xl">
+        <div className="mb-3 ml-2 mr-6 shrink-0 rounded-2xl border border-border bg-muted/30 p-3 backdrop-blur-xl">
           <form
             className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]"
             onSubmit={handleSearch}
@@ -165,7 +165,7 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
               <Input
                 id="fullscreen-custom-lyrics-title"
                 value={searchTitle}
-                className="border-white/10 bg-black/10 backdrop-blur-md focus-visible:border-white/20 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="border-border bg-muted/30 backdrop-blur-md focus-visible:border-border/60 focus-visible:ring-0 focus-visible:ring-offset-0"
                 onChange={(event) => setSearchTitle(event.target.value)}
               />
             </div>
@@ -179,13 +179,13 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
               <Input
                 id="fullscreen-custom-lyrics-artist"
                 value={searchArtist}
-                className="border-white/10 bg-black/10 backdrop-blur-md focus-visible:border-white/20 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="border-border bg-muted/30 backdrop-blur-md focus-visible:border-border/60 focus-visible:ring-0 focus-visible:ring-offset-0"
                 onChange={(event) => setSearchArtist(event.target.value)}
               />
             </div>
             <Button
               type="submit"
-              className="self-end gap-1.5 rounded-full bg-foreground text-background hover:bg-foreground/90"
+              className="self-end gap-1.5 rounded-full bg-foreground text-[var(--btn-text-inv)] hover:bg-foreground/90"
               disabled={!searchTitle.trim() && !searchArtist.trim()}
             >
               <Search className="size-4" />
@@ -256,8 +256,8 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
                   <div
                     key={candidateKey}
                     className={cn(
-                      "min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-foreground/[0.06] backdrop-blur-xl transition-colors hover:bg-foreground/10",
-                      selected && "border-foreground/35 bg-foreground/15",
+                      "min-w-0 overflow-hidden rounded-2xl border border-border bg-muted/30 backdrop-blur-xl transition-colors hover:bg-muted/50",
+                      selected && "border-foreground/30 bg-foreground/10",
                     )}
                   >
                     <div className="flex min-w-0 flex-col items-start justify-between gap-3 p-4 sm:flex-row">
@@ -276,7 +276,7 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
                           "w-full shrink-0 gap-1.5 rounded-full sm:w-auto",
                           selected
                             ? "bg-foreground/15 hover:bg-foreground/20"
-                            : "bg-foreground text-background hover:bg-foreground/90 hover:text-background",
+                            : "bg-foreground text-[var(--btn-text-inv)] hover:bg-foreground/90",
                         )}
                         onClick={() => handleSelect(candidate, index)}
                       >
@@ -296,7 +296,7 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
                       )}
                       <ScrollArea
                         type="always"
-                        className="h-52 min-w-0 rounded-xl border border-white/10 bg-black/10 p-3"
+                        className="h-52 min-w-0 rounded-xl border border-border bg-muted/40 p-3"
                         thumbClassName="secondary-thumb-bar"
                         onWheel={(event) => event.stopPropagation()}
                         onTouchMove={(event) => event.stopPropagation()}
@@ -327,7 +327,7 @@ function EmptyState({
   return (
     <div
       className={cn(
-        "flex h-full min-h-48 flex-col items-center justify-center gap-3 rounded-2xl border border-white/10 bg-foreground/[0.06] p-6 text-center text-foreground/60 backdrop-blur-xl",
+        "flex h-full min-h-48 flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-muted/30 p-6 text-center text-foreground/60 backdrop-blur-xl",
         className,
       )}
     >

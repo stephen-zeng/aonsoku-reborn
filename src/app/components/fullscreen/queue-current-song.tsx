@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
 import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
+import { useTouchMenuGuard } from "@/app/hooks/use-touch-menu-guard";
 import {
   usePlayerActions,
   usePlayerLoop,
@@ -31,6 +32,7 @@ export const QueueCurrentSong = memo(function QueueCurrentSong({
     (a, b) => a?.id === b?.id,
   );
   const { hoverBg10 } = useFullscreenContrast();
+  const { open, setOpen, triggerProps } = useTouchMenuGuard();
 
   if (!currentSong) return null;
 
@@ -58,13 +60,22 @@ export const QueueCurrentSong = memo(function QueueCurrentSong({
           className="shrink-0 size-8 rounded-full"
           onClick={(e) => e.stopPropagation()}
         />
-        <DropdownMenu>
+        <DropdownMenu open={open} onOpenChange={setOpen}>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className={`shrink-0 size-8 rounded-full ${hoverBg10}`}
-              onClick={(e) => e.stopPropagation()}
+              className={clsx(
+                "shrink-0 size-8 rounded-full",
+                hoverBg10,
+                triggerProps.className,
+              )}
+              onPointerDown={triggerProps.onPointerDown}
+              onPointerMove={triggerProps.onPointerMove}
+              onPointerUp={triggerProps.onPointerUp}
+              onPointerCancel={triggerProps.onPointerCancel}
+              onClick={triggerProps.onClick}
+              onContextMenu={triggerProps.onContextMenu}
             >
               <EllipsisVertical className="w-4 h-4" />
             </Button>

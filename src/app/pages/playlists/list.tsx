@@ -33,7 +33,7 @@ export default function PlaylistsPage() {
   const showTable = playlists.length > 0;
 
   return (
-    <div className="w-full h-content">
+    <div className="w-full min-h-content">
       <ShadowHeader
         showGlassEffect={false}
         fixed={false}
@@ -60,7 +60,7 @@ export default function PlaylistsPage() {
       {!showTable && <EmptyPlaylistsPage />}
 
       {showTable && (
-        <div className="w-full h-[calc(100%-80px)]">
+        <div className="w-full">
           <DataTableList
             columns={columns}
             data={playlists}

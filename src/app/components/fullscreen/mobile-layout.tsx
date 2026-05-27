@@ -194,7 +194,10 @@ export const MobileLayout = memo(function MobileLayout({
 
   return (
     <div
-      className="flex flex-col h-full w-full"
+      className={cn(
+        "flex flex-col h-full w-full text-foreground",
+        contrast.className,
+      )}
       data-testid="fullscreen-mobile-layout"
       style={contrast.style}
     >

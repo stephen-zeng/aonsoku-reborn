@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Actions } from "@/app/components/actions";
 import { OptionsButtons } from "@/app/components/options/buttons";
@@ -24,6 +25,11 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
   const { showInfoPanel, toggleShowInfoPanel } = useAppPages();
 
   const isAlbumStarred = album.starred !== undefined;
+  const [isStarred, setIsStarred] = useState(isAlbumStarred);
+
+  useEffect(() => {
+    setIsStarred(isAlbumStarred);
+  }, [isAlbumStarred]);
 
   const queryClient = useQueryClient();
 
@@ -33,16 +39,32 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
       queryClient.invalidateQueries({
         queryKey: [...queryKeys.album.single, album.id],
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.favorites.count,
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.favorites.list,
+      });
     },
   });
 
   function handleLikeButton() {
-    if (!album) return;
+    if (!album || starMutation.isPending) return;
 
-    starMutation.mutate({
-      id: album.id,
-      starred: isAlbumStarred,
-    });
+    const currentStarred = isStarred;
+    setIsStarred(!currentStarred);
+
+    starMutation.mutate(
+      {
+        id: album.id,
+        starred: currentStarred,
+      },
+      {
+        onError: () => {
+          setIsStarred(currentStarred);
+        },
+      },
+    );
   }
 
   const buttonsTooltips = {
@@ -50,7 +72,7 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
     shuffle: t("playlist.buttons.shuffle", { name: album.name }),
     options: t("playlist.buttons.options", { name: album.name }),
     like: () => {
-      return isAlbumStarred
+      return isStarred
         ? t("album.buttons.dislike", { name: album.name })
         : t("album.buttons.like", { name: album.name });
     },
@@ -88,9 +110,10 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
       <Actions.Button
         tooltip={buttonsTooltips.like()}
         className="hidden md:inline-flex"
+        disabled={starMutation.isPending}
         onClick={handleLikeButton}
       >
-        <Actions.LikeIcon isStarred={isAlbumStarred} />
+        <Actions.LikeIcon isStarred={isStarred} />
       </Actions.Button>
 
       {showInfoButton && (
@@ -110,8 +133,9 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
             <DropdownMenuGroup className="md:hidden">
               <OptionsButtons.Like
                 onClick={handleLikeButton}
-                isStarred={isAlbumStarred}
+                isStarred={isStarred}
                 label={buttonsTooltips.like()}
+                disabled={starMutation.isPending}
               />
             </DropdownMenuGroup>
             <DropdownMenuSeparator className="md:hidden" />

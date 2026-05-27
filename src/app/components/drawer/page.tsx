@@ -46,6 +46,7 @@ export function MainDrawerPage() {
           ? "translate-x-0"
           : "translate-x-full pointer-events-none",
       )}
+      style={{ paddingRight: "var(--safe-area-right)" }}
     >
       <ResizeHandle
         side="left"

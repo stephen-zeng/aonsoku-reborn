@@ -3,6 +3,7 @@ import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
+import { createNativeStorage } from "@/store/native-storage";
 import {
   CacheSettings,
   CacheStatus,
@@ -189,6 +190,7 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
       ),
       {
         name: "cache_settings",
+        storage: createNativeStorage<CacheStoreState>("cache_settings"),
         partialize: (state) => ({
           settings: state.settings,
           status: {

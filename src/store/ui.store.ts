@@ -2,6 +2,7 @@ import merge from "lodash/merge";
 import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { createWithEqualityFn } from "zustand/traditional";
+import { createNativeStorage } from "@/store/native-storage";
 import { IUiContext } from "@/types/uiContext";
 
 export const DEFAULT_SIDEBAR_WIDTH = 280;
@@ -69,6 +70,14 @@ export const useUiStore = createWithEqualityFn<IUiContext>()(
               });
             },
           },
+          mobileSearch: {
+            query: "",
+            setQuery: (query: string) => {
+              set((state) => {
+                state.mobileSearch.query = query;
+              });
+            },
+          },
         })),
         {
           name: "ui_store",
@@ -77,6 +86,7 @@ export const useUiStore = createWithEqualityFn<IUiContext>()(
       {
         name: "ui_store",
         version: 2,
+        storage: createNativeStorage<IUiContext>("ui_store"),
         merge: (persistedState, currentState) => {
           return merge(currentState, persistedState);
         },
@@ -113,3 +123,4 @@ export const useUiStore = createWithEqualityFn<IUiContext>()(
 export const useSongInfo = () => useUiStore((state) => state.songInfo);
 export const useSidebar = () => useUiStore((state) => state.sidebar);
 export const useRightPanel = () => useUiStore((state) => state.rightPanel);
+export const useMobileSearch = () => useUiStore((state) => state.mobileSearch);

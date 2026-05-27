@@ -49,6 +49,10 @@ module.exports = {
         "mid-player-text-height": "clamp(40px, calc(12vh + 24px), 48px)",
         "mid-player-padding": "clamp(6px, calc(3vh + 2px), 8px)",
         "mid-player-progress-height": "clamp(16px, calc(10vh + 3px), 24px)",
+        "safe-top": "var(--safe-area-top)",
+        "safe-bottom": "var(--safe-area-bottom)",
+        "safe-left": "var(--safe-area-left)",
+        "safe-right": "var(--safe-area-right)",
       },
       colors: {
         border: "hsl(var(--border))",
@@ -168,15 +172,23 @@ module.exports = {
   plugins: [
     require("tailwindcss-animate"),
     require("tailwind-extended-shadows"),
-    function ({ addVariant }) {
+    function ({ addVariant, matchVariant }) {
       addVariant("hover-supported", "@media (hover: hover) { &:hover }");
-      addVariant(
+      matchVariant(
         "group-hover-supported",
-        "@media (hover: hover) { :where(.group):hover & }",
+        (_, { modifier }) => {
+          const groupClass = modifier ? `group\\/${modifier}` : "group";
+          return `@media (hover: hover) { :where(.${groupClass}):hover & }`;
+        },
+        { values: { DEFAULT: "" } },
       );
-      addVariant(
+      matchVariant(
         "peer-hover-supported",
-        "@media (hover: hover) { :where(.peer):hover ~ & }",
+        (_, { modifier }) => {
+          const peerClass = modifier ? `peer\\/${modifier}` : "peer";
+          return `@media (hover: hover) { :where(.${peerClass}):hover ~ & }`;
+        },
+        { values: { DEFAULT: "" } },
       );
     },
     function ({ matchUtilities, theme }) {

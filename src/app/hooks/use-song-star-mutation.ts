@@ -65,11 +65,12 @@ export function useSongStarMutation({
   function toggleStar() {
     if (starMutation.isPending) return;
 
-    const newState = !isStarred;
+    const currentStarred = isStarred;
+    const newState = !currentStarred;
     setIsStarred(newState);
 
     starMutation.mutate(
-      { id: songId, starred: newState },
+      { id: songId, starred: currentStarred },
       {
         onSuccess: () => {
           const { mediaType } = usePlayerStore.getState().playerState;
@@ -82,7 +83,7 @@ export function useSongStarMutation({
           }
         },
         onError: () => {
-          setIsStarred(!newState);
+          setIsStarred(currentStarred);
         },
       },
     );

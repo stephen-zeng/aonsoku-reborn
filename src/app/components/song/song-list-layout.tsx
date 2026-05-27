@@ -125,7 +125,7 @@ export function SongListLayout({
   }
 
   return (
-    <div className="w-full h-content">
+    <div className="w-full min-h-content">
       <ShadowHeader
         showGlassEffect={false}
         fixed={false}
@@ -144,7 +144,7 @@ export function SongListLayout({
         )}
       </ShadowHeader>
 
-      <div className="w-full h-[calc(100%-80px)] overflow-auto">
+      <div className="w-full">
         <DataTableList
           columns={columns}
           data={songlist}

@@ -103,3 +103,30 @@ Examples:
 - chore: bump to v0.30.0
 
 The scope is omitted when the change is cross-cutting or doesn't fit a specific area. This follows the Conventional Commits convention.
+
+## Multi-Stack Native Playback
+
+The project implements a unified playback abstraction layer (`PlaybackBackend` interface) supporting multiple platform-native playback stacks:
+
+| Stack | Runtime | Implementation |
+|---|---|---|
+| Web Audio (HTMLAudioElement) | web, electron | `src/player/playback/web-backend.ts` |
+| Native iOS (Capacitor plugin) | capacitor-ios | `src/player/playback/native-backend.ts` |
+
+Key files:
+
+- `src/player/playback/types.ts` — unified PlaybackBackend interface
+- `src/player/playback/backend-factory.ts` — platform-aware backend selection
+- `src/player/queue-controller/` — queue management (web-controller / native-controller)
+- `src/store/player/playback-actions.ts` — runtime-aware action dispatch (iOS branch / Web branch)
+- `src/utils/capabilities.ts` — platform detection and capability matrix
+
+### Modification Rules
+
+When modifying playback-related functionality, **all stacks must remain feature-consistent**:
+
+1. Playback logic changes → update both `web-backend.ts` and `native-backend.ts`
+2. Queue logic changes → update both `web-controller.ts` and `native-controller.ts`
+3. Playback action changes → ensure both iOS and Web branches are covered in `playback-actions.ts`
+4. New playback features → define in the `PlaybackBackend` interface and implement in all backends
+5. Platform capability differences (`capabilities.ts`) → degrade gracefully when unavailable, never silently ignore

@@ -7,6 +7,7 @@ import { getCacheIndexActions } from "@/store/cache-index.store";
 import { usePlayerStore } from "@/store/player.store";
 import type { SyncState } from "@/types/cache";
 import type { AuthType } from "@/types/serverConfig";
+import { getRuntime } from "@/utils/capabilities";
 
 interface WorkerAuthConfig {
   url: string;
@@ -186,18 +187,32 @@ class SyncWorkerAdapter {
 
 let syncService: SyncWorkerAdapter | typeof metadataSyncService;
 
-try {
-  if (typeof Worker !== "undefined") {
-    syncService = new SyncWorkerAdapter();
-  } else {
-    syncService = metadataSyncService;
+function createSyncService(): SyncWorkerAdapter | typeof metadataSyncService {
+  try {
+    if (getRuntime() === "capacitor-ios" || typeof Worker === "undefined") {
+      return metadataSyncService;
+    }
+    return new SyncWorkerAdapter();
+  } catch (err) {
+    console.warn(
+      "[syncWorkerAdapter] failed to create Worker, falling back to main thread:",
+      err,
+    );
+    return metadataSyncService;
   }
-} catch (err) {
-  console.warn(
-    "[syncWorkerAdapter] failed to create Worker, falling back to main thread:",
-    err,
+}
+
+syncService = createSyncService();
+
+if (getRuntime() === "capacitor-ios") {
+  import("@/native/data/native-sync-adapter").then(
+    ({ nativeSyncAdapter }) => {
+      syncService = nativeSyncAdapter as unknown as typeof metadataSyncService;
+    },
+    (err) => {
+      console.warn("[syncWorkerAdapter] native adapter unavailable:", err);
+    },
   );
-  syncService = metadataSyncService;
 }
 
 export { syncService };

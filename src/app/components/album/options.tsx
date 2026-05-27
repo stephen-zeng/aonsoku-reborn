@@ -6,6 +6,10 @@ import {
 } from "@/app/components/ui/dropdown-menu";
 import { useOptions } from "@/app/hooks/use-options";
 import { cacheManager } from "@/service/cache";
+import {
+  useIsPinnedHomeItem,
+  usePinnedHomeActions,
+} from "@/store/pinned-home.store";
 import { usePlayerStore } from "@/store/player.store";
 import { SingleAlbum } from "@/types/responses/album";
 
@@ -15,9 +19,11 @@ interface AlbumOptionsProps {
 
 export function AlbumOptions({ album }: AlbumOptionsProps) {
   const { playNext, playLast, addToPlaylist, createNewPlaylist } = useOptions();
+  const { toggle } = usePinnedHomeActions();
   const isUserQueueEmpty = usePlayerStore(
     (state) => state.songlist.userQueue.songs.length === 0,
   );
+  const isPinned = useIsPinnedHomeItem({ id: album.id, type: "album" });
 
   function handlePlayNext() {
     playNext(album.song, { albumId: album.id });
@@ -61,6 +67,18 @@ export function AlbumOptions({ album }: AlbumOptionsProps) {
         <OptionsButtons.DownloadAlbum
           onClick={() => cacheManager.cacheAlbum(album.id)}
         />
+      </DropdownMenuGroup>
+      <DropdownMenuSeparator />
+      <DropdownMenuGroup>
+        {isPinned ? (
+          <OptionsButtons.UnpinItem
+            onClick={() => toggle({ id: album.id, type: "album" })}
+          />
+        ) : (
+          <OptionsButtons.PinItem
+            onClick={() => toggle({ id: album.id, type: "album" })}
+          />
+        )}
       </DropdownMenuGroup>
     </>
   );

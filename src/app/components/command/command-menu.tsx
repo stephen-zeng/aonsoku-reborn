@@ -15,7 +15,6 @@ import {
   CommandInput,
   CommandList,
 } from "@/app/components/ui/command";
-import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { subsonic } from "@/service/subsonic";
 import { useAppStore } from "@/store/app.store";
@@ -168,6 +167,8 @@ export default function CommandMenu() {
     [clear, setOpen],
   );
 
+  const composingRef = useRef(false);
+
   const debounced = useDebouncedCallback((value: string) => {
     setQuery(value);
   }, 500);
@@ -180,6 +181,7 @@ export default function CommandMenu() {
 
   const handleSearchChange = useCallback(
     (value: string) => {
+      if (composingRef.current) return;
       if (activePage === "PLAYLISTS") {
         setQuery(value);
       } else {
@@ -300,8 +302,20 @@ export default function CommandMenu() {
             spellCheck="false"
             onValueChange={handleSearchChange}
             onKeyDown={handleInputKeyDown}
+            onCompositionStart={() => {
+              composingRef.current = true;
+            }}
+            onCompositionEnd={(e) => {
+              composingRef.current = false;
+              const value = e.currentTarget.value;
+              if (activePage === "PLAYLISTS") {
+                setQuery(value);
+              } else {
+                debounced(value);
+              }
+            }}
           />
-          <ScrollArea className="max-h-[500px] 2xl:max-h-[700px]">
+          <div className="max-h-[500px] 2xl:max-h-[700px] overflow-y-auto overscroll-contain">
             <CommandList className="max-h-fit pr-1">
               {showNotFoundMessage ? (
                 <div className="flex justify-center items-center p-4 mt-2 mx-2 bg-accent/40 rounded border border-border">
@@ -356,7 +370,7 @@ export default function CommandMenu() {
 
               {activePage === "SERVER" && <CommandServer />}
             </CommandList>
-          </ScrollArea>
+          </div>
           <div className="flex justify-end p-2 h-10 gap-1 border-t">
             <Keyboard text="ESC" className="text-sm" />
             <Keyboard text="↓" className="text-sm" />

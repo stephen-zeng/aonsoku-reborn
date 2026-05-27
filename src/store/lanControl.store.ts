@@ -3,6 +3,7 @@ import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
 import { LanControlConfig, LanControlServerInfo } from "@/types/lanControl";
+import { createNativeStorage } from "@/store/native-storage";
 import { decodeStoredPassword, toHex } from "@/utils/salt";
 
 interface ILanControlContext {
@@ -109,6 +110,7 @@ export const useLanControlStore = createWithEqualityFn<ILanControlContext>()(
       {
         name: "lan_control_store",
         version: 2,
+        storage: createNativeStorage<ILanControlContext>("lan_control_store"),
         partialize: (state) => ({
           config: encodeConfig(state.config),
         }),

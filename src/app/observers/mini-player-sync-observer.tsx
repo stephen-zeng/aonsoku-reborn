@@ -2,13 +2,13 @@ import { useEffect } from "react";
 import { useCurrentLyricLine } from "@/app/hooks/use-current-lyric-line";
 import { usePipWindowOpen } from "@/store/player.store";
 import { hasElectronBridge } from "@/utils/desktop";
-import { 
-  broadcastState, 
-  destroyMiniPlayerSync, 
-  handleControlAction, 
-  initMiniPlayerSync, 
+import {
+  broadcastState,
+  destroyMiniPlayerSync,
+  handleControlAction,
+  initMiniPlayerSync,
   listenControlActions,
-  setCurrentLine
+  setCurrentLine,
 } from "@/utils/mini-player-sync";
 
 /**
@@ -24,7 +24,7 @@ export function MiniPlayerSyncObserver() {
 
     if (pipWindowOpen) {
       initMiniPlayerSync();
-      
+
       const cleanup = listenControlActions(
         (action, value) => {
           handleControlAction(action, value);

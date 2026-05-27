@@ -1,5 +1,7 @@
 import { expose, type Remote, transfer, wrap } from "comlink";
 import { getSongStreamUrl } from "@/api/httpClient";
+import { getNativeAudioPluginAvailability } from "@/native/audio/facade";
+import type { PluginListenerHandle } from "@capacitor/core";
 import { AudioCacheQueue } from "@/service/cache/audio-cache-queue";
 import { audioKey } from "@/service/cache/cache-keys";
 import { cacheStorage } from "@/service/cache/cache-storage";
@@ -14,6 +16,9 @@ import {
 import { libraryDb } from "@/store/library-db";
 import type { CachedItemMeta, CacheTask } from "@/types/cache";
 import type { AuthType } from "@/types/serverConfig";
+import { getRuntime } from "@/utils/capabilities";
+import type { AudioDownloadService } from "./contracts";
+import { storeNativeAudioFileIfAvailable } from "./native-cache-adapter";
 
 /* ── Types ─────────────────────────────────────────────────────── */
 
@@ -41,13 +46,7 @@ interface Callbacks {
   onError(songId: string, message: string): void;
 }
 
-/** Shared interface for both Worker and fallback implementations. */
-interface AudioCacheDownloader {
-  cacheSong(task: CacheTask): Promise<void>;
-  cancelAll(): void;
-  isQueued(songId: string): boolean;
-  isInFlight(songId: string): boolean;
-}
+type AudioCacheDownloader = AudioDownloadService;
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
 
@@ -182,6 +181,10 @@ class MainThreadAudioCacheEngine implements AudioCacheDownloader {
   }
 
   private async executeDownload(task: CacheTask): Promise<void> {
+    if (getRuntime() === "capacitor-ios") {
+      return this.executeNativeDownload(task);
+    }
+
     const { songId, source, triggers } = task;
     const url = `${getSongStreamUrl(songId)}&_c=1`;
     const response = await fetch(url);
@@ -201,14 +204,20 @@ class MainThreadAudioCacheEngine implements AudioCacheDownloader {
     );
 
     const key = audioKey(songId);
-    await cacheStorage.put(key, blob, blob.type || "audio/mpeg");
+    const contentType = blob.type || "audio/mpeg";
+    await cacheStorage.put(key, blob, contentType);
+    const nativeFile = await storeNativeAudioFileIfAvailable(
+      songId,
+      blob,
+      contentType,
+    );
 
     const meta: CachedItemMeta = {
       id: songId,
       type: "audio",
       source,
       triggers,
-      sizeBytes: blob.size,
+      sizeBytes: nativeFile?.sizeBytes ?? blob.size,
       cachedAt: Date.now(),
       lastAccessedAt: Date.now(),
     };
@@ -223,6 +232,89 @@ class MainThreadAudioCacheEngine implements AudioCacheDownloader {
     });
 
     this.scheduleClearDownloadProgress(songId);
+  }
+
+  private executeNativeDownload(task: CacheTask): Promise<void> {
+    const { songId, source, triggers } = task;
+    const availability = getNativeAudioPluginAvailability();
+    if (!availability.available) {
+      throw new Error("Native audio plugin not available for download");
+    }
+
+    const plugin = availability.plugin;
+
+    return new Promise<void>((resolve, reject) => {
+      let progressHandle: PluginListenerHandle | null = null;
+      let completedHandle: PluginListenerHandle | null = null;
+      let failedHandle: PluginListenerHandle | null = null;
+
+      const cleanup = () => {
+        progressHandle?.remove();
+        completedHandle?.remove();
+        failedHandle?.remove();
+      };
+
+      plugin
+        .addListener("downloadProgress", (event) => {
+          if (event.songId !== songId) return;
+          if (event.total > 0) {
+            const { onProgress } = this.createProgressCallbacks(songId);
+            onProgress(event.loaded, event.total);
+          }
+        })
+        .then((h) => {
+          progressHandle = h;
+        });
+
+      plugin
+        .addListener("downloadCompleted", (event) => {
+          if (event.songId !== songId) return;
+          cleanup();
+
+          const key = audioKey(songId);
+          const meta: CachedItemMeta = {
+            id: songId,
+            type: "audio",
+            source,
+            triggers,
+            sizeBytes: event.sizeBytes,
+            cachedAt: Date.now(),
+            lastAccessedAt: Date.now(),
+          };
+
+          getCacheIndexActions().addItem(key, meta);
+          refreshCacheStatsFromIndex();
+          persistCacheMeta(key, { key, ...meta });
+          this.scheduleClearDownloadProgress(songId);
+
+          this.cacheLyrics(songId).catch((err) => {
+            console.warn(
+              `[cacheManager] lyrics prefetch failed for ${songId}:`,
+              err,
+            );
+          });
+
+          resolve();
+        })
+        .then((h) => {
+          completedHandle = h;
+        });
+
+      plugin
+        .addListener("downloadFailed", (event) => {
+          if (event.songId !== songId) return;
+          cleanup();
+          reject(new Error(event.error));
+        })
+        .then((h) => {
+          failedHandle = h;
+        });
+
+      plugin.downloadAudioFile({ songId }).catch((err) => {
+        cleanup();
+        reject(err);
+      });
+    });
   }
 
   private async cacheLyrics(songId: string): Promise<void> {
@@ -362,7 +454,10 @@ class AudioCacheWorkerAdapter implements AudioCacheDownloader {
 let audioCacheService: AudioCacheDownloader;
 
 try {
-  if (typeof Worker !== "undefined") {
+  if (getRuntime() === "capacitor-ios") {
+    audioCacheService = new MainThreadAudioCacheEngine();
+    setupStreamCacheListener();
+  } else if (typeof Worker !== "undefined") {
     audioCacheService = new AudioCacheWorkerAdapter();
   } else {
     audioCacheService = new MainThreadAudioCacheEngine();
@@ -373,6 +468,37 @@ try {
     err,
   );
   audioCacheService = new MainThreadAudioCacheEngine();
+}
+
+function setupStreamCacheListener(): void {
+  const availability = getNativeAudioPluginAvailability();
+  if (!availability.available) return;
+
+  availability.plugin.addListener("streamCacheCompleted", (event) => {
+    const { songId, sizeBytes } = event;
+    const key = audioKey(songId);
+
+    const existing = getCacheIndexItems()[key];
+    if (existing) {
+      const updated = { ...existing, lastAccessedAt: Date.now() };
+      getCacheIndexActions().addItem(key, updated);
+      persistCacheMeta(key, { key, ...updated });
+      return;
+    }
+
+    const meta: CachedItemMeta = {
+      id: songId,
+      type: "audio",
+      source: "lru",
+      sizeBytes,
+      cachedAt: Date.now(),
+      lastAccessedAt: Date.now(),
+    };
+
+    getCacheIndexActions().addItem(key, meta);
+    refreshCacheStatsFromIndex();
+    persistCacheMeta(key, { key, ...meta });
+  });
 }
 
 export { audioCacheService };
