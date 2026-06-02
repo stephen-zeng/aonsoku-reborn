@@ -296,35 +296,20 @@ class AudioPlugin : Plugin() {
     // MARK: - Audio Focus
 
     private fun registerAudioFocusListener() {
-        audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
-        if (audioManager == null) return
-
-        audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
-            handleAudioFocusChange(focusChange)
-        }
+        // No-op: ExoPlayer manages audio focus automatically via setAudioAttributes(..., true)
     }
 
     private fun unregisterAudioFocusListener() {
-        audioFocusChangeListener?.let {
-            audioManager?.abandonAudioFocus(it)
-        }
-        audioFocusChangeListener = null
+        // No-op
     }
 
     private fun requestAudioFocus(): Int {
-        val am = audioManager ?: return AudioManager.AUDIOFOCUS_REQUEST_GRANTED
-        val listener = audioFocusChangeListener ?: return AudioManager.AUDIOFOCUS_REQUEST_GRANTED
-        return am.requestAudioFocus(
-            listener,
-            AudioManager.STREAM_MUSIC,
-            AudioManager.AUDIOFOCUS_GAIN,
-        )
+        // No-op: ExoPlayer requests audio focus automatically on play()
+        return AudioManager.AUDIOFOCUS_REQUEST_GRANTED
     }
 
     private fun abandonAudioFocus() {
-        val am = audioManager ?: return
-        val listener = audioFocusChangeListener ?: return
-        am.abandonAudioFocus(listener)
+        // No-op
     }
 
     private fun handleAudioFocusChange(focusChange: Int) {

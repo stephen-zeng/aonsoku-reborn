@@ -28,6 +28,13 @@ object NativeLogger {
             }
             bucket.add(entry)
         }
+        val tag = "Aonsoku/${source.ifEmpty { "Default" }}"
+        when (level) {
+            Entry.Level.DEBUG -> android.util.Log.d(tag, message)
+            Entry.Level.INFO -> android.util.Log.i(tag, message)
+            Entry.Level.WARN -> android.util.Log.w(tag, message)
+            Entry.Level.ERROR -> android.util.Log.e(tag, message)
+        }
     }
 
     fun debug(message: String, source: String = "") = log(Entry.Level.DEBUG, message, source)
