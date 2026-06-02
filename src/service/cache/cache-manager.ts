@@ -1,5 +1,18 @@
 import { Capacitor } from "@capacitor/core";
 import { getAvatarUrl, getCoverArtUrl } from "@/api/httpClient";
+
+function convertFileSrc(uri: string): string {
+  // Avoid the double-slash bug in Capacitor.convertFileSrc on Android
+  // where "file:///data/..." becomes "serverUrl/_capacitor_file_//data/..."
+  // instead of "serverUrl/_capacitor_file_/data/..."
+  if (typeof uri !== "string" || !uri.startsWith("file://")) {
+    return Capacitor.convertFileSrc(uri);
+  }
+  const serverUrl = Capacitor.getServerUrl?.() ?? "";
+  if (!serverUrl) return Capacitor.convertFileSrc(uri);
+  const filePath = uri.slice(7);
+  return `${serverUrl}/_capacitor_file_${filePath}`;
+}
 import { asyncPool } from "@/service/cache/concurrency";
 import { subsonic } from "@/service/subsonic";
 import { useCacheStore } from "@/store/cache.store";
@@ -340,7 +353,7 @@ class CacheManager {
         getCacheIndexActions().touchItem(key);
       }
 
-      return Capacitor.convertFileSrc(result.uri);
+      return convertFileSrc(result.uri);
     }
 
     // Fast path: when the index is loaded and the key is absent, skip
@@ -496,7 +509,7 @@ class CacheManager {
         getCacheIndexActions().touchItem(key);
       }
 
-      return Capacitor.convertFileSrc(result.uri);
+      return convertFileSrc(result.uri);
     }
 
     const { loaded } = useCacheIndexStore.getState();

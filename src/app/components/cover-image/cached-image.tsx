@@ -183,6 +183,7 @@ export function CachedImage({
     autoCache,
   });
   const [failedNetworkSrc, setFailedNetworkSrc] = useState<string | null>(null);
+  const [cachedSrcFailed, setCachedSrcFailed] = useState(false);
 
   const cacheKeys = useMemo(
     () => resolveCacheKeys(coverArtId, coverArtType, albumId),
@@ -193,11 +194,14 @@ export function CachedImage({
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — reset on primaryCacheKey change
   useEffect(() => {
     setFailedNetworkSrc(null);
+    setCachedSrcFailed(false);
   }, [primaryCacheKey]);
 
   const defaultArtUrl = getDefaultArtUrl(coverArtType);
 
-  let resolvedSrc = cachedSrc ?? directSrc ?? generatedSrc;
+  const showCachedImage = cachedSrc && !cachedSrcFailed;
+
+  let resolvedSrc = showCachedImage ? cachedSrc : (directSrc ?? generatedSrc);
 
   if (isOffline || resolvedSrc === failedNetworkSrc) {
     resolvedSrc = defaultArtUrl;
@@ -205,18 +209,20 @@ export function CachedImage({
 
   const handleError: React.ReactEventHandler<HTMLImageElement> = (e) => {
     const currentSrc = resolvedSrc;
-    if (
-      currentSrc &&
-      currentSrc !== defaultArtUrl &&
-      currentSrc !== failedNetworkSrc &&
-      currentSrc !== cachedSrc
-    ) {
-      setFailedNetworkSrc(currentSrc);
+    if (currentSrc) {
+      if (currentSrc === cachedSrc) {
+        setCachedSrcFailed(true);
+      } else if (
+        currentSrc !== defaultArtUrl &&
+        currentSrc !== failedNetworkSrc
+      ) {
+        setFailedNetworkSrc(currentSrc);
+      }
     }
     onError?.(e as never);
   };
 
-  if (cachedSrc) {
+  if (showCachedImage) {
     return (
       // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
       <div
