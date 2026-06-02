@@ -6,7 +6,10 @@ import { usePlayerStore } from "@/store/player.store";
 
 export function AndroidBackButtonObserver() {
   useEffect(() => {
-    if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== "android") {
+    if (
+      !Capacitor.isNativePlatform() ||
+      Capacitor.getPlatform() !== "android"
+    ) {
       return;
     }
 

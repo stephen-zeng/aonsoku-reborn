@@ -52,7 +52,8 @@ import { CacheManagerSection } from "./cache-manager";
 function LibraryCachingSection() {
   const { t } = useTranslation();
   const libraryCaching = useLibraryCaching();
-  const isCapacitorNative = getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android";
+  const isCapacitorNative =
+    getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android";
   const syncCoverArt = useCacheStore((s) => s.settings.syncCoverArt);
   const coverArtConcurrency = useCacheStore(
     (s) => s.settings.coverArtConcurrency,

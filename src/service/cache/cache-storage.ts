@@ -4,7 +4,9 @@ import type { CacheStorageAdapter } from "./contracts";
 const CACHE_NAME = "aonsoku-media-cache";
 
 function isNativePlatform(): boolean {
-  return getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android";
+  return (
+    getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android"
+  );
 }
 
 // NOTE: On native platforms, cover art caching is handled by the native

@@ -141,7 +141,13 @@ export function createQueueActions(shared: SharedDeps) {
     ) => {
       const nativeController = getNativeQueueController();
       if (nativeController) {
-        nativeController.setSongList(songlist, index, shuffle, sourceId, sourceName);
+        nativeController.setSongList(
+          songlist,
+          index,
+          shuffle,
+          sourceId,
+          sourceName,
+        );
         return;
       }
 
