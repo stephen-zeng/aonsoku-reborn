@@ -9,6 +9,10 @@ export interface NativeImageCacheAdapter {
     coverArtId: string,
     size: string,
   ): Promise<NativeCachedCoverImageFile | null>;
+  downloadAvatar(
+    username: string,
+    size: string,
+  ): Promise<NativeCachedCoverImageFile | null>;
   storeCoverImage(
     coverArtId: string,
     data: Blob,
@@ -27,6 +31,10 @@ export interface NativeImageCacheAdapter {
 
 class WebNullNativeImageCacheAdapter implements NativeImageCacheAdapter {
   async downloadCoverImage(): Promise<NativeCachedCoverImageFile | null> {
+    return null;
+  }
+
+  async downloadAvatar(): Promise<NativeCachedCoverImageFile | null> {
     return null;
   }
 
@@ -74,6 +82,14 @@ export class IosNativeImageCacheAdapter implements NativeImageCacheAdapter {
     size: string,
   ): Promise<NativeCachedCoverImageFile | null> {
     const result = await this.plugin.downloadCoverImage({ coverArtId, size });
+    return result.file;
+  }
+
+  async downloadAvatar(
+    username: string,
+    size: string,
+  ): Promise<NativeCachedCoverImageFile | null> {
+    const result = await this.plugin.downloadAvatar({ username, size });
     return result.file;
   }
 

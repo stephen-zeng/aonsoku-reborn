@@ -15,6 +15,57 @@ final class ImageCacheManager {
 
     // MARK: - Public API
 
+    func downloadAvatar(username: String, size: String) async throws -> URL {
+        guard let credentials = KeychainManager.retrieve() else {
+            throw ImageCacheError.noCredentials
+        }
+
+        let directory = try ImageCacheUtils.cacheDirectoryURL(createIfNeeded: true)
+        let cacheId = ImageCacheUtils.cacheId(for: username)
+        // Remove existing file before downloading
+        let existingFiles = try FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil
+        ).filter { $0.lastPathComponent.hasPrefix("\(cacheId).") }
+        for file in existingFiles {
+            try? FileManager.default.removeItem(at: file)
+        }
+
+        let url = try buildAvatarURL(credentials: credentials, username: username, size: size)
+        let (data, response) = try await session.data(from: url)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode >= 200, httpResponse.statusCode < 300 else {
+            throw ImageCacheError.downloadFailed(NSError(domain: "ImageCache", code: -1))
+        }
+
+        let contentType = httpResponse.value(forHTTPHeaderField: "Content-Type") ?? "image/jpeg"
+        let ext = ImageCacheUtils.fileExtension(for: contentType)
+        let fileName = "\(cacheId).\(ext)"
+        let fileURL = directory.appendingPathComponent(fileName, isDirectory: false)
+
+        try data.write(to: fileURL, options: [.atomic])
+
+        let now = Int(Date().timeIntervalSince1970 * 1000)
+        let record = CacheMetaRecord(
+            key: "cover:\(username)",
+            id: username,
+            type: "cover",
+            source: "explicit",
+            triggersJson: nil,
+            coverSize: size,
+            sizeBytes: data.count,
+            cachedAt: now,
+            lastAccessedAt: now,
+            removedFromServer: nil
+        )
+
+        let repo = CacheMetaRepository(db: db)
+        try repo.upsert(record)
+
+        return fileURL
+    }
+
     func downloadCoverImage(coverArtId: String, size: String) async throws -> URL {
         guard let credentials = KeychainManager.retrieve() else {
             throw ImageCacheError.noCredentials
@@ -199,6 +250,28 @@ final class ImageCacheManager {
     }
 
     // MARK: - Private Helpers
+
+    private func buildAvatarURL(credentials: ServerCredentials, username: String, size: String) throws -> URL {
+        var params = SubsonicAuthBuilder.buildQueryParams(
+            username: credentials.username,
+            password: credentials.password,
+            authType: credentials.authType,
+            protocolVersion: credentials.protocolVersion
+        )
+        params["username"] = username
+        params["size"] = size
+
+        let baseString = "\(credentials.serverUrl)/rest/getAvatar"
+        guard var components = URLComponents(string: baseString) else {
+            throw ImageCacheError.invalidURL
+        }
+        components.queryItems = params.map { URLQueryItem(name: $0.key, value: $0.value) }
+
+        guard let url = components.url else {
+            throw ImageCacheError.invalidURL
+        }
+        return url
+    }
 
     private func buildCoverArtURL(credentials: ServerCredentials, coverArtId: String, size: String) throws -> URL {
         var params = SubsonicAuthBuilder.buildQueryParams(

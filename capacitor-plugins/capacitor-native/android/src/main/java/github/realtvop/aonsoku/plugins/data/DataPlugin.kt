@@ -191,6 +191,11 @@ class DataPlugin : Plugin() {
         scope.launch { try { val c = credStore.retrieve() ?: run { reject(call, "no creds"); return@launch }; val f = imgCache.downloadCoverImage(id, size, c); resolve(call, JSObject().apply { put("file", JSObject().apply { put("coverArtId", id); put("uri", f.toURI().toString()); put("sizeBytes", f.length()); put("coverSize", size) }) }) } catch (e: Exception) { reject(call, e.message ?: "error") } }
     }
 
+    @PluginMethod fun downloadAvatar(call: PluginCall) {
+        init(); val username = call.getString("username") ?: run { reject(call, "no username"); return }; val size = call.getString("size") ?: "150"
+        scope.launch { try { val c = credStore.retrieve() ?: run { reject(call, "no creds"); return@launch }; val f = imgCache.downloadAvatar(username, size, c); resolve(call, JSObject().apply { put("file", JSObject().apply { put("coverArtId", username); put("uri", f.toURI().toString()); put("sizeBytes", f.length()); put("coverSize", size) }) }) } catch (e: Exception) { reject(call, e.message ?: "error") } }
+    }
+
     private fun resolve(call: PluginCall) { mainHandler.post { call.resolve() } }
     private fun resolve(call: PluginCall, d: JSObject) { mainHandler.post { call.resolve(d) } }
     private fun reject(call: PluginCall, m: String) { mainHandler.post { call.reject(m) } }

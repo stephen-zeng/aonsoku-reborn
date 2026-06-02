@@ -425,20 +425,9 @@ class CacheManager {
 
     if (existing) return;
 
-    const url = getAvatarUrl(username, size);
-    const response = await fetch(url);
-    if (!response.ok) return;
-
-    const blob = await response.blob();
-
     if (isNativeImageCacheAdapterAvailable()) {
       const adapter = getNativeImageCacheAdapter();
-      const result = await adapter.storeCoverImage(
-        username,
-        blob,
-        blob.type || "image/jpeg",
-        size,
-      );
+      const result = await adapter.downloadAvatar(username, size);
       if (!result) return;
 
       const meta: CachedItemMeta = {
@@ -456,6 +445,12 @@ class CacheManager {
       persistCacheMeta(key, { key, ...meta });
       return;
     }
+
+    const url = getAvatarUrl(username, size);
+    const response = await fetch(url);
+    if (!response.ok) return;
+
+    const blob = await response.blob();
 
     await cacheStorage.put(key, blob, blob.type || "image/jpeg");
 

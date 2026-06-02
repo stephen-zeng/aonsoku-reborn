@@ -27,6 +27,21 @@ class ImageCacheManager(private val cacheDir: File, private val cacheMetaDao: Ca
         return file
     }
 
+    suspend fun downloadAvatar(username: String, size: String, credentials: ServerCredentials): File {
+        val dir = ImageCacheUtils.cacheDirectory(cacheDir, true); val cid = ImageCacheUtils.cacheId(username)
+        dir.listFiles { f -> f.name.startsWith("$cid.") }?.forEach { it.delete() }
+        val p = SubsonicAuthBuilder.buildQueryParams(credentials.username, credentials.password, credentials.authType, credentials.protocolVersion).toMutableMap().apply { put("username", username); put("size", size) }
+        val url = "${credentials.serverUrl.trimEnd('/')}/rest/getAvatar?${p.entries.joinToString("&") { (k, v) -> "${java.net.URLEncoder.encode(k, "UTF-8")}=${java.net.URLEncoder.encode(v, "UTF-8")}" }}"
+        val resp = client.newCall(Request.Builder().url(url).get().build()).execute()
+        if (!resp.isSuccessful) throw ImageCacheError.DownloadFailed(Exception("HTTP ${resp.code}"))
+        val ct = resp.header("Content-Type", "image/jpeg") ?: "image/jpeg"; val ext = ImageCacheUtils.fileExtension(ct)
+        val data = resp.body?.bytes() ?: throw ImageCacheError.DownloadFailed(Exception("Empty body"))
+        val file = File(dir, "$cid.$ext"); file.writeBytes(data)
+        val now = System.currentTimeMillis()
+        cacheMetaDao.upsert(CacheMetaEntity("cover:$username", username, "cover", "explicit", coverSize = size, sizeBytes = data.size.toLong(), cachedAt = now, lastAccessedAt = now))
+        return file
+    }
+
     suspend fun storeCoverImage(coverArtId: String, data: ByteArray, contentType: String, coverSize: String): File {
         val dir = ImageCacheUtils.cacheDirectory(cacheDir, true); val cid = ImageCacheUtils.cacheId(coverArtId); val ext = ImageCacheUtils.fileExtension(contentType)
         val file = File(dir, "$cid.$ext"); dir.listFiles { f -> f.name.startsWith("$cid.") }?.forEach { it.delete() }; file.writeBytes(data)

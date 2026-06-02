@@ -33,6 +33,7 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "deleteCoverImage", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "clearCoverImages", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "downloadCoverImage", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "downloadAvatar", returnType: CAPPluginReturnPromise),
     ]
 
     private var dbManager: DatabaseManager!
@@ -589,6 +590,34 @@ public class AonsokuNativeDataPlugin: CAPPlugin, CAPBridgedPlugin {
                 DispatchQueue.main.async {
                     call.reject("Failed to clear cover images: \(error.localizedDescription)")
                 }
+            }
+        }
+    }
+
+    @objc func downloadAvatar(_ call: CAPPluginCall) {
+        ensureInitialized()
+        guard let username = call.getString("username"), !username.isEmpty else {
+            call.reject("Missing username")
+            return
+        }
+        let size = call.getString("size") ?? "150"
+
+        Task {
+            do {
+                let manager = ImageCacheManager(db: self.dbManager.dbPool)
+                let fileURL = try await manager.downloadAvatar(username: username, size: size)
+                let attrs = try? FileManager.default.attributesOfItem(atPath: fileURL.path)
+                let sizeBytes = (attrs?[.size] as? NSNumber)?.intValue
+                call.resolve([
+                    "file": [
+                        "coverArtId": username,
+                        "uri": fileURL.absoluteString,
+                        "sizeBytes": sizeBytes as Any,
+                        "coverSize": size,
+                    ] as [String: Any],
+                ])
+            } catch {
+                call.reject("Failed to download avatar: \(error.localizedDescription)")
             }
         }
     }
