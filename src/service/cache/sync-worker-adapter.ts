@@ -189,7 +189,7 @@ let syncService: SyncWorkerAdapter | typeof metadataSyncService;
 
 function createSyncService(): SyncWorkerAdapter | typeof metadataSyncService {
   try {
-    if (getRuntime() === "capacitor-ios" || typeof Worker === "undefined") {
+    if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android" || typeof Worker === "undefined") {
       return metadataSyncService;
     }
     return new SyncWorkerAdapter();
@@ -204,7 +204,7 @@ function createSyncService(): SyncWorkerAdapter | typeof metadataSyncService {
 
 syncService = createSyncService();
 
-if (getRuntime() === "capacitor-ios") {
+if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
   import("@/native/data/native-sync-adapter").then(
     ({ nativeSyncAdapter }) => {
       syncService = nativeSyncAdapter as unknown as typeof metadataSyncService;

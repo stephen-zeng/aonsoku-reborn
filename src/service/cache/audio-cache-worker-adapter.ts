@@ -181,7 +181,7 @@ class MainThreadAudioCacheEngine implements AudioCacheDownloader {
   }
 
   private async executeDownload(task: CacheTask): Promise<void> {
-    if (getRuntime() === "capacitor-ios") {
+    if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
       return this.executeNativeDownload(task);
     }
 
@@ -454,7 +454,7 @@ class AudioCacheWorkerAdapter implements AudioCacheDownloader {
 let audioCacheService: AudioCacheDownloader;
 
 try {
-  if (getRuntime() === "capacitor-ios") {
+  if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
     audioCacheService = new MainThreadAudioCacheEngine();
     setupStreamCacheListener();
   } else if (typeof Worker !== "undefined") {

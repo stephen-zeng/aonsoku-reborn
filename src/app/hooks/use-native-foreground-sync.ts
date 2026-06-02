@@ -5,7 +5,7 @@ import { getRuntime } from "@/utils/capabilities";
 
 export function useNativeForegroundSync() {
   useEffect(() => {
-    if (getRuntime() !== "capacitor-ios") return;
+    if (getRuntime() !== "capacitor-ios" && getRuntime() !== "capacitor-android") return;
 
     syncOnForeground();
 

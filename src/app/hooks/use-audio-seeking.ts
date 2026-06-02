@@ -47,7 +47,7 @@ export function useAudioSeeking({ audioRef }: UseAudioSeekingOptions) {
       setLocalProgress(amount);
       setIsLocalSeeking(false);
       setIsScrubbing(false);
-      if (!isRemoteControlActive && getRuntime() !== "capacitor-ios") {
+      if (!isRemoteControlActive && getRuntime() !== "capacitor-ios" && getRuntime() !== "capacitor-android") {
         updateAudioCurrentTime(amount);
       }
     },

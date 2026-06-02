@@ -54,7 +54,7 @@ const defaultSyncState: SyncState = {
 };
 
 function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
-  const isIosCapacitor = getRuntime() === "capacitor-ios";
+  const isCapacitorNative = getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android";
   // Pre-P2.3 format (had maxCacheSize but not the per-pool quotas).
   const raw = persisted as Partial<CacheSettings> | undefined;
   if (raw && typeof raw === "object") {
@@ -70,7 +70,7 @@ function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
         assetsQuota: raw.assetsQuota ?? DEFAULT_ASSETS_QUOTA,
         lruQuota: raw.lruQuota ?? legacyCap,
         smartRules: { ...DEFAULT_SMART_RULES, ...(raw.smartRules ?? {}) },
-        libraryCaching: isIosCapacitor ? true : (raw.libraryCaching ?? false),
+        libraryCaching: isCapacitorNative ? true : (raw.libraryCaching ?? false),
       };
     }
   }
@@ -82,13 +82,13 @@ function migrateSettings(persisted: Record<string, unknown>): CacheSettings {
     return {
       ...(final as unknown as CacheSettings),
       smartRules: { ...DEFAULT_SMART_RULES },
-      libraryCaching: isIosCapacitor ? true : final.libraryCaching === true,
+      libraryCaching: isCapacitorNative ? true : final.libraryCaching === true,
     };
   }
 
   return {
     ...(persisted as unknown as CacheSettings),
-    libraryCaching: isIosCapacitor
+    libraryCaching: isCapacitorNative
       ? true
       : (persisted as Record<string, unknown>).libraryCaching === true,
   };
@@ -104,7 +104,7 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             assetsQuota: DEFAULT_ASSETS_QUOTA,
             lruQuota: DEFAULT_LRU_QUOTA,
             smartRules: { ...DEFAULT_SMART_RULES },
-            libraryCaching: getRuntime() === "capacitor-ios",
+            libraryCaching: getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android",
             syncLibrary: true,
             syncCoverArt: false,
             coverArtConcurrency: COVER_ART_CONCURRENCY_DEFAULT,
@@ -142,8 +142,8 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             },
             setLibraryCaching: (enabled) => {
               set((state) => {
-                const isIosCapacitor = getRuntime() === "capacitor-ios";
-                const value = isIosCapacitor ? true : enabled;
+                const isCapacitorNative = getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android";
+                const value = isCapacitorNative ? true : enabled;
                 state.settings.libraryCaching = value;
                 state.settings.syncLibrary = value;
               });
@@ -210,7 +210,7 @@ export const useCacheStore = createWithEqualityFn<CacheStoreState>()(
             raw.settings = migrateSettings(settings);
           }
           const merged = merge({}, current, raw);
-          if (getRuntime() === "capacitor-ios") {
+          if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
             merged.settings.libraryCaching = true;
             merged.settings.syncLibrary = true;
           }
@@ -268,6 +268,6 @@ export const useCacheActions = () => useCacheStore((state) => state.actions);
 
 export const useLibraryCaching = () =>
   useCacheStore((state) => {
-    if (getRuntime() === "capacitor-ios") return true;
+    if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") return true;
     return state.settings.libraryCaching;
   });

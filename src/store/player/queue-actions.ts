@@ -140,7 +140,7 @@ export function createQueueActions(shared: SharedDeps) {
       sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
       sourceName?: string,
     ) => {
-      if (getRuntime() === "capacitor-ios") {
+      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
         getQueueController().setSongList(
           songlist,
           index,
@@ -269,7 +269,7 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     playFromQueue: (contextSongs: ISong[], contextIndex: number) => {
-      if (getRuntime() === "capacitor-ios") {
+      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
         getQueueController().playFromQueue(contextSongs, contextIndex);
         return;
       }
@@ -323,7 +323,7 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     playFromUserQueue: (userQueueIndex: number) => {
-      if (getRuntime() === "capacitor-ios") {
+      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
         getQueueController().playFromUserQueue(userQueueIndex);
         return;
       }
@@ -353,7 +353,7 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     playSong: (song: ISong, sourceName?: string) => {
-      if (getRuntime() === "capacitor-ios") {
+      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
         getQueueController().playSong(song, sourceName);
         return;
       }
@@ -395,7 +395,7 @@ export function createQueueActions(shared: SharedDeps) {
       list: ISong[],
       sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     ) => {
-      if (getRuntime() === "capacitor-ios") {
+      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
         getQueueController().addToQueueNext(list, sourceId);
         return;
       }
@@ -419,7 +419,7 @@ export function createQueueActions(shared: SharedDeps) {
       list: ISong[],
       sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     ) => {
-      if (getRuntime() === "capacitor-ios") {
+      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
         getQueueController().addToQueueLast(list, sourceId);
         return;
       }
@@ -440,7 +440,7 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     removeSongFromQueue: (id: string, tier?: QueueTier) => {
-      if (getRuntime() === "capacitor-ios") {
+      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
         getQueueController().removeFromQueue(id, tier);
         return;
       }
@@ -514,7 +514,7 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     clearUserQueue: () => {
-      if (getRuntime() === "capacitor-ios") {
+      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
         getQueueController().clearUserQueue();
         return;
       }
@@ -529,7 +529,7 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     reorderQueue: (fromIndex: number, toIndex: number) => {
-      if (getRuntime() === "capacitor-ios") {
+      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
         getQueueController().reorderQueue(fromIndex, toIndex);
         return;
       }
@@ -578,7 +578,7 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     toggleShuffle: () => {
-      if (getRuntime() === "capacitor-ios") {
+      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
         getQueueController().toggleShuffle();
         return;
       }
@@ -604,7 +604,7 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     playNextSong: () => {
-      if (getRuntime() === "capacitor-ios") {
+      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
         getQueueController().playNext();
         return;
       }
@@ -745,7 +745,7 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     playPrevSong: () => {
-      if (getRuntime() === "capacitor-ios") {
+      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
         getQueueController().playPrev();
         return;
       }
@@ -937,7 +937,7 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     clearPlayerState: () => {
-      if (getRuntime() === "capacitor-ios") {
+      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
         getQueueController().clearPlayerState();
         return;
       }

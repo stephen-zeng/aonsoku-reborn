@@ -18,7 +18,7 @@ export function createPlaybackActions(shared: SharedDeps) {
 
   return {
     setPlayingState: (status: boolean) => {
-      if (getRuntime() === "capacitor-ios") {
+      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
         if (status) {
           getQueueController().play();
         } else {
@@ -42,7 +42,7 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     togglePlayPause: () => {
-      if (getRuntime() === "capacitor-ios") {
+      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
         getQueueController().togglePlayPause();
         return;
       }
@@ -56,7 +56,7 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     toggleLoop: () => {
-      if (getRuntime() === "capacitor-ios") {
+      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
         getQueueController().toggleLoop();
         return;
       }
@@ -79,7 +79,7 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     setProgress: (progress: number) => {
-      if (getRuntime() === "capacitor-ios") {
+      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
         getQueueController().seek(progress);
         return;
       }
