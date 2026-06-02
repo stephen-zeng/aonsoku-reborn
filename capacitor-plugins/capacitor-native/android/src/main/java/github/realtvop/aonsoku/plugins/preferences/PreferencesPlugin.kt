@@ -14,6 +14,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
+import github.realtvop.aonsoku.plugins.debug.NativeLogger
 
 @CapacitorPlugin(name = "AonsokuNativePreferences")
 class PreferencesPlugin : Plugin() {
@@ -35,8 +36,9 @@ class PreferencesPlugin : Plugin() {
                     call,
                     JSObject().apply { put("preferences", preferences) },
                 )
-            } catch (_: Exception) {
-                reject(call, "Failed to read preferences")
+            } catch (e: Exception) {
+                NativeLogger.error("Failed to read preferences: ${e.localizedMessage}", "preferences-plugin")
+                reject(call, "Failed to read preferences: ${e.localizedMessage}")
             }
         }
     }
@@ -60,7 +62,8 @@ class PreferencesPlugin : Plugin() {
             try {
                 store.setPreferences(pairs)
                 resolve(call)
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                NativeLogger.error("Failed to write preferences: ${e.localizedMessage}", "preferences-plugin")
                 reject(call, "Failed to write preferences")
             }
         }
@@ -79,7 +82,8 @@ class PreferencesPlugin : Plugin() {
             try {
                 store.setPreference(key, value)
                 resolve(call)
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                NativeLogger.error("Failed to write preference: ${e.localizedMessage}", "preferences-plugin")
                 reject(call, "Failed to write preference")
             }
         }
@@ -97,7 +101,8 @@ class PreferencesPlugin : Plugin() {
             try {
                 store.deletePreference(key)
                 resolve(call)
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                NativeLogger.error("Failed to delete preference: ${e.localizedMessage}", "preferences-plugin")
                 reject(call, "Failed to delete preference")
             }
         }
@@ -112,7 +117,8 @@ class PreferencesPlugin : Plugin() {
                     call,
                     JSObject().apply { put("state", state ?: JSONObject.NULL) },
                 )
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                NativeLogger.error("Failed to read queue state: ${e.localizedMessage}", "preferences-plugin")
                 reject(call, "Failed to read queue state")
             }
         }
@@ -130,7 +136,8 @@ class PreferencesPlugin : Plugin() {
             try {
                 store.setQueueState(state)
                 resolve(call)
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                NativeLogger.error("Failed to write queue state: ${e.localizedMessage}", "preferences-plugin")
                 reject(call, "Failed to write queue state")
             }
         }

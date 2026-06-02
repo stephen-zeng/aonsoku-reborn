@@ -1,6 +1,7 @@
 package github.realtvop.aonsoku.plugins.preferences
 
 import android.content.Context
+import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -9,11 +10,7 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import kotlinx.coroutines.flow.first
 
 class NativePreferencesStore(context: Context) {
-    private val dataStore = PreferenceDataStoreFactory.create(
-        produceFile = {
-            context.applicationContext.preferencesDataStoreFile(DATASTORE_NAME)
-        },
-    )
+    private val dataStore = getSharedDataStore(context)
 
     suspend fun getAllPreferences(): Map<String, String> {
         val snapshot = dataStore.data.first()
@@ -83,5 +80,23 @@ class NativePreferencesStore(context: Context) {
         private const val PREFERENCE_PREFIX = "pref."
         private val QUEUE_STATE_KEY = stringPreferencesKey("queue_state")
         private val PLAY_HISTORY_KEY = stringPreferencesKey("play_history")
+
+        private var sharedDataStore: DataStore<Preferences>? = null
+        private val lock = Any()
+
+        private fun getSharedDataStore(context: Context): DataStore<Preferences> {
+            return synchronized(lock) {
+                var instance = sharedDataStore
+                if (instance == null) {
+                    instance = PreferenceDataStoreFactory.create(
+                        produceFile = {
+                            context.applicationContext.preferencesDataStoreFile(DATASTORE_NAME)
+                        }
+                    )
+                    sharedDataStore = instance
+                }
+                instance
+            }
+        }
     }
 }
