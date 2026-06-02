@@ -13,7 +13,8 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
     private Sensor accelerometer;
     private float lastX, lastY, lastZ;
     private long lastShakeTime;
-    private static final float SHAKE_THRESHOLD = 12f;
+    private boolean hasInitialValues;
+    private static final float SHAKE_THRESHOLD = 5f;
     private static final long SHAKE_COOLDOWN_MS = 2000;
 
     @Override
@@ -39,6 +40,7 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
         if (sensorManager != null) {
             sensorManager.unregisterListener(this);
         }
+        hasInitialValues = false;
     }
 
     @Override
@@ -46,6 +48,14 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
         float x = event.values[0];
         float y = event.values[1];
         float z = event.values[2];
+
+        if (!hasInitialValues) {
+            lastX = x;
+            lastY = y;
+            lastZ = z;
+            hasInitialValues = true;
+            return;
+        }
 
         float deltaX = Math.abs(x - lastX);
         float deltaY = Math.abs(y - lastY);
@@ -55,9 +65,7 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
         lastY = y;
         lastZ = z;
 
-        if ((deltaX > SHAKE_THRESHOLD && deltaY > SHAKE_THRESHOLD) ||
-            (deltaX > SHAKE_THRESHOLD && deltaZ > SHAKE_THRESHOLD) ||
-            (deltaY > SHAKE_THRESHOLD && deltaZ > SHAKE_THRESHOLD)) {
+        if (deltaX > SHAKE_THRESHOLD || deltaY > SHAKE_THRESHOLD || deltaZ > SHAKE_THRESHOLD) {
             long now = System.currentTimeMillis();
             if (now - lastShakeTime > SHAKE_COOLDOWN_MS) {
                 lastShakeTime = now;
