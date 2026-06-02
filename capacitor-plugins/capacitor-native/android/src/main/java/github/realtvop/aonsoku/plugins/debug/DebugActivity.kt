@@ -10,7 +10,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
-import android.text.ClipboardManager
+import android.content.ClipboardManager
 import android.text.TextWatcher
 import android.text.Editable
 import android.view.Gravity
@@ -633,7 +633,7 @@ class DebugActivity : AppCompatActivity() {
             val textView = TextView(this).apply {
                 text = prefix
                 textSize = 10f
-                setTypeface(null, android.graphics.Typeface.MONOSPACE)
+                setTypeface(android.graphics.Typeface.MONOSPACE)
                 setTextColor(textColor)
                 maxLines = 1
             }
@@ -642,7 +642,7 @@ class DebugActivity : AppCompatActivity() {
             val msgView = TextView(this).apply {
                 text = entry.message
                 textSize = 11f
-                setTypeface(null, android.graphics.Typeface.MONOSPACE)
+                setTypeface(android.graphics.Typeface.MONOSPACE)
                 maxLines = 2
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -709,7 +709,7 @@ class DebugActivity : AppCompatActivity() {
 
     private fun copyToClipboard(text: String) {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.setText(android.content.ClipData.newPlainText("debug_log", text))
+        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("debug_log", text))
     }
 
     // MARK: - Common UI Helpers
@@ -736,8 +736,7 @@ class DebugActivity : AppCompatActivity() {
         TextView(this).apply {
             text = key
             textSize = 12f
-            setTypeface(null, android.graphics.Typeface.MONOSPACE)
-            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTypeface(android.graphics.Typeface.MONOSPACE, android.graphics.Typeface.BOLD)
             setTextColor(if (secondary) 0xFF6B7280.toInt() else 0xFF9CA3AF.toInt())
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -757,7 +756,7 @@ class DebugActivity : AppCompatActivity() {
         TextView(this).apply {
             text = value
             textSize = 12f
-            setTypeface(null, android.graphics.Typeface.MONOSPACE)
+            setTypeface(android.graphics.Typeface.MONOSPACE)
             if (valueColor != null) setTextColor(valueColor)
             layoutParams = LinearLayout.LayoutParams(
                 0,
