@@ -1,9 +1,6 @@
 import { Capacitor } from "@capacitor/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  getNativeBridgeAvailability,
-  isNativeBridgeAvailable,
-} from "./facade";
+import { getNativeBridgeAvailability, isNativeBridgeAvailable } from "./facade";
 
 const mocks = vi.hoisted(() => ({
   plugin: {},
@@ -59,9 +56,7 @@ describe("native bridge facade", () => {
         plugin: mocks.plugin,
       });
       expect(isNativeBridgeAvailable()).toBe(true);
-      expect(mockIsPluginAvailable).toHaveBeenCalledWith(
-        "AonsokuNativeBridge",
-      );
+      expect(mockIsPluginAvailable).toHaveBeenCalledWith("AonsokuNativeBridge");
     },
   );
 

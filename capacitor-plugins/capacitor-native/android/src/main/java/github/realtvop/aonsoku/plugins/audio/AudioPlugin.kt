@@ -24,10 +24,14 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
 
 @CapacitorPlugin(
     name = "AonsokuNativeAudio",
@@ -45,6 +49,49 @@ class AudioPlugin : Plugin() {
     private var isBound = false
     private var currentRequestId: String? = null
     private var playerListener: Player.Listener? = null
+
+    private val pluginScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    private val downloadListener = object : PlaybackService.DownloadListener {
+        override fun onDownloadProgress(songId: String, loaded: Long, total: Long) {
+            if (playbackService?.isBackgroundCache(songId) == true) return
+            notifyListeners("downloadProgress", JSObject().apply {
+                put("songId", songId)
+                put("loaded", loaded)
+                put("total", total)
+            })
+        }
+
+        override fun onDownloadCompleted(songId: String, fileUri: String, contentType: String, sizeBytes: Long) {
+            if (playbackService?.isBackgroundCache(songId) == true) {
+                playbackService?.removeBackgroundCache(songId)
+                notifyListeners("streamCacheCompleted", JSObject().apply {
+                    put("songId", songId)
+                    put("uri", fileUri)
+                    put("contentType", contentType)
+                    put("sizeBytes", sizeBytes)
+                })
+                return
+            }
+            notifyListeners("downloadCompleted", JSObject().apply {
+                put("songId", songId)
+                put("uri", fileUri)
+                put("contentType", contentType)
+                put("sizeBytes", sizeBytes)
+            })
+        }
+
+        override fun onDownloadFailed(songId: String, errorMessage: String) {
+            if (playbackService?.isBackgroundCache(songId) == true) {
+                playbackService?.removeBackgroundCache(songId)
+                return
+            }
+            notifyListeners("downloadFailed", JSObject().apply {
+                put("songId", songId)
+                put("error", errorMessage)
+            })
+        }
+    }
 
     private val serviceListener = object : PlaybackService.Listener {
         override fun onRemoteCommand(command: String, position: Double?) {
@@ -89,11 +136,13 @@ class AudioPlugin : Plugin() {
             isBound = true
 
             currentService?.addListener(serviceListener)
+            currentService?.addDownloadListener(downloadListener)
             setupPlayerListener()
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             playbackService?.removeListener(serviceListener)
+            playbackService?.removeDownloadListener(downloadListener)
             playbackService = null
             isBound = false
         }
@@ -106,11 +155,13 @@ class AudioPlugin : Plugin() {
 
     override fun handleOnDestroy() {
         playbackService?.removeListener(serviceListener)
+        playbackService?.removeDownloadListener(downloadListener)
         if (isBound) {
             context.unbindService(connection)
             isBound = false
         }
         mainHandler.removeCallbacks(progressRunnable)
+        pluginScope.cancel()
         super.handleOnDestroy()
     }
 
@@ -503,37 +554,172 @@ class AudioPlugin : Plugin() {
         }
     }
 
-    // Safe stubs for caching capabilities (A4)
+    private fun deleteCachedAudioFileInternal(songId: String): Boolean {
+        val cacheId = AudioCacheUtils.cacheId(songId)
+        var deleted = false
+        val cacheDirs = listOf(
+            AudioCacheDirectoryHelper.getCacheDir(context),
+            AudioCacheDirectoryHelper.getSecCacheDir(context)
+        )
+        for (dir in cacheDirs) {
+            if (dir.exists() && dir.isDirectory) {
+                val files = dir.listFiles()
+                if (files != null) {
+                    for (file in files) {
+                        if (file.name.startsWith("$cacheId.")) {
+                            if (file.delete()) {
+                                deleted = true
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return deleted
+    }
+
+    private fun resolveCachedAudioFileInternal(songId: String): JSObject? {
+        val cacheId = AudioCacheUtils.cacheId(songId)
+        val cacheDirs = listOf(
+            AudioCacheDirectoryHelper.getCacheDir(context),
+            AudioCacheDirectoryHelper.getSecCacheDir(context)
+        )
+
+        for (dir in cacheDirs) {
+            if (!dir.exists() || !dir.isDirectory) continue
+            val metadataFile = File(dir, "$cacheId.json")
+            if (metadataFile.exists()) {
+                try {
+                    val json = JSONObject(metadataFile.readText(Charsets.UTF_8))
+                    val fileName = json.getString("fileName")
+                    val contentType = json.getString("contentType")
+                    val lastModifiedAt = json.getDouble("lastModifiedAt")
+
+                    val audioFile = File(dir, fileName)
+                    if (audioFile.exists()) {
+                        return JSObject().apply {
+                            put("songId", songId)
+                            put("uri", Uri.fromFile(audioFile).toString())
+                            put("contentType", contentType)
+                            put("sizeBytes", audioFile.length())
+                            put("lastModifiedAt", lastModifiedAt)
+                        }
+                    }
+                } catch (_: Exception) {
+                    // Metadata corrupt? Fallback to directory scan
+                }
+            }
+
+            // Fallback: search directory for any file starting with cacheId. but not ending with .json
+            val files = dir.listFiles()
+            if (files != null) {
+                for (file in files) {
+                    if (file.name.startsWith("$cacheId.") && !file.name.endsWith(".json")) {
+                        return JSObject().apply {
+                            put("songId", songId)
+                            put("uri", Uri.fromFile(file).toString())
+                            put("contentType", "audio/mpeg") // fallback content type
+                            put("sizeBytes", file.length())
+                            put("lastModifiedAt", file.lastModified().toDouble())
+                        }
+                    }
+                }
+            }
+        }
+        return null
+    }
+
+    // Helper object to avoid repeated reflection lookups inside resolver loops
+    private object AudioCacheDirectoryHelper {
+        fun getCacheDir(context: Context) = AudioCacheUtils.getCacheDirectory(context)
+        fun getSecCacheDir(context: Context) = AudioCacheUtils.getSecondaryCacheDirectory(context)
+    }
+
     @PluginMethod
     fun resolveAudioFile(call: PluginCall) {
-        val response = JSObject().apply {
-            put("file", JSONObject.NULL)
+        val songId = call.getString("songId") ?: run {
+            call.reject("Missing songId")
+            return
         }
-        call.resolve(response)
+
+        pluginScope.launch(Dispatchers.IO) {
+            try {
+                val file = resolveCachedAudioFileInternal(songId)
+                val response = JSObject().apply {
+                    if (file != null) {
+                        put("file", file)
+                    } else {
+                        put("file", JSONObject.NULL)
+                    }
+                }
+                call.resolve(response)
+            } catch (e: Exception) {
+                call.reject("Failed to resolve audio file: ${e.localizedMessage}")
+            }
+        }
     }
 
     @PluginMethod
     fun getAudioFileSize(call: PluginCall) {
-        val response = JSObject().apply {
-            put("sizeBytes", JSONObject.NULL)
+        val songId = call.getString("songId") ?: run {
+            call.reject("Missing songId")
+            return
         }
-        call.resolve(response)
+
+        pluginScope.launch(Dispatchers.IO) {
+            val file = resolveCachedAudioFileInternal(songId)
+            val response = JSObject().apply {
+                if (file != null) {
+                    put("sizeBytes", file.getLong("sizeBytes"))
+                } else {
+                    put("sizeBytes", JSONObject.NULL)
+                }
+            }
+            call.resolve(response)
+        }
     }
 
     @PluginMethod
     fun deleteAudioFile(call: PluginCall) {
-        val response = JSObject().apply {
-            put("deleted", false)
+        val songId = call.getString("songId") ?: run {
+            call.reject("Missing songId")
+            return
         }
-        call.resolve(response)
+
+        pluginScope.launch(Dispatchers.IO) {
+            val deleted = deleteCachedAudioFileInternal(songId)
+            val response = JSObject().apply {
+                put("deleted", deleted)
+            }
+            call.resolve(response)
+        }
     }
 
     @PluginMethod
     fun clearAudioFiles(call: PluginCall) {
-        val response = JSObject().apply {
-            put("deletedCount", 0)
+        pluginScope.launch(Dispatchers.IO) {
+            var count = 0
+            val cacheDirs = listOf(
+                AudioCacheDirectoryHelper.getCacheDir(context),
+                AudioCacheDirectoryHelper.getSecCacheDir(context)
+            )
+            for (dir in cacheDirs) {
+                if (dir.exists() && dir.isDirectory) {
+                    val files = dir.listFiles()
+                    if (files != null) {
+                        for (file in files) {
+                            if (file.delete()) {
+                                count++
+                            }
+                        }
+                    }
+                }
+            }
+            val response = JSObject().apply {
+                put("deletedCount", count)
+            }
+            call.resolve(response)
         }
-        call.resolve(response)
     }
 
     // Volume HUD Stub
@@ -795,17 +981,84 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun storeAudioFile(call: PluginCall) {
-        AonsokuNativeError.rejectUnimplemented(call, pluginName, "storeAudioFile")
+        val songId = call.getString("songId") ?: run {
+            call.reject("Missing songId")
+            return
+        }
+        val dataBase64 = call.getString("dataBase64") ?: run {
+            call.reject("Missing dataBase64")
+            return
+        }
+        val contentType = call.getString("contentType") ?: "audio/mpeg"
+
+        pluginScope.launch(Dispatchers.IO) {
+            try {
+                val data = android.util.Base64.decode(dataBase64, android.util.Base64.DEFAULT)
+                val cacheDir = AudioCacheUtils.getCacheDirectory(context, createIfNeeded = true)
+
+                // Delete existing first to ensure atomic updates
+                deleteCachedAudioFileInternal(songId)
+
+                val ext = AudioCacheUtils.fileExtension(contentType)
+                val cacheId = AudioCacheUtils.cacheId(songId)
+                val destFile = File(cacheDir, "$cacheId.$ext")
+                destFile.writeBytes(data)
+
+                val metadataFile = AudioCacheUtils.getMetadataFile(context, songId)
+                val metadataJson = JSONObject().apply {
+                    put("songId", songId)
+                    put("fileName", destFile.name)
+                    put("contentType", contentType)
+                    put("lastModifiedAt", System.currentTimeMillis().toDouble())
+                }
+                metadataFile.writeText(metadataJson.toString(), Charsets.UTF_8)
+
+                val response = JSObject().apply {
+                    put("songId", songId)
+                    put("uri", Uri.fromFile(destFile).toString())
+                    put("contentType", contentType)
+                    put("sizeBytes", destFile.length())
+                    put("lastModifiedAt", metadataJson.getDouble("lastModifiedAt"))
+                }
+                call.resolve(response)
+            } catch (e: Exception) {
+                call.reject("Failed to store audio file: ${e.localizedMessage}")
+            }
+        }
     }
 
     @PluginMethod
     fun downloadAudioFile(call: PluginCall) {
-        AonsokuNativeError.rejectUnimplemented(call, pluginName, "downloadAudioFile")
+        val songId = call.getString("songId") ?: run {
+            call.reject("Missing songId")
+            return
+        }
+        val maxBitRate = call.getInt("maxBitRate")
+        val format = call.getString("format")
+
+        val service = playbackService ?: run {
+            call.reject("Playback service not ready")
+            return
+        }
+
+        service.downloadManager.download(songId, maxBitRate, format)
+        call.resolve()
     }
 
     @PluginMethod
     fun cancelDownload(call: PluginCall) {
-        AonsokuNativeError.rejectUnimplemented(call, pluginName, "cancelDownload")
+        val service = playbackService ?: run {
+            call.reject("Playback service not ready")
+            return
+        }
+
+        val songId = call.getString("songId")
+        if (songId != null) {
+            service.downloadManager.cancel(songId)
+        } else {
+            service.downloadManager.cancelAll()
+        }
+        call.resolve()
     }
 
     @PluginMethod

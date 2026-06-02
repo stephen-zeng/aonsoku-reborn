@@ -24,7 +24,8 @@ import type {
   SongFilter,
 } from "./definitions";
 
-const UNAVAILABLE = "AonsokuNativeData is only available on native Capacitor platforms";
+const UNAVAILABLE =
+  "AonsokuNativeData is only available on native Capacitor platforms";
 
 export class AonsokuNativeDataWeb
   extends WebPlugin

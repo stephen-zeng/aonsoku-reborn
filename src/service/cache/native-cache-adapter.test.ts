@@ -134,6 +134,18 @@ describe("getNativeCacheAdapter", () => {
     expect(isNativeCacheAdapterAvailable()).toBe(true);
   });
 
+  it("returns the adapter on Android when the native plugin is available", () => {
+    const plugin = createNativePlugin();
+    mocks.getRuntime.mockReturnValue("capacitor-android");
+    mocks.getNativeAudioPluginAvailability.mockReturnValue({
+      available: true,
+      plugin,
+    });
+
+    expect(getNativeCacheAdapter()).toBeInstanceOf(IosNativeCacheAdapter);
+    expect(isNativeCacheAdapterAvailable()).toBe(true);
+  });
+
   it("returns a null adapter on iOS when the native plugin is missing", async () => {
     mocks.getRuntime.mockReturnValue("capacitor-ios");
     mocks.getNativeAudioPluginAvailability.mockReturnValue({

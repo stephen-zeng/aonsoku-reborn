@@ -25,6 +25,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.io.File
 
 class PlaybackService : MediaSessionService() {
     private var mediaSession: MediaSession? = null
@@ -37,6 +38,55 @@ class PlaybackService : MediaSessionService() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val preferencesStore by lazy { NativePreferencesStore(this) }
     lateinit var persistence: PlaybackStatePersistence
+
+    val downloadManager by lazy { NativeDownloadManager(this) }
+    private val backgroundCacheSongIds = java.util.Collections.synchronizedSet(mutableSetOf<String>())
+    private val downloadListeners = mutableListOf<DownloadListener>()
+
+    interface DownloadListener {
+        fun onDownloadProgress(songId: String, loaded: Long, total: Long)
+        fun onDownloadCompleted(songId: String, fileUri: String, contentType: String, sizeBytes: Long)
+        fun onDownloadFailed(songId: String, errorMessage: String)
+    }
+
+    fun addDownloadListener(listener: DownloadListener) {
+        synchronized(downloadListeners) {
+            if (!downloadListeners.contains(listener)) {
+                downloadListeners.add(listener)
+            }
+        }
+    }
+
+    fun removeDownloadListener(listener: DownloadListener) {
+        synchronized(downloadListeners) {
+            downloadListeners.remove(listener)
+        }
+    }
+
+    fun isBackgroundCache(songId: String): Boolean = backgroundCacheSongIds.contains(songId)
+    fun removeBackgroundCache(songId: String): Boolean = backgroundCacheSongIds.remove(songId)
+
+    private fun startBackgroundCache(songId: String) {
+        val cacheId = AudioCacheUtils.cacheId(songId)
+        val extensions = listOf("mp3", "flac", "m4a", "aac", "ogg", "opus", "wav", "audio")
+
+        val cacheDirectories = listOf(
+            AudioCacheUtils.getCacheDirectory(this),
+            AudioCacheUtils.getSecondaryCacheDirectory(this)
+        )
+        for (directory in cacheDirectories) {
+            if (directory.exists() && directory.isDirectory) {
+                for (ext in extensions) {
+                    if (File(directory, "$cacheId.$ext").exists()) {
+                        return
+                    }
+                }
+            }
+        }
+
+        backgroundCacheSongIds.add(songId)
+        downloadManager.download(songId)
+    }
 
     interface Listener {
         fun onRemoteCommand(command: String, position: Double?)
@@ -187,6 +237,26 @@ class PlaybackService : MediaSessionService() {
             .setCallback(callback)
             .build()
 
+        downloadManager.addListener(object : NativeDownloadManager.Listener {
+            override fun onDownloadProgress(songId: String, loaded: Long, total: Long) {
+                synchronized(downloadListeners) {
+                    downloadListeners.forEach { it.onDownloadProgress(songId, loaded, total) }
+                }
+            }
+
+            override fun onDownloadCompleted(songId: String, fileUri: String, contentType: String, sizeBytes: Long) {
+                synchronized(downloadListeners) {
+                    downloadListeners.forEach { it.onDownloadCompleted(songId, fileUri, contentType, sizeBytes) }
+                }
+            }
+
+            override fun onDownloadFailed(songId: String, errorMessage: String) {
+                synchronized(downloadListeners) {
+                    downloadListeners.forEach { it.onDownloadFailed(songId, errorMessage) }
+                }
+            }
+        })
+
         restorePlaybackState()
     }
 
@@ -215,7 +285,15 @@ class PlaybackService : MediaSessionService() {
     }
 
     fun loadSong(song: QueueSong, autoplay: Boolean, startTime: Double?) {
-        val url = resolveSongUri(song)
+        val resolver = NativeSourceResolver(this)
+        val resolved = resolver.resolveSource(song)
+        val url = resolved?.first ?: song.streamUrl
+        val kind = resolved?.second ?: "stream"
+
+        if (kind == "stream") {
+            startBackgroundCache(song.id)
+        }
+
         val artworkUrl = resolveArtworkUrl(song)
 
         val mediaMetadataBuilder = MediaMetadata.Builder()
@@ -244,14 +322,6 @@ class PlaybackService : MediaSessionService() {
             if (autoplay) {
                 currentPlayer.play()
             }
-        }
-    }
-
-    private fun resolveSongUri(song: QueueSong): String {
-        return if (!song.cachedFileUri.isNullOrEmpty()) {
-            song.cachedFileUri
-        } else {
-            song.streamUrl
         }
     }
 
