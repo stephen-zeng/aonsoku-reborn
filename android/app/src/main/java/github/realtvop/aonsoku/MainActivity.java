@@ -80,7 +80,16 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
 
     private void openDebugPage() {
         android.util.Log.d("MainActivity", "Shake detected, opening debug page");
-        Intent intent = new Intent(this, DebugActivity.class);
-        startActivity(intent);
+        runOnUiThread(() -> {
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
+            try {
+                Intent intent = new Intent(MainActivity.this, DebugActivity.class);
+                startActivity(intent);
+            } catch (Throwable t) {
+                android.util.Log.e("MainActivity", "Failed to open debug page", t);
+            }
+        });
     }
 }
