@@ -65,7 +65,9 @@ class AudioPlugin : Plugin() {
     private val credentialStore: AndroidCredentialStore by lazy {
         AndroidCredentialStore(context)
     }
-    private val scrobbleBuffer = NativeScrobbleBuffer(ScrobbleFileStore(context))
+    private val scrobbleBuffer by lazy {
+        NativeScrobbleBuffer(ScrobbleFileStore(context))
+    }
     private val scrobbleSubmitter = NativeScrobbleSubmitter(httpClient)
 
     private var currentScrobbleSongId: String? = null
