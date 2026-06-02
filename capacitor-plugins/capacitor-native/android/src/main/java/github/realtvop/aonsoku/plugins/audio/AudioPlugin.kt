@@ -721,11 +721,34 @@ class AudioPlugin : Plugin() {
 
         handleScrobbleSongEnded()
 
-        val url = parsedSource.url ?: parsedSource.uri
-        if (url.isNullOrEmpty()) {
+        val rawUrl = parsedSource.url ?: parsedSource.uri
+        if (rawUrl.isNullOrEmpty()) {
             call.reject("Missing audio source URL or URI")
             return
         }
+
+        val resolver = NativeSourceResolver(context)
+        val tempSong = QueueSong(
+            id = parsedSource.songId ?: "",
+            title = parsedMetadata?.title ?: "",
+            artist = parsedMetadata?.artist ?: "",
+            artistId = null,
+            album = parsedMetadata?.album ?: "",
+            albumId = null,
+            duration = parsedMetadata?.duration ?: 0.0,
+            coverArtId = null,
+            streamUrl = rawUrl,
+            cachedFileUri = parsedSource.uri
+        )
+        val resolved = resolver.resolveSource(tempSong)
+
+        if (resolved == null && (rawUrl.startsWith("aonsoku-media://") || rawUrl.isNullOrEmpty())) {
+            NativeLogger.error("Cannot resolve source for song ${parsedSource.songId}: missing credentials or unresolvable stream URL", "audio-plugin")
+            call.reject("Cannot resolve source: missing credentials or unresolvable stream URL")
+            return
+        }
+
+        val url = resolved?.first ?: rawUrl
 
         val mediaMetadataBuilder = MediaMetadata.Builder()
         parsedMetadata?.let {
