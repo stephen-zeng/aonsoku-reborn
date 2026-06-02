@@ -3,6 +3,7 @@ package github.realtvop.aonsoku.plugins.audio
 import github.realtvop.aonsoku.plugins.bridge.ServerCredentials
 import github.realtvop.aonsoku.plugins.bridge.SubsonicHttpClient
 import java.util.Date
+import kotlinx.coroutines.launch
 
 class NativeScrobbleSubmitter(private val httpClient: SubsonicHttpClient) {
     private val thresholdPercent = 0.5
@@ -52,8 +53,10 @@ class NativeScrobbleSubmitter(private val httpClient: SubsonicHttpClient) {
     }
 
     private fun submitInternal(songId: String, timestamp: Double, credentials: ServerCredentials) {
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-            submitAsync(songId = songId, timestamp = timestamp, credentials = credentials)
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).let { scope ->
+            scope.launch {
+                submitAsync(songId = songId, timestamp = timestamp, credentials = credentials)
+            }
         }
     }
 

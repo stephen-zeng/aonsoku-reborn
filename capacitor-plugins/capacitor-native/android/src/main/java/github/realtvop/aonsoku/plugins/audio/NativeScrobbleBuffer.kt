@@ -8,7 +8,7 @@ data class ScrobbleEntry(
     val timestamp: Double,
 )
 
-fun interface ScrobbleEntryStore {
+interface ScrobbleEntryStore {
     fun save(entries: List<ScrobbleEntry>)
     fun load(): List<ScrobbleEntry>
 }

@@ -532,7 +532,6 @@ class AudioPlugin : Plugin() {
             PlaybackException.ERROR_CODE_DECODER_INIT_FAILED,
             PlaybackException.ERROR_CODE_DECODER_QUERY_FAILED,
             PlaybackException.ERROR_CODE_DECODING_FAILED,
-            PlaybackException.ERROR_CODE_DECODER_QUERYING_FAILED -> "decode_error"
             PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED,
             PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED -> "invalid_media"
             PlaybackException.ERROR_CODE_DRM_UNSPECIFIED,

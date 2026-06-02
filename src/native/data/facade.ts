@@ -9,11 +9,16 @@ export type NativeDataAvailability =
   | { available: true; plugin: AonsokuNativeDataPlugin }
   | { available: false; reason: string };
 
+const NATIVE_DATA_PLATFORMS = ["ios", "android"];
+
 export function getNativeDataAvailability(): NativeDataAvailability {
-  if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== "ios") {
+  if (
+    !Capacitor.isNativePlatform() ||
+    !NATIVE_DATA_PLATFORMS.includes(Capacitor.getPlatform())
+  ) {
     return {
       available: false,
-      reason: "Only supported in Capacitor iOS",
+      reason: "Only supported in Capacitor iOS and Android",
     };
   }
 
