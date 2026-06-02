@@ -14,7 +14,7 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
     private float lastX, lastY, lastZ;
     private long lastShakeTime;
     private boolean hasInitialValues;
-    private static final float SHAKE_THRESHOLD = 5f;
+    private static final float SHAKE_THRESHOLD = 12f;
     private static final long SHAKE_COOLDOWN_MS = 2000;
 
     @Override
