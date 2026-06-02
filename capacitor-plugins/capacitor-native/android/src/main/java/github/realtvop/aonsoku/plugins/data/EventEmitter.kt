@@ -2,11 +2,10 @@ package github.realtvop.aonsoku.plugins.data
 import android.os.Handler
 import android.os.Looper
 import com.getcapacitor.JSObject
-import com.getcapacitor.Plugin
 import org.json.JSONArray
 import org.json.JSONObject
 
-class EventEmitter(private val plugin: Plugin) {
+class EventEmitter(private val notifyListeners: (String, JSObject) -> Unit) {
     private val h: Handler? = try { Handler(Looper.getMainLooper()) } catch (_: Exception) { null }
     private var pending: JSObject? = null
     private var scheduled: Runnable? = null
@@ -24,7 +23,7 @@ class EventEmitter(private val plugin: Plugin) {
         }
     }
     fun emitDataChanged(tables: List<String>, tier: String) { flushDataChanged(tables, tier) }
-    private fun flushDataChanged(tables: List<String>, tier: String) { plugin.notifyListeners("dataChanged", JSObject().apply { put("tables", JSONArray(tables)); put("tier", tier) }) }
+    private fun flushDataChanged(tables: List<String>, tier: String) { notifyListeners("dataChanged", JSObject().apply { put("tables", JSONArray(tables)); put("tier", tier) }) }
     fun forceFlush() { scheduled?.let { h?.removeCallbacks(it) }; scheduled = null; flush() }
-    private fun flush() { val s = pending ?: return; pending = null; plugin.notifyListeners("syncStateChanged", s) }
+    private fun flush() { val s = pending ?: return; pending = null; notifyListeners("syncStateChanged", s) }
 }

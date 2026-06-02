@@ -17,7 +17,7 @@ class EventEmitterContractTest {
     @Before
     fun setUp() {
         plugin = mock(Plugin::class.java)
-        emitter = EventEmitter(plugin)
+        emitter = EventEmitter { event, data -> plugin.notifyListeners(event, data) }
     }
 
     @Test
