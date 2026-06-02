@@ -6,6 +6,10 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import com.getcapacitor.BridgeActivity;
+import github.realtvop.aonsoku.plugins.audio.AudioPlugin;
+import github.realtvop.aonsoku.plugins.bridge.BridgePlugin;
+import github.realtvop.aonsoku.plugins.data.DataPlugin;
+import github.realtvop.aonsoku.plugins.preferences.PreferencesPlugin;
 import github.realtvop.aonsoku.plugins.debug.DebugActivity;
 
 public class MainActivity extends BridgeActivity implements SensorEventListener {
@@ -19,6 +23,11 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
 
     @Override
     public void onCreate(android.os.Bundle savedInstanceState) {
+        registerPlugin(AudioPlugin.class);
+        registerPlugin(BridgePlugin.class);
+        registerPlugin(DataPlugin.class);
+        registerPlugin(PreferencesPlugin.class);
+
         super.onCreate(savedInstanceState);
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sensorManager != null) {
