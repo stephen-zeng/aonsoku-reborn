@@ -17,7 +17,7 @@ import { NATIVE_BRIDGE_PLUGIN_NAME } from "./definitions";
 
 function unavailable(method: string) {
   return new Error(
-    `${NATIVE_BRIDGE_PLUGIN_NAME}.${method} is only available in Capacitor iOS.`,
+    `${NATIVE_BRIDGE_PLUGIN_NAME}.${method} is only available on native Capacitor platforms.`,
   );
 }
 

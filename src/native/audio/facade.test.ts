@@ -118,7 +118,7 @@ describe("Aonsoku native audio facade", () => {
         },
       }),
     ).rejects.toThrow(
-      "AonsokuNativeAudio.load is only available in Capacitor iOS",
+      "AonsokuNativeAudio.load is only available on native Capacitor platforms",
     );
   });
 
@@ -126,12 +126,19 @@ describe("Aonsoku native audio facade", () => {
     expect(getNativeAudioPluginAvailability()).toEqual({
       available: false,
       reason: "unsupported-platform",
-      message: "AonsokuNativeAudio is only supported in Capacitor iOS.",
+      message: "AonsokuNativeAudio requires a native Capacitor platform.",
     });
     expect(isNativeAudioPluginAvailable()).toBe(false);
 
     mockIsNativePlatform.mockReturnValue(true);
     mockGetPlatform.mockReturnValue("android");
+
+    expect(getNativeAudioPluginAvailability()).toMatchObject({
+      available: false,
+      reason: "missing-plugin",
+    });
+
+    mockIsPluginAvailable.mockReturnValue(true);
 
     expect(getNativeAudioPluginAvailability()).toMatchObject({
       available: false,
@@ -147,7 +154,7 @@ describe("Aonsoku native audio facade", () => {
     expect(getNativeAudioPluginAvailability()).toEqual({
       available: false,
       reason: "missing-plugin",
-      message: "AonsokuNativeAudio native plugin is not available.",
+      message: "AonsokuNativeAudio native plugin is not available on ios.",
     });
   });
 
@@ -189,7 +196,7 @@ describe("Aonsoku native audio facade", () => {
       tryAddNativeAudioListener("ended", vi.fn()),
     ).resolves.toBeNull();
     await expect(addNativeAudioListener("ended", vi.fn())).rejects.toThrow(
-      "AonsokuNativeAudio is only supported in Capacitor iOS.",
+      "AonsokuNativeAudio requires a native Capacitor platform.",
     );
   });
 });

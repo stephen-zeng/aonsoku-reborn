@@ -5,6 +5,7 @@ import {
   shouldUseNativePlaybackBackend,
   type PlaybackBackend,
 } from ".";
+import type { PlaybackCapabilities } from "@/utils/capabilities";
 
 function makeAudio() {
   return {} as HTMLAudioElement;
@@ -37,13 +38,25 @@ function makeAvailablePlugin() {
   } as const;
 }
 
+function caps(overrides?: Partial<PlaybackCapabilities>): PlaybackCapabilities {
+  return {
+    canSetVolume: true,
+    requiresSystemVolume: false,
+    supportsSystemVolumeControl: false,
+    supportsWebAudioReplayGain: true,
+    supportsNativePlayback: false,
+    supportsBackgroundPlayback: false,
+    ...overrides,
+  };
+}
+
 describe("playback backend selection", () => {
-  it("uses the web backend outside Capacitor iOS", () => {
+  it("uses the web backend when native playback is not supported", () => {
     const webBackend = makeBackend();
     const nativeBackend = makeBackend();
 
     const selection = createPlaybackBackend(makeAudio(), {
-      getRuntime: () => "web",
+      getCapabilities: () => caps({ supportsNativePlayback: false }),
       getNativeAudioAvailability: makeAvailablePlugin,
       createWebBackend: () => webBackend,
       createNativeBackend: () => nativeBackend,
@@ -60,7 +73,7 @@ describe("playback backend selection", () => {
     const nativeBackend = makeBackend();
 
     const selection = createPlaybackBackend(makeAudio(), {
-      getRuntime: () => "capacitor-ios",
+      getCapabilities: () => caps({ supportsNativePlayback: true }),
       getNativeAudioAvailability: makeAvailablePlugin,
       createWebBackend: () => webBackend,
       createNativeBackend: () => nativeBackend,
@@ -72,12 +85,12 @@ describe("playback backend selection", () => {
     });
   });
 
-  it("falls back to web on Capacitor iOS when the plugin is missing", () => {
+  it("falls back to web when the plugin is missing", () => {
     const webBackend = makeBackend();
     const nativeFactory = vi.fn(() => makeBackend());
 
     const selection = createPlaybackBackend(makeAudio(), {
-      getRuntime: () => "capacitor-ios",
+      getCapabilities: () => caps({ supportsNativePlayback: true }),
       getNativeAudioAvailability: () => ({
         available: false,
         reason: "missing-plugin",
@@ -99,7 +112,7 @@ describe("playback backend selection", () => {
     const webBackend = makeBackend();
 
     const selection = createPlaybackBackend(makeAudio(), {
-      getRuntime: () => "capacitor-ios",
+      getCapabilities: () => caps({ supportsNativePlayback: true }),
       getNativeAudioAvailability: makeAvailablePlugin,
       createWebBackend: () => webBackend,
       createNativeBackend: () => {
@@ -117,13 +130,13 @@ describe("playback backend selection", () => {
   it("reports whether native playback should be used", () => {
     expect(
       shouldUseNativePlaybackBackend({
-        getRuntime: () => "web",
+        getCapabilities: () => caps({ supportsNativePlayback: false }),
         getNativeAudioAvailability: makeAvailablePlugin,
       }),
     ).toBe(false);
     expect(
       shouldUseNativePlaybackBackend({
-        getRuntime: () => "capacitor-ios",
+        getCapabilities: () => caps({ supportsNativePlayback: true }),
         getNativeAudioAvailability: () => ({
           available: false,
           reason: "missing-plugin",
@@ -133,7 +146,7 @@ describe("playback backend selection", () => {
     ).toBe(false);
     expect(
       shouldUseNativePlaybackBackend({
-        getRuntime: () => "capacitor-ios",
+        getCapabilities: () => caps({ supportsNativePlayback: true }),
         getNativeAudioAvailability: makeAvailablePlugin,
       }),
     ).toBe(true);

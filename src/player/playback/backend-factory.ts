@@ -2,7 +2,7 @@ import {
   getNativeAudioPluginAvailability,
   type NativeAudioPluginAvailability,
 } from "@/native/audio";
-import { getRuntime, type PlatformRuntime } from "@/utils/capabilities";
+import { getPlaybackCapabilities } from "@/utils/capabilities";
 import {
   createNativeAudioPlaybackBackend,
   type NativeAudioPlaybackBackend,
@@ -27,7 +27,7 @@ export interface PlaybackBackendSelectionOptions {
   ) => PlaybackBackend;
   createWebBackend?: (audio: HTMLAudioElement) => PlaybackBackend;
   getNativeAudioAvailability?: () => NativeAudioPluginAvailability;
-  getRuntime?: () => PlatformRuntime;
+  getCapabilities?: () => ReturnType<typeof getPlaybackCapabilities>;
   webOptions?: WebAudioPlaybackBackendOptions;
 }
 
@@ -35,13 +35,13 @@ export function createPlaybackBackend(
   audio: HTMLAudioElement,
   options: PlaybackBackendSelectionOptions = {},
 ): PlaybackBackendSelection {
-  const runtime = (options.getRuntime ?? getRuntime)();
+  const caps = (options.getCapabilities ?? getPlaybackCapabilities)();
   const createWebBackend =
     options.createWebBackend ??
     ((webAudio: HTMLAudioElement) =>
       createWebAudioPlaybackBackend(webAudio, options.webOptions));
 
-  if (runtime !== "capacitor-ios") {
+  if (!caps.supportsNativePlayback) {
     return {
       backend: createWebBackend(audio),
       kind: "web",
@@ -80,10 +80,11 @@ export function createPlaybackBackend(
 export function shouldUseNativePlaybackBackend(
   options: Pick<
     PlaybackBackendSelectionOptions,
-    "getNativeAudioAvailability" | "getRuntime"
+    "getNativeAudioAvailability" | "getCapabilities"
   > = {},
 ) {
-  if ((options.getRuntime ?? getRuntime)() !== "capacitor-ios") {
+  const caps = (options.getCapabilities ?? getPlaybackCapabilities)();
+  if (!caps.supportsNativePlayback) {
     return false;
   }
 
