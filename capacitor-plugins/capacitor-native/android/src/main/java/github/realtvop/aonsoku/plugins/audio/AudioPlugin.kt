@@ -4,7 +4,9 @@ import android.Manifest
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.ServiceConnection
+import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
@@ -18,6 +20,9 @@ import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import com.getcapacitor.annotation.Permission
 import com.getcapacitor.annotation.PermissionCallback
+import github.realtvop.aonsoku.plugins.bridge.AndroidCredentialStore
+import github.realtvop.aonsoku.plugins.bridge.ServerCredentials
+import github.realtvop.aonsoku.plugins.bridge.SubsonicHttpClient
 import github.realtvop.aonsoku.plugins.error.AonsokuNativeError
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -51,6 +56,36 @@ class AudioPlugin : Plugin() {
     private var playerListener: Player.Listener? = null
 
     private val pluginScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    private val httpClient = SubsonicHttpClient()
+    private val credentialStore: AndroidCredentialStore by lazy {
+        AndroidCredentialStore(context)
+    }
+    private val scrobbleBuffer = NativeScrobbleBuffer(ScrobbleFileStore(context))
+    private val scrobbleSubmitter = NativeScrobbleSubmitter(httpClient)
+
+    private var currentScrobbleSongId: String? = null
+    private var currentScrobbleSongDuration: Double = 0.0
+
+    private var sleepTimerHandler: Handler? = null
+    private var sleepTimerEndTime: Long = 0
+    private var sleepTimerMode: String = "duration"
+
+    private var audioManager: AudioManager? = null
+    private var audioFocusChangeListener: AudioManager.OnAudioFocusChangeListener? = null
+    private var wasPlayingBeforeFocusLoss: Boolean = false
+    private var headphoneReceiver: HeadphoneUnplugReceiver? = null
+
+    private inner class HeadphoneUnplugReceiver : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
+                notifyListeners("routeChanged", JSObject().apply {
+                    put("requestId", currentRequestId ?: JSONObject.NULL)
+                    put("reason", "headphone_unplugged")
+                })
+            }
+        }
+    }
 
     private val downloadListener = object : PlaybackService.DownloadListener {
         override fun onDownloadProgress(songId: String, loaded: Long, total: Long) {
@@ -99,6 +134,8 @@ class AudioPlugin : Plugin() {
         }
 
         override fun onQueueStateChanged(currentIndex: Int, songId: String, reason: String, isInUserQueue: Boolean) {
+            handleScrobbleSongEnded()
+            handleScrobbleSongStarted(songId, currentScrobbleSongDuration)
             val data = JSObject().apply {
                 put("currentIndex", currentIndex)
                 put("songId", songId)
@@ -116,6 +153,11 @@ class AudioPlugin : Plugin() {
         }
 
         override fun onPlaybackStateChanged(state: String) {
+            if (state == "playing" && currentScrobbleSongId != null) {
+                scrobbleBuffer.resumeTracking()
+            } else if (state == "paused" && currentScrobbleSongId != null) {
+                scrobbleBuffer.pauseTracking()
+            }
             emitPlaybackState(state, currentRequestId)
         }
 
@@ -125,6 +167,13 @@ class AudioPlugin : Plugin() {
                 put("reason", reason)
             })
             emitPlaybackState("ended", currentRequestId)
+            if (reason == "finished") {
+                handleScrobbleSongEnded()
+            }
+        }
+
+        override fun onSleepTimerEndOfTrack() {
+            fireSleepTimerEvent("endOfTrack")
         }
     }
 
@@ -151,6 +200,8 @@ class AudioPlugin : Plugin() {
     override fun load() {
         super.load()
         bindPlaybackService()
+        registerAudioFocusListener()
+        registerHeadphoneReceiver()
     }
 
     override fun handleOnDestroy() {
@@ -161,6 +212,9 @@ class AudioPlugin : Plugin() {
             isBound = false
         }
         mainHandler.removeCallbacks(progressRunnable)
+        cancelSleepTimerInternal()
+        unregisterAudioFocusListener()
+        unregisterHeadphoneReceiver()
         pluginScope.cancel()
         super.handleOnDestroy()
     }
@@ -170,11 +224,198 @@ class AudioPlugin : Plugin() {
         try {
             context.startService(intent)
         } catch (_: Exception) {
-            // Foreground limits might apply on some versions if started in background,
-            // but we are in the main app startup flow.
         }
         context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
     }
+
+    // MARK: - Audio Focus
+
+    private fun registerAudioFocusListener() {
+        audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+        if (audioManager == null) return
+
+        audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
+            handleAudioFocusChange(focusChange)
+        }
+    }
+
+    private fun unregisterAudioFocusListener() {
+        audioFocusChangeListener?.let {
+            audioManager?.abandonAudioFocus(it)
+        }
+        audioFocusChangeListener = null
+    }
+
+    private fun requestAudioFocus(): Int {
+        val am = audioManager ?: return AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+        val listener = audioFocusChangeListener ?: return AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+        return am.requestAudioFocus(
+            listener,
+            AudioManager.STREAM_MUSIC,
+            AudioManager.AUDIOFOCUS_GAIN,
+        )
+    }
+
+    private fun abandonAudioFocus() {
+        val am = audioManager ?: return
+        val listener = audioFocusChangeListener ?: return
+        am.abandonAudioFocus(listener)
+    }
+
+    private fun handleAudioFocusChange(focusChange: Int) {
+        when (focusChange) {
+            AudioManager.AUDIOFOCUS_GAIN -> {
+                notifyListeners("interruptionChanged", JSObject().apply {
+                    put("requestId", currentRequestId ?: JSONObject.NULL)
+                    put("type", "ended")
+                    put("shouldResume", wasPlayingBeforeFocusLoss)
+                })
+                wasPlayingBeforeFocusLoss = false
+            }
+            AudioManager.AUDIOFOCUS_LOSS -> {
+                val player = playbackService?.getPlayer()
+                wasPlayingBeforeFocusLoss = player?.isPlaying == true
+                player?.pause()
+                notifyListeners("interruptionChanged", JSObject().apply {
+                    put("requestId", currentRequestId ?: JSONObject.NULL)
+                    put("type", "began")
+                })
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                val player = playbackService?.getPlayer()
+                wasPlayingBeforeFocusLoss = player?.isPlaying == true
+                player?.pause()
+                notifyListeners("interruptionChanged", JSObject().apply {
+                    put("requestId", currentRequestId ?: JSONObject.NULL)
+                    put("type", "began")
+                })
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                notifyListeners("interruptionChanged", JSObject().apply {
+                    put("requestId", currentRequestId ?: JSONObject.NULL)
+                    put("type", "began")
+                    put("canDuck", true)
+                })
+            }
+        }
+    }
+
+    // MARK: - Headphone Route Receiver
+
+    private fun registerHeadphoneReceiver() {
+        val receiver = HeadphoneUnplugReceiver()
+        headphoneReceiver = receiver
+        if (Build.VERSION.SDK_INT >= 33) {
+            context.registerReceiver(receiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY), Context.RECEIVER_EXPORTED)
+        } else {
+            context.registerReceiver(receiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
+        }
+    }
+
+    private fun unregisterHeadphoneReceiver() {
+        headphoneReceiver?.let { receiver ->
+            try {
+                context.unregisterReceiver(receiver)
+            } catch (_: Exception) {
+            }
+        }
+        headphoneReceiver = null
+    }
+
+    // MARK: - Scrobble
+
+    private fun handleScrobbleSongEnded() {
+        val entry = scrobbleBuffer.stopTracking()
+        if (entry != null) {
+            notifyListeners("scrobbleEvent", JSObject().apply {
+                put("songId", entry.songId)
+                put("playedDurationMs", entry.playedDurationMs)
+                put("timestamp", entry.timestamp)
+            })
+            val credentials = credentialStore.retrieve()
+            if (credentials != null) {
+                scrobbleSubmitter.submitIfEligible(entry, currentScrobbleSongDuration, credentials)
+            }
+        }
+        currentScrobbleSongId = null
+    }
+
+    private fun handleScrobbleSongStarted(songId: String, duration: Double) {
+        currentScrobbleSongId = songId
+        currentScrobbleSongDuration = duration
+        scrobbleBuffer.startTracking(songId, duration)
+        val credentials = credentialStore.retrieve()
+        if (credentials != null) {
+            pluginScope.launch {
+                scrobbleSubmitter.sendNowPlaying(songId, credentials)
+            }
+        }
+    }
+
+    // MARK: - Sleep Timer
+
+    @PluginMethod
+    fun setSleepTimer(call: PluginCall) {
+        val seconds = call.getDouble("seconds") ?: 0.0
+        val mode = call.getString("mode") ?: "duration"
+
+        cancelSleepTimerInternal()
+        playbackService?.sleepTimerMode = mode
+
+        if (mode == "duration" && seconds > 0) {
+            sleepTimerEndTime = System.currentTimeMillis() + (seconds * 1000).toLong()
+            sleepTimerMode = mode
+            val handler = Handler(Looper.getMainLooper())
+            sleepTimerHandler = handler
+            handler.postDelayed({
+                fireSleepTimer()
+            }, (seconds * 1000).toLong())
+        }
+        call.resolve()
+    }
+
+    @PluginMethod
+    fun cancelSleepTimer(call: PluginCall) {
+        cancelSleepTimerInternal()
+        playbackService?.sleepTimerMode = "duration"
+        call.resolve()
+    }
+
+    @PluginMethod
+    fun getSleepTimerRemaining(call: PluginCall) {
+        val remaining = if (sleepTimerEndTime > 0) {
+            maxOf(0, sleepTimerEndTime - System.currentTimeMillis()) / 1000
+        } else 0
+        call.resolve(JSObject().apply {
+            put("remainingSeconds", remaining.toDouble())
+        })
+    }
+
+    private fun cancelSleepTimerInternal() {
+        sleepTimerHandler?.removeCallbacksAndMessages(null)
+        sleepTimerHandler = null
+        sleepTimerEndTime = 0
+        sleepTimerMode = "duration"
+    }
+
+    private fun fireSleepTimer() {
+        playbackService?.getPlayer()?.let { player ->
+            player.pause()
+        }
+        playbackService?.persistence?.flushNow()
+        cancelSleepTimerInternal()
+        playbackService?.sleepTimerMode = "duration"
+        fireSleepTimerEvent("duration")
+    }
+
+    private fun fireSleepTimerEvent(reason: String) {
+        emitPlaybackState("paused", currentRequestId)
+        notifyListeners("sleepTimerFired", JSObject().apply {
+            put("reason", reason)
+        })
+    }
+
+    // MARK: - Player Listener
 
     private fun setupPlayerListener() {
         val player = playbackService?.getPlayer() ?: return
@@ -229,7 +470,6 @@ class AudioPlugin : Plugin() {
             Player.STATE_ENDED -> {
                 val service = playbackService
                 if (service != null && service.isQueueEngineActive) {
-                    // Handled internally by service queueEngine
                 } else {
                     notifyListeners("bufferingChanged", JSObject().apply {
                         put("isBuffering", false)
@@ -275,13 +515,38 @@ class AudioPlugin : Plugin() {
             put("requestId", requestId ?: JSONObject.NULL)
         })
 
+        val mappedCode = mapPlayerErrorCode(error)
         notifyListeners("error", JSObject().apply {
-            put("code", "playback_failed")
+            put("code", mappedCode)
             put("message", error.localizedMessage ?: "Unknown ExoPlayer error")
             put("requestId", requestId ?: JSONObject.NULL)
         })
         emitPlaybackState("failed", requestId)
     }
+
+    private fun mapPlayerErrorCode(error: PlaybackException): String {
+        return when (error.errorCode) {
+            PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW,
+            PlaybackException.ERROR_CODE_TIMEOUT,
+            PlaybackException.ERROR_CODE_IO_UNSPECIFIED -> "network_error"
+            PlaybackException.ERROR_CODE_DECODER_INIT_FAILED,
+            PlaybackException.ERROR_CODE_DECODER_QUERY_FAILED,
+            PlaybackException.ERROR_CODE_DECODING_FAILED,
+            PlaybackException.ERROR_CODE_DECODER_QUERYING_FAILED -> "decode_error"
+            PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED,
+            PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED -> "invalid_media"
+            PlaybackException.ERROR_CODE_DRM_UNSPECIFIED,
+            PlaybackException.ERROR_CODE_DRM_SCHEME_UNSUPPORTED,
+            PlaybackException.ERROR_CODE_DRM_PROVISIONING_FAILED,
+            PlaybackException.ERROR_CODE_DRM_CONTENT_ERROR,
+            PlaybackException.ERROR_CODE_DRM_LICENSE_ACQUISITION_FAILED,
+            PlaybackException.ERROR_CODE_DRM_DISALLOWED_OPERATION -> "drm_error"
+            PlaybackException.ERROR_CODE_REMOTE_ERROR -> "remote_error"
+            else -> "playback_failed"
+        }
+    }
+
+    // MARK: - Progress
 
     private val progressRunnable = object : Runnable {
         override fun run() {
@@ -313,7 +578,6 @@ class AudioPlugin : Plugin() {
         }
         notifyListeners("progress", data)
 
-        // Also sync progress down to persistence
         playbackService?.persistence?.updateProgress(currentPosition / 1000.0)
     }
 
@@ -337,7 +601,7 @@ class AudioPlugin : Plugin() {
     }
 
     private fun checkAndRequestNotificationPermission(call: PluginCall, onDone: () -> Unit) {
-        if (Build.VERSION.SDK_INT >= 33) { // Android 13+ (Tiramisu)
+        if (Build.VERSION.SDK_INT >= 33) {
             if (getPermissionState("post_notifications") != PermissionState.GRANTED) {
                 requestPermissionForAlias("post_notifications", call, "notificationPermissionCallback")
                 return
@@ -348,12 +612,13 @@ class AudioPlugin : Plugin() {
 
     @PermissionCallback
     fun notificationPermissionCallback(call: PluginCall) {
-        // Regardless of granted/denied status, we proceed with the command
         when (call.methodName) {
             "play" -> executePlay(call)
             "load" -> executeLoad(call)
         }
     }
+
+    // MARK: - Plugin Methods
 
     @PluginMethod
     fun load(call: PluginCall) {
@@ -385,6 +650,8 @@ class AudioPlugin : Plugin() {
 
         currentRequestId = requestId
 
+        handleScrobbleSongEnded()
+
         val url = parsedSource.url ?: parsedSource.uri
         if (url.isNullOrEmpty()) {
             call.reject("Missing audio source URL or URI")
@@ -399,6 +666,12 @@ class AudioPlugin : Plugin() {
             it.artworkUrl?.let { artUrl ->
                 mediaMetadataBuilder.setArtworkUri(Uri.parse(artUrl))
             }
+        }
+
+        val songId = parsedSource.songId
+        val songDuration = parsedMetadata?.duration ?: 0.0
+        if (songId != null) {
+            handleScrobbleSongStarted(songId, songDuration)
         }
 
         val mediaItem = MediaItem.Builder()
@@ -420,6 +693,7 @@ class AudioPlugin : Plugin() {
             }
             emitPlaybackState("loading", requestId)
             if (autoplay) {
+                requestAudioFocus()
                 player.play()
             }
             call.resolve()
@@ -447,6 +721,7 @@ class AudioPlugin : Plugin() {
             service.savedRestoreTime = null
             service.queueEngine.clearRestoredFlag()
 
+            requestAudioFocus()
             player.play()
             call.resolve()
         }
@@ -547,9 +822,9 @@ class AudioPlugin : Plugin() {
             player.clearMediaItems()
             emitPlaybackState("idle", currentRequestId)
             currentRequestId = null
-
+            handleScrobbleSongEnded()
+            abandonAudioFocus()
             service.clearQueueState()
-
             call.resolve()
         }
     }
@@ -606,11 +881,9 @@ class AudioPlugin : Plugin() {
                         }
                     }
                 } catch (_: Exception) {
-                    // Metadata corrupt? Fallback to directory scan
                 }
             }
 
-            // Fallback: search directory for any file starting with cacheId. but not ending with .json
             val files = dir.listFiles()
             if (files != null) {
                 for (file in files) {
@@ -618,7 +891,7 @@ class AudioPlugin : Plugin() {
                         return JSObject().apply {
                             put("songId", songId)
                             put("uri", Uri.fromFile(file).toString())
-                            put("contentType", "audio/mpeg") // fallback content type
+                            put("contentType", "audio/mpeg")
                             put("sizeBytes", file.length())
                             put("lastModifiedAt", file.lastModified().toDouble())
                         }
@@ -629,7 +902,6 @@ class AudioPlugin : Plugin() {
         return null
     }
 
-    // Helper object to avoid repeated reflection lookups inside resolver loops
     private object AudioCacheDirectoryHelper {
         fun getCacheDir(context: Context) = AudioCacheUtils.getCacheDirectory(context)
         fun getSecCacheDir(context: Context) = AudioCacheUtils.getSecondaryCacheDirectory(context)
@@ -722,13 +994,34 @@ class AudioPlugin : Plugin() {
         }
     }
 
-    // Volume HUD Stub
     @PluginMethod
     fun setVolumeHUDEnabled(call: PluginCall) {
         call.resolve()
     }
 
-    // Queue Engine Methods
+    @PluginMethod
+    fun getScrobbleBuffer(call: PluginCall) {
+        val entries = scrobbleBuffer.getEntries()
+        val array = JSONArray()
+        for (entry in entries) {
+            array.put(JSONObject().apply {
+                put("songId", entry.songId)
+                put("playedDurationMs", entry.playedDurationMs)
+                put("timestamp", entry.timestamp)
+            })
+        }
+        call.resolve(JSObject().apply {
+            put("entries", array)
+        })
+    }
+
+    @PluginMethod
+    fun clearScrobbleBuffer(call: PluginCall) {
+        scrobbleBuffer.clear()
+        call.resolve()
+    }
+
+    // MARK: - Queue Engine Methods
 
     @PluginMethod
     fun setContextQueue(call: PluginCall) {
@@ -972,7 +1265,7 @@ class AudioPlugin : Plugin() {
         }
     }
 
-    // Other non-A2/A3 methods return UNIMPLEMENTED
+    // Stubs for non-A5 capabilities
 
     @PluginMethod
     fun preload(call: PluginCall) {
@@ -996,7 +1289,6 @@ class AudioPlugin : Plugin() {
                 val data = android.util.Base64.decode(dataBase64, android.util.Base64.DEFAULT)
                 val cacheDir = AudioCacheUtils.getCacheDirectory(context, createIfNeeded = true)
 
-                // Delete existing first to ensure atomic updates
                 deleteCachedAudioFileInternal(songId)
 
                 val ext = AudioCacheUtils.fileExtension(contentType)
@@ -1072,16 +1364,6 @@ class AudioPlugin : Plugin() {
     }
 
     @PluginMethod
-    fun getScrobbleBuffer(call: PluginCall) {
-        AonsokuNativeError.rejectUnimplemented(call, pluginName, "getScrobbleBuffer")
-    }
-
-    @PluginMethod
-    fun clearScrobbleBuffer(call: PluginCall) {
-        AonsokuNativeError.rejectUnimplemented(call, pluginName, "clearScrobbleBuffer")
-    }
-
-    @PluginMethod
     fun resolveSongs(call: PluginCall) {
         AonsokuNativeError.rejectUnimplemented(call, pluginName, "resolveSongs")
     }
@@ -1089,20 +1371,5 @@ class AudioPlugin : Plugin() {
     @PluginMethod
     fun setLikeActive(call: PluginCall) {
         AonsokuNativeError.rejectUnimplemented(call, pluginName, "setLikeActive")
-    }
-
-    @PluginMethod
-    fun setSleepTimer(call: PluginCall) {
-        AonsokuNativeError.rejectUnimplemented(call, pluginName, "setSleepTimer")
-    }
-
-    @PluginMethod
-    fun cancelSleepTimer(call: PluginCall) {
-        AonsokuNativeError.rejectUnimplemented(call, pluginName, "cancelSleepTimer")
-    }
-
-    @PluginMethod
-    fun getSleepTimerRemaining(call: PluginCall) {
-        AonsokuNativeError.rejectUnimplemented(call, pluginName, "getSleepTimerRemaining")
     }
 }

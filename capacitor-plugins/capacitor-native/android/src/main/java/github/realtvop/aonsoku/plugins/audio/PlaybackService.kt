@@ -35,6 +35,8 @@ class PlaybackService : MediaSessionService() {
     var isQueueEngineActive = false
     var savedRestoreTime: Double? = null
 
+    var sleepTimerMode: String = "duration"
+
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val preferencesStore by lazy { NativePreferencesStore(this) }
     lateinit var persistence: PlaybackStatePersistence
@@ -94,6 +96,7 @@ class PlaybackService : MediaSessionService() {
         fun onQueueContentsChanged(reason: String)
         fun onPlaybackStateChanged(state: String)
         fun onEnded(reason: String)
+        fun onSleepTimerEndOfTrack()
     }
 
     private val listeners = mutableListOf<Listener>()
@@ -128,6 +131,10 @@ class PlaybackService : MediaSessionService() {
         listeners.forEach { it.onEnded(reason) }
     }
 
+    private fun emitSleepTimerEndOfTrack() {
+        listeners.forEach { it.onSleepTimerEndOfTrack() }
+    }
+
     inner class LocalBinder : Binder() {
         fun getService(): PlaybackService = this@PlaybackService
     }
@@ -146,8 +153,8 @@ class PlaybackService : MediaSessionService() {
             .build()
 
         val newPlayer = ExoPlayer.Builder(this)
-            .setAudioAttributes(audioAttributes, true) // Handles audio focus changes automatically
-            .setHandleAudioBecomingNoisy(true) // Pauses automatically when headphones are unplugged
+            .setAudioAttributes(audioAttributes, true)
+            .setHandleAudioBecomingNoisy(true)
             .build()
 
         player = newPlayer
@@ -197,6 +204,13 @@ class PlaybackService : MediaSessionService() {
         newPlayer.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 if (playbackState == Player.STATE_ENDED) {
+                    if (sleepTimerMode == "end-of-track") {
+                        sleepTimerMode = "duration"
+                        player?.pause()
+                        emitPlaybackState("paused")
+                        emitSleepTimerEndOfTrack()
+                        return
+                    }
                     if (isQueueEngineActive) {
                         queueEngine.handleEnded()
                     } else {

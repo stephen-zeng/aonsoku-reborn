@@ -7,6 +7,8 @@ import { useSleepTimerStore } from "@/store/sleep-timer.store";
 import { usePlayerStore } from "@/store/player.store";
 import { getRuntime } from "@/utils/capabilities";
 
+const NATIVE_RUNTIMES = new Set(["capacitor-ios", "capacitor-android"]);
+
 export function useSleepTimer() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isActive = useSleepTimerStore((s) => s.isActive);
@@ -41,7 +43,7 @@ export function useSleepTimer() {
 
   useEffect(() => {
     const runtime = getRuntime();
-    if (runtime !== "capacitor-ios") return;
+    if (!NATIVE_RUNTIMES.has(runtime)) return;
 
     let handle: Awaited<ReturnType<typeof tryAddNativeAudioListener>> = null;
 
@@ -61,7 +63,7 @@ export function startSleepTimer(seconds: number) {
   const runtime = getRuntime();
   useSleepTimerStore.getState().startTimer(seconds);
 
-  if (runtime === "capacitor-ios") {
+  if (NATIVE_RUNTIMES.has(runtime)) {
     const availability = getNativeAudioPluginAvailability();
     if (availability.available) {
       availability.plugin.setSleepTimer({ seconds, mode: "duration" });
@@ -73,7 +75,7 @@ export function startEndOfTrackTimer() {
   const runtime = getRuntime();
   useSleepTimerStore.getState().startEndOfTrack();
 
-  if (runtime === "capacitor-ios") {
+  if (NATIVE_RUNTIMES.has(runtime)) {
     const availability = getNativeAudioPluginAvailability();
     if (availability.available) {
       availability.plugin.setSleepTimer({ seconds: 0, mode: "endOfTrack" });
@@ -85,7 +87,7 @@ export function cancelSleepTimer() {
   const runtime = getRuntime();
   useSleepTimerStore.getState().cancelTimer();
 
-  if (runtime === "capacitor-ios") {
+  if (NATIVE_RUNTIMES.has(runtime)) {
     const availability = getNativeAudioPluginAvailability();
     if (availability.available) {
       availability.plugin.cancelSleepTimer();
