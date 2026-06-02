@@ -58,6 +58,9 @@ class AudioPlugin : Plugin() {
 
     private val pluginScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
+    private val pendingServiceCalls = mutableListOf<PluginCall>()
+    private val serviceReadyTimeoutMs = 5000L
+
     private val httpClient = SubsonicHttpClient()
     private val credentialStore: AndroidCredentialStore by lazy {
         AndroidCredentialStore(context)
@@ -189,6 +192,7 @@ class AudioPlugin : Plugin() {
             currentService?.addListener(serviceListener)
             currentService?.addDownloadListener(downloadListener)
             setupPlayerListener()
+            drainPendingServiceCalls()
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -219,6 +223,10 @@ class AudioPlugin : Plugin() {
         cancelSleepTimerInternal()
         unregisterAudioFocusListener()
         unregisterHeadphoneReceiver()
+        for (call in pendingServiceCalls) {
+            call.reject("Plugin destroyed")
+        }
+        pendingServiceCalls.clear()
         pluginScope.cancel()
         super.handleOnDestroy()
     }
@@ -230,6 +238,57 @@ class AudioPlugin : Plugin() {
         } catch (_: Exception) {
         }
         context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+    }
+
+    private fun requireServiceOrQueue(call: PluginCall): Boolean {
+        if (playbackService != null) return false
+        pendingServiceCalls.add(call)
+        mainHandler.postDelayed({
+            if (pendingServiceCalls.remove(call)) {
+                NativeLogger.error("Service-ready timeout for call: ${call.methodName}", "audio-plugin")
+                call.reject("Playback service is not ready")
+            }
+        }, serviceReadyTimeoutMs)
+        return true
+    }
+
+    private fun drainPendingServiceCalls() {
+        val calls = pendingServiceCalls.toList()
+        pendingServiceCalls.clear()
+        for (call in calls) {
+            routePendingCall(call)
+        }
+    }
+
+    private fun routePendingCall(call: PluginCall) {
+        try {
+            when (call.methodName) {
+                "load" -> executeLoad(call)
+                "play" -> executePlay(call)
+                "pause" -> executePause(call)
+                "seek" -> executeSeek(call)
+                "clear" -> executeClear(call)
+                "setContextQueue" -> executeSetContextQueue(call)
+                "updateContextQueue" -> executeUpdateContextQueue(call)
+                "reorderContextQueue" -> executeReorderContextQueue(call)
+                "addToUserQueue" -> executeAddToUserQueue(call)
+                "removeFromUserQueue" -> executeRemoveFromUserQueue(call)
+                "clearUserQueue" -> executeClearUserQueue(call)
+                "playAtIndex" -> executePlayAtIndex(call)
+                "getFullState" -> executeGetFullState(call)
+                "setRepeatMode" -> executeSetRepeatMode(call)
+                "setShuffle" -> executeSetShuffle(call)
+                "stop" -> executeStop(call)
+                "updateMetadata" -> executeUpdateMetadata(call)
+                "skipToNext" -> executeSkipToNext(call)
+                "skipToPrevious" -> executeSkipToPrevious(call)
+                "markAsShuffled" -> executeMarkAsShuffled(call)
+                else -> call.reject("Unknown method: ${call.methodName}")
+            }
+        } catch (e: Exception) {
+            NativeLogger.error("Error replaying pending call ${call.methodName}: ${e.message}", "audio-plugin")
+            call.reject("Failed to execute ${call.methodName}: ${e.message}")
+        }
     }
 
     // MARK: - Audio Focus
@@ -629,9 +688,13 @@ class AudioPlugin : Plugin() {
     fun load(call: PluginCall) {
         val service = playbackService
         if (service != null && service.isQueueEngineActive) {
-            call.resolve()
-            return
+            val player = service.getPlayer()
+            if (player != null && player.mediaItemCount > 0) {
+                call.resolve()
+                return
+            }
         }
+        if (requireServiceOrQueue(call)) return
         checkAndRequestNotificationPermission(call) {
             executeLoad(call)
         }
@@ -708,6 +771,7 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun play(call: PluginCall) {
+        if (requireServiceOrQueue(call)) return
         checkAndRequestNotificationPermission(call) {
             executePlay(call)
         }
@@ -736,6 +800,11 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun pause(call: PluginCall) {
+        if (requireServiceOrQueue(call)) return
+        executePause(call)
+    }
+
+    private fun executePause(call: PluginCall) {
         NativeLogger.debug("Pause requested", "audio-plugin")
         mainHandler.post {
             val service = playbackService ?: run {
@@ -754,6 +823,11 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun stop(call: PluginCall) {
+        if (requireServiceOrQueue(call)) return
+        executeStop(call)
+    }
+
+    private fun executeStop(call: PluginCall) {
         mainHandler.post {
             val player = playbackService?.getPlayer() ?: run {
                 call.reject("Playback service is not ready")
@@ -768,10 +842,16 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun seek(call: PluginCall) {
-        val position = call.getDouble("position") ?: run {
+        if (call.getDouble("position") == null) {
             call.reject("Missing position parameter")
             return
         }
+        if (requireServiceOrQueue(call)) return
+        executeSeek(call)
+    }
+
+    private fun executeSeek(call: PluginCall) {
+        val position = call.getDouble("position") ?: 0.0
         NativeLogger.debug("Seek to $position", "audio-plugin")
         mainHandler.post {
             val service = playbackService ?: run {
@@ -791,6 +871,11 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun updateMetadata(call: PluginCall) {
+        if (requireServiceOrQueue(call)) return
+        executeUpdateMetadata(call)
+    }
+
+    private fun executeUpdateMetadata(call: PluginCall) {
         val title = call.getString("title")
         val artist = call.getString("artist")
         val album = call.getString("album")
@@ -821,6 +906,11 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun clear(call: PluginCall) {
+        if (requireServiceOrQueue(call)) return
+        executeClear(call)
+    }
+
+    private fun executeClear(call: PluginCall) {
         mainHandler.post {
             val service = playbackService
             val player = service?.getPlayer() ?: run {
@@ -1034,6 +1124,15 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun setContextQueue(call: PluginCall) {
+        if (call.getArray("songs") == null) {
+            call.reject("Missing songs parameter")
+            return
+        }
+        if (requireServiceOrQueue(call)) return
+        executeSetContextQueue(call)
+    }
+
+    private fun executeSetContextQueue(call: PluginCall) {
         val service = playbackService ?: run {
             call.reject("Playback service is not ready")
             return
@@ -1071,6 +1170,15 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun updateContextQueue(call: PluginCall) {
+        if (call.getArray("songs") == null) {
+            call.reject("Missing songs parameter")
+            return
+        }
+        if (requireServiceOrQueue(call)) return
+        executeUpdateContextQueue(call)
+    }
+
+    private fun executeUpdateContextQueue(call: PluginCall) {
         val service = playbackService ?: run {
             call.reject("Playback service is not ready")
             return
@@ -1093,6 +1201,11 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun reorderContextQueue(call: PluginCall) {
+        if (requireServiceOrQueue(call)) return
+        executeReorderContextQueue(call)
+    }
+
+    private fun executeReorderContextQueue(call: PluginCall) {
         val service = playbackService ?: run {
             call.reject("Playback service is not ready")
             return
@@ -1108,6 +1221,15 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun addToUserQueue(call: PluginCall) {
+        if (call.getArray("songs") == null) {
+            call.reject("Missing songs parameter")
+            return
+        }
+        if (requireServiceOrQueue(call)) return
+        executeAddToUserQueue(call)
+    }
+
+    private fun executeAddToUserQueue(call: PluginCall) {
         val service = playbackService ?: run {
             call.reject("Playback service is not ready")
             return
@@ -1130,6 +1252,15 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun removeFromUserQueue(call: PluginCall) {
+        if (call.getArray("indices") == null) {
+            call.reject("Missing indices parameter")
+            return
+        }
+        if (requireServiceOrQueue(call)) return
+        executeRemoveFromUserQueue(call)
+    }
+
+    private fun executeRemoveFromUserQueue(call: PluginCall) {
         val service = playbackService ?: run {
             call.reject("Playback service is not ready")
             return
@@ -1151,6 +1282,11 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun clearUserQueue(call: PluginCall) {
+        if (requireServiceOrQueue(call)) return
+        executeClearUserQueue(call)
+    }
+
+    private fun executeClearUserQueue(call: PluginCall) {
         val service = playbackService ?: run {
             call.reject("Playback service is not ready")
             return
@@ -1163,6 +1299,11 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun playAtIndex(call: PluginCall) {
+        if (requireServiceOrQueue(call)) return
+        executePlayAtIndex(call)
+    }
+
+    private fun executePlayAtIndex(call: PluginCall) {
         val service = playbackService ?: run {
             call.reject("Playback service is not ready")
             return
@@ -1178,6 +1319,11 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun getFullState(call: PluginCall) {
+        if (requireServiceOrQueue(call)) return
+        executeGetFullState(call)
+    }
+
+    private fun executeGetFullState(call: PluginCall) {
         val service = playbackService ?: run {
             call.reject("Playback service is not ready")
             return
@@ -1196,6 +1342,11 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun setRepeatMode(call: PluginCall) {
+        if (requireServiceOrQueue(call)) return
+        executeSetRepeatMode(call)
+    }
+
+    private fun executeSetRepeatMode(call: PluginCall) {
         val service = playbackService ?: run {
             call.reject("Playback service is not ready")
             return
@@ -1209,6 +1360,11 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun setShuffle(call: PluginCall) {
+        if (requireServiceOrQueue(call)) return
+        executeSetShuffle(call)
+    }
+
+    private fun executeSetShuffle(call: PluginCall) {
         val service = playbackService ?: run {
             call.reject("Playback service is not ready")
             return
@@ -1222,6 +1378,15 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun markAsShuffled(call: PluginCall) {
+        if (call.getArray("originalSongs") == null) {
+            call.reject("Missing originalSongs parameter")
+            return
+        }
+        if (requireServiceOrQueue(call)) return
+        executeMarkAsShuffled(call)
+    }
+
+    private fun executeMarkAsShuffled(call: PluginCall) {
         val service = playbackService ?: run {
             call.reject("Playback service is not ready")
             return
@@ -1243,6 +1408,11 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun skipToNext(call: PluginCall) {
+        if (requireServiceOrQueue(call)) return
+        executeSkipToNext(call)
+    }
+
+    private fun executeSkipToNext(call: PluginCall) {
         val service = playbackService ?: run {
             call.reject("Playback service is not ready")
             return
@@ -1259,6 +1429,11 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun skipToPrevious(call: PluginCall) {
+        if (requireServiceOrQueue(call)) return
+        executeSkipToPrevious(call)
+    }
+
+    private fun executeSkipToPrevious(call: PluginCall) {
         val service = playbackService ?: run {
             call.reject("Playback service is not ready")
             return

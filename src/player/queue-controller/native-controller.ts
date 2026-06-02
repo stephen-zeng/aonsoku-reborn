@@ -256,6 +256,25 @@ export class NativeQueueController implements QueueController {
         usePlayerStore.setState((state) => {
           state.playerState.isPlaying = true;
         });
+        this.#plugin.play().catch(() => {
+          this.#plugin
+            .setContextQueue({
+              songs: contextQueue.songs.map(songToNativeQueueSong),
+              currentIndex: clampedIndex,
+              autoplay: true,
+              repeatMode: loopStateToNative(
+                usePlayerStore.getState().playerState.loopState,
+              ),
+              sourceId: normalizedId,
+              sourceName,
+            })
+            .catch((err) => {
+              logger.error(
+                "[NativeQueueController] setSongList same-queue play fallback failed",
+                err,
+              );
+            });
+        });
         return;
       }
 
@@ -484,11 +503,73 @@ export class NativeQueueController implements QueueController {
 
   play(): void {
     const currentIsPlaying = usePlayerStore.getState().playerState.isPlaying;
+    const state = usePlayerStore.getState();
+
+    if (!this.#queueSynced) {
+      const songs = state.songlist.contextQueue.songs;
+      const index = state.songlist.contextQueue.currentIndex;
+      if (songs.length > 0) {
+        const nativeSongs = songs.map(songToNativeQueueSong);
+        this.#plugin
+          .setContextQueue({
+            songs: nativeSongs,
+            currentIndex: index,
+            autoplay: true,
+            repeatMode: loopStateToNative(state.playerState.loopState),
+            sourceId: normalizeSourceId(state.songlist.contextQueue.sourceId),
+            sourceName: state.songlist.contextQueue.sourceName ?? undefined,
+          })
+          .then(() => {
+            this.#queueSynced = true;
+          })
+          .catch((err) => {
+            logger.error(
+              "[NativeQueueController] play resubmit queue failed",
+              err,
+            );
+            usePlayerStore.setState((s) => {
+              s.playerState.isPlaying = currentIsPlaying;
+            });
+          });
+        usePlayerStore.setState((s) => {
+          s.playerState.isPlaying = true;
+        });
+        return;
+      }
+    }
+
     this.#plugin.play().catch((err) => {
       logger.error("[NativeQueueController] play failed", err);
-      usePlayerStore.setState((s) => {
-        s.playerState.isPlaying = currentIsPlaying;
-      });
+      const songs = usePlayerStore.getState().songlist.contextQueue.songs;
+      const idx = usePlayerStore.getState().songlist.contextQueue.currentIndex;
+      if (songs.length > 0) {
+        const nativeSongs = songs.map(songToNativeQueueSong);
+        this.#plugin
+          .setContextQueue({
+            songs: nativeSongs,
+            currentIndex: idx,
+            autoplay: true,
+            repeatMode: loopStateToNative(
+              usePlayerStore.getState().playerState.loopState,
+            ),
+          })
+          .then(() => {
+            this.#queueSynced = true;
+          })
+          .catch((fallbackErr) => {
+            logger.error(
+              "[NativeQueueController] play fallback setContextQueue failed",
+              fallbackErr,
+            );
+            usePlayerStore.setState((s) => {
+              s.playerState.isPlaying = currentIsPlaying;
+            });
+          });
+      } else {
+        usePlayerStore.setState((s) => {
+          s.playerState.isPlaying = currentIsPlaying;
+        });
+      }
     });
     usePlayerStore.setState((s) => {
       s.playerState.isPlaying = true;

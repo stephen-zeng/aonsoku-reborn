@@ -305,6 +305,13 @@ class PlaybackService : MediaSessionService() {
         NativeLogger.debug("Loading song: ${song.title} - ${song.artist} (autoplay=$autoplay)", "playback-service")
         val resolver = NativeSourceResolver(this)
         val resolved = resolver.resolveSource(song)
+
+        if (resolved == null && (song.streamUrl.startsWith("aonsoku-media://") || song.streamUrl.isNullOrEmpty())) {
+            NativeLogger.error("Cannot resolve source for song ${song.id}: missing credentials or unresolvable stream URL", "playback-service")
+            emitPlaybackState("failed")
+            return
+        }
+
         val url = resolved?.first ?: song.streamUrl
         val kind = resolved?.second ?: "stream"
 

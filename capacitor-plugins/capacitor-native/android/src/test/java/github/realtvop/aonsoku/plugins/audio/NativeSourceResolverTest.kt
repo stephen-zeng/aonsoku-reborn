@@ -88,6 +88,29 @@ class NativeSourceResolverTest {
     }
 
     @Test
+    fun testResolveAonsokuMediaUrlReturnsNullWhenNoCredentials() {
+        val context = Mockito.mock(Context::class.java)
+        val filesDir = tempFolder.newFolder("files")
+        val cacheDir = tempFolder.newFolder("cache")
+        Mockito.`when`(context.filesDir).thenReturn(filesDir)
+        Mockito.`when`(context.cacheDir).thenReturn(cacheDir)
+
+        val credentialStore = Mockito.mock(AndroidCredentialStore::class.java)
+        Mockito.`when`(credentialStore.retrieve()).thenReturn(null)
+
+        val song = createSong(
+            id = "song-no-creds",
+            streamUrl = "aonsoku-media://stream?id=song-no-creds"
+        )
+
+        val resolver = NativeSourceResolver(context, credentialStore)
+        val result = resolver.resolveSource(song)
+
+        // Should return null because no credentials are available
+        assertEquals(null, result)
+    }
+
+    @Test
     fun testResolveAuthenticatedStreamUrl() {
         val context = Mockito.mock(Context::class.java)
         val filesDir = tempFolder.newFolder("files")
