@@ -688,17 +688,19 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun load(call: PluginCall) {
-        val service = playbackService
-        if (service != null && service.isQueueEngineActive) {
-            val player = service.getPlayer()
-            if (player != null && player.mediaItemCount > 0) {
-                call.resolve()
-                return
+        mainHandler.post {
+            val service = playbackService
+            if (service != null && service.isQueueEngineActive) {
+                val player = service.getPlayer()
+                if (player != null && player.mediaItemCount > 0) {
+                    call.resolve()
+                    return@post
+                }
             }
-        }
-        if (requireServiceOrQueue(call)) return
-        checkAndRequestNotificationPermission(call) {
-            executeLoad(call)
+            if (requireServiceOrQueue(call)) return@post
+            checkAndRequestNotificationPermission(call) {
+                executeLoad(call)
+            }
         }
     }
 
