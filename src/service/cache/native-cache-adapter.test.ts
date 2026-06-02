@@ -148,12 +148,18 @@ describe("getNativeCacheAdapter", () => {
     expect(await adapter.resolveAudioFile("song-1")).toBeNull();
   });
 
-  it("throws on capacitor-android (not yet available)", () => {
+  it("returns a null adapter on capacitor-android when native plugin is unavailable", async () => {
     mocks.getRuntime.mockReturnValue("capacitor-android");
+    mocks.getNativeAudioPluginAvailability.mockReturnValue({
+      available: false,
+      reason: "unsupported-platform",
+      message: "not yet implemented",
+    });
 
-    expect(() => getNativeCacheAdapter()).toThrow(
-      "Capacitor Android native cache adapter is not available until Phase 5",
-    );
+    const adapter = getNativeCacheAdapter();
+
+    expect(isNativeCacheAdapterAvailable()).toBe(false);
+    expect(await adapter.resolveAudioFile("song-1")).toBeNull();
   });
 
   it("caches the adapter instance", () => {
@@ -259,6 +265,11 @@ describe("native cache availability helpers", () => {
 
   it("no-ops helper calls when native iOS cache is unavailable", async () => {
     mocks.getRuntime.mockReturnValue("web");
+    mocks.getNativeAudioPluginAvailability.mockReturnValue({
+      available: false,
+      reason: "unsupported-platform",
+      message: "not a native platform",
+    });
 
     await expect(
       storeNativeAudioFileIfAvailable(
