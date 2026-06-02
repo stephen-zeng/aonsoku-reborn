@@ -147,7 +147,8 @@ export function getSongStreamUrl(
   maxBitRate?: string,
   format?: string,
 ) {
-  if (getRuntime() === "capacitor-ios") {
+  const runtime = getRuntime();
+  if (runtime === "capacitor-ios" || runtime === "capacitor-android") {
     const params = new URLSearchParams({ id });
     if (maxBitRate) params.set("maxBitRate", maxBitRate);
     if (format) params.set("format", format);

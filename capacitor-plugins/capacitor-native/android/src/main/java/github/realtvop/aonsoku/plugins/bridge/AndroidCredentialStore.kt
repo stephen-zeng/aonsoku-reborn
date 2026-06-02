@@ -4,6 +4,7 @@ import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import android.util.Log
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -48,7 +49,8 @@ class AndroidCredentialStore(context: Context) {
             )
             val decrypted = cipher.doFinal(encrypted).toString(Charsets.UTF_8)
             ServerCredentials.fromStorageJson(decrypted)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.e("AndroidCredentialStore", "Failed to decrypt credentials", e)
             null
         }
     }
