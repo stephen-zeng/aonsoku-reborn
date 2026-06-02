@@ -225,9 +225,8 @@ export function getNativeAudioPluginAvailability(): NativeAudioPluginAvailabilit
   const platform = Capacitor.getPlatform();
   if (platform === "android") {
     return {
-      available: false,
-      reason: "unsupported-platform",
-      message: `${NATIVE_AUDIO_PLUGIN_NAME} native Android plugin registered but methods are not yet implemented. See A1-A8 for incremental enablement.`,
+      available: true,
+      plugin: AonsokuNativeAudio,
     };
   }
 

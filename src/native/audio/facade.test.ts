@@ -139,10 +139,9 @@ describe("Aonsoku native audio facade", () => {
     });
 
     mockIsPluginAvailable.mockReturnValue(true);
-
-    expect(getNativeAudioPluginAvailability()).toMatchObject({
-      available: false,
-      reason: "unsupported-platform",
+    expect(getNativeAudioPluginAvailability()).toEqual({
+      available: true,
+      plugin: mockPlugin,
     });
   });
 
