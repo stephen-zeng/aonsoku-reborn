@@ -2,15 +2,25 @@ import { Capacitor } from "@capacitor/core";
 import { getAvatarUrl, getCoverArtUrl } from "@/api/httpClient";
 
 function convertFileSrc(uri: string): string {
-  // Avoid the double-slash bug in Capacitor.convertFileSrc on Android
-  // where "file:///data/..." becomes "serverUrl/_capacitor_file_//data/..."
-  // instead of "serverUrl/_capacitor_file_/data/..."
-  if (typeof uri !== "string" || !uri.startsWith("file://")) {
+  if (typeof uri !== "string" || !uri.startsWith("file:")) {
     return Capacitor.convertFileSrc(uri);
   }
   const serverUrl = Capacitor.getServerUrl?.() ?? "";
   if (!serverUrl) return Capacitor.convertFileSrc(uri);
-  const filePath = uri.slice(7);
+
+  // Handle all file: URI variants produced by the native layer:
+  //   "file:///absolute/path"  – RFC 8089 (iOS, Capacitor's own convertFileSrc)
+  //   "file:/absolute/path"    – Java File.toURI() (Android native plugin)
+  //   "file://relative/path"   – not used, handled for safety
+  // Strip the "file:" scheme, then normalize leading slashes to "/".
+  let filePath = uri.slice(5);
+  while (filePath.startsWith("//")) {
+    filePath = filePath.slice(1);
+  }
+  if (!filePath.startsWith("/")) {
+    filePath = "/" + filePath;
+  }
+
   return `${serverUrl}/_capacitor_file_${filePath}`;
 }
 import { asyncPool } from "@/service/cache/concurrency";
