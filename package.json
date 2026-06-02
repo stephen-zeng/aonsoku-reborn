@@ -189,9 +189,8 @@
       "electron",
       "electron-winstaller",
       "esbuild",
-      "fs-xattr",
-      "macos-alias",
       "register-scheme",
+      "sharp",
       "utf-8-validate"
     ]
   },
