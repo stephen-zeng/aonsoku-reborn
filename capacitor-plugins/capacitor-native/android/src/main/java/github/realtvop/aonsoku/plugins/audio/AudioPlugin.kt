@@ -23,6 +23,7 @@ import com.getcapacitor.annotation.PermissionCallback
 import github.realtvop.aonsoku.plugins.bridge.AndroidCredentialStore
 import github.realtvop.aonsoku.plugins.bridge.ServerCredentials
 import github.realtvop.aonsoku.plugins.bridge.SubsonicHttpClient
+import github.realtvop.aonsoku.plugins.debug.NativeLogger
 import github.realtvop.aonsoku.plugins.error.AonsokuNativeError
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -183,6 +184,7 @@ class AudioPlugin : Plugin() {
             val currentService = binder?.getService()
             playbackService = currentService
             isBound = true
+            NativeLogger.info("PlaybackService connected", "audio-plugin")
 
             currentService?.addListener(serviceListener)
             currentService?.addDownloadListener(downloadListener)
@@ -190,6 +192,7 @@ class AudioPlugin : Plugin() {
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
+            NativeLogger.warn("PlaybackService disconnected", "audio-plugin")
             playbackService?.removeListener(serviceListener)
             playbackService?.removeDownloadListener(downloadListener)
             playbackService = null
@@ -199,6 +202,7 @@ class AudioPlugin : Plugin() {
 
     override fun load() {
         super.load()
+        NativeLogger.info("AudioPlugin loaded, binding PlaybackService", "audio-plugin")
         bindPlaybackService()
         registerAudioFocusListener()
         registerHeadphoneReceiver()
@@ -515,7 +519,8 @@ class AudioPlugin : Plugin() {
             put("requestId", requestId ?: JSONObject.NULL)
         })
 
-        val mappedCode = mapPlayerErrorCode(error)
+            val mappedCode = mapPlayerErrorCode(error)
+        NativeLogger.error("Player error: ${mappedCode} - ${error.localizedMessage}", "audio-plugin")
         notifyListeners("error", JSObject().apply {
             put("code", mappedCode)
             put("message", error.localizedMessage ?: "Unknown ExoPlayer error")
@@ -632,6 +637,7 @@ class AudioPlugin : Plugin() {
     }
 
     private fun executeLoad(call: PluginCall) {
+        NativeLogger.debug("Loading audio source", "audio-plugin")
         val sourceObj = call.getObject("source") ?: run {
             call.reject("Missing audio source.")
             return
@@ -707,6 +713,7 @@ class AudioPlugin : Plugin() {
     }
 
     private fun executePlay(call: PluginCall) {
+        NativeLogger.debug("Play requested", "audio-plugin")
         mainHandler.post {
             val service = playbackService ?: run {
                 call.reject("Playback service is not ready")
@@ -728,6 +735,7 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun pause(call: PluginCall) {
+        NativeLogger.debug("Pause requested", "audio-plugin")
         mainHandler.post {
             val service = playbackService ?: run {
                 call.reject("Playback service is not ready")
@@ -763,6 +771,7 @@ class AudioPlugin : Plugin() {
             call.reject("Missing position parameter")
             return
         }
+        NativeLogger.debug("Seek to $position", "audio-plugin")
         mainHandler.post {
             val service = playbackService ?: run {
                 call.reject("Playback service is not ready")
@@ -1029,6 +1038,7 @@ class AudioPlugin : Plugin() {
             return
         }
 
+        NativeLogger.debug("Setting context queue", "audio-plugin")
         val songsArray = call.getArray("songs") ?: run {
             call.reject("Missing songs parameter")
             return

@@ -17,6 +17,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionResult
+import github.realtvop.aonsoku.plugins.debug.NativeLogger
 import github.realtvop.aonsoku.plugins.preferences.NativePreferencesStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -147,6 +148,7 @@ class PlaybackService : MediaSessionService() {
     @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
+        NativeLogger.info("PlaybackService created", "playback-service")
         val audioAttributes = AudioAttributes.Builder()
             .setUsage(C.USAGE_MEDIA)
             .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
@@ -286,6 +288,7 @@ class PlaybackService : MediaSessionService() {
     }
 
     override fun onDestroy() {
+        NativeLogger.info("PlaybackService destroyed", "playback-service")
         serviceScope.cancel()
         persistence.stopProgressTracking()
         listeners.clear()
@@ -299,6 +302,7 @@ class PlaybackService : MediaSessionService() {
     }
 
     fun loadSong(song: QueueSong, autoplay: Boolean, startTime: Double?) {
+        NativeLogger.debug("Loading song: ${song.title} - ${song.artist} (autoplay=$autoplay)", "playback-service")
         val resolver = NativeSourceResolver(this)
         val resolved = resolver.resolveSource(song)
         val url = resolved?.first ?: song.streamUrl
