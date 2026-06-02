@@ -42,7 +42,7 @@ class DataPlugin : Plugin() {
         credStore = AndroidCredentialStore(ctx)
         db = AonsokuDatabase.getInstance(ctx)
         imgCache = ImageCacheManager(ctx.cacheDir, db.cacheMetaDao())
-        emitter = EventEmitter(bridge)
+        emitter = EventEmitter(this)
         sync = SyncEngine(http, db.artistDao(), db.albumDao(), db.songDao(), db.playlistDao(), db.genreDao(), db.syncStateDao())
         sync.onSyncStateChanged = { emitter.emitSyncStateChanged(it) }
         sync.onDataChanged = { emitter.emitDataChanged(it, "") }

@@ -1,22 +1,30 @@
 package github.realtvop.aonsoku.plugins.data
 import android.os.Handler
 import android.os.Looper
-import com.getcapacitor.Bridge
 import com.getcapacitor.JSObject
+import com.getcapacitor.Plugin
 import org.json.JSONArray
 import org.json.JSONObject
 
-class EventEmitter(private val bridge: Bridge) {
-    private val h = Handler(Looper.getMainLooper())
+class EventEmitter(private val plugin: Plugin) {
+    private val h: Handler? = try { Handler(Looper.getMainLooper()) } catch (_: Exception) { null }
     private var pending: JSObject? = null
     private var scheduled: Runnable? = null
+    private val terminalPhases = setOf("done", "error", "cancelled")
 
     fun emitSyncStateChanged(state: Map<String, Any?>) {
         val js = JSObject(); for ((k, v) in state) when (v) { is String -> js.put(k, v); is Number -> js.put(k, v.toDouble()); is Boolean -> js.put(k, v); else -> js.put(k, JSONObject.NULL) }
         pending = js
-        if (scheduled == null) { val r = Runnable { flush(); scheduled = null }; scheduled = r; h.postDelayed(r, 200) }
+        val phase = state["phase"] as? String
+        if (phase in terminalPhases) {
+            forceFlush()
+        } else if (scheduled == null) {
+            val r = Runnable { flush(); scheduled = null }; scheduled = r
+            h?.postDelayed(r, 200)
+        }
     }
-    fun emitDataChanged(tables: List<String>, tier: String) { h.post { bridge.triggerJSEvent("dataChanged", JSObject().apply { put("tables", JSONArray(tables)); put("tier", tier) }.toString()) } }
-    fun forceFlush() { scheduled?.let { h.removeCallbacks(it) }; scheduled = null; flush() }
-    private fun flush() { val s = pending ?: return; pending = null; bridge.triggerJSEvent("syncStateChanged", s.toString()) }
+    fun emitDataChanged(tables: List<String>, tier: String) { flushDataChanged(tables, tier) }
+    private fun flushDataChanged(tables: List<String>, tier: String) { plugin.notifyListeners("dataChanged", JSObject().apply { put("tables", JSONArray(tables)); put("tier", tier) }) }
+    fun forceFlush() { scheduled?.let { h?.removeCallbacks(it) }; scheduled = null; flush() }
+    private fun flush() { val s = pending ?: return; pending = null; plugin.notifyListeners("syncStateChanged", s) }
 }

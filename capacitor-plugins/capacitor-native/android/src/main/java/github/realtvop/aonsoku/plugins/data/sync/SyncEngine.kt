@@ -13,6 +13,7 @@ import github.realtvop.aonsoku.plugins.bridge.ServerCredentials
 import github.realtvop.aonsoku.plugins.bridge.SubsonicHttpClient
 import github.realtvop.aonsoku.plugins.data.db.dao.*
 import github.realtvop.aonsoku.plugins.data.db.entity.*
+import github.realtvop.aonsoku.plugins.debug.NativeLogger
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -53,7 +54,7 @@ class SyncEngine(
             if (!coroutineContext.isActive) return
             syncStateDao.upsert(SyncStateEntity("full-sync", System.currentTimeMillis()))
             emitState("done", null, 0, 0)
-        } catch (_: CancellationException) { emitState("cancelled", null, 0, 0) } catch (_: Exception) { emitState("error", null, 0, 0) }
+        } catch (_: CancellationException) { emitState("cancelled", null, 0, 0) } catch (e: Exception) { NativeLogger.error("sync failed: ${e.message ?: "unknown"}", "sync-engine"); emitState("error", null, 0, 0) }
         if (generation == gen) currentJob = null
     }
 
@@ -89,7 +90,7 @@ class SyncEngine(
                 val dp = dr.data.optJSONObject("playlist") ?: continue
                 val eid = dp.optString("id", null) ?: continue; val en = dp.optString("name", null) ?: continue
                 details.add(PlaylistDetailEntity(eid, en, dp.optString("comment", null), dp.optInt("songCount", 0), dp.optInt("duration", 0), dp.optBoolean("public", false), dp.optString("owner", null), dp.optString("created", null), dp.optString("changed", null), dp.optString("coverArt", null), dp.optString("starred", null), toEpoch(dp.optString("starred", null)), dp.optJSONArray("entry")?.toString() ?: "[]"))
-            } catch (_: Exception) {}
+            } catch (e: Exception) { NativeLogger.warn("playlist detail failed: ${p.id} ${e.message ?: "unknown"}", "sync-engine") }
             if (details.isNotEmpty()) playlistDao.bulkUpsertDetails(details)
         }
     }
@@ -134,8 +135,9 @@ class SyncEngine(
 
     private suspend fun runSongs(c: ServerCredentials) {
         emitState("songs", "t3", 0, 0); var all = mutableListOf<SongEntity>(); var off = 0
+        val searchAllQuery = buildAllSongsQuery(c.serverType)
         while (true) {
-            val r = httpClient.request(c.serverUrl, "search3.view", c, mapOf("query" to "", "artistCount" to "0", "artistOffset" to "0", "albumCount" to "0", "albumOffset" to "0", "songCount" to "500", "songOffset" to off.toString()))
+            val r = httpClient.request(c.serverUrl, "search3.view", c, mapOf("query" to searchAllQuery, "artistCount" to "0", "artistOffset" to "0", "albumCount" to "0", "albumOffset" to "0", "songCount" to "500", "songOffset" to off.toString()))
             val arr = r.data.optJSONObject("searchResult3")?.optJSONArray("song") ?: break; var cnt = 0
             for (i in 0 until arr.length()) { parseSong(arr.optJSONObject(i))?.let { all.add(it); cnt++ } }
             off += cnt; emitState("songs", "t3", all.size, 0); if (cnt < 500) break
@@ -176,3 +178,6 @@ class SyncEngine(
         return try { SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }.parse(iso)?.time } catch (_: Exception) { try { SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US).apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }.parse(iso)?.time } catch (_: Exception) { null } }
     }
 }
+
+internal fun buildAllSongsQuery(serverType: String): String =
+    if (serverType == "navidrome") "\"\"" else ""

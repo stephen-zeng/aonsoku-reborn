@@ -6,9 +6,10 @@ import type { SyncState } from "@/types/cache";
 class NativeSyncAdapter {
   private listenerHandles: Array<{ remove: () => Promise<void> }> = [];
   private initialized = false;
+  private listenerReady: Promise<void>;
 
   constructor() {
-    this.setupListeners();
+    this.listenerReady = this.setupListeners();
   }
 
   private async setupListeners() {
@@ -50,6 +51,7 @@ class NativeSyncAdapter {
 
   async initialize(): Promise<void> {
     if (this.initialized) return;
+    await this.listenerReady;
     await AonsokuNativeData.initialize();
     this.initialized = true;
   }
