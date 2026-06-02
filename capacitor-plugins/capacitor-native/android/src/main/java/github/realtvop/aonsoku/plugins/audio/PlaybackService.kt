@@ -329,7 +329,10 @@ class PlaybackService : MediaSessionService() {
 
         val mainHandler = Handler(Looper.getMainLooper())
         mainHandler.post {
-            val currentPlayer = player ?: return@post
+            val currentPlayer = player ?: run {
+                NativeLogger.error("loadSong: player is null, aborting", "playback-service")
+                return@post
+            }
             currentPlayer.stop()
             currentPlayer.clearMediaItems()
             currentPlayer.setMediaItem(mediaItem)

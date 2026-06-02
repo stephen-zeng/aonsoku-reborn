@@ -492,6 +492,7 @@ class AudioPlugin : Plugin() {
                     put("isBuffering", false)
                     put("requestId", requestId ?: JSONObject.NULL)
                 })
+                emitPlaybackState("idle", requestId)
             }
         }
     }
