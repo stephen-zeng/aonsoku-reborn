@@ -27,6 +27,11 @@ function createQueueController(): QueueController {
   return new WebQueueController();
 }
 
+export function getNativeQueueController(): NativeQueueController | null {
+  const controller = getQueueController();
+  return controller instanceof NativeQueueController ? controller : null;
+}
+
 export function resetQueueController(): void {
   instance?.dispose();
   instance = null;

@@ -1,17 +1,16 @@
 import { useEffect } from "react";
-import { getQueueController } from "@/player/queue-controller";
-import { NativeQueueController } from "@/player/queue-controller/native-controller";
-import { getRuntime } from "@/utils/capabilities";
+import { getNativeQueueController } from "@/player/queue-controller";
 
 export function useNativeForegroundSync() {
   useEffect(() => {
-    if (getRuntime() !== "capacitor-ios" && getRuntime() !== "capacitor-android") return;
+    const controller = getNativeQueueController();
+    if (!controller) return;
 
-    syncOnForeground();
+    syncOnForeground(controller);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        syncOnForeground();
+        syncOnForeground(controller);
       }
     };
 
@@ -22,9 +21,8 @@ export function useNativeForegroundSync() {
   }, []);
 }
 
-async function syncOnForeground() {
-  const controller = getQueueController();
-  if (controller instanceof NativeQueueController) {
-    await controller.syncFromNative();
-  }
+async function syncOnForeground(
+  controller: NonNullable<ReturnType<typeof getNativeQueueController>>,
+) {
+  await controller.syncFromNative();
 }

@@ -2,9 +2,9 @@ import type { Draft } from "immer";
 import clamp from "lodash/clamp";
 import { LanControlMessageType } from "@/types/lanControl";
 import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
-import { getPlaybackCapabilities, getRuntime } from "@/utils/capabilities";
+import { getPlaybackCapabilities } from "@/utils/capabilities";
 import { logger } from "@/utils/logger";
-import { getQueueController } from "@/player/queue-controller";
+import { getNativeQueueController } from "@/player/queue-controller";
 
 interface SharedDeps {
   set: (fn: (state: Draft<IPlayerContext>) => void) => void;
@@ -18,11 +18,12 @@ export function createPlaybackActions(shared: SharedDeps) {
 
   return {
     setPlayingState: (status: boolean) => {
-      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
         if (status) {
-          getQueueController().play();
+          nativeController.play();
         } else {
-          getQueueController().pause();
+          nativeController.pause();
         }
         return;
       }
@@ -42,8 +43,9 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     togglePlayPause: () => {
-      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
-        getQueueController().togglePlayPause();
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.togglePlayPause();
         return;
       }
 
@@ -56,8 +58,9 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     toggleLoop: () => {
-      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
-        getQueueController().toggleLoop();
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.toggleLoop();
         return;
       }
 
@@ -79,8 +82,9 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     setProgress: (progress: number) => {
-      if (getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android") {
-        getQueueController().seek(progress);
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.seek(progress);
         return;
       }
 

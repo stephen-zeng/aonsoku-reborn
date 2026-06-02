@@ -1,10 +1,10 @@
 import { RefObject, useCallback, useState } from "react";
 import { seekPlaybackTarget } from "@/player/playback/backend-registry";
+import { getNativeQueueController } from "@/player/queue-controller";
 import {
   useIsRemoteControlActive,
   usePlayerActions,
 } from "@/store/player.store";
-import { getRuntime } from "@/utils/capabilities";
 import { logger } from "@/utils/logger";
 
 interface UseAudioSeekingOptions {
@@ -47,7 +47,7 @@ export function useAudioSeeking({ audioRef }: UseAudioSeekingOptions) {
       setLocalProgress(amount);
       setIsLocalSeeking(false);
       setIsScrubbing(false);
-      if (!isRemoteControlActive && getRuntime() !== "capacitor-ios" && getRuntime() !== "capacitor-android") {
+      if (!isRemoteControlActive && !getNativeQueueController()) {
         updateAudioCurrentTime(amount);
       }
     },
