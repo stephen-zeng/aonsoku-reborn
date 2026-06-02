@@ -21,6 +21,7 @@ export async function nativeHttpClient<T>(
       path,
       method: (options.method as "GET" | "POST" | "PUT" | "DELETE") ?? "GET",
       query,
+      body: typeof options.body === "string" ? options.body : undefined,
     });
 
     return {
