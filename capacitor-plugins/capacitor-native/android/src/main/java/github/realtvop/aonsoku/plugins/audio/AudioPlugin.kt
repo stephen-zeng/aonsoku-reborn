@@ -1655,7 +1655,7 @@ class AudioPlugin : Plugin() {
             try {
                 val service = awaitService()
                 mainHandler.post {
-                    service.setLikeActive(active)
+                    service.isLikeActive = active
                     call.resolve()
                 }
             } catch (_: TimeoutCancellationException) {
