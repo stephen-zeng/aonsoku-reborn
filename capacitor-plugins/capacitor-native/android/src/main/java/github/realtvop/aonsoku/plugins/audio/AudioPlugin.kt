@@ -1,6 +1,7 @@
 package github.realtvop.aonsoku.plugins.audio
 
 import android.Manifest
+import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -87,6 +88,21 @@ class AudioPlugin : Plugin() {
     private val db by lazy { AonsokuDatabase.getInstance(context) }
 
     private var headphoneReceiver: HeadphoneUnplugReceiver? = null
+    private var volumeReceiver: VolumeChangeReceiver? = null
+
+    private inner class VolumeChangeReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == "android.media.VOLUME_CHANGED_ACTION") {
+                val streamType = intent.getIntExtra("android.media.EXTRA_VOLUME_STREAM_TYPE", -1)
+                if (streamType == AudioManager.STREAM_MUSIC) {
+                    val volume = getSystemVolumePercentage()
+                    notifyListeners("systemVolumeChanged", JSObject().apply {
+                        put("volume", volume)
+                    })
+                }
+            }
+        }
+    }
 
     private inner class HeadphoneUnplugReceiver : android.content.BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -231,6 +247,7 @@ class AudioPlugin : Plugin() {
         bindPlaybackService()
         registerAudioFocusListener()
         registerHeadphoneReceiver()
+        registerVolumeReceiver()
     }
 
     override fun handleOnDestroy() {
@@ -244,6 +261,7 @@ class AudioPlugin : Plugin() {
         cancelSleepTimerInternal()
         unregisterAudioFocusListener()
         unregisterHeadphoneReceiver()
+        unregisterVolumeReceiver()
         pluginScope.cancel()
         super.handleOnDestroy()
     }
@@ -296,6 +314,33 @@ class AudioPlugin : Plugin() {
             }
         }
         headphoneReceiver = null
+    }
+
+    private fun registerVolumeReceiver() {
+        val receiver = VolumeChangeReceiver()
+        volumeReceiver = receiver
+        if (Build.VERSION.SDK_INT >= 33) {
+            context.registerReceiver(receiver, IntentFilter("android.media.VOLUME_CHANGED_ACTION"), Context.RECEIVER_EXPORTED)
+        } else {
+            context.registerReceiver(receiver, IntentFilter("android.media.VOLUME_CHANGED_ACTION"))
+        }
+    }
+
+    private fun unregisterVolumeReceiver() {
+        volumeReceiver?.let { receiver ->
+            try {
+                context.unregisterReceiver(receiver)
+            } catch (_: Exception) {
+            }
+        }
+        volumeReceiver = null
+    }
+
+    private fun getSystemVolumePercentage(): Double {
+        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val current = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+        val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        return if (max > 0) current.toDouble() / max.toDouble() else 0.0
     }
 
     // MARK: - Scrobble
@@ -1535,12 +1580,27 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun setSystemVolume(call: PluginCall) {
-        AonsokuNativeError.rejectUnimplemented(call, pluginName, "setSystemVolume")
+        val value = call.getDouble("value") ?: run {
+            call.reject("Missing value parameter")
+            return
+        }
+        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        val targetVolume = (value * max).toInt()
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVolume, 0)
+
+        val actualVolume = getSystemVolumePercentage()
+        call.resolve(JSObject().apply {
+            put("volume", actualVolume)
+        })
     }
 
     @PluginMethod
     fun getSystemVolume(call: PluginCall) {
-        AonsokuNativeError.rejectUnimplemented(call, pluginName, "getSystemVolume")
+        val actualVolume = getSystemVolumePercentage()
+        call.resolve(JSObject().apply {
+            put("volume", actualVolume)
+        })
     }
 
     @PluginMethod
