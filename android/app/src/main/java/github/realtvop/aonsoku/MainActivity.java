@@ -102,11 +102,9 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
         });
     }
 
-    public static boolean isVolumeHUDDisabled = false;
-
     @Override
     public boolean dispatchKeyEvent(android.view.KeyEvent event) {
-        if (isVolumeHUDDisabled) {
+        if (AudioPlugin.isVolumeHUDDisabled()) {
             int keyCode = event.getKeyCode();
             if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP || keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN) {
                 if (event.getAction() == android.view.KeyEvent.ACTION_DOWN) {
