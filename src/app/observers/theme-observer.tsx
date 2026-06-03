@@ -16,13 +16,12 @@ const colorMap: Record<string, string[]> = {
   colorOnPrimary: ["--primary-foreground"],
   colorSecondary: ["--secondary"],
   colorOnSecondary: ["--secondary-foreground"],
-  colorSurface: ["--background", "--background-foreground"], // M3 Standard: Surface as base background
+  colorSurfaceContainer: ["--background", "--background-foreground"], // M3 Modern: Container as main background (softer)
   colorOnSurface: ["--foreground", "--card-foreground", "--popover-foreground"],
-  colorSurfaceContainerLow: ["--card", "--popover"],
-  colorSurfaceContainer: ["--muted"],
-  colorSurfaceContainerHigh: ["--accent"],
+  colorSurfaceContainerHigh: ["--card", "--popover"], // Subtle elevation
+  colorSurfaceContainerHighest: ["--accent", "--muted"], // Focus/Accent areas
   colorOnSurfaceVariant: ["--muted-foreground", "--accent-foreground"],
-  colorSurfaceContainerHighest: ["--border", "--input"],
+  colorOutlineVariant: ["--border", "--input"], // Standard soft border
 };
 
 function hexToHslComponents(hex: string): string {
