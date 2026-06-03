@@ -24,7 +24,6 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionResult
-import github.realtvop.aonsoku.MainActivity
 import github.realtvop.aonsoku.plugins.debug.NativeLogger
 import github.realtvop.aonsoku.plugins.preferences.NativePreferencesStore
 import kotlinx.coroutines.CoroutineScope
@@ -365,9 +364,9 @@ class PlaybackService : MediaSessionService() {
             text = "Playing"
         }
 
-        val openIntent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
+        val openIntent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        } ?: Intent()
         val contentPendingIntent = PendingIntent.getActivity(
             this,
             REQUEST_CODE_CONTENT,
@@ -415,8 +414,11 @@ class PlaybackService : MediaSessionService() {
         val playPauseIcon = if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
         val playPauseLabel = if (isPlaying) "Pause" else "Play"
 
+        val iconResId = resources.getIdentifier("ic_notification", "drawable", packageName)
+        val icon = if (iconResId != 0) iconResId else android.R.drawable.ic_menu_info_details
+
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(icon)
             .setContentTitle(title)
             .setContentText(text)
             .setSubText(subText)
