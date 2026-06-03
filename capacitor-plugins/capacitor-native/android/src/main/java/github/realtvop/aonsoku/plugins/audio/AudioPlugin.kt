@@ -1650,7 +1650,18 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun setLikeActive(call: PluginCall) {
-        call.resolve()
+        val active = call.getBoolean("active", false) ?: false
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    service.setLikeActive(active)
+                    call.resolve()
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
+            }
+        }
     }
 
     companion object {

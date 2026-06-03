@@ -50,12 +50,16 @@ class PlaybackService : MediaSessionService() {
         const val ACTION_SKIP_NEXT = "github.realtvop.aonsoku.action.SKIP_NEXT"
         const val ACTION_SKIP_PREV = "github.realtvop.aonsoku.action.SKIP_PREV"
         const val ACTION_STOP = "github.realtvop.aonsoku.action.STOP"
+        const val ACTION_TOGGLE_SHUFFLE = "github.realtvop.aonsoku.action.TOGGLE_SHUFFLE"
+        const val ACTION_TOGGLE_LIKE = "github.realtvop.aonsoku.action.TOGGLE_LIKE"
 
         private const val REQUEST_CODE_CONTENT = 1000
         private const val REQUEST_CODE_PLAY_PAUSE = 1001
         private const val REQUEST_CODE_SKIP_NEXT = 1002
         private const val REQUEST_CODE_SKIP_PREV = 1003
         private const val REQUEST_CODE_STOP = 1004
+        private const val REQUEST_CODE_TOGGLE_SHUFFLE = 1005
+        private const val REQUEST_CODE_TOGGLE_LIKE = 1006
     }
 
     private var mediaSession: MediaSession? = null
@@ -67,6 +71,7 @@ class PlaybackService : MediaSessionService() {
     var savedRestoreTime: Double? = null
     var currentSongMetadata: MediaMetadata? = null
 
+    var isLikeActive: Boolean = false
     var sleepTimerMode: String = "duration"
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -411,10 +416,18 @@ class PlaybackService : MediaSessionService() {
         )
 
         val style = MediaStyle()
-            .setShowActionsInCompactView(0, 1, 2)
+            .setShowActionsInCompactView(1, 2, 3)
         if (session != null) {
             style.setMediaSession(session.sessionCompatToken)
         }
+
+        val shuffleIntent = Intent(this, PlaybackService::class.java).setAction(ACTION_TOGGLE_SHUFFLE)
+        val shufflePendingIntent = PendingIntent.getService(
+            this,
+            REQUEST_CODE_TOGGLE_SHUFFLE,
+            shuffleIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
 
         val prevIntent = Intent(this, PlaybackService::class.java).setAction(ACTION_SKIP_PREV)
         val prevPendingIntent = PendingIntent.getService(
@@ -440,8 +453,24 @@ class PlaybackService : MediaSessionService() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
+        val likeIntent = Intent(this, PlaybackService::class.java).setAction(ACTION_TOGGLE_LIKE)
+        val likePendingIntent = PendingIntent.getService(
+            this,
+            REQUEST_CODE_TOGGLE_LIKE,
+            likeIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
         val playPauseIcon = if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
         val playPauseLabel = if (isPlaying) "Pause" else "Play"
+
+        val shuffleIconName = if (queueEngine.isShuffleActive) "ic_shuffle_on" else "ic_shuffle"
+        val shuffleIconResId = resources.getIdentifier(shuffleIconName, "drawable", packageName)
+        val shuffleIcon = if (shuffleIconResId != 0) shuffleIconResId else android.R.drawable.ic_menu_share
+
+        val likeIconName = if (isLikeActive) "ic_favorite" else "ic_favorite_border"
+        val likeIconResId = resources.getIdentifier(likeIconName, "drawable", packageName)
+        val likeIcon = if (likeIconResId != 0) likeIconResId else android.R.drawable.btn_star
 
         val iconResId = resources.getIdentifier("icon_transparent", "drawable", packageName)
         val icon = if (iconResId != 0) iconResId else android.R.drawable.ic_menu_info_details
@@ -458,9 +487,11 @@ class PlaybackService : MediaSessionService() {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
             .setStyle(style)
+            .addAction(shuffleIcon, "Shuffle", shufflePendingIntent)
             .addAction(android.R.drawable.ic_media_previous, "Previous", prevPendingIntent)
             .addAction(playPauseIcon, playPauseLabel, playPausePendingIntent)
             .addAction(android.R.drawable.ic_media_next, "Next", nextPendingIntent)
+            .addAction(likeIcon, "Like", likePendingIntent)
 
         return builder.build()
     }
@@ -562,6 +593,12 @@ class PlaybackService : MediaSessionService() {
                     emitRemoteCommand("previous")
                 }
                 updateNotification()
+            }
+            ACTION_TOGGLE_SHUFFLE -> {
+                emitRemoteCommand("shuffle")
+            }
+            ACTION_TOGGLE_LIKE -> {
+                emitRemoteCommand("like")
             }
             ACTION_STOP -> {
                 player?.stop()
@@ -760,6 +797,12 @@ class PlaybackService : MediaSessionService() {
     fun setShuffle(enabled: Boolean) {
         queueEngine.setShuffleActive(enabled)
         persistence.markStateDirty()
+        updateNotification()
+    }
+
+    fun setLikeActive(active: Boolean) {
+        isLikeActive = active
+        updateNotification()
     }
 
     fun markAsShuffled(originalSongs: List<QueueSong>) {

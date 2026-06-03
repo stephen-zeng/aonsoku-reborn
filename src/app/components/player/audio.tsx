@@ -117,6 +117,7 @@ export function AudioPlayer({
     playNextSong,
     playPrevSong,
     starCurrentSong,
+    toggleShuffle,
   } = usePlayerActions();
 
   const getPlaybackBackendEntry = useCallback(
@@ -548,6 +549,7 @@ export function AudioPlayer({
           });
         },
         starCurrentSong,
+        toggleShuffle,
       });
     },
     [
@@ -557,6 +559,7 @@ export function AudioPlayer({
       seekAudio,
       starCurrentSong,
       togglePlayPause,
+      toggleShuffle,
     ],
   );
 

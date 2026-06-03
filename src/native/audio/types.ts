@@ -259,7 +259,8 @@ export type NativeAudioRemoteCommand =
   | "next"
   | "previous"
   | "seek"
-  | "like";
+  | "like"
+  | "shuffle";
 
 export interface NativeAudioRemoteCommandEvent {
   requestId?: string;

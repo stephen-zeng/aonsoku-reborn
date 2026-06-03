@@ -66,7 +66,8 @@ export type PlaybackRemoteCommand =
   | "next"
   | "previous"
   | "seek"
-  | "like";
+  | "like"
+  | "shuffle";
 
 export interface PlaybackRemoteCommandEvent {
   command: PlaybackRemoteCommand;
@@ -93,6 +94,16 @@ export type PlaybackBackendListener<TEvent extends PlaybackBackendEvent> = (
 export type UnsubscribePlaybackEvent = () => void;
 
 export type PlaybackRepeatMode = "off" | "one" | "all";
+
+export interface PlaybackRemoteCommandContext {
+  isPlaying: () => boolean;
+  togglePlayPause: () => void;
+  playNextSong: () => void;
+  playPrevSong: () => void;
+  seek: (position: number) => void;
+  starCurrentSong: () => void;
+  toggleShuffle: () => void;
+}
 
 export interface PlaybackBackend {
   load(
