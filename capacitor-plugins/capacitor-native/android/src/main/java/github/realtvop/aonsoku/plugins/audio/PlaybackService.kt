@@ -27,9 +27,14 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import android.os.Bundle
+import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
+import com.google.common.util.concurrent.Futures
+import com.google.common.util.concurrent.ListenableFuture
 import github.realtvop.aonsoku.plugins.debug.NativeLogger
 import github.realtvop.aonsoku.plugins.preferences.NativePreferencesStore
 import kotlinx.coroutines.CoroutineScope
@@ -75,8 +80,40 @@ class PlaybackService : MediaSessionService() {
         set(value) {
             field = value
             updateNotification()
+            mediaSession?.setCustomLayout(getCustomLayoutButtons())
         }
     var sleepTimerMode: String = "duration"
+
+    private val CUSTOM_COMMAND_TOGGLE_SHUFFLE by lazy {
+        SessionCommand(ACTION_TOGGLE_SHUFFLE, Bundle.EMPTY)
+    }
+    private val CUSTOM_COMMAND_TOGGLE_LIKE by lazy {
+        SessionCommand(ACTION_TOGGLE_LIKE, Bundle.EMPTY)
+    }
+
+    private fun getCustomLayoutButtons(): List<CommandButton> {
+        val shuffleIconName = if (queueEngine.isShuffleActive) "ic_shuffle_on" else "ic_shuffle"
+        val shuffleIconResId = resources.getIdentifier(shuffleIconName, "drawable", packageName)
+        val shuffleIcon = if (shuffleIconResId != 0) shuffleIconResId else android.R.drawable.ic_menu_share
+
+        val likeIconName = if (isLikeActive) "ic_favorite" else "ic_favorite_border"
+        val likeIconResId = resources.getIdentifier(likeIconName, "drawable", packageName)
+        val likeIcon = if (likeIconResId != 0) likeIconResId else android.R.drawable.btn_star
+
+        val shuffleButton = CommandButton.Builder()
+            .setSessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE)
+            .setDisplayName("Shuffle")
+            .setIconResId(shuffleIcon)
+            .build()
+
+        val likeButton = CommandButton.Builder()
+            .setSessionCommand(CUSTOM_COMMAND_TOGGLE_LIKE)
+            .setDisplayName("Like")
+            .setIconResId(likeIcon)
+            .build()
+
+        return listOf(shuffleButton, likeButton)
+    }
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val preferencesStore by lazy { NativePreferencesStore(this) }
@@ -300,6 +337,47 @@ class PlaybackService : MediaSessionService() {
         })
 
         val callback = object : MediaSession.Callback {
+            override fun onConnect(
+                session: MediaSession,
+                controller: MediaSession.ControllerInfo
+            ): MediaSession.ConnectionResult {
+                val connectionResult = super.onConnect(session, controller)
+                val availableSessionCommands = connectionResult.availableSessionCommands.buildUpon()
+                    .add(CUSTOM_COMMAND_TOGGLE_SHUFFLE)
+                    .add(CUSTOM_COMMAND_TOGGLE_LIKE)
+                    .build()
+                return MediaSession.ConnectionResult.accept(
+                    availableSessionCommands,
+                    connectionResult.availablePlayerCommands
+                )
+            }
+
+            override fun onPostConnect(session: MediaSession, controller: MediaSession.ControllerInfo) {
+                super.onPostConnect(session, controller)
+                session.setCustomLayout(controller, getCustomLayoutButtons())
+            }
+
+            override fun onCustomCommand(
+                session: MediaSession,
+                controller: MediaSession.ControllerInfo,
+                customCommand: SessionCommand,
+                args: Bundle
+            ): ListenableFuture<SessionResult> {
+                when (customCommand.customAction) {
+                    ACTION_TOGGLE_SHUFFLE -> {
+                        emitRemoteCommand("shuffle")
+                        session.setCustomLayout(getCustomLayoutButtons())
+                        return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                    }
+                    ACTION_TOGGLE_LIKE -> {
+                        emitRemoteCommand("like")
+                        session.setCustomLayout(getCustomLayoutButtons())
+                        return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                    }
+                }
+                return super.onCustomCommand(session, controller, customCommand, args)
+            }
+
             override fun onPlayerCommandRequest(
                 session: MediaSession,
                 controller: MediaSession.ControllerInfo,
@@ -820,6 +898,7 @@ class PlaybackService : MediaSessionService() {
         queueEngine.setShuffleActive(enabled)
         persistence.markStateDirty()
         updateNotification()
+        mediaSession?.setCustomLayout(getCustomLayoutButtons())
     }
 
     fun markAsShuffled(originalSongs: List<QueueSong>) {
