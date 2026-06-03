@@ -250,6 +250,17 @@ class AudioPlugin : Plugin() {
         registerVolumeReceiver()
     }
 
+    override fun handleOnStop() {
+        super.handleOnStop()
+        pluginScope.launch {
+            val credentials = credentialStore.retrieve()
+            if (credentials != null) {
+                scrobbleSubmitter.submitPending(scrobbleBuffer, credentials)
+            }
+            playbackService?.persistence?.flushNow()
+        }
+    }
+
     override fun handleOnDestroy() {
         playbackService?.removeListener(serviceListener)
         playbackService?.removeDownloadListener(downloadListener)

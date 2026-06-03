@@ -18,7 +18,7 @@ class NativeScrobbleSubmitter(private val httpClient: SubsonicHttpClient) {
                 extraQuery = mapOf(
                     "id" to songId,
                     "submission" to "false",
-                    "time" to (Date().time * 1000).toLong().toString(),
+                    "time" to Date().time.toString(),
                 ),
             )
         } catch (_: Exception) {
