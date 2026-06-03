@@ -3,6 +3,7 @@ package github.realtvop.aonsoku.plugins.debug
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.ServiceConnection
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -96,6 +97,10 @@ class DebugActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val isTabletResId = resources.getIdentifier("is_tablet", "bool", packageName)
+        if (isTabletResId != 0 && !resources.getBoolean(isTabletResId)) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
         setTheme(com.google.android.material.R.style.Theme_Material3_DayNight_NoActionBar)
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
