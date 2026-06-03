@@ -41,6 +41,7 @@ function useCoverArtCacheLookup({
   const isOffline = useIsOfflineMode();
   const isPrimaryCached = useIsCoverCached(primaryCacheKey ?? "__none__");
   const [cachedUrl, setCachedUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const pendingAutoCache = useRef<string | null>(null);
   const prevObjectUrl = useRef<string | null>(null);
 
@@ -53,11 +54,13 @@ function useCoverArtCacheLookup({
   useEffect(() => {
     if (cacheKeys.length === 0) {
       setCachedUrl(null);
+      setIsLoading(false);
       return;
     }
 
     let cancelled = false;
     let objectUrl: string | null = null;
+    setIsLoading(true);
 
     async function loadCache() {
       for (const key of cacheKeys) {
@@ -70,6 +73,7 @@ function useCoverArtCacheLookup({
             }
             objectUrl = url;
             setCachedUrl(url);
+            setIsLoading(false);
             return;
           }
         } catch (err) {
@@ -79,6 +83,7 @@ function useCoverArtCacheLookup({
 
       if (!cancelled) {
         setCachedUrl(null);
+        setIsLoading(false);
         if (
           autoCache &&
           !isOffline &&
@@ -126,7 +131,7 @@ function useCoverArtCacheLookup({
     };
   }, []);
 
-  return { cachedUrl, isOffline };
+  return { cachedUrl, isOffline, isLoading };
 }
 
 export function useCachedCoverUrl(
@@ -176,7 +181,7 @@ export function CachedImage({
     albumId,
     size: coverArtSize,
   });
-  const { cachedUrl: cachedSrc, isOffline } = useCoverArtCacheLookup({
+  const { cachedUrl: cachedSrc, isOffline, isLoading } = useCoverArtCacheLookup({
     coverArtId,
     coverArtType,
     albumId,
@@ -204,9 +209,24 @@ export function CachedImage({
 
   const showCachedImage = cachedSrc && !cachedSrcFailed;
 
+  // Render a grey background skeleton during lookup if coverArtId is provided
+  if (isLoading && coverArtId) {
+    return (
+      <div
+        className={`${props.className ?? ""} bg-skeleton`}
+        style={{
+          width: props.width,
+          height: props.height,
+          ...props.style,
+        }}
+        data-testid="cached-image-skeleton"
+      />
+    );
+  }
+
   let resolvedSrc = showCachedImage ? cachedSrc : (directSrc ?? generatedSrc);
 
-  if (isOffline || resolvedSrc === failedNetworkSrc) {
+  if ((isOffline && !showCachedImage) || resolvedSrc === failedNetworkSrc) {
     resolvedSrc = defaultArtUrl;
   }
 
@@ -250,7 +270,7 @@ export function CachedImage({
       >
         <img
           alt={props.alt}
-          className={`${props.className ?? ""} transition-opacity duration-300`}
+          className={`${props.className ?? ""} bg-skeleton transition-opacity duration-300`}
           crossOrigin={props.crossOrigin}
           data-testid={props["data-testid"]}
           height={props.height}
@@ -273,7 +293,7 @@ export function CachedImage({
       src={resolvedSrc}
       onError={handleError}
       onLoad={handleLoad}
-      className={`${props.className ?? ""} transition-opacity duration-300`}
+      className={`${props.className ?? ""} bg-skeleton transition-opacity duration-300`}
       style={{ ...props.style, opacity: isLoaded ? 1 : 0 }}
     />
   );
