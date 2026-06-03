@@ -509,9 +509,9 @@ class AudioPlugin : Plugin() {
                     })
                 }
 
-                if (!player.isPlaying) {
+                if (!player.playWhenReady && !player.isPlaying) {
                     emitPlaybackState("paused", requestId)
-                } else {
+                } else if (player.isPlaying) {
                     emitPlaybackState("playing", requestId)
                 }
             }
