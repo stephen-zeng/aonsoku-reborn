@@ -421,6 +421,7 @@ class PlaybackService : MediaSessionService() {
 
         mediaSession = MediaSession.Builder(this, player!!)
             .setCallback(callback)
+            .setCustomLayout(getCustomLayoutButtons())
             .build()
 
         showNotification()
@@ -639,6 +640,32 @@ class PlaybackService : MediaSessionService() {
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
         return mediaSession
+    }
+
+    @OptIn(UnstableApi::class)
+    override fun onUpdateNotification(session: MediaSession, startInForegroundRequired: Boolean) {
+        val isPlaying = player?.isPlaying ?: false
+        val notification = buildNotification(isPlaying)
+        if (startInForegroundRequired || !isForegroundStarted) {
+            try {
+                startForeground(NOTIFICATION_ID, notification)
+                isForegroundStarted = true
+            } catch (e: Exception) {
+                NativeLogger.warn(
+                    "startForeground failed in onUpdateNotification: ${e.message}",
+                    "playback-service"
+                )
+                val manager = getSystemService(NotificationManager::class.java)
+                try {
+                    manager.notify(NOTIFICATION_ID, notification)
+                } catch (_: Exception) {}
+            }
+        } else {
+            val manager = getSystemService(NotificationManager::class.java)
+            try {
+                manager.notify(NOTIFICATION_ID, notification)
+            } catch (_: Exception) {}
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder? {
