@@ -358,7 +358,11 @@ class BridgePlugin : Plugin() {
                             if (isDark) android.content.res.Configuration.UI_MODE_NIGHT_YES else android.content.res.Configuration.UI_MODE_NIGHT_NO
 
                     val nightContext = context.createConfigurationContext(config)
-                    val dynamicContext = DynamicColors.wrapContextIfAvailable(nightContext)
+                    val themedContext = android.view.ContextThemeWrapper(
+                        nightContext,
+                        com.google.android.material.R.style.Theme_Material3_DayNight
+                    )
+                    val dynamicContext = DynamicColors.wrapContextIfAvailable(themedContext)
 
                     val colorsObj = JSObject().apply {
                         val attrs = mapOf(
