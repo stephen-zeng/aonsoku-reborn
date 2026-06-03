@@ -549,7 +549,7 @@ class AudioPlugin : Plugin() {
     private val progressRunnable = object : Runnable {
         override fun run() {
             emitProgress()
-            mainHandler.postDelayed(this, 500)
+            mainHandler.postDelayed(this, 250)
         }
     }
 
