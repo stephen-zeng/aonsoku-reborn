@@ -1173,6 +1173,8 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun setVolumeHUDEnabled(call: PluginCall) {
+        val enabled = call.getBoolean("enabled", true) ?: true
+        github.realtvop.aonsoku.MainActivity.isVolumeHUDDisabled = !enabled
         call.resolve()
     }
 

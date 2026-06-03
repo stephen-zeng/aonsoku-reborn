@@ -101,4 +101,26 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
             }
         });
     }
+
+    public static boolean isVolumeHUDDisabled = false;
+
+    @Override
+    public boolean dispatchKeyEvent(android.view.KeyEvent event) {
+        if (isVolumeHUDDisabled) {
+            int keyCode = event.getKeyCode();
+            if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP || keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN) {
+                if (event.getAction() == android.view.KeyEvent.ACTION_DOWN) {
+                    android.media.AudioManager audioManager = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
+                    if (audioManager != null) {
+                        int direction = (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) 
+                            ? android.media.AudioManager.ADJUST_RAISE 
+                            : android.media.AudioManager.ADJUST_LOWER;
+                        audioManager.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC, direction, 0);
+                    }
+                }
+                return true;
+            }
+        }
+        return super.dispatchKeyEvent(event);
+    }
 }
