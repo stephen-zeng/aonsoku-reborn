@@ -206,6 +206,7 @@ export class NativeQueueController implements QueueController {
 
       const nativeSongs = shuffledSongs.map(songToNativeQueueSong);
       const originalNativeSongs = songs.map(songToNativeQueueSong);
+      this.#nativeDrivenTransition = true;
       this.#plugin
         .setContextQueue({
           songs: nativeSongs,
@@ -260,6 +261,7 @@ export class NativeQueueController implements QueueController {
       }
 
       const nativeSongs = songs.map(songToNativeQueueSong);
+      this.#nativeDrivenTransition = true;
       this.#plugin
         .setContextQueue({
           songs: nativeSongs,

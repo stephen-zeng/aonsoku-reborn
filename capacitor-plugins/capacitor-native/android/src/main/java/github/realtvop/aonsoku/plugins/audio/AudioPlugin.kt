@@ -1183,6 +1183,11 @@ class AudioPlugin : Plugin() {
         pluginScope.launch {
             try {
                 val service = awaitService()
+                // Set isQueueEngineActive early to prevent a concurrent load()
+                // call (triggered by Zustand → React re-render → src change →
+                // backend.load()) from also playing on the same ExoPlayer.
+                // Otherwise both loadMediaAndPlay() and loadSong() conflict.
+                service.isQueueEngineActive = true
                 mainHandler.post {
                     repeatMode?.let { service.setRepeatMode(it) }
                     service.setContextQueue(songs, currentIndex, autoplay, startTime, sourceId, sourceName)

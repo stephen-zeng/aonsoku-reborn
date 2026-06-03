@@ -13,7 +13,8 @@ const REMOVE_DEBOUNCE_MS = 500;
 
 function isMediaSessionSupported(): boolean {
   if (typeof navigator === "undefined") return false;
-  if (!("mediaSession" in navigator) || navigator.mediaSession === null) return false;
+  if (!("mediaSession" in navigator) || navigator.mediaSession === null)
+    return false;
   // On Android native, the ExoPlayer MediaSession handles system-level
   // controls. navigator.mediaSession would conflict with it.
   if (getRuntime() === "capacitor-android") return false;
