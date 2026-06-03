@@ -494,6 +494,7 @@ class AudioPlugin : Plugin() {
                     put("isBuffering", true)
                     put("requestId", requestId ?: JSONObject.NULL)
                 })
+                emitPlaybackState("loading", requestId)
             }
             Player.STATE_READY -> {
                 notifyListeners("bufferingChanged", JSObject().apply {
@@ -532,11 +533,13 @@ class AudioPlugin : Plugin() {
                 }
             }
             Player.STATE_IDLE -> {
-                notifyListeners("bufferingChanged", JSObject().apply {
-                    put("isBuffering", false)
-                    put("requestId", requestId ?: JSONObject.NULL)
-                })
-                emitPlaybackState("idle", requestId)
+                if (player.playbackState == Player.STATE_IDLE) {
+                    notifyListeners("bufferingChanged", JSObject().apply {
+                        put("isBuffering", false)
+                        put("requestId", requestId ?: JSONObject.NULL)
+                    })
+                    emitPlaybackState("idle", requestId)
+                }
             }
         }
     }
@@ -551,7 +554,9 @@ class AudioPlugin : Plugin() {
             val player = playbackService?.getPlayer()
             if (player != null) {
                 if (player.playbackState != Player.STATE_ENDED && player.playbackState != Player.STATE_IDLE) {
-                    emitPlaybackState("paused", requestId)
+                    if (!player.playWhenReady) {
+                        emitPlaybackState("paused", requestId)
+                    }
                 }
             }
         }
