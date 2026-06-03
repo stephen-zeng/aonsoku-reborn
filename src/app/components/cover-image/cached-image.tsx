@@ -167,6 +167,7 @@ export function CachedImage({
   src: directSrc,
   autoCache = true,
   onError,
+  onLoad,
   ...props
 }: CachedImageProps) {
   const generatedSrc = useCoverArtUrlFromSongPreference({
@@ -184,6 +185,7 @@ export function CachedImage({
   });
   const [failedNetworkSrc, setFailedNetworkSrc] = useState<string | null>(null);
   const [cachedSrcFailed, setCachedSrcFailed] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const cacheKeys = useMemo(
     () => resolveCacheKeys(coverArtId, coverArtType, albumId),
@@ -206,6 +208,17 @@ export function CachedImage({
   if (isOffline || resolvedSrc === failedNetworkSrc) {
     resolvedSrc = defaultArtUrl;
   }
+
+  // Reset loaded status on source change to ensure smooth transition and hide placeholder during load
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — reset loaded status on source change
+  useEffect(() => {
+    setIsLoaded(false);
+  }, [resolvedSrc]);
+
+  const handleLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    setIsLoaded(true);
+    onLoad?.(e as never);
+  };
 
   const handleError: React.ReactEventHandler<HTMLImageElement> = (e) => {
     const currentSrc = resolvedSrc;
@@ -236,16 +249,16 @@ export function CachedImage({
       >
         <img
           alt={props.alt}
-          className={props.className}
+          className={`${props.className ?? ""} transition-opacity duration-300`}
           crossOrigin={props.crossOrigin}
           data-testid={props["data-testid"]}
           height={props.height}
           id={props.id}
           loading={props.loading}
           onError={handleError}
-          onLoad={props.onLoad}
+          onLoad={handleLoad}
           src={cachedSrc}
-          style={{ opacity: 1 }}
+          style={{ ...props.style, opacity: isLoaded ? 1 : 0 }}
           title={props.title}
           width={props.width}
         />
@@ -253,5 +266,14 @@ export function CachedImage({
     );
   }
 
-  return <LazyLoadImage {...props} src={resolvedSrc} onError={handleError} />;
+  return (
+    <LazyLoadImage
+      {...props}
+      src={resolvedSrc}
+      onError={handleError}
+      onLoad={handleLoad}
+      className={`${props.className ?? ""} transition-opacity duration-300`}
+      style={{ ...props.style, opacity: isLoaded ? 1 : 0 }}
+    />
+  );
 }
