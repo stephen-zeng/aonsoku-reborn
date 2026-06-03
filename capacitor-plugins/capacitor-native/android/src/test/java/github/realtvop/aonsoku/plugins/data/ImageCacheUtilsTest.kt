@@ -1,13 +1,36 @@
 package github.realtvop.aonsoku.plugins.data
 
+import android.util.Base64
 import github.realtvop.aonsoku.plugins.data.image.ImageCacheUtils
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
+import org.mockito.MockedStatic
+import org.mockito.Mockito
 
 class ImageCacheUtilsTest {
+    private lateinit var mockedBase64: MockedStatic<Base64>
+
+    @Before
+    fun setUp() {
+        mockedBase64 = Mockito.mockStatic(Base64::class.java)
+        mockedBase64.`when`<String> { 
+            Base64.encodeToString(Mockito.any(ByteArray::class.java), Mockito.anyInt()) 
+        }.thenAnswer { invocation ->
+            val input = invocation.getArgument<ByteArray>(0)
+            java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(input)
+        }
+    }
+
+    @After
+    fun tearDown() {
+        mockedBase64.close()
+    }
+
     @Test
     fun cacheIdIsBase64UrlSafeNoPadding() {
         val id = ImageCacheUtils.cacheId(forCoverArtId = "al-123")

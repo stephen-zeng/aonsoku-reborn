@@ -1,11 +1,32 @@
 package github.realtvop.aonsoku.plugins.debug
 
+import android.util.Log
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
+import org.mockito.MockedStatic
+import org.mockito.Mockito
 
 class NativeLoggerTest {
+    private lateinit var mockedLog: MockedStatic<Log>
+
+    @Before
+    fun setUp() {
+        mockedLog = Mockito.mockStatic(Log::class.java)
+        mockedLog.`when`<Int> { Log.d(Mockito.anyString(), Mockito.anyString()) }.thenReturn(0)
+        mockedLog.`when`<Int> { Log.i(Mockito.anyString(), Mockito.anyString()) }.thenReturn(0)
+        mockedLog.`when`<Int> { Log.w(Mockito.anyString(), Mockito.anyString()) }.thenReturn(0)
+        mockedLog.`when`<Int> { Log.e(Mockito.anyString(), Mockito.anyString()) }.thenReturn(0)
+    }
+
+    @After
+    fun tearDown() {
+        mockedLog.close()
+    }
+
     @Test
     fun testLogAndRetrieve() {
         NativeLogger.clear()
@@ -49,7 +70,9 @@ class NativeLoggerTest {
     fun testMultipleSources() {
         NativeLogger.clear()
         NativeLogger.info("src1 msg1", "source1")
+        Thread.sleep(2)
         NativeLogger.info("src2 msg1", "source2")
+        Thread.sleep(2)
         NativeLogger.info("src1 msg2", "source1")
 
         val entries = NativeLogger.getEntries()

@@ -1,19 +1,79 @@
 package github.realtvop.aonsoku.plugins.audio
 
 import android.content.Context
+import android.net.Uri
+import android.util.Base64
+import android.util.Log
 import github.realtvop.aonsoku.plugins.bridge.AndroidCredentialStore
 import github.realtvop.aonsoku.plugins.bridge.ServerCredentials
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.mockito.MockedStatic
 import org.mockito.Mockito
 import java.io.File
 
 class NativeSourceResolverTest {
+
+    private lateinit var mockedUri: MockedStatic<Uri>
+    private lateinit var mockedBase64: MockedStatic<Base64>
+    private lateinit var mockedLog: MockedStatic<Log>
+
+    @Before
+    fun setUp() {
+        mockedUri = Mockito.mockStatic(Uri::class.java)
+        mockedUri.`when`<Uri> { Uri.parse(Mockito.anyString()) }.thenAnswer { invocation ->
+            val urlString = invocation.getArgument<String>(0)
+            val mockUri = Mockito.mock(Uri::class.java)
+            Mockito.`when`(mockUri.getQueryParameter(Mockito.anyString())).thenAnswer { paramInvocation ->
+                val paramName = paramInvocation.getArgument<String>(0)
+                val queryIndex = urlString.indexOf('?')
+                if (queryIndex != -1) {
+                    val query = urlString.substring(queryIndex + 1)
+                    val pairs = query.split('&')
+                    for (pair in pairs) {
+                        val idx = pair.indexOf('=')
+                        if (idx != -1) {
+                            val key = pair.substring(0, idx)
+                            val value = pair.substring(idx + 1)
+                            if (key == paramName) {
+                                return@thenAnswer java.net.URLDecoder.decode(value, "UTF-8")
+                            }
+                        }
+                    }
+                }
+                null
+            }
+            mockUri
+        }
+
+        mockedBase64 = Mockito.mockStatic(Base64::class.java)
+        mockedBase64.`when`<String> { 
+            Base64.encodeToString(Mockito.any(ByteArray::class.java), Mockito.anyInt()) 
+        }.thenAnswer { invocation ->
+            val input = invocation.getArgument<ByteArray>(0)
+            java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(input)
+        }
+
+        mockedLog = Mockito.mockStatic(Log::class.java)
+        mockedLog.`when`<Int> { Log.d(Mockito.anyString(), Mockito.anyString()) }.thenReturn(0)
+        mockedLog.`when`<Int> { Log.i(Mockito.anyString(), Mockito.anyString()) }.thenReturn(0)
+        mockedLog.`when`<Int> { Log.w(Mockito.anyString(), Mockito.anyString()) }.thenReturn(0)
+        mockedLog.`when`<Int> { Log.e(Mockito.anyString(), Mockito.anyString()) }.thenReturn(0)
+    }
+
+    @After
+    fun tearDown() {
+        mockedUri.close()
+        mockedBase64.close()
+        mockedLog.close()
+    }
 
     @Rule
     @JvmField

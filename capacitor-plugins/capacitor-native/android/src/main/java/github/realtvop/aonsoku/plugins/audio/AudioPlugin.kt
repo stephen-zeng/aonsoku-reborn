@@ -676,11 +676,12 @@ class AudioPlugin : Plugin() {
                     call.resolve()
                     return@launch
                 }
+                checkAndRequestNotificationPermission(call) {
+                    executeLoad(call)
+                }
             } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
             }
-        }
-        checkAndRequestNotificationPermission(call) {
-            executeLoad(call)
         }
     }
 

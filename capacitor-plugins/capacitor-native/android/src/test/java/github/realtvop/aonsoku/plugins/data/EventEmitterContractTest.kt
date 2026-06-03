@@ -10,13 +10,25 @@ import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 
+open class TestPlugin : Plugin() {
+    public override fun notifyListeners(eventName: String, data: JSObject) {
+        super.notifyListeners(eventName, data)
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun <T> eq(value: T): T = ArgumentMatchers.eq(value) ?: value
+
+@Suppress("UNCHECKED_CAST")
+private fun <T> capture(captor: ArgumentCaptor<T>): T = captor.capture() ?: (JSObject() as T)
+
 class EventEmitterContractTest {
-    private lateinit var plugin: Plugin
+    private lateinit var plugin: TestPlugin
     private lateinit var emitter: EventEmitter
 
     @Before
     fun setUp() {
-        plugin = mock(Plugin::class.java)
+        plugin = mock(TestPlugin::class.java)
         emitter = EventEmitter { event, data -> plugin.notifyListeners(event, data) }
     }
 
@@ -25,9 +37,10 @@ class EventEmitterContractTest {
         val state = mapOf<String, Any?>("phase" to "songs", "tier" to "t3", "isSyncing" to true, "progress" to 50)
 
         emitter.emitSyncStateChanged(state)
+        emitter.forceFlush()
 
         val captor = ArgumentCaptor.forClass(JSObject::class.java)
-        verify(plugin).notifyListeners(ArgumentMatchers.eq("syncStateChanged"), captor.capture())
+        verify(plugin).notifyListeners(eq("syncStateChanged"), capture(captor))
         val captured = captor.value
         assertTrue(captured.has("phase"))
         assertTrue(captured.has("tier"))
@@ -40,7 +53,7 @@ class EventEmitterContractTest {
         emitter.emitDataChanged(tables, "t2")
 
         val captor = ArgumentCaptor.forClass(JSObject::class.java)
-        verify(plugin).notifyListeners(ArgumentMatchers.eq("dataChanged"), captor.capture())
+        verify(plugin).notifyListeners(eq("dataChanged"), capture(captor))
         val captured = captor.value
         assertTrue(captured.has("tables"))
         assertTrue(captured.has("tier"))
@@ -53,7 +66,7 @@ class EventEmitterContractTest {
         emitter.emitSyncStateChanged(state)
 
         val captor = ArgumentCaptor.forClass(JSObject::class.java)
-        verify(plugin).notifyListeners(ArgumentMatchers.eq("syncStateChanged"), captor.capture())
+        verify(plugin).notifyListeners(eq("syncStateChanged"), capture(captor))
         val captured = captor.value
         assertTrue(captured.has("phase"))
     }
@@ -69,7 +82,7 @@ class EventEmitterContractTest {
         emitter.forceFlush()
 
         val captor = ArgumentCaptor.forClass(JSObject::class.java)
-        verify(plugin).notifyListeners(ArgumentMatchers.eq("syncStateChanged"), captor.capture())
+        verify(plugin).notifyListeners(eq("syncStateChanged"), capture(captor))
         val captured = captor.value
         assertTrue(captured.has("phase"))
     }
