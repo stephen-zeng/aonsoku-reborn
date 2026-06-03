@@ -118,6 +118,7 @@ export interface NativeSetContextQueueOptions {
   sourceName?: string | null;
   autoplay?: boolean;
   startTime?: number;
+  repeatMode?: "off" | "one" | "all";
 }
 
 export type NativeQueueSourceId =
@@ -187,6 +188,7 @@ export interface NativeAudioQueueStateChangedEvent {
   currentIndex: number;
   songId: string;
   reason: "next" | "previous" | "ended" | "skip";
+  isInUserQueue: boolean;
 }
 
 export interface NativeAudioQueueContentsChangedEvent {
@@ -318,6 +320,27 @@ export interface NativeSystemVolumeChangedEvent {
   volume: number;
 }
 
+export interface NativeSleepTimerFiredEvent {
+  reason: "duration" | "endOfTrack";
+}
+
+export interface NativeSleepTimerRemainingResult {
+  remainingSeconds: number;
+}
+
+export interface NativeSetSleepTimerOptions {
+  seconds: number;
+  mode: "duration" | "endOfTrack";
+}
+
+export interface NativeResolveSongsResult {
+  songs: Record<string, unknown>[];
+}
+
+export interface NativeMarkAsShuffledOptions {
+  originalSongs: NativeQueueSong[];
+}
+
 export interface NativeAudioEvents {
   playbackStateChanged: NativeAudioPlaybackStateChangedEvent;
   progress: NativeAudioProgressEvent;
@@ -337,6 +360,7 @@ export interface NativeAudioEvents {
   streamCacheCompleted: NativeStreamCacheCompletedEvent;
   bufferComplete: NativeAudioBufferCompleteEvent;
   systemVolumeChanged: NativeSystemVolumeChangedEvent;
+  sleepTimerFired: NativeSleepTimerFiredEvent;
 }
 
 export type NativeAudioEventName = keyof NativeAudioEvents;
@@ -349,6 +373,7 @@ export interface AonsokuNativeAudioPlugin extends Plugin {
   seek(options: NativeAudioSeekOptions): Promise<void>;
   setRepeatMode(options: NativeAudioRepeatModeOptions): Promise<void>;
   setShuffle(options: NativeAudioShuffleOptions): Promise<void>;
+  markAsShuffled(options: NativeMarkAsShuffledOptions): Promise<void>;
   setQueue(options: NativeAudioQueueOptions): Promise<void>;
   skipToNext(): Promise<void>;
   skipToPrevious(): Promise<void>;
@@ -392,6 +417,14 @@ export interface AonsokuNativeAudioPlugin extends Plugin {
   getSystemVolume(): Promise<NativeSystemVolumeResult>;
   setVolumeHUDEnabled(options: { enabled: boolean }): Promise<void>;
   setLikeActive(options: { active: boolean }): Promise<void>;
+
+  // Song Resolution
+  resolveSongs(options: { ids: string[] }): Promise<NativeResolveSongsResult>;
+
+  // Sleep Timer
+  setSleepTimer(options: NativeSetSleepTimerOptions): Promise<void>;
+  cancelSleepTimer(): Promise<void>;
+  getSleepTimerRemaining(): Promise<NativeSleepTimerRemainingResult>;
 
   addListener<TEvent extends NativeAudioEventName>(
     eventName: TEvent,

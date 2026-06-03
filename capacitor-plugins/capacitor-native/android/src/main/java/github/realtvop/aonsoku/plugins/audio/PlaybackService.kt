@@ -109,6 +109,7 @@ class PlaybackService : MediaSessionService() {
         fun onPlaybackStateChanged(state: String)
         fun onEnded(reason: String)
         fun onSleepTimerEndOfTrack()
+        fun onError(code: String, message: String)
     }
 
     private val listeners = mutableListOf<Listener>()
@@ -145,6 +146,10 @@ class PlaybackService : MediaSessionService() {
 
     private fun emitSleepTimerEndOfTrack() {
         listeners.forEach { it.onSleepTimerEndOfTrack() }
+    }
+
+    private fun emitError(code: String, message: String) {
+        listeners.forEach { it.onError(code, message) }
     }
 
     inner class LocalBinder : Binder() {
@@ -219,7 +224,7 @@ class PlaybackService : MediaSessionService() {
         newPlayer.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 if (playbackState == Player.STATE_ENDED) {
-                    if (sleepTimerMode == "end-of-track") {
+                    if (sleepTimerMode == "endOfTrack") {
                         sleepTimerMode = "duration"
                         player?.pause()
                         emitPlaybackState("paused")
@@ -250,24 +255,41 @@ class PlaybackService : MediaSessionService() {
                 controller: MediaSession.ControllerInfo,
                 playerCommand: Int
             ): Int {
-                if (playerCommand == Player.COMMAND_SEEK_TO_NEXT) {
-                    if (isQueueEngineActive) {
-                        queueEngine.skipToNext()
+                when (playerCommand) {
+                    Player.COMMAND_SEEK_TO_NEXT -> {
+                        if (isQueueEngineActive) {
+                            queueEngine.skipToNext()
+                            return SessionResult.RESULT_INFO_SKIPPED
+                        }
+                        emitRemoteCommand("next")
                         return SessionResult.RESULT_INFO_SKIPPED
                     }
-                    emitRemoteCommand("next")
-                    return SessionResult.RESULT_INFO_SKIPPED
-                }
-                if (playerCommand == Player.COMMAND_SEEK_TO_PREVIOUS) {
-                    if (isQueueEngineActive) {
-                        val currentTime = (player?.currentPosition ?: 0L) / 1000.0
-                        queueEngine.skipToPrevious(currentTime)
+                    Player.COMMAND_SEEK_TO_PREVIOUS -> {
+                        if (isQueueEngineActive) {
+                            val currentTime = (player?.currentPosition ?: 0L) / 1000.0
+                            queueEngine.skipToPrevious(currentTime)
+                            return SessionResult.RESULT_INFO_SKIPPED
+                        }
+                        emitRemoteCommand("previous")
                         return SessionResult.RESULT_INFO_SKIPPED
                     }
-                    emitRemoteCommand("previous")
-                    return SessionResult.RESULT_INFO_SKIPPED
+                    else -> {
+                        if (!isQueueEngineActive) {
+                            val commandName = when (playerCommand) {
+                                Player.COMMAND_PLAY_PAUSE -> "togglePlayPause"
+                                Player.COMMAND_PLAY -> "play"
+                                Player.COMMAND_PAUSE -> "pause"
+                                Player.COMMAND_SEEK_TO -> "seek"
+                                else -> null
+                            }
+                            if (commandName != null) {
+                                emitRemoteCommand(commandName)
+                                return SessionResult.RESULT_INFO_SKIPPED
+                            }
+                        }
+                        return super.onPlayerCommandRequest(session, controller, playerCommand)
+                    }
                 }
-                return super.onPlayerCommandRequest(session, controller, playerCommand)
             }
         }
 
@@ -372,8 +394,29 @@ class PlaybackService : MediaSessionService() {
         NativeLogger.debug("Loading song: ${song.title} - ${song.artist} (autoplay=$autoplay)", "playback-service")
         val resolver = NativeSourceResolver(this)
         val resolved = resolver.resolveSource(song)
-        val url = resolved?.first ?: song.streamUrl
-        val kind = resolved?.second ?: "stream"
+
+        if (resolved == null) {
+            val isCredentialsMissing = song.streamUrl.startsWith("aonsoku-media://")
+            val code = if (isCredentialsMissing) "missing_credentials" else "invalid_source"
+            val message = if (isCredentialsMissing) {
+                "Cannot resolve aonsoku-media://stream: no credentials for song ${song.id}"
+            } else {
+                "Cannot resolve source for song ${song.id}: ${song.streamUrl}"
+            }
+            NativeLogger.error(message, "playback-service")
+            emitError(code, message)
+            val mainHandler = Handler(Looper.getMainLooper())
+            mainHandler.post {
+                val currentPlayer = player ?: return@post
+                currentPlayer.stop()
+                currentPlayer.clearMediaItems()
+                emitPlaybackState("failed")
+            }
+            return
+        }
+
+        val url = resolved.first
+        val kind = resolved.second
 
         if (kind == "stream") {
             startBackgroundCache(song.id)

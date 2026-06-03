@@ -21,8 +21,9 @@ import com.getcapacitor.annotation.CapacitorPlugin
 import com.getcapacitor.annotation.Permission
 import com.getcapacitor.annotation.PermissionCallback
 import github.realtvop.aonsoku.plugins.bridge.AndroidCredentialStore
-import github.realtvop.aonsoku.plugins.bridge.ServerCredentials
 import github.realtvop.aonsoku.plugins.bridge.SubsonicHttpClient
+import github.realtvop.aonsoku.plugins.data.db.AonsokuDatabase
+import github.realtvop.aonsoku.plugins.data.db.toJSObject
 import github.realtvop.aonsoku.plugins.debug.NativeLogger
 import github.realtvop.aonsoku.plugins.error.AonsokuNativeError
 import androidx.media3.common.C
@@ -35,6 +36,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.CompletableDeferred
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -57,6 +62,11 @@ class AudioPlugin : Plugin() {
     private var playerListener: Player.Listener? = null
 
     private val pluginScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val serviceReady = CompletableDeferred<PlaybackService>()
+
+    private suspend fun awaitService(timeoutMs: Long = 5000): PlaybackService {
+        return withTimeout(timeoutMs) { serviceReady.await() }
+    }
 
     private val httpClient = SubsonicHttpClient()
     private val credentialStore: AndroidCredentialStore by lazy {
@@ -71,6 +81,8 @@ class AudioPlugin : Plugin() {
     private var sleepTimerHandler: Handler? = null
     private var sleepTimerEndTime: Long = 0
     private var sleepTimerMode: String = "duration"
+
+    private val db by lazy { AonsokuDatabase.getInstance(context) }
 
     private var audioManager: AudioManager? = null
     private var audioFocusChangeListener: AudioManager.OnAudioFocusChangeListener? = null
@@ -136,7 +148,9 @@ class AudioPlugin : Plugin() {
 
         override fun onQueueStateChanged(currentIndex: Int, songId: String, reason: String, isInUserQueue: Boolean) {
             handleScrobbleSongEnded()
-            handleScrobbleSongStarted(songId, currentScrobbleSongDuration)
+            val song = playbackService?.queueEngine?.currentSong
+            val duration = song?.duration ?: 0.0
+            handleScrobbleSongStarted(songId, duration)
             val data = JSObject().apply {
                 put("currentIndex", currentIndex)
                 put("songId", songId)
@@ -176,6 +190,14 @@ class AudioPlugin : Plugin() {
         override fun onSleepTimerEndOfTrack() {
             fireSleepTimerEvent("endOfTrack")
         }
+
+        override fun onError(code: String, message: String) {
+            notifyListeners("error", JSObject().apply {
+                put("code", code)
+                put("message", message)
+                put("requestId", currentRequestId ?: JSONObject.NULL)
+            })
+        }
     }
 
     private val connection = object : ServiceConnection {
@@ -189,6 +211,9 @@ class AudioPlugin : Plugin() {
             currentService?.addListener(serviceListener)
             currentService?.addDownloadListener(downloadListener)
             setupPlayerListener()
+            if (!serviceReady.isCompleted) {
+                serviceReady.complete(currentService ?: return)
+            }
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -197,6 +222,7 @@ class AudioPlugin : Plugin() {
             playbackService?.removeDownloadListener(downloadListener)
             playbackService = null
             isBound = false
+            serviceReady.completeExceptionally(IllegalStateException("PlaybackService disconnected"))
         }
     }
 
@@ -364,11 +390,20 @@ class AudioPlugin : Plugin() {
         val mode = call.getString("mode") ?: "duration"
 
         cancelSleepTimerInternal()
-        playbackService?.sleepTimerMode = mode
 
-        if (mode == "duration" && seconds > 0) {
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                service.sleepTimerMode = mode
+            } catch (_: TimeoutCancellationException) {}
+        }
+
+        if (mode == "endOfTrack") {
+            sleepTimerMode = "endOfTrack"
+            sleepTimerEndTime = 0
+        } else if (seconds > 0) {
             sleepTimerEndTime = System.currentTimeMillis() + (seconds * 1000).toLong()
-            sleepTimerMode = mode
+            sleepTimerMode = "duration"
             val handler = Handler(Looper.getMainLooper())
             sleepTimerHandler = handler
             handler.postDelayed({
@@ -381,7 +416,12 @@ class AudioPlugin : Plugin() {
     @PluginMethod
     fun cancelSleepTimer(call: PluginCall) {
         cancelSleepTimerInternal()
-        playbackService?.sleepTimerMode = "duration"
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                service.sleepTimerMode = "duration"
+            } catch (_: TimeoutCancellationException) {}
+        }
         call.resolve()
     }
 
@@ -459,11 +499,13 @@ class AudioPlugin : Plugin() {
                     put("requestId", requestId ?: JSONObject.NULL)
                 })
 
-                val durationSec = player.duration / 1000.0
-                notifyListeners("durationChanged", JSObject().apply {
-                    put("duration", durationSec)
-                    put("requestId", requestId ?: JSONObject.NULL)
-                })
+                val rawDuration = player.duration
+                if (rawDuration != C.TIME_UNSET) {
+                    notifyListeners("durationChanged", JSObject().apply {
+                        put("duration", rawDuration / 1000.0)
+                        put("requestId", requestId ?: JSONObject.NULL)
+                    })
+                }
 
                 if (!player.isPlaying) {
                     emitPlaybackState("paused", requestId)
@@ -627,10 +669,15 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun load(call: PluginCall) {
-        val service = playbackService
-        if (service != null && service.isQueueEngineActive) {
-            call.resolve()
-            return
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                if (service.isQueueEngineActive) {
+                    call.resolve()
+                    return@launch
+                }
+            } catch (_: TimeoutCancellationException) {
+            }
         }
         checkAndRequestNotificationPermission(call) {
             executeLoad(call)
@@ -710,17 +757,25 @@ class AudioPlugin : Plugin() {
                     call.reject("Missing URI for native-file source")
                     return
                 }
-                val path = if (uri.startsWith("file://")) uri.substring(7) else uri
-                val file = File(path)
-                if (!file.exists()) {
-                    call.reject("Native file does not exist: $path")
-                    return
+                if (uri.startsWith("content://")) {
+                    handleScrobbleSongEnded()
+                    if (songId != null) {
+                        handleScrobbleSongStarted(songId, songDuration)
+                    }
+                    loadMediaAndPlay(uri, parsedMetadata, startTime, autoplay, requestId, onResolved = { call.resolve() }, onRejected = { msg -> call.reject(msg) })
+                } else {
+                    val path = if (uri.startsWith("file://")) uri.substring(7) else uri
+                    val file = File(path)
+                    if (!file.exists()) {
+                        call.reject("Native file does not exist: $path")
+                        return
+                    }
+                    handleScrobbleSongEnded()
+                    if (songId != null) {
+                        handleScrobbleSongStarted(songId, songDuration)
+                    }
+                    loadMediaAndPlay(uri, parsedMetadata, startTime, autoplay, requestId, onResolved = { call.resolve() }, onRejected = { msg -> call.reject(msg) })
                 }
-                handleScrobbleSongEnded()
-                if (songId != null) {
-                    handleScrobbleSongStarted(songId, songDuration)
-                }
-                loadMediaAndPlay(uri, parsedMetadata, startTime, autoplay, requestId, onResolved = { call.resolve() }, onRejected = { msg -> call.reject(msg) })
             }
             "blob" -> {
                 NativeLogger.error("Blob source not supported on Android native", "audio-plugin")
@@ -763,7 +818,6 @@ class AudioPlugin : Plugin() {
 
         mainHandler.post {
             val player = playbackService?.getPlayer() ?: run {
-                onResolved()
                 onRejected?.invoke("Playback service is not ready")
                 return@post
             }
@@ -792,54 +846,67 @@ class AudioPlugin : Plugin() {
 
     private fun executePlay(call: PluginCall) {
         NativeLogger.debug("Play requested", "audio-plugin")
-        mainHandler.post {
-            val service = playbackService ?: run {
-                call.reject("Playback service is not ready")
-                return@post
-            }
-            val player = service.getPlayer() ?: run {
-                call.reject("ExoPlayer is not ready")
-                return@post
-            }
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    val player = service.getPlayer() ?: run {
+                        call.reject("ExoPlayer is not ready")
+                        return@post
+                    }
 
-            service.savedRestoreTime = null
-            service.queueEngine.clearRestoredFlag()
+                    service.savedRestoreTime = null
+                    service.queueEngine.clearRestoredFlag()
 
-            requestAudioFocus()
-            player.play()
-            call.resolve()
+                    requestAudioFocus()
+                    player.play()
+                    call.resolve()
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
+            }
         }
     }
 
     @PluginMethod
     fun pause(call: PluginCall) {
         NativeLogger.debug("Pause requested", "audio-plugin")
-        mainHandler.post {
-            val service = playbackService ?: run {
-                call.reject("Playback service is not ready")
-                return@post
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    val player = service.getPlayer() ?: run {
+                        call.reject("ExoPlayer is not ready")
+                        return@post
+                    }
+                    player.pause()
+                    service.persistence.flushNow()
+                    call.resolve()
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
             }
-            val player = service.getPlayer() ?: run {
-                call.reject("ExoPlayer is not ready")
-                return@post
-            }
-            player.pause()
-            service.persistence.flushNow()
-            call.resolve()
         }
     }
 
     @PluginMethod
     fun stop(call: PluginCall) {
-        mainHandler.post {
-            val player = playbackService?.getPlayer() ?: run {
-                call.reject("Playback service is not ready")
-                return@post
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    val player = service.getPlayer() ?: run {
+                        call.reject("ExoPlayer is not ready")
+                        return@post
+                    }
+                    player.pause()
+                    player.seekTo(0)
+                    emitPlaybackState("stopped", currentRequestId)
+                    call.resolve()
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
             }
-            player.pause()
-            player.seekTo(0)
-            emitPlaybackState("stopped", currentRequestId)
-            call.resolve()
         }
     }
 
@@ -850,19 +917,22 @@ class AudioPlugin : Plugin() {
             return
         }
         NativeLogger.debug("Seek to $position", "audio-plugin")
-        mainHandler.post {
-            val service = playbackService ?: run {
-                call.reject("Playback service is not ready")
-                return@post
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    val player = service.getPlayer() ?: run {
+                        call.reject("ExoPlayer is not ready")
+                        return@post
+                    }
+                    player.seekTo((position * 1000).toLong())
+                    service.persistence.updateProgress(position)
+                    service.persistence.flushNow()
+                    call.resolve()
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
             }
-            val player = service.getPlayer() ?: run {
-                call.reject("ExoPlayer is not ready")
-                return@post
-            }
-            player.seekTo((position * 1000).toLong())
-            service.persistence.updateProgress(position)
-            service.persistence.flushNow()
-            call.resolve()
         }
     }
 
@@ -873,45 +943,58 @@ class AudioPlugin : Plugin() {
         val album = call.getString("album")
         val artworkUrl = call.getString("artworkUrl")
 
-        mainHandler.post {
-            val player = playbackService?.getPlayer() ?: run {
-                call.reject("Playback service is not ready")
-                return@post
-            }
-            val currentItem = player.currentMediaItem
-            if (currentItem != null) {
-                val updatedMetadata = currentItem.mediaMetadata.buildUpon()
-                    .setTitle(title)
-                    .setArtist(artist)
-                    .setAlbumTitle(album)
-                if (artworkUrl != null) {
-                    updatedMetadata.setArtworkUri(Uri.parse(artworkUrl))
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    val player = service.getPlayer() ?: run {
+                        call.reject("ExoPlayer is not ready")
+                        return@post
+                    }
+                    val currentItem = player.currentMediaItem
+                    if (currentItem != null) {
+                        val updatedMetadata = currentItem.mediaMetadata.buildUpon()
+                            .setTitle(title)
+                            .setArtist(artist)
+                            .setAlbumTitle(album)
+                        if (artworkUrl != null) {
+                            updatedMetadata.setArtworkUri(Uri.parse(artworkUrl))
+                        }
+                        val updatedItem = currentItem.buildUpon()
+                            .setMediaMetadata(updatedMetadata.build())
+                            .build()
+                        player.replaceMediaItem(player.currentMediaItemIndex, updatedItem)
+                    }
+                    call.resolve()
                 }
-                val updatedItem = currentItem.buildUpon()
-                    .setMediaMetadata(updatedMetadata.build())
-                    .build()
-                player.replaceMediaItem(player.currentMediaItemIndex, updatedItem)
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
             }
-            call.resolve()
         }
     }
 
     @PluginMethod
     fun clear(call: PluginCall) {
-        mainHandler.post {
-            val service = playbackService
-            val player = service?.getPlayer() ?: run {
-                call.resolve()
-                return@post
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    val player = service.getPlayer() ?: run {
+                        call.resolve()
+                        return@post
+                    }
+                    player.stop()
+                    player.clearMediaItems()
+                    emitPlaybackState("idle", currentRequestId)
+                    currentRequestId = null
+                    handleScrobbleSongEnded()
+                    abandonAudioFocus()
+                    service.clearQueueState()
+                    call.resolve()
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
             }
-            player.stop()
-            player.clearMediaItems()
-            emitPlaybackState("idle", currentRequestId)
-            currentRequestId = null
-            handleScrobbleSongEnded()
-            abandonAudioFocus()
-            service.clearQueueState()
-            call.resolve()
         }
     }
 
@@ -1111,11 +1194,6 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun setContextQueue(call: PluginCall) {
-        val service = playbackService ?: run {
-            call.reject("Playback service is not ready")
-            return
-        }
-
         NativeLogger.debug("Setting context queue", "audio-plugin")
         val songsArray = call.getArray("songs") ?: run {
             call.reject("Missing songs parameter")
@@ -1139,19 +1217,22 @@ class AudioPlugin : Plugin() {
 
         val repeatMode = call.getString("repeatMode")
 
-        mainHandler.post {
-            repeatMode?.let { service.setRepeatMode(it) }
-            service.setContextQueue(songs, currentIndex, autoplay, startTime, sourceId, sourceName)
-            call.resolve()
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    repeatMode?.let { service.setRepeatMode(it) }
+                    service.setContextQueue(songs, currentIndex, autoplay, startTime, sourceId, sourceName)
+                    call.resolve()
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
+            }
         }
     }
 
     @PluginMethod
     fun updateContextQueue(call: PluginCall) {
-        val service = playbackService ?: run {
-            call.reject("Playback service is not ready")
-            return
-        }
         val songsArray = call.getArray("songs") ?: run {
             call.reject("Missing songs parameter")
             return
@@ -1162,33 +1243,39 @@ class AudioPlugin : Plugin() {
         }
         val currentIndex = call.getInt("currentIndex") ?: 0
 
-        mainHandler.post {
-            service.updateContextQueue(songs, currentIndex)
-            call.resolve()
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    service.updateContextQueue(songs, currentIndex)
+                    call.resolve()
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
+            }
         }
     }
 
     @PluginMethod
     fun reorderContextQueue(call: PluginCall) {
-        val service = playbackService ?: run {
-            call.reject("Playback service is not ready")
-            return
-        }
         val fromIndex = call.getInt("fromIndex") ?: 0
         val toIndex = call.getInt("toIndex") ?: 0
 
-        mainHandler.post {
-            service.reorderContextQueue(fromIndex, toIndex)
-            call.resolve()
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    service.reorderContextQueue(fromIndex, toIndex)
+                    call.resolve()
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
+            }
         }
     }
 
     @PluginMethod
     fun addToUserQueue(call: PluginCall) {
-        val service = playbackService ?: run {
-            call.reject("Playback service is not ready")
-            return
-        }
         val songsArray = call.getArray("songs") ?: run {
             call.reject("Missing songs parameter")
             return
@@ -1199,18 +1286,21 @@ class AudioPlugin : Plugin() {
         }
         val position = call.getString("position") ?: "last"
 
-        mainHandler.post {
-            service.addToUserQueue(songs, position)
-            call.resolve()
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    service.addToUserQueue(songs, position)
+                    call.resolve()
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
+            }
         }
     }
 
     @PluginMethod
     fun removeFromUserQueue(call: PluginCall) {
-        val service = playbackService ?: run {
-            call.reject("Playback service is not ready")
-            return
-        }
         val indicesArray = call.getArray("indices") ?: run {
             call.reject("Missing indices parameter")
             return
@@ -1220,89 +1310,109 @@ class AudioPlugin : Plugin() {
             indices.add(indicesArray.getInt(i))
         }
 
-        mainHandler.post {
-            service.removeFromUserQueue(indices)
-            call.resolve()
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    service.removeFromUserQueue(indices)
+                    call.resolve()
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
+            }
         }
     }
 
     @PluginMethod
     fun clearUserQueue(call: PluginCall) {
-        val service = playbackService ?: run {
-            call.reject("Playback service is not ready")
-            return
-        }
-        mainHandler.post {
-            service.clearUserQueue()
-            call.resolve()
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    service.clearUserQueue()
+                    call.resolve()
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
+            }
         }
     }
 
     @PluginMethod
     fun playAtIndex(call: PluginCall) {
-        val service = playbackService ?: run {
-            call.reject("Playback service is not ready")
-            return
-        }
         val index = call.getInt("index") ?: 0
         val startTime = call.getDouble("startTime")
 
-        mainHandler.post {
-            service.playAtIndex(index, startTime)
-            call.resolve()
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    service.playAtIndex(index, startTime)
+                    call.resolve()
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
+            }
         }
     }
 
     @PluginMethod
     fun getFullState(call: PluginCall) {
-        val service = playbackService ?: run {
-            call.reject("Playback service is not ready")
-            return
-        }
-        mainHandler.post {
-            val player = service.getPlayer()
-            val currentTime = if (player != null) player.currentPosition / 1000.0 else 0.0
-            val duration = if (player != null && player.duration != C.TIME_UNSET) player.duration / 1000.0 else 0.0
-            val isPlaying = if (player != null) player.isPlaying else false
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    val player = service.getPlayer()
+                    val currentTime = if (player != null) player.currentPosition / 1000.0 else 0.0
+                    val duration = if (player != null && player.duration != C.TIME_UNSET) player.duration / 1000.0 else 0.0
+                    val isPlaying = if (player != null) player.isPlaying else false
 
-            val fullState = service.queueEngine.getFullState(currentTime, duration, isPlaying)
-            val jsObj = JSObject.fromJSONObject(fullState)
-            call.resolve(jsObj)
+                    val fullState = service.queueEngine.getFullState(currentTime, duration, isPlaying)
+                    val jsObj = JSObject.fromJSONObject(fullState)
+                    call.resolve(jsObj)
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
+            }
         }
     }
 
     @PluginMethod
     fun setRepeatMode(call: PluginCall) {
-        val service = playbackService ?: run {
-            call.reject("Playback service is not ready")
-            return
-        }
         val mode = call.getString("mode") ?: "off"
-        mainHandler.post {
-            service.setRepeatMode(mode)
-            call.resolve()
+
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    service.setRepeatMode(mode)
+                    call.resolve()
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
+            }
         }
     }
 
     @PluginMethod
     fun setShuffle(call: PluginCall) {
-        val service = playbackService ?: run {
-            call.reject("Playback service is not ready")
-            return
-        }
         val enabled = call.getBoolean("enabled") ?: false
-        mainHandler.post {
-            service.setShuffle(enabled)
-            call.resolve()
+
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    service.setShuffle(enabled)
+                    call.resolve()
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
+            }
         }
     }
 
     @PluginMethod
     fun markAsShuffled(call: PluginCall) {
-        val service = playbackService ?: run {
-            call.reject("Playback service is not ready")
-            return
-        }
         val songsArray = call.getArray("originalSongs") ?: run {
             call.reject("Missing originalSongs parameter")
             return
@@ -1312,51 +1422,62 @@ class AudioPlugin : Plugin() {
             songs.add(QueueSong.from(songsArray.getJSONObject(i)))
         }
 
-        mainHandler.post {
-            service.markAsShuffled(songs)
-            call.resolve()
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    service.markAsShuffled(songs)
+                    call.resolve()
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
+            }
         }
     }
 
     @PluginMethod
     fun skipToNext(call: PluginCall) {
-        val service = playbackService ?: run {
-            call.reject("Playback service is not ready")
-            return
-        }
-        mainHandler.post {
-            if (service.isQueueEngineActive) {
-                service.queueEngine.skipToNext()
-            } else {
-                emitRemoteCommand("next")
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    if (service.isQueueEngineActive) {
+                        service.queueEngine.skipToNext()
+                    } else {
+                        emitRemoteCommand("next")
+                    }
+                    call.resolve()
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
             }
-            call.resolve()
         }
     }
 
     @PluginMethod
     fun skipToPrevious(call: PluginCall) {
-        val service = playbackService ?: run {
-            call.reject("Playback service is not ready")
-            return
-        }
-        mainHandler.post {
-            if (service.isQueueEngineActive) {
-                val player = service.getPlayer()
-                val currentTime = if (player != null) player.currentPosition / 1000.0 else 0.0
-                service.queueEngine.skipToPrevious(currentTime)
-            } else {
-                emitRemoteCommand("previous")
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                mainHandler.post {
+                    if (service.isQueueEngineActive) {
+                        val player = service.getPlayer()
+                        val currentTime = if (player != null) player.currentPosition / 1000.0 else 0.0
+                        service.queueEngine.skipToPrevious(currentTime)
+                    } else {
+                        emitRemoteCommand("previous")
+                    }
+                    call.resolve()
+                }
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service is not ready (timeout)")
             }
-            call.resolve()
         }
     }
 
-    // Stubs for non-A5 capabilities
-
     @PluginMethod
     fun preload(call: PluginCall) {
-        AonsokuNativeError.rejectUnimplemented(call, pluginName, "preload")
+        call.resolve()
     }
 
     @PluginMethod
@@ -1415,29 +1536,33 @@ class AudioPlugin : Plugin() {
         val maxBitRate = call.getInt("maxBitRate")
         val format = call.getString("format")
 
-        val service = playbackService ?: run {
-            call.reject("Playback service not ready")
-            return
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                service.downloadManager.download(songId, maxBitRate, format)
+                call.resolve()
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service not ready (timeout)")
+            }
         }
-
-        service.downloadManager.download(songId, maxBitRate, format)
-        call.resolve()
     }
 
     @PluginMethod
     fun cancelDownload(call: PluginCall) {
-        val service = playbackService ?: run {
-            call.reject("Playback service not ready")
-            return
+        pluginScope.launch {
+            try {
+                val service = awaitService()
+                val songId = call.getString("songId")
+                if (songId != null) {
+                    service.downloadManager.cancel(songId)
+                } else {
+                    service.downloadManager.cancelAll()
+                }
+                call.resolve()
+            } catch (_: TimeoutCancellationException) {
+                call.reject("Playback service not ready (timeout)")
+            }
         }
-
-        val songId = call.getString("songId")
-        if (songId != null) {
-            service.downloadManager.cancel(songId)
-        } else {
-            service.downloadManager.cancelAll()
-        }
-        call.resolve()
     }
 
     @PluginMethod
@@ -1452,11 +1577,39 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun resolveSongs(call: PluginCall) {
-        AonsokuNativeError.rejectUnimplemented(call, pluginName, "resolveSongs")
+        val idsArray = call.getArray("ids") ?: run {
+            call.resolve(JSObject().apply { put("songs", JSONArray()) })
+            return
+        }
+        val ids = mutableListOf<String>()
+        for (i in 0 until idsArray.length()) {
+            ids.add(idsArray.getString(i))
+        }
+        if (ids.isEmpty()) {
+            call.resolve(JSObject().apply { put("songs", JSONArray()) })
+            return
+        }
+
+        pluginScope.launch {
+            try {
+                val records = withContext(Dispatchers.IO) {
+                    db.songDao().getByIds(ids)
+                }
+                val songsArray = JSONArray()
+                for (record in records) {
+                    songsArray.put(record.toJSObject())
+                }
+                call.resolve(JSObject().apply { put("songs", songsArray) })
+            } catch (e: Exception) {
+                NativeLogger.error("resolveSongs failed: ${e.localizedMessage}", pluginName)
+                call.resolve(JSObject().apply { put("songs", JSONArray()) })
+            }
+        }
     }
 
     @PluginMethod
     fun setLikeActive(call: PluginCall) {
-        AonsokuNativeError.rejectUnimplemented(call, pluginName, "setLikeActive")
+        emitRemoteCommand("like")
+        call.resolve()
     }
 }
