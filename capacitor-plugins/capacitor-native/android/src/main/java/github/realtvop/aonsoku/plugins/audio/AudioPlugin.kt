@@ -1650,7 +1650,6 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun setLikeActive(call: PluginCall) {
-        emitRemoteCommand("like")
         call.resolve()
     }
 
