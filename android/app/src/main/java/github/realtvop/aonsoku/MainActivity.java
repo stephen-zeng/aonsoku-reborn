@@ -1,6 +1,7 @@
 package github.realtvop.aonsoku;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -23,6 +24,9 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
 
     @Override
     public void onCreate(android.os.Bundle savedInstanceState) {
+        if (!getResources().getBoolean(R.bool.is_tablet)) {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
         com.google.android.material.color.DynamicColors.applyToActivitiesIfAvailable(this.getApplication());
         registerPlugin(AudioPlugin.class);
         registerPlugin(BridgePlugin.class);
