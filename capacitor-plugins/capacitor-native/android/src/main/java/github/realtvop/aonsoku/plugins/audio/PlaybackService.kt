@@ -100,6 +100,8 @@ class PlaybackService : MediaSessionService() {
         val likeIconResId = resources.getIdentifier(likeIconName, "drawable", packageName)
         val likeIcon = if (likeIconResId != 0) likeIconResId else android.R.drawable.btn_star
 
+        android.util.Log.d("AonsokuNotification", "getCustomLayoutButtons: pkg=$packageName, shuffleName=$shuffleIconName, shuffleId=$shuffleIconResId, likeName=$likeIconName, likeId=$likeIconResId")
+
         val shuffleButton = CommandButton.Builder()
             .setSessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE)
             .setDisplayName("Shuffle")
@@ -341,6 +343,7 @@ class PlaybackService : MediaSessionService() {
                 session: MediaSession,
                 controller: MediaSession.ControllerInfo
             ): MediaSession.ConnectionResult {
+                android.util.Log.d("AonsokuNotification", "onConnect: pkg=${controller.packageName}, connectionVersion=${controller.controllerVersion}")
                 val connectionResult = super.onConnect(session, controller)
                 val availableSessionCommands = connectionResult.availableSessionCommands.buildUpon()
                     .add(CUSTOM_COMMAND_TOGGLE_SHUFFLE)
@@ -355,6 +358,7 @@ class PlaybackService : MediaSessionService() {
 
             override fun onPostConnect(session: MediaSession, controller: MediaSession.ControllerInfo) {
                 super.onPostConnect(session, controller)
+                android.util.Log.d("AonsokuNotification", "onPostConnect: pkg=${controller.packageName}")
                 session.setCustomLayout(controller, getCustomLayoutButtons())
             }
 
@@ -670,7 +674,7 @@ class PlaybackService : MediaSessionService() {
     }
 
     override fun onBind(intent: Intent?): IBinder? {
-        if (intent?.action == SERVICE_INTERFACE) {
+        if (intent?.action == SERVICE_INTERFACE || intent?.action == "android.media.browse.MediaBrowserService") {
             return super.onBind(intent)
         }
         return binder

@@ -181,7 +181,11 @@ export function CachedImage({
     albumId,
     size: coverArtSize,
   });
-  const { cachedUrl: cachedSrc, isOffline, isLoading } = useCoverArtCacheLookup({
+  const {
+    cachedUrl: cachedSrc,
+    isOffline,
+    isLoading,
+  } = useCoverArtCacheLookup({
     coverArtId,
     coverArtType,
     albumId,
