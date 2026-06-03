@@ -376,8 +376,11 @@ class BridgePlugin : Plugin() {
                             "colorOnSurface" to com.google.android.material.R.attr.colorOnSurface,
                             "colorSurfaceVariant" to com.google.android.material.R.attr.colorSurfaceVariant,
                             "colorOnSurfaceVariant" to com.google.android.material.R.attr.colorOnSurfaceVariant,
+                            "colorSurfaceContainerLowest" to com.google.android.material.R.attr.colorSurfaceContainerLowest,
+                            "colorSurfaceContainerLow" to com.google.android.material.R.attr.colorSurfaceContainerLow,
                             "colorSurfaceContainer" to com.google.android.material.R.attr.colorSurfaceContainer,
                             "colorSurfaceContainerHigh" to com.google.android.material.R.attr.colorSurfaceContainerHigh,
+                            "colorSurfaceContainerHighest" to com.google.android.material.R.attr.colorSurfaceContainerHighest,
                             "colorOutline" to com.google.android.material.R.attr.colorOutline,
                             "colorOutlineVariant" to com.google.android.material.R.attr.colorOutlineVariant
                         )
