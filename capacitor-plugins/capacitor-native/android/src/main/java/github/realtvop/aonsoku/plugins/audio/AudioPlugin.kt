@@ -768,6 +768,8 @@ class AudioPlugin : Plugin() {
             .setMediaMetadata(mediaMetadataBuilder.build())
             .build()
 
+        playbackService?.clearArtworkCache()
+
         mainHandler.post {
             val player = playbackService?.getPlayer() ?: run {
                 onRejected?.invoke("Playback service is not ready")

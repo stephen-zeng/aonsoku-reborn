@@ -5,6 +5,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Binder
 import android.os.Build
@@ -54,6 +56,7 @@ class PlaybackService : MediaSessionService() {
 
     private var mediaSession: MediaSession? = null
     private var player: ExoPlayer? = null
+    private var cachedArtworkBitmap: Bitmap? = null
 
     val queueEngine = NativeQueueEngine()
     var isQueueEngineActive = false
@@ -260,6 +263,14 @@ class PlaybackService : MediaSessionService() {
                     persistence.flushNow()
                 }
             }
+
+            override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+                val artworkData = mediaMetadata.artworkData
+                if (artworkData != null) {
+                    cachedArtworkBitmap = BitmapFactory.decodeByteArray(artworkData, 0, artworkData.size)
+                }
+                updateNotification()
+            }
         })
 
         val callback = object : MediaSession.Callback {
@@ -417,8 +428,9 @@ class PlaybackService : MediaSessionService() {
         val iconResId = resources.getIdentifier("ic_notification", "drawable", packageName)
         val icon = if (iconResId != 0) iconResId else android.R.drawable.ic_menu_info_details
 
-        return NotificationCompat.Builder(this, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(icon)
+            .setLargeIcon(cachedArtworkBitmap)
             .setContentTitle(title)
             .setContentText(text)
             .setSubText(subText)
@@ -430,13 +442,18 @@ class PlaybackService : MediaSessionService() {
             .addAction(android.R.drawable.ic_media_previous, "Previous", prevPendingIntent)
             .addAction(playPauseIcon, playPauseLabel, playPausePendingIntent)
             .addAction(android.R.drawable.ic_media_next, "Next", nextPendingIntent)
-            .build()
+
+        return builder.build()
     }
 
     private fun showNotification() {
         val isPlaying = player?.isPlaying ?: false
         val notification = buildNotification(isPlaying)
         startForeground(NOTIFICATION_ID, notification)
+    }
+
+    fun clearArtworkCache() {
+        cachedArtworkBitmap = null
     }
 
     fun updateNotification() {
@@ -554,6 +571,8 @@ class PlaybackService : MediaSessionService() {
             .setUri(Uri.parse(url))
             .setMediaMetadata(mediaMetadataBuilder.build())
             .build()
+
+        cachedArtworkBitmap = null
 
         val mainHandler = Handler(Looper.getMainLooper())
         mainHandler.post {
