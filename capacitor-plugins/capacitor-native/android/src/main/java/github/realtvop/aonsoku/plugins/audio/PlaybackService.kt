@@ -72,6 +72,10 @@ class PlaybackService : MediaSessionService() {
     var currentSongMetadata: MediaMetadata? = null
 
     var isLikeActive: Boolean = false
+        set(value) {
+            field = value
+            updateNotification()
+        }
     var sleepTimerMode: String = "duration"
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -657,7 +661,19 @@ class PlaybackService : MediaSessionService() {
             startBackgroundCache(song.id)
         }
 
-        val artworkUrl = resolveArtworkUrl(song)
+        val localArtworkFile = if (!song.coverArtId.isNullOrEmpty()) {
+            val dir = github.realtvop.aonsoku.plugins.data.image.ImageCacheUtils.cacheDirectory(cacheDir, false)
+            val cid = github.realtvop.aonsoku.plugins.data.image.ImageCacheUtils.cacheId(song.coverArtId)
+            if (dir.exists()) {
+                dir.listFiles { f -> f.name.startsWith("$cid.") }?.firstOrNull()
+            } else null
+        } else null
+
+        val artworkUrl = if (localArtworkFile != null && localArtworkFile.exists()) {
+            "file://${localArtworkFile.absolutePath}"
+        } else {
+            resolveArtworkUrl(song)
+        }
 
         val mediaMetadataBuilder = MediaMetadata.Builder()
             .setTitle(song.title)
@@ -704,7 +720,7 @@ class PlaybackService : MediaSessionService() {
         val coverArtId = song.coverArtId
         if (coverArtId.isNullOrEmpty()) return null
         val resolver = NativeSourceResolver(this)
-        return resolver.resolveCoverArtUrl(coverArtId, 300)
+        return resolver.resolveCoverArtUrl(coverArtId, 800)
     }
 
 
@@ -714,9 +730,15 @@ class PlaybackService : MediaSessionService() {
         cachedArtworkBitmap = null
         serviceScope.launch(Dispatchers.IO) {
             try {
-                val inputStream = java.net.URL(url).openStream()
-                val bitmap = BitmapFactory.decodeStream(inputStream)
-                inputStream.close()
+                val bitmap = if (url.startsWith("file://")) {
+                    val filePath = url.substring(7)
+                    BitmapFactory.decodeFile(filePath)
+                } else {
+                    val inputStream = java.net.URL(url).openStream()
+                    val b = BitmapFactory.decodeStream(inputStream)
+                    inputStream.close()
+                    b
+                }
                 if (bitmap != null) {
                     withContext(Dispatchers.Main) {
                         cachedArtworkBitmap = bitmap
@@ -797,11 +819,6 @@ class PlaybackService : MediaSessionService() {
     fun setShuffle(enabled: Boolean) {
         queueEngine.setShuffleActive(enabled)
         persistence.markStateDirty()
-        updateNotification()
-    }
-
-    fun setLikeActive(active: Boolean) {
-        isLikeActive = active
         updateNotification()
     }
 
