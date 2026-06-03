@@ -346,10 +346,11 @@ class PlaybackService : MediaSessionService() {
                     .add(CUSTOM_COMMAND_TOGGLE_SHUFFLE)
                     .add(CUSTOM_COMMAND_TOGGLE_LIKE)
                     .build()
-                return MediaSession.ConnectionResult.accept(
-                    availableSessionCommands,
-                    connectionResult.availablePlayerCommands
-                )
+                return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
+                    .setAvailableSessionCommands(availableSessionCommands)
+                    .setAvailablePlayerCommands(connectionResult.availablePlayerCommands)
+                    .setCustomLayout(getCustomLayoutButtons())
+                    .build()
             }
 
             override fun onPostConnect(session: MediaSession, controller: MediaSession.ControllerInfo) {
