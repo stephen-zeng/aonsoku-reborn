@@ -5,6 +5,7 @@ import github.realtvop.aonsoku.plugins.bridge.AndroidCredentialStore
 import github.realtvop.aonsoku.plugins.bridge.ServerCredentials
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -68,7 +69,6 @@ class NativeSourceResolverTest {
         Mockito.`when`(context.cacheDir).thenReturn(cacheDir)
 
         val cacheId = AudioCacheUtils.cacheId("song-abc")
-        // Create cached file under primary files cache directory
         val audioCacheDir = File(filesDir, AudioCacheUtils.CACHE_DIRECTORY_NAME).apply { mkdirs() }
         val cachedFile = File(audioCacheDir, "$cacheId.mp3")
         cachedFile.writeText("cached mp3 data")
@@ -85,29 +85,6 @@ class NativeSourceResolverTest {
         assertNotNull(result)
         assertEquals("native-file", result?.second)
         assertTrue(result?.first?.contains("$cacheId.mp3") ?: false)
-    }
-
-    @Test
-    fun testResolveAonsokuMediaUrlReturnsNullWhenNoCredentials() {
-        val context = Mockito.mock(Context::class.java)
-        val filesDir = tempFolder.newFolder("files")
-        val cacheDir = tempFolder.newFolder("cache")
-        Mockito.`when`(context.filesDir).thenReturn(filesDir)
-        Mockito.`when`(context.cacheDir).thenReturn(cacheDir)
-
-        val credentialStore = Mockito.mock(AndroidCredentialStore::class.java)
-        Mockito.`when`(credentialStore.retrieve()).thenReturn(null)
-
-        val song = createSong(
-            id = "song-no-creds",
-            streamUrl = "aonsoku-media://stream?id=song-no-creds"
-        )
-
-        val resolver = NativeSourceResolver(context, credentialStore)
-        val result = resolver.resolveSource(song)
-
-        // Should return null because no credentials are available
-        assertEquals(null, result)
     }
 
     @Test
@@ -145,5 +122,121 @@ class NativeSourceResolverTest {
         assertTrue(resolvedUrl.contains("u=testuser"))
         assertTrue(resolvedUrl.contains("id=song-stream-id"))
         assertTrue(resolvedUrl.contains("estimateContentLength=true"))
+    }
+
+    @Test
+    fun testDirectHttpUrlPassThroughWithCredentials() {
+        val context = Mockito.mock(Context::class.java)
+        val filesDir = tempFolder.newFolder("files")
+        val cacheDir = tempFolder.newFolder("cache")
+        Mockito.`when`(context.filesDir).thenReturn(filesDir)
+        Mockito.`when`(context.cacheDir).thenReturn(cacheDir)
+
+        val credentialStore = Mockito.mock(AndroidCredentialStore::class.java)
+        val credentials = ServerCredentials(
+            serverUrl = "https://navidrome.example.com",
+            username = "testuser",
+            password = "testpassword",
+            authType = "token",
+            protocolVersion = "1.16.0",
+            serverType = "subsonic",
+            fallbackUrl = null
+        )
+        Mockito.`when`(credentialStore.retrieve()).thenReturn(credentials)
+
+        val song = createSong(
+            id = "radio-1",
+            streamUrl = "http://radio.example.com/stream.mp3"
+        )
+
+        val resolver = NativeSourceResolver(context, credentialStore)
+        val result = resolver.resolveSource(song)
+
+        assertNotNull(result)
+        assertEquals("stream", result?.second)
+        assertEquals("http://radio.example.com/stream.mp3", result?.first)
+    }
+
+    @Test
+    fun testRadioUrlPassthrough() {
+        val context = Mockito.mock(Context::class.java)
+        val filesDir = tempFolder.newFolder("files")
+        val cacheDir = tempFolder.newFolder("cache")
+        Mockito.`when`(context.filesDir).thenReturn(filesDir)
+        Mockito.`when`(context.cacheDir).thenReturn(cacheDir)
+
+        val credentialStore = Mockito.mock(AndroidCredentialStore::class.java)
+        Mockito.`when`(credentialStore.retrieve()).thenReturn(null)
+
+        val song = createSong(
+            id = "radio-2",
+            streamUrl = "https://radio.example.com/stream"
+        )
+
+        val resolver = NativeSourceResolver(context, credentialStore)
+        val result = resolver.resolveSource(song)
+
+        assertNotNull(result)
+        assertEquals("stream", result?.second)
+        assertEquals("https://radio.example.com/stream", result?.first)
+    }
+
+    @Test
+    fun testAonsokuStreamWithoutCredentialsReturnsNull() {
+        val context = Mockito.mock(Context::class.java)
+        val filesDir = tempFolder.newFolder("files")
+        val cacheDir = tempFolder.newFolder("cache")
+        Mockito.`when`(context.filesDir).thenReturn(filesDir)
+        Mockito.`when`(context.cacheDir).thenReturn(cacheDir)
+
+        val credentialStore = Mockito.mock(AndroidCredentialStore::class.java)
+        Mockito.`when`(credentialStore.retrieve()).thenReturn(null)
+
+        val song = createSong(
+            id = "song-no-cred",
+            streamUrl = "aonsoku-media://stream?id=song-no-cred"
+        )
+
+        val resolver = NativeSourceResolver(context, credentialStore)
+        val result = resolver.resolveSource(song)
+
+        assertNull("Should return null when credentials are missing", result)
+    }
+
+    @Test
+    fun testAonsokuStreamWithMaxBitRateAndFormat() {
+        val context = Mockito.mock(Context::class.java)
+        val filesDir = tempFolder.newFolder("files")
+        val cacheDir = tempFolder.newFolder("cache")
+        Mockito.`when`(context.filesDir).thenReturn(filesDir)
+        Mockito.`when`(context.cacheDir).thenReturn(cacheDir)
+
+        val credentialStore = Mockito.mock(AndroidCredentialStore::class.java)
+        val credentials = ServerCredentials(
+            serverUrl = "http://192.168.1.100:4533",
+            username = "user",
+            password = "pass",
+            authType = "password",
+            protocolVersion = "1.16.0",
+            serverType = "navidrome",
+            fallbackUrl = null
+        )
+        Mockito.`when`(credentialStore.retrieve()).thenReturn(credentials)
+
+        val song = createSong(
+            id = "song-123",
+            streamUrl = "aonsoku-media://stream?id=song-123&maxBitRate=320&format=mp3"
+        )
+
+        val resolver = NativeSourceResolver(context, credentialStore)
+        val result = resolver.resolveSource(song)
+
+        assertNotNull(result)
+        assertEquals("stream", result?.second)
+        val resolvedUrl = result?.first ?: ""
+        assertTrue("Should use HTTP base URL", resolvedUrl.startsWith("http://192.168.1.100:4533/rest/stream"))
+        assertTrue("Should include maxBitRate", resolvedUrl.contains("maxBitRate=320"))
+        assertTrue("Should include format", resolvedUrl.contains("format=mp3"))
+        assertTrue("Should include estimateContentLength", resolvedUrl.contains("estimateContentLength=true"))
     }
 }

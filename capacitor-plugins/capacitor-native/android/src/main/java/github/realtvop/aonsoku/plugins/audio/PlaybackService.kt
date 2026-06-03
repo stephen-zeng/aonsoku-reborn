@@ -1,12 +1,18 @@
 package github.realtvop.aonsoku.plugins.audio
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Intent
 import android.net.Uri
 import android.os.Binder
+import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import androidx.annotation.OptIn
+import androidx.core.app.NotificationCompat
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -29,6 +35,11 @@ import org.json.JSONObject
 import java.io.File
 
 class PlaybackService : MediaSessionService() {
+    companion object {
+        private const val NOTIFICATION_ID = 1001
+        private const val CHANNEL_ID = "aonsoku_playback"
+    }
+
     private var mediaSession: MediaSession? = null
     private var player: ExoPlayer? = null
 
@@ -145,10 +156,12 @@ class PlaybackService : MediaSessionService() {
     fun getPlayer(): ExoPlayer? = player
     fun getSession(): MediaSession? = mediaSession
 
-    @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
         NativeLogger.info("PlaybackService created", "playback-service")
+
+        createNotificationChannel()
+
         val audioAttributes = AudioAttributes.Builder()
             .setUsage(C.USAGE_MEDIA)
             .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
@@ -238,10 +251,19 @@ class PlaybackService : MediaSessionService() {
                 playerCommand: Int
             ): Int {
                 if (playerCommand == Player.COMMAND_SEEK_TO_NEXT) {
+                    if (isQueueEngineActive) {
+                        queueEngine.skipToNext()
+                        return SessionResult.RESULT_INFO_SKIPPED
+                    }
                     emitRemoteCommand("next")
                     return SessionResult.RESULT_INFO_SKIPPED
                 }
                 if (playerCommand == Player.COMMAND_SEEK_TO_PREVIOUS) {
+                    if (isQueueEngineActive) {
+                        val currentTime = (player?.currentPosition ?: 0L) / 1000.0
+                        queueEngine.skipToPrevious(currentTime)
+                        return SessionResult.RESULT_INFO_SKIPPED
+                    }
                     emitRemoteCommand("previous")
                     return SessionResult.RESULT_INFO_SKIPPED
                 }
@@ -252,6 +274,8 @@ class PlaybackService : MediaSessionService() {
         mediaSession = MediaSession.Builder(this, newPlayer)
             .setCallback(callback)
             .build()
+
+        showNotification()
 
         downloadManager.addListener(object : NativeDownloadManager.Listener {
             override fun onDownloadProgress(songId: String, loaded: Long, total: Long) {
@@ -274,6 +298,49 @@ class PlaybackService : MediaSessionService() {
         })
 
         restorePlaybackState()
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Playback",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Music playback controls"
+                setShowBadge(false)
+            }
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(channel)
+            NativeLogger.info("Notification channel created: $CHANNEL_ID", "playback-service")
+        }
+    }
+
+    private fun buildNotification(): Notification {
+        val session = mediaSession
+        val title: String
+        val text: String
+        if (session != null) {
+            val metadata = session.player.mediaMetadata
+            title = metadata.title?.toString() ?: "Aonsoku"
+            text = metadata.artist?.toString() ?: metadata.albumTitle?.toString() ?: "Playing"
+        } else {
+            title = "Aonsoku"
+            text = "Playing"
+        }
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_media_play)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setOngoing(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .build()
+    }
+
+    private fun showNotification() {
+        val notification = buildNotification()
+        startForeground(NOTIFICATION_ID, notification)
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
@@ -305,13 +372,6 @@ class PlaybackService : MediaSessionService() {
         NativeLogger.debug("Loading song: ${song.title} - ${song.artist} (autoplay=$autoplay)", "playback-service")
         val resolver = NativeSourceResolver(this)
         val resolved = resolver.resolveSource(song)
-
-        if (resolved == null && (song.streamUrl.startsWith("aonsoku-media://") || song.streamUrl.isNullOrEmpty())) {
-            NativeLogger.error("Cannot resolve source for song ${song.id}: missing credentials or unresolvable stream URL", "playback-service")
-            emitPlaybackState("failed")
-            return
-        }
-
         val url = resolved?.first ?: song.streamUrl
         val kind = resolved?.second ?: "stream"
 
@@ -350,6 +410,7 @@ class PlaybackService : MediaSessionService() {
             if (autoplay) {
                 currentPlayer.play()
             }
+            showNotification()
         }
     }
 

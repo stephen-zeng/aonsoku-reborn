@@ -1,3 +1,4 @@
+import { getNativeQueueController } from "@/player/queue-controller";
 import { cacheManager } from "@/service/cache";
 import { usePlayerStore } from "@/store/player.store";
 import { LanControlMessageType } from "@/types/lanControl";
@@ -382,12 +383,17 @@ function setHandlers() {
           state.remoteControl.sendCommand(LanControlMessageType.SEEK, {
             time: details.seekTime,
           });
-        } else {
-          const audioPlayerRef = state.playerState.audioPlayerRef;
-          if (audioPlayerRef) {
-            audioPlayerRef.currentTime = details.seekTime;
-            state.actions.setProgress(Math.floor(details.seekTime));
-          }
+          return;
+        }
+        const nativeController = getNativeQueueController();
+        if (nativeController) {
+          nativeController.seek(details.seekTime);
+          return;
+        }
+        const audioPlayerRef = state.playerState.audioPlayerRef;
+        if (audioPlayerRef) {
+          audioPlayerRef.currentTime = details.seekTime;
+          state.actions.setProgress(Math.floor(details.seekTime));
         }
       }
     });

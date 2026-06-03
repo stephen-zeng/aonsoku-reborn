@@ -38,6 +38,36 @@ class NativeAudioSourceParserTest {
     }
 
     @Test
+    fun parseSourceWithRadioKind() {
+        val json = JSONObject()
+        json.put("kind", "radio")
+        json.put("url", "https://radio.example.com/stream")
+        json.put("radioId", "radio-789")
+
+        val result = NativeAudioSourceParser.parseSource(json)
+        assertEquals("radio", result?.kind)
+        assertEquals("https://radio.example.com/stream", result?.url)
+        assertEquals("radio-789", result?.radioId)
+        assertNull(result?.uri)
+        assertNull(result?.songId)
+    }
+
+    @Test
+    fun parseSourceWithBlobKind() {
+        val json = JSONObject()
+        json.put("kind", "blob")
+        json.put("url", "blob:http://example.com/uuid")
+        json.put("songId", "song-blob")
+
+        val result = NativeAudioSourceParser.parseSource(json)
+        assertEquals("blob", result?.kind)
+        assertEquals("blob:http://example.com/uuid", result?.url)
+        assertEquals("song-blob", result?.songId)
+        assertNull(result?.uri)
+        assertNull(result?.radioId)
+    }
+
+    @Test
     fun parseSourceWithNull() {
         assertNull(NativeAudioSourceParser.parseSource(null))
     }

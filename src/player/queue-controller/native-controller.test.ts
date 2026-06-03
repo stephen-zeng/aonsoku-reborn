@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   NativeAudioEvents,
   NativeAudioPlugin,
@@ -102,11 +102,7 @@ const mocks = vi.hoisted(() => {
         sourceName: null,
       },
       userQueue: { songs: [] },
-      originalContextSongs: [],
-      originalUserSongs: undefined,
       playedUserQueueHistory: [],
-      shuffleHistory: [],
-      shuffleStartHistory: [],
       currentSong: null,
       isInUserQueue: false,
       isShuffleActive: false,
@@ -171,10 +167,6 @@ describe("NativeQueueController terminal playback reset", () => {
     mocks.storeState.songlist.contextQueue.songs = [];
     mocks.storeState.songlist.contextQueue.currentIndex = 0;
     mocks.storeState.songlist.currentSong = null;
-    mocks.storeState.songlist.shuffleHistory = [];
-    mocks.storeState.songlist.shuffleStartHistory = [];
-    mocks.storeState.songlist.originalContextSongs = [];
-    mocks.storeState.songlist.originalUserSongs = undefined;
   });
 
   it("seeks native playback back to zero after the last track ends", async () => {
@@ -212,180 +204,6 @@ describe("NativeQueueController terminal playback reset", () => {
     expect(mocks.plugin.seek).not.toHaveBeenCalledWith({ position: 0 });
     expect(mocks.storeState.playerProgress.progress).toBe(0);
     expect(mocks.storeState.playerState.isPlaying).toBe(true);
-
-    controller.dispose();
-  });
-});
-
-describe("NativeQueueController setSongList same-queue-same-index", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    for (const value of Object.values(mocks.plugin)) {
-      if (typeof value === "function") {
-        vi.mocked(value).mockClear();
-      }
-    }
-    for (const key of Object.keys(mocks.listeners) as Array<
-      keyof typeof mocks.listeners
-    >) {
-      delete mocks.listeners[key];
-    }
-    mocks.storeState.playerState.loopState = LoopState.Off;
-    mocks.storeState.playerState.isPlaying = false;
-    mocks.storeState.playerState.isBuffering = false;
-    mocks.storeState.playerState.currentDuration = 200;
-    mocks.storeState.playerProgress.progress = 0;
-    mocks.storeState.playerProgress.bufferedProgress = 0;
-    mocks.storeState.songlist.contextQueue.songs = [
-      { id: "song-1", duration: 200 } as never,
-      { id: "song-2", duration: 180 } as never,
-    ];
-    mocks.storeState.songlist.contextQueue.currentIndex = 0;
-    mocks.storeState.songlist.contextQueue.sourceId = undefined;
-    mocks.storeState.songlist.contextQueue.sourceName = null;
-    mocks.storeState.songlist.currentSong = {
-      id: "song-1",
-      duration: 200,
-    } as never;
-    mocks.storeState.songlist.isInUserQueue = false;
-    mocks.storeState.songlist.shuffleHistory = [];
-    mocks.storeState.songlist.shuffleStartHistory = [];
-    mocks.storeState.songlist.originalContextSongs = [];
-    mocks.storeState.songlist.originalUserSongs = undefined;
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it("calls plugin.play() when same queue and same index", async () => {
-    const controller = new NativeQueueController();
-    await vi.runAllTimersAsync();
-
-    const songs = [
-      { id: "song-1", duration: 200 } as never,
-      { id: "song-2", duration: 180 } as never,
-    ];
-
-    controller.setSongList(songs as never, 0, false);
-
-    expect(mocks.plugin.play).toHaveBeenCalledTimes(1);
-    expect(mocks.storeState.playerState.isPlaying).toBe(true);
-
-    controller.dispose();
-  });
-
-  it("resubmits setContextQueue when same-queue plugin.play() fails", async () => {
-    vi.mocked(mocks.plugin.play).mockRejectedValueOnce(
-      new Error("service not ready"),
-    );
-
-    const controller = new NativeQueueController();
-    await vi.runAllTimersAsync();
-
-    const songs = [
-      { id: "song-1", duration: 200 } as never,
-      { id: "song-2", duration: 180 } as never,
-    ];
-
-    controller.setSongList(songs as never, 0, false);
-    await vi.runAllTimersAsync();
-
-    expect(mocks.plugin.play).toHaveBeenCalledTimes(1);
-    expect(mocks.plugin.setContextQueue).toHaveBeenCalledWith(
-      expect.objectContaining({
-        currentIndex: 0,
-        autoplay: true,
-        repeatMode: "off",
-      }),
-    );
-    expect(mocks.storeState.playerState.isPlaying).toBe(true);
-
-    controller.dispose();
-  });
-});
-
-describe("NativeQueueController play fallback", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    for (const value of Object.values(mocks.plugin)) {
-      if (typeof value === "function") {
-        vi.mocked(value).mockClear();
-      }
-    }
-    for (const key of Object.keys(mocks.listeners) as Array<
-      keyof typeof mocks.listeners
-    >) {
-      delete mocks.listeners[key];
-    }
-    mocks.storeState.playerState.loopState = LoopState.Off;
-    mocks.storeState.playerState.isPlaying = false;
-    mocks.storeState.playerState.isBuffering = false;
-    mocks.storeState.playerState.currentDuration = 200;
-    mocks.storeState.playerProgress.progress = 0;
-    mocks.storeState.playerProgress.bufferedProgress = 0;
-    mocks.storeState.songlist.contextQueue.songs = [
-      { id: "song-1", duration: 200 } as never,
-      { id: "song-2", duration: 180 } as never,
-    ];
-    mocks.storeState.songlist.contextQueue.currentIndex = 0;
-    mocks.storeState.songlist.contextQueue.sourceId = undefined;
-    mocks.storeState.songlist.contextQueue.sourceName = null;
-    mocks.storeState.songlist.currentSong = {
-      id: "song-1",
-      duration: 200,
-    } as never;
-    mocks.storeState.songlist.isInUserQueue = false;
-    mocks.storeState.songlist.shuffleHistory = [];
-    mocks.storeState.songlist.shuffleStartHistory = [];
-    mocks.storeState.songlist.originalContextSongs = [];
-    mocks.storeState.songlist.originalUserSongs = undefined;
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it("submits setContextQueue when play() fails and queue has songs", async () => {
-    mocks.plugin.setContextQueue = vi.fn(async () => {});
-    vi.mocked(mocks.plugin.play).mockRejectedValueOnce(
-      new Error("service not ready"),
-    );
-
-    const controller = new NativeQueueController();
-    await vi.runAllTimersAsync();
-
-    controller.play();
-    await vi.runAllTimersAsync();
-
-    expect(mocks.plugin.setContextQueue).toHaveBeenCalledWith(
-      expect.objectContaining({
-        currentIndex: 0,
-        autoplay: true,
-      }),
-    );
-    expect(mocks.storeState.playerState.isPlaying).toBe(true);
-
-    controller.dispose();
-  });
-
-  it("rolls back isPlaying when play() fails and fallback also fails", async () => {
-    vi.mocked(mocks.plugin.play).mockRejectedValueOnce(
-      new Error("service not ready"),
-    );
-    vi.mocked(mocks.plugin.setContextQueue).mockRejectedValueOnce(
-      new Error("setContextQueue failed"),
-    );
-
-    const controller = new NativeQueueController();
-    await vi.runAllTimersAsync();
-
-    const prevIsPlaying = mocks.storeState.playerState.isPlaying;
-
-    controller.play();
-    await vi.runAllTimersAsync();
-
-    expect(mocks.storeState.playerState.isPlaying).toBe(prevIsPlaying);
 
     controller.dispose();
   });

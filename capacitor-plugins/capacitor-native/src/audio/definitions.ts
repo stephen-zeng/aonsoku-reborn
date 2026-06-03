@@ -118,7 +118,6 @@ export interface NativeSetContextQueueOptions {
   sourceName?: string | null;
   autoplay?: boolean;
   startTime?: number;
-  repeatMode?: "off" | "one" | "all";
 }
 
 export type NativeQueueSourceId =

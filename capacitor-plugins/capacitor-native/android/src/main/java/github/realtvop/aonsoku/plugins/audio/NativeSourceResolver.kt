@@ -1,11 +1,11 @@
 package github.realtvop.aonsoku.plugins.audio
 
 import android.content.Context
-
+import android.net.Uri
 import github.realtvop.aonsoku.plugins.bridge.AndroidCredentialStore
 import github.realtvop.aonsoku.plugins.bridge.SubsonicAuthBuilder
+import github.realtvop.aonsoku.plugins.debug.NativeLogger
 import java.io.File
-import java.net.URL
 import java.net.URLEncoder
 
 class NativeSourceResolver(
@@ -29,6 +29,7 @@ class NativeSourceResolver(
             if (file.exists()) {
                 return Pair("file://${file.absolutePath}", "native-file")
             }
+            NativeLogger.warn("cachedFileUri does not exist on disk: $path", "source-resolver")
         }
 
         // 2. Check if the file is in local cache directories
@@ -45,47 +46,52 @@ class NativeSourceResolver(
             }
         }
 
-        // 3. Fallback to stream URL
-        var effectiveSongId = song.id
-        if (song.streamUrl.startsWith("aonsoku-media://stream")) {
-            val idIndex = song.streamUrl.indexOf("id=")
-            if (idIndex != -1) {
-                var idVal = song.streamUrl.substring(idIndex + 3)
-                val ampersandIndex = idVal.indexOf("&")
-                if (ampersandIndex != -1) {
-                    idVal = idVal.substring(0, ampersandIndex)
-                }
-                if (idVal.isNotEmpty()) {
-                    effectiveSongId = idVal
-                }
-            }
-        }
-
-        val credentials = credentialStore.retrieve()
-        if (credentials != null) {
-            val cleanBaseUrl = credentials.serverUrl.trimEnd('/')
-            val authParams = SubsonicAuthBuilder.buildQueryParams(
-                username = credentials.username,
-                password = credentials.password,
-                authType = credentials.authType,
-                protocolVersion = credentials.protocolVersion
-            )
-            val extraParams = mapOf(
-                "id" to effectiveSongId,
-                "estimateContentLength" to "true"
-            )
-            val allParams = authParams + extraParams
-            val queryString = allParams.entries.joinToString("&") { (k, v) ->
-                "${URLEncoder.encode(k, "UTF-8")}=${URLEncoder.encode(v, "UTF-8")}"
-            }
-            return Pair("$cleanBaseUrl/rest/stream?$queryString", "stream")
-        }
-
-        // If no credentials, check if streamUrl itself is a valid HTTP/HTTPS URL
+        // 3. Direct HTTP/HTTPS URL → pass through unchanged (radio, direct stream)
         if (song.streamUrl.startsWith("http://") || song.streamUrl.startsWith("https://")) {
             return Pair(song.streamUrl, "stream")
         }
 
+        // 4. aonsoku-media://stream → resolve with credentials
+        if (song.streamUrl.startsWith("aonsoku-media://stream")) {
+            return resolveAonsokuStreamUrl(song)
+        }
+
+        NativeLogger.warn("Cannot resolve source: unknown streamUrl scheme for song ${song.id}", "source-resolver")
         return null
+    }
+
+    private fun resolveAonsokuStreamUrl(song: QueueSong): Pair<String, String>? {
+        val uri = Uri.parse(song.streamUrl)
+        val songId = uri.getQueryParameter("id") ?: song.id
+        val maxBitRate = uri.getQueryParameter("maxBitRate")
+        val format = uri.getQueryParameter("format")
+
+        val credentials = credentialStore.retrieve()
+        if (credentials == null) {
+            NativeLogger.error("Cannot resolve aonsoku-media://stream: no credentials for song ${song.id}", "source-resolver")
+            return null
+        }
+
+        val cleanBaseUrl = credentials.serverUrl.trimEnd('/')
+        val authParams = SubsonicAuthBuilder.buildQueryParams(
+            username = credentials.username,
+            password = credentials.password,
+            authType = credentials.authType,
+            protocolVersion = credentials.protocolVersion
+        )
+        val extraParams = mutableMapOf(
+            "id" to songId,
+            "estimateContentLength" to "true"
+        )
+        if (maxBitRate != null) extraParams["maxBitRate"] = maxBitRate
+        if (format != null) extraParams["format"] = format
+
+        val allParams = authParams + extraParams
+        val queryString = allParams.entries.joinToString("&") { (k, v) ->
+            "${URLEncoder.encode(k, "UTF-8")}=${URLEncoder.encode(v, "UTF-8")}"
+        }
+        val resolvedUrl = "$cleanBaseUrl/rest/stream?$queryString"
+        NativeLogger.debug("Resolved aonsoku-media://stream -> $resolvedUrl", "source-resolver")
+        return Pair(resolvedUrl, "stream")
     }
 }
