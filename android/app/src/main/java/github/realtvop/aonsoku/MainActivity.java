@@ -23,6 +23,7 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
 
     @Override
     public void onCreate(android.os.Bundle savedInstanceState) {
+        com.google.android.material.color.DynamicColors.applyToActivitiesIfAvailable(this.getApplication());
         registerPlugin(AudioPlugin.class);
         registerPlugin(BridgePlugin.class);
         registerPlugin(DataPlugin.class);

@@ -45,6 +45,8 @@
   },
   "theme": {
     "label": "Theme",
+    "materialYou": "Material You theme color",
+    "materialYouInfo": "Use dynamic colors based on your system wallpaper (Android 12+).",
     "light": "Light",
     "dark": "Dark",
     "system": "System",

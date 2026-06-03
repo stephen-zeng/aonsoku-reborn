@@ -45,4 +45,6 @@ export type {
   LoginOptions,
   LoginResult,
   StoredCredentials,
+  MaterialYouColors,
+  MaterialYouColorsResult,
 } from "@aonsoku/capacitor-native/bridge";

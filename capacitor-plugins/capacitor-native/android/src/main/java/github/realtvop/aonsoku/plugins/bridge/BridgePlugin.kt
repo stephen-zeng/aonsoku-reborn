@@ -12,9 +12,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import com.google.android.material.color.DynamicColors
+import com.google.android.material.color.MaterialColors
 
 @CapacitorPlugin(name = "AonsokuNativeBridge")
 class BridgePlugin : Plugin() {
+
     private val mainHandler = Handler(Looper.getMainLooper())
     private val pluginScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val httpClient = SubsonicHttpClient()
@@ -341,4 +344,56 @@ class BridgePlugin : Plugin() {
             put("fallbackUrl", fallbackUrl)
         }
     }
+
+    @PluginMethod
+    fun getMaterialYouColors(call: PluginCall) {
+        val isDark = call.getBoolean("isDark", false) ?: false
+        try {
+            val supported = DynamicColors.isDynamicColorAvailable()
+            val response = JSObject().apply {
+                put("supported", supported)
+                if (supported) {
+                    val config = android.content.res.Configuration(context.resources.configuration)
+                    config.uiMode = (config.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK.inv()) or
+                            if (isDark) android.content.res.Configuration.UI_MODE_NIGHT_YES else android.content.res.Configuration.UI_MODE_NIGHT_NO
+
+                    val nightContext = context.createConfigurationContext(config)
+                    val dynamicContext = DynamicColors.wrapContextIfAvailable(nightContext)
+
+                    val colorsObj = JSObject().apply {
+                        val attrs = mapOf(
+                            "colorPrimary" to com.google.android.material.R.attr.colorPrimary,
+                            "colorOnPrimary" to com.google.android.material.R.attr.colorOnPrimary,
+                            "colorSecondary" to com.google.android.material.R.attr.colorSecondary,
+                            "colorOnSecondary" to com.google.android.material.R.attr.colorOnSecondary,
+                            "colorBackground" to android.R.attr.colorBackground,
+                            "colorOnBackground" to com.google.android.material.R.attr.colorOnBackground,
+                            "colorSurface" to com.google.android.material.R.attr.colorSurface,
+                            "colorOnSurface" to com.google.android.material.R.attr.colorOnSurface,
+                            "colorSurfaceVariant" to com.google.android.material.R.attr.colorSurfaceVariant,
+                            "colorOnSurfaceVariant" to com.google.android.material.R.attr.colorOnSurfaceVariant,
+                            "colorOutline" to com.google.android.material.R.attr.colorOutline
+                        )
+                        for ((name, attr) in attrs) {
+                            val resolvedColor = MaterialColors.getColor(
+                                dynamicContext,
+                                attr,
+                                android.graphics.Color.BLACK
+                            )
+                            val hexStr = String.format("#%06X", 0xFFFFFF and resolvedColor)
+                            put(name, hexStr)
+                        }
+                    }
+                    put("colors", colorsObj)
+                }
+            }
+            resolve(call, response)
+        } catch (e: Exception) {
+            val response = JSObject().apply {
+                put("supported", false)
+            }
+            resolve(call, response)
+        }
+    }
 }
+

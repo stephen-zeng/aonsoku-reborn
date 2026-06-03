@@ -17,6 +17,7 @@ interface ThemePersistedState {
   themeMode: ThemeMode;
   lightTheme: Theme;
   darkTheme: Theme;
+  materialYouEnabled: boolean;
 }
 
 export const useThemeStore = createWithEqualityFn<IThemeContext>()(
@@ -28,6 +29,7 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
           themeMode: ThemeMode.System,
           lightTheme: Theme.Light,
           darkTheme: Theme.Dark,
+          materialYouEnabled: false,
           setTheme: (theme: Theme) => {
             set((state) => {
               state.theme = theme;
@@ -48,7 +50,13 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
               state.darkTheme = theme;
             });
           },
+          setMaterialYouEnabled: (enabled: boolean) => {
+            set((state) => {
+              state.materialYouEnabled = enabled;
+            });
+          },
         })),
+
         {
           name: "theme_store",
         },
@@ -79,6 +87,9 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
           }
           if (!VALID_THEMES.has(merged.darkTheme)) {
             merged.darkTheme = Theme.Dark;
+          }
+          if (typeof merged.materialYouEnabled !== "boolean") {
+            merged.materialYouEnabled = false;
           }
           return merged;
         },

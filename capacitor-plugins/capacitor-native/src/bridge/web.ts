@@ -12,6 +12,7 @@ import type {
   ServerInfoResult,
   StoredCredentials,
   StoreCredentialsOptions,
+  MaterialYouColorsResult,
 } from "./definitions";
 import { NATIVE_BRIDGE_PLUGIN_NAME } from "./definitions";
 
@@ -55,5 +56,11 @@ export class AonsokuNativeBridgeWeb
 
   request(_options: APIRequestOptions): Promise<APIResponse> {
     return Promise.reject(unavailable("request"));
+  }
+
+  getMaterialYouColors(_options: {
+    isDark: boolean;
+  }): Promise<MaterialYouColorsResult> {
+    return Promise.resolve({ supported: false });
   }
 }

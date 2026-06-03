@@ -3,8 +3,73 @@ import { useThemeStore } from "@/store/theme.store";
 import { isDarkTheme, Theme, ThemeMode } from "@/types/themeContext";
 import { hasElectronBridge } from "@/utils/desktop";
 import { setDesktopTitleBarColors, updatePwaThemeColor } from "@/utils/theme";
+import { Capacitor } from "@capacitor/core";
+import {
+  isNativeBridgeAvailable,
+  AonsokuNativeBridge,
+} from "@/native/bridge/facade";
 
 export const appThemes: Theme[] = Object.values(Theme);
+
+const colorMap: Record<string, string[]> = {
+  colorPrimary: ["--primary", "--ring"],
+  colorOnPrimary: ["--primary-foreground"],
+  colorSecondary: ["--secondary"],
+  colorOnSecondary: ["--secondary-foreground"],
+  colorBackground: ["--background"],
+  colorOnBackground: ["--foreground"],
+  colorSurface: ["--card", "--popover"],
+  colorOnSurface: ["--card-foreground", "--popover-foreground"],
+  colorSurfaceVariant: ["--muted", "--accent"],
+  colorOnSurfaceVariant: ["--muted-foreground", "--accent-foreground"],
+  colorOutline: ["--border", "--input"],
+};
+
+function hexToHslComponents(hex: string): string {
+  let h = hex.replace(/^#/, "");
+  if (h.length === 3) {
+    h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+  }
+  const r = parseInt(h.substring(0, 2), 16) / 255;
+  const g = parseInt(h.substring(2, 4), 16) / 255;
+  const b = parseInt(h.substring(4, 6), 16) / 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let hue = 0;
+  let sat = 0;
+  const light = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    sat = light > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r:
+        hue = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        hue = (b - r) / d + 2;
+        break;
+      case b:
+        hue = (r - g) / d + 4;
+        break;
+    }
+    hue /= 6;
+  }
+
+  const hueDeg = Math.round(hue * 360);
+  const satPct = Math.round(sat * 100);
+  const lightPct = Math.round(light * 100);
+
+  return `${hueDeg} ${satPct}% ${lightPct}%`;
+}
+
+function clearMaterialYouStyles(root: HTMLElement) {
+  const allCssKeys = Object.values(colorMap).flat();
+  for (const cssKey of allCssKeys) {
+    root.style.removeProperty(cssKey);
+  }
+}
 
 function getSystemPrefersDark(): boolean {
   if (typeof window === "undefined" || !window.matchMedia) return false;
@@ -43,6 +108,7 @@ export function ThemeObserver() {
   const lightTheme = useThemeStore((s) => s.lightTheme);
   const darkTheme = useThemeStore((s) => s.darkTheme);
   const currentTheme = useThemeStore((s) => s.theme);
+  const materialYouEnabled = useThemeStore((s) => s.materialYouEnabled);
 
   const updateTheme = useCallback(() => {
     const resolved = resolveTheme(themeMode, lightTheme, darkTheme);
@@ -77,6 +143,40 @@ export function ThemeObserver() {
   useLayoutEffect(() => {
     applyTheme(currentTheme);
   }, [currentTheme]);
+
+  useLayoutEffect(() => {
+    const root = window.document.documentElement;
+    const isAndroid =
+      Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android";
+
+    if (materialYouEnabled && isAndroid && isNativeBridgeAvailable()) {
+      AonsokuNativeBridge.getMaterialYouColors({
+        isDark: isDarkTheme(currentTheme),
+      })
+        .then((result) => {
+          if (result.supported && result.colors) {
+            for (const [nativeKey, cssKeys] of Object.entries(colorMap)) {
+              const hexColor =
+                result.colors[nativeKey as keyof typeof result.colors];
+              if (hexColor) {
+                const hslStr = hexToHslComponents(hexColor);
+                for (const cssKey of cssKeys) {
+                  root.style.setProperty(cssKey, hslStr);
+                }
+              }
+            }
+          } else {
+            clearMaterialYouStyles(root);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to get Material You colors", err);
+          clearMaterialYouStyles(root);
+        });
+    } else {
+      clearMaterialYouStyles(root);
+    }
+  }, [currentTheme, materialYouEnabled]);
 
   return null;
 }

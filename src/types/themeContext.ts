@@ -79,8 +79,10 @@ export interface IThemeContext {
   themeMode: ThemeMode;
   lightTheme: Theme;
   darkTheme: Theme;
+  materialYouEnabled: boolean;
   setTheme: (theme: Theme) => void;
   setThemeMode: (mode: ThemeMode) => void;
   setLightTheme: (theme: Theme) => void;
   setDarkTheme: (theme: Theme) => void;
+  setMaterialYouEnabled: (enabled: boolean) => void;
 }
