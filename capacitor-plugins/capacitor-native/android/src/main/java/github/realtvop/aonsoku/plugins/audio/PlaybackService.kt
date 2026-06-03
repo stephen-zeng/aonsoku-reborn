@@ -62,6 +62,7 @@ class PlaybackService : MediaSessionService() {
     val queueEngine = NativeQueueEngine()
     var isQueueEngineActive = false
     var savedRestoreTime: Double? = null
+    var currentSongMetadata: MediaMetadata? = null
 
     var sleepTimerMode: String = "duration"
 
@@ -204,6 +205,10 @@ class PlaybackService : MediaSessionService() {
                     .add(COMMAND_SEEK_TO_NEXT)
                     .add(COMMAND_SEEK_TO_PREVIOUS)
                     .build()
+            }
+
+            override fun getMediaMetadata(): MediaMetadata {
+                return currentSongMetadata ?: super.getMediaMetadata()
             }
         }
 
@@ -523,6 +528,7 @@ class PlaybackService : MediaSessionService() {
         serviceScope.cancel()
         persistence.stopProgressTracking()
         listeners.clear()
+        currentSongMetadata = null
         mediaSession?.run {
             player?.release()
             release()
@@ -574,9 +580,12 @@ class PlaybackService : MediaSessionService() {
             mediaMetadataBuilder.setArtworkUri(Uri.parse(it))
         }
 
+        val customMeta = mediaMetadataBuilder.build()
+        currentSongMetadata = customMeta
+
         val mediaItem = MediaItem.Builder()
             .setUri(Uri.parse(url))
-            .setMediaMetadata(mediaMetadataBuilder.build())
+            .setMediaMetadata(customMeta)
             .build()
 
         cachedArtworkBitmap = null
@@ -710,6 +719,7 @@ class PlaybackService : MediaSessionService() {
         isQueueEngineActive = false
         queueEngine.setContextQueue(emptyList(), 0, false, null, null, null)
         persistence.stopProgressTracking()
+        currentSongMetadata = null
         serviceScope.launch(Dispatchers.IO) {
             preferencesStore.setQueueState("")
         }

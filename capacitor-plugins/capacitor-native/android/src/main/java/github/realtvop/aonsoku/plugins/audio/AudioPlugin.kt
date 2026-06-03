@@ -763,9 +763,12 @@ class AudioPlugin : Plugin() {
             }
         }
 
+        val customMeta = mediaMetadataBuilder.build()
+        playbackService?.currentSongMetadata = customMeta
+
         val mediaItem = MediaItem.Builder()
             .setUri(Uri.parse(url))
-            .setMediaMetadata(mediaMetadataBuilder.build())
+            .setMediaMetadata(customMeta)
             .build()
 
         val artworkUrl = parsedMetadata?.artworkUrl
@@ -916,8 +919,10 @@ class AudioPlugin : Plugin() {
                         if (artworkUrl != null) {
                             updatedMetadata.setArtworkUri(Uri.parse(artworkUrl))
                         }
+                        val updatedMeta = updatedMetadata.build()
+                        service.currentSongMetadata = updatedMeta
                         val updatedItem = currentItem.buildUpon()
-                            .setMediaMetadata(updatedMetadata.build())
+                            .setMediaMetadata(updatedMeta)
                             .build()
                         player.replaceMediaItem(player.currentMediaItemIndex, updatedItem)
                     }
@@ -947,6 +952,7 @@ class AudioPlugin : Plugin() {
                     handleScrobbleSongEnded()
                     abandonAudioFocus()
                     service.clearQueueState()
+                    service.currentSongMetadata = null
                     call.resolve()
                 }
             } catch (_: TimeoutCancellationException) {
