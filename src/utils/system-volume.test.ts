@@ -67,32 +67,32 @@ describe("volumeFromNative", () => {
 
 describe("canUseSystemVolumeControl", () => {
   it("returns false when supportsSystemVolumeControl is false", () => {
-  mocks.mockGetPlaybackCapabilities.mockReturnValue({
-    supportsSystemVolumeControl: false,
+    mocks.mockGetPlaybackCapabilities.mockReturnValue({
+      supportsSystemVolumeControl: false,
+    });
+    expect(canUseSystemVolumeControl()).toBe(false);
   });
-  expect(canUseSystemVolumeControl()).toBe(false);
-});
 
-it("returns false when plugin is unavailable", () => {
-  mocks.mockGetPlaybackCapabilities.mockReturnValue({
-    supportsSystemVolumeControl: true,
+  it("returns false when plugin is unavailable", () => {
+    mocks.mockGetPlaybackCapabilities.mockReturnValue({
+      supportsSystemVolumeControl: true,
+    });
+    mocks.mockGetNativeAudioPluginAvailability.mockReturnValue({
+      available: false,
+    });
+    expect(canUseSystemVolumeControl()).toBe(false);
   });
-  mocks.mockGetNativeAudioPluginAvailability.mockReturnValue({
-    available: false,
-  });
-  expect(canUseSystemVolumeControl()).toBe(false);
-});
 
-it("returns true when both capability and plugin are available", () => {
-  mocks.mockGetPlaybackCapabilities.mockReturnValue({
-    supportsSystemVolumeControl: true,
+  it("returns true when both capability and plugin are available", () => {
+    mocks.mockGetPlaybackCapabilities.mockReturnValue({
+      supportsSystemVolumeControl: true,
+    });
+    mocks.mockGetNativeAudioPluginAvailability.mockReturnValue({
+      available: true,
+      plugin: {},
+    });
+    expect(canUseSystemVolumeControl()).toBe(true);
   });
-  mocks.mockGetNativeAudioPluginAvailability.mockReturnValue({
-    available: true,
-    plugin: {},
-  });
-  expect(canUseSystemVolumeControl()).toBe(true);
-});
 });
 
 describe("getCurrentSystemVolume", () => {
@@ -108,74 +108,74 @@ describe("getCurrentSystemVolume", () => {
 
 describe("setSystemVolume", () => {
   it("calls native plugin with clamped 0-1 value", async () => {
-  mocks.mockGetPlaybackCapabilities.mockReturnValue({
-    supportsSystemVolumeControl: true,
-  });
-  mocks.mockGetNativeAudioPluginAvailability.mockReturnValue({
-    available: true,
-    plugin: { setSystemVolume: mocks.mockSetSystemVolume },
-  });
-  mocks.mockSetSystemVolume.mockResolvedValue(undefined);
+    mocks.mockGetPlaybackCapabilities.mockReturnValue({
+      supportsSystemVolumeControl: true,
+    });
+    mocks.mockGetNativeAudioPluginAvailability.mockReturnValue({
+      available: true,
+      plugin: { setSystemVolume: mocks.mockSetSystemVolume },
+    });
+    mocks.mockSetSystemVolume.mockResolvedValue(undefined);
 
-  await setSystemVolume(50);
+    await setSystemVolume(50);
 
-  expect(mocks.mockSetSystemVolume).toHaveBeenCalledWith({ value: 0.5 });
-  expect(getCurrentSystemVolume()).toBe(50);
-});
-
-it("updates currentSystemVolume on success", async () => {
-  mocks.mockGetPlaybackCapabilities.mockReturnValue({
-    supportsSystemVolumeControl: true,
-  });
-  mocks.mockGetNativeAudioPluginAvailability.mockReturnValue({
-    available: true,
-    plugin: { setSystemVolume: mocks.mockSetSystemVolume },
-  });
-  mocks.mockSetSystemVolume.mockResolvedValue(undefined);
-
-  setCurrentSystemVolume(80);
-  await setSystemVolume(30);
-
-  expect(getCurrentSystemVolume()).toBe(30);
-});
-
-it("does nothing when system volume control is unavailable", async () => {
-  mocks.mockGetPlaybackCapabilities.mockReturnValue({
-    supportsSystemVolumeControl: false,
+    expect(mocks.mockSetSystemVolume).toHaveBeenCalledWith({ value: 0.5 });
+    expect(getCurrentSystemVolume()).toBe(50);
   });
 
-  await setSystemVolume(50);
+  it("updates currentSystemVolume on success", async () => {
+    mocks.mockGetPlaybackCapabilities.mockReturnValue({
+      supportsSystemVolumeControl: true,
+    });
+    mocks.mockGetNativeAudioPluginAvailability.mockReturnValue({
+      available: true,
+      plugin: { setSystemVolume: mocks.mockSetSystemVolume },
+    });
+    mocks.mockSetSystemVolume.mockResolvedValue(undefined);
 
-  expect(mocks.mockSetSystemVolume).not.toHaveBeenCalled();
-  expect(getCurrentSystemVolume()).toBe(100);
+    setCurrentSystemVolume(80);
+    await setSystemVolume(30);
+
+    expect(getCurrentSystemVolume()).toBe(30);
+  });
+
+  it("does nothing when system volume control is unavailable", async () => {
+    mocks.mockGetPlaybackCapabilities.mockReturnValue({
+      supportsSystemVolumeControl: false,
+    });
+
+    await setSystemVolume(50);
+
+    expect(mocks.mockSetSystemVolume).not.toHaveBeenCalled();
+    expect(getCurrentSystemVolume()).toBe(100);
   });
 });
 
 describe("getSystemVolume", () => {
   it("returns native value converted to 0-100", async () => {
-  mocks.mockGetPlaybackCapabilities.mockReturnValue({
-    supportsSystemVolumeControl: true,
-  });
-  mocks.mockGetNativeAudioPluginAvailability.mockReturnValue({
-    available: true,
-    plugin: { getSystemVolume: mocks.mockGetSystemVolume },
-  });
-  mocks.mockGetSystemVolume.mockResolvedValue({ volume: 0.75 });
+    mocks.mockGetPlaybackCapabilities.mockReturnValue({
+      supportsSystemVolumeControl: true,
+    });
+    mocks.mockGetNativeAudioPluginAvailability.mockReturnValue({
+      available: true,
+      plugin: { getSystemVolume: mocks.mockGetSystemVolume },
+    });
+    mocks.mockGetSystemVolume.mockResolvedValue({ volume: 0.75 });
 
-  const result = await getSystemVolume();
+    const result = await getSystemVolume();
 
-  expect(result).toBe(75);
-  expect(getCurrentSystemVolume()).toBe(75);
-});
-
-it("returns 100 when system volume control is unavailable", async () => {
-  mocks.mockGetPlaybackCapabilities.mockReturnValue({
-    supportsSystemVolumeControl: false,
+    expect(result).toBe(75);
+    expect(getCurrentSystemVolume()).toBe(75);
   });
 
-  const result = await getSystemVolume();
+  it("returns 100 when system volume control is unavailable", async () => {
+    mocks.mockGetPlaybackCapabilities.mockReturnValue({
+      supportsSystemVolumeControl: false,
+    });
 
-  expect(result).toBe(100);
-  expect(mocks.mockGetSystemVolume).not.toHaveBeenCalled();
+    const result = await getSystemVolume();
+
+    expect(result).toBe(100);
+    expect(mocks.mockGetSystemVolume).not.toHaveBeenCalled();
   });
 });

@@ -56,34 +56,39 @@ export const QueueCurrentSong = memo(function QueueCurrentSong({
             {currentSong.artist}
           </span>
         </div>
-        <LikeButton
-          className="shrink-0 size-8 rounded-full"
+        <div
+          className="flex items-center gap-3 shrink-0"
           onClick={(e) => e.stopPropagation()}
-        />
-        <DropdownMenu open={open} onOpenChange={setOpen}>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={clsx(
-                "shrink-0 size-8 rounded-full",
-                hoverBg10,
-                triggerProps.className,
-              )}
-              onPointerDown={triggerProps.onPointerDown}
-              onPointerMove={triggerProps.onPointerMove}
-              onPointerUp={triggerProps.onPointerUp}
-              onPointerCancel={triggerProps.onPointerCancel}
-              onClick={triggerProps.onClick}
-              onContextMenu={triggerProps.onContextMenu}
-            >
-              <EllipsisVertical className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <QueueMenuOptions variant="dropdown" song={currentSong} />
-          </DropdownMenuContent>
-        </DropdownMenu>
+          onTouchStart={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+          onTouchEnd={(e) => e.stopPropagation()}
+        >
+          <LikeButton className="shrink-0 size-8 rounded-full" />
+          <DropdownMenu open={open} onOpenChange={setOpen}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={clsx(
+                  "shrink-0 size-8 rounded-full",
+                  hoverBg10,
+                  triggerProps.className,
+                )}
+                onPointerDown={triggerProps.onPointerDown}
+                onPointerMove={triggerProps.onPointerMove}
+                onPointerUp={triggerProps.onPointerUp}
+                onPointerCancel={triggerProps.onPointerCancel}
+                onClick={triggerProps.onClick}
+                onContextMenu={triggerProps.onContextMenu}
+              >
+                <EllipsisVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <QueueMenuOptions variant="dropdown" song={currentSong} />
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,9 @@
 import { usePlayerStore } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
-import { canUseSystemVolumeControl, getCurrentSystemVolume } from "@/utils/system-volume";
+import {
+  canUseSystemVolumeControl,
+  getCurrentSystemVolume,
+} from "@/utils/system-volume";
 
 const CHANNEL_NAME = "aonsoku-mini-player";
 
