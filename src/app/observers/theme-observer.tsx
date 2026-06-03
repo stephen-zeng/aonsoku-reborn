@@ -16,12 +16,12 @@ const colorMap: Record<string, string[]> = {
   colorOnPrimary: ["--primary-foreground"],
   colorSecondary: ["--secondary"],
   colorOnSecondary: ["--secondary-foreground"],
-  colorSurfaceContainerLowest: ["--background", "--background-foreground"],
-  colorOnBackground: ["--foreground"],
+  colorSurface: ["--background", "--background-foreground"], // M3 Standard: Surface as base background
+  colorOnSurface: ["--foreground", "--card-foreground", "--popover-foreground"],
   colorSurfaceContainerLow: ["--card", "--popover"],
   colorSurfaceContainer: ["--muted"],
   colorSurfaceContainerHigh: ["--accent"],
-  colorOnSurface: ["--card-foreground", "--popover-foreground", "--accent-foreground", "--muted-foreground"],
+  colorOnSurfaceVariant: ["--muted-foreground", "--accent-foreground"],
   colorSurfaceContainerHighest: ["--border", "--input"],
 };
 
