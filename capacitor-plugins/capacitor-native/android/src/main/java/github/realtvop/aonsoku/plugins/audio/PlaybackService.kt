@@ -9,7 +9,9 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Binder
+import android.content.pm.PackageManager
 import android.os.Build
+import android.Manifest
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -458,10 +460,53 @@ class PlaybackService : MediaSessionService() {
         return builder.build()
     }
 
+    private fun hasNotificationPermission(): Boolean {
+        if (Build.VERSION.SDK_INT < 33) return true
+        return checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+    }
+
+    private var isForegroundStarted = false
+
     private fun showNotification() {
         val isPlaying = player?.isPlaying ?: false
         val notification = buildNotification(isPlaying)
-        startForeground(NOTIFICATION_ID, notification)
+        if (!isForegroundStarted) {
+            try {
+                startForeground(NOTIFICATION_ID, notification)
+                isForegroundStarted = true
+            } catch (e: Exception) {
+                NativeLogger.warn(
+                    "startForeground failed, using fallback notification: ${e.message}",
+                    "playback-service"
+                )
+                val manager = getSystemService(NotificationManager::class.java)
+                try {
+                    manager.notify(NOTIFICATION_ID, notification)
+                } catch (_: Exception) {}
+            }
+        } else {
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.notify(NOTIFICATION_ID, notification)
+        }
+    }
+
+    fun tryStartForeground(): Boolean {
+        if (isForegroundStarted) return true
+        if (!hasNotificationPermission()) return false
+        val isPlaying = player?.isPlaying ?: false
+        val notification = buildNotification(isPlaying)
+        try {
+            startForeground(NOTIFICATION_ID, notification)
+            isForegroundStarted = true
+            return true
+        } catch (e: Exception) {
+            NativeLogger.warn(
+                "tryStartForeground failed: ${e.message}",
+                "playback-service"
+            )
+            return false
+        }
     }
 
     fun clearArtworkCache() {
@@ -594,6 +639,8 @@ class PlaybackService : MediaSessionService() {
         mainHandler.post {
             val currentPlayer = player ?: run {
                 NativeLogger.error("loadSong: player is null, aborting", "playback-service")
+                emitError("internal_error", "ExoPlayer not available")
+                emitPlaybackState("failed")
                 return@post
             }
             currentPlayer.stop()

@@ -242,7 +242,6 @@ export function AudioPlayer({
         logger.info(
           `[AudioSrcChange:SKIP] reason=nativeDrivenTransition | songId=${songId} | src=${src?.slice(-60)}`,
         );
-        sessionRef.current.beginSourceChange(songId);
         sessionRef.current.markLoopRestartSyncHandled();
         setAudioSrc(src || undefined);
         return;
