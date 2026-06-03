@@ -57,6 +57,7 @@ class PlaybackService : MediaSessionService() {
     private var mediaSession: MediaSession? = null
     private var player: ExoPlayer? = null
     private var cachedArtworkBitmap: Bitmap? = null
+    private var skipCommandsEnabled = false
 
     val queueEngine = NativeQueueEngine()
     var isQueueEngineActive = false
@@ -193,6 +194,12 @@ class PlaybackService : MediaSessionService() {
             .build()
 
         player = newPlayer
+
+        // Force skip commands so notification action buttons are always visible.
+        // ExoPlayer only advertises COMMAND_SEEK_TO_NEXT / _PREVIOUS when the
+        // timeline has more than one item; without them, the system may hide
+        // the action buttons added to the MediaStyle notification.
+        applySkipCommands()
 
         persistence = PlaybackStatePersistence(preferencesStore, serviceScope).apply {
             setStateProvider {
@@ -385,7 +392,8 @@ class PlaybackService : MediaSessionService() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-        val style = MediaStyle().setShowActionsInCompactView(0, 1, 2)
+        val style = MediaStyle()
+            .setShowActionsInCompactView(0, 1, 2)
         if (session != null) {
             style.setMediaSession(session.sessionCompatToken)
         }
@@ -430,6 +438,7 @@ class PlaybackService : MediaSessionService() {
             .setDeleteIntent(stopPendingIntent)
             .setOngoing(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
             .setStyle(style)
             .addAction(android.R.drawable.ic_media_previous, "Previous", prevPendingIntent)
             .addAction(playPauseIcon, playPauseLabel, playPausePendingIntent)
@@ -592,6 +601,17 @@ class PlaybackService : MediaSessionService() {
         if (coverArtId.isNullOrEmpty()) return null
         val resolver = NativeSourceResolver(this)
         return resolver.resolveCoverArtUrl(coverArtId, 300)
+    }
+
+    private fun applySkipCommands() {
+        val currentPlayer = player ?: return
+        val commands = currentPlayer.getAvailableCommands()
+            .buildUpon()
+            .add(Player.COMMAND_SEEK_TO_NEXT)
+            .add(Player.COMMAND_SEEK_TO_PREVIOUS)
+            .build()
+        currentPlayer.setAvailableCommands(commands)
+        skipCommandsEnabled = true
     }
 
     fun loadAndCacheArtwork(artworkUrl: String?) {
