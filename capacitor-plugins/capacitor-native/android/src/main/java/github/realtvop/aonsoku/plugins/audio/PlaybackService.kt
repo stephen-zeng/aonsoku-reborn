@@ -277,9 +277,7 @@ class PlaybackService : MediaSessionService() {
                         if (!isQueueEngineActive) {
                             val commandName = when (playerCommand) {
                                 Player.COMMAND_PLAY_PAUSE -> "togglePlayPause"
-                                Player.COMMAND_PLAY -> "play"
-                                Player.COMMAND_PAUSE -> "pause"
-                                Player.COMMAND_SEEK_TO -> "seek"
+                                Player.COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM -> "seek"
                                 else -> null
                             }
                             if (commandName != null) {
