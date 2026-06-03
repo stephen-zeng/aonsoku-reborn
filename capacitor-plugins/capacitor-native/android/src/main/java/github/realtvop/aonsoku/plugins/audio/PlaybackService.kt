@@ -19,6 +19,7 @@ import androidx.media.app.NotificationCompat.MediaStyle
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -55,9 +56,8 @@ class PlaybackService : MediaSessionService() {
     }
 
     private var mediaSession: MediaSession? = null
-    private var player: ExoPlayer? = null
+    private var player: Player? = null
     private var cachedArtworkBitmap: Bitmap? = null
-    private var skipCommandsEnabled = false
 
     val queueEngine = NativeQueueEngine()
     var isQueueEngineActive = false
@@ -174,9 +174,10 @@ class PlaybackService : MediaSessionService() {
 
     private val binder = LocalBinder()
 
-    fun getPlayer(): ExoPlayer? = player
+    fun getPlayer(): Player? = player
     fun getSession(): MediaSession? = mediaSession
 
+    @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
         NativeLogger.info("PlaybackService created", "playback-service")
@@ -188,18 +189,23 @@ class PlaybackService : MediaSessionService() {
             .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
             .build()
 
-        val newPlayer = ExoPlayer.Builder(this)
+        val basePlayer = ExoPlayer.Builder(this)
             .setAudioAttributes(audioAttributes, true)
             .setHandleAudioBecomingNoisy(true)
             .build()
-
-        player = newPlayer
 
         // Force skip commands so notification action buttons are always visible.
         // ExoPlayer only advertises COMMAND_SEEK_TO_NEXT / _PREVIOUS when the
         // timeline has more than one item; without them, the system may hide
         // the action buttons added to the MediaStyle notification.
-        applySkipCommands()
+        player = object : ForwardingPlayer(basePlayer) {
+            override fun getAvailableCommands(): Player.Commands {
+                return super.getAvailableCommands().buildUpon()
+                    .add(COMMAND_SEEK_TO_NEXT)
+                    .add(COMMAND_SEEK_TO_PREVIOUS)
+                    .build()
+            }
+        }
 
         persistence = PlaybackStatePersistence(preferencesStore, serviceScope).apply {
             setStateProvider {
@@ -243,7 +249,7 @@ class PlaybackService : MediaSessionService() {
             }
         }
 
-        newPlayer.addListener(object : Player.Listener {
+        player?.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 if (playbackState == Player.STATE_ENDED) {
                     if (sleepTimerMode == "endOfTrack") {
@@ -314,7 +320,7 @@ class PlaybackService : MediaSessionService() {
             }
         }
 
-        mediaSession = MediaSession.Builder(this, newPlayer)
+        mediaSession = MediaSession.Builder(this, player!!)
             .setCallback(callback)
             .build()
 
@@ -603,16 +609,7 @@ class PlaybackService : MediaSessionService() {
         return resolver.resolveCoverArtUrl(coverArtId, 300)
     }
 
-    private fun applySkipCommands() {
-        val currentPlayer = player ?: return
-        val commands = currentPlayer.getAvailableCommands()
-            .buildUpon()
-            .add(Player.COMMAND_SEEK_TO_NEXT)
-            .add(Player.COMMAND_SEEK_TO_PREVIOUS)
-            .build()
-        currentPlayer.setAvailableCommands(commands)
-        skipCommandsEnabled = true
-    }
+
 
     fun loadAndCacheArtwork(artworkUrl: String?) {
         val url = artworkUrl ?: return
