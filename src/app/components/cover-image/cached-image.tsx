@@ -186,6 +186,7 @@ export function CachedImage({
   const [failedNetworkSrc, setFailedNetworkSrc] = useState<string | null>(null);
   const [cachedSrcFailed, setCachedSrcFailed] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [prevSrc, setPrevSrc] = useState<string | null>(null);
 
   const cacheKeys = useMemo(
     () => resolveCacheKeys(coverArtId, coverArtType, albumId),
@@ -209,11 +210,11 @@ export function CachedImage({
     resolvedSrc = defaultArtUrl;
   }
 
-  // Reset loaded status on source change to ensure smooth transition and hide placeholder during load
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — reset loaded status on source change
-  useEffect(() => {
+  // Reset loaded status synchronously during render on source change to prevent layout/placeholder flashes
+  if (resolvedSrc !== prevSrc) {
+    setPrevSrc(resolvedSrc);
     setIsLoaded(false);
-  }, [resolvedSrc]);
+  }
 
   const handleLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     setIsLoaded(true);
