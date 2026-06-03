@@ -917,6 +917,7 @@ class AudioPlugin : Plugin() {
                             .build()
                         player.replaceMediaItem(player.currentMediaItemIndex, updatedItem)
                     }
+                    service.updateNotification()
                     call.resolve()
                 }
             } catch (_: TimeoutCancellationException) {

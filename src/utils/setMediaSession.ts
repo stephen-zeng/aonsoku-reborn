@@ -4,6 +4,7 @@ import { usePlayerStore } from "@/store/player.store";
 import { LanControlMessageType } from "@/types/lanControl";
 import { ISong } from "@/types/responses/song";
 import { getCoverArtUrlFromSongPreference, resolveCacheKeys } from "./coverArt";
+import { getRuntime } from "./capabilities";
 import { isValidDuration } from "./duration";
 import { logger } from "./logger";
 
@@ -11,11 +12,12 @@ const MEDIA_SESSION_COVER_SIZE = "300";
 const REMOVE_DEBOUNCE_MS = 500;
 
 function isMediaSessionSupported(): boolean {
-  return (
-    typeof navigator !== "undefined" &&
-    "mediaSession" in navigator &&
-    navigator.mediaSession !== null
-  );
+  if (typeof navigator === "undefined") return false;
+  if (!("mediaSession" in navigator) || navigator.mediaSession === null) return false;
+  // On Android native, the ExoPlayer MediaSession handles system-level
+  // controls. navigator.mediaSession would conflict with it.
+  if (getRuntime() === "capacitor-android") return false;
+  return true;
 }
 
 let lastArtworkUrl: string | null = null;

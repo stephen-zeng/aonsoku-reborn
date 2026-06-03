@@ -13,6 +13,7 @@ import android.os.IBinder
 import android.os.Looper
 import androidx.annotation.OptIn
 import androidx.core.app.NotificationCompat
+import androidx.media.app.NotificationCompat.MediaStyle
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -23,6 +24,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionResult
+import github.realtvop.aonsoku.MainActivity
 import github.realtvop.aonsoku.plugins.debug.NativeLogger
 import github.realtvop.aonsoku.plugins.preferences.NativePreferencesStore
 import kotlinx.coroutines.CoroutineScope
@@ -38,6 +40,17 @@ class PlaybackService : MediaSessionService() {
     companion object {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "aonsoku_playback"
+
+        const val ACTION_PLAY_PAUSE = "github.realtvop.aonsoku.action.PLAY_PAUSE"
+        const val ACTION_SKIP_NEXT = "github.realtvop.aonsoku.action.SKIP_NEXT"
+        const val ACTION_SKIP_PREV = "github.realtvop.aonsoku.action.SKIP_PREV"
+        const val ACTION_STOP = "github.realtvop.aonsoku.action.STOP"
+
+        private const val REQUEST_CODE_CONTENT = 1000
+        private const val REQUEST_CODE_PLAY_PAUSE = 1001
+        private const val REQUEST_CODE_SKIP_NEXT = 1002
+        private const val REQUEST_CODE_SKIP_PREV = 1003
+        private const val REQUEST_CODE_STOP = 1004
     }
 
     private var mediaSession: MediaSession? = null
@@ -240,6 +253,7 @@ class PlaybackService : MediaSessionService() {
             }
 
             override fun onIsPlayingChanged(isPlaying: Boolean) {
+                updateNotification()
                 if (isPlaying) {
                     persistence.startProgressTracking()
                 } else {
@@ -336,31 +350,97 @@ class PlaybackService : MediaSessionService() {
         }
     }
 
-    private fun buildNotification(): Notification {
+    private fun buildNotification(isPlaying: Boolean = false): Notification {
         val session = mediaSession
         val title: String
         val text: String
+        var subText: String? = null
         if (session != null) {
             val metadata = session.player.mediaMetadata
             title = metadata.title?.toString() ?: "Aonsoku"
-            text = metadata.artist?.toString() ?: metadata.albumTitle?.toString() ?: "Playing"
+            text = metadata.artist?.toString() ?: "Playing"
+            subText = metadata.albumTitle?.toString()
         } else {
             title = "Aonsoku"
             text = "Playing"
         }
 
+        val openIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val contentPendingIntent = PendingIntent.getActivity(
+            this,
+            REQUEST_CODE_CONTENT,
+            openIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val stopIntent = Intent(this, PlaybackService::class.java).setAction(ACTION_STOP)
+        val stopPendingIntent = PendingIntent.getService(
+            this,
+            REQUEST_CODE_STOP,
+            stopIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val style = MediaStyle().setShowActionsInCompactView(0, 1, 2)
+        if (session != null) {
+            style.setMediaSession(session.sessionCompatToken)
+        }
+
+        val prevIntent = Intent(this, PlaybackService::class.java).setAction(ACTION_SKIP_PREV)
+        val prevPendingIntent = PendingIntent.getService(
+            this,
+            REQUEST_CODE_SKIP_PREV,
+            prevIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val playPauseIntent = Intent(this, PlaybackService::class.java).setAction(ACTION_PLAY_PAUSE)
+        val playPausePendingIntent = PendingIntent.getService(
+            this,
+            REQUEST_CODE_PLAY_PAUSE,
+            playPauseIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val nextIntent = Intent(this, PlaybackService::class.java).setAction(ACTION_SKIP_NEXT)
+        val nextPendingIntent = PendingIntent.getService(
+            this,
+            REQUEST_CODE_SKIP_NEXT,
+            nextIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val playPauseIcon = if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
+        val playPauseLabel = if (isPlaying) "Pause" else "Play"
+
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_media_play)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(text)
+            .setSubText(subText)
+            .setContentIntent(contentPendingIntent)
+            .setDeleteIntent(stopPendingIntent)
             .setOngoing(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setStyle(style)
+            .addAction(android.R.drawable.ic_media_previous, "Previous", prevPendingIntent)
+            .addAction(playPauseIcon, playPauseLabel, playPausePendingIntent)
+            .addAction(android.R.drawable.ic_media_next, "Next", nextPendingIntent)
             .build()
     }
 
     private fun showNotification() {
-        val notification = buildNotification()
+        val isPlaying = player?.isPlaying ?: false
+        val notification = buildNotification(isPlaying)
         startForeground(NOTIFICATION_ID, notification)
+    }
+
+    fun updateNotification() {
+        if (player != null) {
+            showNotification()
+        }
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
@@ -372,6 +452,44 @@ class PlaybackService : MediaSessionService() {
             return super.onBind(intent)
         }
         return binder
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            ACTION_PLAY_PAUSE -> {
+                val currentPlayer = player ?: return START_STICKY
+                if (currentPlayer.isPlaying) {
+                    currentPlayer.pause()
+                } else {
+                    currentPlayer.play()
+                }
+                updateNotification()
+            }
+            ACTION_SKIP_NEXT -> {
+                if (isQueueEngineActive) {
+                    queueEngine.skipToNext()
+                } else {
+                    emitRemoteCommand("next")
+                }
+                updateNotification()
+            }
+            ACTION_SKIP_PREV -> {
+                if (isQueueEngineActive) {
+                    val currentTime = (player?.currentPosition ?: 0L) / 1000.0
+                    queueEngine.skipToPrevious(currentTime)
+                } else {
+                    emitRemoteCommand("previous")
+                }
+                updateNotification()
+            }
+            ACTION_STOP -> {
+                player?.stop()
+                player?.clearMediaItems()
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
+            }
+        }
+        return super.onStartCommand(intent, flags, startId)
     }
 
     override fun onDestroy() {
