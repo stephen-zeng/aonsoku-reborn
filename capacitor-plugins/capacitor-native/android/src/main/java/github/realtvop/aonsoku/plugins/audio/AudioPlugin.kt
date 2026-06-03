@@ -86,9 +86,6 @@ class AudioPlugin : Plugin() {
 
     private val db by lazy { AonsokuDatabase.getInstance(context) }
 
-    private var audioManager: AudioManager? = null
-    private var audioFocusChangeListener: AudioManager.OnAudioFocusChangeListener? = null
-    private var wasPlayingBeforeFocusLoss: Boolean = false
     private var headphoneReceiver: HeadphoneUnplugReceiver? = null
 
     private inner class HeadphoneUnplugReceiver : android.content.BroadcastReceiver() {
@@ -263,73 +260,20 @@ class AudioPlugin : Plugin() {
     // MARK: - Audio Focus
 
     private fun registerAudioFocusListener() {
-        audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
-        if (audioManager == null) return
-
-        audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
-            handleAudioFocusChange(focusChange)
-        }
+        // No-op: ExoPlayer manages audio focus automatically via setAudioAttributes(..., true)
     }
 
     private fun unregisterAudioFocusListener() {
-        audioFocusChangeListener?.let {
-            audioManager?.abandonAudioFocus(it)
-        }
-        audioFocusChangeListener = null
+        // No-op
     }
 
     private fun requestAudioFocus(): Int {
-        val am = audioManager ?: return AudioManager.AUDIOFOCUS_REQUEST_GRANTED
-        val listener = audioFocusChangeListener ?: return AudioManager.AUDIOFOCUS_REQUEST_GRANTED
-        return am.requestAudioFocus(
-            listener,
-            AudioManager.STREAM_MUSIC,
-            AudioManager.AUDIOFOCUS_GAIN,
-        )
+        // No-op: ExoPlayer requests audio focus automatically on play()
+        return AudioManager.AUDIOFOCUS_REQUEST_GRANTED
     }
 
     private fun abandonAudioFocus() {
-        val am = audioManager ?: return
-        val listener = audioFocusChangeListener ?: return
-        am.abandonAudioFocus(listener)
-    }
-
-    private fun handleAudioFocusChange(focusChange: Int) {
-        when (focusChange) {
-            AudioManager.AUDIOFOCUS_GAIN -> {
-                notifyListeners("interruptionChanged", JSObject().apply {
-                    put("requestId", currentRequestId ?: JSONObject.NULL)
-                    put("type", "ended")
-                    put("shouldResume", wasPlayingBeforeFocusLoss)
-                })
-                wasPlayingBeforeFocusLoss = false
-            }
-            AudioManager.AUDIOFOCUS_LOSS -> {
-                val player = playbackService?.getPlayer()
-                wasPlayingBeforeFocusLoss = player?.isPlaying == true
-                player?.pause()
-                notifyListeners("interruptionChanged", JSObject().apply {
-                    put("requestId", currentRequestId ?: JSONObject.NULL)
-                    put("type", "began")
-                })
-            }
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                val player = playbackService?.getPlayer()
-                wasPlayingBeforeFocusLoss = player?.isPlaying == true
-                player?.pause()
-                notifyListeners("interruptionChanged", JSObject().apply {
-                    put("requestId", currentRequestId ?: JSONObject.NULL)
-                    put("type", "began")
-                })
-            }
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
-                notifyListeners("interruptionChanged", JSObject().apply {
-                    put("requestId", currentRequestId ?: JSONObject.NULL)
-                    put("type", "began")
-                    put("canDuck", true)
-                })
-            }
-        }
+        // No-op
     }
 
     // MARK: - Headphone Route Receiver
