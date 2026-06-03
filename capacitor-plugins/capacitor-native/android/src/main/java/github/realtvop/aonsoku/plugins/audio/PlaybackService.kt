@@ -438,7 +438,7 @@ class PlaybackService : MediaSessionService() {
         val playPauseIcon = if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
         val playPauseLabel = if (isPlaying) "Pause" else "Play"
 
-        val iconResId = resources.getIdentifier("ic_notification", "drawable", packageName)
+        val iconResId = resources.getIdentifier("icon_transparent", "drawable", packageName)
         val icon = if (iconResId != 0) iconResId else android.R.drawable.ic_menu_info_details
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
