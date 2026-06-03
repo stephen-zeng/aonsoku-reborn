@@ -1,6 +1,7 @@
 import { PropsWithChildren, useEffect, useMemo, useState } from "react";
 import { useCurrentLyricLine } from "@/app/hooks/use-current-lyric-line";
 import { usePlaybackControls } from "@/app/hooks/use-playback-controls";
+import { useSystemVolume } from "@/app/hooks/use-system-volume";
 import {
   usePlayerActions,
   usePlayerProgress,
@@ -39,6 +40,12 @@ export function InternalMiniPlayerProvider({ children }: PropsWithChildren) {
   const playerState = usePlayerStore((s) => s.playerState);
   const progress = usePlayerProgress();
   const { currentLine } = useCurrentLyricLine();
+  const { volume: systemVolume, supportsSystemVolumeControl } =
+    useSystemVolume();
+
+  const displayVolume = supportsSystemVolumeControl
+    ? systemVolume
+    : playerState.volume;
 
   const value = useMemo<MiniPlayerContextValue>(
     () => ({
@@ -66,7 +73,7 @@ export function InternalMiniPlayerProvider({ children }: PropsWithChildren) {
           : null,
         progress,
         duration: playerState.currentDuration ?? 0,
-        volume: playerState.volume,
+        volume: displayVolume,
         mediaType: playerState.mediaType as "song" | "radio",
         currentSongColor,
         currentLine,
@@ -93,6 +100,7 @@ export function InternalMiniPlayerProvider({ children }: PropsWithChildren) {
       progress,
       currentSongColor,
       currentLine,
+      displayVolume,
       togglePlayPause,
       playNextSong,
       playPrevSong,

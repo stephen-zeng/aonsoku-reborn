@@ -1,6 +1,7 @@
 import type { PluginListenerHandle } from "@capacitor/core";
 import { getSongStreamUrl } from "@/api/httpClient";
 import { getNativeAudioPluginAvailability } from "@/native/audio/facade";
+import { getRuntime } from "@/utils/capabilities";
 import type {
   NativeAudioEvents,
   NativeAudioPlugin,
@@ -533,8 +534,14 @@ export class NativeQueueController implements QueueController {
     });
   }
 
-  setVolume(_volume: number): void {
-    // iOS does not support programmatic volume control
+  setVolume(volume: number): void {
+    const runtime = getRuntime();
+    if (runtime !== "capacitor-android") return;
+
+    const clamped = Math.max(0, Math.min(100, Math.round(volume)));
+    this.#plugin.setSystemVolume({ value: clamped / 100 }).catch(() => {
+      /* ignore */
+    });
   }
 
   setPlayRadio(_list: Radio[], _index: number): void {

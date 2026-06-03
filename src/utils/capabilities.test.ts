@@ -220,7 +220,8 @@ describe("getPlaybackCapabilities", () => {
 
     const caps = getPlaybackCapabilities();
     expect(caps.canSetVolume).toBe(true);
-    expect(caps.requiresSystemVolume).toBe(false);
+    expect(caps.requiresSystemVolume).toBe(true);
+    expect(caps.supportsSystemVolumeControl).toBe(true);
     expect(caps.supportsWebAudioReplayGain).toBe(false);
     expect(caps.supportsNativePlayback).toBe(true);
     expect(caps.supportsBackgroundPlayback).toBe(true);

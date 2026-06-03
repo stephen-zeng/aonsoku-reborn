@@ -4,6 +4,7 @@ import { LanControlMessageType } from "@/types/lanControl";
 import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
 import { getPlaybackCapabilities } from "@/utils/capabilities";
 import { logger } from "@/utils/logger";
+import { setSystemVolume } from "@/utils/system-volume";
 import { getNativeQueueController } from "@/player/queue-controller";
 
 interface SharedDeps {
@@ -111,13 +112,17 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     setVolume: (volume: number) => {
-      if (!getPlaybackCapabilities().canSetVolume) return;
+      const caps = getPlaybackCapabilities();
+      if (!caps.canSetVolume) return;
       remoteSend(LanControlMessageType.SET_VOLUME, {
         volume,
       });
       set((state) => {
         state.playerState.volume = volume;
       });
+      if (caps.requiresSystemVolume && caps.supportsSystemVolumeControl) {
+        setSystemVolume(volume);
+      }
     },
 
     handleVolumeWheel: (isScrollingDown: boolean) => {

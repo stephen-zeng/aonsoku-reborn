@@ -13,6 +13,7 @@ type ListenerMap = {
 };
 
 const mocks = vi.hoisted(() => {
+  const mockGetRuntime = vi.fn();
   const listeners: ListenerMap = {};
   const plugin: NativeAudioPlugin = {
     load: vi.fn(async () => {}),
@@ -110,6 +111,7 @@ const mocks = vi.hoisted(() => {
   };
 
   return {
+    mockGetRuntime,
     plugin,
     listeners,
     storeState,
@@ -119,6 +121,10 @@ const mocks = vi.hoisted(() => {
     })),
   };
 });
+
+vi.mock("@/utils/capabilities", () => ({
+  getRuntime: mocks.mockGetRuntime,
+}));
 
 vi.mock("@/native/audio/facade", () => ({
   getNativeAudioPluginAvailability: mocks.getNativeAudioPluginAvailability,
@@ -204,6 +210,55 @@ describe("NativeQueueController terminal playback reset", () => {
     expect(mocks.plugin.seek).not.toHaveBeenCalledWith({ position: 0 });
     expect(mocks.storeState.playerProgress.progress).toBe(0);
     expect(mocks.storeState.playerState.isPlaying).toBe(true);
+
+    controller.dispose();
+  });
+});
+
+describe("NativeQueueController setVolume", () => {
+  beforeEach(() => {
+    for (const value of Object.values(mocks.plugin)) {
+      if (typeof value === "function") {
+        vi.mocked(value).mockClear();
+      }
+    }
+  });
+
+  it("calls setSystemVolume on Android", () => {
+    mocks.mockGetRuntime.mockReturnValue("capacitor-android");
+    const controller = new NativeQueueController();
+
+    controller.setVolume(25);
+
+    expect(mocks.plugin.setSystemVolume).toHaveBeenCalledWith({
+      value: 0.25,
+    });
+
+    controller.dispose();
+  });
+
+  it("does not call setSystemVolume on iOS", () => {
+    mocks.mockGetRuntime.mockReturnValue("capacitor-ios");
+    const controller = new NativeQueueController();
+
+    mocks.plugin.setSystemVolume.mockClear();
+    controller.setVolume(50);
+
+    expect(mocks.plugin.setSystemVolume).not.toHaveBeenCalled();
+
+    controller.dispose();
+  });
+
+  it("handles setSystemVolume failure gracefully", () => {
+    mocks.mockGetRuntime.mockReturnValue("capacitor-android");
+    const controller = new NativeQueueController();
+
+    mocks.plugin.setSystemVolume.mockRejectedValue(new Error("plugin error"));
+    controller.setVolume(75);
+
+    expect(mocks.plugin.setSystemVolume).toHaveBeenCalledWith({
+      value: 0.75,
+    });
 
     controller.dispose();
   });
