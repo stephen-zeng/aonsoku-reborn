@@ -768,6 +768,7 @@ class AudioPlugin : Plugin() {
             .setMediaMetadata(mediaMetadataBuilder.build())
             .build()
 
+        val artworkUrl = parsedMetadata?.artworkUrl
         playbackService?.clearArtworkCache()
 
         mainHandler.post {
@@ -787,6 +788,7 @@ class AudioPlugin : Plugin() {
                 requestAudioFocus()
                 player.play()
             }
+            playbackService?.loadAndCacheArtwork(artworkUrl)
             onResolved()
         }
     }

@@ -263,14 +263,6 @@ class PlaybackService : MediaSessionService() {
                     persistence.flushNow()
                 }
             }
-
-            override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
-                val artworkData = mediaMetadata.artworkData
-                if (artworkData != null) {
-                    cachedArtworkBitmap = BitmapFactory.decodeByteArray(artworkData, 0, artworkData.size)
-                }
-                updateNotification()
-            }
         })
 
         val callback = object : MediaSession.Callback {
@@ -591,13 +583,35 @@ class PlaybackService : MediaSessionService() {
                 currentPlayer.play()
             }
             showNotification()
+            loadAndCacheArtwork(artworkUrl)
         }
     }
 
     private fun resolveArtworkUrl(song: QueueSong): String? {
         val coverArtId = song.coverArtId
         if (coverArtId.isNullOrEmpty()) return null
-        return "aonsoku-media://getCoverArt?id=$coverArtId&size=300"
+        val resolver = NativeSourceResolver(this)
+        return resolver.resolveCoverArtUrl(coverArtId, 300)
+    }
+
+    fun loadAndCacheArtwork(artworkUrl: String?) {
+        val url = artworkUrl ?: return
+        cachedArtworkBitmap = null
+        serviceScope.launch(Dispatchers.IO) {
+            try {
+                val inputStream = java.net.URL(url).openStream()
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream.close()
+                if (bitmap != null) {
+                    withContext(Dispatchers.Main) {
+                        cachedArtworkBitmap = bitmap
+                        updateNotification()
+                    }
+                }
+            } catch (e: Exception) {
+                NativeLogger.warn("Failed to load artwork: ${e.message}", "playback-service")
+            }
+        }
     }
 
     private fun restorePlaybackState() {

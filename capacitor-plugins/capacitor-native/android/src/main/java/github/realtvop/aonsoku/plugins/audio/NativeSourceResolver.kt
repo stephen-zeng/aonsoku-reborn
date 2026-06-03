@@ -60,6 +60,27 @@ class NativeSourceResolver(
         return null
     }
 
+    fun resolveCoverArtUrl(coverArtId: String, size: Int = 300): String? {
+        val credentials = credentialStore.retrieve()
+        if (credentials == null) {
+            NativeLogger.warn("Cannot resolve cover art: no credentials", "source-resolver")
+            return null
+        }
+
+        val cleanBaseUrl = credentials.serverUrl.trimEnd('/')
+        val authParams = SubsonicAuthBuilder.buildQueryParams(
+            username = credentials.username,
+            password = credentials.password,
+            authType = credentials.authType,
+            protocolVersion = credentials.protocolVersion
+        )
+        val params = authParams + mapOf("id" to coverArtId, "size" to size.toString())
+        val queryString = params.entries.joinToString("&") { (k, v) ->
+            "${URLEncoder.encode(k, "UTF-8")}=${URLEncoder.encode(v, "UTF-8")}"
+        }
+        return "$cleanBaseUrl/rest/getCoverArt?$queryString"
+    }
+
     private fun resolveAonsokuStreamUrl(song: QueueSong): Pair<String, String>? {
         val uri = Uri.parse(song.streamUrl)
         val songId = uri.getQueryParameter("id") ?: song.id
