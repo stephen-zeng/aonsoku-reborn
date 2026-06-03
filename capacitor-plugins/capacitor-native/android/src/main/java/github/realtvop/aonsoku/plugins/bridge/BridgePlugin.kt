@@ -376,7 +376,10 @@ class BridgePlugin : Plugin() {
                             "colorOnSurface" to com.google.android.material.R.attr.colorOnSurface,
                             "colorSurfaceVariant" to com.google.android.material.R.attr.colorSurfaceVariant,
                             "colorOnSurfaceVariant" to com.google.android.material.R.attr.colorOnSurfaceVariant,
-                            "colorOutline" to com.google.android.material.R.attr.colorOutline
+                            "colorSurfaceContainer" to com.google.android.material.R.attr.colorSurfaceContainer,
+                            "colorSurfaceContainerHigh" to com.google.android.material.R.attr.colorSurfaceContainerHigh,
+                            "colorOutline" to com.google.android.material.R.attr.colorOutline,
+                            "colorOutlineVariant" to com.google.android.material.R.attr.colorOutlineVariant
                         )
                         for ((name, attr) in attrs) {
                             val resolvedColor = MaterialColors.getColor(

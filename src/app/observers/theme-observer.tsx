@@ -16,13 +16,14 @@ const colorMap: Record<string, string[]> = {
   colorOnPrimary: ["--primary-foreground"],
   colorSecondary: ["--secondary"],
   colorOnSecondary: ["--secondary-foreground"],
-  colorBackground: ["--background"],
+  colorBackground: ["--background", "--background-foreground"],
   colorOnBackground: ["--foreground"],
   colorSurface: ["--card", "--popover"],
-  colorOnSurface: ["--card-foreground", "--popover-foreground"],
-  colorSurfaceVariant: ["--muted", "--accent"],
-  colorOnSurfaceVariant: ["--muted-foreground", "--accent-foreground"],
-  colorOutline: ["--border", "--input"],
+  colorSurfaceVariant: ["--muted"],
+  colorOnSurfaceVariant: ["--muted-foreground"],
+  colorSurfaceContainer: ["--accent"],
+  colorOnSurface: ["--card-foreground", "--popover-foreground", "--accent-foreground"],
+  colorOutlineVariant: ["--border", "--input"],
 };
 
 function hexToHslComponents(hex: string): string {
