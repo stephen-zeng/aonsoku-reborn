@@ -794,10 +794,25 @@ export function AudioPlayer({
             return;
           }
 
+          if (backendRef.current?.kind === "native") {
+            logger.info(
+              "[PlayEffect:SKIP] reason=nativeBackend | native player handles its own playback",
+            );
+            return;
+          }
+
           logger.info('[PlayEffect:play] → calling safePlay("Song")');
           safePlay(audio, "Song");
         } else {
           sessionRef.current.consumeSyncPlayHandled();
+
+          if (backendRef.current?.kind === "native") {
+            logger.info(
+              "[PlayEffect:SKIP] reason=nativeBackend | native player handles its own playback",
+            );
+            return;
+          }
+
           logger.info("[PlayEffect:pause] → calling pauseAudio");
           pauseAudio(audio);
         }
