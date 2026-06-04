@@ -3,7 +3,7 @@ import { ChevronDown, ListChecks, ListMusic, MicVocalIcon } from "lucide-react";
 import { memo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
-import { DrawerHandle } from "@/app/components/ui/drawer";
+import { Drawer as DrawerPrimitive } from "vaul";
 import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useIsTouchPrimary } from "@/app/hooks/use-input-mode";
@@ -69,19 +69,15 @@ const MobileHeader = memo(function MobileHeader({
 
       {showDragHandle && (
         <div className="absolute left-1/2 top-3 -translate-x-1/2 flex justify-center">
-          <DrawerHandle
+          <DrawerPrimitive.Handle
             preventCycle
             data-testid="fullscreen-drag-handle"
             aria-label="Drag to close"
-            className="opacity-100 bg-transparent"
-          >
-            <span
-              className="block w-9 h-1 rounded-full opacity-40 bg-foreground"
-              style={{
-                backgroundColor: currentSongColor ?? "hsl(var(--primary))",
-              }}
-            />
-          </DrawerHandle>
+            className="block w-9 h-1 rounded-full opacity-40 bg-foreground cursor-grab"
+            style={{
+              backgroundColor: currentSongColor ?? "hsl(var(--primary))",
+            }}
+          />
         </div>
       )}
 
