@@ -33,6 +33,7 @@ export function PullToRefresh({
   const progress = useTransform(y, [0, threshold], [0, 1]);
   const strokeDashoffset = useTransform(progress, [0, 1], [circumference, 0]);
   const pullRotate = useTransform(progress, [0, 1], [-90, 90]);
+  const spinnerY = useTransform(y, [0, threshold], [0, threshold * 0.5]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -137,12 +138,13 @@ export function PullToRefresh({
         className="absolute left-0 right-0 flex justify-center items-center pointer-events-none"
         style={{
           height: threshold,
-          top: 0,
+          top: "env(safe-area-inset-top, 0px)",
           zIndex: 10,
         }}
       >
         <motion.div
           style={{
+            y: spinnerY,
             opacity: useTransform(y, [0, threshold / 2], [0, 1]),
             scale: useTransform(y, [0, threshold], [0.8, 1]),
           }}
