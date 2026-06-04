@@ -174,7 +174,7 @@ export function HeaderItem({ album }: { album: Albums }) {
       <Link
         to={ROUTES.ALBUM.PAGE(album.id)}
         className={clsx(
-          "w-full h-[140px] sm:h-[250px] 2xl:h-[300px] relative block",
+          "w-full h-[140px] sm:h-[250px] 2xl:h-[300px] relative block overflow-hidden",
           isFirefox && "bg-black/60",
         )}
       >
@@ -186,7 +186,7 @@ export function HeaderItem({ album }: { album: Albums }) {
   return (
     <div
       className={clsx(
-        "w-full h-[140px] sm:h-[250px] 2xl:h-[300px] relative",
+        "w-full h-[140px] sm:h-[250px] 2xl:h-[300px] relative overflow-hidden",
         isFirefox && "bg-black/60",
       )}
     >
