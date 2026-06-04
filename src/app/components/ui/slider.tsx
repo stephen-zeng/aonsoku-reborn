@@ -207,11 +207,20 @@ function useSlider({
       const state = dragStateRef.current;
       if (!state || state.pointerId !== e.pointerId) return;
 
+      if (e.pointerType === "touch" && !state.isDragging) {
+        try {
+          onTouchStateChange?.(false);
+        } finally {
+          dragStateRef.current = null;
+        }
+        return;
+      }
+
       const isTap = e.pointerType === "touch" && !state.isDragging;
       const commitValue = isTap ? computeValue(e.clientX) : state.currentValue;
       finishDrag(e.pointerType, commitValue, isTap);
     },
-    [computeValue, finishDrag],
+    [computeValue, finishDrag, onTouchStateChange],
   );
 
   const handleLostPointerCapture = React.useCallback(
@@ -219,11 +228,20 @@ function useSlider({
       const state = dragStateRef.current;
       if (!state || state.pointerId !== e.pointerId) return;
 
+      if (e.pointerType === "touch" && !state.isDragging) {
+        try {
+          onTouchStateChange?.(false);
+        } finally {
+          dragStateRef.current = null;
+        }
+        return;
+      }
+
       const isTap = e.pointerType === "touch" && !state.isDragging;
       const commitValue = isTap ? computeValue(e.clientX) : state.currentValue;
       finishDrag(e.pointerType, commitValue, isTap);
     },
-    [computeValue, finishDrag],
+    [computeValue, finishDrag, onTouchStateChange],
   );
 
   const percentage = range === 0 ? 0 : ((currentValue - min) / range) * 100;
