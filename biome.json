@@ -3,11 +3,22 @@
   "vcs": {
     "enabled": true,
     "clientKind": "git",
-    "useIgnoreFile": true
+    "useIgnoreFile": false
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**", "!cypress/**/*", "!**/*.cy.{ts,tsx}", "!ios/*"]
+    "includes": [
+      "**",
+      "!cypress",
+      "!**/*.cy.{ts,tsx}",
+      "!ios",
+      "!dist",
+      "!out",
+      "!coverage",
+      "!.build",
+      "!.swiftpm",
+      "!**/.gradle"
+    ]
   },
   "javascript": {
     "formatter": {
@@ -143,12 +154,11 @@
         "noWith": "error",
         "useDefaultSwitchClauseLast": "error"
       }
-    },
-    "includes": ["**", "src/**/*.css", "src/**/*.json"]
+    }
   },
   "overrides": [
     {
-      "includes": ["*.ts", "*.tsx", "*.mts", "*.cts"],
+      "includes": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
       "linter": {
         "rules": {
           "complexity": {

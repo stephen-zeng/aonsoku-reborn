@@ -12,7 +12,6 @@ import { memo } from "react";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { Button } from "@/app/components/ui/button";
 import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
-import { useIsPortraitViewport } from "@/app/hooks/use-mobile";
 import { usePlaybackControls } from "@/app/hooks/use-playback-controls";
 import { LoopState } from "@/types/playerContext";
 
@@ -34,7 +33,6 @@ function FullscreenControls() {
     toggleLoop,
     hasNext,
   } = usePlaybackControls();
-  const isPortraitViewport = useIsPortraitViewport();
   const { isBackdropDark, playButtonBg, playButtonIcon } =
     useFullscreenContrast();
 
@@ -48,23 +46,21 @@ function FullscreenControls() {
 
   return (
     <>
-      {!isPortraitViewport && (
-        <Button
-          size="icon"
-          variant="ghost"
-          data-state={isShuffleActive ? "active" : undefined}
-          className={clsx(
-            secondaryBtnClass,
-            isShuffleActive && "fullscreen-button-active",
-          )}
-          style={{ backfaceVisibility: "hidden" }}
-          onClick={() => toggleShuffle()}
-          disabled={isPlayingOneSong() || !hasNext}
-          unfocusable
-        >
-          <Shuffle className="w-5 h-5 md:w-6 md:h-6" />
-        </Button>
-      )}
+      <Button
+        size="icon"
+        variant="ghost"
+        data-state={isShuffleActive ? "active" : undefined}
+        className={clsx(
+          secondaryBtnClass,
+          isShuffleActive && "fullscreen-button-active",
+        )}
+        style={{ backfaceVisibility: "hidden" }}
+        onClick={() => toggleShuffle()}
+        disabled={isPlayingOneSong() || !hasNext}
+        unfocusable
+      >
+        <Shuffle className="w-5 h-5 md:w-6 md:h-6" />
+      </Button>
       <Button
         size="icon"
         variant="ghost"
@@ -126,24 +122,22 @@ function FullscreenControls() {
       >
         <SkipForward className="w-5 h-5 md:w-6 md:h-6 text-secondary-foreground fill-secondary-foreground" />
       </Button>
-      {!isPortraitViewport && (
-        <Button
-          size="icon"
-          variant="ghost"
-          data-state={loopState !== LoopState.Off ? "active" : undefined}
-          className={clsx(
-            secondaryBtnClass,
-            loopState !== LoopState.Off && "fullscreen-button-active",
-          )}
-          onClick={() => toggleLoop()}
-          style={{ backfaceVisibility: "hidden" }}
-          unfocusable
-        >
-          {isLoopOff && <Repeat className="w-5 h-5 md:w-6 md:h-6" />}
-          {isLoopAll && <Repeat className="w-5 h-5 md:w-6 md:h-6" />}
-          {isLoopOne && <RepeatOne className="w-5 h-5 md:w-6 md:h-6" />}
-        </Button>
-      )}
+      <Button
+        size="icon"
+        variant="ghost"
+        data-state={loopState !== LoopState.Off ? "active" : undefined}
+        className={clsx(
+          secondaryBtnClass,
+          loopState !== LoopState.Off && "fullscreen-button-active",
+        )}
+        onClick={() => toggleLoop()}
+        style={{ backfaceVisibility: "hidden" }}
+        unfocusable
+      >
+        {isLoopOff && <Repeat className="w-5 h-5 md:w-6 md:h-6" />}
+        {isLoopAll && <Repeat className="w-5 h-5 md:w-6 md:h-6" />}
+        {isLoopOne && <RepeatOne className="w-5 h-5 md:w-6 md:h-6" />}
+      </Button>
     </>
   );
 }
