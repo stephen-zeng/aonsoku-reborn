@@ -180,21 +180,6 @@
     "vite": "6.4.2",
     "vitest": "4.1.5"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@applemusic-like-lyrics/core",
-      "@applemusic-like-lyrics/lyric",
-      "@applemusic-like-lyrics/react",
-      "bufferutil",
-      "cypress",
-      "electron",
-      "electron-winstaller",
-      "esbuild",
-      "register-scheme",
-      "sharp",
-      "utf-8-validate"
-    ]
-  },
   "electron": {
     "window": {
       "defaultWidth": 1280,
