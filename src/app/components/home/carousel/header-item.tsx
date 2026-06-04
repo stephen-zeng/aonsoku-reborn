@@ -58,7 +58,8 @@ export function HeaderItem({ album }: { album: Albums }) {
           "absolute -inset-10 bg-gradient-to-b from-background/40 to-background/80 z-10",
           !isFirefox && "backdrop-blur-xl",
         )}
-      >
+      />
+      <div className="absolute inset-0 z-20 w-full h-full">
         <div className="flex h-full p-4 2xl:p-6 gap-4">
           <div
             className="h-full aspect-square relative group bg-skeleton rounded-lg"
