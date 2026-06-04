@@ -41,6 +41,16 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
         super.onCreate(savedInstanceState);
 
         getBridge().getWebView().post(() -> {
+            android.webkit.WebView webView = getBridge().getWebView();
+            if (webView != null) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    webView.setRendererPriorityPolicy(
+                        android.webkit.WebView.RENDERER_PRIORITY_BOUND,
+                        false
+                    );
+                }
+            }
+
             View parent = (View) getBridge().getWebView().getParent();
             ViewCompat.setOnApplyWindowInsetsListener(parent, (v, insets) -> {
                 v.setPadding(0, 0, 0, 0);
