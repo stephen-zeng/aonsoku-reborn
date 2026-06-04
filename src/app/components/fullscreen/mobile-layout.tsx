@@ -136,7 +136,7 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
 
   return (
     <div
-      className="shrink-0 flex items-center justify-between w-full mx-auto px-10 pt-2 pb-5 max-w-[clamp(280px,85vw,480px)]"
+      className="shrink-0 flex items-center justify-between w-full mx-auto px-0 pt-2 pb-5 max-w-[clamp(280px,85vw,480px)]"
       role="tablist"
     >
       <MobileTabButton

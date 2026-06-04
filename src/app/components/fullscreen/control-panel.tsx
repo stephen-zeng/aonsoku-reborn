@@ -25,7 +25,7 @@ export const FullscreenControlPanel = memo(function FullscreenControlPanel({
       )}
     >
       <div
-        className={clsx(compact ? "shrink-0 px-4" : expanded ? "px-5" : "px-4")}
+        className={clsx(compact ? "shrink-0 px-4" : expanded ? "px-0" : "px-4")}
       >
         <FullscreenProgress thin stacked />
       </div>
@@ -42,7 +42,7 @@ export const FullscreenControlPanel = memo(function FullscreenControlPanel({
         <MemoFullscreenControls />
       </div>
       <div
-        className={clsx(compact ? "shrink-0 px-4" : expanded ? "px-5" : "px-4")}
+        className={clsx(compact ? "shrink-0 px-4" : expanded ? "px-0" : "px-4")}
         data-vaul-no-drag
       >
         <VolumeBar />
