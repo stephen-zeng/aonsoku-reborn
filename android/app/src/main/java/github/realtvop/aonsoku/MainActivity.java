@@ -12,6 +12,9 @@ import github.realtvop.aonsoku.plugins.bridge.BridgePlugin;
 import github.realtvop.aonsoku.plugins.data.DataPlugin;
 import github.realtvop.aonsoku.plugins.preferences.PreferencesPlugin;
 import github.realtvop.aonsoku.plugins.debug.DebugActivity;
+import android.view.View;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends BridgeActivity implements SensorEventListener {
     private SensorManager sensorManager;
@@ -34,6 +37,15 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
         registerPlugin(PreferencesPlugin.class);
 
         super.onCreate(savedInstanceState);
+
+        getBridge().getWebView().post(() -> {
+            View parent = (View) getBridge().getWebView().getParent();
+            ViewCompat.setOnApplyWindowInsetsListener(parent, (v, insets) -> {
+                v.setPadding(0, 0, 0, 0);
+                return insets;
+            });
+            getBridge().getWebView().requestApplyInsets();
+        });
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sensorManager != null) {
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
