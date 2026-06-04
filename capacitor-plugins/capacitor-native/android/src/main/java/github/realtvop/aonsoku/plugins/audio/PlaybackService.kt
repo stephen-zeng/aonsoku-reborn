@@ -70,6 +70,7 @@ class PlaybackService : MediaSessionService() {
     private var mediaSession: MediaSession? = null
     private var player: Player? = null
     private var cachedArtworkBitmap: Bitmap? = null
+    private var isBoundToActivity = false
 
     val queueEngine = NativeQueueEngine()
     var isQueueEngineActive = false
@@ -334,6 +335,10 @@ class PlaybackService : MediaSessionService() {
                 } else {
                     persistence.stopProgressTracking()
                     persistence.flushNow()
+                    if (!isBoundToActivity) {
+                        stopForeground(STOP_FOREGROUND_REMOVE)
+                        stopSelf()
+                    }
                 }
             }
         })
@@ -677,17 +682,21 @@ class PlaybackService : MediaSessionService() {
         if (intent?.action == SERVICE_INTERFACE || intent?.action == "android.media.browse.MediaBrowserService") {
             return super.onBind(intent)
         }
+        isBoundToActivity = true
         return binder
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
         NativeLogger.info("PlaybackService onUnbind: intent=$intent", "playback-service")
-        val currentPlayer = player
-        if (currentPlayer == null || !currentPlayer.isPlaying) {
-            persistence.stopProgressTracking()
-            persistence.flushNow()
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf()
+        if (intent?.action != SERVICE_INTERFACE && intent?.action != "android.media.browse.MediaBrowserService") {
+            isBoundToActivity = false
+            val currentPlayer = player
+            if (currentPlayer == null || !currentPlayer.isPlaying) {
+                persistence.stopProgressTracking()
+                persistence.flushNow()
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
+            }
         }
         return super.onUnbind(intent)
     }
@@ -700,8 +709,10 @@ class PlaybackService : MediaSessionService() {
             persistence.flushNow()
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
+            super.onTaskRemoved(rootIntent)
+        } else {
+            NativeLogger.info("PlaybackService onTaskRemoved: player is playing, keeping service alive", "playback-service")
         }
-        super.onTaskRemoved(rootIntent)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
