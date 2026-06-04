@@ -831,10 +831,12 @@ class AudioPlugin : Plugin() {
         playbackService?.clearArtworkCache()
 
         mainHandler.post {
-            val player = playbackService?.getPlayer() ?: run {
+            val service = playbackService
+            val player = service?.getPlayer() ?: run {
                 onRejected?.invoke("Playback service is not ready")
                 return@post
             }
+            service.isTransitioning = true
             player.stop()
             player.clearMediaItems()
             player.setMediaItem(mediaItem)
@@ -847,7 +849,7 @@ class AudioPlugin : Plugin() {
                 requestAudioFocus()
                 player.play()
             }
-            playbackService?.loadAndCacheArtwork(artworkUrl)
+            service.loadAndCacheArtwork(artworkUrl)
             onResolved()
         }
     }

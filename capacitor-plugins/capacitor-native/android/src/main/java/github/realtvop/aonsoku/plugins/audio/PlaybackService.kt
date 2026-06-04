@@ -84,6 +84,7 @@ class PlaybackService : MediaSessionService() {
             mediaSession?.setCustomLayout(getCustomLayoutButtons())
         }
     var sleepTimerMode: String = "duration"
+    var isTransitioning = false
 
     private val CUSTOM_COMMAND_TOGGLE_SHUFFLE by lazy {
         SessionCommand(ACTION_TOGGLE_SHUFFLE, Bundle.EMPTY)
@@ -326,16 +327,46 @@ class PlaybackService : MediaSessionService() {
                         emitEnded("finished")
                     }
                 }
+
+                val currentPlayer = player
+                if (currentPlayer != null) {
+                    if (playbackState == Player.STATE_READY && !currentPlayer.playWhenReady) {
+                        isTransitioning = false
+                        if (!isBoundToActivity) {
+                            stopForeground(STOP_FOREGROUND_REMOVE)
+                            stopSelf()
+                        }
+                    } else if (playbackState == Player.STATE_IDLE) {
+                        isTransitioning = false
+                        if (!isBoundToActivity) {
+                            stopForeground(STOP_FOREGROUND_REMOVE)
+                            stopSelf()
+                        }
+                    }
+                }
             }
 
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 updateNotification()
                 if (isPlaying) {
+                    isTransitioning = false
                     persistence.startProgressTracking()
                 } else {
                     persistence.stopProgressTracking()
                     persistence.flushNow()
-                    if (!isBoundToActivity) {
+
+                    val isEndTransition = player?.let {
+                        it.playbackState == Player.STATE_ENDED &&
+                        sleepTimerMode != "endOfTrack" &&
+                        isQueueEngineActive &&
+                        (queueEngine.hasNext || queueEngine.loopState == LoopState.ONE)
+                    } ?: false
+
+                    if (isEndTransition) {
+                        isTransitioning = true
+                    }
+
+                    if (!isTransitioning && !isBoundToActivity) {
                         stopForeground(STOP_FOREGROUND_REMOVE)
                         stopSelf()
                     }
@@ -775,6 +806,7 @@ class PlaybackService : MediaSessionService() {
     }
 
     fun loadSong(song: QueueSong, autoplay: Boolean, startTime: Double?) {
+        isTransitioning = true
         NativeLogger.debug("Loading song: ${song.title} - ${song.artist} (autoplay=$autoplay)", "playback-service")
         val resolver = NativeSourceResolver(this)
         val resolved = resolver.resolveSource(song)
@@ -844,6 +876,11 @@ class PlaybackService : MediaSessionService() {
                 NativeLogger.error("loadSong: player is null, aborting", "playback-service")
                 emitError("internal_error", "ExoPlayer not available")
                 emitPlaybackState("failed")
+                isTransitioning = false
+                if (!isBoundToActivity) {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                }
                 return@post
             }
             currentPlayer.stop()
