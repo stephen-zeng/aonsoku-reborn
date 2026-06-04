@@ -1,8 +1,11 @@
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import * as React from "react";
+import { Capacitor } from "@capacitor/core";
 
 import { cn } from "@/lib/utils";
+
+const isNative = typeof window !== "undefined" && Capacitor.isNativePlatform();
 
 const Select = SelectPrimitive.Root;
 
@@ -103,7 +106,11 @@ const SelectLabel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Label
     ref={ref}
-    className={cn("py-1.5 pl-8 pr-2 text-sm font-semibold", className)}
+    className={cn(
+      "font-semibold",
+      isNative ? "py-3 pl-12 pr-4 text-base" : "py-1.5 pl-8 pr-2 text-sm",
+      className,
+    )}
     {...props}
   />
 ));
@@ -116,14 +123,18 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus-visible:bg-accent focus-visible:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex w-full cursor-default select-none items-center rounded-sm outline-none focus-visible:bg-accent focus-visible:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      isNative ? "py-3 pl-12 pr-4 text-base" : "py-1.5 pl-8 pr-2 text-sm",
       className,
     )}
     {...props}
   >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+    <span className={cn(
+      "absolute flex items-center justify-center",
+      isNative ? "left-4 h-5 w-5" : "left-2 h-3.5 w-3.5"
+    )}>
       <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4" />
+        <Check className={cn(isNative ? "h-5 w-5" : "h-4 w-4")} />
       </SelectPrimitive.ItemIndicator>
     </span>
 
@@ -138,7 +149,7 @@ const SelectSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Separator
     ref={ref}
-    className={cn("-mx-1 my-1 h-px bg-muted", className)}
+    className={cn("-mx-1 h-px bg-muted", isNative ? "my-2" : "my-1", className)}
     {...props}
   />
 ));
