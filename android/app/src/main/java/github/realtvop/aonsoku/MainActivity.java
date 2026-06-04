@@ -37,6 +37,7 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
         getBridge().getWebView().post(() -> {
             android.webkit.WebView webView = getBridge().getWebView();
             if (webView != null) {
+                webView.setOverScrollMode(android.view.View.OVER_SCROLL_NEVER);
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     webView.setRendererPriorityPolicy(
                         android.webkit.WebView.RENDERER_PRIORITY_BOUND,

@@ -664,6 +664,10 @@ body {
   overscroll-behavior-x: none;
 }
 
+body.capacitor-android {
+  overscroll-behavior-y: none;
+}
+
 html {
   overscroll-behavior-y: none;
   overscroll-behavior-x: none;
