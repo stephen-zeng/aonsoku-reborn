@@ -7,13 +7,15 @@ export function KeyboardObserver() {
   const commandOpen = useAppStore((state) => state.command.open);
 
   useEffect(() => {
-    if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== "ios") {
+    if (!Capacitor.isNativePlatform()) {
       return;
     }
 
-    Keyboard.setAccessoryBarVisible({ isVisible: false }).catch((err) => {
-      console.debug("[KeyboardObserver] setAccessoryBarVisible failed:", err);
-    });
+    if (Capacitor.getPlatform() === "ios") {
+      Keyboard.setAccessoryBarVisible({ isVisible: false }).catch((err) => {
+        console.debug("[KeyboardObserver] setAccessoryBarVisible failed:", err);
+      });
+    }
 
     if (commandOpen) {
       return;
@@ -36,6 +38,8 @@ export function KeyboardObserver() {
     };
 
     Keyboard.addListener("keyboardWillShow", onShow);
+    Keyboard.addListener("keyboardDidShow", onShow);
+    Keyboard.addListener("keyboardWillHide", onHide);
     Keyboard.addListener("keyboardDidHide", onHide);
     document.addEventListener("scroll", onScroll, { capture: true });
 
