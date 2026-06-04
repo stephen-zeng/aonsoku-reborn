@@ -1,5 +1,6 @@
 import omit from "lodash/omit";
 import { markServerUnreachable } from "@/app/hooks/use-network-status";
+import { isNativeBridgeAvailable } from "@/native/bridge/facade";
 import { useAppStore } from "@/store/app.store";
 import type { CoverArt } from "@/types/coverArtType";
 import { getRuntime } from "@/utils/capabilities";
@@ -96,7 +97,7 @@ export async function httpClient<T>(
   path: string,
   options: FetchOptions,
 ): Promise<{ count: number; data: T }> {
-  if (getRuntime() === "capacitor-ios") {
+  if (isNativeBridgeAvailable()) {
     return nativeHttpClient<T>(path, options);
   }
 
@@ -146,7 +147,8 @@ export function getSongStreamUrl(
   maxBitRate?: string,
   format?: string,
 ) {
-  if (getRuntime() === "capacitor-ios") {
+  const runtime = getRuntime();
+  if (runtime === "capacitor-ios" || runtime === "capacitor-android") {
     const params = new URLSearchParams({ id });
     if (maxBitRate) params.set("maxBitRate", maxBitRate);
     if (format) params.set("format", format);

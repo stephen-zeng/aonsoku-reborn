@@ -136,8 +136,6 @@ export class NativeAudioPlaybackBackend implements PlaybackBackend {
     for (const listeners of Object.values(this.#listeners)) {
       listeners.clear();
     }
-
-    this.#plugin.clear().catch(() => {});
   }
 
   subscribe<TEvent extends PlaybackBackendEvent>(
@@ -235,9 +233,18 @@ export class NativeAudioPlaybackBackend implements PlaybackBackend {
     return requestId;
   }
 
-  #isStaleNativeEvent(event: { requestId?: string }) {
+  #isStaleNativeEvent(event: { requestId?: string | null }) {
+    if (
+      event.requestId !== undefined &&
+      event.requestId !== null &&
+      this.#activeRequestId === null
+    ) {
+      this.#activeRequestId = event.requestId;
+    }
     return (
-      event.requestId !== undefined && event.requestId !== this.#activeRequestId
+      event.requestId !== undefined &&
+      event.requestId !== null &&
+      event.requestId !== this.#activeRequestId
     );
   }
 }

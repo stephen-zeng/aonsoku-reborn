@@ -2,9 +2,10 @@ import type { Draft } from "immer";
 import clamp from "lodash/clamp";
 import { LanControlMessageType } from "@/types/lanControl";
 import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
-import { getPlaybackCapabilities, getRuntime } from "@/utils/capabilities";
+import { getPlaybackCapabilities } from "@/utils/capabilities";
 import { logger } from "@/utils/logger";
-import { getQueueController } from "@/player/queue-controller";
+import { setSystemVolume } from "@/utils/system-volume";
+import { getNativeQueueController } from "@/player/queue-controller";
 
 interface SharedDeps {
   set: (fn: (state: Draft<IPlayerContext>) => void) => void;
@@ -18,11 +19,12 @@ export function createPlaybackActions(shared: SharedDeps) {
 
   return {
     setPlayingState: (status: boolean) => {
-      if (getRuntime() === "capacitor-ios") {
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
         if (status) {
-          getQueueController().play();
+          nativeController.play();
         } else {
-          getQueueController().pause();
+          nativeController.pause();
         }
         return;
       }
@@ -42,8 +44,9 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     togglePlayPause: () => {
-      if (getRuntime() === "capacitor-ios") {
-        getQueueController().togglePlayPause();
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.togglePlayPause();
         return;
       }
 
@@ -56,8 +59,9 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     toggleLoop: () => {
-      if (getRuntime() === "capacitor-ios") {
-        getQueueController().toggleLoop();
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.toggleLoop();
         return;
       }
 
@@ -79,8 +83,9 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     setProgress: (progress: number) => {
-      if (getRuntime() === "capacitor-ios") {
-        getQueueController().seek(progress);
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.seek(progress);
         return;
       }
 
@@ -107,13 +112,17 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     setVolume: (volume: number) => {
-      if (!getPlaybackCapabilities().canSetVolume) return;
+      const caps = getPlaybackCapabilities();
+      if (!caps.canSetVolume) return;
       remoteSend(LanControlMessageType.SET_VOLUME, {
         volume,
       });
       set((state) => {
         state.playerState.volume = volume;
       });
+      if (caps.requiresSystemVolume && caps.supportsSystemVolumeControl) {
+        setSystemVolume(volume);
+      }
     },
 
     handleVolumeWheel: (isScrollingDown: boolean) => {

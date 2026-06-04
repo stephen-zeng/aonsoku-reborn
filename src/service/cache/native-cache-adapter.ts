@@ -100,17 +100,13 @@ export function getNativeCacheAdapter(): NativeCacheAdapter {
   if (nativeCacheAdapter) return nativeCacheAdapter;
 
   const runtime = getRuntime();
-  if (runtime === "capacitor-ios") {
+  if (runtime === "capacitor-ios" || runtime === "capacitor-android") {
     const availability = getNativeAudioPluginAvailability();
-    nativeCacheAdapter = availability.available
+    const useNativeCache = availability.available;
+    nativeCacheAdapter = useNativeCache
       ? new IosNativeCacheAdapter(availability.plugin)
       : new WebNullNativeCacheAdapter();
     return nativeCacheAdapter;
-  }
-  if (runtime === "capacitor-android") {
-    throw new Error(
-      "Capacitor Android native cache adapter is not available until Phase 5.",
-    );
   }
 
   nativeCacheAdapter = new WebNullNativeCacheAdapter();
@@ -118,10 +114,8 @@ export function getNativeCacheAdapter(): NativeCacheAdapter {
 }
 
 export function isNativeCacheAdapterAvailable(): boolean {
-  return (
-    getRuntime() === "capacitor-ios" &&
-    getNativeAudioPluginAvailability().available
-  );
+  const availability = getNativeAudioPluginAvailability();
+  return availability.available;
 }
 
 export async function storeNativeAudioFileIfAvailable(

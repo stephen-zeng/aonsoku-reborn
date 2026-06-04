@@ -6,6 +6,7 @@ import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
 import { pingServer } from "@/api/pingServer";
 import { queryServerInfo } from "@/api/queryServerInfo";
+import { isNativeBridgeAvailable } from "@/native/bridge/facade";
 import { createNativeStorage } from "@/store/native-storage";
 import {
   ActiveServerType,
@@ -14,7 +15,6 @@ import {
   IServerConfig,
   IServerUrlConfig,
 } from "@/types/serverConfig";
-import { getRuntime } from "@/utils/capabilities";
 import { hasElectronBridge } from "@/utils/desktop";
 import { discordRpc } from "@/utils/discordRpc";
 import { logger } from "@/utils/logger";
@@ -105,7 +105,7 @@ function applyConfiguredServerState(
 }
 
 async function syncCredentialsToKeychain(data: IAppContext["data"]) {
-  if (getRuntime() !== "capacitor-ios") return;
+  if (!isNativeBridgeAvailable()) return;
   if (!data.url || !data.username || !data.password || data.authType === null) {
     return;
   }
@@ -347,7 +347,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                 return false;
               }
 
-              if (getRuntime() === "capacitor-ios") {
+              if (isNativeBridgeAvailable()) {
                 const { AonsokuNativeBridge } = await import(
                   "@aonsoku/capacitor-native/bridge"
                 );
@@ -443,7 +443,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
 
               if (
                 !username ||
-                (!password && getRuntime() !== "capacitor-ios") ||
+                (!password && !isNativeBridgeAvailable()) ||
                 authType === null
               ) {
                 return false;
@@ -494,7 +494,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
               if (
                 !configuredPrimaryUrl ||
                 !username ||
-                (!password && getRuntime() !== "capacitor-ios") ||
+                (!password && !isNativeBridgeAvailable()) ||
                 authType === null
               ) {
                 return false;
@@ -529,7 +529,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
               return true;
             },
             removeConfig: () => {
-              if (getRuntime() === "capacitor-ios") {
+              if (isNativeBridgeAvailable()) {
                 import("@aonsoku/capacitor-native/bridge").then(
                   ({ AonsokuNativeBridge }) => {
                     AonsokuNativeBridge.clearCredentials();

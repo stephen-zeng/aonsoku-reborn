@@ -1,5 +1,28 @@
 import { Capacitor } from "@capacitor/core";
 import { getAvatarUrl, getCoverArtUrl } from "@/api/httpClient";
+
+function convertFileSrc(uri: string): string {
+  if (typeof uri !== "string" || !uri.startsWith("file:")) {
+    return Capacitor.convertFileSrc(uri);
+  }
+  const serverUrl = Capacitor.getServerUrl?.() ?? "";
+  if (!serverUrl) return Capacitor.convertFileSrc(uri);
+
+  // Handle all file: URI variants produced by the native layer:
+  //   "file:///absolute/path"  – RFC 8089 (iOS, Capacitor's own convertFileSrc)
+  //   "file:/absolute/path"    – Java File.toURI() (Android native plugin)
+  //   "file://relative/path"   – not used, handled for safety
+  // Strip the "file:" scheme, then normalize leading slashes to "/".
+  let filePath = uri.slice(5);
+  while (filePath.startsWith("//")) {
+    filePath = filePath.slice(1);
+  }
+  if (!filePath.startsWith("/")) {
+    filePath = "/" + filePath;
+  }
+
+  return `${serverUrl}/_capacitor_file_${filePath}`;
+}
 import { asyncPool } from "@/service/cache/concurrency";
 import { subsonic } from "@/service/subsonic";
 import { useCacheStore } from "@/store/cache.store";
@@ -340,7 +363,7 @@ class CacheManager {
         getCacheIndexActions().touchItem(key);
       }
 
-      return Capacitor.convertFileSrc(result.uri);
+      return convertFileSrc(result.uri);
     }
 
     // Fast path: when the index is loaded and the key is absent, skip
@@ -402,20 +425,9 @@ class CacheManager {
 
     if (existing) return;
 
-    const url = getAvatarUrl(username, size);
-    const response = await fetch(url);
-    if (!response.ok) return;
-
-    const blob = await response.blob();
-
     if (isNativeImageCacheAdapterAvailable()) {
       const adapter = getNativeImageCacheAdapter();
-      const result = await adapter.storeCoverImage(
-        username,
-        blob,
-        blob.type || "image/jpeg",
-        size,
-      );
+      const result = await adapter.downloadAvatar(username, size);
       if (!result) return;
 
       const meta: CachedItemMeta = {
@@ -433,6 +445,12 @@ class CacheManager {
       persistCacheMeta(key, { key, ...meta });
       return;
     }
+
+    const url = getAvatarUrl(username, size);
+    const response = await fetch(url);
+    if (!response.ok) return;
+
+    const blob = await response.blob();
 
     await cacheStorage.put(key, blob, blob.type || "image/jpeg");
 
@@ -496,7 +514,7 @@ class CacheManager {
         getCacheIndexActions().touchItem(key);
       }
 
-      return Capacitor.convertFileSrc(result.uri);
+      return convertFileSrc(result.uri);
     }
 
     const { loaded } = useCacheIndexStore.getState();

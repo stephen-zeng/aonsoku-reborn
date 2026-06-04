@@ -269,6 +269,11 @@ export interface NativeDownloadCoverImageOptions {
   size: string;
 }
 
+export interface NativeDownloadAvatarOptions {
+  username: string;
+  size: string;
+}
+
 // --- Plugin Interface ---
 
 export interface AonsokuNativeDataPlugin extends Plugin {
@@ -334,5 +339,8 @@ export interface AonsokuNativeDataPlugin extends Plugin {
   clearCoverImages(): Promise<NativeClearCoverImagesResult>;
   downloadCoverImage(
     options: NativeDownloadCoverImageOptions,
+  ): Promise<NativeResolveCoverImageResult>;
+  downloadAvatar(
+    options: NativeDownloadAvatarOptions,
   ): Promise<NativeResolveCoverImageResult>;
 }

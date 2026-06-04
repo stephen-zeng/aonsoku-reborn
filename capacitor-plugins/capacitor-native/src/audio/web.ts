@@ -22,7 +22,7 @@ import { NATIVE_AUDIO_PLUGIN_NAME } from "./definitions";
 
 export function createNativeAudioUnavailableError(method: string) {
   return new Error(
-    `${NATIVE_AUDIO_PLUGIN_NAME}.${method} is only available in Capacitor iOS.`,
+    `${NATIVE_AUDIO_PLUGIN_NAME}.${method} is only available on native Capacitor platforms.`,
   );
 }
 

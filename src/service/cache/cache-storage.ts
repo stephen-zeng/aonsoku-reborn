@@ -3,13 +3,15 @@ import type { CacheStorageAdapter } from "./contracts";
 
 const CACHE_NAME = "aonsoku-media-cache";
 
-function isIosNative(): boolean {
-  return getRuntime() === "capacitor-ios";
+function isNativePlatform(): boolean {
+  return (
+    getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android"
+  );
 }
 
-// NOTE: On iOS, cover art caching is handled by the native ImageCacheManager
-// via IosNativeImageCacheAdapter in cache-manager.ts, not through this
-// CacheStorageService. This service is intentionally no-op on iOS for images.
+// NOTE: On native platforms, cover art caching is handled by the native
+// cache manager, not through this CacheStorageService. This service is
+// intentionally no-op on iOS and Android.
 
 class CacheStorageService implements CacheStorageAdapter {
   private async getCache(): Promise<Cache> {
@@ -25,7 +27,7 @@ class CacheStorageService implements CacheStorageAdapter {
   }
 
   async put(key: string, data: Blob, contentType: string): Promise<void> {
-    if (isIosNative()) return;
+    if (isNativePlatform()) return;
     const cache = await this.getCache();
     const response = new Response(data, {
       headers: {
@@ -37,7 +39,7 @@ class CacheStorageService implements CacheStorageAdapter {
   }
 
   async get(key: string): Promise<Blob | null> {
-    if (isIosNative()) return null;
+    if (isNativePlatform()) return null;
     const cache = await this.getCache();
     // Try the new encoded URL first, then fall back to the legacy unencoded
     // URL for backwards compatibility with existing cached entries.
@@ -50,7 +52,7 @@ class CacheStorageService implements CacheStorageAdapter {
   }
 
   async delete(key: string): Promise<boolean> {
-    if (isIosNative()) return false;
+    if (isNativePlatform()) return false;
     const cache = await this.getCache();
     const deleted = await cache.delete(this.buildUrl(key));
     if (deleted) return true;
@@ -58,7 +60,7 @@ class CacheStorageService implements CacheStorageAdapter {
   }
 
   async has(key: string): Promise<boolean> {
-    if (isIosNative()) return false;
+    if (isNativePlatform()) return false;
     const cache = await this.getCache();
     const response = await cache.match(this.buildUrl(key));
     if (response) return true;
@@ -67,12 +69,12 @@ class CacheStorageService implements CacheStorageAdapter {
   }
 
   async clear(): Promise<void> {
-    if (isIosNative()) return;
+    if (isNativePlatform()) return;
     await caches.delete(CACHE_NAME);
   }
 
   async keys(): Promise<string[]> {
-    if (isIosNative()) return [];
+    if (isNativePlatform()) return [];
     const cache = await this.getCache();
     const requests = await cache.keys();
     const prefix = "/_cache/";

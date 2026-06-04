@@ -14,7 +14,10 @@ export function getQueueController(): QueueController {
 }
 
 function createQueueController(): QueueController {
-  if (getRuntime() === "capacitor-ios") {
+  if (
+    getRuntime() === "capacitor-ios" ||
+    getRuntime() === "capacitor-android"
+  ) {
     try {
       return new NativeQueueController();
     } catch (err) {
@@ -25,6 +28,11 @@ function createQueueController(): QueueController {
     }
   }
   return new WebQueueController();
+}
+
+export function getNativeQueueController(): NativeQueueController | null {
+  const controller = getQueueController();
+  return controller instanceof NativeQueueController ? controller : null;
 }
 
 export function resetQueueController(): void {

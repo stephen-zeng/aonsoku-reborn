@@ -14,7 +14,13 @@ export function SongTableActions({ row }: SongTableActionsProps) {
   const hasHover = useHasHover();
 
   return (
-    <div className="flex gap-1 items-center">
+    <div
+      className="flex gap-1 items-center"
+      onClick={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      onTouchEnd={(e) => e.stopPropagation()}
+    >
       <TableActionButton
         optionsMenuItems={
           <SongMenuOptions

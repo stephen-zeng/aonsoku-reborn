@@ -38,8 +38,7 @@ import {
   trimQueueToWindow,
 } from "./queue-utils";
 import { transitionHandleSongEnded } from "./queue-transitions";
-import { getRuntime } from "@/utils/capabilities";
-import { getQueueController } from "@/player/queue-controller";
+import { getNativeQueueController } from "@/player/queue-controller";
 
 interface SharedDeps {
   set: (fn: (state: Draft<IPlayerContext>) => void) => void;
@@ -140,8 +139,9 @@ export function createQueueActions(shared: SharedDeps) {
       sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
       sourceName?: string,
     ) => {
-      if (getRuntime() === "capacitor-ios") {
-        getQueueController().setSongList(
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.setSongList(
           songlist,
           index,
           shuffle,
@@ -269,8 +269,9 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     playFromQueue: (contextSongs: ISong[], contextIndex: number) => {
-      if (getRuntime() === "capacitor-ios") {
-        getQueueController().playFromQueue(contextSongs, contextIndex);
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.playFromQueue(contextSongs, contextIndex);
         return;
       }
 
@@ -323,8 +324,9 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     playFromUserQueue: (userQueueIndex: number) => {
-      if (getRuntime() === "capacitor-ios") {
-        getQueueController().playFromUserQueue(userQueueIndex);
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.playFromUserQueue(userQueueIndex);
         return;
       }
 
@@ -353,8 +355,9 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     playSong: (song: ISong, sourceName?: string) => {
-      if (getRuntime() === "capacitor-ios") {
-        getQueueController().playSong(song, sourceName);
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.playSong(song, sourceName);
         return;
       }
 
@@ -395,8 +398,9 @@ export function createQueueActions(shared: SharedDeps) {
       list: ISong[],
       sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     ) => {
-      if (getRuntime() === "capacitor-ios") {
-        getQueueController().addToQueueNext(list, sourceId);
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.addToQueueNext(list, sourceId);
         return;
       }
 
@@ -419,8 +423,9 @@ export function createQueueActions(shared: SharedDeps) {
       list: ISong[],
       sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     ) => {
-      if (getRuntime() === "capacitor-ios") {
-        getQueueController().addToQueueLast(list, sourceId);
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.addToQueueLast(list, sourceId);
         return;
       }
 
@@ -440,8 +445,9 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     removeSongFromQueue: (id: string, tier?: QueueTier) => {
-      if (getRuntime() === "capacitor-ios") {
-        getQueueController().removeFromQueue(id, tier);
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.removeFromQueue(id, tier);
         return;
       }
 
@@ -514,8 +520,9 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     clearUserQueue: () => {
-      if (getRuntime() === "capacitor-ios") {
-        getQueueController().clearUserQueue();
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.clearUserQueue();
         return;
       }
 
@@ -529,8 +536,9 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     reorderQueue: (fromIndex: number, toIndex: number) => {
-      if (getRuntime() === "capacitor-ios") {
-        getQueueController().reorderQueue(fromIndex, toIndex);
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.reorderQueue(fromIndex, toIndex);
         return;
       }
 
@@ -578,8 +586,9 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     toggleShuffle: () => {
-      if (getRuntime() === "capacitor-ios") {
-        getQueueController().toggleShuffle();
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.toggleShuffle();
         return;
       }
 
@@ -604,8 +613,9 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     playNextSong: () => {
-      if (getRuntime() === "capacitor-ios") {
-        getQueueController().playNext();
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.playNext();
         return;
       }
 
@@ -745,8 +755,9 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     playPrevSong: () => {
-      if (getRuntime() === "capacitor-ios") {
-        getQueueController().playPrev();
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.playPrev();
         return;
       }
 
@@ -937,8 +948,9 @@ export function createQueueActions(shared: SharedDeps) {
     },
 
     clearPlayerState: () => {
-      if (getRuntime() === "capacitor-ios") {
-        getQueueController().clearPlayerState();
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.clearPlayerState();
         return;
       }
 

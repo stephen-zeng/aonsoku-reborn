@@ -39,5 +39,8 @@ export function handlePlaybackRemoteCommand(
     case "like":
       context.starCurrentSong();
       return;
+    case "shuffle":
+      context.toggleShuffle();
+      return;
   }
 }

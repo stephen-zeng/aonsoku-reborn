@@ -36,8 +36,8 @@ const runtimeCapabilities: Record<PlatformRuntime, PlaybackCapabilities> = {
   },
   "capacitor-android": {
     canSetVolume: true,
-    requiresSystemVolume: false,
-    supportsSystemVolumeControl: false,
+    requiresSystemVolume: true,
+    supportsSystemVolumeControl: true,
     supportsWebAudioReplayGain: false,
     supportsNativePlayback: true,
     supportsBackgroundPlayback: true,

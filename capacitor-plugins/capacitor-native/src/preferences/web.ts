@@ -4,7 +4,7 @@ import { NATIVE_PREFERENCES_PLUGIN_NAME } from "./definitions";
 
 function unavailable(method: string) {
   return new Error(
-    `${NATIVE_PREFERENCES_PLUGIN_NAME}.${method} is only available in Capacitor iOS.`,
+    `${NATIVE_PREFERENCES_PLUGIN_NAME}.${method} is only available on native Capacitor platforms.`,
   );
 }
 

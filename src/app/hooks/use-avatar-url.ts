@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { cacheManager } from "@/service/cache";
 import { useIsOfflineMode } from "@/store/cache.store";
 import { useIsAvatarCached } from "@/store/cache-index.store";
+import { getAvatarUrl } from "@/api/httpClient";
 
 export function useAvatarUrl(username: string | undefined): string | null {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -42,7 +43,17 @@ export function useAvatarUrl(username: string | undefined): string | null {
       }
 
       if (!cancelled) {
-        setAvatarUrl(null);
+        // Use direct server URL as fallback — <img> can load cross-origin
+        // images without CORS, so this works even when fetch() / native
+        // caching fails. Once caching completes the effect re-runs and
+        // switches to the cached (offline-capable) URL.
+        const fallback = getAvatarUrl(username, "150");
+        setAvatarUrl(
+          fallback && !fallback.startsWith("aonsoku-media://")
+            ? fallback
+            : null,
+        );
+
         if (!isOffline && username && pendingAutoCache.current !== username) {
           pendingAutoCache.current = username;
           cacheManager.cacheAvatar(username).catch(() => {});

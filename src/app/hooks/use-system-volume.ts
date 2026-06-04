@@ -1,26 +1,23 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { getNativeAudioPluginAvailability } from "@/native/audio/facade";
-import { getPlaybackCapabilities } from "@/utils/capabilities";
+import {
+  clampVolume,
+  canUseSystemVolumeControl,
+  getCurrentSystemVolume,
+  getSystemVolume as getSystemVolumeFromNative,
+  setCurrentSystemVolume,
+  volumeFromNative,
+} from "@/utils/system-volume";
 
 const volumeListeners = new Set<() => void>();
-let systemVolume = 100;
 let isListenerStarted = false;
 let isDragging = false;
 
-function clampVolume(value: number) {
-  if (!Number.isFinite(value)) return 100;
-  return Math.max(0, Math.min(100, Math.round(value)));
-}
-
-function volumeFromNative(value: number) {
-  return clampVolume(value * 100);
-}
-
 function emitSystemVolume(value: number) {
   const nextVolume = clampVolume(value);
-  if (nextVolume === systemVolume) return;
+  if (nextVolume === getCurrentSystemVolume()) return;
 
-  systemVolume = nextVolume;
+  setCurrentSystemVolume(nextVolume);
   for (const listener of volumeListeners) {
     listener();
   }
@@ -39,22 +36,13 @@ function subscribeToSystemVolume(listener: () => void) {
 }
 
 function getSystemVolumeSnapshot() {
-  return systemVolume;
-}
-
-function canUseSystemVolumeControl() {
-  if (!getPlaybackCapabilities().supportsSystemVolumeControl) return false;
-  return getNativeAudioPluginAvailability().available;
+  return getCurrentSystemVolume();
 }
 
 function refreshSystemVolume() {
-  const availability = getNativeAudioPluginAvailability();
-  if (!availability.available) return Promise.resolve();
-
-  return availability.plugin
-    .getSystemVolume()
-    .then(({ volume }) => {
-      emitSystemVolume(volumeFromNative(volume));
+  return getSystemVolumeFromNative()
+    .then((volume) => {
+      emitSystemVolume(volume);
     })
     .catch(() => undefined);
 }

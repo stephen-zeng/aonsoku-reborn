@@ -12,6 +12,7 @@
 		"AonsokuNativeDataPlugin",
 		"AonsokuNativeBridgePlugin",
 		"AonsokuNativeAudioPlugin",
+		"AppPlugin",
 		"HapticsPlugin",
 		"KeyboardPlugin"
 	]

@@ -84,7 +84,10 @@ export function createPlayerPersistOptions(getStore: () => PlayerStoreApi) {
           return;
         }
 
-        if (getRuntime() === "capacitor-ios") {
+        if (
+          getRuntime() === "capacitor-ios" ||
+          getRuntime() === "capacitor-android"
+        ) {
           songlistHydrated.value = true;
           return;
         }
@@ -244,7 +247,10 @@ export function partializePlayerStoreState(state: IPlayerContext) {
     "remoteControl",
   ];
 
-  if (getRuntime() === "capacitor-ios") {
+  if (
+    getRuntime() === "capacitor-ios" ||
+    getRuntime() === "capacitor-android"
+  ) {
     omitKeys.push("playerProgress.progress");
   }
 
@@ -431,7 +437,10 @@ export function registerPlayerPersistence(
   if (persistenceRegistered) return;
   persistenceRegistered = true;
 
-  if (getRuntime() !== "capacitor-ios") {
+  if (
+    getRuntime() !== "capacitor-ios" &&
+    getRuntime() !== "capacitor-android"
+  ) {
     store.subscribe(
       (state) => [state.songlist],
       ([songlist]) => {

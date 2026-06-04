@@ -12,12 +12,13 @@ import type {
   ServerInfoResult,
   StoredCredentials,
   StoreCredentialsOptions,
+  MaterialYouColorsResult,
 } from "./definitions";
 import { NATIVE_BRIDGE_PLUGIN_NAME } from "./definitions";
 
 function unavailable(method: string) {
   return new Error(
-    `${NATIVE_BRIDGE_PLUGIN_NAME}.${method} is only available in Capacitor iOS.`,
+    `${NATIVE_BRIDGE_PLUGIN_NAME}.${method} is only available on native Capacitor platforms.`,
   );
 }
 
@@ -55,5 +56,11 @@ export class AonsokuNativeBridgeWeb
 
   request(_options: APIRequestOptions): Promise<APIResponse> {
     return Promise.reject(unavailable("request"));
+  }
+
+  getMaterialYouColors(_options: {
+    isDark: boolean;
+  }): Promise<MaterialYouColorsResult> {
+    return Promise.resolve({ supported: false });
   }
 }

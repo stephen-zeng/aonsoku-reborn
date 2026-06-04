@@ -1,6 +1,7 @@
 import type { PluginListenerHandle } from "@capacitor/core";
 import { getSongStreamUrl } from "@/api/httpClient";
 import { getNativeAudioPluginAvailability } from "@/native/audio/facade";
+import { getRuntime } from "@/utils/capabilities";
 import type {
   NativeAudioEvents,
   NativeAudioPlugin,
@@ -206,6 +207,7 @@ export class NativeQueueController implements QueueController {
 
       const nativeSongs = shuffledSongs.map(songToNativeQueueSong);
       const originalNativeSongs = songs.map(songToNativeQueueSong);
+      this.#nativeDrivenTransition = true;
       this.#plugin
         .setContextQueue({
           songs: nativeSongs,
@@ -260,6 +262,7 @@ export class NativeQueueController implements QueueController {
       }
 
       const nativeSongs = songs.map(songToNativeQueueSong);
+      this.#nativeDrivenTransition = true;
       this.#plugin
         .setContextQueue({
           songs: nativeSongs,
@@ -531,8 +534,14 @@ export class NativeQueueController implements QueueController {
     });
   }
 
-  setVolume(_volume: number): void {
-    // iOS does not support programmatic volume control
+  setVolume(volume: number): void {
+    const runtime = getRuntime();
+    if (runtime !== "capacitor-android") return;
+
+    const clamped = Math.max(0, Math.min(100, Math.round(volume)));
+    this.#plugin.setSystemVolume({ value: clamped / 100 }).catch(() => {
+      /* ignore */
+    });
   }
 
   setPlayRadio(_list: Radio[], _index: number): void {
@@ -872,8 +881,8 @@ export class NativeQueueController implements QueueController {
       }
 
       const isRestoredColdStart =
-        nativeState.isRestored &&
-        usePlayerStore.getState().songlist.contextQueue.songs.length === 0;
+        usePlayerStore.getState().songlist.contextQueue.songs.length === 0 &&
+        (nativeState.isRestored || nativeState.contextQueue.songs.length > 0);
 
       usePlayerStore.setState((s) => {
         s.playerState.isPlaying = nativeState.isPlaying;
@@ -897,6 +906,7 @@ export class NativeQueueController implements QueueController {
         }
 
         if (isRestoredColdStart) {
+          s.playerState.mediaType = "song";
           s.songlist.contextQueue.songs = nativeState.contextQueue.songs.map(
             nativeQueueSongToISong,
           );
@@ -1017,6 +1027,7 @@ export class NativeQueueController implements QueueController {
       });
 
       if (isRestoredColdStart) {
+        this.#nativeDrivenTransition = true;
         this.#resolveFullSongs();
       }
     } catch (err) {
@@ -1174,7 +1185,9 @@ export class NativeQueueController implements QueueController {
       } else if (
         event.state === "paused" ||
         event.state === "stopped" ||
-        event.state === "ended"
+        event.state === "ended" ||
+        event.state === "idle" ||
+        event.state === "failed"
       ) {
         usePlayerStore.setState((s) => {
           s.playerState.isPlaying = false;

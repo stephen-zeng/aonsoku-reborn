@@ -43,6 +43,7 @@ import {
   LRC_TIMESTAMP_REGEX,
 } from "@/utils/lrc-converter";
 import { queryKeys } from "@/utils/queryKeys";
+import { shouldUseNativePlaybackBackend } from "@/player/playback";
 
 const LyricPlayer = lazy(() =>
   import("@applemusic-like-lyrics/react").then((m) => ({
@@ -340,6 +341,22 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
   const scrubbingProgressRef = useRef(
     usePlayerStore.getState().playerProgress.scrubbingProgress,
   );
+  const lastProgressRef = useRef(0);
+  const lastProgressTimeRef = useRef(0);
+
+  useEffect(() => {
+    const currentProgress = usePlayerStore.getState().playerProgress.progress;
+    lastProgressRef.current = currentProgress * 1000;
+    lastProgressTimeRef.current = performance.now();
+
+    return usePlayerStore.subscribe(
+      (state) => state.playerProgress.progress,
+      (progress) => {
+        lastProgressRef.current = progress * 1000;
+        lastProgressTimeRef.current = performance.now();
+      },
+    );
+  }, []);
 
   useEffect(() => {
     isScrubbingRef.current = isScrubbing;
@@ -511,7 +528,8 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
 
   // Use requestAnimationFrame for smooth time updates
   useEffect(() => {
-    if (!playerRef) return;
+    const isNative = shouldUseNativePlaybackBackend();
+    if (!playerRef && !isNative) return;
 
     const updateTime = () => {
       if (isScrubbingRef.current) {
@@ -524,7 +542,18 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
         return;
       }
 
-      const timeMs = Math.floor((playerRef.currentTime || 0) * 1000);
+      let timeMs = 0;
+      if (isNative) {
+        if (isPlaying) {
+          const elapsed = performance.now() - lastProgressTimeRef.current;
+          timeMs = Math.floor(lastProgressRef.current + elapsed);
+        } else {
+          timeMs = Math.floor(lastProgressRef.current);
+        }
+      } else {
+        timeMs = Math.floor((playerRef?.currentTime || 0) * 1000);
+      }
+
       if (currentTimeRef.current !== timeMs) {
         const delta = timeMs - currentTimeRef.current;
         if (Math.abs(delta) > 500) {
@@ -554,7 +583,7 @@ function SyncedLyrics({ lyricLines }: SyncedLyricsProps) {
       clearTimeout(seekingTimerRef.current);
       clearTouchScrollBlurTimer();
     };
-  }, [clearTouchScrollBlurTimer, playerRef]);
+  }, [clearTouchScrollBlurTimer, playerRef, isPlaying]);
 
   return (
     <div

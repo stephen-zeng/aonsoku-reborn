@@ -1,8 +1,18 @@
+import { getNativeBridgeAvailability } from "@/native/bridge/facade";
 import { AuthType } from "@/types/serverConfig";
 import { appName } from "@/utils/appName";
 import { authQueryParams } from "./auth";
 
 export async function queryServerInfo(url: string) {
+  const nativeBridge = getNativeBridgeAvailability();
+  if (nativeBridge.available) {
+    try {
+      return await nativeBridge.plugin.queryServerInfo({ url });
+    } catch {
+      // Fall back to the browser probe so web-compatible servers still work.
+    }
+  }
+
   try {
     const query = {
       ...authQueryParams("dummy", "dummy", AuthType.PASSWORD), // Use dummy credentials, we don't want to actually be logged in

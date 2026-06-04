@@ -149,7 +149,13 @@ export const QueueItemRow = forwardRef<
         <QueueArtists song={song} />
       </div>
 
-      <div className="relative flex-shrink-0 flex items-center justify-end gap-1">
+      <div
+        className="relative flex-shrink-0 flex items-center justify-end gap-1"
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+      >
         {!hideDownload && <CachedIndicator songId={song.id} />}
         {!hideDownload && <CacheButton songId={song.id} groupName="queuerow" />}
         {!hideDuration && (

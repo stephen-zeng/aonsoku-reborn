@@ -10,10 +10,18 @@ export type NativeBridgeAvailability =
   | { available: false; reason: string };
 
 export function getNativeBridgeAvailability(): NativeBridgeAvailability {
-  if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== "ios") {
+  if (!Capacitor.isNativePlatform()) {
     return {
       available: false,
-      reason: "Only supported in Capacitor iOS",
+      reason: "Only supported on native Capacitor platforms",
+    };
+  }
+
+  const platform = Capacitor.getPlatform();
+  if (platform !== "ios" && platform !== "android") {
+    return {
+      available: false,
+      reason: `Unsupported native platform: ${platform}`,
     };
   }
 
@@ -37,4 +45,6 @@ export type {
   LoginOptions,
   LoginResult,
   StoredCredentials,
+  MaterialYouColors,
+  MaterialYouColorsResult,
 } from "@aonsoku/capacitor-native/bridge";

@@ -83,6 +83,27 @@ export interface APIResponse {
   data: Record<string, unknown>;
 }
 
+// MARK: Material You Color Retrieval
+
+export interface MaterialYouColors {
+  colorPrimary: string;
+  colorOnPrimary: string;
+  colorSecondary: string;
+  colorOnSecondary: string;
+  colorBackground: string;
+  colorOnBackground: string;
+  colorSurface: string;
+  colorOnSurface: string;
+  colorSurfaceVariant: string;
+  colorOnSurfaceVariant: string;
+  colorOutline: string;
+}
+
+export interface MaterialYouColorsResult {
+  supported: boolean;
+  colors?: MaterialYouColors;
+}
+
 // MARK: Plugin Interface
 
 export interface AonsokuNativeBridgePlugin extends Plugin {
@@ -96,4 +117,7 @@ export interface AonsokuNativeBridgePlugin extends Plugin {
   queryServerInfo(options: ServerInfoOptions): Promise<ServerInfoResult>;
 
   request(options: APIRequestOptions): Promise<APIResponse>;
+  getMaterialYouColors(options: {
+    isDark: boolean;
+  }): Promise<MaterialYouColorsResult>;
 }

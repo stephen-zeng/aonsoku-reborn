@@ -185,11 +185,75 @@ class SyncWorkerAdapter {
   }
 }
 
-let syncService: SyncWorkerAdapter | typeof metadataSyncService;
+/**
+ * Lazy proxy for the native sync adapter (Capacitor iOS/Android).
+ *
+ * Never falls back to IndexedDB on native platforms. Waits for the
+ * native adapter module to load before delegating calls.
+ */
+class LazyNativeSyncAdapter {
+  private adapter: {
+    syncAll(options?: Record<string, unknown>): Promise<void>;
+    syncIncremental(options?: Record<string, unknown>): Promise<void>;
+    cancel(): void;
+  } | null = null;
+  private readyPromise: Promise<void>;
 
-function createSyncService(): SyncWorkerAdapter | typeof metadataSyncService {
+  constructor() {
+    this.readyPromise = this.load();
+  }
+
+  private async load() {
+    try {
+      const { nativeSyncAdapter } = await import(
+        "@/native/data/native-sync-adapter"
+      );
+      this.adapter = nativeSyncAdapter;
+    } catch (err) {
+      console.warn("[syncWorkerAdapter] native adapter unavailable:", err);
+    }
+  }
+
+  private async ensure() {
+    await this.readyPromise;
+    return this.adapter;
+  }
+
+  async syncAll(options?: {
+    includeCoverArt?: boolean;
+    includeFullSongs?: boolean;
+  }): Promise<void> {
+    const a = await this.ensure();
+    if (a) await a.syncAll(options as Record<string, unknown>);
+  }
+
+  async syncIncremental(options?: {
+    includeCoverArt?: boolean;
+    includeFullSongs?: boolean;
+  }): Promise<void> {
+    const a = await this.ensure();
+    if (a) await a.syncIncremental(options as Record<string, unknown>);
+  }
+
+  cancel(): void {
+    if (this.adapter) {
+      this.adapter.cancel();
+    }
+  }
+}
+
+function createSyncService():
+  | SyncWorkerAdapter
+  | typeof metadataSyncService
+  | LazyNativeSyncAdapter {
+  const runtime = getRuntime();
+
+  if (runtime === "capacitor-ios" || runtime === "capacitor-android") {
+    return new LazyNativeSyncAdapter();
+  }
+
   try {
-    if (getRuntime() === "capacitor-ios" || typeof Worker === "undefined") {
+    if (typeof Worker === "undefined") {
       return metadataSyncService;
     }
     return new SyncWorkerAdapter();
@@ -202,17 +266,6 @@ function createSyncService(): SyncWorkerAdapter | typeof metadataSyncService {
   }
 }
 
-syncService = createSyncService();
-
-if (getRuntime() === "capacitor-ios") {
-  import("@/native/data/native-sync-adapter").then(
-    ({ nativeSyncAdapter }) => {
-      syncService = nativeSyncAdapter as unknown as typeof metadataSyncService;
-    },
-    (err) => {
-      console.warn("[syncWorkerAdapter] native adapter unavailable:", err);
-    },
-  );
-}
+const syncService = createSyncService();
 
 export { syncService };

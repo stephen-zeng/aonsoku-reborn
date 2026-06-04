@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { AonsokuNativeBridge } from "@aonsoku/capacitor-native/bridge";
+import { isNativeBridgeAvailable } from "@/native/bridge/facade";
 import { useAppStore } from "@/store/app.store";
 import { AuthType } from "@/types/serverConfig";
-import { getRuntime } from "@/utils/capabilities";
 import { logger } from "@/utils/logger";
 
 function nativeAuthType(authType: AuthType | null): "token" | "password" {
@@ -11,7 +11,7 @@ function nativeAuthType(authType: AuthType | null): "token" | "password" {
 
 export function NativeAuthObserver() {
   useEffect(() => {
-    if (getRuntime() !== "capacitor-ios") return;
+    if (!isNativeBridgeAvailable()) return;
 
     AonsokuNativeBridge.getCredentials()
       .then(async (credentials) => {

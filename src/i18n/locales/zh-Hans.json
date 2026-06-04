@@ -1050,6 +1050,8 @@
     }
   },
   "theme": {
+    "materialYou": "Material You 主题色",
+    "materialYouInfo": "使用系统壁纸的动态色彩（仅限 Android 12+）。",
     "achiever": "Achiever",
     "bearded-solarized": "Bearded Solarized",
     "black": "黑白",

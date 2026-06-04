@@ -14,6 +14,7 @@ import { MiniPlayerSyncObserver } from "@/app/observers/mini-player-sync-observe
 import { NetworkMonitorObserver } from "@/app/observers/network-monitor";
 import { SmartDownloadObserver } from "@/app/observers/smart-download-observer";
 import { ThemeObserver } from "@/app/observers/theme-observer";
+import { AndroidBackButtonObserver } from "@/app/observers/android-back-button-observer";
 import { KeyboardObserver } from "@/app/observers/keyboard-observer";
 import { NativeAuthObserver } from "@/app/observers/native-auth-observer";
 import { VolumeHUDObserver } from "@/app/observers/volume-hud-observer";
@@ -70,6 +71,7 @@ function App() {
       <LangObserver />
       <ThemeObserver />
       <KeyboardObserver />
+      <AndroidBackButtonObserver />
       <NativeAuthObserver />
       <LanControlObserver />
       <VolumeHUDObserver />

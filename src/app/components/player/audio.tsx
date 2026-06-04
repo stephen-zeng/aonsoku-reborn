@@ -117,6 +117,7 @@ export function AudioPlayer({
     playNextSong,
     playPrevSong,
     starCurrentSong,
+    toggleShuffle,
   } = usePlayerActions();
 
   const getPlaybackBackendEntry = useCallback(
@@ -242,7 +243,6 @@ export function AudioPlayer({
         logger.info(
           `[AudioSrcChange:SKIP] reason=nativeDrivenTransition | songId=${songId} | src=${src?.slice(-60)}`,
         );
-        sessionRef.current.beginSourceChange(songId);
         sessionRef.current.markLoopRestartSyncHandled();
         setAudioSrc(src || undefined);
         return;
@@ -549,6 +549,7 @@ export function AudioPlayer({
           });
         },
         starCurrentSong,
+        toggleShuffle,
       });
     },
     [
@@ -558,6 +559,7 @@ export function AudioPlayer({
       seekAudio,
       starCurrentSong,
       togglePlayPause,
+      toggleShuffle,
     ],
   );
 
@@ -739,6 +741,7 @@ export function AudioPlayer({
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !isSong) return;
+    if (shouldUseNativePlaybackBackend()) return;
 
     if (!audioSrc && !songId) {
       pauseAudio(audio);
@@ -794,10 +797,25 @@ export function AudioPlayer({
             return;
           }
 
+          if (backendRef.current?.kind === "native") {
+            logger.info(
+              "[PlayEffect:SKIP] reason=nativeBackend | native player handles its own playback",
+            );
+            return;
+          }
+
           logger.info('[PlayEffect:play] → calling safePlay("Song")');
           safePlay(audio, "Song");
         } else {
           sessionRef.current.consumeSyncPlayHandled();
+
+          if (backendRef.current?.kind === "native") {
+            logger.info(
+              "[PlayEffect:SKIP] reason=nativeBackend | native player handles its own playback",
+            );
+            return;
+          }
+
           logger.info("[PlayEffect:pause] → calling pauseAudio");
           pauseAudio(audio);
         }

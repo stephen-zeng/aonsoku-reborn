@@ -38,7 +38,7 @@ export type NativeAudioPluginAvailability =
 
 export function createNativeAudioUnavailableError(method: string) {
   return new Error(
-    `${NATIVE_AUDIO_PLUGIN_NAME}.${method} is only available in Capacitor iOS after the native plugin is installed.`,
+    `${NATIVE_AUDIO_PLUGIN_NAME}.${method} is only available on native Capacitor platforms after the native plugin is installed.`,
   );
 }
 
@@ -206,11 +206,11 @@ export const AonsokuNativeAudio = registerPlugin<NativeAudioPlugin>(
 );
 
 export function getNativeAudioPluginAvailability(): NativeAudioPluginAvailability {
-  if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== "ios") {
+  if (!Capacitor.isNativePlatform()) {
     return {
       available: false,
       reason: "unsupported-platform",
-      message: `${NATIVE_AUDIO_PLUGIN_NAME} is only supported in Capacitor iOS.`,
+      message: `${NATIVE_AUDIO_PLUGIN_NAME} requires a native Capacitor platform.`,
     };
   }
 
@@ -218,7 +218,15 @@ export function getNativeAudioPluginAvailability(): NativeAudioPluginAvailabilit
     return {
       available: false,
       reason: "missing-plugin",
-      message: `${NATIVE_AUDIO_PLUGIN_NAME} native plugin is not available.`,
+      message: `${NATIVE_AUDIO_PLUGIN_NAME} native plugin is not available on ${Capacitor.getPlatform()}.`,
+    };
+  }
+
+  const platform = Capacitor.getPlatform();
+  if (platform === "android") {
+    return {
+      available: true,
+      plugin: AonsokuNativeAudio,
     };
   }
 

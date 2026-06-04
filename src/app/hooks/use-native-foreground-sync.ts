@@ -1,30 +1,43 @@
 import { useEffect } from "react";
-import { getQueueController } from "@/player/queue-controller";
-import { NativeQueueController } from "@/player/queue-controller/native-controller";
-import { getRuntime } from "@/utils/capabilities";
+import { App } from "@capacitor/app";
+import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
+import { getNativeQueueController } from "@/player/queue-controller";
 
 export function useNativeForegroundSync() {
   useEffect(() => {
-    if (getRuntime() !== "capacitor-ios") return;
+    const controller = getNativeQueueController();
+    if (!controller) return;
 
-    syncOnForeground();
+    syncOnForeground(controller);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        syncOnForeground();
+        syncOnForeground(controller);
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    let appStateHandle: Promise<PluginListenerHandle> | null = null;
+    if (Capacitor.isNativePlatform()) {
+      appStateHandle = App.addListener("appStateChange", ({ isActive }) => {
+        if (isActive) {
+          syncOnForeground(controller);
+        }
+      });
+    }
+
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (appStateHandle) {
+        appStateHandle.then((h) => h.remove());
+      }
     };
   }, []);
 }
 
-async function syncOnForeground() {
-  const controller = getQueueController();
-  if (controller instanceof NativeQueueController) {
-    await controller.syncFromNative();
-  }
+async function syncOnForeground(
+  controller: NonNullable<ReturnType<typeof getNativeQueueController>>,
+) {
+  await controller.syncFromNative();
 }
