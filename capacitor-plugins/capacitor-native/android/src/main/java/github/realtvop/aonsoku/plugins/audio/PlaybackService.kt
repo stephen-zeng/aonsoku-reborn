@@ -250,6 +250,7 @@ class PlaybackService : MediaSessionService() {
             .setRenderersFactory(renderersFactory)
             .setAudioAttributes(audioAttributes, true)
             .setHandleAudioBecomingNoisy(true)
+            .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
 
         // Force skip commands so notification action buttons are always visible.
