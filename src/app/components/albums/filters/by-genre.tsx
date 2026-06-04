@@ -41,9 +41,10 @@ export function AlbumsFilterByGenre() {
 
   function handleChangeGenreFilter(value: string) {
     setSearchParams((state) => {
-      state.set(AlbumsSearchParams.Genre, value);
+      const next = new URLSearchParams(state);
+      next.set(AlbumsSearchParams.Genre, value);
 
-      return state;
+      return next;
     });
     setOpen(false);
     scrollPageToTop();

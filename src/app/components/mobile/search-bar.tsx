@@ -37,9 +37,10 @@ export function MobileSearchBar({
     if (trimmed) {
       setSearchParams(
         (params) => {
-          params.set(AlbumsSearchParams.MainFilter, AlbumsFilters.Search);
-          params.set(AlbumsSearchParams.Query, trimmed);
-          return params;
+          const next = new URLSearchParams(params);
+          next.set(AlbumsSearchParams.MainFilter, AlbumsFilters.Search);
+          next.set(AlbumsSearchParams.Query, trimmed);
+          return next;
         },
         { replace: true },
       );
@@ -52,9 +53,10 @@ export function MobileSearchBar({
     setInputValue("");
     setSearchParams(
       (params) => {
-        params.delete(AlbumsSearchParams.MainFilter);
-        params.delete(AlbumsSearchParams.Query);
-        return params;
+        const next = new URLSearchParams(params);
+        next.delete(AlbumsSearchParams.MainFilter);
+        next.delete(AlbumsSearchParams.Query);
+        return next;
       },
       { replace: true },
     );
