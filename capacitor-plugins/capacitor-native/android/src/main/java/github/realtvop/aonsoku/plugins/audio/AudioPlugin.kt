@@ -687,13 +687,18 @@ class AudioPlugin : Plugin() {
         mainHandler.removeCallbacks(progressRunnable)
     }
 
+    private fun isWebViewVisible(): Boolean {
+        val webView = bridge?.webView ?: return false
+        return isWebViewActive && webView.isShown && webView.windowVisibility == android.view.View.VISIBLE
+    }
+
     private fun emitProgress() {
         val player = playbackService?.getPlayer() ?: return
         val duration = player.duration
         val currentPosition = player.currentPosition
         val bufferedPosition = player.bufferedPosition
 
-        if (isWebViewActive) {
+        if (isWebViewVisible()) {
             val data = JSObject().apply {
                 put("currentTime", currentPosition / 1000.0)
                 put("duration", if (duration == C.TIME_UNSET) 0.0 else duration / 1000.0)
