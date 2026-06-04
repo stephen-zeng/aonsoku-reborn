@@ -44,7 +44,7 @@ export default function HomeHeader({ albums }: HomeHeaderProps) {
         {albums.map((album, index) => (
           <CarouselItem
             key={album.id}
-            className="pl-0 basis-full maskImage-carousel-item"
+            className="pl-0 basis-full"
             data-testid={`carousel-header-album-${index}`}
           >
             <HeaderItem album={album} />
