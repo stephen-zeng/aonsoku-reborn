@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { clsx } from "clsx";
 import * as React from "react";
 
@@ -301,7 +302,11 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
           ref={trackRef}
           className={clsx(
             "relative w-full grow overflow-hidden rounded-full select-none transition-[height] duration-150 ease-out",
-            isTouching ? "h-[10px]" : "h-1",
+            isTouching
+              ? "h-[10px]"
+              : Capacitor.isNativePlatform()
+                ? "h-1.5"
+                : "h-1",
             !isBuffering && variant === "default" && "bg-secondary",
             isBuffering && "buffer-track",
             isBuffering && variant === "secondary" && "buffer-secondary",
