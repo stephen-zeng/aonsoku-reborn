@@ -375,6 +375,12 @@ class PlaybackService : MediaSessionService() {
                     }
                 }
             }
+
+            override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
+                if (queueEngine.isShuffleActive != shuffleModeEnabled) {
+                    emitRemoteCommand("shuffle")
+                }
+            }
         })
 
         val callback = object : MediaSession.Callback {
@@ -952,6 +958,7 @@ class PlaybackService : MediaSessionService() {
                     withContext(Dispatchers.Main) {
                         queueEngine.restoreState(persistedState)
                         isQueueEngineActive = true
+                        player?.shuffleModeEnabled = persistedState.isShuffleActive
 
                         val song = queueEngine.currentSong
                         if (song != null) {
@@ -968,6 +975,7 @@ class PlaybackService : MediaSessionService() {
     fun setContextQueue(songs: List<QueueSong>, currentIndex: Int, autoplay: Boolean, startTime: Double?, sourceId: QueueSourceId?, sourceName: String?) {
         isQueueEngineActive = true
         queueEngine.setContextQueue(songs, currentIndex, autoplay, startTime, sourceId, sourceName)
+        player?.shuffleModeEnabled = queueEngine.isShuffleActive
         persistence.markStateDirty()
     }
 
@@ -1009,6 +1017,7 @@ class PlaybackService : MediaSessionService() {
 
     fun setShuffle(enabled: Boolean) {
         queueEngine.setShuffleActive(enabled)
+        player?.shuffleModeEnabled = enabled
         persistence.markStateDirty()
         updateNotification()
         mediaSession?.setCustomLayout(getCustomLayoutButtons())
@@ -1016,12 +1025,14 @@ class PlaybackService : MediaSessionService() {
 
     fun markAsShuffled(originalSongs: List<QueueSong>) {
         queueEngine.markAsShuffled(originalSongs)
+        player?.shuffleModeEnabled = true
         persistence.markStateDirty()
     }
 
     fun clearQueueState() {
         isQueueEngineActive = false
         queueEngine.setContextQueue(emptyList(), 0, false, null, null, null)
+        player?.shuffleModeEnabled = false
         persistence.stopProgressTracking()
         currentSongMetadata = null
         serviceScope.launch(Dispatchers.IO) {
