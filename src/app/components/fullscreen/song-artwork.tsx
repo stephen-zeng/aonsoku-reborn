@@ -37,7 +37,7 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
           exit={{ opacity: 0, scale: 1.05 }}
           transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
           className={clsx(
-            "relative aspect-square w-full bg-foreground/5 rounded-md overflow-hidden flex items-center justify-center",
+            "relative aspect-square w-full bg-foreground/5 rounded-md overflow-hidden flex items-center justify-center transition-all duration-300 ease-in-out",
             !compact && "fullscreen-desktop-artwork",
             compact
               ? "max-h-[42svh] max-w-[260px]"
