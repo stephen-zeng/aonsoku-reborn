@@ -1027,6 +1027,7 @@ export class NativeQueueController implements QueueController {
       });
 
       if (isRestoredColdStart) {
+        this.#nativeDrivenTransition = true;
         this.#resolveFullSongs();
       }
     } catch (err) {
