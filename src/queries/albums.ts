@@ -85,15 +85,39 @@ export async function getAlbumList(params: Required<AlbumListParams>) {
       byYear: "year",
       random: "random",
     };
+
+    let fromYear: number | undefined ;
+    let toYear: number | undefined ;
+    let sortOrder: "asc" | "desc" = "asc";
+
+    if (params.type === "newest" || params.type === "recent") {
+      sortOrder = "desc";
+    }
+
+    if (params.type === "byYear") {
+      const fy = params.fromYear ? parseInt(params.fromYear, 10) : undefined;
+      const ty = params.toYear ? parseInt(params.toYear, 10) : undefined;
+      if (fy !== undefined && ty !== undefined && !isNaN(fy) && !isNaN(ty)) {
+        if (fy > ty) {
+          fromYear = ty;
+          toYear = fy;
+          sortOrder = "desc";
+        } else {
+          fromYear = fy;
+          toYear = ty;
+          sortOrder = "asc";
+        }
+      }
+    }
+
     const result = await AonsokuNativeData.getAlbums({
       limit: params.size,
       offset: params.offset,
       sortBy: sortMap[params.type] || "name",
-      sortOrder:
-        params.type === "newest" || params.type === "recent" ? "desc" : "asc",
-      genre: params.genre,
-      fromYear: params.fromYear,
-      toYear: params.toYear,
+      sortOrder,
+      genre: params.genre || undefined,
+      fromYear,
+      toYear,
     });
     return {
       albums: result.items,
