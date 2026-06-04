@@ -31,8 +31,15 @@ export function KeyboardObserver() {
       keyboardVisible = false;
     };
 
-    const onScroll = () => {
+    const onScrollOrTouch = () => {
       if (keyboardVisible) {
+        const activeEl = document.activeElement;
+        if (
+          activeEl instanceof HTMLInputElement ||
+          activeEl instanceof HTMLTextAreaElement
+        ) {
+          activeEl.blur();
+        }
         Keyboard.hide();
       }
     };
@@ -41,10 +48,16 @@ export function KeyboardObserver() {
     Keyboard.addListener("keyboardDidShow", onShow);
     Keyboard.addListener("keyboardWillHide", onHide);
     Keyboard.addListener("keyboardDidHide", onHide);
-    document.addEventListener("scroll", onScroll, { capture: true });
+    document.addEventListener("scroll", onScrollOrTouch, { capture: true });
+    document.addEventListener("touchmove", onScrollOrTouch, { capture: true });
 
     return () => {
-      document.removeEventListener("scroll", onScroll, { capture: true });
+      document.removeEventListener("scroll", onScrollOrTouch, {
+        capture: true,
+      });
+      document.removeEventListener("touchmove", onScrollOrTouch, {
+        capture: true,
+      });
       Keyboard.removeAllListeners();
     };
   }, [commandOpen]);
