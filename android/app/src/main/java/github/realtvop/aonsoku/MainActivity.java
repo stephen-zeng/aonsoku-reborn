@@ -19,11 +19,13 @@ import androidx.core.view.WindowInsetsCompat;
 public class MainActivity extends BridgeActivity implements SensorEventListener {
     private SensorManager sensorManager;
     private Sensor accelerometer;
-    private float lastX, lastY, lastZ;
     private long lastShakeTime;
-    private boolean hasInitialValues;
-    private static final float SHAKE_THRESHOLD = 12f;
+    private long lastCheckTime;
+    private int shakeCount;
+    private static final float MIN_ACCEL = 14f;
+    private static final int REQUIRED_SHAKES = 3;
     private static final long SHAKE_COOLDOWN_MS = 2000;
+    private static final long SHAKE_WINDOW_MS = 500;
 
     @Override
     public void onCreate(android.os.Bundle savedInstanceState) {
@@ -66,7 +68,6 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
         if (sensorManager != null) {
             sensorManager.unregisterListener(this);
         }
-        hasInitialValues = false;
     }
 
     @Override
@@ -75,27 +76,24 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
         float y = event.values[1];
         float z = event.values[2];
 
-        if (!hasInitialValues) {
-            lastX = x;
-            lastY = y;
-            lastZ = z;
-            hasInitialValues = true;
-            return;
-        }
+        double acceleration = Math.sqrt(x * x + y * y + z * z);
 
-        float deltaX = Math.abs(x - lastX);
-        float deltaY = Math.abs(y - lastY);
-        float deltaZ = Math.abs(z - lastZ);
-
-        lastX = x;
-        lastY = y;
-        lastZ = z;
-
-        if (deltaX > SHAKE_THRESHOLD || deltaY > SHAKE_THRESHOLD || deltaZ > SHAKE_THRESHOLD) {
+        if (acceleration > MIN_ACCEL) {
             long now = System.currentTimeMillis();
-            if (now - lastShakeTime > SHAKE_COOLDOWN_MS) {
-                lastShakeTime = now;
-                openDebugPage();
+
+            if (now - lastCheckTime > SHAKE_WINDOW_MS) {
+                shakeCount = 0;
+            }
+
+            lastCheckTime = now;
+            shakeCount++;
+
+            if (shakeCount >= REQUIRED_SHAKES) {
+                if (now - lastShakeTime > SHAKE_COOLDOWN_MS) {
+                    shakeCount = 0;
+                    lastShakeTime = now;
+                    openDebugPage();
+                }
             }
         }
     }
