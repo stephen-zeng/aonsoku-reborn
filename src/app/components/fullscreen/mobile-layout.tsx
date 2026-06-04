@@ -20,7 +20,7 @@ import {
   useSongColor,
 } from "@/store/player.store";
 import { ArtworkWithInfo } from "./artwork-with-info";
-import { FULLSCREEN_QUEUE_BG_CLASS, PANEL_MAX_WIDTH } from "./constants";
+import { CONTENT_MAX_WIDTH, FULLSCREEN_QUEUE_BG_CLASS, PANEL_MAX_WIDTH } from "./constants";
 import { FullscreenControlPanel } from "./control-panel";
 import { CustomLyricsSelect } from "./custom-lyrics-select";
 import { LyricsTab } from "./lyrics";
@@ -136,7 +136,10 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
 
   return (
     <div
-      className="shrink-0 flex items-center justify-between w-full mx-auto px-0 pt-2 pb-5 max-w-[clamp(280px,85vw,480px)]"
+      className={cn(
+        "shrink-0 flex items-center justify-between w-full mx-auto px-0 pt-2 pb-5",
+        CONTENT_MAX_WIDTH,
+      )}
       role="tablist"
     >
       <MobileTabButton

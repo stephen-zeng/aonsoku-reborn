@@ -672,3 +672,9 @@ html {
   overscroll-behavior-y: none;
   overscroll-behavior-x: none;
 }
+
+.fullscreen-content-width {
+  width: 100%;
+  max-width: min(clamp(280px, 85vw, 480px), calc(100dvh - 24rem));
+}
+
