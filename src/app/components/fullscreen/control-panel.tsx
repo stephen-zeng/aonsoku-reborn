@@ -20,7 +20,7 @@ export const FullscreenControlPanel = memo(function FullscreenControlPanel({
         compact
           ? "shrink-0 gap-3 pb-2"
           : expanded
-            ? "shrink-0 pt-2 pb-6 gap-6 md:gap-8"
+            ? "shrink-0 pt-7 pb-6 gap-6 md:gap-8"
             : "shrink-0 py-7 gap-5",
       )}
     >
