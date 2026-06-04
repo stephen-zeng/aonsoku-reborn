@@ -86,8 +86,8 @@ export async function getAlbumList(params: Required<AlbumListParams>) {
       random: "random",
     };
 
-    let fromYear: number | undefined ;
-    let toYear: number | undefined ;
+    let fromYear: number | undefined;
+    let toYear: number | undefined;
     let sortOrder: "asc" | "desc" = "asc";
 
     if (params.type === "newest" || params.type === "recent") {

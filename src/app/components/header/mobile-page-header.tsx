@@ -1,12 +1,21 @@
 import { ChevronLeft } from "lucide-react";
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { UserDropdown } from "@/app/components/header/user-dropdown";
 import { Button } from "@/app/components/ui/button";
 import { cn } from "@/lib/utils";
 import { blendColors, hslToHex, isDarkHex } from "@/utils/getAverageColor";
-import { registerHeaderBackHandler, unregisterHeaderBackHandler } from "@/utils/back-button-registry";
+import {
+  registerHeaderBackHandler,
+  unregisterHeaderBackHandler,
+} from "@/utils/back-button-registry";
 
 type MobilePageHeaderVariant = "root" | "sub";
 
