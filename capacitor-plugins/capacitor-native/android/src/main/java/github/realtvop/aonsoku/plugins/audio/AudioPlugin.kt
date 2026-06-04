@@ -59,6 +59,7 @@ class AudioPlugin : Plugin() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var playbackService: PlaybackService? = null
     private var isBound = false
+    private var isWebViewActive = true
     private var currentRequestId: String? = null
     private var playerListener: Player.Listener? = null
 
@@ -248,6 +249,22 @@ class AudioPlugin : Plugin() {
         registerAudioFocusListener()
         registerHeadphoneReceiver()
         registerVolumeReceiver()
+    }
+
+    override fun handleOnPause() {
+        isWebViewActive = false
+        stopProgressUpdates()
+        super.handleOnPause()
+    }
+
+    override fun handleOnResume() {
+        super.handleOnResume()
+        isWebViewActive = true
+        val player = playbackService?.getPlayer()
+        if (player != null && player.isPlaying) {
+            emitProgress()
+            startProgressUpdates()
+        }
     }
 
     override fun handleOnStop() {
@@ -624,13 +641,15 @@ class AudioPlugin : Plugin() {
         val currentPosition = player.currentPosition
         val bufferedPosition = player.bufferedPosition
 
-        val data = JSObject().apply {
-            put("currentTime", currentPosition / 1000.0)
-            put("duration", if (duration == C.TIME_UNSET) 0.0 else duration / 1000.0)
-            put("bufferedTime", bufferedPosition / 1000.0)
-            put("requestId", currentRequestId ?: JSONObject.NULL)
+        if (isWebViewActive) {
+            val data = JSObject().apply {
+                put("currentTime", currentPosition / 1000.0)
+                put("duration", if (duration == C.TIME_UNSET) 0.0 else duration / 1000.0)
+                put("bufferedTime", bufferedPosition / 1000.0)
+                put("requestId", currentRequestId ?: JSONObject.NULL)
+            }
+            notifyListeners("progress", data)
         }
-        notifyListeners("progress", data)
 
         playbackService?.persistence?.updateProgress(currentPosition / 1000.0)
     }
