@@ -741,6 +741,7 @@ export function AudioPlayer({
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !isSong) return;
+    if (shouldUseNativePlaybackBackend()) return;
 
     if (!audioSrc && !songId) {
       pauseAudio(audio);

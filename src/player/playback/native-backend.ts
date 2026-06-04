@@ -136,8 +136,6 @@ export class NativeAudioPlaybackBackend implements PlaybackBackend {
     for (const listeners of Object.values(this.#listeners)) {
       listeners.clear();
     }
-
-    this.#plugin.clear().catch(() => {});
   }
 
   subscribe<TEvent extends PlaybackBackendEvent>(

@@ -316,7 +316,7 @@ describe("NativeAudioPlaybackBackend", () => {
     expect(listeners.error).not.toHaveBeenCalled();
   });
 
-  it("removes native listeners and clears plugin state on dispose", async () => {
+  it("removes native listeners on dispose without clearing plugin state", async () => {
     const { plugin, emit } = createPlugin();
     const backend = new NativeAudioPlaybackBackend(plugin);
     const progress = vi.fn();
@@ -329,7 +329,7 @@ describe("NativeAudioPlaybackBackend", () => {
     emit("progress", { currentTime: 1, duration: 2 });
 
     expect(progress).not.toHaveBeenCalled();
-    expect(plugin.clear).toHaveBeenCalledTimes(1);
+    expect(plugin.clear).not.toHaveBeenCalled();
     expect(() => backend.play()).toThrow("Playback backend has been disposed");
   });
 });
