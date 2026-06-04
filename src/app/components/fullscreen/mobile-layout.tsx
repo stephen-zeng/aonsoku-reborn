@@ -70,10 +70,14 @@ const MobileHeader = memo(function MobileHeader({
             data-testid="fullscreen-drag-handle"
             aria-label="Drag to close"
             className="opacity-100"
-            style={{
-              backgroundColor: currentSongColor ?? "hsl(var(--primary))",
-            }}
-          />
+          >
+            <span
+              className="block w-9 h-1 rounded-full opacity-40 bg-foreground"
+              style={{
+                backgroundColor: currentSongColor ?? "hsl(var(--primary))",
+              }}
+            />
+          </DrawerHandle>
         </div>
       )}
 
@@ -132,7 +136,7 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
 
   return (
     <div
-      className="shrink-0 flex items-center justify-center gap-4 pt-1 pb-2"
+      className="shrink-0 flex items-center justify-between w-full mx-auto px-10 pt-2 pb-5 max-w-[clamp(280px,85vw,480px)]"
       role="tablist"
     >
       <MobileTabButton

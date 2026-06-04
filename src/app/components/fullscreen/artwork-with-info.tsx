@@ -18,7 +18,7 @@ export const ArtworkWithInfo = memo(function ArtworkWithInfo({
     <div
       className={clsx(
         "flex w-full min-h-0 min-w-0 flex-col items-center",
-        compact && "justify-center",
+        compact ? "justify-center" : "flex-1 justify-between py-2 md:py-4",
         className,
       )}
     >
@@ -26,22 +26,24 @@ export const ArtworkWithInfo = memo(function ArtworkWithInfo({
         className={clsx(
           "mx-auto w-full min-w-0 shrink-0 justify-self-center",
           CONTENT_MAX_WIDTH,
-          compact ? "pb-2" : "pb-3",
+          compact ? "pb-2" : "pb-1.5",
         )}
       >
         <AlbumName compact={compact} />
       </div>
 
-      <FullscreenSongArtwork
-        compact={compact}
-        showTouchDragSurface={showTouchDragSurface}
-      />
+      <div className="flex-1 min-h-0 w-full flex items-center justify-center">
+        <FullscreenSongArtwork
+          compact={compact}
+          showTouchDragSurface={showTouchDragSurface}
+        />
+      </div>
 
       <div
         className={clsx(
           "mx-auto w-full min-w-0 shrink-0 justify-self-center",
           CONTENT_MAX_WIDTH,
-          compact ? "pt-2" : "pt-3",
+          compact ? "pt-2" : "pt-4",
         )}
       >
         <div className="flex min-w-0 items-start justify-between gap-2">
