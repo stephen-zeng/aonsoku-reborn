@@ -37,6 +37,8 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import github.realtvop.aonsoku.plugins.debug.NativeLogger
 import github.realtvop.aonsoku.plugins.preferences.NativePreferencesStore
+import github.realtvop.aonsoku.plugins.bridge.AndroidCredentialStore
+import github.realtvop.aonsoku.plugins.bridge.SubsonicHttpClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -76,6 +78,20 @@ class PlaybackService : MediaSessionService() {
     var isQueueEngineActive = false
     var savedRestoreTime: Double? = null
     var currentSongMetadata: MediaMetadata? = null
+
+    private val httpClient = SubsonicHttpClient()
+    private val credentialStore by lazy {
+        AndroidCredentialStore(this)
+    }
+    val scrobbleBuffer by lazy {
+        NativeScrobbleBuffer(ScrobbleFileStore(this))
+    }
+    private val scrobbleSubmitter = NativeScrobbleSubmitter(httpClient)
+
+    var currentScrobbleSongId: String? = null
+        private set
+    var currentScrobbleSongDuration: Double = 0.0
+        private set
 
     var isLikeActive: Boolean = false
         set(value) {
@@ -222,6 +238,38 @@ class PlaybackService : MediaSessionService() {
         listeners.forEach { it.onError(code, message) }
     }
 
+    fun handleScrobbleSongEnded() {
+        val entry = scrobbleBuffer.stopTracking()
+        if (entry != null) {
+            val credentials = credentialStore.retrieve()
+            if (credentials != null) {
+                scrobbleSubmitter.submitIfEligible(entry, currentScrobbleSongDuration, credentials, scrobbleBuffer)
+            }
+        }
+        currentScrobbleSongId = null
+    }
+
+    fun handleScrobbleSongStarted(songId: String, duration: Double) {
+        currentScrobbleSongId = songId
+        currentScrobbleSongDuration = duration
+        scrobbleBuffer.startTracking(songId, duration)
+        val credentials = credentialStore.retrieve()
+        if (credentials != null) {
+            serviceScope.launch {
+                scrobbleSubmitter.sendNowPlaying(songId, credentials)
+            }
+        }
+    }
+
+    fun submitPendingScrobbles() {
+        val credentials = credentialStore.retrieve()
+        if (credentials != null) {
+            CoroutineScope(Dispatchers.IO).launch {
+                scrobbleSubmitter.submitPending(scrobbleBuffer, credentials)
+            }
+        }
+    }
+
     inner class LocalBinder : Binder() {
         fun getService(): PlaybackService = this@PlaybackService
     }
@@ -287,6 +335,9 @@ class PlaybackService : MediaSessionService() {
 
             override fun queueEngineDidAdvanceTo(engine: NativeQueueEngine, index: Int, songId: String, reason: QueueAdvanceReason) {
                 persistence.markStateDirty()
+                handleScrobbleSongEnded()
+                val duration = engine.currentSong?.duration ?: 0.0
+                handleScrobbleSongStarted(songId, duration)
                 emitQueueStateChanged(index, songId, reason.value, engine.isInUserQueue)
             }
 
@@ -298,6 +349,7 @@ class PlaybackService : MediaSessionService() {
             override fun queueEngineDidExhaustQueue(engine: NativeQueueEngine) {
                 val mainHandler = Handler(Looper.getMainLooper())
                 mainHandler.post {
+                    handleScrobbleSongEnded()
                     player?.pause()
                     player?.seekTo(0)
                     emitPlaybackState("ended")
@@ -308,6 +360,8 @@ class PlaybackService : MediaSessionService() {
             override fun queueEngineSeekToStart(engine: NativeQueueEngine, song: QueueSong) {
                 val mainHandler = Handler(Looper.getMainLooper())
                 mainHandler.post {
+                    handleScrobbleSongEnded()
+                    handleScrobbleSongStarted(song.id, song.duration)
                     player?.seekTo(0)
                     player?.play()
                 }
@@ -327,6 +381,7 @@ class PlaybackService : MediaSessionService() {
                     if (isQueueEngineActive) {
                         queueEngine.handleEnded()
                     } else {
+                        handleScrobbleSongEnded()
                         emitEnded("finished")
                     }
                 }
@@ -354,9 +409,15 @@ class PlaybackService : MediaSessionService() {
                 if (isPlaying) {
                     isTransitioning = false
                     persistence.startProgressTracking()
+                    if (currentScrobbleSongId != null) {
+                        scrobbleBuffer.resumeTracking()
+                    }
                 } else {
                     persistence.stopProgressTracking()
                     persistence.flushNow()
+                    if (currentScrobbleSongId != null) {
+                        scrobbleBuffer.pauseTracking()
+                    }
 
                     val isEndTransition = player?.let {
                         it.playbackState == Player.STATE_ENDED &&
@@ -807,6 +868,13 @@ class PlaybackService : MediaSessionService() {
 
     override fun onDestroy() {
         NativeLogger.info("PlaybackService destroyed", "playback-service")
+        handleScrobbleSongEnded()
+        CoroutineScope(Dispatchers.IO).launch {
+            val credentials = credentialStore.retrieve()
+            if (credentials != null) {
+                scrobbleSubmitter.submitPending(scrobbleBuffer, credentials)
+            }
+        }
         serviceScope.cancel()
         persistence.stopProgressTracking()
         listeners.clear()
@@ -973,10 +1041,15 @@ class PlaybackService : MediaSessionService() {
     }
 
     fun setContextQueue(songs: List<QueueSong>, currentIndex: Int, autoplay: Boolean, startTime: Double?, sourceId: QueueSourceId?, sourceName: String?) {
+        handleScrobbleSongEnded()
         isQueueEngineActive = true
         queueEngine.setContextQueue(songs, currentIndex, autoplay, startTime, sourceId, sourceName)
         player?.shuffleModeEnabled = queueEngine.isShuffleActive
         persistence.markStateDirty()
+        val song = queueEngine.currentSong
+        if (song != null) {
+            handleScrobbleSongStarted(song.id, song.duration)
+        }
     }
 
     fun updateContextQueue(songs: List<QueueSong>, currentIndex: Int) {

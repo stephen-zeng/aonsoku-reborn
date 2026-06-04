@@ -74,13 +74,6 @@ class AudioPlugin : Plugin() {
     private val credentialStore: AndroidCredentialStore by lazy {
         AndroidCredentialStore(context)
     }
-    private val scrobbleBuffer by lazy {
-        NativeScrobbleBuffer(ScrobbleFileStore(context))
-    }
-    private val scrobbleSubmitter = NativeScrobbleSubmitter(httpClient)
-
-    private var currentScrobbleSongId: String? = null
-    private var currentScrobbleSongDuration: Double = 0.0
 
     private var sleepTimerHandler: Handler? = null
     private var sleepTimerEndTime: Long = 0
@@ -164,10 +157,6 @@ class AudioPlugin : Plugin() {
         }
 
         override fun onQueueStateChanged(currentIndex: Int, songId: String, reason: String, isInUserQueue: Boolean) {
-            handleScrobbleSongEnded()
-            val song = playbackService?.queueEngine?.currentSong
-            val duration = song?.duration ?: 0.0
-            handleScrobbleSongStarted(songId, duration)
             val data = JSObject().apply {
                 put("currentIndex", currentIndex)
                 put("songId", songId)
@@ -185,11 +174,6 @@ class AudioPlugin : Plugin() {
         }
 
         override fun onPlaybackStateChanged(state: String) {
-            if (state == "playing" && currentScrobbleSongId != null) {
-                scrobbleBuffer.resumeTracking()
-            } else if (state == "paused" && currentScrobbleSongId != null) {
-                scrobbleBuffer.pauseTracking()
-            }
             emitPlaybackState(state, currentRequestId)
         }
 
@@ -199,9 +183,6 @@ class AudioPlugin : Plugin() {
                 put("reason", reason)
             })
             emitPlaybackState("ended", currentRequestId)
-            if (reason == "finished") {
-                handleScrobbleSongEnded()
-            }
         }
 
         override fun onSleepTimerEndOfTrack() {
@@ -277,10 +258,7 @@ class AudioPlugin : Plugin() {
     override fun handleOnStop() {
         super.handleOnStop()
         pluginScope.launch {
-            val credentials = credentialStore.retrieve()
-            if (credentials != null) {
-                scrobbleSubmitter.submitPending(scrobbleBuffer, credentials)
-            }
+            playbackService?.submitPendingScrobbles()
             playbackService?.persistence?.flushNow()
         }
     }
@@ -423,35 +401,7 @@ class AudioPlugin : Plugin() {
         })
     }
 
-    // MARK: - Scrobble
 
-    private fun handleScrobbleSongEnded() {
-        val entry = scrobbleBuffer.stopTracking()
-        if (entry != null) {
-            notifyListeners("scrobbleEvent", JSObject().apply {
-                put("songId", entry.songId)
-                put("playedDurationMs", entry.playedDurationMs)
-                put("timestamp", entry.timestamp)
-            })
-            val credentials = credentialStore.retrieve()
-            if (credentials != null) {
-                scrobbleSubmitter.submitIfEligible(entry, currentScrobbleSongDuration, credentials)
-            }
-        }
-        currentScrobbleSongId = null
-    }
-
-    private fun handleScrobbleSongStarted(songId: String, duration: Double) {
-        currentScrobbleSongId = songId
-        currentScrobbleSongDuration = duration
-        scrobbleBuffer.startTracking(songId, duration)
-        val credentials = credentialStore.retrieve()
-        if (credentials != null) {
-            pluginScope.launch {
-                scrobbleSubmitter.sendNowPlaying(songId, credentials)
-            }
-        }
-    }
 
     // MARK: - Sleep Timer
 
@@ -820,9 +770,9 @@ class AudioPlugin : Plugin() {
                 } else {
                     url
                 }
-                handleScrobbleSongEnded()
+                playbackService?.handleScrobbleSongEnded()
                 if (songId != null) {
-                    handleScrobbleSongStarted(songId, songDuration)
+                    playbackService?.handleScrobbleSongStarted(songId, songDuration)
                 }
                 loadMediaAndPlay(resolvedUrl, parsedMetadata, startTime, autoplay, requestId, onResolved = { call.resolve() }, onRejected = { msg -> call.reject(msg) })
             }
@@ -832,7 +782,7 @@ class AudioPlugin : Plugin() {
                     call.reject("Missing URL for radio source")
                     return
                 }
-                handleScrobbleSongEnded()
+                playbackService?.handleScrobbleSongEnded()
                 loadMediaAndPlay(url, parsedMetadata, startTime, autoplay, requestId, onResolved = { call.resolve() }, onRejected = { msg -> call.reject(msg) })
             }
             "native-file" -> {
@@ -842,9 +792,9 @@ class AudioPlugin : Plugin() {
                     return
                 }
                 if (uri.startsWith("content://")) {
-                    handleScrobbleSongEnded()
+                    playbackService?.handleScrobbleSongEnded()
                     if (songId != null) {
-                        handleScrobbleSongStarted(songId, songDuration)
+                        playbackService?.handleScrobbleSongStarted(songId, songDuration)
                     }
                     loadMediaAndPlay(uri, parsedMetadata, startTime, autoplay, requestId, onResolved = { call.resolve() }, onRejected = { msg -> call.reject(msg) })
                 } else {
@@ -854,9 +804,9 @@ class AudioPlugin : Plugin() {
                         call.reject("Native file does not exist: $path")
                         return
                     }
-                    handleScrobbleSongEnded()
+                    playbackService?.handleScrobbleSongEnded()
                     if (songId != null) {
-                        handleScrobbleSongStarted(songId, songDuration)
+                        playbackService?.handleScrobbleSongStarted(songId, songDuration)
                     }
                     loadMediaAndPlay(uri, parsedMetadata, startTime, autoplay, requestId, onResolved = { call.resolve() }, onRejected = { msg -> call.reject(msg) })
                 }
@@ -1083,7 +1033,7 @@ class AudioPlugin : Plugin() {
                     player.clearMediaItems()
                     emitPlaybackState("idle", currentRequestId)
                     currentRequestId = null
-                    handleScrobbleSongEnded()
+                    service.handleScrobbleSongEnded()
                     abandonAudioFocus()
                     service.clearQueueState()
                     service.currentSongMetadata = null
@@ -1269,7 +1219,14 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun getScrobbleBuffer(call: PluginCall) {
-        val entries = scrobbleBuffer.getEntries()
+        val service = playbackService
+        if (service == null) {
+            call.resolve(JSObject().apply {
+                put("entries", JSONArray())
+            })
+            return
+        }
+        val entries = service.scrobbleBuffer.getEntries()
         val array = JSONArray()
         for (entry in entries) {
             array.put(JSONObject().apply {
@@ -1285,7 +1242,7 @@ class AudioPlugin : Plugin() {
 
     @PluginMethod
     fun clearScrobbleBuffer(call: PluginCall) {
-        scrobbleBuffer.clear()
+        playbackService?.scrobbleBuffer?.clear()
         call.resolve()
     }
 

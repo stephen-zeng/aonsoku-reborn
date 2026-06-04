@@ -3,6 +3,8 @@ package github.realtvop.aonsoku.plugins.audio
 import github.realtvop.aonsoku.plugins.bridge.ServerCredentials
 import github.realtvop.aonsoku.plugins.bridge.SubsonicHttpClient
 import java.util.Date
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class NativeScrobbleSubmitter(private val httpClient: SubsonicHttpClient) {
@@ -26,13 +28,22 @@ class NativeScrobbleSubmitter(private val httpClient: SubsonicHttpClient) {
         }
     }
 
-    fun submitIfEligible(entry: ScrobbleEntry, songDurationSeconds: Double, credentials: ServerCredentials) {
+    fun submitIfEligible(
+        entry: ScrobbleEntry,
+        songDurationSeconds: Double,
+        credentials: ServerCredentials,
+        buffer: NativeScrobbleBuffer
+    ) {
         val playedSeconds = entry.playedDurationMs / 1000.0
         val threshold = minOf(songDurationSeconds * thresholdPercent, thresholdMaxSeconds)
 
         if (playedSeconds < threshold || threshold <= 0.0) return
 
-        submitInternal(songId = entry.songId, timestamp = entry.timestamp, credentials = credentials)
+        CoroutineScope(Dispatchers.IO).launch {
+            if (submitAsync(songId = entry.songId, timestamp = entry.timestamp, credentials = credentials)) {
+                buffer.removeEntries(setOf(entry.songId))
+            }
+        }
     }
 
     suspend fun submitPending(buffer: NativeScrobbleBuffer, credentials: ServerCredentials) {
@@ -49,14 +60,6 @@ class NativeScrobbleSubmitter(private val httpClient: SubsonicHttpClient) {
         }
         if (submittedIds.isNotEmpty()) {
             buffer.removeEntries(submittedIds)
-        }
-    }
-
-    private fun submitInternal(songId: String, timestamp: Double, credentials: ServerCredentials) {
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).let { scope ->
-            scope.launch {
-                submitAsync(songId = songId, timestamp = timestamp, credentials = credentials)
-            }
         }
     }
 

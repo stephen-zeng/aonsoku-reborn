@@ -94,11 +94,7 @@ class NativeScrobbleBuffer(private val store: ScrobbleEntryStore) {
 
         lastEntryDuration = currentSongDuration
         currentSongDuration = null
-        return ScrobbleEntry(
-            songId = entry.songId,
-            playedDurationMs = entry.playedDurationMs,
-            timestamp = lastEntryDuration ?: 0.0,
-        )
+        return entry
     }
 
     private fun persistEntries() {
