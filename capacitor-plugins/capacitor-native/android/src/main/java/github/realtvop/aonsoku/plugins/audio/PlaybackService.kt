@@ -262,6 +262,8 @@ class PlaybackService : MediaSessionService() {
                 return super.getAvailableCommands().buildUpon()
                     .add(COMMAND_SEEK_TO_NEXT)
                     .add(COMMAND_SEEK_TO_PREVIOUS)
+                    .add(COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+                    .add(COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
                     .build()
             }
 
@@ -386,9 +388,15 @@ class PlaybackService : MediaSessionService() {
                     .add(CUSTOM_COMMAND_TOGGLE_SHUFFLE)
                     .add(CUSTOM_COMMAND_TOGGLE_LIKE)
                     .build()
+                val availablePlayerCommands = connectionResult.availablePlayerCommands.buildUpon()
+                    .add(Player.COMMAND_SEEK_TO_NEXT)
+                    .add(Player.COMMAND_SEEK_TO_PREVIOUS)
+                    .add(Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+                    .add(Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+                    .build()
                 return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                     .setAvailableSessionCommands(availableSessionCommands)
-                    .setAvailablePlayerCommands(connectionResult.availablePlayerCommands)
+                    .setAvailablePlayerCommands(availablePlayerCommands)
                     .setCustomLayout(getCustomLayoutButtons())
                     .build()
             }
@@ -426,7 +434,7 @@ class PlaybackService : MediaSessionService() {
                 playerCommand: Int
             ): Int {
                 when (playerCommand) {
-                    Player.COMMAND_SEEK_TO_NEXT -> {
+                    Player.COMMAND_SEEK_TO_NEXT, Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM -> {
                         if (isQueueEngineActive) {
                             queueEngine.skipToNext()
                             return SessionResult.RESULT_INFO_SKIPPED
@@ -434,7 +442,7 @@ class PlaybackService : MediaSessionService() {
                         emitRemoteCommand("next")
                         return SessionResult.RESULT_INFO_SKIPPED
                     }
-                    Player.COMMAND_SEEK_TO_PREVIOUS -> {
+                    Player.COMMAND_SEEK_TO_PREVIOUS, Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM -> {
                         if (isQueueEngineActive) {
                             val currentTime = (player?.currentPosition ?: 0L) / 1000.0
                             queueEngine.skipToPrevious(currentTime)
