@@ -34,7 +34,7 @@ function LibraryRow({ icon: Icon, label, to, active }: LibraryRowProps) {
         active ? "bg-accent text-foreground" : "text-foreground/90",
       )}
     >
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-border">
         <Icon className="size-5" />
       </span>
       <span className="min-w-0 flex-1 truncate">{label}</span>
