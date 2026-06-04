@@ -680,6 +680,30 @@ class PlaybackService : MediaSessionService() {
         return binder
     }
 
+    override fun onUnbind(intent: Intent?): Boolean {
+        NativeLogger.info("PlaybackService onUnbind: intent=$intent", "playback-service")
+        val currentPlayer = player
+        if (currentPlayer == null || !currentPlayer.isPlaying) {
+            persistence.stopProgressTracking()
+            persistence.flushNow()
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+        }
+        return super.onUnbind(intent)
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        NativeLogger.info("PlaybackService onTaskRemoved", "playback-service")
+        val currentPlayer = player
+        if (currentPlayer == null || !currentPlayer.isPlaying) {
+            persistence.stopProgressTracking()
+            persistence.flushNow()
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+        }
+        super.onTaskRemoved(rootIntent)
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_PLAY_PAUSE -> {

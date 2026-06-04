@@ -881,8 +881,8 @@ export class NativeQueueController implements QueueController {
       }
 
       const isRestoredColdStart =
-        nativeState.isRestored &&
-        usePlayerStore.getState().songlist.contextQueue.songs.length === 0;
+        usePlayerStore.getState().songlist.contextQueue.songs.length === 0 &&
+        (nativeState.isRestored || nativeState.contextQueue.songs.length > 0);
 
       usePlayerStore.setState((s) => {
         s.playerState.isPlaying = nativeState.isPlaying;
@@ -906,6 +906,7 @@ export class NativeQueueController implements QueueController {
         }
 
         if (isRestoredColdStart) {
+          s.playerState.mediaType = "song";
           s.songlist.contextQueue.songs = nativeState.contextQueue.songs.map(
             nativeQueueSongToISong,
           );
