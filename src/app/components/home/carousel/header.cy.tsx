@@ -1,21 +1,21 @@
-import { ISong } from '@/types/responses/song'
+import { Albums } from '@/types/responses/album'
 import HomeHeader from './header'
 
 describe('HomeHeader Component', () => {
-  it('should not show component if songs list is empty', () => {
-    cy.mount(<HomeHeader songs={[]} />)
+  it('should not show component if albums list is empty', () => {
+    cy.mount(<HomeHeader albums={[]} />)
 
     cy.getByTestId('header-carousel').should('not.exist')
   })
 
-  it('mounts the component and shows the songs correctly', () => {
+  it('mounts the component and shows the albums correctly', () => {
     cy.mockCoverArt()
 
-    cy.fixture('songs/random').then((songs: ISong[]) => {
-      cy.mount(<HomeHeader songs={songs} />)
+    cy.fixture('albums/mostPlayed').then((albums: Albums[]) => {
+      cy.mount(<HomeHeader albums={albums} />)
 
-      songs.forEach((song, index) => {
-        cy.getByTestId(`carousel-header-song-${index}`).as('activeCarousel')
+      albums.forEach((album, index) => {
+        cy.getByTestId(`carousel-header-album-${index}`).as('activeCarousel')
 
         cy.get('@activeCarousel')
           .findByTestId('header-bg')
@@ -23,19 +23,31 @@ describe('HomeHeader Component', () => {
 
         cy.get('@activeCarousel')
           .findByTestId('header-title')
-          .should('have.text', song.title)
+          .should('have.text', album.name)
 
         cy.get('@activeCarousel')
           .findByTestId('header-artist')
-          .should('have.text', song.artist)
+          .should('have.text', album.artist)
 
-        cy.get('@activeCarousel')
-          .findByTestId('header-genre')
-          .should('have.text', song.genre)
+        if (album.genre !== undefined) {
+          cy.get('@activeCarousel')
+            .findByTestId('header-genre')
+            .should('have.text', album.genre)
+        } else {
+          cy.get('@activeCarousel')
+            .findByTestId('header-genre')
+            .should('not.exist')
+        }
 
-        cy.get('@activeCarousel')
-          .findByTestId('header-year')
-          .should('have.text', song.year)
+        if (album.year) {
+          cy.get('@activeCarousel')
+            .findByTestId('header-year')
+            .should('have.text', String(album.year))
+        } else {
+          cy.get('@activeCarousel')
+            .findByTestId('header-year')
+            .should('not.exist')
+        }
       })
 
       cy.getByTestId('header-carousel-previous')
@@ -51,8 +63,8 @@ describe('HomeHeader Component', () => {
   it('moves the carousel with horizontal wheel input', () => {
     cy.mockCoverArt()
 
-    cy.fixture('songs/random').then((songs: ISong[]) => {
-      cy.mount(<HomeHeader songs={songs} />)
+    cy.fixture('albums/mostPlayed').then((albums: Albums[]) => {
+      cy.mount(<HomeHeader albums={albums} />)
 
       cy.getByTestId('header-carousel')
         .find('.transform-gpu')
@@ -83,8 +95,8 @@ describe('HomeHeader Component', () => {
   it('does not move the carousel with vertical wheel input', () => {
     cy.mockCoverArt()
 
-    cy.fixture('songs/random').then((songs: ISong[]) => {
-      cy.mount(<HomeHeader songs={songs} />)
+    cy.fixture('albums/mostPlayed').then((albums: Albums[]) => {
+      cy.mount(<HomeHeader albums={albums} />)
 
       cy.getByTestId('header-carousel')
         .find('.transform-gpu')

@@ -4,7 +4,38 @@ import * as React from "react";
 import { buttonVariants } from "@/app/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const AlertDialog = AlertDialogPrimitive.Root;
+import {
+  registerBackButtonHandler,
+  unregisterBackButtonHandler,
+} from "@/utils/back-button-registry";
+
+const AlertDialog = ({
+  open,
+  onOpenChange,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Root>) => {
+  React.useEffect(() => {
+    if (!open || !onOpenChange) return;
+
+    const handler = () => {
+      onOpenChange(false);
+      return true;
+    };
+
+    registerBackButtonHandler(handler);
+    return () => {
+      unregisterBackButtonHandler(handler);
+    };
+  }, [open, onOpenChange]);
+
+  return (
+    <AlertDialogPrimitive.Root
+      open={open}
+      onOpenChange={onOpenChange}
+      {...props}
+    />
+  );
+};
 
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
 

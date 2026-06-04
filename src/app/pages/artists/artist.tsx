@@ -89,6 +89,7 @@ export default function Artist() {
         variant="sub"
         title={artist.name}
         accentColor={accentColor}
+        showSpacer={false}
       />
       <ImageHeader
         type={t("artist.headline")}

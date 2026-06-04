@@ -2,6 +2,10 @@ import { OptionsButtons } from "@/app/components/options/buttons";
 import { DropdownMenuSeparator } from "@/app/components/ui/dropdown-menu";
 import { useOptions } from "@/app/hooks/use-options";
 import { cacheManager } from "@/service/cache";
+import {
+  useIsPinnedHomeItem,
+  usePinnedHomeActions,
+} from "@/store/pinned-home.store";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerStore } from "@/store/player.store";
 import { usePlaylists, useRemovePlaylist } from "@/store/playlists.store";
@@ -29,10 +33,12 @@ export function PlaylistOptions({
 }: PlaylistOptionsProps) {
   const { setPlaylistDialogState, setData } = usePlaylists();
   const { play, playNext, playLast } = useOptions();
+  const { toggle } = usePinnedHomeActions();
   const { setPlaylistId, setConfirmDialogState } = useRemovePlaylist();
   const isUserQueueEmpty = usePlayerStore(
     (state) => state.songlist.userQueue.songs.length === 0,
   );
+  const isPinned = useIsPinnedHomeItem({ id: playlist.id, type: "playlist" });
   const isAddLastDisabled = disableAddLast || isUserQueueEmpty;
 
   function handleEdit() {
@@ -125,6 +131,23 @@ export function PlaylistOptions({
           cacheManager.cachePlaylist(playlist.id);
         }}
       />
+      {isPinned ? (
+        <OptionsButtons.UnpinItem
+          variant={variant}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggle({ id: playlist.id, type: "playlist" });
+          }}
+        />
+      ) : (
+        <OptionsButtons.PinItem
+          variant={variant}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggle({ id: playlist.id, type: "playlist" });
+          }}
+        />
+      )}
       <DropdownMenuSeparator />
       <OptionsButtons.EditPlaylist
         variant={variant}

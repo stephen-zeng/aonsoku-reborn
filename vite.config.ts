@@ -22,6 +22,9 @@ function swCacheVersionPlugin(buildHash: string): Plugin {
       // Generate precache manifest: collect all files under dist/assets/
       const assetFiles: string[] = [];
       const assetsDir = path.join(distDir, "assets");
+      if (!fs.existsSync(assetsDir)) {
+        return;
+      }
       function walk(dir: string, prefix: string) {
         for (const entry of fs.readdirSync(dir, {
           withFileTypes: true,

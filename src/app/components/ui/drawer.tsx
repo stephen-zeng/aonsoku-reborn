@@ -3,16 +3,40 @@ import { Drawer as DrawerPrimitive } from "vaul";
 
 import { cn } from "@/lib/utils";
 
+import {
+  registerBackButtonHandler,
+  unregisterBackButtonHandler,
+} from "@/utils/back-button-registry";
+
 const Drawer = ({
   shouldScaleBackground = true,
+  open,
+  onOpenChange,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
-  <DrawerPrimitive.Root
-    shouldScaleBackground={shouldScaleBackground}
-    {...props}
-  />
-);
-Drawer.displayName = "Drawer";
+}: React.ComponentProps<typeof DrawerPrimitive.Root>) => {
+  React.useEffect(() => {
+    if (!open || !onOpenChange) return;
+
+    const handler = () => {
+      onOpenChange(false);
+      return true;
+    };
+
+    registerBackButtonHandler(handler);
+    return () => {
+      unregisterBackButtonHandler(handler);
+    };
+  }, [open, onOpenChange]);
+
+  return (
+    <DrawerPrimitive.Root
+      shouldScaleBackground={shouldScaleBackground}
+      open={open}
+      onOpenChange={onOpenChange}
+      {...props}
+    />
+  );
+};
 
 const DrawerTrigger = DrawerPrimitive.Trigger;
 
@@ -75,6 +99,7 @@ const DrawerContent = React.forwardRef<
       ref={ref}
       className={cn(
         "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent",
+        "pb-[var(--safe-area-bottom)] pl-[var(--safe-area-left)] pr-[var(--safe-area-right)]",
         className,
       )}
       {...props}

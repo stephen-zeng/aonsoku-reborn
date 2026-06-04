@@ -1,8 +1,28 @@
-import {
-  getAvatarUrl,
-  getCoverArtUrl,
-  getSongStreamUrl,
-} from "@/api/httpClient";
+import { Capacitor } from "@capacitor/core";
+import { getAvatarUrl, getCoverArtUrl } from "@/api/httpClient";
+
+function convertFileSrc(uri: string): string {
+  if (typeof uri !== "string" || !uri.startsWith("file:")) {
+    return Capacitor.convertFileSrc(uri);
+  }
+  const serverUrl = Capacitor.getServerUrl?.() ?? "";
+  if (!serverUrl) return Capacitor.convertFileSrc(uri);
+
+  // Handle all file: URI variants produced by the native layer:
+  //   "file:///absolute/path"  – RFC 8089 (iOS, Capacitor's own convertFileSrc)
+  //   "file:/absolute/path"    – Java File.toURI() (Android native plugin)
+  //   "file://relative/path"   – not used, handled for safety
+  // Strip the "file:" scheme, then normalize leading slashes to "/".
+  let filePath = uri.slice(5);
+  while (filePath.startsWith("//")) {
+    filePath = filePath.slice(1);
+  }
+  if (!filePath.startsWith("/")) {
+    filePath = "/" + filePath;
+  }
+
+  return `${serverUrl}/_capacitor_file_${filePath}`;
+}
 import { asyncPool } from "@/service/cache/concurrency";
 import { subsonic } from "@/service/subsonic";
 import { useCacheStore } from "@/store/cache.store";
@@ -19,6 +39,7 @@ import { usePlayerStore } from "@/store/player.store";
 import { CachedItemMeta, CacheMetaSource, Priority } from "@/types/cache";
 import { getSongCoverArtId } from "@/utils/coverArt";
 import { audioCacheService } from "./audio-cache-worker-adapter";
+import { resolveCachedAudioSource } from "./audio-source";
 import {
   albumKey,
   audioKey,
@@ -27,15 +48,26 @@ import {
   coverKey,
   isOldCoverKey,
   playlistKey,
+  songIdFromKey,
 } from "./cache-keys";
 import { cacheStorage } from "./cache-storage";
 import { computeEvictionPlan } from "./eviction";
+import {
+  clearNativeAudioFilesIfAvailable,
+  evictNativeAudioFileIfAvailable,
+} from "./native-cache-adapter";
+import {
+  getNativeImageCacheAdapter,
+  isNativeImageCacheAdapterAvailable,
+} from "./native-image-cache-adapter";
 import {
   bulkDeleteCacheMeta,
   deleteCacheMeta,
   persistCacheMeta,
 } from "./persist-meta";
 import { syncService } from "./sync-worker-adapter";
+
+export { buildAudioUrl } from "./audio-url-resolver";
 
 export interface CachedItemDetail {
   key: string;
@@ -49,23 +81,6 @@ export interface CachedItemDetail {
   lastAccessedAt: number;
   coverSize?: string;
   removedFromServer?: boolean;
-}
-
-/**
- * Build a URL for fetching audio.
- * Always uses /stream with no maxBitRate, letting the server decide
- * the output quality.
- *
- * `purpose: "cache"` adds a `_c=1` query param so the Service Worker's
- * stale-while-revalidate API cache doesn't collide with a concurrent
- * stream request for the same song.
- */
-export function buildAudioUrl(
-  songId: string,
-  purpose: "cache" | "stream",
-): string {
-  const url = getSongStreamUrl(songId);
-  return purpose === "cache" ? `${url}&_c=1` : url;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -204,58 +219,16 @@ class CacheManager {
    * avoid leaking memory.**
    */
   async getCachedAudioUrl(songId: string): Promise<string | null> {
+    const source = await resolveCachedAudioSource(songId);
+    if (source) return source.url;
+
     const key = audioKey(songId);
-
-    // Fast path: when the index is loaded and the key is absent, the
-    // blob cannot exist in the Cache API — skip the async lookup.
-    const { loaded } = useCacheIndexStore.getState();
-    if (loaded && !isAudioCached(songId)) return null;
-
-    // Slow path (index not loaded yet, or index says cached): read the
-    // Cache API directly.  This ensures offline audio is playable
-    // immediately on app startup before loadFromIDB completes.
-    const blob = await cacheStorage.get(key);
-    if (!blob) {
-      if (isAudioCached(songId)) {
-        getCacheIndexActions().removeItem(key);
-      }
-      return null;
+    if (getCacheIndexItems()[key]) {
+      getCacheIndexActions().removeItem(key);
+      await deleteCacheMeta(key);
     }
 
-    // If the blob exists but the in-memory index missed it (e.g.
-    // loadFromIDB has not completed yet), try to recover the original
-    // metadata from Dexie cacheMeta.  Falls back to a synthetic entry
-    // only when no persisted metadata exists.
-    if (!isAudioCached(songId)) {
-      const existingRow = await libraryDb.cacheMeta.get(key);
-      if (existingRow) {
-        getCacheIndexActions().addItem(key, {
-          id: existingRow.id,
-          type: existingRow.type,
-          source: existingRow.source,
-          triggers: existingRow.triggers,
-          sizeBytes: existingRow.sizeBytes,
-          cachedAt: existingRow.cachedAt,
-          lastAccessedAt: Date.now(),
-          removedFromServer: existingRow.removedFromServer,
-        });
-      } else {
-        const syntheticMeta = {
-          id: songId,
-          type: "audio" as const,
-          source: "explicit" as const,
-          sizeBytes: blob.size,
-          cachedAt: Date.now(),
-          lastAccessedAt: Date.now(),
-        };
-        getCacheIndexActions().addItem(key, syntheticMeta);
-        persistCacheMeta(key, { key, ...syntheticMeta });
-      }
-    } else {
-      getCacheIndexActions().touchItem(key);
-    }
-
-    return URL.createObjectURL(blob);
+    return null;
   }
 
   async cacheCover(coverArtId: string, size = "700"): Promise<void> {
@@ -275,6 +248,33 @@ class CacheManager {
     size = "700",
   ): Promise<void> {
     const key = coverKey(coverArtId);
+
+    if (isNativeImageCacheAdapterAvailable()) {
+      const adapter = getNativeImageCacheAdapter();
+      const existing = await adapter.getCoverImageSize(coverArtId);
+      if (existing.coverSize && Number(existing.coverSize) >= Number(size)) {
+        return;
+      }
+
+      const result = await adapter.downloadCoverImage(coverArtId, size);
+      if (!result) return;
+
+      const meta: CachedItemMeta = {
+        id: coverArtId,
+        type: "cover",
+        source: "explicit",
+        coverSize: size,
+        sizeBytes: result.sizeBytes ?? 0,
+        cachedAt: Date.now(),
+        lastAccessedAt: Date.now(),
+      };
+
+      getCacheIndexActions().addItem(key, meta);
+      this.scheduleStatsRefresh();
+      persistCacheMeta(key, { key, ...meta });
+      return;
+    }
+
     const items = getCacheIndexItems();
     const existing = items[key];
     const existingSize = Number(existing?.coverSize ?? "0");
@@ -320,6 +320,51 @@ class CacheManager {
    */
   async getCachedCoverUrl(coverArtId: string): Promise<string | null> {
     const key = coverKey(coverArtId);
+
+    if (isNativeImageCacheAdapterAvailable()) {
+      const adapter = getNativeImageCacheAdapter();
+      const result = await adapter.resolveCoverImage(coverArtId);
+      if (!result) {
+        if (isCoverCached(coverArtId)) {
+          getCacheIndexActions().removeItem(key);
+        }
+        return null;
+      }
+
+      if (!isCoverCached(coverArtId)) {
+        const existingRow = await libraryDb.cacheMeta.get(key);
+        if (existingRow) {
+          getCacheIndexActions().addItem(key, {
+            id: existingRow.id,
+            type: existingRow.type,
+            source: existingRow.source,
+            coverSize: (existingRow as Record<string, unknown>).coverSize as
+              | string
+              | undefined,
+            sizeBytes: existingRow.sizeBytes,
+            cachedAt: existingRow.cachedAt,
+            lastAccessedAt: Date.now(),
+            removedFromServer: existingRow.removedFromServer,
+          });
+        } else {
+          const syntheticMeta = {
+            id: coverArtId,
+            type: "cover" as const,
+            source: "explicit" as const,
+            coverSize: result.coverSize ?? "700",
+            sizeBytes: result.sizeBytes ?? 0,
+            cachedAt: Date.now(),
+            lastAccessedAt: Date.now(),
+          };
+          getCacheIndexActions().addItem(key, syntheticMeta);
+          persistCacheMeta(key, { key, ...syntheticMeta });
+        }
+      } else {
+        getCacheIndexActions().touchItem(key);
+      }
+
+      return convertFileSrc(result.uri);
+    }
 
     // Fast path: when the index is loaded and the key is absent, skip
     // the async Cache API lookup.
@@ -380,6 +425,27 @@ class CacheManager {
 
     if (existing) return;
 
+    if (isNativeImageCacheAdapterAvailable()) {
+      const adapter = getNativeImageCacheAdapter();
+      const result = await adapter.downloadAvatar(username, size);
+      if (!result) return;
+
+      const meta: CachedItemMeta = {
+        id: username,
+        type: "cover",
+        source: "explicit",
+        coverSize: size,
+        sizeBytes: result.sizeBytes ?? 0,
+        cachedAt: Date.now(),
+        lastAccessedAt: Date.now(),
+      };
+
+      getCacheIndexActions().addItem(key, meta);
+      this.scheduleStatsRefresh();
+      persistCacheMeta(key, { key, ...meta });
+      return;
+    }
+
     const url = getAvatarUrl(username, size);
     const response = await fetch(url);
     if (!response.ok) return;
@@ -405,6 +471,51 @@ class CacheManager {
 
   async getCachedAvatarUrl(username: string): Promise<string | null> {
     const key = avatarKey(username);
+
+    if (isNativeImageCacheAdapterAvailable()) {
+      const adapter = getNativeImageCacheAdapter();
+      const result = await adapter.resolveCoverImage(username);
+      if (!result) {
+        if (isAvatarCached(username)) {
+          getCacheIndexActions().removeItem(key);
+        }
+        return null;
+      }
+
+      if (!isAvatarCached(username)) {
+        const existingRow = await libraryDb.cacheMeta.get(key);
+        if (existingRow) {
+          getCacheIndexActions().addItem(key, {
+            id: existingRow.id,
+            type: existingRow.type,
+            source: existingRow.source,
+            coverSize: (existingRow as Record<string, unknown>).coverSize as
+              | string
+              | undefined,
+            sizeBytes: existingRow.sizeBytes,
+            cachedAt: existingRow.cachedAt,
+            lastAccessedAt: Date.now(),
+            removedFromServer: existingRow.removedFromServer,
+          });
+        } else {
+          const syntheticMeta = {
+            id: username,
+            type: "cover" as const,
+            source: "explicit" as const,
+            coverSize: result.coverSize ?? "150",
+            sizeBytes: result.sizeBytes ?? 0,
+            cachedAt: Date.now(),
+            lastAccessedAt: Date.now(),
+          };
+          getCacheIndexActions().addItem(key, syntheticMeta);
+          persistCacheMeta(key, { key, ...syntheticMeta });
+        }
+      } else {
+        getCacheIndexActions().touchItem(key);
+      }
+
+      return convertFileSrc(result.uri);
+    }
 
     const { loaded } = useCacheIndexStore.getState();
     if (loaded && !isAvatarCached(username)) return null;
@@ -505,6 +616,30 @@ class CacheManager {
         if (isCoverCached(album.id)) continue;
 
         try {
+          if (isNativeImageCacheAdapterAvailable()) {
+            const adapter = getNativeImageCacheAdapter();
+            const sourceResult = await adapter.resolveCoverImage(
+              album.coverArt,
+            );
+            if (sourceResult) {
+              // On iOS, re-download under the album.id key; native file copy
+              // is not exposed, but re-downloading is cheap and keeps logic simple.
+              await adapter.downloadCoverImage(album.id, "700");
+              getCacheIndexActions().addItem(key, {
+                id: album.id,
+                type: "cover",
+                source: "explicit",
+                coverSize: "700",
+                sizeBytes: sourceResult.sizeBytes ?? 0,
+                cachedAt: Date.now(),
+                lastAccessedAt: Date.now(),
+              });
+            } else {
+              await this.cacheCover(album.id, "700");
+            }
+            continue;
+          }
+
           const blob = await cacheStorage.get(coverKey(album.coverArt));
           if (blob) {
             await cacheStorage.put(key, blob, blob.type || "image/jpeg");
@@ -638,13 +773,34 @@ class CacheManager {
   }
 
   async evictItem(key: string): Promise<void> {
-    await cacheStorage.delete(key);
+    await this.deleteCachedStorageItem(key);
     getCacheIndexActions().removeItem(key);
 
     await libraryDb.cacheMeta.delete(key);
 
     this.scheduleStatsRefresh();
     deleteCacheMeta(key);
+  }
+
+  private async deleteCachedStorageItem(key: string): Promise<void> {
+    const songId = songIdFromKey(key);
+    if (songId) {
+      await evictNativeAudioFileIfAvailable(songId);
+    }
+
+    if (isNativeImageCacheAdapterAvailable()) {
+      const isCover = key.startsWith(COVER_PREFIX) || key.startsWith("avatar:");
+      if (isCover) {
+        const id = key.split(":")[1];
+        if (id) {
+          const adapter = getNativeImageCacheAdapter();
+          await adapter.deleteCoverImage(id);
+        }
+        return;
+      }
+    }
+
+    await cacheStorage.delete(key);
   }
 
   /**
@@ -662,7 +818,9 @@ class CacheManager {
       )
       .map(([key]) => key);
 
-    await Promise.all(keysToDelete.map((key) => cacheStorage.delete(key)));
+    await Promise.all(
+      keysToDelete.map((key) => this.deleteCachedStorageItem(key)),
+    );
     for (const key of keysToDelete) {
       getCacheIndexActions().removeItem(key);
     }
@@ -678,6 +836,11 @@ class CacheManager {
     const keysToDelete = Object.entries(items)
       .filter(([, meta]) => meta.type === "cover")
       .map(([key]) => key);
+
+    if (isNativeImageCacheAdapterAvailable()) {
+      const adapter = getNativeImageCacheAdapter();
+      await adapter.clearCoverImages();
+    }
 
     await Promise.all(keysToDelete.map((key) => cacheStorage.delete(key)));
     for (const key of keysToDelete) {
@@ -752,6 +915,13 @@ class CacheManager {
     // stale cacheMeta rows after we clear them.
     audioCacheService.cancelAll();
     syncService.cancel();
+    await clearNativeAudioFilesIfAvailable();
+
+    if (isNativeImageCacheAdapterAvailable()) {
+      const adapter = getNativeImageCacheAdapter();
+      await adapter.clearCoverImages();
+    }
+
     await cacheStorage.clear();
     getCacheIndexActions().clear();
     await libraryDb.lyrics.clear();

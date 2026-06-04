@@ -1,19 +1,19 @@
-import { useGrid, useVirtualizer } from "@virtual-grid/react";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import {
-  Fragment,
   ReactNode,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
+import { useLocation } from "react-router-dom";
 import {
   GridViewWrapperType,
   getGridClickedItem,
   saveGridClickedItem,
 } from "@/utils/gridTools";
-import { getMainScrollElement } from "@/utils/scrollPageToTop";
 
 type GridViewWrapperProps<T> = {
   list: T[];
@@ -35,7 +35,6 @@ export function GridViewWrapper<T>({
   type,
 }: GridViewWrapperProps<T>) {
   const gridWrapperRef = useRef<HTMLDivElement | null>(null);
-  const scrollDivRef = useRef<HTMLElement | null>(null);
   const [gridColumnsSize, setGridColumnsSize] = useState(4);
   const [effectivePadding, setEffectivePadding] = useState(padding);
   const [effectiveGap, setEffectiveGap] = useState(gap);
@@ -45,18 +44,16 @@ export function GridViewWrapper<T>({
   });
   const initialScrollRestored = useRef(false);
   const isScrollingSaved = useRef(false);
-  const initialMeasurementDone = useRef(false);
 
+  const location = useLocation();
   const routeKey = location.pathname + location.search;
 
-  const rows = useMemo(
+  const rowCount = useMemo(
     () => Math.ceil(list.length / gridColumnsSize),
     [gridColumnsSize, list.length],
   );
 
   useLayoutEffect(() => {
-    scrollDivRef.current = getMainScrollElement();
-
     const handleResize = () => {
       const viewportWidth = window.innerWidth;
 
@@ -115,41 +112,27 @@ export function GridViewWrapper<T>({
     };
   }, [padding, gap, defaultWidth, titleHeight]);
 
-  const grid = useGrid({
-    scrollRef: scrollDivRef,
-    count: list.length,
-    totalCount: list.length,
-    columns: gridColumnsSize,
-    rows,
-    size,
-    padding: {
-      x: effectivePadding,
-    },
-    gap: effectiveGap,
+  const [scrollMargin, setScrollMargin] = useState(0);
+
+  useLayoutEffect(() => {
+    if (gridWrapperRef.current) {
+      setScrollMargin(gridWrapperRef.current.offsetTop);
+    }
+  }, []);
+
+  const rowVirtualizer = useWindowVirtualizer({
+    count: rowCount,
+    estimateSize: useCallback(
+      () => size.height + effectiveGap,
+      [size.height, effectiveGap],
+    ),
+    scrollMargin,
     overscan: 5,
   });
 
-  const rowVirtualizer = useVirtualizer(grid.rowVirtualizer);
-  const columnVirtualizer = useVirtualizer(grid.columnVirtualizer);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: initial grid measurement
-  useLayoutEffect(() => {
-    rowVirtualizer.measure();
-    columnVirtualizer.measure();
-
-    initialMeasurementDone.current = true;
-  }, [
-    rowVirtualizer,
-    columnVirtualizer,
-    grid.virtualItemHeight,
-    grid.virtualItemWidth,
-  ]);
-
   // Restoring scroll position
   useLayoutEffect(() => {
-    // Awaits initial measurement before restoring
-    if (!initialMeasurementDone.current || initialScrollRestored.current)
-      return;
+    if (initialScrollRestored.current) return;
 
     const savedRowPosition = getGridClickedItem({ name: type });
     if (!savedRowPosition) {
@@ -163,18 +146,16 @@ export function GridViewWrapper<T>({
       return;
     }
 
-    // 50ms timeout to ensure the grid was rendered
+    // Await for virtualizer to be ready
     setTimeout(() => {
       rowVirtualizer.scrollToOffset(offsetTop);
       initialScrollRestored.current = true;
 
-      // 100ms timeout to allow saving scroll position again avoiding saving wrong offsets
       setTimeout(() => {
         isScrollingSaved.current = false;
       }, 100);
     }, 50);
 
-    // Prevent scroll saves while restoring the scroll
     isScrollingSaved.current = true;
   }, [routeKey, rowVirtualizer, type]);
 
@@ -194,35 +175,47 @@ export function GridViewWrapper<T>({
   }, [routeKey, rowVirtualizer.scrollOffset, type]);
 
   return (
-    <div ref={gridWrapperRef} className="w-full overflow-hidden relative">
-      <div
-        style={{
-          width: columnVirtualizer.getTotalSize(),
-          height: rowVirtualizer.getTotalSize(),
-          position: "relative",
-        }}
-      >
-        {rowVirtualizer.getVirtualItems().map((virtualRow) => (
-          <Fragment key={virtualRow.key}>
-            {columnVirtualizer.getVirtualItems().map((virtualColumn) => {
-              const item = grid.getVirtualItem({
-                row: virtualRow,
-                column: virtualColumn,
-              });
+    <div
+      ref={gridWrapperRef}
+      className="w-full relative overflow-x-hidden"
+      style={{
+        height: `${rowVirtualizer.getTotalSize()}px`,
+      }}
+    >
+      {rowVirtualizer.getVirtualItems().map((virtualRow) => (
+        <div
+          key={virtualRow.key}
+          className="absolute top-0 left-0 w-full flex flex-row"
+          style={{
+            height: `${size.height}px`,
+            gap: `${effectiveGap}px`,
+            paddingLeft: `${effectivePadding}px`,
+            paddingRight: `${effectivePadding}px`,
+            transform: `translateY(${
+              virtualRow.start - rowVirtualizer.options.scrollMargin
+            }px)`,
+          }}
+        >
+          {Array.from({ length: gridColumnsSize }).map((_, columnIndex) => {
+            const index = virtualRow.index * gridColumnsSize + columnIndex;
+            if (index >= list.length) return null;
 
-              if (!item) return null;
+            const child = list[index];
 
-              const child = list[item.index];
-
-              return (
-                <div key={virtualColumn.key} style={item.style}>
-                  {children(child)}
-                </div>
-              );
-            })}
-          </Fragment>
-        ))}
-      </div>
+            return (
+              <div
+                key={index}
+                style={{
+                  width: `${size.width}px`,
+                  height: `${size.height}px`,
+                }}
+              >
+                {children(child)}
+              </div>
+            );
+          })}
+        </div>
+      ))}
     </div>
   );
 }

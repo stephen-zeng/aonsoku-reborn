@@ -190,9 +190,10 @@ export default function ImageHeader({
         )}
         <div
           className={cn(
-            "w-full px-3 py-3 md:px-8 md:py-6 flex gap-2 md:gap-4 relative md:absolute md:inset-0",
+            "w-full pb-3 md:py-6 flex gap-2 md:gap-4 relative md:absolute md:inset-0",
             IMAGE_HEADER_MAIN_GRADIENT,
             "flex-col",
+            "pt-album-header px-album-header",
             !loaded && "bg-background-foreground",
           )}
           style={loaded ? { backgroundColor: bgColor } : undefined}

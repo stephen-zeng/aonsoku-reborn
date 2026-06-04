@@ -7,6 +7,7 @@ import { getCacheIndexActions } from "@/store/cache-index.store";
 import { usePlayerStore } from "@/store/player.store";
 import type { SyncState } from "@/types/cache";
 import type { AuthType } from "@/types/serverConfig";
+import { getRuntime } from "@/utils/capabilities";
 
 interface WorkerAuthConfig {
   url: string;
@@ -184,20 +185,87 @@ class SyncWorkerAdapter {
   }
 }
 
-let syncService: SyncWorkerAdapter | typeof metadataSyncService;
+/**
+ * Lazy proxy for the native sync adapter (Capacitor iOS/Android).
+ *
+ * Never falls back to IndexedDB on native platforms. Waits for the
+ * native adapter module to load before delegating calls.
+ */
+class LazyNativeSyncAdapter {
+  private adapter: {
+    syncAll(options?: Record<string, unknown>): Promise<void>;
+    syncIncremental(options?: Record<string, unknown>): Promise<void>;
+    cancel(): void;
+  } | null = null;
+  private readyPromise: Promise<void>;
 
-try {
-  if (typeof Worker !== "undefined") {
-    syncService = new SyncWorkerAdapter();
-  } else {
-    syncService = metadataSyncService;
+  constructor() {
+    this.readyPromise = this.load();
   }
-} catch (err) {
-  console.warn(
-    "[syncWorkerAdapter] failed to create Worker, falling back to main thread:",
-    err,
-  );
-  syncService = metadataSyncService;
+
+  private async load() {
+    try {
+      const { nativeSyncAdapter } = await import(
+        "@/native/data/native-sync-adapter"
+      );
+      this.adapter = nativeSyncAdapter;
+    } catch (err) {
+      console.warn("[syncWorkerAdapter] native adapter unavailable:", err);
+    }
+  }
+
+  private async ensure() {
+    await this.readyPromise;
+    return this.adapter;
+  }
+
+  async syncAll(options?: {
+    includeCoverArt?: boolean;
+    includeFullSongs?: boolean;
+  }): Promise<void> {
+    const a = await this.ensure();
+    if (a) await a.syncAll(options as Record<string, unknown>);
+  }
+
+  async syncIncremental(options?: {
+    includeCoverArt?: boolean;
+    includeFullSongs?: boolean;
+  }): Promise<void> {
+    const a = await this.ensure();
+    if (a) await a.syncIncremental(options as Record<string, unknown>);
+  }
+
+  cancel(): void {
+    if (this.adapter) {
+      this.adapter.cancel();
+    }
+  }
 }
+
+function createSyncService():
+  | SyncWorkerAdapter
+  | typeof metadataSyncService
+  | LazyNativeSyncAdapter {
+  const runtime = getRuntime();
+
+  if (runtime === "capacitor-ios" || runtime === "capacitor-android") {
+    return new LazyNativeSyncAdapter();
+  }
+
+  try {
+    if (typeof Worker === "undefined") {
+      return metadataSyncService;
+    }
+    return new SyncWorkerAdapter();
+  } catch (err) {
+    console.warn(
+      "[syncWorkerAdapter] failed to create Worker, falling back to main thread:",
+      err,
+    );
+    return metadataSyncService;
+  }
+}
+
+const syncService = createSyncService();
 
 export { syncService };

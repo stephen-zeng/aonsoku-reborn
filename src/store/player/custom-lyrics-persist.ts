@@ -1,4 +1,3 @@
-import { setCustomLyricsBody } from "@/service/lyrics";
 import {
   MAX_SELECTED_CUSTOM_LYRICS,
   type SelectedCustomLyrics,
@@ -49,6 +48,7 @@ export async function migrateCustomLyricsBodiesToIdb(state: any) {
   const entries = state?.settings?.lyrics?.selectedCustomLyrics;
   if (!entries || typeof entries !== "object") return;
 
+  const { setCustomLyricsBody } = await import("@/service/lyrics");
   const promises: Promise<void>[] = [];
   for (const [songKey, entry] of Object.entries(entries)) {
     if (entry && typeof entry === "object" && "lyrics" in entry) {

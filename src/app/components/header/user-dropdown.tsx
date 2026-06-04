@@ -29,7 +29,6 @@ import {
   DrawerClose,
   DrawerContent,
   DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
@@ -232,7 +231,7 @@ export function UserDropdown() {
               <SyncStatusBadge variant={badgeVariant} />
             </div>
           </DrawerTrigger>
-          <DrawerContent>
+          <DrawerContent className="h-[calc(100dvh-env(safe-area-inset-top)-12px)] rounded-t-[24px]">
             <DrawerHeader className="text-left">
               <div className="flex items-center gap-3">
                 <div className="relative">
@@ -255,14 +254,16 @@ export function UserDropdown() {
               </div>
             </DrawerHeader>
 
+            <div className="border-t" />
             <SyncSection variant="mobile" />
+            <div className="border-t" />
 
-            <div className="flex flex-col px-4 pb-2">
+            <div className="flex flex-col gap-1.5 px-4 pb-2">
               {!isServerRunning && (
                 <DrawerClose asChild>
                   <button
                     onClick={() => setRemoteControlOpen(true)}
-                    className="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover-supported:bg-accent w-full text-left"
+                    className="flex items-center gap-3 rounded-md px-3 py-4 text-sm hover-supported:bg-accent w-full text-left"
                   >
                     <Cast className="h-4 w-4" />
                     <span>{t("lanControl.remote.menu")}</span>
@@ -272,7 +273,7 @@ export function UserDropdown() {
               <DrawerClose asChild>
                 <button
                   onClick={handleSettingsClick}
-                  className="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover-supported:bg-accent w-full text-left"
+                  className="flex items-center gap-3 rounded-md px-3 py-4 text-sm hover-supported:bg-accent w-full text-left"
                 >
                   <Settings className="h-4 w-4" />
                   <span>{t("settings.label")}</span>
@@ -281,39 +282,35 @@ export function UserDropdown() {
               <DrawerClose asChild>
                 <button
                   onClick={() => setAboutOpen(true)}
-                  className="flex items-center gap-3 rounded-md px-3 py-3 text-sm hover-supported:bg-accent w-full text-left"
+                  className="flex items-center gap-3 rounded-md px-3 py-4 text-sm hover-supported:bg-accent w-full text-left"
                 >
                   <Info className="h-4 w-4" />
                   <span>{t("menu.about")}</span>
                 </button>
               </DrawerClose>
-              {swStatus === "waiting" && <div className="border-t my-1" />}
               {swStatus === "waiting" && (
                 <DrawerClose asChild>
                   <button
                     onClick={() => applyUpdate()}
-                    className="flex items-center gap-3 rounded-md px-3 py-3 text-sm text-primary font-medium hover-supported:bg-accent w-full text-left"
+                    className="flex items-center gap-3 rounded-md px-3 py-4 text-sm text-primary font-medium hover-supported:bg-accent w-full text-left"
                   >
                     <RefreshCw className="h-4 w-4" />
                     <span>{t("update.sw.refresh")}</span>
                   </button>
                 </DrawerClose>
               )}
-            </div>
-
-            {!lockUser && (
-              <DrawerFooter className="border-t pt-4">
+              {!lockUser && (
                 <DrawerClose asChild>
                   <button
                     onClick={() => setLogoutDialogState(true)}
-                    className="flex items-center justify-center gap-2 rounded-md bg-destructive/10 px-3 py-2.5 text-sm font-medium text-destructive hover-supported:bg-destructive/20 w-full"
+                    className="flex items-center gap-3 rounded-md px-3 py-4 text-sm text-destructive hover-supported:bg-accent w-full text-left"
                   >
                     <LogOut className="h-4 w-4" />
                     <span>{t("menu.serverLogout")}</span>
                   </button>
                 </DrawerClose>
-              </DrawerFooter>
-            )}
+              )}
+            </div>
           </DrawerContent>
         </Drawer>
       ) : (

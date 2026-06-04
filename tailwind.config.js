@@ -49,6 +49,10 @@ module.exports = {
         "mid-player-text-height": "clamp(40px, calc(12vh + 24px), 48px)",
         "mid-player-padding": "clamp(6px, calc(3vh + 2px), 8px)",
         "mid-player-progress-height": "clamp(16px, calc(10vh + 3px), 24px)",
+        "safe-top": "var(--safe-area-top)",
+        "safe-bottom": "var(--safe-area-bottom)",
+        "safe-left": "var(--safe-area-left)",
+        "safe-right": "var(--safe-area-right)",
       },
       colors: {
         border: "hsl(var(--border))",
@@ -148,11 +152,6 @@ module.exports = {
           "linear-gradient(270deg, transparent 0%, rgb(0, 0, 0) 3%, rgb(0, 0, 0) 97%, transparent 100%)",
         "marquee-fade-finished":
           "linear-gradient(270deg, transparent 0%, rgb(0, 0, 0) 3%, rgb(0, 0, 0) 100%, transparent 100%)",
-        "carousel-item": "radial-gradient(circle, white 100%, transparent 0)",
-        "big-player-lyrics":
-          "linear-gradient(180deg, transparent 0%, rgb(0, 0, 0) 25%, rgb(0, 0, 0) 75%, transparent 100%)",
-        lyrics:
-          "linear-gradient(180deg, transparent 0%, rgb(0, 0, 0) 10%, rgb(0, 0, 0) 90%, transparent 100%)",
       },
       boxShadow: {
         "custom-3": "0 0 3px rgba(255, 255, 255, 0.03)",
@@ -168,15 +167,23 @@ module.exports = {
   plugins: [
     require("tailwindcss-animate"),
     require("tailwind-extended-shadows"),
-    function ({ addVariant }) {
+    function ({ addVariant, matchVariant }) {
       addVariant("hover-supported", "@media (hover: hover) { &:hover }");
-      addVariant(
+      matchVariant(
         "group-hover-supported",
-        "@media (hover: hover) { :where(.group):hover & }",
+        (_, { modifier }) => {
+          const groupClass = modifier ? `group\\/${modifier}` : "group";
+          return `@media (hover: hover) { :where(.${groupClass}):hover & }`;
+        },
+        { values: { DEFAULT: "" } },
       );
-      addVariant(
+      matchVariant(
         "peer-hover-supported",
-        "@media (hover: hover) { :where(.peer):hover ~ & }",
+        (_, { modifier }) => {
+          const peerClass = modifier ? `peer\\/${modifier}` : "peer";
+          return `@media (hover: hover) { :where(.${peerClass}):hover ~ & }`;
+        },
+        { values: { DEFAULT: "" } },
       );
     },
     function ({ matchUtilities, theme }) {

@@ -18,7 +18,8 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { useWebHaptics } from "web-haptics/react";
+import { useHaptic } from "@/app/hooks/use-haptic";
+import { useScrollEndListener } from "@/app/hooks/use-scroll-end-listener";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { useQueueDndSensors } from "@/app/components/queue/dnd-sensors";
 import {
@@ -35,7 +36,6 @@ import { useIsMobile } from "@/app/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import {
   useContextQueue,
-  useHapticSettings,
   useHasQueueSongs,
   usePlayerActions,
   usePlayerCurrentSong,
@@ -145,11 +145,8 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
 
   const { clearHistory: clearPlayHistory } = usePlayHistoryActions();
 
-  const { hapticFeedbackEnabled } = useHapticSettings();
-  const { trigger } = useWebHaptics();
-  const snapHaptic = hapticFeedbackEnabled
-    ? () => trigger([{ duration: 6 }])
-    : undefined;
+  const { trigger: hapticTrigger } = useHaptic();
+  const snapHaptic = hapticTrigger ? () => hapticTrigger("heavy") : undefined;
 
   const upcomingContext = useMemo(
     () => contextSongs.slice(contextIndex + 1),
@@ -235,10 +232,18 @@ function UnifiedQueueView({
   snapHaptic?: () => void;
 }) {
   const { t } = useTranslation();
-  const { playSong, playFromQueue, playFromUserQueue, reorderQueue } =
+  const { playFromQueue, playFromUserQueue, setNextOnQueue, reorderQueue } =
     usePlayerActions();
   const loopState = usePlayerLoop();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
+
+  const playHistorySong = useCallback(
+    (song: ISong) => {
+      setNextOnQueue([song]);
+      playFromUserQueue(0);
+    },
+    [setNextOnQueue, playFromUserQueue],
+  );
 
   const queueItemProps = {
     hideDownload: true as const,
@@ -305,47 +310,39 @@ function UnifiedQueueView({
     };
   }, [useVirtualization]);
 
-  useEffect(() => {
-    if (useVirtualization) return;
+  useScrollEndListener(() =>
+    useVirtualization ? null : scrollContainerRef.current, () => {
     const container = scrollContainerRef.current;
-    if (!container) return;
-    const handleScrollEnd = () => {
-      const el = currentSongRef.current;
-      const spacer = spacerRef.current;
-      if (!el || !container || !spacer) return;
-      if (container.scrollTop <= 1) return;
-      const containerRect = container.getBoundingClientRect();
-      const historySection = container.querySelector<HTMLElement>(
-        "[data-history-section]",
-      );
-      let visibleHistoryCount = 0;
-      if (historySection) {
-        const sectionRect = historySection.getBoundingClientRect();
-        const visibleTop = Math.max(sectionRect.top, containerRect.top);
-        const visibleBottom = Math.min(
-          sectionRect.bottom,
-          containerRect.bottom,
-        );
-        const visibleHeight = Math.max(0, visibleBottom - visibleTop);
-        const headerHeight = 32;
-        const itemHeight = 64;
-        const itemsVisibleHeight = visibleHeight - headerHeight;
-        if (itemsVisibleHeight > 0) {
-          visibleHistoryCount = Math.ceil(itemsVisibleHeight / itemHeight);
-        }
+    const el = currentSongRef.current;
+    const spacer = spacerRef.current;
+    if (!el || !container || !spacer) return;
+    if (container.scrollTop <= 1) return;
+    const containerRect = container.getBoundingClientRect();
+    const historySection = container.querySelector<HTMLElement>(
+      "[data-history-section]",
+    );
+    let visibleHistoryCount = 0;
+    if (historySection) {
+      const sectionRect = historySection.getBoundingClientRect();
+      const visibleTop = Math.max(sectionRect.top, containerRect.top);
+      const visibleBottom = Math.min(sectionRect.bottom, containerRect.bottom);
+      const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+      const headerHeight = 32;
+      const itemHeight = 64;
+      const itemsVisibleHeight = visibleHeight - headerHeight;
+      if (itemsVisibleHeight > 0) {
+        visibleHistoryCount = Math.ceil(itemsVisibleHeight / itemHeight);
       }
-      if (visibleHistoryCount >= 1 && visibleHistoryCount <= 3) {
-        syncQueueCurrentSongPosition({
-          container,
-          el,
-          spacer,
-          behavior: "smooth",
-        });
-        snapHaptic?.();
-      }
-    };
-    container.addEventListener("scrollend", handleScrollEnd);
-    return () => container.removeEventListener("scrollend", handleScrollEnd);
+    }
+    if (visibleHistoryCount >= 1 && visibleHistoryCount <= 3) {
+      syncQueueCurrentSongPosition({
+        container,
+        el,
+        spacer,
+        behavior: "smooth",
+      });
+      snapHaptic?.();
+    }
   }, [useVirtualization, snapHaptic]);
 
   const contextPlayedCount = contextIndex + 1;
@@ -430,7 +427,7 @@ function UnifiedQueueView({
         onUserDragEnd={handleUserDragEnd}
         onUpcomingDragStart={handleUpcomingDragStart}
         onUpcomingDragEnd={handleUpcomingDragEnd}
-        playSong={playSong}
+        playHistorySong={playHistorySong}
         playFromQueue={playFromQueue}
         playFromUserQueue={playFromUserQueue}
         clearPlayHistory={clearPlayHistory}
@@ -484,7 +481,7 @@ function UnifiedQueueView({
                   key={`${displaySong.id}-${displayIdx}`}
                   song={displaySong}
                   isActive={isCurrent}
-                  onPlay={() => playSong(displaySong)}
+                  onPlay={() => playHistorySong(displaySong)}
                   tier="context"
                   {...queueItemProps}
                 />
@@ -499,16 +496,14 @@ function UnifiedQueueView({
           </div>
         )}
 
+        {!hideModeButtons && (
+          <div className="pt-1 pb-1">
+            <QueueModeButtons />
+          </div>
+        )}
+
         {isRepeatOne && userQueueSongs.length === 0 && (
           <div>
-            <div
-              className={cn(
-                FULLSCREEN_QUEUE_BG_CLASS,
-                "sticky top-0 z-10 pt-1 pb-1",
-              )}
-            >
-              {!hideModeButtons && <QueueModeButtons />}
-            </div>
             {!hideRepeatIndicator && (
               <RepeatIndicator
                 icon={RepeatOne}
@@ -535,14 +530,6 @@ function UnifiedQueueView({
               sticky
               queueItemProps={queueItemProps}
             />
-            <div
-              className={cn(
-                FULLSCREEN_QUEUE_BG_CLASS,
-                "sticky top-0 z-10 pt-1 pb-1",
-              )}
-            >
-              {!hideModeButtons && <QueueModeButtons />}
-            </div>
             {!hideRepeatIndicator && (
               <RepeatIndicator
                 icon={RepeatOne}
@@ -578,14 +565,6 @@ function UnifiedQueueView({
 
             {hasNoUpcoming && !isRepeatAll ? (
               <div>
-                <div
-                  className={cn(
-                    FULLSCREEN_QUEUE_BG_CLASS,
-                    "sticky top-0 z-10 pt-1 pb-1",
-                  )}
-                >
-                  {!hideModeButtons && <QueueModeButtons />}
-                </div>
                 <div className="flex items-center justify-center py-4">
                   <span className="text-foreground/50 text-xs">
                     {t("fullscreen.emptyQueue")}
@@ -600,10 +579,7 @@ function UnifiedQueueView({
                     "sticky top-0 z-10 pt-1 pb-1",
                   )}
                 >
-                  {!hideModeButtons && <QueueModeButtons />}
-                  <div
-                    className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
-                  >
+                  <div className="flex items-center justify-between px-2 pt-1">
                     <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
                       {t("fullscreen.queueContinue")}
                     </h3>
@@ -701,7 +677,7 @@ function VirtualizedQueueView({
   onUserDragEnd,
   onUpcomingDragStart,
   onUpcomingDragEnd,
-  playSong,
+  playHistorySong,
   playFromQueue,
   playFromUserQueue,
   clearPlayHistory,
@@ -736,7 +712,7 @@ function VirtualizedQueueView({
   onUserDragEnd: (e: DragEndEvent) => void;
   onUpcomingDragStart: (e: DragStartEvent) => void;
   onUpcomingDragEnd: (e: DragEndEvent) => void;
-  playSong: (song: ISong) => void;
+  playHistorySong: (song: ISong) => void;
   playFromQueue: (songs: ISong[], index: number) => void;
   playFromUserQueue: (index: number) => void;
   clearPlayHistory: () => void;
@@ -762,6 +738,7 @@ function VirtualizedQueueView({
   type VirtualItem =
     | { type: "history"; song: ISong; key: string }
     | { type: "currentSong" }
+    | { type: "modeButtons" }
     | { type: "queueHeader" }
     | { type: "userQueueSong"; song: ISong; userQueueIndex: number }
     | { type: "queueDivider" }
@@ -785,6 +762,10 @@ function VirtualizedQueueView({
 
     if (!hideCurrentSong) {
       items.push({ type: "currentSong" });
+    }
+
+    if (!hideModeButtons) {
+      items.push({ type: "modeButtons" });
     }
 
     const filteredUserQueueSongs = userQueueSongs.filter(
@@ -843,6 +824,7 @@ function VirtualizedQueueView({
   }, [
     hideHistory,
     hideCurrentSong,
+    hideModeButtons,
     hideRepeatIndicator,
     playHistory,
     userQueueSongs,
@@ -868,6 +850,8 @@ function VirtualizedQueueView({
           return 64;
         case "currentSong":
           return 56;
+        case "modeButtons":
+          return 40;
         case "queueHeader":
           return 36;
         case "queueDivider":
@@ -899,41 +883,33 @@ function VirtualizedQueueView({
     }
   }, [currentSong?.id, currentSongVirtualIndex, virtualizer]);
 
-  useEffect(() => {
+  useScrollEndListener(getScrollElement, () => {
     const scrollEl = getScrollElement();
     if (!scrollEl) return;
-    const handleScrollEnd = () => {
-      const currentSongEl = scrollEl.querySelector<HTMLElement>(
-        "[data-current-song]",
-      );
-      if (!currentSongEl) return;
-      if (scrollEl.scrollTop <= 1) return;
-      const containerHeight = scrollEl.clientHeight;
-      const scrollTop = scrollEl.scrollTop;
-      const visibleVirtualItems = virtualizer.getVirtualItems();
-      let visibleHistoryCount = 0;
-      for (const vItem of visibleVirtualItems) {
-        const item = virtualItems[vItem.index];
-        if (item?.type === "history") {
-          const itemTop = vItem.start;
-          const itemBottom = vItem.start + vItem.size;
-          if (itemTop < scrollTop + containerHeight && itemBottom > scrollTop) {
-            visibleHistoryCount++;
-          }
+    if (scrollEl.scrollTop <= 1) return;
+    const containerHeight = scrollEl.clientHeight;
+    const scrollTop = scrollEl.scrollTop;
+    const visibleVirtualItems = virtualizer.getVirtualItems();
+    let visibleHistoryCount = 0;
+    for (const vItem of visibleVirtualItems) {
+      const item = virtualItems[vItem.index];
+      if (item?.type === "history") {
+        const itemTop = vItem.start;
+        const itemBottom = vItem.start + vItem.size;
+        if (itemTop < scrollTop + containerHeight && itemBottom > scrollTop) {
+          visibleHistoryCount++;
         }
       }
-      if (visibleHistoryCount >= 1 && visibleHistoryCount <= 3) {
-        if (currentSongVirtualIndex >= 0) {
-          virtualizer.scrollToIndex(currentSongVirtualIndex, {
-            align: "start",
-            behavior: "smooth",
-          });
-          snapHaptic?.();
-        }
+    }
+    if (visibleHistoryCount >= 1 && visibleHistoryCount <= 3) {
+      if (currentSongVirtualIndex >= 0) {
+        virtualizer.scrollToIndex(currentSongVirtualIndex, {
+          align: "start",
+          behavior: "smooth",
+        });
+        snapHaptic?.();
       }
-    };
-    scrollEl.addEventListener("scrollend", handleScrollEnd);
-    return () => scrollEl.removeEventListener("scrollend", handleScrollEnd);
+    }
   }, [
     currentSongVirtualIndex,
     virtualizer,
@@ -1010,7 +986,7 @@ function VirtualizedQueueView({
                           <QueueItemRow
                             song={item.song}
                             isActive={currentSong?.id === item.song.id}
-                            onPlay={() => playSong(item.song)}
+                            onPlay={() => playHistorySong(item.song)}
                             tier="context"
                             {...queueItemProps}
                           />
@@ -1019,6 +995,12 @@ function VirtualizedQueueView({
                         {item.type === "currentSong" && (
                           <div data-current-song className="px-0 pt-2 pb-0.5">
                             <QueueCurrentSong onClick={onCurrentSongClick} />
+                          </div>
+                        )}
+
+                        {item.type === "modeButtons" && (
+                          <div className="pt-1 pb-1">
+                            <QueueModeButtons />
                           </div>
                         )}
 
@@ -1063,10 +1045,7 @@ function VirtualizedQueueView({
 
                         {item.type === "continueHeader" && (
                           <div>
-                            {!hideModeButtons && <QueueModeButtons />}
-                            <div
-                              className={`flex items-center justify-between px-2 ${hideModeButtons ? "pt-1" : "pt-3"}`}
-                            >
+                            <div className="flex items-center justify-between px-2 pt-1">
                               <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
                                 {t("fullscreen.queueContinue")}
                               </h3>
@@ -1077,7 +1056,6 @@ function VirtualizedQueueView({
 
                         {item.type === "emptyQueueMessage" && (
                           <div>
-                            {!hideModeButtons && <QueueModeButtons />}
                             <div className="flex items-center justify-center py-4">
                               <span className="text-foreground/50 text-xs">
                                 {t("fullscreen.emptyQueue")}

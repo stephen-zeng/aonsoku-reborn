@@ -2,8 +2,10 @@ import type { Draft } from "immer";
 import clamp from "lodash/clamp";
 import { LanControlMessageType } from "@/types/lanControl";
 import type { IPlayerActions, IPlayerContext } from "@/types/playerContext";
+import { getPlaybackCapabilities } from "@/utils/capabilities";
 import { logger } from "@/utils/logger";
-import { isIOS } from "@/utils/platform";
+import { setSystemVolume } from "@/utils/system-volume";
+import { getNativeQueueController } from "@/player/queue-controller";
 
 interface SharedDeps {
   set: (fn: (state: Draft<IPlayerContext>) => void) => void;
@@ -17,6 +19,16 @@ export function createPlaybackActions(shared: SharedDeps) {
 
   return {
     setPlayingState: (status: boolean) => {
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        if (status) {
+          nativeController.play();
+        } else {
+          nativeController.pause();
+        }
+        return;
+      }
+
       const prev = get().playerState.isPlaying;
       logger.info(
         `[setPlayingState] ${prev} → ${status} | isRemote=${!!isRemoteActive()}`,
@@ -32,6 +44,12 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     togglePlayPause: () => {
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.togglePlayPause();
+        return;
+      }
+
       const prev = get().playerState.isPlaying;
       logger.info(`[togglePlayPause] isPlaying: ${prev} → ${!prev}`);
       remoteSend(LanControlMessageType.PLAY_PAUSE);
@@ -41,6 +59,12 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     toggleLoop: () => {
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.toggleLoop();
+        return;
+      }
+
       const { loopState } = get().playerState;
       const newState = (loopState + 1) % (2 + 1);
 
@@ -59,6 +83,12 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     setProgress: (progress: number) => {
+      const nativeController = getNativeQueueController();
+      if (nativeController) {
+        nativeController.seek(progress);
+        return;
+      }
+
       remoteSend(LanControlMessageType.SEEK, {
         time: progress,
       });
@@ -82,17 +112,21 @@ export function createPlaybackActions(shared: SharedDeps) {
     },
 
     setVolume: (volume: number) => {
-      if (isIOS()) return;
+      const caps = getPlaybackCapabilities();
+      if (!caps.canSetVolume) return;
       remoteSend(LanControlMessageType.SET_VOLUME, {
         volume,
       });
       set((state) => {
         state.playerState.volume = volume;
       });
+      if (caps.requiresSystemVolume && caps.supportsSystemVolumeControl) {
+        setSystemVolume(volume);
+      }
     },
 
     handleVolumeWheel: (isScrollingDown: boolean) => {
-      if (isIOS()) return;
+      if (!getPlaybackCapabilities().canSetVolume) return;
       if (isRemoteActive()) return;
       const { min, max, wheelStep } = get().settings.volume;
       const { volume } = get().playerState;

@@ -4,7 +4,34 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-const Dialog = DialogPrimitive.Root;
+import {
+  registerBackButtonHandler,
+  unregisterBackButtonHandler,
+} from "@/utils/back-button-registry";
+
+const Dialog = ({
+  open,
+  onOpenChange,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>) => {
+  React.useEffect(() => {
+    if (!open || !onOpenChange) return;
+
+    const handler = () => {
+      onOpenChange(false);
+      return true;
+    };
+
+    registerBackButtonHandler(handler);
+    return () => {
+      unregisterBackButtonHandler(handler);
+    };
+  }, [open, onOpenChange]);
+
+  return (
+    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange} {...props} />
+  );
+};
 
 const DialogTrigger = DialogPrimitive.Trigger;
 

@@ -41,6 +41,7 @@ function useCoverArtCacheLookup({
   const isOffline = useIsOfflineMode();
   const isPrimaryCached = useIsCoverCached(primaryCacheKey ?? "__none__");
   const [cachedUrl, setCachedUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const pendingAutoCache = useRef<string | null>(null);
   const prevObjectUrl = useRef<string | null>(null);
 
@@ -53,11 +54,13 @@ function useCoverArtCacheLookup({
   useEffect(() => {
     if (cacheKeys.length === 0) {
       setCachedUrl(null);
+      setIsLoading(false);
       return;
     }
 
     let cancelled = false;
     let objectUrl: string | null = null;
+    setIsLoading(true);
 
     async function loadCache() {
       for (const key of cacheKeys) {
@@ -70,6 +73,7 @@ function useCoverArtCacheLookup({
             }
             objectUrl = url;
             setCachedUrl(url);
+            setIsLoading(false);
             return;
           }
         } catch (err) {
@@ -79,6 +83,7 @@ function useCoverArtCacheLookup({
 
       if (!cancelled) {
         setCachedUrl(null);
+        setIsLoading(false);
         if (
           autoCache &&
           !isOffline &&
@@ -126,7 +131,7 @@ function useCoverArtCacheLookup({
     };
   }, []);
 
-  return { cachedUrl, isOffline };
+  return { cachedUrl, isOffline, isLoading };
 }
 
 export function useCachedCoverUrl(
@@ -167,6 +172,7 @@ export function CachedImage({
   src: directSrc,
   autoCache = true,
   onError,
+  onLoad,
   ...props
 }: CachedImageProps) {
   const generatedSrc = useCoverArtUrlFromSongPreference({
@@ -175,7 +181,11 @@ export function CachedImage({
     albumId,
     size: coverArtSize,
   });
-  const { cachedUrl: cachedSrc, isOffline } = useCoverArtCacheLookup({
+  const {
+    cachedUrl: cachedSrc,
+    isOffline,
+    isLoading,
+  } = useCoverArtCacheLookup({
     coverArtId,
     coverArtType,
     albumId,
@@ -183,6 +193,9 @@ export function CachedImage({
     autoCache,
   });
   const [failedNetworkSrc, setFailedNetworkSrc] = useState<string | null>(null);
+  const [cachedSrcFailed, setCachedSrcFailed] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [prevSrc, setPrevSrc] = useState<string | null>(null);
 
   const cacheKeys = useMemo(
     () => resolveCacheKeys(coverArtId, coverArtType, albumId),
@@ -193,30 +206,61 @@ export function CachedImage({
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — reset on primaryCacheKey change
   useEffect(() => {
     setFailedNetworkSrc(null);
+    setCachedSrcFailed(false);
   }, [primaryCacheKey]);
 
   const defaultArtUrl = getDefaultArtUrl(coverArtType);
 
-  let resolvedSrc = cachedSrc ?? directSrc ?? generatedSrc;
+  const showCachedImage = cachedSrc && !cachedSrcFailed;
 
-  if (isOffline || resolvedSrc === failedNetworkSrc) {
+  // Render a grey background skeleton during lookup if coverArtId is provided
+  if (isLoading && coverArtId) {
+    return (
+      <div
+        className={`${props.className ?? ""} bg-skeleton`}
+        style={{
+          width: props.width,
+          height: props.height,
+          ...props.style,
+        }}
+        data-testid="cached-image-skeleton"
+      />
+    );
+  }
+
+  let resolvedSrc = showCachedImage ? cachedSrc : (directSrc ?? generatedSrc);
+
+  if ((isOffline && !showCachedImage) || resolvedSrc === failedNetworkSrc) {
     resolvedSrc = defaultArtUrl;
   }
 
+  // Reset loaded status synchronously during render on source change to prevent layout/placeholder flashes
+  if (resolvedSrc !== prevSrc) {
+    setPrevSrc(resolvedSrc);
+    setIsLoaded(false);
+  }
+
+  const handleLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    setIsLoaded(true);
+    onLoad?.(e as never);
+  };
+
   const handleError: React.ReactEventHandler<HTMLImageElement> = (e) => {
     const currentSrc = resolvedSrc;
-    if (
-      currentSrc &&
-      currentSrc !== defaultArtUrl &&
-      currentSrc !== failedNetworkSrc &&
-      currentSrc !== cachedSrc
-    ) {
-      setFailedNetworkSrc(currentSrc);
+    if (currentSrc) {
+      if (currentSrc === cachedSrc) {
+        setCachedSrcFailed(true);
+      } else if (
+        currentSrc !== defaultArtUrl &&
+        currentSrc !== failedNetworkSrc
+      ) {
+        setFailedNetworkSrc(currentSrc);
+      }
     }
     onError?.(e as never);
   };
 
-  if (cachedSrc) {
+  if (showCachedImage) {
     return (
       // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
       <div
@@ -230,16 +274,16 @@ export function CachedImage({
       >
         <img
           alt={props.alt}
-          className={props.className}
+          className={`${props.className ?? ""} bg-skeleton transition-opacity duration-300`}
           crossOrigin={props.crossOrigin}
           data-testid={props["data-testid"]}
           height={props.height}
           id={props.id}
           loading={props.loading}
           onError={handleError}
-          onLoad={props.onLoad}
+          onLoad={handleLoad}
           src={cachedSrc}
-          style={{ opacity: 1 }}
+          style={{ ...props.style, opacity: isLoaded ? 1 : 0 }}
           title={props.title}
           width={props.width}
         />
@@ -247,5 +291,14 @@ export function CachedImage({
     );
   }
 
-  return <LazyLoadImage {...props} src={resolvedSrc} onError={handleError} />;
+  return (
+    <LazyLoadImage
+      {...props}
+      src={resolvedSrc}
+      onError={handleError}
+      onLoad={handleLoad}
+      className={`${props.className ?? ""} bg-skeleton transition-opacity duration-300`}
+      style={{ ...props.style, opacity: isLoaded ? 1 : 0 }}
+    />
+  );
 }

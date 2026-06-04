@@ -46,11 +46,14 @@ import {
 } from "@/types/cache";
 import dateTime from "@/utils/dateTime";
 import { formatBytes } from "@/utils/formatBytes";
+import { getRuntime } from "@/utils/capabilities";
 import { CacheManagerSection } from "./cache-manager";
 
 function LibraryCachingSection() {
   const { t } = useTranslation();
   const libraryCaching = useLibraryCaching();
+  const isCapacitorNative =
+    getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android";
   const syncCoverArt = useCacheStore((s) => s.settings.syncCoverArt);
   const coverArtConcurrency = useCacheStore(
     (s) => s.settings.coverArtConcurrency,
@@ -107,12 +110,20 @@ function LibraryCachingSection() {
       <Content>
         <ContentItem>
           <ContentItemTitle
-            info={t("settings.storage.sync.libraryCachingInfo")}
+            info={
+              isCapacitorNative
+                ? t("settings.storage.sync.libraryCachingInfoIos")
+                : t("settings.storage.sync.libraryCachingInfo")
+            }
           >
             {t("settings.storage.sync.libraryCaching")}
           </ContentItemTitle>
           <ContentItemForm>
-            <Switch checked={libraryCaching} onCheckedChange={handleToggle} />
+            <Switch
+              checked={libraryCaching}
+              onCheckedChange={handleToggle}
+              disabled={isCapacitorNative}
+            />
           </ContentItemForm>
         </ContentItem>
 

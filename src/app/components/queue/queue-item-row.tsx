@@ -3,8 +3,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
 import { EllipsisVertical, GripVertical, PlayIcon } from "lucide-react";
-import { CSSProperties, forwardRef, useState } from "react";
-import { useWebHaptics } from "web-haptics/react";
+import { CSSProperties, forwardRef } from "react";
+import { useHaptic } from "@/app/hooks/use-haptic";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { CacheButton } from "@/app/components/table/cache-button";
 import { CachedIndicator } from "@/app/components/table/cached-indicator";
@@ -15,7 +15,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
-import { useHapticSettings } from "@/store/player.store";
+import { useTouchMenuGuard } from "@/app/hooks/use-touch-menu-guard";
 import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
@@ -89,22 +89,23 @@ export const QueueItemRow = forwardRef<
   },
   ref,
 ) {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const { hapticFeedbackEnabled } = useHapticSettings();
-  const { trigger } = useWebHaptics();
-
-  const hapticTrigger = hapticFeedbackEnabled
-    ? () => trigger([{ duration: 1 }])
-    : undefined;
+  const {
+    open: dropdownOpen,
+    setOpen: setDropdownOpen,
+    triggerProps,
+  } = useTouchMenuGuard();
+  const { trigger } = useHaptic();
+  const hapticTrigger = trigger ? () => trigger() : undefined;
 
   const content = (
     <div
       ref={ref}
       className={clsx([
-        "group/queuerow flex items-center w-full h-16 text-sm rounded-md px-3 gap-2",
+        "group/queuerow flex items-center w-full h-16 text-sm rounded-md px-3 gap-2 cursor-pointer",
         "hover-supported:bg-muted",
       ])}
       style={style}
+      onClick={onPlay}
       {...dragAttributes}
     >
       {dragListeners && !isMobile && (
@@ -148,7 +149,13 @@ export const QueueItemRow = forwardRef<
         <QueueArtists song={song} />
       </div>
 
-      <div className="relative flex-shrink-0 flex items-center justify-end gap-1">
+      <div
+        className="relative flex-shrink-0 flex items-center justify-end gap-1"
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+      >
         {!hideDownload && <CachedIndicator songId={song.id} />}
         {!hideDownload && <CacheButton songId={song.id} groupName="queuerow" />}
         {!hideDuration && (
@@ -173,10 +180,14 @@ export const QueueItemRow = forwardRef<
                     "w-8 h-8 p-1 rounded-full",
                     "data-[state=open]:opacity-100",
                     "opacity-0 group-hover-supported/queuerow:opacity-100 transition-opacity",
+                    triggerProps.className,
                   )}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
+                  onPointerDown={triggerProps.onPointerDown}
+                  onPointerMove={triggerProps.onPointerMove}
+                  onPointerUp={triggerProps.onPointerUp}
+                  onPointerCancel={triggerProps.onPointerCancel}
+                  onClick={triggerProps.onClick}
+                  onContextMenu={triggerProps.onContextMenu}
                 >
                   <EllipsisVertical className="w-4 h-4" />
                 </Button>

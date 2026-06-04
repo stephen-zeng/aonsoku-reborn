@@ -1,9 +1,15 @@
 import { checkConfiguredServerConnectivity } from "@/api/checkConfiguredServer";
 import { probeServerConnection } from "@/api/pingServer";
 import { getConfiguredUrls } from "@/app/hooks/use-network-status";
+import { isNativeBridgeAvailable } from "@/native/bridge/facade";
 import { useAppStore } from "@/store/app.store";
 
 export function hasConfiguredSession() {
+  if (isNativeBridgeAvailable()) {
+    const { isServerConfigured } = useAppStore.getState().data;
+    return isServerConfigured;
+  }
+
   const { primaryUrl, url, username, password, authType, isServerConfigured } =
     useAppStore.getState().data;
 
@@ -17,6 +23,10 @@ export function hasConfiguredSession() {
 }
 
 export async function canUseConfiguredSession() {
+  if (isNativeBridgeAvailable()) {
+    return hasConfiguredSession();
+  }
+
   const { username, password, authType } = useAppStore.getState().data;
 
   if (!hasConfiguredSession() || !username || !password || authType === null) {

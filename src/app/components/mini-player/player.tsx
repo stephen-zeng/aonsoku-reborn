@@ -32,15 +32,13 @@ export function MiniPlayer() {
   const currentSongColor = state.currentSongColor;
 
   return (
-    <div
-      className="w-screen h-screen max-h-screen relative flex flex-col group select-none bg-background overflow-hidden"
-    >
+    <div className="w-screen h-screen max-h-screen relative flex flex-col group select-none bg-background overflow-hidden">
       <MiniPlayerTitleBar />
 
-      <div 
+      <div
         className={clsx(
           "flex-1 relative z-10 grid grid-rows-1 mid-player:grid-rows-[auto_auto_auto] gap-2 mid-player:gap-mid-player-gap p-1 mid-player:p-mid-player-padding mini-player:p-1.5 pb-4 mid-player:pb-4 mini-player:pb-1.5",
-          "overflow-hidden"
+          "overflow-hidden",
         )}
       >
         <div

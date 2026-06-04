@@ -94,23 +94,40 @@ function preventAltBehaviour() {
 }
 
 export function enterFullscreen() {
-  const element = document.documentElement;
-  if (element.requestFullscreen) {
-    element.requestFullscreen();
-  }
-  if ("webkitRequestFullscreen" in element) {
-    // @ts-expect-error no types for webkit
-    element.webkitRequestFullscreen();
+  try {
+    const element = document.documentElement;
+    if (element.requestFullscreen) {
+      element.requestFullscreen().catch((err) => {
+        console.warn("Failed to enter fullscreen:", err);
+      });
+    } else if ("webkitRequestFullscreen" in element) {
+      // @ts-expect-error no types for webkit
+      element.webkitRequestFullscreen();
+    }
+  } catch (err) {
+    console.warn("enterFullscreen failed:", err);
   }
 }
 
 export function exitFullscreen() {
-  if (document.exitFullscreen) {
-    document.exitFullscreen();
-  }
-  if ("webkitExitFullscreen" in document) {
-    // @ts-expect-error no types for webkit
-    document.webkitExitFullscreen();
+  try {
+    const isFullscreen = !!(
+      document.fullscreenElement ||
+      // @ts-expect-error no types for webkit
+      document.webkitFullscreenElement
+    );
+    if (!isFullscreen) return;
+
+    if (document.exitFullscreen) {
+      document.exitFullscreen().catch((err) => {
+        console.warn("Failed to exit fullscreen:", err);
+      });
+    } else if ("webkitExitFullscreen" in document) {
+      // @ts-expect-error no types for webkit
+      document.webkitExitFullscreen();
+    }
+  } catch (err) {
+    console.warn("exitFullscreen failed:", err);
   }
 }
 

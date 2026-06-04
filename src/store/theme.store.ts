@@ -7,6 +7,7 @@ import {
   Theme,
   ThemeMode,
 } from "@/types/themeContext";
+import { createNativeStorage } from "@/store/native-storage";
 
 const VALID_THEMES = new Set<string>(Object.values(Theme));
 const VALID_MODES = new Set<string>(Object.values(ThemeMode));
@@ -16,6 +17,7 @@ interface ThemePersistedState {
   themeMode: ThemeMode;
   lightTheme: Theme;
   darkTheme: Theme;
+  materialYouEnabled: boolean;
 }
 
 export const useThemeStore = createWithEqualityFn<IThemeContext>()(
@@ -27,6 +29,7 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
           themeMode: ThemeMode.System,
           lightTheme: Theme.Light,
           darkTheme: Theme.Dark,
+          materialYouEnabled: false,
           setTheme: (theme: Theme) => {
             set((state) => {
               state.theme = theme;
@@ -47,7 +50,13 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
               state.darkTheme = theme;
             });
           },
+          setMaterialYouEnabled: (enabled: boolean) => {
+            set((state) => {
+              state.materialYouEnabled = enabled;
+            });
+          },
         })),
+
         {
           name: "theme_store",
         },
@@ -55,6 +64,7 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
       {
         name: "theme_store",
         version: 2,
+        storage: createNativeStorage<IThemeContext>("theme_store"),
         merge: (persistedState, currentState) => {
           const merged = {
             ...currentState,
@@ -77,6 +87,9 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
           }
           if (!VALID_THEMES.has(merged.darkTheme)) {
             merged.darkTheme = Theme.Dark;
+          }
+          if (typeof merged.materialYouEnabled !== "boolean") {
+            merged.materialYouEnabled = false;
           }
           return merged;
         },

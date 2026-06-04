@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { clsx } from "clsx";
 import { Heart } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/app/components/ui/button";
 import { useHasHover } from "@/app/hooks/use-input-mode";
 import { useSongStarMutation } from "@/app/hooks/use-song-star-mutation";
@@ -35,6 +35,14 @@ export function TableLikeButton({
     song,
   });
 
+  const [artistStarred, setArtistStarred] = useState(starred);
+
+  useEffect(() => {
+    if (type === "artist") {
+      setArtistStarred(starred);
+    }
+  }, [starred, type]);
+
   const currentSong = usePlayerCurrentSong();
   const isSongStarred = usePlayerSongStarred();
 
@@ -56,6 +64,9 @@ export function TableLikeButton({
       queryClient.invalidateQueries({
         queryKey: queryKeys.favorites.count,
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.favorites.list,
+      });
     },
   });
 
@@ -65,10 +76,16 @@ export function TableLikeButton({
       return;
     }
 
+    if (artistStarMutation.isPending) return;
+
+    const currentStarred = artistStarred;
+    setArtistStarred(!currentStarred);
+
     artistStarMutation.mutate(
-      { id: entityId, starred },
+      { id: entityId, starred: currentStarred },
       {
         onError: () => {
+          setArtistStarred(currentStarred);
           queryClient.invalidateQueries({
             queryKey: [...queryKeys.artist.single, entityId],
           });
@@ -77,7 +94,7 @@ export function TableLikeButton({
     );
   }
 
-  const isStarred = type === "song" ? songStar.isStarred : starred;
+  const isStarred = type === "song" ? songStar.isStarred : artistStarred;
   const hasHover = useHasHover();
 
   return (

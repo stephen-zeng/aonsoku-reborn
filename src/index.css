@@ -56,12 +56,21 @@
     --safe-area-left: env(safe-area-inset-left, 0px);
     --header-bar-height: 44px;
     --header-height: calc(var(--header-bar-height) + var(--safe-area-top));
-    --sidebar-width: 280px;
-    --mini-sidebar-width: 48px;
+    --sidebar-base-width: 280px;
+    --sidebar-width: calc(var(--sidebar-base-width) + var(--safe-area-left));
+    --mini-sidebar-base-width: 48px;
+    --mini-sidebar-width: calc(
+      var(--mini-sidebar-base-width) +
+      var(--safe-area-left)
+    );
     --player-height: 96px;
     --bottom-nav-bar-height: 56px;
     --bottom-nav-height: 0px;
-    --right-panel-width: 280px;
+    --right-panel-base-width: 280px;
+    --right-panel-width: calc(
+      var(--right-panel-base-width) +
+      var(--safe-area-right)
+    );
     --content-height: calc(
       100vh -
       var(--header-height) -
@@ -74,6 +83,32 @@
       var(--player-height) -
       var(--bottom-nav-height)
     );
+  }
+
+  .pt-album-header {
+    padding-top: calc(var(--safe-area-top) + 3.25rem);
+  }
+
+  .px-album-header {
+    padding-left: max(var(--safe-area-left), 0.75rem);
+    padding-right: max(var(--safe-area-right), 0.75rem);
+  }
+
+  .px-content-area {
+    padding-left: max(var(--safe-area-left), 1rem);
+    padding-right: max(var(--safe-area-right), 1rem);
+  }
+
+  @media (min-width: 768px) {
+    .pt-album-header {
+      padding-top: 1.5rem;
+    }
+
+    .px-album-header,
+    .px-content-area {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
   }
 
   /* Mobile optimization: no header, smaller player height + bottom nav */
@@ -158,7 +193,10 @@
     --shadow-header-height: 80px;
     --shadow-header-distance: calc(var(--shadow-header-height) + 1.5rem);
 
-    --toastify-toast-top: calc(var(--header-height) + 0.25rem);
+    --toastify-toast-top: calc(
+      max(var(--header-height), var(--safe-area-top)) +
+      0.25rem
+    );
     --toastify-toast-container-height: calc(
       var(--shadow-header-height) -
       0.5rem
@@ -513,8 +551,15 @@ svg#bars .eq-bar--4 {
   @apply w-fit m-auto max-w-[80%] text-balance;
 }
 
-/* Fix synced lyrics visibility on light themes */
-:is(.light, .night-owl-light, .noctis-lilac, .achiever, .tinacious-design)
+/* Fix synced lyrics visibility on light themes and light player backdrops */
+:is(
+    .light,
+    .night-owl-light,
+    .noctis-lilac,
+    .achiever,
+    .tinacious-design,
+    .backdrop-light
+  )
   .lrc-box
   .amll-lyric-player {
   --amll-lp-color: hsl(var(--foreground));

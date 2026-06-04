@@ -15,12 +15,16 @@ export interface MiniPlayerContextValue {
   };
 }
 
-export const MiniPlayerContext = createContext<MiniPlayerContextValue | null>(null);
+export const MiniPlayerContext = createContext<MiniPlayerContextValue | null>(
+  null,
+);
 
 export function useMiniPlayerContext() {
   const context = useContext(MiniPlayerContext);
   if (!context) {
-    throw new Error("useMiniPlayerContext must be used within a MiniPlayerProvider");
+    throw new Error(
+      "useMiniPlayerContext must be used within a MiniPlayerProvider",
+    );
   }
   return context;
 }

@@ -25,6 +25,21 @@ export function tokenizeQuery(query: string): string[] {
 }
 
 /**
+ * Check if the full query string is contained in any target string.
+ * Uses normalized comparison for diacritic-insensitive matching.
+ */
+export function matchesQuery(
+  query: string,
+  targets: (string | undefined | null)[],
+): boolean {
+  const normalizedQuery = normalizeSearchText(query);
+  if (normalizedQuery.length === 0) return false;
+  return targets
+    .filter(Boolean)
+    .some((t) => normalizeSearchText(t!).includes(normalizedQuery));
+}
+
+/**
  * Check if any single query token is found in a set of target strings.
  * Uses normalized comparison for diacritic-insensitive matching.
  */

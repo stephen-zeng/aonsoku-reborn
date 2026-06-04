@@ -39,8 +39,8 @@ function FullscreenControls() {
   const secondaryBtnClass = clsx(
     "relative w-11 h-11 md:w-12 md:h-12 rounded-full text-foreground",
     isBackdropDark
-      ? "data-[state=active]:text-white"
-      : "data-[state=active]:text-primary",
+      ? "data-[state=active]:text-white hover-supported:data-[state=active]:text-white"
+      : "data-[state=active]:text-primary hover-supported:data-[state=active]:text-primary",
     "hover-supported:bg-transparent hover-supported:scale-110 transition-transform will-change-transform",
   );
 

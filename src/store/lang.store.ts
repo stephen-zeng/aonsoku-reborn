@@ -4,6 +4,7 @@ import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
 import { languages } from "@/i18n/languages";
+import { createNativeStorage } from "@/store/native-storage";
 import { ILangContext } from "@/types/langContext";
 
 export const useLangStore = createWithEqualityFn<ILangContext>()(
@@ -35,6 +36,7 @@ export const useLangStore = createWithEqualityFn<ILangContext>()(
       {
         name: "lang_store",
         version: 1,
+        storage: createNativeStorage<ILangContext>("lang_store"),
         merge: (persistedState, currentState) => {
           return merge(currentState, persistedState);
         },

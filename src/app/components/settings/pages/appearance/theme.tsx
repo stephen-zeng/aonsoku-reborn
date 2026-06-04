@@ -11,6 +11,8 @@ import {
   themeGroups,
   themeModeItems,
 } from "@/types/themeContext";
+import { Switch } from "@/app/components/ui/switch";
+import { getRuntime } from "@/utils/capabilities";
 
 export function ThemeSettingsPicker() {
   const { t } = useTranslation();
@@ -18,40 +20,66 @@ export function ThemeSettingsPicker() {
     themeMode,
     lightTheme,
     darkTheme,
+    materialYouEnabled,
     setThemeMode,
     setLightTheme,
     setDarkTheme,
+    setMaterialYouEnabled,
   } = useTheme();
+
+  const isAndroidApp = getRuntime() === "capacitor-android";
 
   return (
     <div className="h-full space-y-4">
       <ContentItemTitle>{t("theme.label")}</ContentItemTitle>
       <ThemeModeSelector mode={themeMode} onModeChange={setThemeMode} />
-      {themeMode === ThemeMode.System ? (
-        <div className="space-y-4">
-          {themeGroups.map((group) => (
-            <div key={group.key}>
-              <p className="text-xs font-medium text-muted-foreground mb-2">
-                {t(group.label)}
-              </p>
-              <ThemeGrid
-                themes={group.themes}
-                activeTheme={group.key === "light" ? lightTheme : darkTheme}
-                onThemeChange={
-                  group.key === "light" ? setLightTheme : setDarkTheme
-                }
-              />
-            </div>
-          ))}
+
+      {isAndroidApp && (
+        <div className="flex items-center justify-between rounded-lg border border-border p-4 bg-card/30">
+          <div className="space-y-0.5 pr-4">
+            <p className="text-sm font-medium">{t("theme.materialYou")}</p>
+            <p className="text-xs text-muted-foreground">
+              {t("theme.materialYouInfo")}
+            </p>
+          </div>
+          <Switch
+            checked={materialYouEnabled}
+            onCheckedChange={setMaterialYouEnabled}
+          />
         </div>
-      ) : (
-        <ThemeGrid
-          themes={themeMode === ThemeMode.Light ? lightThemes : darkThemes}
-          activeTheme={themeMode === ThemeMode.Light ? lightTheme : darkTheme}
-          onThemeChange={
-            themeMode === ThemeMode.Light ? setLightTheme : setDarkTheme
-          }
-        />
+      )}
+
+      {(!isAndroidApp || !materialYouEnabled) && (
+        <>
+          {themeMode === ThemeMode.System ? (
+            <div className="space-y-4">
+              {themeGroups.map((group) => (
+                <div key={group.key}>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">
+                    {t(group.label)}
+                  </p>
+                  <ThemeGrid
+                    themes={group.themes}
+                    activeTheme={group.key === "light" ? lightTheme : darkTheme}
+                    onThemeChange={
+                      group.key === "light" ? setLightTheme : setDarkTheme
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <ThemeGrid
+              themes={themeMode === ThemeMode.Light ? lightThemes : darkThemes}
+              activeTheme={
+                themeMode === ThemeMode.Light ? lightTheme : darkTheme
+              }
+              onThemeChange={
+                themeMode === ThemeMode.Light ? setLightTheme : setDarkTheme
+              }
+            />
+          )}
+        </>
       )}
     </div>
   );

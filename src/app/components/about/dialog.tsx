@@ -37,7 +37,7 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
       >
         <DialogTitle className="sr-only">{t("menu.about")}</DialogTitle>
         <DialogHeader>
-          <div className="flex gap-2 items-center justify-center w-full py-4 bg-gradient-to-b from-accent to-background">
+          <div className="flex gap-2 items-center justify-center w-full py-4 bg-accent/50">
             <img
               src={roundedIcon}
               alt="Aonsoku"

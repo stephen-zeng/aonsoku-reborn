@@ -1,3 +1,5 @@
+import { Capacitor } from "@capacitor/core";
+
 export type SwStatus = "idle" | "installing" | "waiting" | "error";
 
 type SwStatusCallback = (status: SwStatus) => void;
@@ -47,6 +49,8 @@ export function registerServiceWorker(
 
 function bootstrapServiceWorker(): void {
   if (!("serviceWorker" in navigator)) return;
+  // Skip registration on Capacitor native platforms (iOS/Android)
+  if (Capacitor.isNativePlatform()) return;
   // Allow SW registration on all deployment targets including localhost and Electron
   const isLocalhost =
     location.hostname === "localhost" ||

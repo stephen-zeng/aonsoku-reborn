@@ -1,5 +1,9 @@
 import { libraryDb } from "@/store/library-db";
 import type { CachedItemMeta } from "@/types/cache";
+import type {
+  CacheMetadataPersistence,
+  CacheMetadataRecord,
+} from "./contracts";
 
 const RETRY_DELAY_MS = 200;
 const MAX_RETRIES = 2;
@@ -61,3 +65,25 @@ export async function bulkDeleteCacheMeta(keys: string[]): Promise<void> {
     }
   }
 }
+
+export const cacheMetadataPersistence: CacheMetadataPersistence = {
+  get(key: string): Promise<CacheMetadataRecord | undefined> {
+    return libraryDb.cacheMeta.get(key);
+  },
+
+  list(): Promise<CacheMetadataRecord[]> {
+    return libraryDb.cacheMeta.toArray();
+  },
+
+  put(key: string, meta: CacheMetadataRecord): Promise<void> {
+    return persistCacheMeta(key, { ...meta, key });
+  },
+
+  delete(key: string): Promise<void> {
+    return deleteCacheMeta(key);
+  },
+
+  bulkDelete(keys: string[]): Promise<void> {
+    return bulkDeleteCacheMeta(keys);
+  },
+};

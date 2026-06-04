@@ -1,6 +1,19 @@
+import { getRuntime } from "@/utils/capabilities";
+import type { CacheStorageAdapter } from "./contracts";
+
 const CACHE_NAME = "aonsoku-media-cache";
 
-class CacheStorageService {
+function isNativePlatform(): boolean {
+  return (
+    getRuntime() === "capacitor-ios" || getRuntime() === "capacitor-android"
+  );
+}
+
+// NOTE: On native platforms, cover art caching is handled by the native
+// cache manager, not through this CacheStorageService. This service is
+// intentionally no-op on iOS and Android.
+
+class CacheStorageService implements CacheStorageAdapter {
   private async getCache(): Promise<Cache> {
     return caches.open(CACHE_NAME);
   }
@@ -14,6 +27,7 @@ class CacheStorageService {
   }
 
   async put(key: string, data: Blob, contentType: string): Promise<void> {
+    if (isNativePlatform()) return;
     const cache = await this.getCache();
     const response = new Response(data, {
       headers: {
@@ -25,6 +39,7 @@ class CacheStorageService {
   }
 
   async get(key: string): Promise<Blob | null> {
+    if (isNativePlatform()) return null;
     const cache = await this.getCache();
     // Try the new encoded URL first, then fall back to the legacy unencoded
     // URL for backwards compatibility with existing cached entries.
@@ -37,6 +52,7 @@ class CacheStorageService {
   }
 
   async delete(key: string): Promise<boolean> {
+    if (isNativePlatform()) return false;
     const cache = await this.getCache();
     const deleted = await cache.delete(this.buildUrl(key));
     if (deleted) return true;
@@ -44,6 +60,7 @@ class CacheStorageService {
   }
 
   async has(key: string): Promise<boolean> {
+    if (isNativePlatform()) return false;
     const cache = await this.getCache();
     const response = await cache.match(this.buildUrl(key));
     if (response) return true;
@@ -52,10 +69,12 @@ class CacheStorageService {
   }
 
   async clear(): Promise<void> {
+    if (isNativePlatform()) return;
     await caches.delete(CACHE_NAME);
   }
 
   async keys(): Promise<string[]> {
+    if (isNativePlatform()) return [];
     const cache = await this.getCache();
     const requests = await cache.keys();
     const prefix = "/_cache/";

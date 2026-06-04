@@ -2,6 +2,7 @@ import clsx from "clsx";
 import { Play } from "lucide-react";
 import { isFirefox } from "react-device-detect";
 import { Link } from "react-router-dom";
+import { getCoverArtUrl } from "@/api/httpClient";
 import {
   CachedImage,
   useCachedCoverUrl,
@@ -12,30 +13,27 @@ import { useIsMobile } from "@/app/hooks/use-mobile";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
-import { ISong } from "@/types/responses/song";
+import { Albums } from "@/types/responses/album";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
-import { useSongCoverArtUrl } from "@/utils/coverArt";
 
-export function HeaderItem({ song }: { song: ISong }) {
+export function HeaderItem({ album }: { album: Albums }) {
   const isMobile = useIsMobile();
   const { setSongList } = usePlayerActions();
-  const coverArtFallback = useSongCoverArtUrl(song, "300");
+  const coverArtFallback = getCoverArtUrl(album.coverArt, "album", "300");
   const coverArtUrl = useCachedCoverUrl(
-    song.coverArt,
-    "song",
-    song.albumId,
+    album.coverArt,
+    "album",
+    album.id,
     coverArtFallback,
   );
 
-  async function handlePlaySongAlbum(song: ISong) {
-    const album = await subsonic.albums.getOne(song.albumId);
+  async function handlePlayAlbum(album: Albums) {
+    const response = await subsonic.albums.getOne(album.id);
 
-    if (album) {
-      const songIndex = album.song.findIndex((item) => item.id === song.id);
-
+    if (response?.song && response.song.length > 0) {
       setSongList(
-        album.song,
-        songIndex,
+        response.song,
+        0,
         false,
         {
           albumId: album.id,
@@ -45,13 +43,8 @@ export function HeaderItem({ song }: { song: ISong }) {
     }
   }
 
-  return (
-    <div
-      className={clsx(
-        "w-full h-[140px] sm:h-[250px] 2xl:h-[300px] relative",
-        isFirefox && "bg-black/60",
-      )}
-    >
+  const innerContent = (
+    <>
       <div
         data-testid="header-bg"
         className="absolute -inset-10 bg-cover bg-center z-0 bg-skeleton"
@@ -72,10 +65,10 @@ export function HeaderItem({ song }: { song: ISong }) {
             data-testid="header-image-container"
           >
             <CachedImage
-              coverArtId={song.coverArt}
-              coverArtType="song"
-              albumId={song.albumId}
-              alt={song.title}
+              coverArtId={album.coverArt}
+              coverArtType="album"
+              albumId={album.id}
+              alt={album.name}
               effect="opacity"
               width="100%"
               height="100%"
@@ -86,7 +79,7 @@ export function HeaderItem({ song }: { song: ISong }) {
               <Button
                 className="opacity-0 group-hover-supported:opacity-100 rounded-full w-14 h-14"
                 variant="outline"
-                onClick={() => handlePlaySongAlbum(song)}
+                onClick={() => handlePlayAlbum(album)}
                 data-testid="header-play-button"
               >
                 <Play className="fill-foreground" />
@@ -99,61 +92,67 @@ export function HeaderItem({ song }: { song: ISong }) {
                 data-testid="header-title"
                 className="w-full scroll-m-20 text-xl sm:text-3xl 2xl:text-4xl font-bold tracking-tight mb-0 2xl:mb-1 line-clamp-2"
               >
-                {song.title}
+                {album.name}
               </h1>
             ) : (
-              <Link to={ROUTES.ALBUM.PAGE(song.albumId)} className="w-fit">
+              <Link
+                to={ROUTES.ALBUM.PAGE(album.id)}
+                className="w-fit max-w-full"
+              >
                 <h1
                   data-testid="header-title"
                   className="w-full scroll-m-20 text-xl sm:text-3xl 2xl:text-4xl font-bold tracking-tight mb-0 2xl:mb-1 hover-supported:underline line-clamp-2"
                 >
-                  {song.title}
+                  {album.name}
                 </h1>
               </Link>
             )}
-            {!song.artistId ? (
+            {!album.artistId ? (
               <h4
                 data-testid="header-artist"
-                className="scroll-m-20 text-base sm:text-lg 2xl:text-xl font-semibold tracking-tight opacity-70"
+                className="scroll-m-20 text-base sm:text-lg 2xl:text-xl font-semibold tracking-tight opacity-70 line-clamp-1"
               >
-                {song.artist}
+                {album.artist}
               </h4>
             ) : isMobile ? (
               <h4
                 data-testid="header-artist"
-                className="scroll-m-20 text-base sm:text-lg 2xl:text-xl font-semibold tracking-tight opacity-70"
+                className="scroll-m-20 text-base sm:text-lg 2xl:text-xl font-semibold tracking-tight opacity-70 line-clamp-1"
               >
-                {song.artist}
+                {album.artist}
               </h4>
             ) : (
-              <Link to={ROUTES.ARTIST.PAGE(song.artistId)} className="w-fit">
+              <Link
+                to={ROUTES.ARTIST.PAGE(album.artistId)}
+                className="w-fit max-w-full"
+              >
                 <h4
                   data-testid="header-artist"
-                  className="scroll-m-20 text-base sm:text-lg 2xl:text-xl font-semibold tracking-tight opacity-70 hover-supported:underline"
+                  className="scroll-m-20 text-base sm:text-lg 2xl:text-xl font-semibold tracking-tight opacity-70 hover-supported:underline line-clamp-1"
                 >
-                  {song.artist}
+                  {album.artist}
                 </h4>
               </Link>
             )}
             <div className="hidden sm:flex gap-2 mt-1 2xl:mt-2">
-              {song.genre !== undefined && (
-                <Link to={ROUTES.ALBUMS.GENRE(song.genre)} className="flex">
+              {album.genre !== undefined && (
+                <Link to={ROUTES.ALBUMS.GENRE(album.genre)} className="flex">
                   <Badge
                     variant="neutral"
                     className="border"
                     data-testid="header-genre"
                   >
-                    {song.genre}
+                    {album.genre}
                   </Badge>
                 </Link>
               )}
-              {song.year && (
+              {album.year && (
                 <Badge
                   variant="neutral"
                   className="border"
                   data-testid="header-year"
                 >
-                  {song.year}
+                  {album.year}
                 </Badge>
               )}
               <Badge
@@ -161,12 +160,37 @@ export function HeaderItem({ song }: { song: ISong }) {
                 className="border"
                 data-testid="header-duration"
               >
-                {convertSecondsToTime(song.duration)}
+                {convertSecondsToTime(album.duration)}
               </Badge>
             </div>
           </div>
         </div>
       </div>
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <Link
+        to={ROUTES.ALBUM.PAGE(album.id)}
+        className={clsx(
+          "w-full h-[140px] sm:h-[250px] 2xl:h-[300px] relative block overflow-hidden",
+          isFirefox && "bg-black/60",
+        )}
+      >
+        {innerContent}
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      className={clsx(
+        "w-full h-[140px] sm:h-[250px] 2xl:h-[300px] relative overflow-hidden",
+        isFirefox && "bg-black/60",
+      )}
+    >
+      {innerContent}
     </div>
   );
 }

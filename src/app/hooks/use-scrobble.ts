@@ -6,15 +6,24 @@ import {
   usePlayerDuration,
   usePlayerIsPlaying,
   usePlayerMediaType,
-  usePlayerProgress,
+  usePlayerStore,
 } from "@/store/player.store";
+import { getRuntime } from "@/utils/capabilities";
 
 const SCROBBLE_THRESHOLD_PERCENT = 50;
 const SCROBBLE_THRESHOLD_SECONDS = 60 * 4;
 
+const NATIVE_NATIVE_SYNC_RUNTIMES = new Set([
+  "capacitor-ios",
+  "capacitor-android",
+]);
+
 export function useScrobble() {
   const currentSong = usePlayerCurrentSong();
-  const progress = usePlayerProgress();
+  const isNative = NATIVE_NATIVE_SYNC_RUNTIMES.has(getRuntime());
+  const progress = usePlayerStore((state) =>
+    isNative ? 0 : state.playerProgress.progress,
+  );
   const currentDuration = usePlayerDuration();
   const isPlaying = usePlayerIsPlaying();
   const { isSong } = usePlayerMediaType();
@@ -33,6 +42,7 @@ export function useScrobble() {
   }, [currentSong?.id]);
 
   useEffect(() => {
+    if (isNative) return;
     if (isRemoteControlActive || !isSong || !isPlaying) return;
 
     const progressPercentage =
@@ -65,5 +75,6 @@ export function useScrobble() {
     isPlaying,
     currentSong?.id,
     isRemoteControlActive,
+    isNative,
   ]);
 }

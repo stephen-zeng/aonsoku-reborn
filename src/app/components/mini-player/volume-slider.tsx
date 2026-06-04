@@ -7,20 +7,25 @@ interface MiniPlayerVolumeSliderProps {
   className?: string;
 }
 
-export function MiniPlayerVolumeSlider({ className }: MiniPlayerVolumeSliderProps) {
+export function MiniPlayerVolumeSlider({
+  className,
+}: MiniPlayerVolumeSliderProps) {
   const { state, actions } = useMiniPlayerContext();
-  const volume = state?.volume ?? 1;
+  const volume = state?.volume ?? 100;
 
-  const [localVolume, setLocalVolume] = useState(volume * 100);
+  const [localVolume, setLocalVolume] = useState(volume);
 
   useEffect(() => {
-    setLocalVolume(volume * 100);
+    setLocalVolume(volume);
   }, [volume]);
 
-  const handleChange = useCallback(([value]: number[]) => {
-    setLocalVolume(value);
-    actions.setVolume(value);
-  }, [actions]);
+  const handleChange = useCallback(
+    ([value]: number[]) => {
+      setLocalVolume(value);
+      actions.setVolume(value);
+    },
+    [actions],
+  );
 
   return (
     <Slider

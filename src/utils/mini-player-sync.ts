@@ -1,5 +1,9 @@
 import { usePlayerStore } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
+import {
+  canUseSystemVolumeControl,
+  getCurrentSystemVolume,
+} from "@/utils/system-volume";
 
 const CHANNEL_NAME = "aonsoku-mini-player";
 
@@ -76,7 +80,9 @@ function getStateFromStore(): MiniPlayerState {
       : null,
     progress: state.playerProgress.progress,
     duration: state.playerState.currentDuration ?? 0,
-    volume: state.playerState.volume,
+    volume: canUseSystemVolumeControl()
+      ? getCurrentSystemVolume()
+      : state.playerState.volume,
     mediaType: state.playerState.mediaType,
     currentSongColor: state.settings.colors.currentSongColor,
     currentLine: lastCurrentLine,

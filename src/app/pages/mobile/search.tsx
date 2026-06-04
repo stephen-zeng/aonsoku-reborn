@@ -1,5 +1,5 @@
 import { Play, SearchIcon } from "lucide-react";
-import { startTransition, useRef, useState } from "react";
+import { startTransition, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
@@ -12,12 +12,15 @@ import {
   getOfflineSearchResults,
   useOfflineQuery,
 } from "@/lib/offlineQueryClient";
+import { AonsokuNativeData, isNativeDataAvailable } from "@/native/data/facade";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
+import { useMobileSearch } from "@/store/ui.store";
 import { CoverArt } from "@/types/coverArtType";
 import { Albums } from "@/types/responses/album";
 import { ISimilarArtist } from "@/types/responses/artist";
+import { Search } from "@/types/responses/search";
 import { ISong } from "@/types/responses/song";
 import { byteLength } from "@/utils/byteLength";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
@@ -106,35 +109,53 @@ function ResultSection({ title, seeMoreHref, children }: SectionProps) {
   );
 }
 
+async function nativeSearch(query: string, count: number): Promise<Search> {
+  if (isNativeDataAvailable()) {
+    const result = await AonsokuNativeData.search({
+      query,
+      artistCount: count,
+      albumCount: count,
+      songCount: count,
+    });
+    return {
+      artist: result.artists as unknown as ISimilarArtist[],
+      album: result.albums as unknown as Albums[],
+      song: result.songs as unknown as ISong[],
+    };
+  }
+  return getOfflineSearchResults({
+    query,
+    artistCount: count,
+    albumCount: count,
+    songCount: count,
+  });
+}
+
 export default function MobileSearch() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [query, setQuery] = useState("");
+  const { query, setQuery } = useMobileSearch();
   const { playSong, setSongList } = usePlayerActions();
   const { getAlbumSongs, getArtistAllSongs } = useSongList();
 
   const enableQuery = byteLength(query) >= 3;
 
-  const { data: searchResult } = useOfflineQuery({
-    queryKey: [...queryKeys.search, query],
-    onlineFn: () =>
+  const { data: searchResult } = useOfflineQuery(
+    [...queryKeys.search, query],
+    () =>
       subsonic.search.get({
         query,
         albumCount: 6,
         artistCount: 6,
         songCount: 6,
       }),
-    offlineFn: () =>
-      getOfflineSearchResults({
-        query,
-        artistCount: 6,
-        albumCount: 6,
-        songCount: 6,
-      }),
-    enabled: enableQuery,
-    staleTime: convertMinutesToMs(5),
-  });
+    {
+      offlineFn: () => nativeSearch(query, 6),
+      enabled: enableQuery,
+      staleTime: convertMinutesToMs(5),
+    },
+  );
 
   const albums: Albums[] = searchResult?.album ?? [];
   const artists: ISimilarArtist[] = searchResult?.artist ?? [];
@@ -144,9 +165,16 @@ export default function MobileSearch() {
     albums.length > 0 || artists.length > 0 || songs.length > 0;
   const showNoResults = enableQuery && !hasResults;
 
+  const composingRef = useRef(false);
+
   const debounced = useDebouncedCallback((value: string) => {
     setQuery(value);
   }, 500);
+
+  function navigateWithFlush(to: string) {
+    debounced.flush();
+    navigate(to);
+  }
 
   async function handlePlayAlbum(albumId: string, albumName: string) {
     const albumSongs = await getAlbumSongs(albumId);
@@ -160,27 +188,51 @@ export default function MobileSearch() {
 
   return (
     <div className="flex flex-col w-full h-full">
-      <MobilePageHeader variant="root" title={t("sidebar.miniSearch")} />
-      <div
-        className="sticky top-0 z-10 bg-background border-b px-4 py-3"
-        style={{
-          paddingTop: "max(0.75rem, var(--safe-area-top))",
-          paddingLeft: "max(1rem, var(--safe-area-left))",
-          paddingRight: "max(1rem, var(--safe-area-right))",
-        }}
-      >
-        <div className="relative flex items-center">
-          <SearchIcon className="absolute left-3 w-4 h-4 text-muted-foreground pointer-events-none" />
-          <Input
-            ref={inputRef}
-            autoFocus
-            placeholder={t("command.inputPlaceholder")}
-            className="pl-9"
-            autoCorrect="off"
-            autoCapitalize="off"
-            spellCheck={false}
-            onChange={(e) => debounced(e.target.value)}
-          />
+      <div className="sticky top-0 z-10 bg-background border-b">
+        <MobilePageHeader
+          variant="root"
+          title={t("sidebar.miniSearch")}
+          showUserDropdown
+        />
+        <div
+          className="px-4 pb-3 pt-0"
+          style={{
+            paddingLeft: "max(1rem, var(--safe-area-left))",
+            paddingRight: "max(1rem, var(--safe-area-right))",
+          }}
+        >
+          <div className="relative flex items-center">
+            <SearchIcon className="absolute left-3 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Input
+              ref={inputRef}
+              autoFocus
+              defaultValue={query}
+              placeholder={t("command.inputPlaceholder")}
+              className="pl-9"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !composingRef.current) {
+                  e.preventDefault();
+                  debounced.flush();
+                  inputRef.current?.blur();
+                }
+              }}
+              onCompositionStart={() => {
+                composingRef.current = true;
+              }}
+              onCompositionEnd={(e) => {
+                composingRef.current = false;
+                debounced(e.currentTarget.value);
+              }}
+              onChange={(e) => {
+                if (!composingRef.current) {
+                  debounced(e.target.value);
+                }
+              }}
+            />
+          </div>
         </div>
       </div>
 
@@ -205,7 +257,9 @@ export default function MobileSearch() {
                 coverArtType="album"
                 title={album.name}
                 subtitle={album.artist}
-                onRowClick={() => navigate(ROUTES.ALBUM.PAGE(album.id))}
+                onRowClick={() =>
+                  navigateWithFlush(ROUTES.ALBUM.PAGE(album.id))
+                }
                 onPlayClick={() => handlePlayAlbum(album.id, album.name)}
               />
             ))}
@@ -225,7 +279,9 @@ export default function MobileSearch() {
                 albumId={song.albumId}
                 title={song.title}
                 subtitle={song.artist}
-                onRowClick={() => navigate(ROUTES.ALBUM.PAGE(song.albumId))}
+                onRowClick={() =>
+                  navigateWithFlush(ROUTES.ALBUM.PAGE(song.albumId))
+                }
                 onPlayClick={() => playSong(song)}
               />
             ))}
@@ -243,7 +299,9 @@ export default function MobileSearch() {
                 subtitle={t("artist.info.albumsCount", {
                   count: artist.albumCount,
                 })}
-                onRowClick={() => navigate(ROUTES.ARTIST.PAGE(artist.id))}
+                onRowClick={() =>
+                  navigateWithFlush(ROUTES.ARTIST.PAGE(artist.id))
+                }
                 onPlayClick={() => handlePlayArtist(artist)}
               />
             ))}

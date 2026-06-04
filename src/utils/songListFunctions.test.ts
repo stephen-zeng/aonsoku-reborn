@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   addNextSongList,
-  MAX_SHUFFLE_HISTORY,
-  MAX_SHUFFLE_START_HISTORY,
+  getMaxShuffleHistory,
+  getMaxShuffleStartHistory,
   pickRandomStartIndex,
   pushToHistory,
   shuffleSongList,
@@ -42,9 +42,21 @@ describe("shuffleSongList", () => {
   });
 });
 
-describe("MAX_SHUFFLE_HISTORY", () => {
-  it("is 50", () => {
-    expect(MAX_SHUFFLE_HISTORY).toBe(50);
+describe("getMaxShuffleHistory", () => {
+  it("returns lower bound for small queues", () => {
+    expect(getMaxShuffleHistory(10)).toBe(20);
+    expect(getMaxShuffleHistory(0)).toBe(20);
+    expect(getMaxShuffleHistory(1)).toBe(20);
+  });
+
+  it("returns half of queue length for medium queues", () => {
+    expect(getMaxShuffleHistory(100)).toBe(50);
+    expect(getMaxShuffleHistory(200)).toBe(100);
+  });
+
+  it("returns upper bound for large queues", () => {
+    expect(getMaxShuffleHistory(500)).toBe(200);
+    expect(getMaxShuffleHistory(1000)).toBe(200);
   });
 });
 
@@ -121,9 +133,21 @@ describe("addNextSongList", () => {
   });
 });
 
-describe("MAX_SHUFFLE_START_HISTORY", () => {
-  it("is 20", () => {
-    expect(MAX_SHUFFLE_START_HISTORY).toBe(20);
+describe("getMaxShuffleStartHistory", () => {
+  it("returns lower bound for small queues", () => {
+    expect(getMaxShuffleStartHistory(10)).toBe(10);
+    expect(getMaxShuffleStartHistory(0)).toBe(10);
+    expect(getMaxShuffleStartHistory(1)).toBe(10);
+  });
+
+  it("returns quarter of queue length for medium queues", () => {
+    expect(getMaxShuffleStartHistory(100)).toBe(25);
+    expect(getMaxShuffleStartHistory(80)).toBe(20);
+  });
+
+  it("returns upper bound for large queues", () => {
+    expect(getMaxShuffleStartHistory(300)).toBe(50);
+    expect(getMaxShuffleStartHistory(1000)).toBe(50);
   });
 });
 

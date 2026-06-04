@@ -31,10 +31,10 @@ function LibraryRow({ icon: Icon, label, to, active }: LibraryRowProps) {
       to={to}
       className={cn(
         "flex min-h-14 items-center gap-3 rounded-lg px-3 text-sm font-medium active:bg-accent/70",
-        active ? "bg-secondary text-foreground" : "text-foreground/90",
+        active ? "bg-accent text-foreground" : "text-foreground/90",
       )}
     >
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-secondary">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-border">
         <Icon className="size-5" />
       </span>
       <span className="min-w-0 flex-1 truncate">{label}</span>
@@ -87,7 +87,11 @@ export default function MobileLibrary() {
 
   return (
     <div className="w-full flex flex-col">
-      <MobilePageHeader variant="root" title={t("sidebar.library")} />
+      <MobilePageHeader
+        variant="root"
+        title={t("sidebar.library")}
+        showUserDropdown
+      />
       <div className="px-4 flex flex-col gap-6">
         <div className="flex flex-col gap-1">
           {libraryLinks.map((item) => (

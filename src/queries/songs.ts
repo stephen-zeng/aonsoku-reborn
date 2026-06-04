@@ -1,5 +1,6 @@
 import { SearchQueryOptions } from "@/service/search";
 import { subsonic } from "@/service/subsonic";
+import { isNativeDataAvailable, AonsokuNativeData } from "@/native/data/facade";
 import { ISong } from "@/types/responses/song";
 import { SongsOrderByOptions, SortOptions } from "@/utils/albumsFilter";
 
@@ -53,6 +54,26 @@ export async function songsSearch(params: SongSearchParams) {
   const orderBy = params.orderBy || SongsOrderByOptions.LastAdded;
   const sort = params.sort || SortOptions.Desc;
 
+  if (isNativeDataAvailable()) {
+    const sortByMap: Record<string, string> = {
+      [SongsOrderByOptions.Artist]: "artist",
+      [SongsOrderByOptions.Title]: "title",
+      [SongsOrderByOptions.Album]: "album",
+      [SongsOrderByOptions.LastAdded]: "created",
+    };
+    const result = await AonsokuNativeData.getSongs({
+      limit: params.songCount,
+      offset: params.songOffset,
+      search: params.query,
+      sortBy: sortByMap[orderBy] || "created",
+      sortOrder: sort === SortOptions.Asc ? "asc" : "desc",
+    });
+    return {
+      songs: result.items as unknown as ISong[],
+      nextOffset: result.hasMore ? params.songOffset + params.songCount : null,
+    };
+  }
+
   const response = await subsonic.search.get({
     artistCount: 0,
     albumCount: 0,
@@ -83,6 +104,26 @@ export async function getArtistAllSongs(
   const orderBy = params.orderBy || SongsOrderByOptions.LastAdded;
   const sort = params.sort || SortOptions.Desc;
 
+  if (isNativeDataAvailable()) {
+    const sortByMap: Record<string, string> = {
+      [SongsOrderByOptions.Artist]: "artist",
+      [SongsOrderByOptions.Title]: "title",
+      [SongsOrderByOptions.Album]: "album",
+      [SongsOrderByOptions.LastAdded]: "created",
+    };
+    const result = await AonsokuNativeData.getSongs({
+      limit: 10000,
+      offset: 0,
+      artistId,
+      sortBy: sortByMap[orderBy] || "created",
+      sortOrder: sort === SortOptions.Asc ? "asc" : "desc",
+    });
+    return {
+      songs: result.items as unknown as ISong[],
+      nextOffset: null,
+    };
+  }
+
   const artist = await subsonic.artists.getOne(artistId);
 
   if (!artist?.album) return emptyResponse;
@@ -104,6 +145,18 @@ export async function getArtistAllSongs(
 }
 
 export async function getFavoriteSongs() {
+  if (isNativeDataAvailable()) {
+    const result = await AonsokuNativeData.getFavorites({
+      limit: 10000,
+      offset: 0,
+      type: "songs",
+    });
+    return {
+      songs: result.items as unknown as ISong[],
+      nextOffset: null,
+    };
+  }
+
   const response = await subsonic.songs.getFavoriteSongs();
   if (!response || !response.song) return { songs: [], nextOffset: null };
 

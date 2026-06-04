@@ -1,22 +1,36 @@
 import { useCallback, useRef } from "react";
 import { usePlayerVolume } from "@/store/player.store";
-import { isIOS } from "@/utils/platform";
+import { getPlaybackCapabilities } from "@/utils/capabilities";
+import { useSystemVolume } from "./use-system-volume";
 
 export function useMuteToggle() {
-  const { volume, setVolume } = usePlayerVolume();
+  const { volume: playerVolume, setVolume } = usePlayerVolume();
+  const {
+    volume: systemVolume,
+    commitSystemVolume,
+    supportsSystemVolumeControl,
+  } = useSystemVolume();
+  const volume = supportsSystemVolumeControl ? systemVolume : playerVolume;
   const lastVolumeRef = useRef(volume > 0 ? volume : 100);
 
   const handleMuteClick = useCallback(() => {
-    if (isIOS()) return;
+    const canSetVolume =
+      supportsSystemVolumeControl || getPlaybackCapabilities().canSetVolume;
+    if (!canSetVolume) return;
+
+    const applyVolume = supportsSystemVolumeControl
+      ? commitSystemVolume
+      : setVolume;
+
     if (volume === 0) {
       const volumeSafety =
         lastVolumeRef.current >= 1 ? lastVolumeRef.current : 100;
-      setVolume(volumeSafety);
+      applyVolume(volumeSafety);
     } else {
       lastVolumeRef.current = volume;
-      setVolume(0);
+      applyVolume(0);
     }
-  }, [volume, setVolume]);
+  }, [commitSystemVolume, setVolume, supportsSystemVolumeControl, volume]);
 
   return { volume, handleMuteClick, lastVolumeRef };
 }

@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useRef } from "react";
-import { buildAudioUrl, cacheManager } from "@/service/cache";
+import {
+  audioSourceResolver,
+  type AudioSourceDescriptor,
+  getAudioSourceUrl,
+  revokeAudioSource,
+} from "@/service/cache";
 import {
   usePlayerCurrentList,
   usePlayerCurrentSongIndex,
@@ -12,7 +17,7 @@ import { LoopState } from "@/types/playerContext";
 export function usePreloadAudio() {
   const preloadRef = useRef<HTMLAudioElement | null>(null);
   const preloadedSongIdRef = useRef<string | null>(null);
-  const preloadBlobUrlRef = useRef<string | null>(null);
+  const preloadSourceRef = useRef<AudioSourceDescriptor | null>(null);
   const { isSong } = usePlayerMediaType();
   const isShuffleActive = usePlayerShuffle();
   const loopState = usePlayerLoop();
@@ -41,19 +46,15 @@ export function usePreloadAudio() {
         preloadRef.current = null;
         preloadedSongIdRef.current = null;
       }
-      if (preloadBlobUrlRef.current) {
-        URL.revokeObjectURL(preloadBlobUrlRef.current);
-        preloadBlobUrlRef.current = null;
-      }
+      revokeAudioSource(preloadSourceRef.current);
+      preloadSourceRef.current = null;
       return;
     }
 
     if (preloadedSongIdRef.current === nextSongId) return;
 
-    if (preloadBlobUrlRef.current) {
-      URL.revokeObjectURL(preloadBlobUrlRef.current);
-      preloadBlobUrlRef.current = null;
-    }
+    revokeAudioSource(preloadSourceRef.current);
+    preloadSourceRef.current = null;
 
     if (preloadRef.current) {
       preloadRef.current.removeAttribute("src");
@@ -68,22 +69,16 @@ export function usePreloadAudio() {
     let cancelled = false;
 
     (async () => {
-      const cachedUrl = await cacheManager.getCachedAudioUrl(nextSongId);
+      const source = await audioSourceResolver.resolveSongSource(nextSongId);
       if (cancelled) {
-        if (cachedUrl) URL.revokeObjectURL(cachedUrl);
+        revokeAudioSource(source);
         return;
       }
 
-      if (cachedUrl) {
-        if (preloadRef.current) {
-          preloadRef.current.src = cachedUrl;
-        }
-        preloadBlobUrlRef.current = cachedUrl;
-      } else {
-        if (preloadRef.current) {
-          preloadRef.current.src = buildAudioUrl(nextSongId, "stream");
-        }
+      if (preloadRef.current) {
+        preloadRef.current.src = getAudioSourceUrl(source);
       }
+      preloadSourceRef.current = source;
       preloadedSongIdRef.current = nextSongId;
     })();
 
@@ -99,10 +94,8 @@ export function usePreloadAudio() {
         preloadRef.current.load();
         preloadRef.current = null;
       }
-      if (preloadBlobUrlRef.current) {
-        URL.revokeObjectURL(preloadBlobUrlRef.current);
-        preloadBlobUrlRef.current = null;
-      }
+      revokeAudioSource(preloadSourceRef.current);
+      preloadSourceRef.current = null;
     };
   }, []);
 }

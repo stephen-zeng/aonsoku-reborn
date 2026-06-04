@@ -1,0 +1,19 @@
+{
+	"appId": "github.realtvop.aonsoku",
+	"appName": "Aonsoku",
+	"webDir": "dist",
+	"plugins": {
+		"Keyboard": {
+			"resize": "none"
+		}
+	},
+	"packageClassList": [
+		"AonsokuNativePreferencesPlugin",
+		"AonsokuNativeDataPlugin",
+		"AonsokuNativeBridgePlugin",
+		"AonsokuNativeAudioPlugin",
+		"AppPlugin",
+		"HapticsPlugin",
+		"KeyboardPlugin"
+	]
+}

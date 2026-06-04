@@ -21,8 +21,14 @@ interface IRightPanel {
   resetWidth: () => void;
 }
 
+interface IMobileSearch {
+  query: string;
+  setQuery: (query: string) => void;
+}
+
 export interface IUiContext {
   songInfo: ISongInfo;
   sidebar: ISidebar;
   rightPanel: IRightPanel;
+  mobileSearch: IMobileSearch;
 }

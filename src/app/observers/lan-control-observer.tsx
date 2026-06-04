@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
+import { seekPlaybackTarget } from "@/player/playback/backend-registry";
 import { subsonic } from "@/service/subsonic";
 import {
   useLanControlActions,
@@ -252,7 +253,7 @@ export function LanControlObserver() {
           if (payload && typeof payload.time === "number") {
             const target = Math.max(0, payload.time);
             if (audioRef) {
-              audioRef.currentTime = target;
+              seekPlaybackTarget(audioRef, target);
             }
             playerActions.setProgress(target);
           }

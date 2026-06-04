@@ -6,11 +6,19 @@ import { MiniPlayerButton } from "@/app/components/mini-player/button";
 import { RadioInfo } from "@/app/components/player/radio-info";
 import { TrackInfo } from "@/app/components/player/track-info";
 import { Button } from "@/app/components/ui/button";
-import { useCachedAudioUrl } from "@/app/hooks/use-cached-audio";
+import { useAudioSource } from "@/app/hooks/use-audio-source";
 import { usePlayHistory } from "@/app/hooks/use-play-history";
 import { usePlayerBreakpoint } from "@/app/hooks/use-player-breakpoint";
 import { usePreloadAudio } from "@/app/hooks/use-preload-audio";
 import { useScrobble } from "@/app/hooks/use-scrobble";
+import { useSleepTimer } from "@/app/hooks/use-sleep-timer";
+import { useNativeForegroundSync } from "@/app/hooks/use-native-foreground-sync";
+import {
+  getAudioDurationSeconds,
+  getAudioProgressSnapshot,
+  getBufferedTime,
+  type PlaybackMetadata,
+} from "@/player/playback";
 import { openFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import {
   useIsRemoteControlActive,
@@ -26,12 +34,17 @@ import {
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
 import { hasMiniPlayerSupport } from "@/utils/browser";
-import { isValidDuration } from "@/utils/duration";
 import { logger } from "@/utils/logger";
+import { getCoverArtUrlFromSongPreference } from "@/utils/coverArt";
 import {
   type ReplayGainParams,
   resolveReplayGainParams,
 } from "@/utils/replayGain";
+import {
+  audioSourceResolver,
+  getAudioSourceUrl,
+  type AudioSourceDescriptor,
+} from "@/service/cache";
 import { AudioPlayer } from "./audio";
 import { PlayerClearQueueButton } from "./clear-queue-button";
 import { PlayerControls } from "./controls";
@@ -39,6 +52,7 @@ import { PlayerLikeButton } from "./like-button";
 import { PlayerLyricsButton } from "./lyrics-button";
 import { PlayerProgress } from "./progress";
 import { PlayerQueueButton } from "./queue-button";
+import { SleepTimerButton } from "./sleep-timer-button";
 import { PlayerVolume } from "./volume";
 
 const MemoTrackInfo = memo(TrackInfo);
@@ -50,11 +64,13 @@ const MemoPlayerQueueButton = memo(PlayerQueueButton);
 const MemoPlayerClearQueueButton = memo(PlayerClearQueueButton);
 const MemoPlayerVolume = memo(PlayerVolume);
 const MemoLyricsButton = memo(PlayerLyricsButton);
+const MemoSleepTimerButton = memo(SleepTimerButton);
 const MemoMiniPlayerButton = memo(MiniPlayerButton);
 const MemoAudioPlayer = memo(AudioPlayer);
 
 export function Player() {
   const { t } = useTranslation();
+  const radioLabel = t("radios.label");
   const audioRef = useRef<HTMLAudioElement>(null);
   const radioRef = useRef<HTMLAudioElement>(null);
   const isMobile = usePlayerBreakpoint();
@@ -85,6 +101,8 @@ export function Player() {
   usePlayHistory();
   useScrobble();
   usePreloadAudio();
+  useNativeForegroundSync();
+  useSleepTimer();
 
   const isTransitioning = usePlayerIsTransitioning();
 
@@ -105,7 +123,38 @@ export function Player() {
   const song = currentList[currentSongIndex] ?? null;
   const radio = radioList[currentSongIndex];
   const songId = song?.id;
-  const { url: audioSrc, resolvedSongId } = useCachedAudioUrl(song?.id);
+  const { source: audioSource, resolvedSongId } = useAudioSource(song?.id);
+  const audioSrc = audioSource ? getAudioSourceUrl(audioSource) : "";
+  const radioSource = useMemo<AudioSourceDescriptor | null>(() => {
+    if (!radio) return null;
+
+    return audioSourceResolver.resolveRadioSource(radio.streamUrl, radio.id);
+  }, [radio]);
+  const songMetadata = useMemo<PlaybackMetadata | null>(() => {
+    if (!song) return null;
+
+    return {
+      title: song.title,
+      artist: song.artist,
+      album: song.album,
+      duration: song.duration,
+      artworkUrl: getCoverArtUrlFromSongPreference({
+        coverArt: song.coverArt,
+        coverArtType: "song",
+        albumId: song.albumId,
+        size: "300",
+      }),
+    };
+  }, [song]);
+  const radioMetadata = useMemo<PlaybackMetadata | null>(() => {
+    if (!radio) return null;
+
+    return {
+      title: radio.name,
+      artist: radioLabel,
+      album: "",
+    };
+  }, [radio, radioLabel]);
 
   const getAudioRef = useCallback(() => {
     if (isRadio) return radioRef;
@@ -175,9 +224,8 @@ export function Player() {
     const audio = getAudioRef().current;
     if (!audio) return;
 
-    const audioDuration = audio.duration;
-    if (isValidDuration(audioDuration)) {
-      const roundedDuration = Math.round(audioDuration);
+    const roundedDuration = getAudioDurationSeconds(audio);
+    if (roundedDuration !== null) {
       const currentDur = usePlayerStore.getState().playerState.currentDuration;
       if (currentDur !== roundedDuration) {
         setCurrentDuration(roundedDuration);
@@ -203,13 +251,11 @@ export function Player() {
 
     if (usePlayerStore.getState().playerProgress.isScrubbing) return;
 
-    const currentProgress = Math.floor(audio.currentTime);
-    setProgress(currentProgress);
+    const { progress, bufferedProgress } = getAudioProgressSnapshot(audio);
+    setProgress(progress);
 
     if (audio.buffered.length > 0) {
-      const bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
-      const clamped = Math.min(bufferedEnd, audio.duration || 0);
-      setBufferedProgress(clamped);
+      setBufferedProgress(bufferedProgress);
     }
   }, [getAudioRef, setProgress, setBufferedProgress]);
 
@@ -289,9 +335,7 @@ export function Player() {
     (e: React.SyntheticEvent<HTMLAudioElement>) => {
       const audio = e.currentTarget;
       if (audio.buffered.length > 0) {
-        const bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
-        const clamped = Math.min(bufferedEnd, audio.duration || 0);
-        setBufferedProgress(clamped);
+        setBufferedProgress(getBufferedTime(audio));
       }
     },
     [setBufferedProgress],
@@ -318,7 +362,7 @@ export function Player() {
     >
       <div className="w-full h-full grid grid-cols-[1fr_auto] gap-3 px-3 md:grid-cols-player md:gap-2 md:px-4">
         {/* Track Info */}
-        <div className="flex items-center gap-1 w-full md:gap-2">
+        <div className="flex items-center gap-1 w-full min-w-0 md:gap-2">
           {isSong && <MemoTrackInfo song={song} />}
           {isRadio && <MemoRadioInfo radio={radio} />}
         </div>
@@ -363,6 +407,7 @@ export function Player() {
               <>
                 <MemoPlayerLikeButton disabled={!song} />
                 <MemoLyricsButton disabled={!song} />
+                <MemoSleepTimerButton disabled={!song} />
                 <MemoPlayerQueueButton disabled={!song} />
               </>
             )}
@@ -380,7 +425,9 @@ export function Player() {
 
       {isSong && song && !isRemoteControlActive && (
         <MemoAudioPlayer
+          audioSource={audioSource}
           replayGain={trackReplayGain}
+          metadata={songMetadata}
           src={audioSrc}
           songId={resolvedSongId}
           autoPlay={isPlaying}
@@ -404,6 +451,8 @@ export function Player() {
 
       {isRadio && radio && !isRemoteControlActive && (
         <MemoAudioPlayer
+          audioSource={radioSource}
+          metadata={radioMetadata}
           src={radio.streamUrl}
           autoPlay={isPlaying}
           audioRef={radioRef}

@@ -87,6 +87,7 @@ export default function Playlist() {
         variant="sub"
         title={playlist.name}
         accentColor={accentColor}
+        showSpacer={false}
       />
       <ImageHeader
         type={t("playlist.headline")}

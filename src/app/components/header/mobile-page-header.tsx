@@ -1,11 +1,12 @@
 import { ChevronLeft } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { UserDropdown } from "@/app/components/header/user-dropdown";
 import { Button } from "@/app/components/ui/button";
 import { cn } from "@/lib/utils";
 import { blendColors, hslToHex, isDarkHex } from "@/utils/getAverageColor";
+import { registerHeaderBackHandler, unregisterHeaderBackHandler } from "@/utils/back-button-registry";
 
 type MobilePageHeaderVariant = "root" | "sub";
 
@@ -15,40 +16,54 @@ interface MobilePageHeaderProps {
   className?: string;
   onBack?: () => void;
   accentColor?: string;
+  count?: number;
+  actions?: ReactNode;
+  showSpacer?: boolean;
+  showUserDropdown?: boolean;
+  transparentTheme?: "default" | "image";
 }
 
 function DesktopHeaderStatusItems() {
   return <UserDropdown />;
 }
 
-function MobileHeaderStatusItems() {
-  return <UserDropdown />;
+function MobileHeaderStatusItems({
+  extra,
+  showUserDropdown,
+}: {
+  extra?: ReactNode;
+  showUserDropdown?: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      {extra}
+      {showUserDropdown && <UserDropdown />}
+    </div>
+  );
 }
 
 function StickyHeader({
   title,
   onBack,
   accentColor,
+  actions,
+  showUserDropdown,
+  transparentTheme,
 }: {
   title: string;
   onBack?: () => void;
   accentColor?: string;
+  actions?: ReactNode;
+  showUserDropdown?: boolean;
+  transparentTheme?: "default" | "image";
 }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [titleInViewport, setTitleInViewport] = useState(true);
-  const titleObserverRef = useRef<IntersectionObserver | null>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: title change indicates content swap, need to re-bind observer
   useEffect(() => {
-    const titleEl = document.getElementById("detail-page-title");
-    if (!titleEl) {
-      setTitleInViewport(true);
-      return;
-    }
-
-    if (titleObserverRef.current) {
-      titleObserverRef.current.disconnect();
-    }
+    setTitleInViewport(true);
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -57,18 +72,36 @@ function StickyHeader({
       { threshold: 0, rootMargin: "0px 0px -10% 0px" },
     );
 
-    observer.observe(titleEl);
-    titleObserverRef.current = observer;
-    return () => observer.disconnect();
-  }, []);
+    let retryCount = 0;
+    const checkElement = () => {
+      const titleEl = document.getElementById("detail-page-title");
+      if (titleEl) {
+        observer.observe(titleEl);
+      } else if (retryCount < 20) {
+        retryCount++;
+        setTimeout(checkElement, 100);
+      }
+    };
 
-  function handleBack() {
+    checkElement();
+
+    return () => observer.disconnect();
+  }, [title]);
+
+  const handleBack = useCallback(() => {
     if (onBack) {
       onBack();
     } else {
       navigate(-1);
     }
-  }
+  }, [onBack, navigate]);
+
+  useEffect(() => {
+    registerHeaderBackHandler(handleBack);
+    return () => {
+      unregisterHeaderBackHandler(handleBack);
+    };
+  }, [handleBack]);
 
   const showFullBar = !titleInViewport;
 
@@ -88,60 +121,105 @@ function StickyHeader({
       ? { backgroundColor: `${blendedColor}e6` }
       : undefined;
 
-  const textColorClass = floatingOnImage
-    ? "text-white"
-    : showFullBar && blendedColor && isDarkHex(blendedColor)
+  const textColorClass = useMemo(() => {
+    if (floatingOnImage) {
+      if (transparentTheme === "default") {
+        return "text-foreground";
+      }
+
+      if (accentColor) {
+        if (accentColor.startsWith("var(")) {
+          const varName = accentColor.replace(/^var\(/, "").replace(/\)$/, "");
+          const bgHsl = getComputedStyle(document.documentElement)
+            .getPropertyValue(varName)
+            .trim();
+          const baseHex = hslToHex(bgHsl);
+          return isDarkHex(baseHex) ? "text-white" : "text-foreground";
+        }
+        return isDarkHex(accentColor) ? "text-white" : "text-foreground";
+      }
+
+      const bgFgHsl = getComputedStyle(document.documentElement)
+        .getPropertyValue("--background-foreground")
+        .trim();
+      if (bgFgHsl) {
+        const baseHex = hslToHex(bgFgHsl);
+        return isDarkHex(baseHex) ? "text-white" : "text-foreground";
+      }
+
+      return "text-white";
+    }
+    return showFullBar && blendedColor && isDarkHex(blendedColor)
       ? "text-white"
       : "text-foreground";
+  }, [
+    floatingOnImage,
+    showFullBar,
+    blendedColor,
+    transparentTheme,
+    accentColor,
+  ]);
 
   return (
-    <>
-      <div
+    <div
+      className={cn(
+        "fixed top-0 left-0 right-0 z-30 md:hidden flex items-center gap-1 h-11 box-content transition-[background-color,backdrop-filter,color] duration-200",
+        !showFullBar && "bg-transparent",
+        showFullBar &&
+          !accentColor &&
+          "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80",
+        showFullBar && accentColor && "backdrop-blur-sm",
+        textColorClass,
+      )}
+      style={{
+        paddingTop: "var(--safe-area-top)",
+        paddingLeft: "max(0.25rem, var(--safe-area-left))",
+        paddingRight: "max(0.25rem, var(--safe-area-right))",
+        ...accentBgStyle,
+      }}
+    >
+      <Button
+        variant="ghost"
         className={cn(
-          "fixed top-0 left-0 right-0 z-20 md:hidden flex items-center gap-1 h-11 transition-all duration-200",
-          !showFullBar && "bg-transparent",
+          "h-9 w-9 p-0 rounded-md flex-shrink-0 z-10 transition-colors ml-1",
+          floatingOnImage &&
+            textColorClass === "text-white" &&
+            "text-white hover-supported:bg-white/10 hover-supported:text-white",
+          floatingOnImage &&
+            textColorClass === "text-foreground" &&
+            "text-foreground hover-supported:bg-foreground/10 hover-supported:text-foreground",
+          showFullBar && blendedColor && isDarkHex(blendedColor)
+            ? "hover-supported:bg-white/10 text-white hover-supported:text-white"
+            : "",
+          showFullBar && blendedColor && !isDarkHex(blendedColor)
+            ? "hover-supported:bg-black/10 hover-supported:text-foreground"
+            : "",
           showFullBar &&
             !accentColor &&
-            "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80",
-          showFullBar && accentColor && "backdrop-blur-sm",
-          textColorClass,
+            "hover-supported:bg-foreground/10 hover-supported:text-foreground",
         )}
-        style={{
-          paddingTop: "var(--safe-area-top)",
-          paddingLeft: "max(0.25rem, var(--safe-area-left))",
-          paddingRight: "max(0.25rem, var(--safe-area-right))",
-          ...accentBgStyle,
-        }}
+        onClick={handleBack}
+        aria-label={t("navigation.back")}
       >
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-11 w-11 p-0 rounded-md flex-shrink-0",
-            floatingOnImage &&
-              "hover-supported:bg-white/20 text-white drop-shadow-md",
-            showFullBar && blendedColor && isDarkHex(blendedColor)
-              ? "hover-supported:bg-white/20 text-white"
-              : "",
-            showFullBar && blendedColor && !isDarkHex(blendedColor)
-              ? "hover-supported:bg-black/10"
-              : "",
-          )}
-          onClick={handleBack}
-          aria-label={t("navigation.back")}
-        >
-          <ChevronLeft className="w-5 h-5" strokeWidth={2} />
-        </Button>
+        <ChevronLeft className="w-5 h-5" strokeWidth={2} />
+      </Button>
+      <div className="flex-1 min-w-0">
         <span
           className={cn(
-            "flex-1 text-sm font-medium truncate px-2 transition-opacity duration-200",
-            showFullBar ? "opacity-100" : "opacity-0 w-0 overflow-hidden",
+            "text-sm font-bold truncate transition-opacity duration-200 block",
+            showFullBar ? "opacity-100" : "opacity-0",
           )}
         >
           {title}
         </span>
       </div>
-    </>
+      <div className="pr-2 flex-shrink-0 z-10">
+        <MobileHeaderStatusItems
+          extra={actions}
+          showUserDropdown={showUserDropdown}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -151,6 +229,11 @@ export function MobilePageHeader({
   className,
   onBack,
   accentColor,
+  count,
+  actions,
+  showSpacer = true,
+  showUserDropdown,
+  transparentTheme,
 }: MobilePageHeaderProps) {
   if (variant === "root") {
     return (
@@ -158,17 +241,40 @@ export function MobilePageHeader({
         className={cn("md:hidden px-4 pt-[var(--safe-area-top)]", className)}
       >
         <div className="flex items-center justify-between py-4">
-          <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-          <div className="flex items-center gap-1">
-            <MobileHeaderStatusItems />
+          <div className="flex flex-col">
+            <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+            {count !== undefined && (
+              <span className="text-xs text-muted-foreground font-medium">
+                {count}
+              </span>
+            )}
           </div>
+          <MobileHeaderStatusItems
+            extra={actions}
+            showUserDropdown={showUserDropdown}
+          />
         </div>
       </div>
     );
   }
 
   return (
-    <StickyHeader title={title} onBack={onBack} accentColor={accentColor} />
+    <>
+      {showSpacer && (
+        <div
+          className="h-11 md:hidden"
+          style={{ marginTop: "var(--safe-area-top)" }}
+        />
+      )}
+      <StickyHeader
+        title={title}
+        onBack={onBack}
+        accentColor={accentColor}
+        actions={actions}
+        showUserDropdown={showUserDropdown}
+        transparentTheme={transparentTheme}
+      />
+    </>
   );
 }
 

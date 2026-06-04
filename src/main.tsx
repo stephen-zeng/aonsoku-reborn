@@ -10,17 +10,34 @@ import "@/index.css";
 
 import "@/i18n";
 
-import App from "@/App";
-
+import { ErrorBoundary } from "@/app/components/error-boundary";
 import { queryClient } from "@/lib/queryClient";
+import {
+  flushNativeWrites,
+  initNativePrefsCache,
+} from "@/store/native-storage";
 import { blockFeatures } from "@/utils/browser";
 
 blockFeatures();
 
-createRoot(document.getElementById("root") as HTMLElement).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </StrictMode>,
-);
+window.addEventListener("beforeunload", flushNativeWrites);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) flushNativeWrites();
+});
+
+async function bootstrap() {
+  await initNativePrefsCache();
+  const { default: App } = await import("@/App");
+
+  createRoot(document.getElementById("root") as HTMLElement).render(
+    <StrictMode>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <App />
+        </QueryClientProvider>
+      </ErrorBoundary>
+    </StrictMode>,
+  );
+}
+
+bootstrap();
