@@ -55,7 +55,7 @@ export function HeaderItem({ album }: { album: Albums }) {
       />
       <div
         className={clsx(
-          "w-full h-full bg-gradient-to-b from-background/40 to-background/80 absolute z-10",
+          "absolute -inset-10 bg-gradient-to-b from-background/40 to-background/80 z-10",
           !isFirefox && "backdrop-blur-xl",
         )}
       >
