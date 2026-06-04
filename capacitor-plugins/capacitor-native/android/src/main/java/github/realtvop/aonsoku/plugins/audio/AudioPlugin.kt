@@ -90,6 +90,7 @@ class AudioPlugin : Plugin() {
 
     private var headphoneReceiver: HeadphoneUnplugReceiver? = null
     private var volumeReceiver: VolumeChangeReceiver? = null
+    private var audioDeviceCallback: android.media.AudioDeviceCallback? = null
 
     private inner class VolumeChangeReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -249,6 +250,7 @@ class AudioPlugin : Plugin() {
         registerAudioFocusListener()
         registerHeadphoneReceiver()
         registerVolumeReceiver()
+        registerAudioDeviceCallback()
     }
 
     override fun handleOnPause() {
@@ -265,6 +267,11 @@ class AudioPlugin : Plugin() {
             emitProgress()
             startProgressUpdates()
         }
+        // Emit volume on resume to ensure UI is in sync
+        val volume = getSystemVolumePercentage()
+        notifyListeners("systemVolumeChanged", JSObject().apply {
+            put("volume", volume)
+        })
     }
 
     override fun handleOnStop() {
@@ -290,6 +297,7 @@ class AudioPlugin : Plugin() {
         unregisterAudioFocusListener()
         unregisterHeadphoneReceiver()
         unregisterVolumeReceiver()
+        unregisterAudioDeviceCallback()
         pluginScope.cancel()
         super.handleOnDestroy()
     }
@@ -369,6 +377,50 @@ class AudioPlugin : Plugin() {
         val current = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
         val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         return if (max > 0) current.toDouble() / max.toDouble() else 0.0
+    }
+
+    private fun registerAudioDeviceCallback() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            val callback = object : android.media.AudioDeviceCallback() {
+                override fun onAudioDevicesAdded(addedDevices: Array<out android.media.AudioDeviceInfo>?) {
+                    triggerVolumeUpdate()
+                }
+
+                override fun onAudioDevicesRemoved(removedDevices: Array<out android.media.AudioDeviceInfo>?) {
+                    triggerVolumeUpdate()
+                }
+            }
+            audioManager.registerAudioDeviceCallback(callback, mainHandler)
+            audioDeviceCallback = callback
+        }
+    }
+
+    private fun unregisterAudioDeviceCallback() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            audioDeviceCallback?.let { callback ->
+                val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                audioManager.unregisterAudioDeviceCallback(callback)
+            }
+            audioDeviceCallback = null
+        }
+    }
+
+    private fun triggerVolumeUpdate() {
+        notifyVolumeChanged()
+        mainHandler.postDelayed({
+            notifyVolumeChanged()
+        }, 300)
+        mainHandler.postDelayed({
+            notifyVolumeChanged()
+        }, 800)
+    }
+
+    private fun notifyVolumeChanged() {
+        val volume = getSystemVolumePercentage()
+        notifyListeners("systemVolumeChanged", JSObject().apply {
+            put("volume", volume)
+        })
     }
 
     // MARK: - Scrobble
