@@ -73,11 +73,15 @@ const MobileHeader = memo(function MobileHeader({
             preventCycle
             data-testid="fullscreen-drag-handle"
             aria-label="Drag to close"
-            className="w-9 h-1 opacity-40"
-            style={{
-              backgroundColor: currentSongColor ?? "hsl(var(--primary))",
-            }}
-          />
+            className="opacity-100 bg-transparent"
+          >
+            <span
+              className="block w-9 h-1 rounded-full opacity-40 bg-foreground"
+              style={{
+                backgroundColor: currentSongColor ?? "hsl(var(--primary))",
+              }}
+            />
+          </DrawerHandle>
         </div>
       )}
 
