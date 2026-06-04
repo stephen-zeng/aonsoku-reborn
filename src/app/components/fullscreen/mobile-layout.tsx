@@ -20,7 +20,11 @@ import {
   useSongColor,
 } from "@/store/player.store";
 import { ArtworkWithInfo } from "./artwork-with-info";
-import { CONTENT_MAX_WIDTH, FULLSCREEN_QUEUE_BG_CLASS, PANEL_MAX_WIDTH } from "./constants";
+import {
+  CONTENT_MAX_WIDTH,
+  FULLSCREEN_QUEUE_BG_CLASS,
+  PANEL_MAX_WIDTH,
+} from "./constants";
 import { FullscreenControlPanel } from "./control-panel";
 import { CustomLyricsSelect } from "./custom-lyrics-select";
 import { LyricsTab } from "./lyrics";
@@ -69,15 +73,11 @@ const MobileHeader = memo(function MobileHeader({
             preventCycle
             data-testid="fullscreen-drag-handle"
             aria-label="Drag to close"
-            className="opacity-100"
-          >
-            <span
-              className="block w-9 h-1 rounded-full opacity-40 bg-foreground"
-              style={{
-                backgroundColor: currentSongColor ?? "hsl(var(--primary))",
-              }}
-            />
-          </DrawerHandle>
+            className="w-9 h-1 opacity-40"
+            style={{
+              backgroundColor: currentSongColor ?? "hsl(var(--primary))",
+            }}
+          />
         </div>
       )}
 

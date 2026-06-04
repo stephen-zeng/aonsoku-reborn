@@ -129,10 +129,12 @@ const SelectItem = React.forwardRef<
     )}
     {...props}
   >
-    <span className={cn(
-      "absolute flex items-center justify-center",
-      isNative ? "left-4 h-5 w-5" : "left-2 h-3.5 w-3.5"
-    )}>
+    <span
+      className={cn(
+        "absolute flex items-center justify-center",
+        isNative ? "left-4 h-5 w-5" : "left-2 h-3.5 w-3.5",
+      )}
+    >
       <SelectPrimitive.ItemIndicator>
         <Check className={cn(isNative ? "h-5 w-5" : "h-4 w-4")} />
       </SelectPrimitive.ItemIndicator>

@@ -143,10 +143,12 @@ const ContextMenuCheckboxItem = React.forwardRef<
     checked={checked}
     {...props}
   >
-    <span className={cn(
-      "absolute flex items-center justify-center",
-      isNative ? "left-4 h-5 w-5" : "left-2 h-3.5 w-3.5"
-    )}>
+    <span
+      className={cn(
+        "absolute flex items-center justify-center",
+        isNative ? "left-4 h-5 w-5" : "left-2 h-3.5 w-3.5",
+      )}
+    >
       <ContextMenuPrimitive.ItemIndicator>
         <Check className={cn(isNative ? "h-5 w-5" : "h-4 w-4")} />
       </ContextMenuPrimitive.ItemIndicator>
@@ -170,12 +172,16 @@ const ContextMenuRadioItem = React.forwardRef<
     )}
     {...props}
   >
-    <span className={cn(
-      "absolute flex items-center justify-center",
-      isNative ? "left-4 h-5 w-5" : "left-2 h-3.5 w-3.5"
-    )}>
+    <span
+      className={cn(
+        "absolute flex items-center justify-center",
+        isNative ? "left-4 h-5 w-5" : "left-2 h-3.5 w-3.5",
+      )}
+    >
       <ContextMenuPrimitive.ItemIndicator>
-        <Circle className={cn("fill-current", isNative ? "h-2.5 w-2.5" : "h-2 w-2")} />
+        <Circle
+          className={cn("fill-current", isNative ? "h-2.5 w-2.5" : "h-2 w-2")}
+        />
       </ContextMenuPrimitive.ItemIndicator>
     </span>
     {children}
@@ -208,7 +214,11 @@ const ContextMenuSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ContextMenuPrimitive.Separator
     ref={ref}
-    className={cn("-mx-1 h-px bg-border", isNative ? "my-2" : "my-1", className)}
+    className={cn(
+      "-mx-1 h-px bg-border",
+      isNative ? "my-2" : "my-1",
+      className,
+    )}
     {...props}
   />
 ));
