@@ -312,6 +312,8 @@ class PlaybackService : MediaSessionService() {
                     .add(COMMAND_SEEK_TO_PREVIOUS)
                     .add(COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
                     .add(COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+                    .add(COMMAND_SET_SHUFFLE_MODE)
+                    .add(COMMAND_SET_REPEAT_MODE)
                     .build()
             }
 
@@ -460,6 +462,8 @@ class PlaybackService : MediaSessionService() {
                     .add(Player.COMMAND_SEEK_TO_PREVIOUS)
                     .add(Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
                     .add(Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+                    .add(Player.COMMAND_SET_SHUFFLE_MODE)
+                    .add(Player.COMMAND_SET_REPEAT_MODE)
                     .build()
                 return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                     .setAvailableSessionCommands(availableSessionCommands)
