@@ -34,3 +34,19 @@ export function executeBackButtonHandlers(): boolean {
   }
   return false;
 }
+
+let activeHeaderBackHandler: (() => void) | null = null;
+
+export function registerHeaderBackHandler(handler: () => void) {
+  activeHeaderBackHandler = handler;
+}
+
+export function unregisterHeaderBackHandler(handler: () => void) {
+  if (activeHeaderBackHandler === handler) {
+    activeHeaderBackHandler = null;
+  }
+}
+
+export function getActiveHeaderBackHandler(): (() => void) | null {
+  return activeHeaderBackHandler;
+}
