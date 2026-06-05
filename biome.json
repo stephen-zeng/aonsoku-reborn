@@ -9,10 +9,13 @@
     "ignoreUnknown": false,
     "includes": [
       "**",
+      "!node_modules",
+      "!**/node_modules",
       "!cypress",
       "!**/*.cy.{ts,tsx}",
       "!ios",
       "!dist",
+      "!dist-ssr",
       "!out",
       "!coverage",
       "!.build",
