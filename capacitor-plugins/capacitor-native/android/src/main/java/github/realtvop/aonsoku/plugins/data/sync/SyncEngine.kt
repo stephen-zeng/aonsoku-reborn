@@ -99,6 +99,14 @@ class SyncEngine(
         emitState("favorites", "t1", 0, 0); val r = httpClient.request(c.serverUrl, "getStarred2.view", c)
         val arr = r.data.optJSONObject("starred2")?.optJSONArray("song"); val songs = mutableListOf<SongEntity>()
         if (arr != null) for (i in 0 until arr.length()) parseSong(arr.optJSONObject(i))?.let { songs.add(it) }
+        val previouslyStarred = songDao.getStarredSongIds()
+        val starredIdsOnServer = songs.map { it.id }.toSet()
+        if (previouslyStarred.isNotEmpty() && starredIdsOnServer.isNotEmpty()) {
+            val toUnstar = previouslyStarred.filter { it !in starredIdsOnServer }
+            if (toUnstar.isNotEmpty()) {
+                songDao.updateStarred(toUnstar, null, null)
+            }
+        }
         if (songs.isNotEmpty()) songDao.bulkUpsert(songs)
         syncStateDao.upsert(SyncStateEntity("tier:t1", System.currentTimeMillis()))
         onDataChanged?.invoke(listOf("playlists", "genres", "favorites", "songs"))
