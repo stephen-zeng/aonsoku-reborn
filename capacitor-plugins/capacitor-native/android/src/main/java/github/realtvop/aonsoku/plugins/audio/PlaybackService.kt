@@ -39,6 +39,8 @@ import github.realtvop.aonsoku.plugins.debug.NativeLogger
 import github.realtvop.aonsoku.plugins.preferences.NativePreferencesStore
 import github.realtvop.aonsoku.plugins.bridge.AndroidCredentialStore
 import github.realtvop.aonsoku.plugins.bridge.SubsonicHttpClient
+import github.realtvop.aonsoku.plugins.data.db.AonsokuDatabase
+import github.realtvop.aonsoku.plugins.data.image.ImageCacheManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -981,7 +983,7 @@ class PlaybackService : MediaSessionService() {
                 currentPlayer.play()
             }
             showNotification()
-            loadAndCacheArtwork(artworkUrl)
+            loadAndCacheArtwork(artworkUrl, song)
         }
     }
 
@@ -994,7 +996,7 @@ class PlaybackService : MediaSessionService() {
 
 
 
-    fun loadAndCacheArtwork(artworkUrl: String?) {
+    fun loadAndCacheArtwork(artworkUrl: String?, song: QueueSong? = null) {
         val url = artworkUrl ?: return
         cachedArtworkBitmap = null
         serviceScope.launch(Dispatchers.IO) {
@@ -1003,10 +1005,27 @@ class PlaybackService : MediaSessionService() {
                     val filePath = url.substring(7)
                     BitmapFactory.decodeFile(filePath)
                 } else {
-                    val inputStream = java.net.URL(url).openStream()
-                    val b = BitmapFactory.decodeStream(inputStream)
-                    inputStream.close()
-                    b
+                    val coverArtId = song?.coverArtId
+                    val credentials = credentialStore.retrieve()
+                    if (!coverArtId.isNullOrEmpty() && credentials != null) {
+                        try {
+                            val db = AonsokuDatabase.getInstance(this@PlaybackService)
+                            val imageCacheManager = ImageCacheManager(cacheDir, db.cacheMetaDao())
+                            val file = imageCacheManager.downloadCoverImage(coverArtId, "800", credentials)
+                            BitmapFactory.decodeFile(file.absolutePath)
+                        } catch (e: Exception) {
+                            NativeLogger.warn("Failed to download and cache artwork natively: ${e.message}, falling back to direct stream", "playback-service")
+                            val inputStream = java.net.URL(url).openStream()
+                            val b = BitmapFactory.decodeStream(inputStream)
+                            inputStream.close()
+                            b
+                        }
+                    } else {
+                        val inputStream = java.net.URL(url).openStream()
+                        val b = BitmapFactory.decodeStream(inputStream)
+                        inputStream.close()
+                        b
+                    }
                 }
                 if (bitmap != null) {
                     withContext(Dispatchers.Main) {
