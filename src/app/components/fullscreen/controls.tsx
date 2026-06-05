@@ -126,6 +126,8 @@ function FullscreenControls() {
         size="icon"
         variant="ghost"
         data-state={loopState !== LoopState.Off ? "active" : undefined}
+        aria-label="Repeat"
+        aria-pressed={loopState !== LoopState.Off}
         className={clsx(
           secondaryBtnClass,
           loopState !== LoopState.Off && "fullscreen-button-active",
