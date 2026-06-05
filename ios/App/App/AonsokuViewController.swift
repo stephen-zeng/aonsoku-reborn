@@ -6,6 +6,11 @@ import AonsokuNativePlugin
 class AonsokuViewController: CAPBridgeViewController {
     private let mediaSchemeHandler = MediaSchemeHandler()
 
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        webView?.allowsBackForwardNavigationGestures = true
+    }
+
     override func webViewConfiguration(for instanceConfiguration: InstanceConfiguration) -> WKWebViewConfiguration {
         let config = super.webViewConfiguration(for: instanceConfiguration)
         config.setURLSchemeHandler(mediaSchemeHandler, forURLScheme: "aonsoku-media")
@@ -31,4 +36,3 @@ class AonsokuViewController: CAPBridgeViewController {
         present(nav, animated: true)
     }
 }
-
