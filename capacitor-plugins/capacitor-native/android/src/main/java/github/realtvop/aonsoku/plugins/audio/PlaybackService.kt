@@ -930,8 +930,16 @@ class PlaybackService : MediaSessionService() {
         val localArtworkFile = if (!song.coverArtId.isNullOrEmpty()) {
             val dir = github.realtvop.aonsoku.plugins.data.image.ImageCacheUtils.cacheDirectory(cacheDir, false)
             val cid = github.realtvop.aonsoku.plugins.data.image.ImageCacheUtils.cacheId(song.coverArtId)
-            if (dir.exists()) {
+            val file = if (dir.exists()) {
                 dir.listFiles { f -> f.name.startsWith("$cid.") }?.firstOrNull()
+            } else null
+            
+            if (file != null && file.exists()) {
+                file
+            } else if (!song.albumId.isNullOrEmpty()) {
+                val acid = github.realtvop.aonsoku.plugins.data.image.ImageCacheUtils.cacheId(song.albumId)
+                val afile = dir.listFiles { f -> f.name.startsWith("$acid.") }?.firstOrNull()
+                if (afile != null && afile.exists()) afile else null
             } else null
         } else null
 

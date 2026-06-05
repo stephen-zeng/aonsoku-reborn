@@ -21,6 +21,7 @@ import { LoopState } from "@/types/playerContext";
 import type { Radio } from "@/types/responses/radios";
 import type { ISong } from "@/types/responses/song";
 import { logger } from "@/utils/logger";
+import { getSongCoverArtId } from "@/utils/coverArt";
 import {
   getMaxShuffleStartHistory,
   pickRandomStartIndex,
@@ -54,7 +55,7 @@ function songToNativeQueueSong(song: ISong): NativeQueueSong {
     album: song.album,
     albumId: song.albumId,
     duration: song.duration,
-    coverArtId: song.coverArt,
+    coverArtId: getSongCoverArtId(song),
     streamUrl: getSongStreamUrl(song.id),
   };
 }
