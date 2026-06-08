@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  Loader2,
   Pause,
   Play,
   Repeat,
@@ -18,6 +19,8 @@ import { LoopState } from "@/types/playerContext";
 function FullscreenControls() {
   const {
     isPlaying,
+    isBuffering,
+    isTransitioning,
     isShuffleActive,
     loopState,
     cannotSkipPrev,
@@ -43,6 +46,8 @@ function FullscreenControls() {
       : "data-[state=active]:text-primary hover-supported:data-[state=active]:text-primary",
     "hover-supported:bg-transparent hover-supported:scale-110 transition-transform will-change-transform",
   );
+
+  const isLoading = isBuffering || isTransitioning;
 
   return (
     <>
@@ -81,11 +86,21 @@ function FullscreenControls() {
         )}
         style={{ backfaceVisibility: "hidden" }}
         onClick={() => togglePlayPause()}
-        aria-label={isPlaying ? "Pause" : "Play"}
+        aria-label={isLoading ? "Loading" : isPlaying ? "Pause" : "Play"}
         type="button"
       >
         <AnimatePresence mode="wait">
-          {isPlaying ? (
+          {isLoading ? (
+            <motion.div
+              key="loading"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.1 }}
+            >
+              <Loader2 className={clsx("w-6 h-6 animate-spin", playButtonIcon)} />
+            </motion.div>
+          ) : isPlaying ? (
             <motion.div
               key="pause"
               initial={{ scale: 0.8, opacity: 0 }}

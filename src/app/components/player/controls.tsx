@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import {
+  Loader2,
   Pause,
   Play,
   Repeat,
@@ -29,6 +30,8 @@ export function PlayerControls({ song, radio }: PlayerControlsProps) {
   const { isSong } = usePlayerMediaType();
   const {
     isPlaying,
+    isBuffering,
+    isTransitioning,
     isShuffleActive,
     loopState,
     cannotSkipPrev,
@@ -59,9 +62,13 @@ export function PlayerControls({ song, radio }: PlayerControlsProps) {
   const previousTooltip = t("player.tooltips.previous");
   const nextTooltip = t("player.tooltips.next");
 
-  const playTooltip = isPlaying
-    ? t("player.tooltips.pause")
-    : t("player.tooltips.play");
+  const isLoading = isBuffering || isTransitioning;
+
+  const playTooltip = isLoading
+    ? t("player.tooltips.loading")
+    : isPlaying
+      ? t("player.tooltips.pause")
+      : t("player.tooltips.play");
 
   const repeatTooltips = {
     0: t("player.tooltips.repeat.enable"),
@@ -109,7 +116,9 @@ export function PlayerControls({ song, radio }: PlayerControlsProps) {
         data-testid={`player-button-${isPlaying ? "pause" : "play"}`}
         tooltip={playTooltip}
       >
-        {isPlaying ? (
+        {isLoading ? (
+          <Loader2 className="animate-spin text-primary-foreground" />
+        ) : isPlaying ? (
           <Pause className="fill-primary-foreground" />
         ) : (
           <Play className="fill-primary-foreground" />

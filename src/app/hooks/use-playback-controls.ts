@@ -1,6 +1,8 @@
 import {
   usePlayerActions,
+  usePlayerIsBuffering,
   usePlayerIsPlaying,
+  usePlayerIsTransitioning,
   usePlayerLoop,
   usePlayerPrevAndNext,
   usePlayerShuffle,
@@ -9,6 +11,8 @@ import { LoopState } from "@/types/playerContext";
 
 export function usePlaybackControls() {
   const isPlaying = usePlayerIsPlaying();
+  const isBuffering = usePlayerIsBuffering();
+  const isTransitioning = usePlayerIsTransitioning();
   const isShuffleActive = usePlayerShuffle();
   const loopState = usePlayerLoop();
   const { hasPrev, hasNext } = usePlayerPrevAndNext();
@@ -29,6 +33,8 @@ export function usePlaybackControls() {
 
   return {
     isPlaying,
+    isBuffering,
+    isTransitioning,
     isShuffleActive,
     loopState,
     hasPrev,
