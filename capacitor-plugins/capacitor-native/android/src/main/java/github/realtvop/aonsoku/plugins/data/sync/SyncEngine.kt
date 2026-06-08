@@ -151,7 +151,26 @@ class SyncEngine(
             off += cnt; emitState("songs", "t3", all.size, 0); if (cnt < 500) break
         }
         songDao.bulkUpsert(all)
-        if (all.isNotEmpty()) { val sid = all.map { it.id }.toSet(); val eid = songDao.getAllIds(); val stale = eid.filter { it !in sid }; val md = (all.size * 0.1).toInt().coerceAtLeast(1); if (stale.isNotEmpty() && stale.size <= md) songDao.deleteByIds(stale) }
+        if (all.isEmpty()) {
+            NativeLogger.warn("songs sync returned 0 songs; skipping stale deletion", "sync-engine")
+        } else {
+            val serverIds = all.map { it.id }.toSet()
+            val localIds = songDao.getAllIds()
+            val staleIds = localIds.filter { it !in serverIds }
+            val maxDeletions = ((all.size + 9) / 10).coerceAtLeast(1)
+            when {
+                staleIds.isEmpty() -> {
+                    NativeLogger.info("songs sync stale check ok: server=${all.size}, local=${localIds.size}, stale=0", "sync-engine")
+                }
+                staleIds.size <= maxDeletions -> {
+                    val deleted = songDao.deleteByIds(staleIds)
+                    NativeLogger.info("songs sync deleted stale songs: deleted=$deleted, stale=${staleIds.size}, server=${all.size}, local=${localIds.size}", "sync-engine")
+                }
+                else -> {
+                    NativeLogger.warn("songs sync skipped stale deletion: stale=${staleIds.size}, max=$maxDeletions, server=${all.size}, local=${localIds.size}, sample=${staleIds.take(5).joinToString(",")}", "sync-engine")
+                }
+            }
+        }
         emitState("songs", "t3", all.size, all.size)
         syncStateDao.upsert(SyncStateEntity("tier:t3", System.currentTimeMillis()))
         onDataChanged?.invoke(listOf("songs", "favorites"))
