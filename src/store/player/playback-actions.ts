@@ -6,6 +6,7 @@ import { getPlaybackCapabilities } from "@/utils/capabilities";
 import { logger } from "@/utils/logger";
 import { setSystemVolume } from "@/utils/system-volume";
 import { getNativeQueueController } from "@/player/queue-controller";
+import { rebuildContextQueueForLoopState } from "./queue-utils";
 
 interface SharedDeps {
   set: (fn: (state: Draft<IPlayerContext>) => void) => void;
@@ -71,6 +72,10 @@ export function createPlaybackActions(shared: SharedDeps) {
       remoteSend(LanControlMessageType.TOGGLE_REPEAT);
       set((state) => {
         state.playerState.loopState = newState as 0 | 1 | 2;
+        rebuildContextQueueForLoopState(
+          state.songlist,
+          state.playerState.loopState,
+        );
       });
     },
 

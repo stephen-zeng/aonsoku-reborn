@@ -6,10 +6,11 @@ import type {
 import { LoopState } from "@/types/playerContext";
 import type { ISong } from "@/types/responses/song";
 import {
+  buildContextQueueSongs,
   getCurrentSong,
   hasNextEffectiveSong,
   hasPrevEffectiveSong,
-  reshuffleContextForWrap,
+  rotateContextQueueToNext,
   trimQueueToWindow,
 } from "./queue-utils";
 
@@ -98,15 +99,11 @@ export function transitionNextSong(
   }
 
   if (loopState === LoopState.All) {
-    const lastPlayedSongId =
-      songlist.contextQueue.songs[songlist.contextQueue.currentIndex]?.id;
-    next.contextQueue.currentIndex = 0;
-    reshuffleContextForWrap(next, lastPlayedSongId);
+    rotateContextQueueToNext(next);
+    next.isShuffleActive = false;
+    next.originalContextSongs = [];
     next.currentSong = getCurrentSong(next);
     const result = withResetProgress(withTransitioning(baseTransition(next)));
-    if (next.currentSong?.id === lastPlayedSongId) {
-      return withSeekToStart(result);
-    }
     return result;
   }
 
@@ -135,10 +132,9 @@ function transitionConsumeUserQueue(
   }
 
   if (loopState === LoopState.All) {
-    const lastPlayedSongId =
-      original.contextQueue.songs[original.contextQueue.currentIndex]?.id;
-    next.contextQueue.currentIndex = 0;
-    reshuffleContextForWrap(next, lastPlayedSongId);
+    rotateContextQueueToNext(next);
+    next.isShuffleActive = false;
+    next.originalContextSongs = [];
     next.currentSong = getCurrentSong(next);
     return withTransitioning(withResetProgress(baseTransition(next)));
   }
@@ -371,7 +367,7 @@ export function transitionSetSongList(
   shuffle: boolean,
   existingStartHistory: string[],
   shuffleFn: (items: ISong[], history: string[]) => ISong[],
-  pickStartIndex: (
+  _pickStartIndex: (
     length: number,
     history: string[],
     idFn: (i: number) => string,
@@ -381,15 +377,14 @@ export function transitionSetSongList(
   const next = cloneSonglist(songlist);
 
   if (shuffle) {
-    const randomIndex = pickStartIndex(
-      newSongs.length,
-      existingStartHistory,
-      (i) => newSongs[i].id,
+    const startSong = newSongs[index];
+    const shuffledRemaining = buildContextQueueSongs(
+      newSongs,
+      index,
+      LoopState.Off,
+      true,
+      shuffleFn,
     );
-    const startSong = newSongs[randomIndex];
-    const remaining = newSongs.filter((_, i) => i !== randomIndex);
-    const shuffledRemaining = shuffleFn(remaining, []);
-    shuffledRemaining.unshift(startSong);
     const updatedStartHistory = [
       ...existingStartHistory.slice(-99),
       startSong.id,
@@ -410,15 +405,21 @@ export function transitionSetSongList(
     next.playedUserQueueHistory = [];
     next.currentSong = getCurrentSong(next);
   } else {
-    const trimmed = trimQueueToWindow(newSongs, index);
+    const queueSongs = buildContextQueueSongs(
+      newSongs,
+      index,
+      LoopState.Off,
+      false,
+    );
+    const trimmed = trimQueueToWindow(queueSongs, 0);
     next.contextQueue = {
       songs: trimmed.songs,
-      currentIndex: trimmed.currentIndex,
+      currentIndex: 0,
       sourceId,
       sourceName,
     };
     next.userQueue = { songs: [] };
-    next.originalContextSongs = [];
+    next.originalContextSongs = [...newSongs];
     next.radioList = [];
     next.shuffleHistory = [];
     next.isShuffleActive = false;

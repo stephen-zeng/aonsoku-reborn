@@ -653,11 +653,10 @@ describe("transitionSetSongList", () => {
       pickStartIndex,
     );
     expect(result.songlist.contextQueue.songs.map((s) => s.id)).toEqual([
-      "x",
       "y",
       "z",
     ]);
-    expect(result.songlist.contextQueue.currentIndex).toBe(1);
+    expect(result.songlist.contextQueue.currentIndex).toBe(0);
     expect(result.songlist.contextQueue.sourceId).toEqual(sourceId);
     expect(result.songlist.contextQueue.sourceName).toBe("Test Album");
     expect(result.songlist.isShuffleActive).toBe(false);

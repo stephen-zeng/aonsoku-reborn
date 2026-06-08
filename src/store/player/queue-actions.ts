@@ -17,13 +17,12 @@ import { logger } from "@/utils/logger";
 import {
   getMaxShuffleHistory,
   getMaxShuffleStartHistory,
-  pickRandomStartIndex,
   pushToHistory,
-  shuffleWithGapAvoidance,
 } from "@/utils/songListFunctions";
 import {
   applyShuffleOff,
   applyShuffleOn,
+  buildContextQueueSongs,
   emptyContextQueue,
   findSongTier,
   getCurrentSong,
@@ -31,7 +30,7 @@ import {
   hasPrevEffectiveSong,
   isPlayingOneSong,
   normalizeSourceId,
-  reshuffleContextForWrap,
+  rotateContextQueueToNext,
   sendAddToQueueRemote,
   setLastOnUserQueue,
   setNextOnUserQueue,
@@ -59,6 +58,22 @@ function resetUserQueue(state: Draft<ISongList>) {
   state.userQueue = { songs: [] };
   state.isInUserQueue = false;
   state.playedUserQueueHistory = [];
+}
+
+function advanceContextQueue(state: Draft<ISongList>, loopState: LoopState) {
+  if (state.songlist.contextQueue.songs.length <= 1) return;
+
+  if (loopState === LoopState.All) {
+    rotateContextQueueToNext(state.songlist);
+    if (state.songlist.isShuffleActive) {
+      state.songlist.isShuffleActive = false;
+      state.songlist.originalContextSongs = [];
+      state.songlist.shuffleHistory = [];
+    }
+  } else {
+    state.songlist.contextQueue.songs.shift();
+    state.songlist.contextQueue.currentIndex = 0;
+  }
 }
 
 function sendSongListRemote(
@@ -204,16 +219,13 @@ export function createQueueActions(shared: SharedDeps) {
 
       if (shuffle) {
         const startHistory = get().songlist.shuffleStartHistory ?? [];
-        const randomIndex = pickRandomStartIndex(
-          songlist.length,
-          startHistory,
-          (i) => songlist[i].id,
+        const startSong = songlist[index];
+        const queueSongs = buildContextQueueSongs(
+          songlist,
+          index,
+          get().playerState.loopState,
+          true,
         );
-
-        const startSong = songlist[randomIndex];
-        const remaining = songlist.filter((_, i) => i !== randomIndex);
-        const shuffledRemaining = shuffleWithGapAvoidance(remaining, []);
-        shuffledRemaining.unshift(startSong);
         const updatedStartHistory = pushToHistory(
           startHistory,
           startSong.id,
@@ -225,7 +237,7 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerProgress.bufferedProgress = 0;
           state.songlist.contextQueue = {
             ...emptyContextQueue(),
-            songs: shuffledRemaining,
+            songs: queueSongs,
             currentIndex: 0,
             sourceId: normalizedId,
             sourceName:
@@ -243,14 +255,20 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerState.isPlaying = true;
         });
       } else {
-        const trimmed = trimQueueToWindow(songlist, index);
+        const queueSongs = buildContextQueueSongs(
+          songlist,
+          index,
+          get().playerState.loopState,
+          false,
+        );
+        const trimmed = trimQueueToWindow(queueSongs, 0);
         set((state) => {
           state.playerProgress.progress = 0;
           state.playerProgress.bufferedProgress = 0;
           state.songlist.contextQueue = {
             ...emptyContextQueue(),
             songs: trimmed.songs,
-            currentIndex: trimmed.currentIndex,
+            currentIndex: 0,
             sourceId: normalizedId,
             sourceName:
               sourceName !== undefined
@@ -258,7 +276,7 @@ export function createQueueActions(shared: SharedDeps) {
                 : state.songlist.contextQueue.sourceName,
           };
           resetUserQueue(state.songlist);
-          state.songlist.originalContextSongs = [];
+          state.songlist.originalContextSongs = [...songlist];
           state.songlist.radioList = [];
           state.songlist.shuffleHistory = [];
           state.songlist.isShuffleActive = false;
@@ -385,7 +403,7 @@ export function createQueueActions(shared: SharedDeps) {
                 : song.album || null,
           };
           resetUserQueue(state.songlist);
-          state.songlist.originalContextSongs = [];
+          state.songlist.originalContextSongs = [...songlist];
           state.songlist.isShuffleActive = false;
           state.songlist.shuffleHistory = [];
           state.playerState.isPlaying = true;
@@ -652,18 +670,7 @@ export function createQueueActions(shared: SharedDeps) {
             state.playerState.isPlaying = true;
           } else {
             state.songlist.isInUserQueue = false;
-            if (
-              state.songlist.contextQueue.currentIndex <
-              state.songlist.contextQueue.songs.length - 1
-            ) {
-              state.songlist.contextQueue.currentIndex += 1;
-            } else if (loopState === LoopState.All) {
-              const lastPlayedSongId =
-                songlist.contextQueue.songs[songlist.contextQueue.currentIndex]
-                  ?.id;
-              state.songlist.contextQueue.currentIndex = 0;
-              reshuffleContextForWrap(state.songlist, lastPlayedSongId);
-            }
+            advanceContextQueue(state, loopState);
             state.playerState.isPlaying = true;
           }
           state.playerState.isTransitioning = true;
@@ -705,12 +712,12 @@ export function createQueueActions(shared: SharedDeps) {
         return;
       }
 
-      if (contextQueue.currentIndex < contextQueue.songs.length - 1) {
+      if (contextQueue.songs.length > 1) {
         logger.info(
-          `[playNextSong:advance] newIndex=${contextQueue.currentIndex + 1} | songId=${contextQueue.songs[contextQueue.currentIndex + 1]?.id}`,
+          `[playNextSong:advance] songId=${contextQueue.songs[1]?.id}`,
         );
         set((state) => {
-          state.songlist.contextQueue.currentIndex += 1;
+          advanceContextQueue(state, loopState);
           state.playerProgress.progress = 0;
           state.playerProgress.bufferedProgress = 0;
           state.playerState.isPlaying = true;
@@ -722,35 +729,6 @@ export function createQueueActions(shared: SharedDeps) {
             : 0;
         });
         return;
-      }
-
-      if (loopState === LoopState.All) {
-        const lastPlayedSongId =
-          songlist.contextQueue.songs[songlist.contextQueue.currentIndex]?.id;
-        set((state) => {
-          state.songlist.contextQueue.currentIndex = 0;
-          reshuffleContextForWrap(state.songlist, lastPlayedSongId);
-          state.playerProgress.progress = 0;
-          state.playerProgress.bufferedProgress = 0;
-          const nextSong = getCurrentSong(state.songlist as ISongList);
-          state.songlist.currentSong = nextSong;
-          state.playerState.currentDuration = nextSong?.duration
-            ? Math.round(nextSong.duration)
-            : 0;
-          if (nextSong?.id === lastPlayedSongId) {
-            logger.info(
-              `[playNextSong:LoopAllWrap] same song, seekToStart=true | songId=${nextSong?.id}`,
-            );
-            state.playerState.isPlaying = true;
-            state.playerState.seekToStart = true;
-          } else {
-            logger.info(
-              `[playNextSong:LoopAllWrap] wrapping to index 0 | songId=${nextSong?.id}`,
-            );
-            state.playerState.isPlaying = true;
-            state.playerState.isTransitioning = true;
-          }
-        });
       }
     },
 
