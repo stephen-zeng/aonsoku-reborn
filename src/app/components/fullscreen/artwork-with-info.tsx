@@ -32,7 +32,7 @@ export const ArtworkWithInfo = memo(function ArtworkWithInfo({
         <AlbumName compact={compact} />
       </div>
 
-      <div className="flex-1 min-h-0 w-full flex items-center justify-center">
+      <div className="flex-1 min-h-0 w-full flex items-center justify-center overflow-hidden">
         <FullscreenSongArtwork
           compact={compact}
           showTouchDragSurface={showTouchDragSurface}

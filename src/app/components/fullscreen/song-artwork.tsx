@@ -19,7 +19,11 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
   return (
     <div
       className={clsx(
-        "relative flex w-full min-h-0 max-h-full items-center justify-center",
+        "relative aspect-square w-full bg-foreground/5 rounded-md overflow-hidden flex items-center justify-center transition-all duration-300 ease-in-out",
+        !compact && "fullscreen-desktop-artwork",
+        compact
+          ? "max-w-[min(260px,42svh,calc(100vw-2rem))]"
+          : `${CONTENT_MAX_WIDTH} max-h-full`,
       )}
     >
       {showTouchDragSurface && (
@@ -36,13 +40,7 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 1.05 }}
           transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-          className={clsx(
-            "relative aspect-square w-full bg-foreground/5 rounded-md overflow-hidden flex items-center justify-center transition-all duration-300 ease-in-out",
-            !compact && "fullscreen-desktop-artwork",
-            compact
-              ? "max-h-[42svh] max-w-[min(260px,calc(100vw-2rem))]"
-              : `${CONTENT_MAX_WIDTH} max-h-full`,
-          )}
+          className="relative flex size-full items-center justify-center"
         >
           <CachedImage
             coverArtId={coverArt}
@@ -51,8 +49,8 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
             coverArtSize="700"
             effect="opacity"
             alt={`${artist} - ${title}`}
-            className="aspect-square object-cover rounded-md"
-            wrapperClassName="size-full block"
+            className="size-full object-cover rounded-md"
+            wrapperClassName="size-full block overflow-hidden"
             width="100%"
             height="100%"
           />
