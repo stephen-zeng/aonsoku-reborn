@@ -69,6 +69,20 @@ function cloneSonglist(sl: ISongList): ISongList {
   };
 }
 
+function advanceContextQueue(songlist: ISongList, loopState: LoopState): void {
+  if (songlist.contextQueue.songs.length <= 1) return;
+
+  if (loopState === LoopState.All) {
+    rotateContextQueueToNext(songlist);
+    songlist.isShuffleActive = false;
+    songlist.originalContextSongs = [];
+    songlist.shuffleHistory = [];
+  } else {
+    songlist.contextQueue.songs.shift();
+    songlist.contextQueue.currentIndex = 0;
+  }
+}
+
 export function transitionNextSong(
   songlist: ISongList,
   loopState: LoopState,
@@ -89,22 +103,10 @@ export function transitionNextSong(
     return withSeekToStart(withResetProgress(baseTransition(next)));
   }
 
-  if (
-    songlist.contextQueue.currentIndex <
-    songlist.contextQueue.songs.length - 1
-  ) {
-    next.contextQueue.currentIndex = songlist.contextQueue.currentIndex + 1;
+  if (songlist.contextQueue.songs.length > 1) {
+    advanceContextQueue(next, loopState);
     next.currentSong = getCurrentSong(next);
     return withTransitioning(withResetProgress(baseTransition(next)));
-  }
-
-  if (loopState === LoopState.All) {
-    rotateContextQueueToNext(next);
-    next.isShuffleActive = false;
-    next.originalContextSongs = [];
-    next.currentSong = getCurrentSong(next);
-    const result = withResetProgress(withTransitioning(baseTransition(next)));
-    return result;
   }
 
   return null;
@@ -125,16 +127,8 @@ function transitionConsumeUserQueue(
   }
 
   next.isInUserQueue = false;
-  if (next.contextQueue.currentIndex < next.contextQueue.songs.length - 1) {
-    next.contextQueue.currentIndex = original.contextQueue.currentIndex + 1;
-    next.currentSong = getCurrentSong(next);
-    return withTransitioning(withResetProgress(baseTransition(next)));
-  }
-
-  if (loopState === LoopState.All) {
-    rotateContextQueueToNext(next);
-    next.isShuffleActive = false;
-    next.originalContextSongs = [];
+  if (next.contextQueue.songs.length > 1) {
+    advanceContextQueue(next, loopState);
     next.currentSong = getCurrentSong(next);
     return withTransitioning(withResetProgress(baseTransition(next)));
   }

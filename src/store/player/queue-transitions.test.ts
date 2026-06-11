@@ -68,7 +68,7 @@ describe("transitionNextSong", () => {
     expect(result).toBeNull();
   });
 
-  it("advances context index when there are more context songs", () => {
+  it("advances context queue by consuming the current song", () => {
     const songlist = makeSonglist({
       contextQueue: makeContextQueue(
         [makeSong("a"), makeSong("b"), makeSong("c")],
@@ -78,7 +78,11 @@ describe("transitionNextSong", () => {
     });
     const result = transitionNextSong(songlist, LoopState.Off);
     expect(result).not.toBeNull();
-    expect(result!.songlist.contextQueue.currentIndex).toBe(1);
+    expect(result!.songlist.contextQueue.currentIndex).toBe(0);
+    expect(result!.songlist.contextQueue.songs.map((s) => s.id)).toEqual([
+      "b",
+      "c",
+    ]);
     expect(result!.songlist.currentSong?.id).toBe("b");
     expect(result!.resetProgress).toBe(true);
     expect(result!.isTransitioning).toBe(true);
@@ -152,7 +156,11 @@ describe("transitionNextSong", () => {
     expect(result).not.toBeNull();
     expect(result!.songlist.userQueue.songs).toHaveLength(0);
     expect(result!.songlist.isInUserQueue).toBe(false);
-    expect(result!.songlist.contextQueue.currentIndex).toBe(1);
+    expect(result!.songlist.contextQueue.currentIndex).toBe(0);
+    expect(result!.songlist.contextQueue.songs.map((s) => s.id)).toEqual([
+      "b",
+      "c",
+    ]);
     expect(result!.songlist.currentSong?.id).toBe("b");
   });
 
