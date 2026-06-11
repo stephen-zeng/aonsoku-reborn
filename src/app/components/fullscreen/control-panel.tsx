@@ -12,6 +12,8 @@ export const FullscreenControlPanel = memo(function FullscreenControlPanel({
   expanded?: boolean;
   compact?: boolean;
 }) {
+  const contentPaddingClass = compact ? "px-4" : "px-0";
+
   return (
     <div
       className={clsx(
@@ -27,19 +29,21 @@ export const FullscreenControlPanel = memo(function FullscreenControlPanel({
       <div
         className={clsx(
           "transition-all duration-300 ease-in-out",
-          compact ? "shrink-0 px-4" : "px-0",
+          compact && "shrink-0",
+          contentPaddingClass,
         )}
       >
         <FullscreenProgress thin stacked />
       </div>
       <div
         className={clsx(
-          "flex items-center justify-center transition-all duration-300 ease-in-out",
+          "flex min-h-14 items-center justify-between transition-all duration-300 ease-in-out",
           compact
-            ? "shrink-0 gap-4"
+            ? "shrink-0"
             : expanded
-              ? "gap-8 md:gap-10"
-              : "gap-6 md:gap-3",
+              ? ""
+              : "md:justify-center md:gap-3",
+          contentPaddingClass,
         )}
       >
         <MemoFullscreenControls />
@@ -47,7 +51,8 @@ export const FullscreenControlPanel = memo(function FullscreenControlPanel({
       <div
         className={clsx(
           "transition-all duration-300 ease-in-out",
-          compact ? "shrink-0 px-4" : "px-0",
+          compact && "shrink-0",
+          contentPaddingClass,
         )}
         data-vaul-no-drag
       >
