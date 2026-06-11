@@ -38,16 +38,17 @@ export function AlbumsMainFilter() {
     localStorage.setItem(PersistedAlbumListKeys.MainFilter, filter);
 
     setSearchParams((state) => {
-      state.set(AlbumsSearchParams.MainFilter, filter);
+      const next = new URLSearchParams(state);
+      next.set(AlbumsSearchParams.MainFilter, filter);
 
-      state.delete(AlbumsSearchParams.ArtistId);
-      state.delete(AlbumsSearchParams.ArtistName);
+      next.delete(AlbumsSearchParams.ArtistId);
+      next.delete(AlbumsSearchParams.ArtistName);
       if (filter !== AlbumsFilters.ByYear)
-        state.delete(AlbumsSearchParams.YearFilter);
+        next.delete(AlbumsSearchParams.YearFilter);
       if (filter !== AlbumsFilters.ByGenre)
-        state.delete(AlbumsSearchParams.Genre);
+        next.delete(AlbumsSearchParams.Genre);
 
-      return state;
+      return next;
     });
     scrollPageToTop();
   }

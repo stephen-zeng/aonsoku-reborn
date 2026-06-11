@@ -121,6 +121,7 @@ export default function SongList() {
         variant="sub"
         title={t("sidebar.favorites")}
         accentColor={accentColor}
+        showSpacer={false}
       />
       <ImageHeader
         type={t("favorites.headline")}

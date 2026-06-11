@@ -37,6 +37,10 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import github.realtvop.aonsoku.plugins.debug.NativeLogger
 import github.realtvop.aonsoku.plugins.preferences.NativePreferencesStore
+import github.realtvop.aonsoku.plugins.bridge.AndroidCredentialStore
+import github.realtvop.aonsoku.plugins.bridge.SubsonicHttpClient
+import github.realtvop.aonsoku.plugins.data.db.AonsokuDatabase
+import github.realtvop.aonsoku.plugins.data.image.ImageCacheManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -76,6 +80,20 @@ class PlaybackService : MediaSessionService() {
     var isQueueEngineActive = false
     var savedRestoreTime: Double? = null
     var currentSongMetadata: MediaMetadata? = null
+
+    private val httpClient = SubsonicHttpClient()
+    private val credentialStore by lazy {
+        AndroidCredentialStore(this)
+    }
+    val scrobbleBuffer by lazy {
+        NativeScrobbleBuffer(ScrobbleFileStore(this))
+    }
+    private val scrobbleSubmitter = NativeScrobbleSubmitter(httpClient)
+
+    var currentScrobbleSongId: String? = null
+        private set
+    var currentScrobbleSongDuration: Double = 0.0
+        private set
 
     var isLikeActive: Boolean = false
         set(value) {
@@ -222,6 +240,38 @@ class PlaybackService : MediaSessionService() {
         listeners.forEach { it.onError(code, message) }
     }
 
+    fun handleScrobbleSongEnded() {
+        val entry = scrobbleBuffer.stopTracking()
+        if (entry != null) {
+            val credentials = credentialStore.retrieve()
+            if (credentials != null) {
+                scrobbleSubmitter.submitIfEligible(entry, currentScrobbleSongDuration, credentials, scrobbleBuffer)
+            }
+        }
+        currentScrobbleSongId = null
+    }
+
+    fun handleScrobbleSongStarted(songId: String, duration: Double) {
+        currentScrobbleSongId = songId
+        currentScrobbleSongDuration = duration
+        scrobbleBuffer.startTracking(songId, duration)
+        val credentials = credentialStore.retrieve()
+        if (credentials != null) {
+            serviceScope.launch {
+                scrobbleSubmitter.sendNowPlaying(songId, credentials)
+            }
+        }
+    }
+
+    fun submitPendingScrobbles() {
+        val credentials = credentialStore.retrieve()
+        if (credentials != null) {
+            CoroutineScope(Dispatchers.IO).launch {
+                scrobbleSubmitter.submitPending(scrobbleBuffer, credentials)
+            }
+        }
+    }
+
     inner class LocalBinder : Binder() {
         fun getService(): PlaybackService = this@PlaybackService
     }
@@ -250,6 +300,7 @@ class PlaybackService : MediaSessionService() {
             .setRenderersFactory(renderersFactory)
             .setAudioAttributes(audioAttributes, true)
             .setHandleAudioBecomingNoisy(true)
+            .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
 
         // Force skip commands so notification action buttons are always visible.
@@ -261,6 +312,10 @@ class PlaybackService : MediaSessionService() {
                 return super.getAvailableCommands().buildUpon()
                     .add(COMMAND_SEEK_TO_NEXT)
                     .add(COMMAND_SEEK_TO_PREVIOUS)
+                    .add(COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+                    .add(COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+                    .add(COMMAND_SET_SHUFFLE_MODE)
+                    .add(COMMAND_SET_REPEAT_MODE)
                     .build()
             }
 
@@ -284,6 +339,9 @@ class PlaybackService : MediaSessionService() {
 
             override fun queueEngineDidAdvanceTo(engine: NativeQueueEngine, index: Int, songId: String, reason: QueueAdvanceReason) {
                 persistence.markStateDirty()
+                handleScrobbleSongEnded()
+                val duration = engine.currentSong?.duration ?: 0.0
+                handleScrobbleSongStarted(songId, duration)
                 emitQueueStateChanged(index, songId, reason.value, engine.isInUserQueue)
             }
 
@@ -295,6 +353,7 @@ class PlaybackService : MediaSessionService() {
             override fun queueEngineDidExhaustQueue(engine: NativeQueueEngine) {
                 val mainHandler = Handler(Looper.getMainLooper())
                 mainHandler.post {
+                    handleScrobbleSongEnded()
                     player?.pause()
                     player?.seekTo(0)
                     emitPlaybackState("ended")
@@ -305,6 +364,8 @@ class PlaybackService : MediaSessionService() {
             override fun queueEngineSeekToStart(engine: NativeQueueEngine, song: QueueSong) {
                 val mainHandler = Handler(Looper.getMainLooper())
                 mainHandler.post {
+                    handleScrobbleSongEnded()
+                    handleScrobbleSongStarted(song.id, song.duration)
                     player?.seekTo(0)
                     player?.play()
                 }
@@ -324,6 +385,7 @@ class PlaybackService : MediaSessionService() {
                     if (isQueueEngineActive) {
                         queueEngine.handleEnded()
                     } else {
+                        handleScrobbleSongEnded()
                         emitEnded("finished")
                     }
                 }
@@ -351,9 +413,15 @@ class PlaybackService : MediaSessionService() {
                 if (isPlaying) {
                     isTransitioning = false
                     persistence.startProgressTracking()
+                    if (currentScrobbleSongId != null) {
+                        scrobbleBuffer.resumeTracking()
+                    }
                 } else {
                     persistence.stopProgressTracking()
                     persistence.flushNow()
+                    if (currentScrobbleSongId != null) {
+                        scrobbleBuffer.pauseTracking()
+                    }
 
                     val isEndTransition = player?.let {
                         it.playbackState == Player.STATE_ENDED &&
@@ -372,6 +440,12 @@ class PlaybackService : MediaSessionService() {
                     }
                 }
             }
+
+            override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
+                if (queueEngine.isShuffleActive != shuffleModeEnabled) {
+                    emitRemoteCommand("shuffle")
+                }
+            }
         })
 
         val callback = object : MediaSession.Callback {
@@ -385,9 +459,17 @@ class PlaybackService : MediaSessionService() {
                     .add(CUSTOM_COMMAND_TOGGLE_SHUFFLE)
                     .add(CUSTOM_COMMAND_TOGGLE_LIKE)
                     .build()
+                val availablePlayerCommands = connectionResult.availablePlayerCommands.buildUpon()
+                    .add(Player.COMMAND_SEEK_TO_NEXT)
+                    .add(Player.COMMAND_SEEK_TO_PREVIOUS)
+                    .add(Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+                    .add(Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+                    .add(Player.COMMAND_SET_SHUFFLE_MODE)
+                    .add(Player.COMMAND_SET_REPEAT_MODE)
+                    .build()
                 return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                     .setAvailableSessionCommands(availableSessionCommands)
-                    .setAvailablePlayerCommands(connectionResult.availablePlayerCommands)
+                    .setAvailablePlayerCommands(availablePlayerCommands)
                     .setCustomLayout(getCustomLayoutButtons())
                     .build()
             }
@@ -425,7 +507,7 @@ class PlaybackService : MediaSessionService() {
                 playerCommand: Int
             ): Int {
                 when (playerCommand) {
-                    Player.COMMAND_SEEK_TO_NEXT -> {
+                    Player.COMMAND_SEEK_TO_NEXT, Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM -> {
                         if (isQueueEngineActive) {
                             queueEngine.skipToNext()
                             return SessionResult.RESULT_INFO_SKIPPED
@@ -433,7 +515,7 @@ class PlaybackService : MediaSessionService() {
                         emitRemoteCommand("next")
                         return SessionResult.RESULT_INFO_SKIPPED
                     }
-                    Player.COMMAND_SEEK_TO_PREVIOUS -> {
+                    Player.COMMAND_SEEK_TO_PREVIOUS, Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM -> {
                         if (isQueueEngineActive) {
                             val currentTime = (player?.currentPosition ?: 0L) / 1000.0
                             queueEngine.skipToPrevious(currentTime)
@@ -792,6 +874,13 @@ class PlaybackService : MediaSessionService() {
 
     override fun onDestroy() {
         NativeLogger.info("PlaybackService destroyed", "playback-service")
+        handleScrobbleSongEnded()
+        CoroutineScope(Dispatchers.IO).launch {
+            val credentials = credentialStore.retrieve()
+            if (credentials != null) {
+                scrobbleSubmitter.submitPending(scrobbleBuffer, credentials)
+            }
+        }
         serviceScope.cancel()
         persistence.stopProgressTracking()
         listeners.clear()
@@ -841,8 +930,16 @@ class PlaybackService : MediaSessionService() {
         val localArtworkFile = if (!song.coverArtId.isNullOrEmpty()) {
             val dir = github.realtvop.aonsoku.plugins.data.image.ImageCacheUtils.cacheDirectory(cacheDir, false)
             val cid = github.realtvop.aonsoku.plugins.data.image.ImageCacheUtils.cacheId(song.coverArtId)
-            if (dir.exists()) {
+            val file = if (dir.exists()) {
                 dir.listFiles { f -> f.name.startsWith("$cid.") }?.firstOrNull()
+            } else null
+
+            if (file != null && file.exists()) {
+                file
+            } else if (!song.albumId.isNullOrEmpty()) {
+                val acid = github.realtvop.aonsoku.plugins.data.image.ImageCacheUtils.cacheId(song.albumId)
+                val afile = dir.listFiles { f -> f.name.startsWith("$acid.") }?.firstOrNull()
+                if (afile != null && afile.exists()) afile else null
             } else null
         } else null
 
@@ -894,7 +991,7 @@ class PlaybackService : MediaSessionService() {
                 currentPlayer.play()
             }
             showNotification()
-            loadAndCacheArtwork(artworkUrl)
+            loadAndCacheArtwork(artworkUrl, song)
         }
     }
 
@@ -907,7 +1004,7 @@ class PlaybackService : MediaSessionService() {
 
 
 
-    fun loadAndCacheArtwork(artworkUrl: String?) {
+    fun loadAndCacheArtwork(artworkUrl: String?, song: QueueSong? = null) {
         val url = artworkUrl ?: return
         cachedArtworkBitmap = null
         serviceScope.launch(Dispatchers.IO) {
@@ -916,10 +1013,27 @@ class PlaybackService : MediaSessionService() {
                     val filePath = url.substring(7)
                     BitmapFactory.decodeFile(filePath)
                 } else {
-                    val inputStream = java.net.URL(url).openStream()
-                    val b = BitmapFactory.decodeStream(inputStream)
-                    inputStream.close()
-                    b
+                    val coverArtId = song?.coverArtId
+                    val credentials = credentialStore.retrieve()
+                    if (!coverArtId.isNullOrEmpty() && credentials != null) {
+                        try {
+                            val db = AonsokuDatabase.getInstance(this@PlaybackService)
+                            val imageCacheManager = ImageCacheManager(cacheDir, db.cacheMetaDao())
+                            val file = imageCacheManager.downloadCoverImage(coverArtId, "800", credentials)
+                            BitmapFactory.decodeFile(file.absolutePath)
+                        } catch (e: Exception) {
+                            NativeLogger.warn("Failed to download and cache artwork natively: ${e.message}, falling back to direct stream", "playback-service")
+                            val inputStream = java.net.URL(url).openStream()
+                            val b = BitmapFactory.decodeStream(inputStream)
+                            inputStream.close()
+                            b
+                        }
+                    } else {
+                        val inputStream = java.net.URL(url).openStream()
+                        val b = BitmapFactory.decodeStream(inputStream)
+                        inputStream.close()
+                        b
+                    }
                 }
                 if (bitmap != null) {
                     withContext(Dispatchers.Main) {
@@ -943,6 +1057,7 @@ class PlaybackService : MediaSessionService() {
                     withContext(Dispatchers.Main) {
                         queueEngine.restoreState(persistedState)
                         isQueueEngineActive = true
+                        player?.shuffleModeEnabled = persistedState.isShuffleActive
 
                         val song = queueEngine.currentSong
                         if (song != null) {
@@ -957,9 +1072,15 @@ class PlaybackService : MediaSessionService() {
     }
 
     fun setContextQueue(songs: List<QueueSong>, currentIndex: Int, autoplay: Boolean, startTime: Double?, sourceId: QueueSourceId?, sourceName: String?) {
+        handleScrobbleSongEnded()
         isQueueEngineActive = true
         queueEngine.setContextQueue(songs, currentIndex, autoplay, startTime, sourceId, sourceName)
+        player?.shuffleModeEnabled = queueEngine.isShuffleActive
         persistence.markStateDirty()
+        val song = queueEngine.currentSong
+        if (song != null) {
+            handleScrobbleSongStarted(song.id, song.duration)
+        }
     }
 
     fun updateContextQueue(songs: List<QueueSong>, currentIndex: Int) {
@@ -1000,6 +1121,7 @@ class PlaybackService : MediaSessionService() {
 
     fun setShuffle(enabled: Boolean) {
         queueEngine.setShuffleActive(enabled)
+        player?.shuffleModeEnabled = enabled
         persistence.markStateDirty()
         updateNotification()
         mediaSession?.setCustomLayout(getCustomLayoutButtons())
@@ -1007,12 +1129,14 @@ class PlaybackService : MediaSessionService() {
 
     fun markAsShuffled(originalSongs: List<QueueSong>) {
         queueEngine.markAsShuffled(originalSongs)
+        player?.shuffleModeEnabled = true
         persistence.markStateDirty()
     }
 
     fun clearQueueState() {
         isQueueEngineActive = false
         queueEngine.setContextQueue(emptyList(), 0, false, null, null, null)
+        player?.shuffleModeEnabled = false
         persistence.stopProgressTracking()
         currentSongMetadata = null
         serviceScope.launch(Dispatchers.IO) {

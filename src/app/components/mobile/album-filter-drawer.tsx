@@ -55,15 +55,20 @@ export function MobileAlbumFilterDrawer({
 
     setSearchParams(
       (state) => {
-        state.set(AlbumsSearchParams.MainFilter, filter);
-        state.delete(AlbumsSearchParams.ArtistId);
-        state.delete(AlbumsSearchParams.ArtistName);
+        const next = new URLSearchParams(state);
+        next.set(AlbumsSearchParams.MainFilter, filter);
+        next.delete(AlbumsSearchParams.ArtistId);
+        next.delete(AlbumsSearchParams.ArtistName);
         if (filter !== AlbumsFilters.ByYear)
-          state.delete(AlbumsSearchParams.YearFilter);
-        return state;
+          next.delete(AlbumsSearchParams.YearFilter);
+        return next;
       },
       { replace: true },
     );
+
+    if (filter !== AlbumsFilters.ByYear) {
+      onOpenChange(false);
+    }
   }
 
   function handleChangeYearFilter(value: string) {
@@ -71,11 +76,13 @@ export function MobileAlbumFilterDrawer({
 
     setSearchParams(
       (state) => {
-        state.set(AlbumsSearchParams.YearFilter, value);
-        return state;
+        const next = new URLSearchParams(state);
+        next.set(AlbumsSearchParams.YearFilter, value);
+        return next;
       },
       { replace: true },
     );
+    onOpenChange(false);
   }
 
   const visibleFilters = albumsFilterValues.filter(

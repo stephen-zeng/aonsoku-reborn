@@ -18,7 +18,6 @@ import {
   stripCustomLyricsBodies,
 } from "./custom-lyrics-persist";
 import {
-  MAX_QUEUE_SIZE,
   MAX_USER_QUEUE_IDB_SIZE,
   trimQueueToWindow,
 } from "./queue-utils";
@@ -157,6 +156,12 @@ export function migratePlayerStoreState(persistedState: any, version: number) {
           sourceId: null,
           sourceName: oldSl.queueSource || null,
         },
+        sourceQueue: {
+          songs: oldSl.originalList || oldSl.currentList || [],
+          currentIndex: oldSl.currentSongIndex || 0,
+          sourceId: null,
+          sourceName: oldSl.queueSource || null,
+        },
         userQueue: { songs: [] },
         originalContextSongs: oldSl.originalList || oldSl.currentList || [],
         currentSong: oldSl.currentSong || null,
@@ -288,6 +293,12 @@ export function migrateLegacySonglist(value: any): ISongList | null {
   if (songs.length === 0) return null;
 
   return {
+    sourceQueue: {
+      songs,
+      currentIndex: value.currentSongIndex || 0,
+      sourceId: null,
+      sourceName: value.queueSource || null,
+    },
     contextQueue: {
       songs,
       currentIndex: value.currentSongIndex || 0,
@@ -330,6 +341,12 @@ export function migrateSonglistFromIdb(value: any): ISongList {
 
   const result: ISongList = {
     ...value,
+    sourceQueue: value.sourceQueue ?? {
+      songs: value.originalContextSongs ?? value.contextQueue?.songs ?? [],
+      currentIndex: value.contextQueue?.currentIndex ?? 0,
+      sourceId: value.contextQueue?.sourceId ?? null,
+      sourceName: value.contextQueue?.sourceName ?? null,
+    },
     contextQueue: value.contextQueue ?? {
       songs: [],
       currentIndex: 0,
@@ -347,15 +364,16 @@ export function migrateSonglistFromIdb(value: any): ISongList {
     shuffleStartHistory: value.shuffleStartHistory ?? [],
   };
 
-  if (result.contextQueue.sourceId) {
-    const srcId = result.contextQueue.sourceId as Record<string, unknown>;
+  for (const queue of [result.contextQueue, result.sourceQueue]) {
+    if (!queue.sourceId) continue;
+    const srcId = queue.sourceId as Record<string, unknown>;
     if ("albumId" in srcId) {
-      result.contextQueue.sourceId = {
+      queue.sourceId = {
         type: "album",
         id: String(srcId.albumId),
       };
     } else if ("playlistId" in srcId) {
-      result.contextQueue.sourceId = {
+      queue.sourceId = {
         type: "playlist",
         id: String(srcId.playlistId),
       };
@@ -368,7 +386,7 @@ export function migrateSonglistFromIdb(value: any): ISongList {
 }
 
 export function trimSonglistForIdb(songlist: ISongList): ISongList {
-  const { contextQueue, userQueue, ...rest } = songlist;
+  const { contextQueue, sourceQueue, userQueue, ...rest } = songlist;
   const trimmed = trimQueueToWindow(
     contextQueue.songs,
     contextQueue.currentIndex,
@@ -381,13 +399,11 @@ export function trimSonglistForIdb(songlist: ISongList): ISongList {
       songs: trimmed.songs,
       currentIndex: trimmed.currentIndex,
     },
+    sourceQueue,
     userQueue: {
       songs: userQueue.songs.slice(0, MAX_USER_QUEUE_IDB_SIZE),
     },
-    originalContextSongs:
-      rest.originalContextSongs.length > MAX_QUEUE_SIZE
-        ? []
-        : rest.originalContextSongs,
+    originalContextSongs: rest.originalContextSongs,
     playedUserQueueHistory: rest.playedUserQueueHistory.slice(
       -MAX_USER_QUEUE_IDB_SIZE,
     ),

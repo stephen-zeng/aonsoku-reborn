@@ -32,21 +32,25 @@ export function MobileSortDrawer({
   function handleChangeSort(value: SortOptions) {
     setSearchParams(
       (state) => {
-        state.set("sort", value);
-        return state;
+        const next = new URLSearchParams(state);
+        next.set("sort", value);
+        return next;
       },
       { replace: true },
     );
+    onOpenChange(false);
   }
 
   function handleChangeOrderBy(value: SongsOrderByOptions) {
     setSearchParams(
       (state) => {
-        state.set("orderBy", value);
-        return state;
+        const next = new URLSearchParams(state);
+        next.set("orderBy", value);
+        return next;
       },
       { replace: true },
     );
+    onOpenChange(false);
   }
 
   const orderByOptions = [

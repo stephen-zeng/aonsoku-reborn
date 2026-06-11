@@ -2,8 +2,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ListChecks, ListMusic, MicVocalIcon } from "lucide-react";
 import { memo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { Drawer as DrawerPrimitive } from "vaul";
 import { Button } from "@/app/components/ui/button";
-import { DrawerHandle } from "@/app/components/ui/drawer";
 import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useIsTouchPrimary } from "@/app/hooks/use-input-mode";
@@ -20,7 +20,11 @@ import {
   useSongColor,
 } from "@/store/player.store";
 import { ArtworkWithInfo } from "./artwork-with-info";
-import { FULLSCREEN_QUEUE_BG_CLASS, PANEL_MAX_WIDTH } from "./constants";
+import {
+  CONTENT_MAX_WIDTH,
+  FULLSCREEN_QUEUE_BG_CLASS,
+  PANEL_MAX_WIDTH,
+} from "./constants";
 import { FullscreenControlPanel } from "./control-panel";
 import { CustomLyricsSelect } from "./custom-lyrics-select";
 import { LyricsTab } from "./lyrics";
@@ -30,7 +34,7 @@ import { FullscreenSettings } from "./settings";
 
 const MemoLyricsTab = memo(LyricsTab);
 
-const VIEW_TRANSITION = { duration: 0.2, ease: [0.4, 0, 0.2, 1] } as const;
+const VIEW_TRANSITION = { duration: 0.25, ease: [0.4, 0, 0.2, 1] } as const;
 
 const HEADER_ICON = <ChevronDown className="size-5" />;
 
@@ -65,11 +69,11 @@ const MobileHeader = memo(function MobileHeader({
 
       {showDragHandle && (
         <div className="absolute left-1/2 top-3 -translate-x-1/2 flex justify-center">
-          <DrawerHandle
+          <DrawerPrimitive.Handle
             preventCycle
             data-testid="fullscreen-drag-handle"
             aria-label="Drag to close"
-            className="opacity-100"
+            className="block w-9 h-1 rounded-full opacity-40 bg-foreground cursor-grab"
             style={{
               backgroundColor: currentSongColor ?? "hsl(var(--primary))",
             }}
@@ -132,7 +136,10 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
 
   return (
     <div
-      className="shrink-0 flex items-center justify-center gap-4 pt-1 pb-2"
+      className={cn(
+        "shrink-0 flex items-center justify-between w-full mx-auto px-0 pt-2 pb-5",
+        CONTENT_MAX_WIDTH,
+      )}
       role="tablist"
     >
       <MobileTabButton
@@ -212,9 +219,9 @@ export const MobileLayout = memo(function MobileLayout({
           {fullscreenPlayerTab === "playing" && (
             <motion.div
               key="playing-view"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
               transition={VIEW_TRANSITION}
               data-testid="fullscreen-playing-view"
               data-layout={playingViewLayout}
@@ -244,9 +251,9 @@ export const MobileLayout = memo(function MobileLayout({
           {fullscreenPlayerTab === "lyrics" && (
             <motion.div
               key="lyrics-view"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
               transition={VIEW_TRANSITION}
               className={`flex-1 overflow-hidden min-h-0 mx-auto w-full flex flex-col ${PANEL_MAX_WIDTH}`}
               data-vaul-no-drag
@@ -279,9 +286,9 @@ export const MobileLayout = memo(function MobileLayout({
           {fullscreenPlayerTab === "customLyrics" && (
             <motion.div
               key="custom-lyrics-view"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
               transition={VIEW_TRANSITION}
               className={`flex-1 overflow-hidden min-h-0 mx-auto w-full flex flex-col ${PANEL_MAX_WIDTH}`}
               data-vaul-no-drag
@@ -296,9 +303,9 @@ export const MobileLayout = memo(function MobileLayout({
           {fullscreenPlayerTab === "queue" && (
             <motion.div
               key="queue-view"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
               transition={VIEW_TRANSITION}
               className={cn(
                 "flex-1 overflow-hidden min-h-0 mx-auto w-full",

@@ -3,11 +3,27 @@
   "vcs": {
     "enabled": true,
     "clientKind": "git",
-    "useIgnoreFile": true
+    "useIgnoreFile": false
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**", "!cypress/**/*", "!**/*.cy.{ts,tsx}", "!ios/*"]
+    "includes": [
+      "**",
+      "!node_modules",
+      "!**/node_modules",
+      "!cypress",
+      "!**/*.cy.{ts,tsx}",
+      "!ios",
+      "!android",
+      "!capacitor-plugins/capacitor-native/.build",
+      "!dist",
+      "!dist-ssr",
+      "!out",
+      "!coverage",
+      "!.build",
+      "!.swiftpm",
+      "!**/.gradle"
+    ]
   },
   "javascript": {
     "formatter": {
@@ -143,12 +159,11 @@
         "noWith": "error",
         "useDefaultSwitchClauseLast": "error"
       }
-    },
-    "includes": ["**", "src/**/*.css", "src/**/*.json"]
+    }
   },
   "overrides": [
     {
-      "includes": ["*.ts", "*.tsx", "*.mts", "*.cts"],
+      "includes": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
       "linter": {
         "rules": {
           "complexity": {

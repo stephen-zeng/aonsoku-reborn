@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { clsx } from "clsx";
 import * as React from "react";
 
@@ -206,11 +207,20 @@ function useSlider({
       const state = dragStateRef.current;
       if (!state || state.pointerId !== e.pointerId) return;
 
+      if (e.pointerType === "touch" && !state.isDragging) {
+        try {
+          onTouchStateChange?.(false);
+        } finally {
+          dragStateRef.current = null;
+        }
+        return;
+      }
+
       const isTap = e.pointerType === "touch" && !state.isDragging;
       const commitValue = isTap ? computeValue(e.clientX) : state.currentValue;
       finishDrag(e.pointerType, commitValue, isTap);
     },
-    [computeValue, finishDrag],
+    [computeValue, finishDrag, onTouchStateChange],
   );
 
   const handleLostPointerCapture = React.useCallback(
@@ -218,11 +228,20 @@ function useSlider({
       const state = dragStateRef.current;
       if (!state || state.pointerId !== e.pointerId) return;
 
+      if (e.pointerType === "touch" && !state.isDragging) {
+        try {
+          onTouchStateChange?.(false);
+        } finally {
+          dragStateRef.current = null;
+        }
+        return;
+      }
+
       const isTap = e.pointerType === "touch" && !state.isDragging;
       const commitValue = isTap ? computeValue(e.clientX) : state.currentValue;
       finishDrag(e.pointerType, commitValue, isTap);
     },
-    [computeValue, finishDrag],
+    [computeValue, finishDrag, onTouchStateChange],
   );
 
   const percentage = range === 0 ? 0 : ((currentValue - min) / range) * 100;
@@ -288,6 +307,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
         aria-busy={isBuffering || undefined}
         className={cn(
           "group relative h-3 flex w-full touch-none select-none items-center cursor-pointer [-webkit-touch-callout:none]",
+          "before:absolute before:-top-5 before:-bottom-5 before:left-0 before:right-0 before:content-['']",
           className,
         )}
         {...props}
@@ -301,7 +321,11 @@ const Slider = React.forwardRef<HTMLDivElement, SliderBaseProps>(
           ref={trackRef}
           className={clsx(
             "relative w-full grow overflow-hidden rounded-full select-none transition-[height] duration-150 ease-out",
-            isTouching ? "h-[10px]" : "h-1",
+            isTouching
+              ? "h-[10px]"
+              : Capacitor.isNativePlatform()
+                ? "h-1.5"
+                : "h-1",
             !isBuffering && variant === "default" && "bg-secondary",
             isBuffering && "buffer-track",
             isBuffering && variant === "secondary" && "buffer-secondary",

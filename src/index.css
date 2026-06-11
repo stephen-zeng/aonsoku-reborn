@@ -660,11 +660,18 @@ div[data-test-id="table-row"].row-active {
 
 body {
   touch-action: pan-y;
-  overscroll-behavior-y: contain;
   overscroll-behavior-x: none;
 }
 
-html {
+body.capacitor-android {
   overscroll-behavior-y: none;
+}
+
+html {
   overscroll-behavior-x: none;
+}
+
+.fullscreen-content-width {
+  width: 100%;
+  max-width: min(clamp(280px, 85vw, 480px), calc(100dvh - 24rem));
 }

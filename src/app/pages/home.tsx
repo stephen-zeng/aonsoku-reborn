@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   HeaderFallback,
   PreviewListFallback,
@@ -15,10 +16,37 @@ import {
   useGetRecentlyAdded,
   useGetRecentlyPlayed,
 } from "@/app/hooks/use-home";
+import { PullToRefresh } from "@/app/components/ui/pull-to-refresh";
+import { useCacheStore } from "@/store/cache.store";
+import { syncService } from "@/service/cache/sync-worker-adapter";
+import { getNetworkStatus } from "@/app/hooks/use-network-status";
 import { ROUTES } from "@/routes/routesList";
 
 export default function Home() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  const handleRefresh = async () => {
+    const promises = [
+      queryClient.invalidateQueries({ queryKey: ["albums"] }),
+      queryClient.invalidateQueries({ queryKey: ["home"] }),
+    ];
+
+    const state = useCacheStore.getState();
+    const network = getNetworkStatus();
+    if (
+      state.settings.libraryCaching &&
+      network.isOnline &&
+      !state.status.syncState.isSyncing
+    ) {
+      syncService.syncIncremental({
+        includeCoverArt: state.settings.syncCoverArt,
+        includeFullSongs: true,
+      });
+    }
+
+    await Promise.all(promises);
+  };
 
   const {
     data: carouselAlbums,
@@ -60,40 +88,42 @@ export default function Home() {
   ];
 
   return (
-    <div className="w-full px-4 sm:px-8 py-4 sm:py-6">
-      <MobilePageHeader
-        variant="root"
-        title={t("sidebar.home")}
-        showUserDropdown
-      />
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="w-full px-4 sm:px-8 py-4 sm:py-6">
+        <MobilePageHeader
+          variant="root"
+          title={t("sidebar.home")}
+          showUserDropdown
+        />
 
-      {isFetching || isLoading ? (
-        <HeaderFallback />
-      ) : (
-        <HomeHeader albums={carouselAlbums?.list || []} />
-      )}
+        {isFetching || isLoading ? (
+          <HeaderFallback />
+        ) : (
+          <HomeHeader albums={carouselAlbums?.list || []} />
+        )}
 
-      {pinnedItems.isLoading && <PreviewListFallback />}
-      {!!pinnedItems.data?.length && (
-        <PinnedList list={pinnedItems.data} title={t("home.pinned")} />
-      )}
+        {pinnedItems.isLoading && <PreviewListFallback />}
+        {!!pinnedItems.data?.length && (
+          <PinnedList list={pinnedItems.data} title={t("home.pinned")} />
+        )}
 
-      {sections.map((section) => {
-        if (section.loader) {
-          return <PreviewListFallback key={section.title} />;
-        }
+        {sections.map((section) => {
+          if (section.loader) {
+            return <PreviewListFallback key={section.title} />;
+          }
 
-        if (!section.data?.list?.length) return null;
+          if (!section.data?.list?.length) return null;
 
-        return (
-          <PreviewList
-            key={section.title}
-            title={section.title}
-            moreRoute={section.route}
-            list={section.data.list}
-          />
-        );
-      })}
-    </div>
+          return (
+            <PreviewList
+              key={section.title}
+              title={section.title}
+              moreRoute={section.route}
+              list={section.data.list}
+            />
+          );
+        })}
+      </div>
+    </PullToRefresh>
   );
 }

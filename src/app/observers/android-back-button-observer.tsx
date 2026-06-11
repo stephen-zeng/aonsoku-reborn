@@ -3,7 +3,10 @@ import { Capacitor } from "@capacitor/core";
 import { useEffect } from "react";
 import { closeFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
 import { usePlayerStore } from "@/store/player.store";
-import { executeBackButtonHandlers, getActiveHeaderBackHandler } from "@/utils/back-button-registry";
+import {
+  executeBackButtonHandlers,
+  getActiveHeaderBackHandler,
+} from "@/utils/back-button-registry";
 
 export function AndroidBackButtonObserver() {
   useEffect(() => {

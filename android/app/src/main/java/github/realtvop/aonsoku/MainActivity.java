@@ -18,14 +18,8 @@ import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends BridgeActivity implements SensorEventListener {
     private SensorManager sensorManager;
-    private Sensor accelerometer;
-    private long lastShakeTime;
-    private long lastCheckTime;
-    private int shakeCount;
-    private static final float MIN_ACCEL = 14f;
-    private static final int REQUIRED_SHAKES = 3;
-    private static final long SHAKE_COOLDOWN_MS = 2000;
-    private static final long SHAKE_WINDOW_MS = 500;
+    private Sensor shakeSensor;
+    private DebugShakeDetector debugShakeDetector;
 
     @Override
     public void onCreate(android.os.Bundle savedInstanceState) {
@@ -41,6 +35,17 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
         super.onCreate(savedInstanceState);
 
         getBridge().getWebView().post(() -> {
+            android.webkit.WebView webView = getBridge().getWebView();
+            if (webView != null) {
+                webView.setOverScrollMode(android.view.View.OVER_SCROLL_NEVER);
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    webView.setRendererPriorityPolicy(
+                        android.webkit.WebView.RENDERER_PRIORITY_BOUND,
+                        false
+                    );
+                }
+            }
+
             View parent = (View) getBridge().getWebView().getParent();
             ViewCompat.setOnApplyWindowInsetsListener(parent, (v, insets) -> {
                 v.setPadding(0, 0, 0, 0);
@@ -50,15 +55,21 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
         });
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sensorManager != null) {
-            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            Sensor linearAccel = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+            if (linearAccel != null) {
+                shakeSensor = linearAccel;
+            } else {
+                shakeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            }
         }
+        debugShakeDetector = new DebugShakeDetector(this::openDebugPage);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if (sensorManager != null && accelerometer != null) {
-            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
+        if (sensorManager != null && shakeSensor != null) {
+            sensorManager.registerListener(this, shakeSensor, SensorManager.SENSOR_DELAY_GAME);
         }
     }
 
@@ -68,33 +79,15 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
         if (sensorManager != null) {
             sensorManager.unregisterListener(this);
         }
+        if (debugShakeDetector != null) {
+            debugShakeDetector.reset();
+        }
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        float x = event.values[0];
-        float y = event.values[1];
-        float z = event.values[2];
-
-        double acceleration = Math.sqrt(x * x + y * y + z * z);
-
-        if (acceleration > MIN_ACCEL) {
-            long now = System.currentTimeMillis();
-
-            if (now - lastCheckTime > SHAKE_WINDOW_MS) {
-                shakeCount = 0;
-            }
-
-            lastCheckTime = now;
-            shakeCount++;
-
-            if (shakeCount >= REQUIRED_SHAKES) {
-                if (now - lastShakeTime > SHAKE_COOLDOWN_MS) {
-                    shakeCount = 0;
-                    lastShakeTime = now;
-                    openDebugPage();
-                }
-            }
+        if (debugShakeDetector != null) {
+            debugShakeDetector.handleSensorData(event.sensor.getType(), event.values, System.currentTimeMillis());
         }
     }
 

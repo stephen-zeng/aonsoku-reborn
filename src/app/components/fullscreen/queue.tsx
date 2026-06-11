@@ -6,7 +6,7 @@ import {
 } from "@dnd-kit/sortable";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { LucideIcon } from "lucide-react";
-import { Repeat } from "lucide-react";
+import { Repeat, Shuffle } from "lucide-react";
 import {
   memo,
   useCallback,
@@ -41,6 +41,7 @@ import {
   usePlayerCurrentSong,
   usePlayerCurrentSongIndex,
   usePlayerLoop,
+  usePlayerShuffle,
   useUserQueue,
 } from "@/store/player.store";
 import {
@@ -235,6 +236,7 @@ function UnifiedQueueView({
   const { playFromQueue, playFromUserQueue, setNextOnQueue, reorderQueue } =
     usePlayerActions();
   const loopState = usePlayerLoop();
+  const isShuffleActive = usePlayerShuffle();
   const [activeItem, setActiveItem] = useState<ISong | null>(null);
 
   const playHistorySong = useCallback(
@@ -415,6 +417,7 @@ function UnifiedQueueView({
         hideRepeatIndicator={hideRepeatIndicator}
         isRepeatOne={isRepeatOne}
         isRepeatAll={isRepeatAll}
+        isShuffleActive={isShuffleActive}
         hasNoUpcoming={hasNoUpcoming}
         scrollAreaClassName={scrollAreaClassName}
         thumbClassName={thumbClassName}
@@ -510,6 +513,12 @@ function UnifiedQueueView({
                 label={t("fullscreen.queueRepeating")}
               />
             )}
+            {isShuffleActive && !hideRepeatIndicator && (
+              <RepeatIndicator
+                icon={Shuffle}
+                label={t("fullscreen.queueShuffling")}
+              />
+            )}
           </div>
         )}
 
@@ -534,6 +543,12 @@ function UnifiedQueueView({
               <RepeatIndicator
                 icon={RepeatOne}
                 label={t("fullscreen.queueRepeating")}
+              />
+            )}
+            {isShuffleActive && !hideRepeatIndicator && (
+              <RepeatIndicator
+                icon={Shuffle}
+                label={t("fullscreen.queueShuffling")}
               />
             )}
           </div>
@@ -570,6 +585,12 @@ function UnifiedQueueView({
                     {t("fullscreen.emptyQueue")}
                   </span>
                 </div>
+                {isShuffleActive && !hideRepeatIndicator && (
+                  <RepeatIndicator
+                    icon={Shuffle}
+                    label={t("fullscreen.queueShuffling")}
+                  />
+                )}
               </div>
             ) : (
               <div>
@@ -641,6 +662,12 @@ function UnifiedQueueView({
                     label={t("fullscreen.queueRepeating")}
                   />
                 )}
+                {isShuffleActive && !hideRepeatIndicator && (
+                  <RepeatIndicator
+                    icon={Shuffle}
+                    label={t("fullscreen.queueShuffling")}
+                  />
+                )}
               </div>
             )}
           </>
@@ -665,6 +692,7 @@ function VirtualizedQueueView({
   hideRepeatIndicator,
   isRepeatOne,
   isRepeatAll,
+  isShuffleActive,
   hasNoUpcoming,
   scrollAreaClassName,
   thumbClassName,
@@ -700,6 +728,7 @@ function VirtualizedQueueView({
   hideRepeatIndicator: boolean;
   isRepeatOne: boolean;
   isRepeatAll: boolean;
+  isShuffleActive: boolean;
   hasNoUpcoming: boolean;
   scrollAreaClassName?: string;
   thumbClassName?: string;
@@ -818,6 +847,13 @@ function VirtualizedQueueView({
           label: t("fullscreen.queueRepeating"),
         });
       }
+      if (isShuffleActive) {
+        items.push({
+          type: "repeatIndicator",
+          icon: Shuffle,
+          label: t("fullscreen.queueShuffling"),
+        });
+      }
     }
 
     return items;
@@ -834,6 +870,7 @@ function VirtualizedQueueView({
     hasNoUpcoming,
     isRepeatOne,
     isRepeatAll,
+    isShuffleActive,
     t,
   ]);
 

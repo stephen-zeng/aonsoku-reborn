@@ -37,8 +37,9 @@ export function SongsSortFilter({
 
   function handleChangeSort() {
     setSearchParams((state) => {
-      state.set("sort", isDesc ? Asc : Desc);
-      return state;
+      const next = new URLSearchParams(state);
+      next.set("sort", isDesc ? Asc : Desc);
+      return next;
     });
   }
 
@@ -73,8 +74,9 @@ export function SongsOrderByFilter() {
 
   function handleChangeFilter(value: SongsOrderByOptions) {
     setSearchParams((state) => {
-      state.set("orderBy", value);
-      return state;
+      const next = new URLSearchParams(state);
+      next.set("orderBy", value);
+      return next;
     });
   }
 

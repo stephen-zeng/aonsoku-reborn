@@ -7,6 +7,7 @@ export interface PlaybackRemoteCommandContext {
   playPrevSong: () => void;
   seek: (position: number) => void;
   starCurrentSong: () => void;
+  toggleShuffle: () => void;
 }
 
 export function handlePlaybackRemoteCommand(

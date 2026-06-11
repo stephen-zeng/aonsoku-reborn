@@ -31,14 +31,15 @@ export function AlbumsFilterByYear() {
 
   function handleChangeYearSort() {
     setSearchParams((state) => {
+      const next = new URLSearchParams(state);
       const filter =
         yearFilter === YearSortOptions.Newest
           ? YearSortOptions.Oldest
           : YearSortOptions.Newest;
 
-      state.set(AlbumsSearchParams.YearFilter, filter);
+      next.set(AlbumsSearchParams.YearFilter, filter);
 
-      return state;
+      return next;
     });
     scrollPageToTop();
   }

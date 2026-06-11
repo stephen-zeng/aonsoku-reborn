@@ -4,6 +4,8 @@ import { usePlayerStore } from "@/store/player.store";
 import { isDesktop } from "./desktop";
 import { isDev } from "./env";
 
+import { getRuntime } from "./capabilities";
+
 export enum MouseButton {
   Left = 0,
   Middle = 1,
@@ -131,16 +133,23 @@ export function exitFullscreen() {
   }
 }
 
-function setFontSmoothing() {
+function setPlatformClasses() {
   if (isMacOs) {
     document.body.classList.add("mac");
   } else {
     document.body.classList.add("windows-linux");
   }
+
+  const runtime = getRuntime();
+  if (runtime === "capacitor-android") {
+    document.body.classList.add("capacitor-android");
+  } else if (runtime === "capacitor-ios") {
+    document.body.classList.add("capacitor-ios");
+  }
 }
 
 export function blockFeatures() {
-  setFontSmoothing();
+  setPlatformClasses();
 
   if (isDev) return;
 

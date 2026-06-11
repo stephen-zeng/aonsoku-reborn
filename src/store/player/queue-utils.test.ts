@@ -6,6 +6,7 @@ import {
   applyShuffleOff,
   applyShuffleOn,
   applyStarToAllLists,
+  buildContextQueueSongs,
   clearSonglistState,
   dedupAgainstExisting,
   emptyContextQueue,
@@ -19,6 +20,7 @@ import {
   initSonglistState,
   isPlayingOneSong,
   normalizeSourceId,
+  rebuildContextQueueForLoopState,
   reshuffleContextForWrap,
   resetPlaybackState,
   trimQueueToWindow,
@@ -422,14 +424,15 @@ describe("applyShuffleOn", () => {
     expect(songlist.originalContextSongs).toEqual(songs);
   });
 
-  it("keeps current song at the same position when starting from index", () => {
+  it("moves current song to the first position when starting from index", () => {
     const songs = [makeSong("a"), makeSong("b"), makeSong("c"), makeSong("d")];
     const songlist = makeSonglist({
       contextQueue: makeContextQueue(songs, 1),
       userQueue: { songs: [] },
     });
     applyShuffleOn(songlist as ISongList);
-    expect(songlist.contextQueue.songs[1]).toEqual(songs[1]);
+    expect(songlist.contextQueue.songs[0]).toEqual(songs[1]);
+    expect(songlist.contextQueue.currentIndex).toBe(0);
   });
 
   it("shuffles upcoming songs after current index", () => {
@@ -439,10 +442,9 @@ describe("applyShuffleOn", () => {
       userQueue: { songs: [] },
     });
     applyShuffleOn(songlist as ISongList);
-    expect(songlist.contextQueue.songs).toHaveLength(4);
-    expect(songlist.contextQueue.currentIndex).toBe(1);
-    expect(songlist.contextQueue.songs[0]).toEqual(songs[0]);
-    expect(songlist.contextQueue.songs[1]).toEqual(songs[1]);
+    expect(songlist.contextQueue.songs).toHaveLength(3);
+    expect(songlist.contextQueue.currentIndex).toBe(0);
+    expect(songlist.contextQueue.songs[0]).toEqual(songs[1]);
   });
 
   it("does nothing for single-song queue", () => {
@@ -455,14 +457,16 @@ describe("applyShuffleOn", () => {
     expect(songlist.isShuffleActive).toBe(false);
   });
 
-  it("does nothing when at last song with no user queue", () => {
+  it("can rebuild from the source queue when at the last playback song", () => {
     const songs = [makeSong("a"), makeSong("b")];
     const songlist = makeSonglist({
+      sourceQueue: makeContextQueue(songs, 1),
       contextQueue: makeContextQueue(songs, 1),
       userQueue: { songs: [] },
     });
     applyShuffleOn(songlist as ISongList);
-    expect(songlist.isShuffleActive).toBe(false);
+    expect(songlist.isShuffleActive).toBe(true);
+    expect(songlist.contextQueue.songs.map((song) => song.id)).toEqual(["b"]);
   });
 
   it("shuffles user queue songs when present", () => {
@@ -479,6 +483,112 @@ describe("applyShuffleOn", () => {
         .sort((a, b) => a.id.localeCompare(b.id))
         .map((s) => s.id),
     ).toEqual(["u1", "u2", "u3"]);
+  });
+});
+
+describe("buildContextQueueSongs", () => {
+  const reverseShuffle = (items: ISong[]) => [...items].reverse();
+
+  it("builds a non-looping queue from the current song", () => {
+    const songs = ["a", "b", "c", "d", "e", "f"].map((id) => makeSong(id));
+    const result = buildContextQueueSongs(songs, 2, LoopState.Off, false);
+    expect(result.map((song) => song.id)).toEqual(["c", "d", "e", "f"]);
+  });
+
+  it("shuffles only remaining songs for non-looping shuffle", () => {
+    const songs = ["a", "b", "c", "d", "e", "f"].map((id) => makeSong(id));
+    const result = buildContextQueueSongs(
+      songs,
+      2,
+      LoopState.Off,
+      true,
+      reverseShuffle,
+    );
+    expect(result.map((song) => song.id)).toEqual(["c", "f", "e", "d"]);
+  });
+
+  it("builds a full rotated queue for looping playback", () => {
+    const songs = ["a", "b", "c", "d", "e", "f"].map((id) => makeSong(id));
+    const result = buildContextQueueSongs(songs, 2, LoopState.All, false);
+    expect(result.map((song) => song.id)).toEqual([
+      "c",
+      "d",
+      "e",
+      "f",
+      "a",
+      "b",
+    ]);
+  });
+
+  it("shuffles all remaining songs for looping shuffle", () => {
+    const songs = ["a", "b", "c", "d", "e", "f"].map((id) => makeSong(id));
+    const result = buildContextQueueSongs(
+      songs,
+      2,
+      LoopState.All,
+      true,
+      reverseShuffle,
+    );
+    expect(result.map((song) => song.id)).toEqual([
+      "c",
+      "b",
+      "a",
+      "f",
+      "e",
+      "d",
+    ]);
+  });
+});
+
+describe("rebuildContextQueueForLoopState", () => {
+  it("extends a non-looping queue when repeat all is enabled", () => {
+    const original = ["a", "b", "c", "d", "e", "f"].map((id) => makeSong(id));
+    const songlist = makeSonglist({
+      contextQueue: makeContextQueue(original.slice(2), 0),
+      currentSong: original[2],
+      originalContextSongs: [...original],
+    });
+
+    rebuildContextQueueForLoopState(songlist, LoopState.All);
+
+    expect(songlist.contextQueue.songs.map((song) => song.id)).toEqual([
+      "c",
+      "d",
+      "e",
+      "f",
+      "a",
+      "b",
+    ]);
+    expect(songlist.contextQueue.currentIndex).toBe(0);
+  });
+
+  it("truncates a looping queue when repeat is disabled", () => {
+    const original = ["a", "b", "c", "d", "e", "f"].map((id) => makeSong(id));
+    const songlist = makeSonglist({
+      contextQueue: makeContextQueue(
+        [
+          original[2],
+          original[3],
+          original[4],
+          original[5],
+          original[0],
+          original[1],
+        ],
+        0,
+      ),
+      currentSong: original[2],
+      originalContextSongs: [...original],
+    });
+
+    rebuildContextQueueForLoopState(songlist, LoopState.Off);
+
+    expect(songlist.contextQueue.songs.map((song) => song.id)).toEqual([
+      "c",
+      "d",
+      "e",
+      "f",
+    ]);
+    expect(songlist.contextQueue.currentIndex).toBe(0);
   });
 });
 
@@ -502,8 +612,8 @@ describe("applyShuffleOff", () => {
     songlist.currentSong = songlist.contextQueue.songs[2];
 
     applyShuffleOff(songlist as ISongList);
-    expect(songlist.contextQueue.songs).toEqual(original);
-    expect(songlist.contextQueue.currentIndex).toBe(1);
+    expect(songlist.contextQueue.songs).toEqual(original.slice(1));
+    expect(songlist.contextQueue.currentIndex).toBe(0);
     expect(songlist.isShuffleActive).toBe(false);
   });
 

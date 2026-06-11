@@ -286,31 +286,25 @@ describe("Slider", () => {
 			});
 		});
 
-		it("should fire onValueChange and onValueCommit on touch tap (below threshold)", () => {
+		it("should not fire onValueChange or onValueCommit on touch tap (below threshold)", () => {
 			mountSlider(50);
 			cy.getByTestId("test-slider")
 				.trigger(
 					"pointerdown",
 					pointerEvent("pointerdown", {
-						clientX: 150,
+						clientX: 200,
 						pointerType: "touch",
 					}),
 				)
 				.trigger(
 					"pointerup",
 					pointerEvent("pointerup", {
-						clientX: 152,
+						clientX: 200,
 						pointerType: "touch",
 					}),
 				);
-			cy.getByTestId("display-value").then(($el) => {
-				const val = Number($el.text());
-				expect(val).to.be.approximately(50, 1);
-			});
-			cy.getByTestId("display-commit").then(($el) => {
-				const val = Number($el.text());
-				expect(val).to.be.approximately(50, 1);
-			});
+			cy.getByTestId("display-value").should("have.text", "50");
+			cy.getByTestId("display-commit").should("have.text", "none");
 		});
 	});
 
@@ -455,27 +449,24 @@ describe("Slider", () => {
 			});
 		});
 
-		it("should handle lostpointercapture for touch tap by committing tap position", () => {
+		it("should handle lostpointercapture for touch tap by not committing", () => {
 			mountSlider(50);
 			cy.getByTestId("test-slider")
 				.trigger(
 					"pointerdown",
 					pointerEvent("pointerdown", {
-						clientX: 150,
+						clientX: 200,
 						pointerType: "touch",
 					}),
 				)
 				.trigger(
 					"lostpointercapture",
 					pointerEvent("lostpointercapture", {
-						clientX: 150,
+						clientX: 200,
 						pointerType: "touch",
 					}),
 				);
-			cy.getByTestId("display-commit").then(($el) => {
-				const val = Number($el.text());
-				expect(val).to.be.approximately(50, 1);
-			});
+			cy.getByTestId("display-commit").should("have.text", "none");
 		});
 	});
 

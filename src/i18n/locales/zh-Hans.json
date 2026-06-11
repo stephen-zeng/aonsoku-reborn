@@ -138,6 +138,7 @@
     "queueFromSource": "来自 {{source}}",
     "queueHistory": "历史记录",
     "queueRepeating": "单曲循环",
+    "queueShuffling": "随机播放中",
     "selectLyrics": "选择歌词",
     "switchButton": "切换到大播放器"
   },

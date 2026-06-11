@@ -20,6 +20,7 @@ interface SongDao {
     @Query("DELETE FROM song") suspend fun deleteAll()
     @Query("UPDATE song SET starred = :starred, starredAt = :starredAt WHERE id IN (:ids)") suspend fun updateStarred(ids: List<String>, starred: String?, starredAt: Long?)
     @Query("SELECT id FROM song") suspend fun getAllIds(): List<String>
+    @Query("SELECT id FROM song WHERE starredAt IS NOT NULL") suspend fun getStarredSongIds(): List<String>
     @Query("DELETE FROM song WHERE id IN (:ids)") suspend fun deleteByIds(ids: List<String>): Int
     @Query("SELECT COUNT(*) FROM song") suspend fun count(): Int
 }
