@@ -5,10 +5,10 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import {
-  usePipWindowOpen,
   usePlayerCurrentList,
   usePlayerStore,
 } from "@/store/player.store";
+import { usePipWindowOpen } from "@/store/player/selectors";
 import { hasElectronBridge } from "@/utils/desktop";
 import { MiniPlayer } from "./player";
 import { MiniPlayerPortal } from "./portal";
@@ -21,17 +21,19 @@ function MiniPlayerButtonWeb() {
   const { t } = useTranslation();
   const currentList = usePlayerCurrentList();
   const pipWindowOpen = usePipWindowOpen();
+  const documentPictureInPicture = window.documentPictureInPicture;
   const [pipWindow, setPipWindow] = useState<Window | null>(
-    window.documentPictureInPicture.window,
+    documentPictureInPicture?.window ?? null,
   );
 
   useEffect(() => {
     if (!pipWindowOpen) return;
     if (pipWindow) return;
+    if (!documentPictureInPicture) return;
 
     let cancelled = false;
 
-    window.documentPictureInPicture
+    documentPictureInPicture
       .requestWindow({ width: 300, height: 300 })
       .then((newWindow) => {
         if (cancelled) {
@@ -54,7 +56,7 @@ function MiniPlayerButtonWeb() {
     return () => {
       cancelled = true;
     };
-  }, [pipWindowOpen, pipWindow]);
+  }, [pipWindowOpen, pipWindow, documentPictureInPicture]);
 
   useEffect(() => {
     if (!pipWindowOpen && pipWindow) {
@@ -64,12 +66,12 @@ function MiniPlayerButtonWeb() {
   }, [pipWindowOpen, pipWindow]);
 
   useEffect(() => {
-    const existingWindow = window.documentPictureInPicture.window;
+    const existingWindow = documentPictureInPicture?.window;
     if (existingWindow) {
       setPipWindow(existingWindow);
       usePlayerStore.getState().actions.openPipWindow();
     }
-  }, []);
+  }, [documentPictureInPicture]);
 
   const handleClick = useCallback(() => {
     if (pipWindowOpen) {
@@ -182,6 +184,8 @@ export function MiniPlayerButton() {
   if (hasElectronBridge()) {
     return <MiniPlayerButtonDesktop />;
   }
+
+  if (!window.documentPictureInPicture) return null;
 
   return <MiniPlayerButtonWeb />;
 }

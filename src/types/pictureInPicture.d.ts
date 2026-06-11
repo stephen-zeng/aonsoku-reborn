@@ -1,6 +1,6 @@
 declare global {
   interface Window {
-    documentPictureInPicture: {
+    documentPictureInPicture?: {
       window: Window | null;
       requestWindow: (options?: {
         width?: number;

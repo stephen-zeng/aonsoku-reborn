@@ -6,10 +6,12 @@ import type {
 import { LoopState } from "@/types/playerContext";
 import type { ISong } from "@/types/responses/song";
 import {
+  advancePlaybackQueue,
+  appendPlaybackQueueCycle,
+  buildContextQueueSongs,
   getCurrentSong,
   hasNextEffectiveSong,
   hasPrevEffectiveSong,
-  reshuffleContextForWrap,
   trimQueueToWindow,
 } from "./queue-utils";
 
@@ -47,6 +49,12 @@ function withSeekToStart(transition: QueueTransition): QueueTransition {
 
 function cloneSonglist(sl: ISongList): ISongList {
   return {
+    sourceQueue: {
+      songs: [...sl.sourceQueue.songs],
+      currentIndex: sl.sourceQueue.currentIndex,
+      sourceId: sl.sourceQueue.sourceId,
+      sourceName: sl.sourceQueue.sourceName,
+    },
     contextQueue: {
       songs: [...sl.contextQueue.songs],
       currentIndex: sl.contextQueue.currentIndex,
@@ -88,26 +96,10 @@ export function transitionNextSong(
     return withSeekToStart(withResetProgress(baseTransition(next)));
   }
 
-  if (
-    songlist.contextQueue.currentIndex <
-    songlist.contextQueue.songs.length - 1
-  ) {
-    next.contextQueue.currentIndex = songlist.contextQueue.currentIndex + 1;
+  if (songlist.contextQueue.songs.length > 1 || loopState === LoopState.All) {
+    advancePlaybackQueue(next, loopState);
     next.currentSong = getCurrentSong(next);
     return withTransitioning(withResetProgress(baseTransition(next)));
-  }
-
-  if (loopState === LoopState.All) {
-    const lastPlayedSongId =
-      songlist.contextQueue.songs[songlist.contextQueue.currentIndex]?.id;
-    next.contextQueue.currentIndex = 0;
-    reshuffleContextForWrap(next, lastPlayedSongId);
-    next.currentSong = getCurrentSong(next);
-    const result = withResetProgress(withTransitioning(baseTransition(next)));
-    if (next.currentSong?.id === lastPlayedSongId) {
-      return withSeekToStart(result);
-    }
-    return result;
   }
 
   return null;
@@ -128,17 +120,8 @@ function transitionConsumeUserQueue(
   }
 
   next.isInUserQueue = false;
-  if (next.contextQueue.currentIndex < next.contextQueue.songs.length - 1) {
-    next.contextQueue.currentIndex = original.contextQueue.currentIndex + 1;
-    next.currentSong = getCurrentSong(next);
-    return withTransitioning(withResetProgress(baseTransition(next)));
-  }
-
-  if (loopState === LoopState.All) {
-    const lastPlayedSongId =
-      original.contextQueue.songs[original.contextQueue.currentIndex]?.id;
-    next.contextQueue.currentIndex = 0;
-    reshuffleContextForWrap(next, lastPlayedSongId);
+  if (next.contextQueue.songs.length > 1 || loopState === LoopState.All) {
+    advancePlaybackQueue(next, loopState);
     next.currentSong = getCurrentSong(next);
     return withTransitioning(withResetProgress(baseTransition(next)));
   }
@@ -371,7 +354,7 @@ export function transitionSetSongList(
   shuffle: boolean,
   existingStartHistory: string[],
   shuffleFn: (items: ISong[], history: string[]) => ISong[],
-  pickStartIndex: (
+  _pickStartIndex: (
     length: number,
     history: string[],
     idFn: (i: number) => string,
@@ -381,15 +364,14 @@ export function transitionSetSongList(
   const next = cloneSonglist(songlist);
 
   if (shuffle) {
-    const randomIndex = pickStartIndex(
-      newSongs.length,
-      existingStartHistory,
-      (i) => newSongs[i].id,
+    const startSong = newSongs[index];
+    const shuffledRemaining = buildContextQueueSongs(
+      newSongs,
+      index,
+      LoopState.Off,
+      true,
+      shuffleFn,
     );
-    const startSong = newSongs[randomIndex];
-    const remaining = newSongs.filter((_, i) => i !== randomIndex);
-    const shuffledRemaining = shuffleFn(remaining, []);
-    shuffledRemaining.unshift(startSong);
     const updatedStartHistory = [
       ...existingStartHistory.slice(-99),
       startSong.id,
@@ -397,6 +379,12 @@ export function transitionSetSongList(
     next.contextQueue = {
       songs: shuffledRemaining,
       currentIndex: 0,
+      sourceId,
+      sourceName,
+    };
+    next.sourceQueue = {
+      songs: [...newSongs],
+      currentIndex: index,
       sourceId,
       sourceName,
     };
@@ -410,15 +398,27 @@ export function transitionSetSongList(
     next.playedUserQueueHistory = [];
     next.currentSong = getCurrentSong(next);
   } else {
-    const trimmed = trimQueueToWindow(newSongs, index);
+    const queueSongs = buildContextQueueSongs(
+      newSongs,
+      index,
+      LoopState.Off,
+      false,
+    );
+    const trimmed = trimQueueToWindow(queueSongs, 0);
     next.contextQueue = {
       songs: trimmed.songs,
-      currentIndex: trimmed.currentIndex,
+      currentIndex: 0,
+      sourceId,
+      sourceName,
+    };
+    next.sourceQueue = {
+      songs: [...newSongs],
+      currentIndex: index,
       sourceId,
       sourceName,
     };
     next.userQueue = { songs: [] };
-    next.originalContextSongs = [];
+    next.originalContextSongs = [...newSongs];
     next.radioList = [];
     next.shuffleHistory = [];
     next.isShuffleActive = false;
@@ -435,6 +435,7 @@ export function transitionPlayFromQueue(
   contextSongs: ISong[],
   contextIndex: number,
   sameList: boolean,
+  loopState: LoopState = LoopState.Off,
 ): QueueTransition | null {
   if (!contextSongs || contextSongs.length === 0) return null;
   contextIndex = Math.max(0, Math.min(contextIndex, contextSongs.length - 1));
@@ -443,6 +444,12 @@ export function transitionPlayFromQueue(
 
   if (sameList) {
     next.contextQueue.currentIndex = contextIndex;
+    if (
+      loopState === LoopState.All &&
+      contextIndex >= next.contextQueue.songs.length - 1
+    ) {
+      appendPlaybackQueueCycle(next);
+    }
     next.isInUserQueue = false;
     next.currentSong = getCurrentSong(next);
     return withResetProgress(baseTransition(next));
@@ -452,6 +459,18 @@ export function transitionPlayFromQueue(
   next.contextQueue = {
     songs: trimmed.songs,
     currentIndex: trimmed.currentIndex,
+    sourceId: next.contextQueue.sourceId,
+    sourceName: next.contextQueue.sourceName,
+  };
+  if (
+    loopState === LoopState.All &&
+    next.contextQueue.currentIndex >= next.contextQueue.songs.length - 1
+  ) {
+    appendPlaybackQueueCycle(next);
+  }
+  next.sourceQueue = {
+    songs: [...contextSongs],
+    currentIndex: contextIndex,
     sourceId: next.contextQueue.sourceId,
     sourceName: next.contextQueue.sourceName,
   };
@@ -478,8 +497,14 @@ export function transitionPlaySong(
     sourceId: null,
     sourceName: sourceName ?? song.album ?? null,
   };
+  next.sourceQueue = {
+    songs: [song],
+    currentIndex: 0,
+    sourceId: null,
+    sourceName: sourceName ?? song.album ?? null,
+  };
   next.userQueue = { songs: [] };
-  next.originalContextSongs = [];
+  next.originalContextSongs = [song];
   next.isShuffleActive = false;
   next.shuffleHistory = [];
   next.isInUserQueue = false;

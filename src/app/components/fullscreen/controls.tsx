@@ -37,7 +37,7 @@ function FullscreenControls() {
     useFullscreenContrast();
 
   const secondaryBtnClass = clsx(
-    "relative w-11 h-11 md:w-12 md:h-12 rounded-full text-foreground",
+    "relative h-11 w-11 min-h-11 min-w-11 shrink-0 rounded-full text-foreground md:h-12 md:w-12 md:min-h-12 md:min-w-12",
     isBackdropDark
       ? "data-[state=active]:text-white hover-supported:data-[state=active]:text-white"
       : "data-[state=active]:text-primary hover-supported:data-[state=active]:text-primary",
@@ -75,7 +75,7 @@ function FullscreenControls() {
       <motion.button
         whileTap={{ scale: 0.9 }}
         className={clsx(
-          "w-14 h-14 rounded-full flex items-center justify-center cursor-pointer",
+          "h-14 w-14 min-h-14 min-w-14 shrink-0 aspect-square rounded-full flex items-center justify-center cursor-pointer",
           "",
           playButtonBg,
         )}

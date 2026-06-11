@@ -34,6 +34,7 @@ export interface IUserQueue {
 }
 
 export interface ISongList {
+  sourceQueue: IContextQueue;
   contextQueue: IContextQueue;
   userQueue: IUserQueue;
   originalContextSongs: ISong[];

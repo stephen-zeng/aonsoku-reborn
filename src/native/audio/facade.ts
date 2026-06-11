@@ -19,6 +19,7 @@ import {
   type NativeRemoveFromUserQueueOptions,
   type NativeSetContextQueueOptions,
   type NativeSetSleepTimerOptions,
+  type NativeUpdateContextQueueOptions,
 } from "./types";
 
 export type NativeAudioUnavailableReason =
@@ -121,6 +122,12 @@ class UnavailableNativeAudioWeb extends WebPlugin implements NativeAudioPlugin {
 
   setContextQueue(_options: NativeSetContextQueueOptions): Promise<void> {
     return Promise.reject(createNativeAudioUnavailableError("setContextQueue"));
+  }
+
+  updateContextQueue(_options: NativeUpdateContextQueueOptions): Promise<void> {
+    return Promise.reject(
+      createNativeAudioUnavailableError("updateContextQueue"),
+    );
   }
 
   addToUserQueue(_options: NativeAddToUserQueueOptions): Promise<void> {
