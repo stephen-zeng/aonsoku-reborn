@@ -46,6 +46,12 @@ const mocks = vi.hoisted(() => {
     playAtIndex: vi.fn(async () => {}),
     markAsShuffled: vi.fn(async () => {}),
     getFullState: vi.fn(async () => ({
+      sourceQueue: {
+        songs: [],
+        currentIndex: 0,
+        sourceId: null,
+        sourceName: null,
+      },
       contextQueue: {
         songs: [],
         currentIndex: 0,
@@ -110,6 +116,12 @@ const mocks = vi.hoisted(() => {
       },
     },
     songlist: {
+      sourceQueue: {
+        songs: [],
+        currentIndex: 0,
+        sourceId: undefined,
+        sourceName: null,
+      },
       contextQueue: {
         songs: [],
         currentIndex: 0,
@@ -190,6 +202,8 @@ describe("NativeQueueController terminal playback reset", () => {
     mocks.storeState.playerProgress.bufferedProgress = 123;
     mocks.storeState.songlist.contextQueue.songs = [];
     mocks.storeState.songlist.contextQueue.currentIndex = 0;
+    mocks.storeState.songlist.sourceQueue.songs = [];
+    mocks.storeState.songlist.sourceQueue.currentIndex = 0;
     mocks.storeState.songlist.originalContextSongs = [];
     mocks.storeState.songlist.originalUserSongs = undefined;
     mocks.storeState.songlist.userQueue.songs = [];
@@ -304,6 +318,10 @@ describe("NativeQueueController shuffle and loop queue updates", () => {
       { id: "song-3", duration: 345 } as never,
     ];
     mocks.storeState.songlist.contextQueue.currentIndex = 0;
+    mocks.storeState.songlist.sourceQueue.songs = [
+      ...mocks.storeState.songlist.contextQueue.songs,
+    ];
+    mocks.storeState.songlist.sourceQueue.currentIndex = 0;
     mocks.storeState.songlist.currentSong =
       mocks.storeState.songlist.contextQueue.songs[0];
     mocks.storeState.songlist.originalContextSongs = [

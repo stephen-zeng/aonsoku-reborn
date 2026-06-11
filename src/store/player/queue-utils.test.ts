@@ -457,14 +457,16 @@ describe("applyShuffleOn", () => {
     expect(songlist.isShuffleActive).toBe(false);
   });
 
-  it("does nothing when at last song with no user queue", () => {
+  it("can rebuild from the source queue when at the last playback song", () => {
     const songs = [makeSong("a"), makeSong("b")];
     const songlist = makeSonglist({
+      sourceQueue: makeContextQueue(songs, 1),
       contextQueue: makeContextQueue(songs, 1),
       userQueue: { songs: [] },
     });
     applyShuffleOn(songlist as ISongList);
-    expect(songlist.isShuffleActive).toBe(false);
+    expect(songlist.isShuffleActive).toBe(true);
+    expect(songlist.contextQueue.songs.map((song) => song.id)).toEqual(["b"]);
   });
 
   it("shuffles user queue songs when present", () => {

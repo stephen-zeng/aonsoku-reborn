@@ -9,6 +9,7 @@ import type {
   NativeQueueSourceId,
 } from "@/native/audio/types";
 import {
+  appendPlaybackQueueCycle,
   buildContextQueueSongs,
   findSongTier,
   getCurrentSong,
@@ -171,6 +172,7 @@ export class NativeQueueController implements QueueController {
     const prevPlayerProgress = { ...usePlayerStore.getState().playerProgress };
     const prevSonglist = {
       isShuffleActive: usePlayerStore.getState().songlist.isShuffleActive,
+      sourceQueue: { ...usePlayerStore.getState().songlist.sourceQueue },
       contextQueue: { ...usePlayerStore.getState().songlist.contextQueue },
       currentSong: usePlayerStore.getState().songlist.currentSong,
       originalContextSongs: usePlayerStore.getState().songlist
@@ -203,6 +205,7 @@ export class NativeQueueController implements QueueController {
         state.playerProgress.bufferedProgress =
           prevPlayerProgress.bufferedProgress;
         state.songlist.isShuffleActive = prevSonglist.isShuffleActive;
+        state.songlist.sourceQueue = prevSonglist.sourceQueue;
         state.songlist.contextQueue = prevSonglist.contextQueue;
         state.songlist.currentSong = prevSonglist.currentSong;
         state.songlist.originalContextSongs = prevSonglist.originalContextSongs;
@@ -268,6 +271,12 @@ export class NativeQueueController implements QueueController {
             ? sourceName || null
             : state.songlist.contextQueue.sourceName;
         state.songlist.currentSong = startSong;
+        state.songlist.sourceQueue = {
+          songs: [...songs],
+          currentIndex: clampedIndex,
+          sourceId: normalizedId,
+          sourceName: state.songlist.contextQueue.sourceName,
+        };
         state.songlist.originalContextSongs = [...songs];
         state.songlist.userQueue = { songs: [] };
         state.songlist.isInUserQueue = false;
@@ -326,6 +335,12 @@ export class NativeQueueController implements QueueController {
             ? sourceName || null
             : state.songlist.contextQueue.sourceName;
         state.songlist.currentSong = queueSongs[0] ?? null;
+        state.songlist.sourceQueue = {
+          songs: [...songs],
+          currentIndex: clampedIndex,
+          sourceId: normalizedId,
+          sourceName: state.songlist.contextQueue.sourceName,
+        };
         state.songlist.originalContextSongs = [...songs];
         state.songlist.userQueue = { songs: [] };
         state.songlist.isInUserQueue = false;
@@ -366,6 +381,12 @@ export class NativeQueueController implements QueueController {
       state.playerProgress.progress = 0;
       state.playerProgress.bufferedProgress = 0;
       state.songlist.contextQueue.currentIndex = contextIndex;
+      if (
+        state.playerState.loopState === LoopState.All &&
+        contextIndex >= state.songlist.contextQueue.songs.length - 1
+      ) {
+        appendPlaybackQueueCycle(state.songlist);
+      }
       state.songlist.isInUserQueue = false;
       const song = state.songlist.contextQueue.songs[contextIndex] ?? null;
       if (song) {
@@ -375,6 +396,13 @@ export class NativeQueueController implements QueueController {
           : 0;
       }
     });
+
+    if (
+      usePlayerStore.getState().playerState.loopState === LoopState.All &&
+      contextIndex >= contextSongs.length - 1
+    ) {
+      this.#updateContextQueueOnNative();
+    }
   }
 
   playFromUserQueue(userQueueIndex: number): void {
@@ -483,9 +511,11 @@ export class NativeQueueController implements QueueController {
       if (!current) {
         const currentSong = getCurrentSong(state.songlist);
         const sourceSongs =
-          state.songlist.originalContextSongs.length > 0
-            ? state.songlist.originalContextSongs
-            : state.songlist.contextQueue.songs;
+          state.songlist.sourceQueue.songs.length > 0
+            ? state.songlist.sourceQueue.songs
+            : state.songlist.originalContextSongs.length > 0
+              ? state.songlist.originalContextSongs
+              : state.songlist.contextQueue.songs;
         const currentIndex = currentSong
           ? sourceSongs.findIndex((song) => song.id === currentSong.id)
           : 0;
@@ -496,6 +526,7 @@ export class NativeQueueController implements QueueController {
           true,
         );
         state.songlist.contextQueue.currentIndex = 0;
+        state.songlist.sourceQueue.songs = [...sourceSongs];
         state.songlist.originalContextSongs = [...sourceSongs];
         if (state.songlist.userQueue.songs.length > 0) {
           state.songlist.originalUserSongs = [
