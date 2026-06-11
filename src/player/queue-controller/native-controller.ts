@@ -134,6 +134,20 @@ export class NativeQueueController implements QueueController {
       });
   }
 
+  #updateContextQueueOnNative(): void {
+    const { songlist } = usePlayerStore.getState();
+    if (songlist.contextQueue.songs.length === 0) return;
+
+    this.#plugin
+      .updateContextQueue({
+        songs: songlist.contextQueue.songs.map(songToNativeQueueSong),
+        currentIndex: songlist.contextQueue.currentIndex,
+      })
+      .catch((err) => {
+        logger.error("[NativeQueueController] queue update failed", err);
+      });
+  }
+
   constructor() {
     const availability = getNativeAudioPluginAvailability();
     if (!availability.available) {
@@ -502,7 +516,7 @@ export class NativeQueueController implements QueueController {
       }
       state.songlist.isShuffleActive = !current;
     });
-    this.#syncContextQueueToNative();
+    this.#updateContextQueueOnNative();
   }
 
   setLoopState(state: LoopState): void {
@@ -520,7 +534,7 @@ export class NativeQueueController implements QueueController {
       s.playerState.loopState = state;
       rebuildContextQueueForLoopState(s.songlist, state);
     });
-    this.#syncContextQueueToNative();
+    this.#updateContextQueueOnNative();
   }
 
   toggleLoop(): void {

@@ -38,10 +38,13 @@ const mocks = vi.hoisted(() => {
     deleteAudioFile: vi.fn(async () => ({ deleted: false })),
     clearAudioFiles: vi.fn(async () => ({ deletedCount: 0 })),
     setContextQueue: vi.fn(async () => {}),
+    updateContextQueue: vi.fn(async () => {}),
+    reorderContextQueue: vi.fn(async () => {}),
     addToUserQueue: vi.fn(async () => {}),
     removeFromUserQueue: vi.fn(async () => {}),
     clearUserQueue: vi.fn(async () => {}),
     playAtIndex: vi.fn(async () => {}),
+    markAsShuffled: vi.fn(async () => {}),
     getFullState: vi.fn(async () => ({
       contextQueue: {
         songs: [],
@@ -50,6 +53,11 @@ const mocks = vi.hoisted(() => {
         sourceName: null,
       },
       userQueue: [],
+      originalContextSongs: [],
+      originalUserSongs: [],
+      shuffleHistory: [],
+      shuffleStartHistory: [],
+      playedUserQueueHistory: [],
       isInUserQueue: false,
       isShuffleActive: false,
       loopState: "off" as const,
@@ -57,6 +65,7 @@ const mocks = vi.hoisted(() => {
       currentTime: 0,
       duration: 0,
       currentSongId: null,
+      isRestored: false,
     })),
     getScrobbleBuffer: vi.fn(async () => ({ entries: [] })),
     clearScrobbleBuffer: vi.fn(async () => {}),
@@ -95,6 +104,11 @@ const mocks = vi.hoisted(() => {
       progress: 123,
       bufferedProgress: 123,
     },
+    settings: {
+      coverArt: {
+        useAlbumCoverForSongs: false,
+      },
+    },
     songlist: {
       contextQueue: {
         songs: [],
@@ -104,6 +118,10 @@ const mocks = vi.hoisted(() => {
       },
       userQueue: { songs: [] },
       playedUserQueueHistory: [],
+      originalContextSongs: [],
+      originalUserSongs: undefined,
+      shuffleHistory: [],
+      shuffleStartHistory: [],
       currentSong: null,
       isInUserQueue: false,
       isShuffleActive: false,
@@ -172,7 +190,15 @@ describe("NativeQueueController terminal playback reset", () => {
     mocks.storeState.playerProgress.bufferedProgress = 123;
     mocks.storeState.songlist.contextQueue.songs = [];
     mocks.storeState.songlist.contextQueue.currentIndex = 0;
+    mocks.storeState.songlist.originalContextSongs = [];
+    mocks.storeState.songlist.originalUserSongs = undefined;
+    mocks.storeState.songlist.userQueue.songs = [];
+    mocks.storeState.songlist.playedUserQueueHistory = [];
+    mocks.storeState.songlist.shuffleHistory = [];
+    mocks.storeState.songlist.shuffleStartHistory = [];
     mocks.storeState.songlist.currentSong = null;
+    mocks.storeState.songlist.isInUserQueue = false;
+    mocks.storeState.songlist.isShuffleActive = false;
   });
 
   it("seeks native playback back to zero after the last track ends", async () => {
@@ -259,6 +285,67 @@ describe("NativeQueueController setVolume", () => {
     expect(mocks.plugin.setSystemVolume).toHaveBeenCalledWith({
       value: 0.75,
     });
+
+    controller.dispose();
+  });
+});
+
+describe("NativeQueueController shuffle and loop queue updates", () => {
+  beforeEach(() => {
+    for (const value of Object.values(mocks.plugin)) {
+      if (typeof value === "function") {
+        vi.mocked(value).mockClear();
+      }
+    }
+    mocks.storeState.playerState.loopState = LoopState.Off;
+    mocks.storeState.songlist.contextQueue.songs = [
+      { id: "song-1", duration: 123 } as never,
+      { id: "song-2", duration: 234 } as never,
+      { id: "song-3", duration: 345 } as never,
+    ];
+    mocks.storeState.songlist.contextQueue.currentIndex = 0;
+    mocks.storeState.songlist.currentSong =
+      mocks.storeState.songlist.contextQueue.songs[0];
+    mocks.storeState.songlist.originalContextSongs = [
+      ...mocks.storeState.songlist.contextQueue.songs,
+    ];
+    mocks.storeState.songlist.isShuffleActive = false;
+  });
+
+  it("updates native queue without reloading when shuffle is toggled", () => {
+    const controller = new NativeQueueController();
+
+    controller.toggleShuffle();
+
+    expect(mocks.plugin.setShuffle).toHaveBeenCalledWith({ enabled: true });
+    expect(mocks.plugin.updateContextQueue).toHaveBeenCalledWith({
+      songs: expect.arrayContaining([
+        expect.objectContaining({ id: "song-1" }),
+        expect.objectContaining({ id: "song-2" }),
+        expect.objectContaining({ id: "song-3" }),
+      ]),
+      currentIndex: 0,
+    });
+    expect(mocks.plugin.setContextQueue).not.toHaveBeenCalled();
+
+    controller.dispose();
+  });
+
+  it("updates native queue without reloading when loop state changes", () => {
+    const controller = new NativeQueueController();
+
+    controller.setLoopState(LoopState.All);
+
+    expect(mocks.plugin.setRepeatMode).toHaveBeenCalledWith({ mode: "all" });
+    expect(mocks.plugin.updateContextQueue).toHaveBeenCalledWith({
+      songs: expect.arrayContaining([
+        expect.objectContaining({ id: "song-1" }),
+        expect.objectContaining({ id: "song-2" }),
+        expect.objectContaining({ id: "song-3" }),
+      ]),
+      currentIndex: 0,
+    });
+    expect(mocks.plugin.setContextQueue).not.toHaveBeenCalled();
 
     controller.dispose();
   });
