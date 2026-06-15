@@ -611,6 +611,25 @@ describe("transitionHandleSongEnded", () => {
     expect(result).toEqual({ action: "playNext" });
   });
 
+  it("returns seekToStart when loop all has only the current song", () => {
+    const songlist = makeSonglist({
+      contextQueue: makeContextQueue([makeSong("a")], 0),
+      userQueue: { songs: [] },
+    });
+    const result = transitionHandleSongEnded(songlist, LoopState.All);
+    expect(result).toEqual({ action: "seekToStart" });
+  });
+
+  it("returns playNext when loop all has a queued user song", () => {
+    const songlist = makeSonglist({
+      contextQueue: makeContextQueue([makeSong("a")], 0),
+      userQueue: { songs: [makeSong("u1")] },
+      isInUserQueue: false,
+    });
+    const result = transitionHandleSongEnded(songlist, LoopState.All);
+    expect(result).toEqual({ action: "playNext" });
+  });
+
   it("seeks to start for loop one when in user queue with no remaining songs", () => {
     const songlist = makeSonglist({
       contextQueue: makeContextQueue([makeSong("a")], 0),

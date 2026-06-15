@@ -337,6 +337,13 @@ export function transitionHandleSongEnded(
       : hasNextEffectiveSong(songlist, loopState);
 
   if (hasNext) {
+    if (
+      loopState === LoopState.All &&
+      userQueueRemaining === 0 &&
+      songlist.contextQueue.songs.length <= 1
+    ) {
+      return { action: "seekToStart" };
+    }
     return { action: "playNext" };
   }
   if (loopState === LoopState.One) {
