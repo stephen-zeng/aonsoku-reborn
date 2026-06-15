@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useCurrentLyricLine } from "@/app/hooks/use-current-lyric-line";
-import { usePipWindowOpen } from "@/store/player.store";
+import { usePipWindowOpen } from "@/store/player/selectors";
 import { hasElectronBridge } from "@/utils/desktop";
 import {
   broadcastState,

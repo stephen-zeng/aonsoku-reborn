@@ -17,6 +17,133 @@ import {
 export const MAX_QUEUE_SIZE = 500;
 export const MAX_USER_QUEUE_IDB_SIZE = 100;
 
+function rotateSongsFromIndex(songs: ISong[], index: number): ISong[] {
+  if (songs.length === 0) return [];
+  index = Math.max(0, Math.min(index, songs.length - 1));
+  return [...songs.slice(index), ...songs.slice(0, index)];
+}
+
+export function getSourceQueueSongs(songlist: ISongList): ISong[] {
+  if (songlist.sourceQueue?.songs.length > 0) {
+    return songlist.sourceQueue.songs;
+  }
+  if (songlist.originalContextSongs.length > 0) {
+    return songlist.originalContextSongs;
+  }
+  return songlist.contextQueue.songs;
+}
+
+export function getSourceQueueIndex(
+  songlist: ISongList,
+  song: ISong | null,
+): number {
+  const sourceSongs = getSourceQueueSongs(songlist);
+  if (!song) return 0;
+  const index = sourceSongs.findIndex(
+    (sourceSong) => sourceSong.id === song.id,
+  );
+  return index >= 0 ? index : 0;
+}
+
+function buildLinearQueue(songs: ISong[], index: number): ISong[] {
+  if (songs.length === 0) return [];
+  index = Math.max(0, Math.min(index, songs.length - 1));
+  return songs.slice(index);
+}
+
+export function buildContextQueueSongs(
+  songs: ISong[],
+  index: number,
+  loopState: LoopState,
+  shuffle: boolean,
+  shuffleFn: (
+    items: ISong[],
+    history: string[],
+  ) => ISong[] = shuffleWithGapAvoidance,
+): ISong[] {
+  if (songs.length === 0) return [];
+
+  const ordered =
+    loopState === LoopState.All
+      ? rotateSongsFromIndex(songs, index)
+      : buildLinearQueue(songs, index);
+
+  if (!shuffle || ordered.length <= 1) return ordered;
+
+  const [currentSong, ...upcoming] = ordered;
+  return [currentSong, ...shuffleFn(upcoming, [])];
+}
+
+export function rotateContextQueueToNext(state: Draft<ISongList>): void {
+  const { songs } = state.contextQueue;
+  if (songs.length <= 1) return;
+  const [currentSong, ...remaining] = songs;
+  state.contextQueue.songs = [...remaining, currentSong];
+  state.contextQueue.currentIndex = 0;
+}
+
+export function appendPlaybackQueueCycle(state: Draft<ISongList>): void {
+  const playbackSongs = state.contextQueue.songs;
+  if (playbackSongs.length === 0) return;
+
+  const cycleLength = Math.max(
+    state.sourceQueue.songs.length || state.originalContextSongs.length,
+    playbackSongs.length,
+  );
+  const cycle = playbackSongs.slice(0, cycleLength);
+  state.contextQueue.songs = [...playbackSongs, ...cycle];
+}
+
+export function advancePlaybackQueue(
+  state: Draft<ISongList>,
+  loopState: LoopState,
+): void {
+  const { contextQueue } = state;
+  if (contextQueue.songs.length <= 1) return;
+
+  const nextIndex = contextQueue.currentIndex + 1;
+  if (
+    loopState === LoopState.All &&
+    nextIndex >= contextQueue.songs.length - 1
+  ) {
+    appendPlaybackQueueCycle(state);
+  }
+
+  contextQueue.currentIndex = Math.min(
+    nextIndex,
+    contextQueue.songs.length - 1,
+  );
+}
+
+export function rebuildContextQueueForLoopState(
+  state: Draft<ISongList>,
+  loopState: LoopState,
+  shuffleFn: (
+    items: ISong[],
+    history: string[],
+  ) => ISong[] = shuffleWithGapAvoidance,
+): void {
+  const currentSong = getCurrentSong(state as ISongList);
+  if (!currentSong) return;
+
+  const sourceSongs = getSourceQueueSongs(state as ISongList);
+  const currentIndex = sourceSongs.findIndex(
+    (song) => song.id === currentSong.id,
+  );
+  if (currentIndex === -1) return;
+
+  state.contextQueue.songs = buildContextQueueSongs(
+    sourceSongs,
+    currentIndex,
+    loopState,
+    state.isShuffleActive,
+    shuffleFn,
+  );
+  state.contextQueue.currentIndex = 0;
+  state.sourceQueue.songs = [...sourceSongs];
+  state.originalContextSongs = [...sourceSongs];
+}
+
 export function getCurrentSong(songlist: ISongList): ISong | null {
   if (songlist.isInUserQueue && songlist.userQueue.songs.length > 0) {
     return songlist.userQueue.songs[0] ?? null;
@@ -99,17 +226,15 @@ export function dedupAgainstExisting(
   });
 }
 
-export function applyShuffleOn(state: Draft<ISongList>): void {
+export function applyShuffleOn(
+  state: Draft<ISongList>,
+  loopState: LoopState = LoopState.Off,
+): void {
   const { contextQueue } = state;
   if (contextQueue.songs.length + state.userQueue.songs.length <= 1) return;
 
-  const isLastContextSong =
-    contextQueue.currentIndex >= contextQueue.songs.length - 1;
-  if (isLastContextSong && state.userQueue.songs.length === 0) return;
-
-  state.originalContextSongs = [...contextQueue.songs];
-
   const currentSong = getCurrentSong(state as ISongList);
+  if (!currentSong) return;
   if (currentSong?.id) {
     state.shuffleStartHistory = pushToHistory(
       state.shuffleStartHistory,
@@ -118,17 +243,17 @@ export function applyShuffleOn(state: Draft<ISongList>): void {
     );
   }
 
-  const upcoming = contextQueue.songs.slice(contextQueue.currentIndex + 1);
-  if (upcoming.length > 0) {
-    const shuffledUpcoming = shuffleWithGapAvoidance(
-      upcoming,
-      state.shuffleHistory,
-    );
-    contextQueue.songs = [
-      ...contextQueue.songs.slice(0, contextQueue.currentIndex + 1),
-      ...shuffledUpcoming,
-    ];
-  }
+  const sourceSongs = getSourceQueueSongs(state as ISongList);
+  const sourceIndex = getSourceQueueIndex(state as ISongList, currentSong);
+  contextQueue.songs = buildContextQueueSongs(
+    sourceSongs,
+    sourceIndex,
+    loopState,
+    true,
+  );
+  contextQueue.currentIndex = 0;
+  state.sourceQueue.songs = [...sourceSongs];
+  state.originalContextSongs = [...sourceSongs];
 
   if (state.userQueue.songs.length > 0) {
     state.originalUserSongs = [...state.userQueue.songs];
@@ -141,40 +266,32 @@ export function applyShuffleOn(state: Draft<ISongList>): void {
   state.isShuffleActive = true;
 }
 
-export function applyShuffleOff(state: Draft<ISongList>): void {
+export function applyShuffleOff(
+  state: Draft<ISongList>,
+  loopState: LoopState = LoopState.Off,
+): void {
   const currentSongId = getCurrentSong(state as ISongList)?.id;
-  const original = state.originalContextSongs;
+  const original = getSourceQueueSongs(state as ISongList);
 
   if (original.length > 0) {
-    if (state.isInUserQueue) {
-      const newIdx = currentSongId
-        ? original.findIndex((s) => s.id === currentSongId)
-        : -1;
-      if (newIdx >= 0) {
-        state.contextQueue.songs = [...original];
-        state.contextQueue.currentIndex = newIdx;
-      } else {
-        const contextIdx = state.contextQueue.currentIndex;
-        state.contextQueue.songs = [...original];
-        state.contextQueue.currentIndex = Math.min(
-          contextIdx,
-          original.length - 1,
-        );
-      }
-    } else {
-      const newIdx = currentSongId
-        ? original.findIndex((s) => s.id === currentSongId)
-        : 0;
-      state.contextQueue.songs = [...original];
-      state.contextQueue.currentIndex = newIdx >= 0 ? newIdx : 0;
-    }
+    const newIdx = currentSongId
+      ? original.findIndex((s) => s.id === currentSongId)
+      : 0;
+    state.contextQueue.songs = buildContextQueueSongs(
+      original,
+      newIdx >= 0 ? newIdx : 0,
+      loopState,
+      false,
+    );
+    state.contextQueue.currentIndex = 0;
   }
 
   if (state.originalUserSongs && state.originalUserSongs.length > 0) {
     state.userQueue.songs = [...state.originalUserSongs];
   }
   state.originalUserSongs = undefined;
-  state.originalContextSongs = [];
+  state.sourceQueue.songs = [...original];
+  state.originalContextSongs = [...original];
   state.playedUserQueueHistory = [];
 
   state.isShuffleActive = false;
@@ -182,6 +299,7 @@ export function applyShuffleOff(state: Draft<ISongList>): void {
 }
 
 export function clearSonglistState(state: Draft<ISongList>): void {
+  state.sourceQueue = emptyContextQueue();
   state.contextQueue = emptyContextQueue();
   state.userQueue = { songs: [] };
   state.originalContextSongs = [];
@@ -197,6 +315,7 @@ export function clearSonglistState(state: Draft<ISongList>): void {
 
 export function initSonglistState(): ISongList {
   return {
+    sourceQueue: emptyContextQueue(),
     contextQueue: emptyContextQueue(),
     userQueue: { songs: [] },
     originalContextSongs: [],
@@ -256,6 +375,7 @@ export function applyStarToAllLists(
   newStarred: string | undefined,
 ): void {
   const allLists = [
+    state.sourceQueue.songs,
     state.contextQueue.songs,
     state.userQueue.songs,
     state.playedUserQueueHistory,

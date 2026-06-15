@@ -9,9 +9,12 @@ import type {
   NativeQueueSourceId,
 } from "@/native/audio/types";
 import {
+  appendPlaybackQueueCycle,
+  buildContextQueueSongs,
   findSongTier,
   getCurrentSong,
   normalizeSourceId,
+  rebuildContextQueueForLoopState,
   setLastOnUserQueue,
   setNextOnUserQueue,
 } from "@/store/player/queue-utils";
@@ -24,9 +27,7 @@ import { logger } from "@/utils/logger";
 import { getSongCoverArtId } from "@/utils/coverArt";
 import {
   getMaxShuffleStartHistory,
-  pickRandomStartIndex,
   pushToHistory,
-  shuffleWithGapAvoidance,
 } from "@/utils/songListFunctions";
 import type {
   QueueController,
@@ -115,6 +116,39 @@ export class NativeQueueController implements QueueController {
   #queueSynced = false;
   #terminalPlaybackResetTimer: ReturnType<typeof setTimeout> | null = null;
 
+  #syncContextQueueToNative(autoplay = true): void {
+    const { songlist, playerState } = usePlayerStore.getState();
+    if (songlist.contextQueue.songs.length === 0) return;
+
+    this.#nativeDrivenTransition = true;
+    this.#plugin
+      .setContextQueue({
+        songs: songlist.contextQueue.songs.map(songToNativeQueueSong),
+        currentIndex: songlist.contextQueue.currentIndex,
+        autoplay,
+        repeatMode: loopStateToNative(playerState.loopState),
+        sourceId: songlist.contextQueue.sourceId,
+        sourceName: songlist.contextQueue.sourceName ?? undefined,
+      })
+      .catch((err) => {
+        logger.error("[NativeQueueController] queue sync failed", err);
+      });
+  }
+
+  #updateContextQueueOnNative(): void {
+    const { songlist } = usePlayerStore.getState();
+    if (songlist.contextQueue.songs.length === 0) return;
+
+    this.#plugin
+      .updateContextQueue({
+        songs: songlist.contextQueue.songs.map(songToNativeQueueSong),
+        currentIndex: songlist.contextQueue.currentIndex,
+      })
+      .catch((err) => {
+        logger.error("[NativeQueueController] queue update failed", err);
+      });
+  }
+
   constructor() {
     const availability = getNativeAudioPluginAvailability();
     if (!availability.available) {
@@ -138,6 +172,7 @@ export class NativeQueueController implements QueueController {
     const prevPlayerProgress = { ...usePlayerStore.getState().playerProgress };
     const prevSonglist = {
       isShuffleActive: usePlayerStore.getState().songlist.isShuffleActive,
+      sourceQueue: { ...usePlayerStore.getState().songlist.sourceQueue },
       contextQueue: { ...usePlayerStore.getState().songlist.contextQueue },
       currentSong: usePlayerStore.getState().songlist.currentSong,
       originalContextSongs: usePlayerStore.getState().songlist
@@ -170,6 +205,7 @@ export class NativeQueueController implements QueueController {
         state.playerProgress.bufferedProgress =
           prevPlayerProgress.bufferedProgress;
         state.songlist.isShuffleActive = prevSonglist.isShuffleActive;
+        state.songlist.sourceQueue = prevSonglist.sourceQueue;
         state.songlist.contextQueue = prevSonglist.contextQueue;
         state.songlist.currentSong = prevSonglist.currentSong;
         state.songlist.originalContextSongs = prevSonglist.originalContextSongs;
@@ -189,16 +225,14 @@ export class NativeQueueController implements QueueController {
     if (shuffle && songs.length > 1) {
       const startHistory =
         usePlayerStore.getState().songlist.shuffleStartHistory ?? [];
-      const randomIndex = pickRandomStartIndex(
-        songs.length,
-        startHistory,
-        (i) => songs[i].id,
+      const clampedIndex = Math.max(0, Math.min(index, songs.length - 1));
+      const startSong = songs[clampedIndex];
+      const queueSongs = buildContextQueueSongs(
+        songs,
+        clampedIndex,
+        loopState,
+        true,
       );
-
-      const startSong = songs[randomIndex];
-      const remaining = songs.filter((_, i) => i !== randomIndex);
-      const shuffledRemaining = shuffleWithGapAvoidance(remaining, []);
-      const shuffledSongs = [startSong, ...shuffledRemaining];
 
       const updatedStartHistory = pushToHistory(
         startHistory,
@@ -206,7 +240,7 @@ export class NativeQueueController implements QueueController {
         getMaxShuffleStartHistory(songs.length),
       );
 
-      const nativeSongs = shuffledSongs.map(songToNativeQueueSong);
+      const nativeSongs = queueSongs.map(songToNativeQueueSong);
       const originalNativeSongs = songs.map(songToNativeQueueSong);
       this.#nativeDrivenTransition = true;
       this.#plugin
@@ -229,7 +263,7 @@ export class NativeQueueController implements QueueController {
         state.playerProgress.progress = 0;
         state.playerProgress.bufferedProgress = 0;
         state.songlist.isShuffleActive = true;
-        state.songlist.contextQueue.songs = shuffledSongs;
+        state.songlist.contextQueue.songs = queueSongs;
         state.songlist.contextQueue.currentIndex = 0;
         state.songlist.contextQueue.sourceId = normalizedId;
         state.songlist.contextQueue.sourceName =
@@ -237,6 +271,12 @@ export class NativeQueueController implements QueueController {
             ? sourceName || null
             : state.songlist.contextQueue.sourceName;
         state.songlist.currentSong = startSong;
+        state.songlist.sourceQueue = {
+          songs: [...songs],
+          currentIndex: clampedIndex,
+          sourceId: normalizedId,
+          sourceName: state.songlist.contextQueue.sourceName,
+        };
         state.songlist.originalContextSongs = [...songs];
         state.songlist.userQueue = { songs: [] };
         state.songlist.isInUserQueue = false;
@@ -262,12 +302,18 @@ export class NativeQueueController implements QueueController {
         return;
       }
 
-      const nativeSongs = songs.map(songToNativeQueueSong);
+      const queueSongs = buildContextQueueSongs(
+        songs,
+        clampedIndex,
+        loopState,
+        false,
+      );
+      const nativeSongs = queueSongs.map(songToNativeQueueSong);
       this.#nativeDrivenTransition = true;
       this.#plugin
         .setContextQueue({
           songs: nativeSongs,
-          currentIndex: clampedIndex,
+          currentIndex: 0,
           autoplay: true,
           repeatMode: loopStateToNative(loopState),
           sourceId: normalizedId,
@@ -281,20 +327,26 @@ export class NativeQueueController implements QueueController {
         state.playerProgress.progress = 0;
         state.playerProgress.bufferedProgress = 0;
         state.songlist.isShuffleActive = false;
-        state.songlist.contextQueue.songs = songs;
-        state.songlist.contextQueue.currentIndex = clampedIndex;
+        state.songlist.contextQueue.songs = queueSongs;
+        state.songlist.contextQueue.currentIndex = 0;
         state.songlist.contextQueue.sourceId = normalizedId;
         state.songlist.contextQueue.sourceName =
           sourceName !== undefined
             ? sourceName || null
             : state.songlist.contextQueue.sourceName;
-        state.songlist.currentSong = songs[clampedIndex] ?? null;
-        state.songlist.originalContextSongs = [];
+        state.songlist.currentSong = queueSongs[0] ?? null;
+        state.songlist.sourceQueue = {
+          songs: [...songs],
+          currentIndex: clampedIndex,
+          sourceId: normalizedId,
+          sourceName: state.songlist.contextQueue.sourceName,
+        };
+        state.songlist.originalContextSongs = [...songs];
         state.songlist.userQueue = { songs: [] };
         state.songlist.isInUserQueue = false;
         state.songlist.playedUserQueueHistory = [];
-        state.playerState.currentDuration = songs[clampedIndex]?.duration
-          ? Math.round(songs[clampedIndex].duration)
+        state.playerState.currentDuration = queueSongs[0]?.duration
+          ? Math.round(queueSongs[0].duration)
           : 0;
       });
     }
@@ -329,6 +381,12 @@ export class NativeQueueController implements QueueController {
       state.playerProgress.progress = 0;
       state.playerProgress.bufferedProgress = 0;
       state.songlist.contextQueue.currentIndex = contextIndex;
+      if (
+        state.playerState.loopState === LoopState.All &&
+        contextIndex >= state.songlist.contextQueue.songs.length - 1
+      ) {
+        appendPlaybackQueueCycle(state.songlist);
+      }
       state.songlist.isInUserQueue = false;
       const song = state.songlist.contextQueue.songs[contextIndex] ?? null;
       if (song) {
@@ -338,6 +396,13 @@ export class NativeQueueController implements QueueController {
           : 0;
       }
     });
+
+    if (
+      usePlayerStore.getState().playerState.loopState === LoopState.All &&
+      contextIndex >= contextSongs.length - 1
+    ) {
+      this.#updateContextQueueOnNative();
+    }
   }
 
   playFromUserQueue(userQueueIndex: number): void {
@@ -444,9 +509,25 @@ export class NativeQueueController implements QueueController {
 
     usePlayerStore.setState((state) => {
       if (!current) {
-        state.songlist.originalContextSongs = [
-          ...state.songlist.contextQueue.songs,
-        ];
+        const currentSong = getCurrentSong(state.songlist);
+        const sourceSongs =
+          state.songlist.sourceQueue.songs.length > 0
+            ? state.songlist.sourceQueue.songs
+            : state.songlist.originalContextSongs.length > 0
+              ? state.songlist.originalContextSongs
+              : state.songlist.contextQueue.songs;
+        const currentIndex = currentSong
+          ? sourceSongs.findIndex((song) => song.id === currentSong.id)
+          : 0;
+        state.songlist.contextQueue.songs = buildContextQueueSongs(
+          sourceSongs,
+          currentIndex >= 0 ? currentIndex : 0,
+          state.playerState.loopState,
+          true,
+        );
+        state.songlist.contextQueue.currentIndex = 0;
+        state.songlist.sourceQueue.songs = [...sourceSongs];
+        state.songlist.originalContextSongs = [...sourceSongs];
         if (state.songlist.userQueue.songs.length > 0) {
           state.songlist.originalUserSongs = [
             ...state.songlist.userQueue.songs,
@@ -459,9 +540,14 @@ export class NativeQueueController implements QueueController {
           ];
         }
         state.songlist.originalUserSongs = undefined;
+        rebuildContextQueueForLoopState(
+          state.songlist,
+          state.playerState.loopState,
+        );
       }
       state.songlist.isShuffleActive = !current;
     });
+    this.#updateContextQueueOnNative();
   }
 
   setLoopState(state: LoopState): void {
@@ -477,7 +563,9 @@ export class NativeQueueController implements QueueController {
 
     usePlayerStore.setState((s) => {
       s.playerState.loopState = state;
+      rebuildContextQueueForLoopState(s.songlist, state);
     });
+    this.#updateContextQueueOnNative();
   }
 
   toggleLoop(): void {
