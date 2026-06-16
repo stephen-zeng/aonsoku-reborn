@@ -19,7 +19,10 @@ import {
   useLyricsSettings,
   useSongColor,
 } from "@/store/player.store";
-import { ArtworkWithInfo } from "./artwork-with-info";
+import {
+  ArtworkWithInfo,
+  FullscreenSongInfoRow,
+} from "./artwork-with-info";
 import {
   CONTENT_MAX_WIDTH,
   FULLSCREEN_QUEUE_BG_CLASS,
@@ -226,19 +229,27 @@ export const MobileLayout = memo(function MobileLayout({
               data-testid="fullscreen-playing-view"
               data-layout={playingViewLayout}
               className={cn(
-                "flex min-h-0 flex-1 flex-col items-center overflow-hidden overflow-clip",
+                "flex min-h-0 flex-1 flex-col items-center overflow-hidden overflow-clip px-4",
                 useWideCenteredPlayingLayout && "justify-center",
                 useShortCompactPlayingLayout && "justify-between",
               )}
             >
-              <ArtworkWithInfo
+              <div className="flex-1 min-h-0 w-full flex flex-col items-center justify-center">
+                <ArtworkWithInfo
+                  showInfo={false}
+                  compact={useShortCompactPlayingLayout}
+                  showTouchDragSurface={isTouchPrimary}
+                  className="w-full"
+                />
+              </div>
+
+              <FullscreenSongInfoRow
                 compact={useShortCompactPlayingLayout}
-                showTouchDragSurface={isTouchPrimary}
                 className={cn(
-                  "w-full",
-                  useShortCompactPlayingLayout ? "flex-1 px-4" : "min-h-0",
+                  useShortCompactPlayingLayout ? "py-3" : "py-8 md:py-10",
                 )}
               />
+
               <FullscreenControlPanel
                 compact={useShortCompactPlayingLayout}
                 expanded={

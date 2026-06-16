@@ -5,56 +5,82 @@ import { LikeButton } from "./like-button";
 import { FullscreenSongArtwork } from "./song-artwork";
 import { AlbumName, SongInfo } from "./song-info";
 
+export const FullscreenSongInfoRow = memo(function FullscreenSongInfoRow({
+  compact = false,
+  className,
+}: {
+  compact?: boolean;
+  className?: string;
+}) {
+  return (
+    <div
+      className={clsx(
+        "mx-auto w-full min-w-0 shrink-0 justify-self-center",
+        CONTENT_MAX_WIDTH,
+        className,
+      )}
+    >
+      <div className="flex min-w-0 items-center justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <SongInfo compact={compact} />
+        </div>
+        <div className={clsx("shrink-0", compact ? "pt-0.5" : "pt-1")}>
+          <LikeButton />
+        </div>
+      </div>
+    </div>
+  );
+});
+
 export const ArtworkWithInfo = memo(function ArtworkWithInfo({
   className,
   compact = false,
   showTouchDragSurface = false,
+  showInfo = true,
 }: {
   className?: string;
   compact?: boolean;
   showTouchDragSurface?: boolean;
+  showInfo?: boolean;
 }) {
   return (
     <div
       className={clsx(
         "flex w-full min-h-0 min-w-0 flex-col items-center transition-all duration-300 ease-in-out",
-        compact ? "justify-center" : "flex-1 justify-between",
+        showInfo ? "flex-1 justify-between" : "justify-center",
         className,
       )}
     >
       <div
         className={clsx(
-          "mx-auto w-full min-w-0 shrink-0 justify-self-center",
-          CONTENT_MAX_WIDTH,
-          compact ? "pb-2" : "pb-1.5",
+          "w-full min-h-0 flex flex-col items-center justify-center",
+          showInfo ? "flex-1" : "shrink-0",
         )}
       >
-        <AlbumName compact={compact} />
-      </div>
+        <div
+          className={clsx(
+            "mx-auto w-full min-w-0 shrink-0 justify-self-center",
+            CONTENT_MAX_WIDTH,
+            compact ? "pb-1" : "pb-2",
+          )}
+        >
+          <AlbumName compact={compact} />
+        </div>
 
-      <div className="flex-1 min-h-0 w-full flex items-center justify-center overflow-hidden">
-        <FullscreenSongArtwork
-          compact={compact}
-          showTouchDragSurface={showTouchDragSurface}
-        />
-      </div>
-
-      <div
-        className={clsx(
-          "mx-auto w-full min-w-0 shrink-0 justify-self-center",
-          CONTENT_MAX_WIDTH,
-          compact ? "pt-2" : "pt-4",
-        )}
-      >
-        <div className="flex min-w-0 items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <SongInfo compact={compact} />
-          </div>
-          <div className={clsx("shrink-0", compact ? "pt-0.5" : "pt-1")}>
-            <LikeButton />
-          </div>
+        <div className="min-h-0 w-full flex items-center justify-center overflow-hidden">
+          <FullscreenSongArtwork
+            compact={compact}
+            showTouchDragSurface={showTouchDragSurface}
+          />
         </div>
       </div>
+
+      {showInfo && (
+        <FullscreenSongInfoRow
+          compact={compact}
+          className={clsx(compact ? "pt-2" : "pt-4")}
+        />
+      )}
     </div>
   );
 });
