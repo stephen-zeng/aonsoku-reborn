@@ -234,7 +234,7 @@ export const MobileLayout = memo(function MobileLayout({
                 useShortCompactPlayingLayout && "justify-between",
               )}
             >
-              <div className="flex-1 min-h-0 w-full flex flex-col items-center justify-center">
+              <div className="flex-[1.3] min-h-0 w-full flex flex-col items-center justify-center">
                 <ArtworkWithInfo
                   showInfo={false}
                   compact={useShortCompactPlayingLayout}
@@ -243,19 +243,33 @@ export const MobileLayout = memo(function MobileLayout({
                 />
               </div>
 
-              <FullscreenSongInfoRow
-                compact={useShortCompactPlayingLayout}
+              <div
                 className={cn(
-                  useShortCompactPlayingLayout ? "py-3" : "py-8 md:py-10",
+                  "w-full flex flex-col min-h-0",
+                  (useShortCompactPlayingLayout || useWideCenteredPlayingLayout)
+                    ? "shrink-0"
+                    : "flex-1 justify-between",
                 )}
-              />
+              >
+                <FullscreenSongInfoRow
+                  compact={useShortCompactPlayingLayout}
+                  className={cn(
+                    useShortCompactPlayingLayout ? "py-3" : "pt-2 pb-4",
+                  )}
+                />
 
-              <FullscreenControlPanel
-                compact={useShortCompactPlayingLayout}
-                expanded={
-                  !useShortCompactPlayingLayout && !useWideCenteredPlayingLayout
-                }
-              />
+                <FullscreenControlPanel
+                  compact={useShortCompactPlayingLayout}
+                  expanded={
+                    !useShortCompactPlayingLayout && !useWideCenteredPlayingLayout
+                  }
+                  className={cn(
+                    (!useShortCompactPlayingLayout &&
+                      !useWideCenteredPlayingLayout) &&
+                      "flex-1",
+                  )}
+                />
+              </div>
             </motion.div>
           )}
 

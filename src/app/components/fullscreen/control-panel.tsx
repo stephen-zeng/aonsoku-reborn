@@ -8,22 +8,25 @@ import { VolumeBar } from "./volume-bar";
 export const FullscreenControlPanel = memo(function FullscreenControlPanel({
   expanded = false,
   compact = false,
+  className,
 }: {
   expanded?: boolean;
   compact?: boolean;
+  className?: string;
 }) {
   const contentPaddingClass = compact ? "px-4" : "px-0";
 
   return (
     <div
       className={clsx(
-        "mx-auto self-center w-full flex flex-col transition-all duration-300 ease-in-out",
+        "mx-auto self-center w-full flex flex-col transition-all duration-300 ease-in-out min-h-0",
         CONTENT_MAX_WIDTH,
         compact
           ? "shrink-0 gap-3 pb-2"
           : expanded
-            ? "shrink-0 pt-7 pb-6 gap-6 md:gap-8"
+            ? "flex-1 justify-between pt-4 pb-6 min-h-0"
             : "shrink-0 py-7 gap-5",
+        className,
       )}
     >
       <div
