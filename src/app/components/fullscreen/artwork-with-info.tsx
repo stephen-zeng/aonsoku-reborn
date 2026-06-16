@@ -18,8 +18,7 @@ export const ArtworkWithInfo = memo(function ArtworkWithInfo({
     <div
       className={clsx(
         "flex w-full min-h-0 min-w-0 flex-col items-center transition-all duration-300 ease-in-out",
-        // compact ? "justify-center" : "flex-1 justify-between py-4",
-        "justify-center flex-1",
+        compact ? "justify-center" : "flex-1 justify-between py-4",
         className,
       )}
     >
