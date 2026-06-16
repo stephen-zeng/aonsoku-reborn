@@ -18,6 +18,7 @@ import {
   stripCustomLyricsBodies,
 } from "./custom-lyrics-persist";
 import {
+  MAX_QUEUE_SIZE,
   MAX_USER_QUEUE_IDB_SIZE,
   trimQueueToWindow,
 } from "./queue-utils";
@@ -403,7 +404,11 @@ export function trimSonglistForIdb(songlist: ISongList): ISongList {
     userQueue: {
       songs: userQueue.songs.slice(0, MAX_USER_QUEUE_IDB_SIZE),
     },
-    originalContextSongs: rest.originalContextSongs,
+    originalContextSongs:
+      sourceQueue.songs.length === 0 &&
+      rest.originalContextSongs.length <= MAX_QUEUE_SIZE
+        ? rest.originalContextSongs
+        : [],
     playedUserQueueHistory: rest.playedUserQueueHistory.slice(
       -MAX_USER_QUEUE_IDB_SIZE,
     ),
