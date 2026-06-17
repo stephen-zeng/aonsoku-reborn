@@ -7,7 +7,6 @@ import { Drawer as DrawerPrimitive } from "vaul";
 import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useIsTouchPrimary } from "@/app/hooks/use-input-mode";
-import { useIsShortViewport, useIsWideViewport } from "@/app/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import {
   closeFullscreenPlayerWithHistory,
@@ -19,14 +18,8 @@ import {
   useLyricsSettings,
   useSongColor,
 } from "@/store/player.store";
-import {
-  ArtworkWithInfo,
-  FullscreenSongInfoRow,
-} from "./artwork-with-info";
-import {
-  FULLSCREEN_QUEUE_BG_CLASS,
-  PANEL_MAX_WIDTH,
-} from "./constants";
+import { ArtworkWithInfo, FullscreenSongInfoRow } from "./artwork-with-info";
+import { FULLSCREEN_QUEUE_BG_CLASS, PANEL_MAX_WIDTH } from "./constants";
 import { FullscreenControlPanel } from "./control-panel";
 import { CustomLyricsSelect } from "./custom-lyrics-select";
 import { LyricsTab } from "./lyrics";
@@ -186,19 +179,8 @@ export const MobileLayout = memo(function MobileLayout({
 }) {
   const { fullscreenPlayerTab } = useFullscreenPlayerState();
   const areLyricsAligned = useLyricsAlignment();
-  const isShortViewport = useIsShortViewport();
-  const isWideViewport = useIsWideViewport();
   const isTouchPrimary = useIsTouchPrimary();
   const contrast = useFullscreenContrast();
-  const useWideCenteredPlayingLayout =
-    fullscreenPlayerTab === "playing" && isWideViewport && !isShortViewport;
-  const useShortCompactPlayingLayout =
-    fullscreenPlayerTab === "playing" && isShortViewport;
-  const playingViewLayout = useShortCompactPlayingLayout
-    ? "short-compact"
-    : useWideCenteredPlayingLayout
-      ? "wide-centered"
-      : "default";
 
   return (
     <div
@@ -212,7 +194,6 @@ export const MobileLayout = memo(function MobileLayout({
       <MobileHeader
         onClose={closeFullscreenPlayerWithHistory}
         showDragHandle={showDragHandle}
-        compact={useShortCompactPlayingLayout}
       />
 
       <div className="flex-1 min-h-0 flex flex-col">
@@ -225,48 +206,21 @@ export const MobileLayout = memo(function MobileLayout({
               exit={{ opacity: 0, y: -8 }}
               transition={VIEW_TRANSITION}
               data-testid="fullscreen-playing-view"
-              data-layout={playingViewLayout}
-              className={cn(
-                "flex min-h-0 flex-1 flex-col items-center overflow-hidden overflow-clip px-4",
-                useWideCenteredPlayingLayout && "justify-center",
-                useShortCompactPlayingLayout && "justify-between",
-              )}
+              data-layout="default"
+              className="flex min-h-0 flex-1 flex-col items-center overflow-hidden overflow-clip px-4"
             >
               <div className="flex-[1.3] min-h-0 w-full flex flex-col items-center justify-center">
                 <ArtworkWithInfo
                   showInfo={false}
-                  compact={useShortCompactPlayingLayout}
                   showTouchDragSurface={isTouchPrimary}
                   className="w-full"
                 />
               </div>
 
-              <div
-                className={cn(
-                  "w-full flex flex-col min-h-0",
-                  (useShortCompactPlayingLayout || useWideCenteredPlayingLayout)
-                    ? "shrink-0"
-                    : "flex-1 justify-between",
-                )}
-              >
-                <FullscreenSongInfoRow
-                  compact={useShortCompactPlayingLayout}
-                  className={cn(
-                    useShortCompactPlayingLayout ? "py-3" : "pt-2 pb-4",
-                  )}
-                />
+              <div className="w-full flex flex-col min-h-0 flex-1 justify-between">
+                <FullscreenSongInfoRow className="pt-2 pb-4" />
 
-                <FullscreenControlPanel
-                  compact={useShortCompactPlayingLayout}
-                  expanded={
-                    !useShortCompactPlayingLayout && !useWideCenteredPlayingLayout
-                  }
-                  className={cn(
-                    (!useShortCompactPlayingLayout &&
-                      !useWideCenteredPlayingLayout) &&
-                      "flex-1",
-                  )}
-                />
+                <FullscreenControlPanel expanded className="flex-1" />
               </div>
             </motion.div>
           )}

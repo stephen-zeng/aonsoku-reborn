@@ -45,7 +45,7 @@ describe("MobileLayout", () => {
     });
   });
 
-  it("keeps the volume bar visible on compact mobile heights", () => {
+  it("keeps the unified playing layout on compact mobile heights", () => {
     cy.viewport(375, 667);
 
     cy.fixture("songs/random").then((songs: ISong[]) => {
@@ -59,14 +59,14 @@ describe("MobileLayout", () => {
       cy.getByTestId("fullscreen-playing-view").should(
         "have.attr",
         "data-layout",
-        "short-compact",
+        "default",
       );
       cy.get('[data-testid="fullscreen-volume-bar"]').should("be.visible");
       cy.get('[role="tablist"]').should("be.visible");
     });
   });
 
-  it("uses the centered compact playing layout on wide mobile screens", () => {
+  it("keeps the unified playing layout on wide mobile screens", () => {
     cy.viewport(768, 1024);
 
     cy.fixture("songs/random").then((songs: ISong[]) => {
@@ -80,7 +80,7 @@ describe("MobileLayout", () => {
       cy.getByTestId("fullscreen-playing-view").should(
         "have.attr",
         "data-layout",
-        "wide-centered",
+        "default",
       );
       cy.get('[data-testid="fullscreen-volume-bar"]').should("be.visible");
       cy.get('[role="tablist"]').should("be.visible");
