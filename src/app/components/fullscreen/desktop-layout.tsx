@@ -192,7 +192,7 @@ export const DesktopLayout = memo(function DesktopLayout() {
                 transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
                 className="h-full"
               >
-                <FullscreenSongQueue hideModeButtons />
+                <FullscreenSongQueue hideModeButtons hideCurrentSongContent />
               </motion.div>
             )}
             {rightPanelView === "lyrics" && (

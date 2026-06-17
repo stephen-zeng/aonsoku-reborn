@@ -107,6 +107,7 @@ interface FullscreenSongQueueProps {
   hideModeButtons?: boolean;
   hideHistory?: boolean;
   hideCurrentSong?: boolean;
+  hideCurrentSongContent?: boolean;
   hideRepeatIndicator?: boolean;
   useVirtualization?: boolean;
   scrollAreaClassName?: string;
@@ -118,6 +119,7 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
   hideModeButtons = false,
   hideHistory = false,
   hideCurrentSong = false,
+  hideCurrentSongContent = false,
   hideRepeatIndicator = false,
   useVirtualization = false,
   scrollAreaClassName,
@@ -178,6 +180,7 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
       hideModeButtons={hideModeButtons}
       hideHistory={hideHistory}
       hideCurrentSong={hideCurrentSong}
+      hideCurrentSongContent={hideCurrentSongContent}
       hideRepeatIndicator={hideRepeatIndicator}
       useVirtualization={useVirtualization}
       scrollAreaClassName={scrollAreaClassName}
@@ -202,6 +205,7 @@ function UnifiedQueueView({
   hideModeButtons,
   hideHistory,
   hideCurrentSong,
+  hideCurrentSongContent,
   hideRepeatIndicator,
   useVirtualization,
   scrollAreaClassName,
@@ -222,6 +226,7 @@ function UnifiedQueueView({
   hideModeButtons: boolean;
   hideHistory: boolean;
   hideCurrentSong: boolean;
+  hideCurrentSongContent: boolean;
   hideRepeatIndicator: boolean;
   useVirtualization: boolean;
   scrollAreaClassName?: string;
@@ -414,6 +419,7 @@ function UnifiedQueueView({
         hideModeButtons={hideModeButtons}
         hideHistory={hideHistory}
         hideCurrentSong={hideCurrentSong}
+        hideCurrentSongContent={hideCurrentSongContent}
         hideRepeatIndicator={hideRepeatIndicator}
         isRepeatOne={isRepeatOne}
         isRepeatAll={isRepeatAll}
@@ -494,8 +500,19 @@ function UnifiedQueueView({
         )}
 
         {!hideCurrentSong && (
-          <div ref={currentSongRef} className="shrink-0 pt-2 pb-1">
-            <QueueCurrentSong onClick={onCurrentSongClick} />
+          <div
+            ref={currentSongRef}
+            className={cn(
+              "shrink-0",
+              hideCurrentSongContent
+                ? "h-0 overflow-hidden"
+                : "pt-2 pb-1",
+            )}
+            aria-hidden={hideCurrentSongContent || undefined}
+          >
+            {!hideCurrentSongContent && (
+              <QueueCurrentSong onClick={onCurrentSongClick} />
+            )}
           </div>
         )}
 
@@ -689,6 +706,7 @@ function VirtualizedQueueView({
   hideModeButtons,
   hideHistory,
   hideCurrentSong,
+  hideCurrentSongContent,
   hideRepeatIndicator,
   isRepeatOne,
   isRepeatAll,
@@ -725,6 +743,7 @@ function VirtualizedQueueView({
   hideModeButtons: boolean;
   hideHistory: boolean;
   hideCurrentSong: boolean;
+  hideCurrentSongContent: boolean;
   hideRepeatIndicator: boolean;
   isRepeatOne: boolean;
   isRepeatAll: boolean;
@@ -886,7 +905,7 @@ function VirtualizedQueueView({
         case "upcomingSong":
           return 64;
         case "currentSong":
-          return 56;
+          return hideCurrentSongContent ? 1 : 56;
         case "modeButtons":
           return 40;
         case "queueHeader":
@@ -1030,8 +1049,18 @@ function VirtualizedQueueView({
                         )}
 
                         {item.type === "currentSong" && (
-                          <div data-current-song className="px-0 pt-2 pb-0.5">
-                            <QueueCurrentSong onClick={onCurrentSongClick} />
+                          <div
+                            data-current-song
+                            className={cn(
+                              hideCurrentSongContent
+                                ? "h-px overflow-hidden"
+                                : "px-0 pt-2 pb-0.5",
+                            )}
+                            aria-hidden={hideCurrentSongContent || undefined}
+                          >
+                            {!hideCurrentSongContent && (
+                              <QueueCurrentSong onClick={onCurrentSongClick} />
+                            )}
                           </div>
                         )}
 
