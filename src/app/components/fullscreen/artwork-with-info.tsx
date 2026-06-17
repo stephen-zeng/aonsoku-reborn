@@ -48,7 +48,10 @@ export const FullscreenSongInfoRow = memo(function FullscreenSongInfoRow({
             compact ? "pt-0.5" : "pt-1",
           )}
         >
-          <LikeButton />
+          <LikeButton
+            className="size-11 rounded-full"
+            iconClassName="w-6 h-6"
+          />
           {currentSong && (
             <DropdownMenu open={open} onOpenChange={setOpen}>
               <DropdownMenuTrigger asChild>
@@ -56,7 +59,7 @@ export const FullscreenSongInfoRow = memo(function FullscreenSongInfoRow({
                   variant="ghost"
                   size="icon"
                   className={clsx(
-                    "relative w-11 h-11 md:w-12 md:h-12 rounded-full text-foreground",
+                    "relative size-11 rounded-full text-foreground",
                     hoverBg,
                     triggerProps.className,
                   )}

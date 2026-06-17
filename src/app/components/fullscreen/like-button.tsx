@@ -7,10 +7,15 @@ import { usePlayerActions, usePlayerSongStarred } from "@/store/player.store";
 
 interface LikeButtonProps {
   className?: string;
+  iconClassName?: string;
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
 }
 
-export function LikeButton({ className, onClick }: LikeButtonProps) {
+export function LikeButton({
+  className,
+  iconClassName,
+  onClick,
+}: LikeButtonProps) {
   const { starCurrentSong } = usePlayerActions();
   const isSongStarred = usePlayerSongStarred();
   const { t } = useTranslation();
@@ -37,6 +42,7 @@ export function LikeButton({ className, onClick }: LikeButtonProps) {
       <Heart
         className={clsx(
           isOverride ? "w-4 h-4" : "w-6 h-6",
+          iconClassName,
           isSongStarred ? "text-red-500 fill-red-500" : "text-foreground/70",
         )}
       />
