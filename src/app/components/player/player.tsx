@@ -52,7 +52,6 @@ import { PlayerLikeButton } from "./like-button";
 import { PlayerLyricsButton } from "./lyrics-button";
 import { PlayerProgress } from "./progress";
 import { PlayerQueueButton } from "./queue-button";
-import { SleepTimerButton } from "./sleep-timer-button";
 import { PlayerVolume } from "./volume";
 
 const MemoTrackInfo = memo(TrackInfo);
@@ -64,7 +63,6 @@ const MemoPlayerQueueButton = memo(PlayerQueueButton);
 const MemoPlayerClearQueueButton = memo(PlayerClearQueueButton);
 const MemoPlayerVolume = memo(PlayerVolume);
 const MemoLyricsButton = memo(PlayerLyricsButton);
-const MemoSleepTimerButton = memo(SleepTimerButton);
 const MemoMiniPlayerButton = memo(MiniPlayerButton);
 const MemoAudioPlayer = memo(AudioPlayer);
 
@@ -407,7 +405,6 @@ export function Player() {
               <>
                 <MemoPlayerLikeButton disabled={!song} />
                 <MemoLyricsButton disabled={!song} />
-                <MemoSleepTimerButton disabled={!song} />
                 <MemoPlayerQueueButton disabled={!song} />
               </>
             )}

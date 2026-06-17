@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { OptionsButtons } from "@/app/components/options/buttons";
+import { SleepTimerMenuOptions } from "@/app/components/player/sleep-timer-menu-options";
 import { AddToPlaylistSubMenu } from "@/app/components/song/add-to-playlist";
 import { DropdownMenuSeparator } from "@/app/components/ui/dropdown-menu";
 import { useOptions } from "@/app/hooks/use-options";
@@ -23,6 +24,8 @@ export function CurrentSongMenuOptions({ song }: CurrentSongMenuOptionsProps) {
           addToPlaylistFn={(id) => addToPlaylist(id, song.id)}
         />
       </OptionsButtons.AddToPlaylistOption>
+      <DropdownMenuSeparator />
+      <SleepTimerMenuOptions />
       <DropdownMenuSeparator />
       {(song.artistId || song.albumId) && (
         <>
