@@ -43,10 +43,6 @@ function withTransitioning(transition: QueueTransition): QueueTransition {
   return { ...transition, isTransitioning: true };
 }
 
-function withSeekToStart(transition: QueueTransition): QueueTransition {
-  return { ...transition, seekToStart: true };
-}
-
 function cloneSonglist(sl: ISongList): ISongList {
   return {
     sourceQueue: {
@@ -90,10 +86,6 @@ export function transitionNextSong(
 
   if (songlist.userQueue.songs.length > 0) {
     return transitionEnterUserQueue(next);
-  }
-
-  if (loopState === LoopState.One) {
-    return withSeekToStart(withResetProgress(baseTransition(next)));
   }
 
   if (songlist.contextQueue.songs.length > 1 || loopState === LoopState.All) {
