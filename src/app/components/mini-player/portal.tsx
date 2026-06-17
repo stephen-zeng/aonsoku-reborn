@@ -14,9 +14,14 @@ export function MiniPlayerPortal({ pipWindow, children }: PortalProps) {
   useEffect(() => {
     if (pipWindow) {
       setAppTheme(theme, pipWindow);
-      replaceHead(pipWindow);
     }
   }, [pipWindow, theme]);
+
+  useEffect(() => {
+    if (!pipWindow) return;
+
+    syncHead(pipWindow);
+  }, [pipWindow]);
 
   if (!pipWindow) return null;
 
@@ -29,6 +34,47 @@ function setAppTheme(theme: Theme, pipWindow: Window) {
   pipWindow.document.documentElement.classList.add(theme);
 }
 
-function replaceHead(pipWindow: Window) {
-  pipWindow.document.head.innerHTML = document.head.innerHTML;
+function syncHead(pipWindow: Window) {
+  const pipDocument = pipWindow.document;
+  pipDocument.head.replaceChildren();
+
+  const charset = document.querySelector<HTMLMetaElement>("meta[charset]");
+  if (charset) {
+    pipDocument.head.appendChild(charset.cloneNode(true));
+  }
+
+  const viewport = document.querySelector<HTMLMetaElement>(
+    'meta[name="viewport"]',
+  );
+  if (viewport) {
+    pipDocument.head.appendChild(viewport.cloneNode(true));
+  }
+
+  const title = pipDocument.createElement("title");
+  title.textContent = document.title;
+  pipDocument.head.appendChild(title);
+
+  for (const styleSheet of Array.from(document.styleSheets)) {
+    copyStyleSheet(styleSheet, pipDocument);
+  }
+}
+
+function copyStyleSheet(styleSheet: CSSStyleSheet, pipDocument: Document) {
+  try {
+    const cssRules = Array.from(styleSheet.cssRules)
+      .map((rule) => rule.cssText)
+      .join("\n");
+    const style = pipDocument.createElement("style");
+    style.textContent = cssRules;
+    pipDocument.head.appendChild(style);
+    return;
+  } catch {
+    if (!styleSheet.href) return;
+  }
+
+  const link = pipDocument.createElement("link");
+  link.rel = "stylesheet";
+  link.href = styleSheet.href;
+  link.media = styleSheet.media.mediaText;
+  pipDocument.head.appendChild(link);
 }
