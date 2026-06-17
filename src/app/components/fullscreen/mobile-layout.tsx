@@ -209,18 +209,16 @@ export const MobileLayout = memo(function MobileLayout({
               data-layout="default"
               className="flex min-h-0 flex-1 flex-col items-center overflow-hidden overflow-clip px-4"
             >
-              <div className="flex-[1.3] min-h-0 w-full flex flex-col items-center justify-center">
+              <div className="min-h-0 w-full flex-1 flex flex-col items-center justify-center">
                 <ArtworkWithInfo
+                  fitArtworkContent
+                  largeArtwork
                   showInfo={false}
                   showTouchDragSurface={isTouchPrimary}
                   className="w-full"
                 />
-              </div>
-
-              <div className="w-full flex shrink-0 flex-col">
-                <FullscreenSongInfoRow className="pt-2 pb-4" />
-
-                <FullscreenControlPanel />
+                <FullscreenSongInfoRow className="py-5" />
+                <FullscreenControlPanel flushTop relaxed />
               </div>
             </motion.div>
           )}

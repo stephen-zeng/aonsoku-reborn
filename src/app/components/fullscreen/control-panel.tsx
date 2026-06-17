@@ -8,10 +8,14 @@ import { VolumeBar } from "./volume-bar";
 export const FullscreenControlPanel = memo(function FullscreenControlPanel({
   expanded = false,
   compact = false,
+  flushTop = false,
+  relaxed = false,
   className,
 }: {
   expanded?: boolean;
   compact?: boolean;
+  flushTop?: boolean;
+  relaxed?: boolean;
   className?: string;
 }) {
   return (
@@ -23,7 +27,11 @@ export const FullscreenControlPanel = memo(function FullscreenControlPanel({
           ? "shrink-0 gap-3 pb-2"
           : expanded
             ? "flex-1 justify-between pt-4 pb-6 min-h-0"
-            : "shrink-0 py-7 gap-5",
+            : clsx(
+                "shrink-0",
+                flushTop ? "pt-0" : "pt-7",
+                relaxed ? "gap-8 pb-8" : "gap-5 pb-7",
+              ),
         className,
       )}
     >
@@ -38,11 +46,7 @@ export const FullscreenControlPanel = memo(function FullscreenControlPanel({
       <div
         className={clsx(
           "flex min-h-14 items-center justify-between transition-all duration-300 ease-in-out",
-          compact
-            ? "shrink-0"
-            : expanded
-              ? ""
-              : "md:justify-center md:gap-3",
+          compact ? "shrink-0" : expanded ? "" : "md:justify-center md:gap-3",
         )}
       >
         <MemoFullscreenControls />
