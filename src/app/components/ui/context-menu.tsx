@@ -35,7 +35,11 @@ const ContextMenu = ({
   );
 
   const close = React.useCallback(
-    () => handleOpenChange(false),
+    () => {
+      handleOpenChange(false);
+      document.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      document.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    },
     [handleOpenChange],
   );
 
