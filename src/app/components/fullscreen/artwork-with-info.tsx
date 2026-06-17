@@ -64,7 +64,13 @@ export const ArtworkWithInfo = memo(function ArtworkWithInfo({
             compact ? "pb-1" : "pb-2",
           )}
         >
-          <AlbumName compact={compact} />
+          <AlbumName
+            compact={compact}
+            className={clsx(
+              "[&>div]:py-0.5 [&_p]:leading-normal",
+              compact ? "pb-0.5" : "pb-1",
+            )}
+          />
         </div>
 
         <div className="min-h-0 w-full flex items-center justify-center overflow-hidden">
