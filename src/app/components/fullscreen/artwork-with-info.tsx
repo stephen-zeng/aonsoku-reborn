@@ -1,6 +1,17 @@
 import { clsx } from "clsx";
+import { EllipsisVertical } from "lucide-react";
 import { memo } from "react";
+import { Button } from "@/app/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/app/components/ui/dropdown-menu";
+import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
+import { useTouchMenuGuard } from "@/app/hooks/use-touch-menu-guard";
+import { usePlayerStore } from "@/store/player.store";
 import { CONTENT_MAX_WIDTH } from "./constants";
+import { CurrentSongMenuOptions } from "./current-song-menu-options";
 import { LikeButton } from "./like-button";
 import { FullscreenSongArtwork } from "./song-artwork";
 import { AlbumName, SongInfo } from "./song-info";
@@ -12,6 +23,13 @@ export const FullscreenSongInfoRow = memo(function FullscreenSongInfoRow({
   compact?: boolean;
   className?: string;
 }) {
+  const currentSong = usePlayerStore(
+    (state) => state.songlist.currentSong,
+    (a, b) => a?.id === b?.id,
+  );
+  const { hoverBg } = useFullscreenContrast();
+  const { open, setOpen, triggerProps } = useTouchMenuGuard();
+
   return (
     <div
       className={clsx(
@@ -24,8 +42,40 @@ export const FullscreenSongInfoRow = memo(function FullscreenSongInfoRow({
         <div className="min-w-0 flex-1">
           <SongInfo compact={compact} />
         </div>
-        <div className={clsx("shrink-0", compact ? "pt-0.5" : "pt-1")}>
+        <div
+          className={clsx(
+            "flex shrink-0 items-center gap-1",
+            compact ? "pt-0.5" : "pt-1",
+          )}
+        >
           <LikeButton />
+          {currentSong && (
+            <DropdownMenu open={open} onOpenChange={setOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={clsx(
+                    "relative w-11 h-11 md:w-12 md:h-12 rounded-full text-foreground",
+                    hoverBg,
+                    triggerProps.className,
+                  )}
+                  onPointerDown={triggerProps.onPointerDown}
+                  onPointerMove={triggerProps.onPointerMove}
+                  onPointerUp={triggerProps.onPointerUp}
+                  onPointerCancel={triggerProps.onPointerCancel}
+                  onClick={triggerProps.onClick}
+                  onContextMenu={triggerProps.onContextMenu}
+                  style={{ backfaceVisibility: "hidden" }}
+                >
+                  <EllipsisVertical className="w-6 h-6 text-foreground/70" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <CurrentSongMenuOptions song={currentSong} />
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
     </div>
