@@ -172,6 +172,29 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
   );
 });
 
+const MobilePlayingView = memo(function MobilePlayingView() {
+  const isTouchPrimary = useIsTouchPrimary();
+
+  return (
+    <div className="flex flex-col items-center justify-center w-full flex-1 min-h-0">
+      {/* Artwork Section: AlbumName + Artwork */}
+      <ArtworkWithInfo
+        fitArtworkContent
+        largeArtwork
+        showInfo={false}
+        showTouchDragSurface={isTouchPrimary}
+        className="w-full"
+      />
+
+      {/* Info Section: Visually centered between artwork and progress */}
+      <FullscreenSongInfoRow className="py-8" />
+
+      {/* Control Section: Progress, Controls, VolumeBar */}
+      <FullscreenControlPanel flushTop relaxed className="w-full" />
+    </div>
+  );
+});
+
 export const MobileLayout = memo(function MobileLayout({
   showDragHandle = false,
 }: {
@@ -179,7 +202,6 @@ export const MobileLayout = memo(function MobileLayout({
 }) {
   const { fullscreenPlayerTab } = useFullscreenPlayerState();
   const areLyricsAligned = useLyricsAlignment();
-  const isTouchPrimary = useIsTouchPrimary();
   const contrast = useFullscreenContrast();
 
   return (
@@ -206,20 +228,9 @@ export const MobileLayout = memo(function MobileLayout({
               exit={{ opacity: 0, y: -8 }}
               transition={VIEW_TRANSITION}
               data-testid="fullscreen-playing-view"
-              data-layout="default"
               className="flex min-h-0 flex-1 flex-col items-center overflow-hidden overflow-clip px-4"
             >
-              <div className="min-h-0 w-full flex-1 flex flex-col items-center justify-center">
-                <ArtworkWithInfo
-                  fitArtworkContent
-                  largeArtwork
-                  showInfo={false}
-                  showTouchDragSurface={isTouchPrimary}
-                  className="w-full"
-                />
-                <FullscreenSongInfoRow className="py-5" />
-                <FullscreenControlPanel flushTop relaxed />
-              </div>
+              <MobilePlayingView />
             </motion.div>
           )}
 

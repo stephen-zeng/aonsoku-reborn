@@ -37,24 +37,29 @@ export const ArtworkWithInfo = memo(function ArtworkWithInfo({
   compact = false,
   showTouchDragSurface = false,
   showInfo = true,
+  fitArtworkContent = false,
+  largeArtwork = false,
 }: {
   className?: string;
   compact?: boolean;
   showTouchDragSurface?: boolean;
   showInfo?: boolean;
+  fitArtworkContent?: boolean;
+  largeArtwork?: boolean;
 }) {
   return (
     <div
       className={clsx(
         "flex w-full min-h-0 min-w-0 flex-col items-center transition-all duration-300 ease-in-out",
         showInfo ? "flex-1 justify-between" : "justify-center",
+        fitArtworkContent && "h-fit flex-none",
         className,
       )}
     >
       <div
         className={clsx(
           "w-full min-h-0 flex flex-col items-center justify-center",
-          showInfo ? "flex-1" : "flex-1 min-h-0",
+          showInfo ? "flex-1" : fitArtworkContent ? "flex-none h-fit" : "flex-1 min-h-0",
         )}
       >
         <div
@@ -73,9 +78,15 @@ export const ArtworkWithInfo = memo(function ArtworkWithInfo({
           />
         </div>
 
-        <div className="min-h-0 w-full flex-1 flex items-center justify-center overflow-hidden">
+        <div
+          className={clsx(
+            "min-h-0 w-full flex items-center justify-center overflow-hidden",
+            fitArtworkContent ? "flex-none h-fit" : "flex-1",
+          )}
+        >
           <FullscreenSongArtwork
             compact={compact}
+            large={largeArtwork}
             showTouchDragSurface={showTouchDragSurface}
           />
         </div>

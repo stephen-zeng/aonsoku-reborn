@@ -6,9 +6,11 @@ import { usePlayerStore } from "@/store/player.store";
 
 export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
   compact = false,
+  large = false,
   showTouchDragSurface = false,
 }: {
   compact?: boolean;
+  large?: boolean;
   showTouchDragSurface?: boolean;
 }) {
   const { albumId, coverArt, artist, title, id } = usePlayerStore(
@@ -18,10 +20,13 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
   return (
     <div
       className={clsx(
-        "relative aspect-square h-full max-w-full shrink bg-foreground/5 rounded-md overflow-hidden flex items-center justify-center transition-all duration-300 ease-in-out",
+        "relative aspect-square shrink bg-foreground/5 rounded-md overflow-hidden flex items-center justify-center transition-all duration-300 ease-in-out",
         compact
-          ? "max-h-[min(260px,42svh,calc(100vw-2rem))]"
-          : "max-h-[clamp(280px,85vw,480px)]",
+          ? "h-[min(260px,42svh,calc(100vw-2rem))]"
+          : large
+            ? "h-[min(480px,85vw,60svh)]"
+            : "h-[clamp(280px,85vw,480px)]",
+        "w-auto max-w-full",
       )}
     >
       {showTouchDragSurface && (
@@ -47,7 +52,7 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
             coverArtSize="700"
             effect="opacity"
             alt={`${artist} - ${title}`}
-            className="size-full object-contain rounded-md"
+            className="size-full object-cover rounded-md"
             wrapperClassName="size-full block overflow-hidden"
             width="100%"
             height="100%"
