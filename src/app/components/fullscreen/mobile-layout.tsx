@@ -217,10 +217,10 @@ export const MobileLayout = memo(function MobileLayout({
                 />
               </div>
 
-              <div className="w-full flex flex-col min-h-0 flex-1 justify-between">
+              <div className="w-full flex shrink-0 flex-col">
                 <FullscreenSongInfoRow className="pt-2 pb-4" />
 
-                <FullscreenControlPanel expanded className="flex-1" />
+                <FullscreenControlPanel />
               </div>
             </motion.div>
           )}
