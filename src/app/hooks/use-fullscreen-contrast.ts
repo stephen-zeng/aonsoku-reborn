@@ -65,9 +65,8 @@ export function useFullscreenContrast() {
         ? "bg-white border-white"
         : "bg-secondary-foreground border-secondary-foreground",
       playButtonBg: isDark ? "bg-white" : "bg-foreground",
-      playButtonIcon: isDark
-        ? "text-black fill-black"
-        : "text-white fill-white",
+      playButtonIconColor: isDark ? "text-black" : "text-white",
+      playButtonIconFill: isDark ? "fill-black" : "fill-white",
       style: isDark ? DARK_STYLE : LIGHT_STYLE,
     };
   }, [currentSongColor, currentSongColorIntensity, theme]);

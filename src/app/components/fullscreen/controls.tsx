@@ -36,7 +36,7 @@ function FullscreenControls() {
     toggleLoop,
     hasNext,
   } = usePlaybackControls();
-  const { isBackdropDark, playButtonBg, playButtonIcon } =
+  const { isBackdropDark, playButtonBg, playButtonIconColor, playButtonIconFill } =
     useFullscreenContrast();
 
   const secondaryBtnClass = clsx(
@@ -98,7 +98,9 @@ function FullscreenControls() {
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ duration: 0.1 }}
             >
-              <Loader2 className={clsx("w-6 h-6 animate-spin", playButtonIcon)} />
+              <Loader2
+                className={clsx("w-6 h-6 animate-spin", playButtonIconColor)}
+              />
             </motion.div>
           ) : isPlaying ? (
             <motion.div
@@ -109,7 +111,7 @@ function FullscreenControls() {
               transition={{ duration: 0.1 }}
             >
               <Pause
-                className={clsx("w-6 h-6", playButtonIcon)}
+                className={clsx("w-6 h-6", playButtonIconColor, playButtonIconFill)}
                 strokeWidth={1}
               />
             </motion.div>
@@ -121,7 +123,9 @@ function FullscreenControls() {
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ duration: 0.1 }}
             >
-              <Play className={clsx("w-6 h-6", playButtonIcon)} />
+              <Play
+                className={clsx("w-6 h-6", playButtonIconColor, playButtonIconFill)}
+              />
             </motion.div>
           )}
         </AnimatePresence>
