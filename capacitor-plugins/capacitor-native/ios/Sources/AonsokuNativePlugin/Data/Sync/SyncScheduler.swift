@@ -2,8 +2,10 @@ import Foundation
 import UIKit
 import BackgroundTasks
 
-final class SyncScheduler {
-    static let bgTaskIdentifier = "github.realtvop.aonsoku.sync.refresh"
+public final class SyncScheduler {
+    public static let bgTaskIdentifier = "github.realtvop.aonsoku.sync.refresh"
+
+    private static var shared: SyncScheduler?
 
     private let syncEngine: SyncEngine
     private var foregroundTimer: Timer?
@@ -11,7 +13,7 @@ final class SyncScheduler {
 
     init(syncEngine: SyncEngine) {
         self.syncEngine = syncEngine
-        registerBackgroundTask()
+        Self.shared = self
         observeAppLifecycle()
     }
 
@@ -34,12 +36,37 @@ final class SyncScheduler {
 
     // MARK: - Background Tasks
 
-    private func registerBackgroundTask() {
+    public static func register() {
         BGTaskScheduler.shared.register(
             forTaskWithIdentifier: Self.bgTaskIdentifier,
             using: nil
-        ) { [weak self] task in
-            self?.handleBackgroundRefresh(task as! BGAppRefreshTask)
+        ) { task in
+            if let shared = Self.shared {
+                shared.handleBackgroundRefresh(task as! BGAppRefreshTask)
+            } else {
+                let db = DatabaseManager.shared.dbPool
+                let httpClient = SubsonicHTTPClient()
+                let syncEngine = SyncEngine(db: db, httpClient: httpClient)
+
+                // Schedule next background refresh
+                let request = BGAppRefreshTaskRequest(identifier: Self.bgTaskIdentifier)
+                request.earliestBeginDate = Date(timeIntervalSinceNow: 30 * 60)
+                try? BGTaskScheduler.shared.submit(request)
+
+                let syncTask = Task {
+                    syncEngine.syncAll(includeFullSongs: false, mode: "incremental")
+                }
+
+                task.expirationHandler = {
+                    syncEngine.cancel()
+                    syncTask.cancel()
+                }
+
+                Task {
+                    _ = await syncTask.value
+                    task.setTaskCompleted(success: true)
+                }
+            }
         }
     }
 
