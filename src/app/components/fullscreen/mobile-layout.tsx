@@ -24,7 +24,6 @@ import {
   FullscreenSongInfoRow,
 } from "./artwork-with-info";
 import {
-  CONTENT_MAX_WIDTH,
   FULLSCREEN_QUEUE_BG_CLASS,
   PANEL_MAX_WIDTH,
 } from "./constants";
@@ -140,8 +139,7 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
   return (
     <div
       className={cn(
-        "shrink-0 flex items-center justify-between w-full mx-auto px-0 pt-2 pb-5",
-        CONTENT_MAX_WIDTH,
+        "shrink-0 flex items-center justify-between w-full mx-auto px-0 pt-2 pb-5 w-[65dvw] max-w-[450px]",
       )}
       role="tablist"
     >
