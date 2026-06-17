@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { LikeButton } from "@/app/components/fullscreen/like-button";
 import RepeatOne from "@/app/components/icons/repeat-one";
-import { QueueMenuOptions } from "@/app/components/queue/queue-menu-options";
 import { Button } from "@/app/components/ui/button";
 import {
   DropdownMenu,
@@ -21,6 +20,7 @@ import {
   usePlayerStore,
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
+import { CurrentSongMenuOptions } from "./current-song-menu-options";
 
 export const QueueCurrentSong = memo(function QueueCurrentSong({
   onClick,
@@ -85,7 +85,7 @@ export const QueueCurrentSong = memo(function QueueCurrentSong({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <QueueMenuOptions variant="dropdown" song={currentSong} />
+              <CurrentSongMenuOptions song={currentSong} />
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
