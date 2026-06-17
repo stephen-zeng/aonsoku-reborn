@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { memo } from "react";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { usePlayerStore } from "@/store/player.store";
-import { CONTENT_MAX_WIDTH } from "./constants";
 
 export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
   compact = false,
@@ -19,11 +18,10 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
   return (
     <div
       className={clsx(
-        "relative aspect-square w-full bg-foreground/5 rounded-md overflow-hidden flex items-center justify-center transition-all duration-300 ease-in-out",
-        !compact && "fullscreen-desktop-artwork",
+        "relative aspect-square h-full max-w-full shrink bg-foreground/5 rounded-md overflow-hidden flex items-center justify-center transition-all duration-300 ease-in-out",
         compact
-          ? "max-w-[min(260px,42svh,calc(100vw-2rem))]"
-          : `${CONTENT_MAX_WIDTH} max-h-full`,
+          ? "max-h-[min(260px,42svh,calc(100vw-2rem))]"
+          : "max-h-[clamp(280px,85vw,480px)]",
       )}
     >
       {showTouchDragSurface && (
@@ -49,7 +47,7 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
             coverArtSize="700"
             effect="opacity"
             alt={`${artist} - ${title}`}
-            className="size-full object-cover rounded-md"
+            className="size-full object-contain rounded-md"
             wrapperClassName="size-full block overflow-hidden"
             width="100%"
             height="100%"

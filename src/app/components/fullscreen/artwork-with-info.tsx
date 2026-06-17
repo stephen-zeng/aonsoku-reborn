@@ -73,7 +73,7 @@ export const ArtworkWithInfo = memo(function ArtworkWithInfo({
           />
         </div>
 
-        <div className="min-h-0 w-full flex items-center justify-center overflow-hidden">
+        <div className="min-h-0 w-full flex-1 flex items-center justify-center overflow-hidden">
           <FullscreenSongArtwork
             compact={compact}
             showTouchDragSurface={showTouchDragSurface}
