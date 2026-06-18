@@ -191,6 +191,7 @@
       "electron",
       "electron-winstaller",
       "esbuild",
+      "macos-alias",
       "register-scheme",
       "sharp",
       "utf-8-validate"
