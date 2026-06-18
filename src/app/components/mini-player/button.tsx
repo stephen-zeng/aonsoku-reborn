@@ -4,10 +4,7 @@ import { memo, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
-import {
-  usePlayerCurrentList,
-  usePlayerStore,
-} from "@/store/player.store";
+import { usePlayerCurrentList, usePlayerStore } from "@/store/player.store";
 import { usePipWindowOpen } from "@/store/player/selectors";
 import { hasElectronBridge } from "@/utils/desktop";
 import { MiniPlayer } from "./player";

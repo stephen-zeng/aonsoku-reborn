@@ -36,8 +36,12 @@ function FullscreenControls() {
     toggleLoop,
     hasNext,
   } = usePlaybackControls();
-  const { isBackdropDark, playButtonBg, playButtonIconColor, playButtonIconFill } =
-    useFullscreenContrast();
+  const {
+    isBackdropDark,
+    playButtonBg,
+    playButtonIconColor,
+    playButtonIconFill,
+  } = useFullscreenContrast();
 
   const secondaryBtnClass = clsx(
     "relative h-11 w-11 min-h-11 min-w-11 shrink-0 rounded-full text-foreground md:h-12 md:w-12 md:min-h-12 md:min-w-12",
@@ -111,7 +115,11 @@ function FullscreenControls() {
               transition={{ duration: 0.1 }}
             >
               <Pause
-                className={clsx("w-6 h-6", playButtonIconColor, playButtonIconFill)}
+                className={clsx(
+                  "w-6 h-6",
+                  playButtonIconColor,
+                  playButtonIconFill,
+                )}
                 strokeWidth={1}
               />
             </motion.div>
@@ -124,7 +132,11 @@ function FullscreenControls() {
               transition={{ duration: 0.1 }}
             >
               <Play
-                className={clsx("w-6 h-6", playButtonIconColor, playButtonIconFill)}
+                className={clsx(
+                  "w-6 h-6",
+                  playButtonIconColor,
+                  playButtonIconFill,
+                )}
               />
             </motion.div>
           )}
