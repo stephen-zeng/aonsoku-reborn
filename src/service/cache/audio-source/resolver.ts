@@ -26,6 +26,7 @@ export interface CacheAudioSourceResolverOptions {
   urlResolver: CacheAudioUrlResolver;
   nativeFileResolver?: NativeFileResolver;
   blobUrls: BlobUrlAdapter;
+  preferStreamOverBlob?: boolean;
   now?: () => number;
 }
 
@@ -88,6 +89,7 @@ export class CacheAudioSourceResolver implements AudioSourceResolver {
   private readonly urlResolver: CacheAudioUrlResolver;
   private readonly nativeFileResolver?: NativeFileResolver;
   private readonly blobUrls: BlobUrlAdapter;
+  private readonly preferStreamOverBlob: boolean;
   private readonly now: () => number;
 
   constructor(options: CacheAudioSourceResolverOptions) {
@@ -97,6 +99,7 @@ export class CacheAudioSourceResolver implements AudioSourceResolver {
     this.urlResolver = options.urlResolver;
     this.nativeFileResolver = options.nativeFileResolver;
     this.blobUrls = options.blobUrls;
+    this.preferStreamOverBlob = options.preferStreamOverBlob ?? false;
     this.now = options.now ?? Date.now;
   }
 
@@ -127,6 +130,10 @@ export class CacheAudioSourceResolver implements AudioSourceResolver {
           uri: migratedFile.uri,
         };
       }
+    }
+
+    if (this.preferStreamOverBlob) {
+      return createStreamSource(songId, this.urlResolver);
     }
 
     const blobSource = await this.resolveCachedBlobSource(songId);

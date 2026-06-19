@@ -3,6 +3,7 @@ export * from "./backend-registry";
 export * from "./errors";
 export * from "./native-backend";
 export * from "./remote-command";
+export * from "./tauri-backend";
 export * from "./types";
 export * from "./web-backend";
 export * from "./session";

@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import type { NativeAudioPlugin } from "@/native/audio";
+import type { PlaybackCapabilities } from "@/utils/capabilities";
 import {
   createPlaybackBackend,
-  shouldUseNativePlaybackBackend,
   type PlaybackBackend,
+  shouldUseNativePlaybackBackend,
 } from ".";
-import type { PlaybackCapabilities } from "@/utils/capabilities";
 
 function makeAudio() {
   return {} as HTMLAudioElement;
@@ -85,6 +85,44 @@ describe("playback backend selection", () => {
     });
   });
 
+  it("uses the Tauri backend on Tauri runtime", () => {
+    const webBackend = makeBackend();
+    const tauriBackend = makeBackend();
+    const nativeFactory = vi.fn(() => makeBackend());
+
+    const selection = createPlaybackBackend(makeAudio(), {
+      getRuntime: () => "tauri",
+      isTauriPlaybackAvailable: () => true,
+      getCapabilities: () => caps({ supportsNativePlayback: true }),
+      getNativeAudioAvailability: makeAvailablePlugin,
+      createWebBackend: () => webBackend,
+      createTauriBackend: () => tauriBackend,
+      createNativeBackend: nativeFactory,
+    });
+
+    expect(selection).toEqual({
+      backend: tauriBackend,
+      kind: "tauri",
+    });
+    expect(nativeFactory).not.toHaveBeenCalled();
+  });
+
+  it("does not fall back to web on Tauri runtime", () => {
+    const webBackend = makeBackend();
+    const tauriFactory = vi.fn(() => makeBackend());
+
+    const selection = createPlaybackBackend(makeAudio(), {
+      getRuntime: () => "tauri",
+      isTauriPlaybackAvailable: () => false,
+      createWebBackend: () => webBackend,
+      createTauriBackend: tauriFactory,
+    });
+
+    expect(selection.kind).toBe("tauri");
+    expect(selection.backend).not.toBe(webBackend);
+    expect(tauriFactory).toHaveBeenCalledTimes(1);
+  });
+
   it("falls back to web when the plugin is missing", () => {
     const webBackend = makeBackend();
     const nativeFactory = vi.fn(() => makeBackend());
@@ -130,12 +168,14 @@ describe("playback backend selection", () => {
   it("reports whether native playback should be used", () => {
     expect(
       shouldUseNativePlaybackBackend({
+        getRuntime: () => "capacitor-ios",
         getCapabilities: () => caps({ supportsNativePlayback: false }),
         getNativeAudioAvailability: makeAvailablePlugin,
       }),
     ).toBe(false);
     expect(
       shouldUseNativePlaybackBackend({
+        getRuntime: () => "capacitor-ios",
         getCapabilities: () => caps({ supportsNativePlayback: true }),
         getNativeAudioAvailability: () => ({
           available: false,
@@ -146,8 +186,15 @@ describe("playback backend selection", () => {
     ).toBe(false);
     expect(
       shouldUseNativePlaybackBackend({
+        getRuntime: () => "capacitor-ios",
         getCapabilities: () => caps({ supportsNativePlayback: true }),
         getNativeAudioAvailability: makeAvailablePlugin,
+      }),
+    ).toBe(true);
+    expect(
+      shouldUseNativePlaybackBackend({
+        getRuntime: () => "tauri",
+        isTauriPlaybackAvailable: () => false,
       }),
     ).toBe(true);
   });

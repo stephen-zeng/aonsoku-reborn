@@ -31,8 +31,8 @@ const runtimeCapabilities: Record<PlatformRuntime, PlaybackCapabilities> = {
     canSetVolume: true,
     requiresSystemVolume: false,
     supportsSystemVolumeControl: false,
-    supportsWebAudioReplayGain: true,
-    supportsNativePlayback: false,
+    supportsWebAudioReplayGain: false,
+    supportsNativePlayback: true,
     supportsBackgroundPlayback: true,
   },
   "capacitor-ios": {

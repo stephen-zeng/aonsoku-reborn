@@ -1,10 +1,11 @@
+import { seekPlaybackTarget } from "@/player/playback";
 import { getNativeQueueController } from "@/player/queue-controller";
 import { cacheManager } from "@/service/cache";
 import { usePlayerStore } from "@/store/player.store";
 import { LanControlMessageType } from "@/types/lanControl";
 import { ISong } from "@/types/responses/song";
-import { getCoverArtUrlFromSongPreference, resolveCacheKeys } from "./coverArt";
 import { getRuntime } from "./capabilities";
+import { getCoverArtUrlFromSongPreference, resolveCacheKeys } from "./coverArt";
 import { isValidDuration } from "./duration";
 import { logger } from "./logger";
 import {
@@ -530,7 +531,7 @@ function handleTauriRemoteCommand(event: TauriMediaRemoteCommandEvent) {
           ? state.playerState.radioPlayerRef
           : state.playerState.audioPlayerRef;
       if (audioRef) {
-        audioRef.currentTime = position;
+        seekPlaybackTarget(audioRef, position);
       }
       state.actions.setProgress(Math.floor(position));
       return;
