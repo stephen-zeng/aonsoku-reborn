@@ -22,6 +22,17 @@ import {
 const MEDIA_SESSION_COVER_SIZE = "300";
 const REMOVE_DEBOUNCE_MS = 500;
 
+type MediaSessionSong =
+  | ISong
+  | {
+      title: string;
+      artist: string;
+      album: string;
+      coverArt?: string;
+      albumId?: string;
+      duration?: number;
+    };
+
 function isMediaSessionSupported(): boolean {
   if (typeof navigator === "undefined") return false;
   if (isTauriMediaSessionSupported()) return false;
@@ -44,7 +55,7 @@ let tauriRemoteCleanup: (() => void) | null = null;
 let tauriRemoteListenerPending = false;
 
 function updateTauriSession(payload: TauriMediaSessionPayload) {
-  tauriSessionPayload = payload;
+  tauriSessionPayload = { ...payload, artworkData: undefined };
   setTauriMediaSession(payload);
 }
 
@@ -60,6 +71,7 @@ function patchTauriSession(patch: Partial<TauriMediaSessionPayload>) {
 
 function removeMediaSession() {
   if (isTauriMediaSessionSupported()) {
+    currentSessionId++;
     tauriPlaybackState = "none";
     tauriSessionPayload = null;
     clearTauriMediaSession();
@@ -102,24 +114,87 @@ function cancelRemoveDebounce() {
   }
 }
 
-async function setMediaSession(
-  song:
-    | ISong
-    | {
-        title: string;
-        artist: string;
-        album: string;
-        coverArt?: string;
-        albumId?: string;
-        duration?: number;
-      },
-) {
+function readBlobAsBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      resolve(result.split(",", 2)[1] ?? "");
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function resolveTauriArtworkPayload(
+  song: MediaSessionSong,
+): Promise<Partial<TauriMediaSessionPayload> | null> {
+  if (!song.coverArt && !song.albumId) return null;
+
+  const artworkUrl = getCoverArtUrlFromSongPreference({
+    coverArt: song.coverArt,
+    coverArtType: "song",
+    albumId: song.albumId,
+    size: MEDIA_SESSION_COVER_SIZE,
+  });
+  const cacheKeys = resolveCacheKeys(song.coverArt, "song", song.albumId);
+  const artworkKey = cacheKeys[0] ?? artworkUrl;
+  let sourceUrl = artworkUrl;
+  let shouldRevokeSourceUrl = false;
+
+  for (const key of cacheKeys) {
+    try {
+      const cachedUrl = await cacheManager.getCachedCoverUrl(key);
+      if (cachedUrl) {
+        sourceUrl = cachedUrl;
+        shouldRevokeSourceUrl = cachedUrl.startsWith("blob:");
+        break;
+      }
+    } catch {
+      // ignore and try next key
+    }
+  }
+
+  try {
+    const response = await fetch(sourceUrl);
+    if (!response.ok) return null;
+
+    const blob = await response.blob();
+    return {
+      artworkUrl,
+      artworkData: await readBlobAsBase64(blob),
+      artworkMimeType: blob.type || "image/jpeg",
+      artworkKey,
+    };
+  } catch (error) {
+    logger.error("[TauriMediaSession] Failed to resolve artwork", error);
+    return null;
+  } finally {
+    if (shouldRevokeSourceUrl) {
+      URL.revokeObjectURL(sourceUrl);
+    }
+  }
+}
+
+async function setMediaSession(song: MediaSessionSong) {
   if (isTauriMediaSessionSupported()) {
     cancelRemoveDebounce();
+    currentSessionId++;
+    const sessionId = currentSessionId;
     const playbackState =
       tauriPlaybackState === "none" ? "playing" : tauriPlaybackState;
     tauriPlaybackState = playbackState;
-    updateTauriSession(songToTauriMediaSessionPayload(song, playbackState));
+    const payload = songToTauriMediaSessionPayload(song, playbackState);
+    updateTauriSession(payload);
+
+    const artworkPayload = await resolveTauriArtworkPayload(song);
+    if (artworkPayload && sessionId === currentSessionId) {
+      updateTauriSession({
+        ...(tauriSessionPayload ?? payload),
+        ...artworkPayload,
+        playbackState: tauriPlaybackState,
+      });
+    }
     return;
   }
 
@@ -253,6 +328,7 @@ async function setMediaSession(
 async function setRadioMediaSession(label: string, radioName: string) {
   if (isTauriMediaSessionSupported()) {
     cancelRemoveDebounce();
+    currentSessionId++;
     const playbackState =
       tauriPlaybackState === "none" ? "playing" : tauriPlaybackState;
     tauriPlaybackState = playbackState;
@@ -306,6 +382,7 @@ function setPlaybackState(state: boolean | null) {
   if (isTauriMediaSessionSupported()) {
     tauriPlaybackState = state === null ? "none" : state ? "playing" : "paused";
     if (tauriPlaybackState === "none") {
+      currentSessionId++;
       tauriSessionPayload = null;
       clearTauriMediaSession();
       return;

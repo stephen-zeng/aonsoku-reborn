@@ -15,6 +15,9 @@ export interface TauriMediaSessionPayload {
   artist?: string;
   album?: string;
   artworkUrl?: string;
+  artworkData?: string;
+  artworkMimeType?: string;
+  artworkKey?: string;
   duration?: number;
   position?: number;
   playbackState: TauriMediaPlaybackState;

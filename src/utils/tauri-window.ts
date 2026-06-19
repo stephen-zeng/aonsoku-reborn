@@ -66,18 +66,26 @@ export async function closeTauriWindow() {
   await callTauriWindow("close", undefined, () => window.close());
 }
 
+export async function startTauriWindowDrag() {
+  const window = getWindow();
+  if (!window?.startDragging) return;
+  await callTauriWindow(
+    "startDragging",
+    undefined,
+    () => window.startDragging?.() ?? Promise.resolve(),
+  );
+}
+
 export async function listenTauriWindowStateChanges(handler: () => void) {
   const window = getWindow();
   if (!window?.listen) return () => {};
 
   const listeners = await Promise.all(
     WINDOW_STATE_EVENTS.map((event) =>
-      window
-        .listen(event, handler)
-        .catch((error) => {
-          logger.error(`[TauriWindow] listen ${event} failed`, error);
-          return null;
-        }),
+      window.listen(event, handler).catch((error) => {
+        logger.error(`[TauriWindow] listen ${event} failed`, error);
+        return null;
+      }),
     ),
   );
 

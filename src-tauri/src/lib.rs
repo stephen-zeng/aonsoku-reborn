@@ -1,3 +1,5 @@
+#[cfg(target_os = "macos")]
+mod macos;
 mod media;
 
 pub fn run() {

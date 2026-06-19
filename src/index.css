@@ -256,6 +256,16 @@ button {
   app-region: no-drag;
 }
 
+header button,
+header a,
+header input,
+header select,
+header [role="button"],
+header [role="link"] {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
 .Toastify__toast-container {
   padding: 0px !important;
 }

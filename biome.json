@@ -19,6 +19,7 @@
       "!dist",
       "!dist-ssr",
       "!out",
+      "!src-tauri/target",
       "!coverage",
       "!.build",
       "!.swiftpm",

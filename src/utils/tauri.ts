@@ -14,6 +14,7 @@ export interface TauriWindowHandle {
   ) => Promise<TauriUnlistenFn>;
   minimize: () => Promise<void>;
   setFullscreen: (fullscreen: boolean) => Promise<void>;
+  startDragging?: () => Promise<void>;
   toggleMaximize: () => Promise<void>;
 }
 
