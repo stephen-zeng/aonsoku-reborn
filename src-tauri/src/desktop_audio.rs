@@ -1,19 +1,24 @@
 use std::{
     path::PathBuf,
-    sync::{mpsc, Arc, Mutex},
+    sync::{mpsc, Arc, Condvar, Mutex},
     time::Duration,
 };
 
 use remu_audio::{
+    decoder::Decoder,
     events::PlayerEvent,
+    loader::downloader::Downloader,
     player::{PlaybackControl, Player},
+    reader::{MVecBytesReader, MVecBytesWrapper},
 };
 use serde::{Deserialize, Serialize};
 use tauri::{Emitter, WebviewWindow};
 use tokio::{runtime::Runtime, sync::oneshot};
+use tokio_util::sync::CancellationToken;
 
 const DESKTOP_AUDIO_EVENT: &str = "desktop-audio-event";
 const PROGRESS_INTERVAL_MS: u64 = 500;
+const STREAM_CHUNK_SIZE: usize = 256 * 1024;
 
 type AudioCommandSender = mpsc::Sender<AudioCommand>;
 type AudioCommandResponse = oneshot::Sender<Result<(), String>>;
@@ -26,18 +31,36 @@ pub struct DesktopAudioState {
 
 struct DesktopAudioWorker {
     player: Option<Player>,
+    stream_handle: Option<StreamLoadHandle>,
     metadata: Option<DesktopAudioMetadata>,
     loaded: bool,
+    volume: f32,
     repeat_mode: DesktopAudioRepeatMode,
     shuffle: bool,
+}
+
+struct StreamLoadHandle {
+    loader: Downloader,
+    condvar: Arc<Condvar>,
+    cancellation_token: CancellationToken,
+}
+
+impl Drop for StreamLoadHandle {
+    fn drop(&mut self) {
+        self.cancellation_token.cancel();
+        self.condvar.notify_all();
+        let _ = self.loader.abort();
+    }
 }
 
 impl Default for DesktopAudioWorker {
     fn default() -> Self {
         Self {
             player: None,
+            stream_handle: None,
             metadata: None,
             loaded: false,
+            volume: 1.0,
             repeat_mode: DesktopAudioRepeatMode::Off,
             shuffle: false,
         }
@@ -436,6 +459,7 @@ fn handle_audio_command(
                 player.stop();
             }
             worker.loaded = false;
+            worker.stream_handle = None;
             let _ = set_current_request_id(request_id, None);
             let _ = response.send(Ok(()));
         }
@@ -444,8 +468,9 @@ fn handle_audio_command(
             let _ = response.send(result);
         }
         AudioCommand::SetVolume { value, response } => {
+            worker.volume = value.clamp(0.0, 1.0) as f32;
             if let Some(player) = worker.player.as_ref() {
-                player.set_volume(value.clamp(0.0, 1.0) as f32);
+                player.set_volume(worker.volume);
             }
             let _ = response.send(Ok(()));
         }
@@ -478,24 +503,32 @@ fn handle_load(
     emit_buffering(window, request_id, true);
 
     worker.loaded = false;
+    worker.stream_handle = None;
     worker.metadata = metadata;
-    let player = ensure_player(worker, window, request_id)?;
-    let load_result = runtime.block_on(load_source(player, &source));
+    let load_result = {
+        let player = ensure_player(worker, window, request_id)?;
+        runtime.block_on(load_source(player, &source))
+    };
 
-    if let Err(error) = load_result {
-        emit_error(
-            window,
-            request_id,
-            "load_failed",
-            classify_load_error(&source, &error),
-            error,
-        );
-        emit_buffering(window, request_id, false);
-        return Err("desktop audio load failed".to_string());
-    }
+    let stream_handle = match load_result {
+        Ok(stream_handle) => stream_handle,
+        Err(error) => {
+            emit_error(
+                window,
+                request_id,
+                "load_failed",
+                classify_load_error(&source, &error),
+                error,
+            );
+            emit_buffering(window, request_id, false);
+            return Err("desktop audio load failed".to_string());
+        }
+    };
 
     worker.loaded = true;
+    worker.stream_handle = stream_handle;
     if let Some(player) = worker.player.as_ref() {
+        player.set_volume(worker.volume);
         if autoplay {
             player.play();
         } else {
@@ -511,13 +544,20 @@ fn handle_load(
 }
 
 fn handle_seek(
-    worker: &DesktopAudioWorker,
+    worker: &mut DesktopAudioWorker,
     window: &WebviewWindow,
     request_id: &Arc<Mutex<Option<String>>>,
     position: f64,
 ) -> Result<(), String> {
     let position =
         valid_seconds(position).ok_or_else(|| "invalid desktop audio seek position".to_string())?;
+    let was_playing = worker
+        .player
+        .as_ref()
+        .ok_or_else(|| "desktop audio player unavailable".to_string())?
+        .paused()
+        == false;
+
     let player = worker
         .player
         .as_ref()
@@ -525,6 +565,9 @@ fn handle_seek(
     player
         .seek(Duration::from_secs_f64(position))
         .map_err(|error| error.to_string())?;
+    if was_playing {
+        player.play();
+    }
     emit_progress(
         window,
         request_id,
@@ -576,24 +619,71 @@ fn install_player_callbacks(
     });
 }
 
-async fn load_source(player: &mut Player, source: &DesktopAudioSource) -> Result<(), String> {
+async fn load_source(
+    player: &mut Player,
+    source: &DesktopAudioSource,
+) -> Result<Option<StreamLoadHandle>, String> {
     match source {
-        DesktopAudioSource::Stream { url, .. } | DesktopAudioSource::Radio { url, .. } => player
-            .load_url(url)
-            .await
-            .map_err(|error| error.to_string()),
+        DesktopAudioSource::Stream { url, .. } => load_seekable_stream(player, url).await.map(Some),
+        DesktopAudioSource::Radio { url, .. } => {
+            player
+                .load_url(url)
+                .await
+                .map_err(|error| error.to_string())?;
+            Ok(None)
+        }
         DesktopAudioSource::NativeFile { uri, .. } => {
             let path = native_file_path(uri)?;
             player
                 .load_file(path.to_string_lossy().as_ref())
                 .await
-                .map_err(|error| error.to_string())
+                .map_err(|error| error.to_string())?;
+            Ok(None)
         }
         DesktopAudioSource::Blob { .. } => Err(
             "blob URLs are owned by the WebView and cannot be played by the native desktop engine"
                 .to_string(),
         ),
     }
+}
+
+async fn load_seekable_stream(player: &mut Player, url: &str) -> Result<StreamLoadHandle, String> {
+    let url = url_with_estimated_content_length(url);
+    let wrapper = MVecBytesWrapper::new(STREAM_CHUNK_SIZE);
+    let loader = Downloader::new(wrapper.clone());
+    loader
+        .download(&url, None)
+        .await
+        .map_err(|_| "failed to download desktop audio stream".to_string())?;
+
+    let byte_len = loader.total_bytes();
+    let condvar = loader.condvar();
+    let reader = MVecBytesReader::new(wrapper, Arc::clone(&condvar));
+    let cancellation_token = reader.cancellation_token();
+    let decoder = if byte_len > 0 {
+        Decoder::builder()
+            .with_data(reader)
+            .with_byte_len(byte_len)
+            .with_seekable(true)
+            .build()
+            .map_err(|error| error.to_string())?
+    } else {
+        Decoder::builder()
+            .with_data(reader)
+            .with_seekable(true)
+            .build()
+            .map_err(|error| error.to_string())?
+    };
+
+    player
+        .load_source(decoder)
+        .map_err(|error| error.to_string())?;
+
+    Ok(StreamLoadHandle {
+        loader,
+        condvar,
+        cancellation_token,
+    })
 }
 
 #[derive(Clone, Copy)]
@@ -624,12 +714,14 @@ fn emit_worker_progress(
 
 fn progress_snapshot(player: &Player, metadata: Option<&DesktopAudioMetadata>) -> ProgressSnapshot {
     let current_time = player.position().as_secs_f64();
-    let duration = player
+    let player_duration = player
         .duration()
         .map(|duration| duration.as_secs_f64())
-        .or_else(|| metadata.and_then(|metadata| metadata.duration))
-        .and_then(valid_seconds)
-        .unwrap_or(0.0);
+        .and_then(valid_seconds);
+    let metadata_duration = metadata
+        .and_then(|metadata| metadata.duration)
+        .and_then(valid_seconds);
+    let duration = metadata_duration.or(player_duration).unwrap_or(0.0);
 
     ProgressSnapshot {
         current_time,
@@ -640,6 +732,28 @@ fn progress_snapshot(player: &Player, metadata: Option<&DesktopAudioMetadata>) -
             current_time
         },
     }
+}
+
+fn url_with_estimated_content_length(url: &str) -> String {
+    if let Ok(mut parsed_url) = url::Url::parse(url) {
+        let query_items = parsed_url
+            .query_pairs()
+            .filter(|(key, _)| key != "estimateContentLength")
+            .map(|(key, value)| (key.into_owned(), value.into_owned()))
+            .collect::<Vec<_>>();
+        {
+            let mut query_pairs = parsed_url.query_pairs_mut();
+            query_pairs.clear();
+            for (key, value) in query_items {
+                query_pairs.append_pair(&key, &value);
+            }
+            query_pairs.append_pair("estimateContentLength", "true");
+        }
+        return parsed_url.to_string();
+    }
+
+    let separator = if url.contains('?') { '&' } else { '?' };
+    format!("{url}{separator}estimateContentLength=true")
 }
 
 fn emit_simple(
