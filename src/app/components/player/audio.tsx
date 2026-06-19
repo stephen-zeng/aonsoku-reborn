@@ -629,6 +629,12 @@ export function AudioPlayer({
           });
         }
         setStoreBufferedProgress(event.bufferedTime);
+        if (isTauriBackend && event.duration > 0) {
+          manageMediaSession.setPositionState(
+            event.duration,
+            event.currentTime,
+          );
+        }
       },
     );
     const unsubscribeDuration = backendEntry.backend.subscribe(

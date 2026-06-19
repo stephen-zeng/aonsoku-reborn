@@ -24,6 +24,7 @@ pub struct MediaControlsState {
     controls: Mutex<Option<MediaControls>>,
     artwork: Mutex<Option<CachedArtwork>>,
     position_seconds: Arc<Mutex<f64>>,
+    playback_state: Mutex<MediaPlaybackState>,
 }
 
 struct CachedArtwork {
@@ -47,12 +48,20 @@ pub struct MediaSessionPayload {
     playback_state: MediaPlaybackState,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 enum MediaPlaybackState {
+    #[default]
     None,
     Playing,
     Paused,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MediaPositionPayload {
+    position: f64,
+    playback_state: Option<MediaPlaybackState>,
 }
 
 #[derive(Clone, Serialize)]
@@ -75,6 +84,7 @@ pub fn media_update_session(
     if let Some(position) = payload.position.and_then(valid_seconds) {
         set_position(&state.position_seconds, position)?;
     }
+    set_playback_state(&state.playback_state, payload.playback_state)?;
 
     let artwork_url = state.resolve_artwork_url(&payload)?;
 
@@ -97,8 +107,29 @@ pub fn media_update_session(
 }
 
 #[tauri::command]
+pub fn media_update_position(
+    state: tauri::State<'_, MediaControlsState>,
+    payload: MediaPositionPayload,
+) -> Result<(), String> {
+    let position =
+        valid_seconds(payload.position).ok_or_else(|| "invalid media position".to_string())?;
+    set_position(&state.position_seconds, position)?;
+
+    if let Some(playback_state) = payload.playback_state {
+        set_playback_state(&state.playback_state, playback_state)?;
+    }
+
+    let playback_state = get_playback_state(&state.playback_state)?;
+    state.with_existing_controls(|controls| {
+        controls.set_playback(media_playback(playback_state, Some(position)))?;
+        Ok(())
+    })
+}
+
+#[tauri::command]
 pub fn media_clear_session(state: tauri::State<'_, MediaControlsState>) -> Result<(), String> {
     set_position(&state.position_seconds, 0.0)?;
+    set_playback_state(&state.playback_state, MediaPlaybackState::None)?;
     state.clear_artwork()?;
 
     let mut controls = state
@@ -133,6 +164,22 @@ impl MediaControlsState {
         let controls = controls
             .as_mut()
             .ok_or_else(|| "media controls unavailable".to_string())?;
+
+        op(controls).map_err(|error| error.to_string())
+    }
+
+    fn with_existing_controls<F>(&self, op: F) -> Result<(), String>
+    where
+        F: FnOnce(&mut MediaControls) -> Result<(), souvlaki::Error>,
+    {
+        let mut controls = self
+            .controls
+            .lock()
+            .map_err(|_| "media controls lock poisoned".to_string())?;
+
+        let Some(controls) = controls.as_mut() else {
+            return Ok(());
+        };
 
         op(controls).map_err(|error| error.to_string())
     }
@@ -279,9 +326,20 @@ fn media_playback_from_payload(payload: &MediaSessionPayload) -> MediaPlayback {
     let progress = payload
         .position
         .and_then(valid_seconds)
-        .map(|seconds| MediaPosition(Duration::from_secs_f64(seconds)));
+        .or_else(|| current_position_fallback(payload))
+        .and_then(valid_seconds);
 
-    match payload.playback_state {
+    media_playback(payload.playback_state, progress)
+}
+
+fn current_position_fallback(_payload: &MediaSessionPayload) -> Option<f64> {
+    None
+}
+
+fn media_playback(playback_state: MediaPlaybackState, position: Option<f64>) -> MediaPlayback {
+    let progress = position.map(|seconds| MediaPosition(Duration::from_secs_f64(seconds)));
+
+    match playback_state {
         MediaPlaybackState::None => MediaPlayback::Stopped,
         MediaPlaybackState::Playing => MediaPlayback::Playing { progress },
         MediaPlaybackState::Paused => MediaPlayback::Paused { progress },
@@ -315,6 +373,26 @@ fn set_position(position_seconds: &Arc<Mutex<f64>>, position: f64) -> Result<(),
         .map_err(|_| "media position lock poisoned".to_string())?;
     *current = position;
     Ok(())
+}
+
+fn set_playback_state(
+    playback_state: &Mutex<MediaPlaybackState>,
+    state: MediaPlaybackState,
+) -> Result<(), String> {
+    let mut current = playback_state
+        .lock()
+        .map_err(|_| "media playback state lock poisoned".to_string())?;
+    *current = state;
+    Ok(())
+}
+
+fn get_playback_state(
+    playback_state: &Mutex<MediaPlaybackState>,
+) -> Result<MediaPlaybackState, String> {
+    let current = playback_state
+        .lock()
+        .map_err(|_| "media playback state lock poisoned".to_string())?;
+    Ok(*current)
 }
 
 fn valid_seconds(value: f64) -> Option<f64> {

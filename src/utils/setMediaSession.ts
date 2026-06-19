@@ -14,6 +14,7 @@ import {
   listenTauriMediaRemoteCommands,
   radioToTauriMediaSessionPayload,
   setTauriMediaSession,
+  setTauriMediaSessionPosition,
   songToTauriMediaSessionPayload,
   type TauriMediaPlaybackState,
   type TauriMediaRemoteCommandEvent,
@@ -435,11 +436,22 @@ function setPositionState(
       logger.info("[MediaSession] Invalid position:", position);
       return;
     }
-    patchTauriSession({
+    const clampedPosition = Math.min(position, duration);
+    const durationChanged = tauriSessionPayload.duration !== duration;
+    tauriSessionPayload = {
+      ...tauriSessionPayload,
       duration,
-      position: Math.min(position, duration),
+      position: clampedPosition,
       playbackState: tauriPlaybackState,
-    });
+    };
+    if (durationChanged) {
+      updateTauriSession(tauriSessionPayload);
+    } else {
+      setTauriMediaSessionPosition({
+        position: clampedPosition,
+        playbackState: tauriPlaybackState,
+      });
+    }
     return;
   }
 
@@ -531,9 +543,16 @@ function handleTauriRemoteCommand(event: TauriMediaRemoteCommandEvent) {
           ? state.playerState.radioPlayerRef
           : state.playerState.audioPlayerRef;
       if (audioRef) {
-        seekPlaybackTarget(audioRef, position);
+        Promise.resolve(seekPlaybackTarget(audioRef, position)).catch(
+          (error) => {
+            logger.error("[TauriMediaSession] Failed to seek playback", error);
+          },
+        );
       }
       state.actions.setProgress(Math.floor(position));
+      if (isValidDuration(state.playerState.currentDuration)) {
+        setPositionState(state.playerState.currentDuration, position);
+      }
       return;
     }
     case "stop":

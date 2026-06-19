@@ -23,7 +23,7 @@ pub fn configure_media_remote_commands() {
 
         enable_command(command_center, "previousTrackCommand");
         enable_command(command_center, "nextTrackCommand");
-        disable_command(command_center, "changePlaybackPositionCommand");
+        enable_command(command_center, "changePlaybackPositionCommand");
         disable_command(command_center, "seekBackwardCommand");
         disable_command(command_center, "seekForwardCommand");
         disable_command(command_center, "skipBackwardCommand");

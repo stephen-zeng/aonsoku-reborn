@@ -1,8 +1,8 @@
 import type { PlaybackRemoteCommand } from "@/player/playback";
 import type { ISong } from "@/types/responses/song";
 import { getCoverArtUrlFromSongPreference } from "./coverArt";
-import { isValidDuration } from "./duration";
 import { hasTauriBridge } from "./desktop";
+import { isValidDuration } from "./duration";
 import { logger } from "./logger";
 import { getTauriInvoke, listenTauriEvent } from "./tauri";
 
@@ -21,6 +21,11 @@ export interface TauriMediaSessionPayload {
   duration?: number;
   position?: number;
   playbackState: TauriMediaPlaybackState;
+}
+
+export interface TauriMediaPositionPayload {
+  position: number;
+  playbackState?: TauriMediaPlaybackState;
 }
 
 export interface TauriMediaRemoteCommandEvent {
@@ -57,6 +62,12 @@ export async function listenTauriMediaRemoteCommands(
 
 export function setTauriMediaSession(payload: TauriMediaSessionPayload) {
   return invokeTauriMediaSession("media_update_session", { payload });
+}
+
+export function setTauriMediaSessionPosition(
+  payload: TauriMediaPositionPayload,
+) {
+  return invokeTauriMediaSession("media_update_position", { payload });
 }
 
 export function clearTauriMediaSession() {

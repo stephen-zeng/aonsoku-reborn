@@ -18,6 +18,7 @@ pub fn run() {
             desktop_audio::desktop_audio_set_repeat_mode,
             desktop_audio::desktop_audio_set_shuffle,
             media::media_update_session,
+            media::media_update_position,
             media::media_clear_session,
         ])
         .run(tauri::generate_context!())
