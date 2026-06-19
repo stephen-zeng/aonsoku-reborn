@@ -25,6 +25,8 @@
     "electron:start": "electron-forge start",
     "electron:dev": "electron-vite dev",
     "electron:build": "electron-vite build",
+    "tauri:dev": "pnpm dlx @tauri-apps/cli@2.10.1 dev",
+    "tauri:build": "pnpm dlx @tauri-apps/cli@2.10.1 build",
     "make": "pnpm electron:build && electron-forge make",
     "publish": "pnpm electron:build && electron-forge publish",
     "build:unpack": "pnpm electron:build",

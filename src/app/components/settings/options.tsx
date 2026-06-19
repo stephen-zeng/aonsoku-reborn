@@ -19,7 +19,7 @@ import {
   SidebarMenuItem,
 } from "@/app/components/ui/sidebar";
 import { useAppSettings } from "@/store/app.store";
-import { isDesktop } from "@/utils/desktop";
+import { hasElectronBridge } from "@/utils/desktop";
 
 export type SettingsOptions =
   | "server"
@@ -47,7 +47,7 @@ const options: OptionsData[] = [
   { id: "audio", icon: Headphones },
   { id: "content", icon: FileText },
   { id: "storage", icon: HardDrive },
-  ...(isDesktop() ? [accountsOption, desktopOption] : []),
+  ...(hasElectronBridge() ? [accountsOption, desktopOption] : []),
   { id: "privacy", icon: EarthLock },
 ];
 

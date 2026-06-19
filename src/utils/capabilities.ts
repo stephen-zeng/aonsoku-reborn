@@ -1,10 +1,11 @@
 import { Capacitor } from "@capacitor/core";
-import { hasElectronBridge, isDesktop } from "./desktop";
+import { hasElectronBridge, hasTauriBridge, isDesktop } from "./desktop";
 import { isIOS } from "./platform";
 
 export type PlatformRuntime =
   | "web"
   | "electron"
+  | "tauri"
   | "capacitor-ios"
   | "capacitor-android";
 
@@ -19,6 +20,14 @@ export interface PlaybackCapabilities {
 
 const runtimeCapabilities: Record<PlatformRuntime, PlaybackCapabilities> = {
   electron: {
+    canSetVolume: true,
+    requiresSystemVolume: false,
+    supportsSystemVolumeControl: false,
+    supportsWebAudioReplayGain: true,
+    supportsNativePlayback: false,
+    supportsBackgroundPlayback: true,
+  },
+  tauri: {
     canSetVolume: true,
     requiresSystemVolume: false,
     supportsSystemVolumeControl: false,
@@ -53,6 +62,10 @@ const runtimeCapabilities: Record<PlatformRuntime, PlaybackCapabilities> = {
 };
 
 export function detectRuntime(): PlatformRuntime {
+  if (hasTauriBridge()) {
+    return "tauri";
+  }
+
   if (isDesktop()) {
     return "electron";
   }
@@ -109,17 +122,18 @@ export interface DesktopCapabilities {
 }
 
 export function getDesktopCapabilities(): DesktopCapabilities {
-  const hasBridge = hasElectronBridge();
+  const hasElectron = hasElectronBridge();
+  const hasTauri = hasTauriBridge();
   return {
-    hasDesktopIntegration: hasBridge,
+    hasDesktopIntegration: hasElectron || hasTauri,
     hasLanControl:
-      hasBridge &&
+      hasElectron &&
       typeof window !== "undefined" &&
       typeof window.api?.lanControl !== "undefined",
     hasMiniPlayer:
-      isDesktop() ||
+      hasElectron ||
       (typeof window !== "undefined" && "documentPictureInPicture" in window),
-    hasNativeThemeSync: hasBridge,
-    hasUpdateCheck: hasBridge,
+    hasNativeThemeSync: hasElectron,
+    hasUpdateCheck: hasElectron,
   };
 }

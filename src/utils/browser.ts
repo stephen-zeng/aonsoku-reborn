@@ -1,7 +1,7 @@
 import { engineName, isMacOs } from "react-device-detect";
 import i18n from "@/i18n";
 import { usePlayerStore } from "@/store/player.store";
-import { isDesktop } from "./desktop";
+import { hasElectronBridge, isDesktop } from "./desktop";
 import { isDev } from "./env";
 
 import { getRuntime } from "./capabilities";
@@ -21,7 +21,7 @@ export const hasPiPSupport = isDesktop()
 
 // Enable mini player for desktop (Electron) or browsers with PiP support
 export const hasMiniPlayerSupport = isDesktop()
-  ? true
+  ? hasElectronBridge()
   : "documentPictureInPicture" in window;
 
 function preventContextMenu() {

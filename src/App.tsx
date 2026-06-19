@@ -27,7 +27,7 @@ import {
   tryAutoConnect,
   useLanControlClientStore,
 } from "@/store/lanControlClient.store";
-import { isDesktop, isLinux } from "@/utils/desktop";
+import { hasElectronBridge, isLinux } from "@/utils/desktop";
 
 function App() {
   const { t } = useTranslation();
@@ -83,7 +83,7 @@ function App() {
       <SettingsDialog />
       <RouterProvider router={router} />
       <ToastContainer />
-      {isDesktop() && isLinux && <Linux />}
+      {hasElectronBridge() && isLinux && <Linux />}
     </>
   );
 }

@@ -10,6 +10,7 @@ vi.mock("@capacitor/core", () => ({
 vi.mock("@/utils/desktop", () => ({
   isDesktop: vi.fn(),
   hasElectronBridge: vi.fn(),
+  hasTauriBridge: vi.fn(),
   hasLanControlBridge: vi.fn(),
 }));
 
@@ -21,7 +22,7 @@ vi.mock("@/utils/platform", () => ({
 }));
 
 import { Capacitor } from "@capacitor/core";
-import { hasElectronBridge, isDesktop } from "@/utils/desktop";
+import { hasElectronBridge, hasTauriBridge, isDesktop } from "@/utils/desktop";
 import { isAndroid, isIOS } from "@/utils/platform";
 import {
   detectRuntime,
@@ -33,6 +34,7 @@ import {
 
 const mockIsDesktop = vi.mocked(isDesktop);
 const mockHasElectronBridge = vi.mocked(hasElectronBridge);
+const mockHasTauriBridge = vi.mocked(hasTauriBridge);
 const mockIsIOS = vi.mocked(isIOS);
 const mockIsAndroid = vi.mocked(isAndroid);
 const mockIsNativePlatform = vi.mocked(Capacitor.isNativePlatform);
@@ -42,6 +44,7 @@ beforeEach(() => {
   resetRuntimeCache();
   mockIsDesktop.mockReturnValue(false);
   mockHasElectronBridge.mockReturnValue(false);
+  mockHasTauriBridge.mockReturnValue(false);
   mockIsIOS.mockReturnValue(false);
   mockIsAndroid.mockReturnValue(false);
   mockIsNativePlatform.mockReturnValue(false);
@@ -58,6 +61,13 @@ describe("detectRuntime", () => {
     mockIsIOS.mockReturnValue(false);
     mockIsAndroid.mockReturnValue(false);
     expect(detectRuntime()).toBe("electron");
+  });
+
+  it("returns 'tauri' when the Tauri bridge is present", () => {
+    mockHasTauriBridge.mockReturnValue(true);
+    mockIsDesktop.mockReturnValue(true);
+
+    expect(detectRuntime()).toBe("tauri");
   });
 
   it("returns 'web' for iOS browsers outside Capacitor", () => {
@@ -196,6 +206,18 @@ describe("getPlaybackCapabilities", () => {
     expect(caps.supportsBackgroundPlayback).toBe(true);
   });
 
+  it("returns tauri capabilities", () => {
+    mockHasTauriBridge.mockReturnValue(true);
+    mockIsDesktop.mockReturnValue(true);
+
+    const caps = getPlaybackCapabilities();
+    expect(caps.canSetVolume).toBe(true);
+    expect(caps.requiresSystemVolume).toBe(false);
+    expect(caps.supportsWebAudioReplayGain).toBe(true);
+    expect(caps.supportsNativePlayback).toBe(false);
+    expect(caps.supportsBackgroundPlayback).toBe(true);
+  });
+
   it("returns capacitor-ios capabilities", () => {
     mockIsDesktop.mockReturnValue(false);
     mockIsIOS.mockReturnValue(true);
@@ -250,6 +272,7 @@ describe("getPlaybackCapabilities", () => {
 describe("getDesktopCapabilities", () => {
   beforeEach(() => {
     mockHasElectronBridge.mockReturnValue(false);
+    mockHasTauriBridge.mockReturnValue(false);
     mockIsDesktop.mockReturnValue(false);
   });
 
@@ -276,6 +299,17 @@ describe("getDesktopCapabilities", () => {
     expect(caps.hasDesktopIntegration).toBe(true);
     expect(caps.hasNativeThemeSync).toBe(true);
     expect(caps.hasUpdateCheck).toBe(true);
+  });
+
+  it("returns desktop integration for Tauri without Electron-only features", () => {
+    mockHasTauriBridge.mockReturnValue(true);
+    mockIsDesktop.mockReturnValue(true);
+
+    const caps = getDesktopCapabilities();
+    expect(caps.hasDesktopIntegration).toBe(true);
+    expect(caps.hasLanControl).toBe(false);
+    expect(caps.hasNativeThemeSync).toBe(false);
+    expect(caps.hasUpdateCheck).toBe(false);
   });
 
   it("detects LAN control when the Electron bridge exposes it", () => {

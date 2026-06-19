@@ -7,7 +7,12 @@ import { useAppWindow } from "@/app/hooks/use-app-window";
 import { useWindowControlsOverlay } from "@/app/hooks/use-window-controls-overlay";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/store/ui.store";
-import { isDesktop, isLinux, isMacOS, isWindows } from "@/utils/desktop";
+import {
+  hasElectronBridge,
+  isLinux,
+  isMacOS,
+  isWindows,
+} from "@/utils/desktop";
 import { isWindowControlsOverlayAvailable } from "@/utils/pwa";
 import CommandMenu from "../components/command/command-menu";
 import { SwUpdateChip } from "../components/header/sw-update-chip";
@@ -22,7 +27,7 @@ export function Header() {
 
   const hasWindowControls = isWindowControlsOverlayAvailable();
   const windowControlsOverlay = useWindowControlsOverlay();
-  const isElectronApp = isDesktop();
+  const isElectronApp = hasElectronBridge();
 
   const [controlsWidth, setControlsWidth] = useState({ left: 0, right: 0 });
 

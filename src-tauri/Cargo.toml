@@ -1,0 +1,21 @@
+[package]
+name = "aonsoku-tauri"
+version = "0.30.0"
+description = "Aonsoku desktop client"
+authors = ["realtvop"]
+license = "MIT"
+repository = "https://github.com/realtvop/aonsoku-reborn"
+edition = "2021"
+
+[lib]
+name = "aonsoku_tauri_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.6.3", features = [] }
+
+[dependencies]
+raw-window-handle = "0.6"
+serde = { version = "1", features = ["derive"] }
+souvlaki = "0.8.3"
+tauri = { version = "2.6.3", features = [] }
