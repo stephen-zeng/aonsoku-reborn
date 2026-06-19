@@ -1,4 +1,5 @@
 import { Capacitor } from "@capacitor/core";
+import { hasTauriBridge } from "./desktop";
 
 export type SwStatus = "idle" | "installing" | "waiting" | "error";
 
@@ -51,7 +52,10 @@ function bootstrapServiceWorker(): void {
   if (!("serviceWorker" in navigator)) return;
   // Skip registration on Capacitor native platforms (iOS/Android)
   if (Capacitor.isNativePlatform()) return;
-  // Allow SW registration on all deployment targets including localhost and Electron
+  // Tauri loads the same production bundle from its app protocol where the
+  // web/PWA service worker is not useful and can surface a false update error.
+  if (hasTauriBridge()) return;
+  // Allow SW registration on web deployments, localhost, and Electron.
   const isLocalhost =
     location.hostname === "localhost" ||
     location.hostname === "127.0.0.1" ||
