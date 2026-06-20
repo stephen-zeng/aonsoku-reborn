@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef } from "react";
+import { shouldUseNativePlaybackBackend } from "@/player/playback";
 import {
-  audioSourceResolver,
   type AudioSourceDescriptor,
+  audioSourceResolver,
   getAudioSourceUrl,
   revokeAudioSource,
 } from "@/service/cache";
@@ -39,7 +40,7 @@ export function usePreloadAudio() {
   }, [isSong, isShuffleActive, loopState, currentSongIndex, currentList]);
 
   useEffect(() => {
-    if (!nextSongId) {
+    if (!nextSongId || shouldUseNativePlaybackBackend()) {
       if (preloadRef.current) {
         preloadRef.current.removeAttribute("src");
         preloadRef.current.load();
