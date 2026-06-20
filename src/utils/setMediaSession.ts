@@ -1,18 +1,43 @@
+import { seekPlaybackTarget } from "@/player/playback";
 import { getNativeQueueController } from "@/player/queue-controller";
 import { cacheManager } from "@/service/cache";
 import { usePlayerStore } from "@/store/player.store";
 import { LanControlMessageType } from "@/types/lanControl";
 import { ISong } from "@/types/responses/song";
-import { getCoverArtUrlFromSongPreference, resolveCacheKeys } from "./coverArt";
 import { getRuntime } from "./capabilities";
+import { getCoverArtUrlFromSongPreference, resolveCacheKeys } from "./coverArt";
 import { isValidDuration } from "./duration";
 import { logger } from "./logger";
+import {
+  clearTauriMediaSession,
+  isTauriMediaSessionSupported,
+  listenTauriMediaRemoteCommands,
+  radioToTauriMediaSessionPayload,
+  setTauriMediaSession,
+  setTauriMediaSessionPosition,
+  songToTauriMediaSessionPayload,
+  type TauriMediaPlaybackState,
+  type TauriMediaRemoteCommandEvent,
+  type TauriMediaSessionPayload,
+} from "./tauri-media-session";
 
 const MEDIA_SESSION_COVER_SIZE = "300";
 const REMOVE_DEBOUNCE_MS = 500;
 
+type MediaSessionSong =
+  | ISong
+  | {
+      title: string;
+      artist: string;
+      album: string;
+      coverArt?: string;
+      albumId?: string;
+      duration?: number;
+    };
+
 function isMediaSessionSupported(): boolean {
   if (typeof navigator === "undefined") return false;
+  if (isTauriMediaSessionSupported()) return false;
   if (!("mediaSession" in navigator) || navigator.mediaSession === null)
     return false;
   // On Android and iOS native, the native MediaSession/MPNowPlayingInfoCenter
@@ -36,8 +61,35 @@ function isSafariMediaSession(): boolean {
 let lastArtworkUrl: string | null = null;
 let currentSessionId = 0;
 let removeDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+let tauriPlaybackState: TauriMediaPlaybackState = "none";
+let tauriSessionPayload: TauriMediaSessionPayload | null = null;
+let tauriRemoteCleanup: (() => void) | null = null;
+let tauriRemoteListenerPending = false;
+
+function updateTauriSession(payload: TauriMediaSessionPayload) {
+  tauriSessionPayload = { ...payload, artworkData: undefined };
+  setTauriMediaSession(payload);
+}
+
+function patchTauriSession(patch: Partial<TauriMediaSessionPayload>) {
+  if (!tauriSessionPayload) return;
+
+  updateTauriSession({
+    ...tauriSessionPayload,
+    ...patch,
+    playbackState: patch.playbackState ?? tauriPlaybackState,
+  });
+}
 
 function removeMediaSession() {
+  if (isTauriMediaSessionSupported()) {
+    currentSessionId++;
+    tauriPlaybackState = "none";
+    tauriSessionPayload = null;
+    clearTauriMediaSession();
+    return;
+  }
+
   if (!isMediaSessionSupported()) return;
 
   const callStack = new Error().stack?.split("\n").slice(1, 4).join(" | ");
@@ -74,18 +126,90 @@ function cancelRemoveDebounce() {
   }
 }
 
-async function setMediaSession(
-  song:
-    | ISong
-    | {
-        title: string;
-        artist: string;
-        album: string;
-        coverArt?: string;
-        albumId?: string;
-        duration?: number;
-      },
-) {
+function readBlobAsBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      resolve(result.split(",", 2)[1] ?? "");
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function resolveTauriArtworkPayload(
+  song: MediaSessionSong,
+): Promise<Partial<TauriMediaSessionPayload> | null> {
+  if (!song.coverArt && !song.albumId) return null;
+
+  const artworkUrl = getCoverArtUrlFromSongPreference({
+    coverArt: song.coverArt,
+    coverArtType: "song",
+    albumId: song.albumId,
+    size: MEDIA_SESSION_COVER_SIZE,
+  });
+  const cacheKeys = resolveCacheKeys(song.coverArt, "song", song.albumId);
+  const artworkKey = cacheKeys[0] ?? artworkUrl;
+  let sourceUrl = artworkUrl;
+  let shouldRevokeSourceUrl = false;
+
+  for (const key of cacheKeys) {
+    try {
+      const cachedUrl = await cacheManager.getCachedCoverUrl(key);
+      if (cachedUrl) {
+        sourceUrl = cachedUrl;
+        shouldRevokeSourceUrl = cachedUrl.startsWith("blob:");
+        break;
+      }
+    } catch {
+      // ignore and try next key
+    }
+  }
+
+  try {
+    const response = await fetch(sourceUrl);
+    if (!response.ok) return null;
+
+    const blob = await response.blob();
+    return {
+      artworkUrl,
+      artworkData: await readBlobAsBase64(blob),
+      artworkMimeType: blob.type || "image/jpeg",
+      artworkKey,
+    };
+  } catch (error) {
+    logger.error("[TauriMediaSession] Failed to resolve artwork", error);
+    return null;
+  } finally {
+    if (shouldRevokeSourceUrl) {
+      URL.revokeObjectURL(sourceUrl);
+    }
+  }
+}
+
+async function setMediaSession(song: MediaSessionSong) {
+  if (isTauriMediaSessionSupported()) {
+    cancelRemoveDebounce();
+    currentSessionId++;
+    const sessionId = currentSessionId;
+    const playbackState =
+      tauriPlaybackState === "none" ? "playing" : tauriPlaybackState;
+    tauriPlaybackState = playbackState;
+    const payload = songToTauriMediaSessionPayload(song, playbackState);
+    updateTauriSession(payload);
+
+    const artworkPayload = await resolveTauriArtworkPayload(song);
+    if (artworkPayload && sessionId === currentSessionId) {
+      updateTauriSession({
+        ...(tauriSessionPayload ?? payload),
+        ...artworkPayload,
+        playbackState: tauriPlaybackState,
+      });
+    }
+    return;
+  }
+
   if (!isMediaSessionSupported()) {
     logger.info("[MediaSession] navigator.mediaSession not available");
     return;
@@ -216,6 +340,18 @@ async function setMediaSession(
 }
 
 async function setRadioMediaSession(label: string, radioName: string) {
+  if (isTauriMediaSessionSupported()) {
+    cancelRemoveDebounce();
+    currentSessionId++;
+    const playbackState =
+      tauriPlaybackState === "none" ? "playing" : tauriPlaybackState;
+    tauriPlaybackState = playbackState;
+    updateTauriSession(
+      radioToTauriMediaSessionPayload(label, radioName, playbackState),
+    );
+    return;
+  }
+
   if (!isMediaSessionSupported()) return;
 
   cancelRemoveDebounce();
@@ -239,6 +375,12 @@ async function setRadioMediaSession(label: string, radioName: string) {
 }
 
 function ensurePlaybackStatePlaying() {
+  if (isTauriMediaSessionSupported()) {
+    tauriPlaybackState = "playing";
+    patchTauriSession({ playbackState: "playing" });
+    return;
+  }
+
   if (!isMediaSessionSupported()) return;
   const prevState = navigator.mediaSession.playbackState;
   const hadPendingRemove = !!removeDebounceTimer;
@@ -252,6 +394,18 @@ function ensurePlaybackStatePlaying() {
 }
 
 function setPlaybackState(state: boolean | null) {
+  if (isTauriMediaSessionSupported()) {
+    tauriPlaybackState = state === null ? "none" : state ? "playing" : "paused";
+    if (tauriPlaybackState === "none") {
+      currentSessionId++;
+      tauriSessionPayload = null;
+      clearTauriMediaSession();
+      return;
+    }
+    patchTauriSession({ playbackState: tauriPlaybackState });
+    return;
+  }
+
   if (!isMediaSessionSupported()) return;
 
   try {
@@ -286,6 +440,34 @@ function setPositionState(
   position: number,
   playbackRate = 1.0,
 ) {
+  if (isTauriMediaSessionSupported()) {
+    if (!isValidDuration(duration)) {
+      logger.info("[MediaSession] Invalid duration:", duration);
+      return;
+    }
+    if (typeof position !== "number" || position < 0) {
+      logger.info("[MediaSession] Invalid position:", position);
+      return;
+    }
+    const clampedPosition = Math.min(position, duration);
+    const durationChanged = tauriSessionPayload.duration !== duration;
+    tauriSessionPayload = {
+      ...tauriSessionPayload,
+      duration,
+      position: clampedPosition,
+      playbackState: tauriPlaybackState,
+    };
+    if (durationChanged) {
+      updateTauriSession(tauriSessionPayload);
+    } else {
+      setTauriMediaSessionPosition({
+        position: clampedPosition,
+        playbackState: tauriPlaybackState,
+      });
+    }
+    return;
+  }
+
   if (!isMediaSessionSupported()) return;
 
   if (!isValidDuration(duration)) {
@@ -320,7 +502,110 @@ function setPositionState(
   }
 }
 
+function handleTauriRemoteCommand(event: TauriMediaRemoteCommandEvent) {
+  logger.info(`[TauriMediaSession.handler] action=${event.command}`);
+
+  const state = usePlayerStore.getState();
+  const { active, sendCommand } = state.remoteControl;
+
+  switch (event.command) {
+    case "play":
+      if (active && sendCommand) {
+        sendCommand(LanControlMessageType.PLAY);
+      } else if (!state.playerState.isPlaying) {
+        state.actions.setPlayingState(true);
+      }
+      return;
+    case "pause":
+      if (active && sendCommand) {
+        sendCommand(LanControlMessageType.PAUSE);
+      } else if (state.playerState.isPlaying) {
+        state.actions.setPlayingState(false);
+      }
+      return;
+    case "togglePlayPause":
+      if (active && sendCommand) {
+        sendCommand(LanControlMessageType.PLAY_PAUSE);
+      } else {
+        state.actions.togglePlayPause();
+      }
+      return;
+    case "next":
+      if (active && sendCommand) {
+        sendCommand(LanControlMessageType.NEXT);
+      } else {
+        state.actions.playNextSong();
+      }
+      return;
+    case "previous":
+      if (active && sendCommand) {
+        sendCommand(LanControlMessageType.PREVIOUS);
+      } else {
+        state.actions.playPrevSong();
+      }
+      return;
+    case "seek": {
+      const position = Math.max(0, event.position ?? 0);
+      if (active && sendCommand) {
+        sendCommand(LanControlMessageType.SEEK, { time: position });
+        return;
+      }
+
+      const audioRef =
+        state.playerState.mediaType === "radio"
+          ? state.playerState.radioPlayerRef
+          : state.playerState.audioPlayerRef;
+      if (audioRef) {
+        Promise.resolve(seekPlaybackTarget(audioRef, position)).catch(
+          (error) => {
+            logger.error("[TauriMediaSession] Failed to seek playback", error);
+          },
+        );
+      }
+      state.actions.setProgress(Math.floor(position));
+      if (isValidDuration(state.playerState.currentDuration)) {
+        setPositionState(state.playerState.currentDuration, position);
+      }
+      return;
+    }
+    case "stop":
+      if (active && sendCommand) {
+        sendCommand(LanControlMessageType.PAUSE);
+        sendCommand(LanControlMessageType.CLEAR_QUEUE);
+      } else {
+        state.actions.clearPlayerState();
+      }
+      return;
+    case "like":
+      state.actions.starCurrentSong();
+      return;
+    case "shuffle":
+      state.actions.toggleShuffle();
+      return;
+  }
+}
+
 function setHandlers() {
+  if (isTauriMediaSessionSupported()) {
+    if (tauriRemoteCleanup || tauriRemoteListenerPending) return;
+
+    tauriRemoteListenerPending = true;
+    listenTauriMediaRemoteCommands(handleTauriRemoteCommand)
+      .then((cleanup) => {
+        tauriRemoteCleanup = cleanup;
+      })
+      .catch((error) => {
+        logger.error(
+          "[TauriMediaSession] Failed to set remote handlers",
+          error,
+        );
+      })
+      .finally(() => {
+        tauriRemoteListenerPending = false;
+      });
+    return;
+  }
+
   if (!isMediaSessionSupported()) {
     logger.info("[MediaSession] Cannot set handlers: API not supported");
     return;

@@ -24,7 +24,7 @@ import { Language } from "@/app/components/settings/pages/language";
 import { Privacy } from "@/app/components/settings/pages/privacy";
 import { ServerSettings } from "@/app/components/settings/pages/server";
 import { Storage } from "@/app/components/settings/pages/storage";
-import { isDesktop } from "@/utils/desktop";
+import { hasElectronBridge } from "@/utils/desktop";
 
 interface CategoryItem {
   id: SettingsOptions;
@@ -41,7 +41,7 @@ const categories: CategoryItem[] = [
   { id: "audio", icon: Headphones },
   { id: "content", icon: FileText },
   { id: "storage", icon: HardDrive },
-  ...(isDesktop() ? [accountsOption, desktopOption] : []),
+  ...(hasElectronBridge() ? [accountsOption, desktopOption] : []),
   { id: "privacy", icon: EarthLock },
 ];
 

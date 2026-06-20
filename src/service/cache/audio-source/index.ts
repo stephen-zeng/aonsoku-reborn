@@ -1,16 +1,17 @@
+import { hasTauriBridge } from "@/utils/desktop";
 import { audioUrlResolver } from "../audio-url-resolver";
 import { cacheIndexAdapter } from "../cache-index-adapter";
 import { cacheStorage } from "../cache-storage";
 import { getNativeCacheAdapter } from "../native-cache-adapter";
 import { cacheMetadataPersistence } from "../persist-meta";
 import {
+  type BlobAudioSource,
+  type BlobUrlAdapter,
   CacheAudioSourceResolver,
+  type CacheAudioSourceResolverOptions,
   getAudioSourceUrl,
   isCachedAudioSource,
   revokeAudioSource,
-  type BlobAudioSource,
-  type BlobUrlAdapter,
-  type CacheAudioSourceResolverOptions,
 } from "./resolver";
 
 const browserBlobUrls: BlobUrlAdapter = {
@@ -30,6 +31,7 @@ export const audioSourceResolver = new CacheAudioSourceResolver({
   urlResolver: audioUrlResolver,
   nativeFileResolver: getNativeCacheAdapter(),
   blobUrls: browserBlobUrls,
+  preferStreamOverBlob: hasTauriBridge(),
 });
 
 export function resolveCachedAudioSource(

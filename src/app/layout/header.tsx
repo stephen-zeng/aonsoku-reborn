@@ -7,13 +7,30 @@ import { useAppWindow } from "@/app/hooks/use-app-window";
 import { useWindowControlsOverlay } from "@/app/hooks/use-window-controls-overlay";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/store/ui.store";
-import { isDesktop, isLinux, isMacOS, isWindows } from "@/utils/desktop";
+import {
+  hasElectronBridge,
+  hasTauriBridge,
+  isLinux,
+  isMacOS,
+  isWindows,
+} from "@/utils/desktop";
 import { isWindowControlsOverlayAvailable } from "@/utils/pwa";
+import { startTauriWindowDrag } from "@/utils/tauri-window";
 import CommandMenu from "../components/command/command-menu";
 import { SwUpdateChip } from "../components/header/sw-update-chip";
 import { Button } from "../components/ui/button";
 
 const MemoCommandMenu = memo(CommandMenu);
+
+function isInteractiveHeaderTarget(target: EventTarget | null) {
+  if (!(target instanceof Element)) return false;
+
+  return Boolean(
+    target.closest(
+      'button,a,input,textarea,select,[role="button"],[role="link"],[data-tauri-no-drag]',
+    ),
+  );
+}
 
 export function Header() {
   const { t } = useTranslation();
@@ -22,7 +39,8 @@ export function Header() {
 
   const hasWindowControls = isWindowControlsOverlayAvailable();
   const windowControlsOverlay = useWindowControlsOverlay();
-  const isElectronApp = isDesktop();
+  const isElectronApp = hasElectronBridge();
+  const isTauriApp = hasTauriBridge();
 
   const [controlsWidth, setControlsWidth] = useState({ left: 0, right: 0 });
 
@@ -42,9 +60,10 @@ export function Header() {
   }, [windowControlsOverlay.visible, windowControlsOverlay.titlebarAreaRect]);
 
   const shouldAddSpacing =
-    !isFullscreen && (isElectronApp || hasWindowControls);
+    !isFullscreen && (isElectronApp || isTauriApp || hasWindowControls);
 
   const needsLeftSpacing = isMacOS && shouldAddSpacing;
+  const hasTauriOverlayTitleBar = isTauriApp && isMacOS;
 
   const needsRightSpacing =
     shouldAddSpacing &&
@@ -54,7 +73,9 @@ export function Header() {
   const leftSpacingWidth = needsLeftSpacing
     ? hasWindowControls && controlsWidth.left > 0
       ? controlsWidth.left
-      : 80
+      : hasTauriOverlayTitleBar
+        ? 82
+        : 80
     : 0;
 
   const rightSpacingWidth = needsRightSpacing
@@ -74,6 +95,12 @@ export function Header() {
   return (
     <header
       className="w-full hidden md:flex md:grid md:grid-cols-header items-center justify-between h-header pt-[var(--safe-area-top)] fixed top-0 right-0 left-0 z-20 bg-background border-b electron-drag"
+      onMouseDown={(event) => {
+        if (!hasTauriOverlayTitleBar || event.button !== 0) return;
+        if (event.detail > 1) return;
+        if (isInteractiveHeaderTarget(event.target)) return;
+        startTauriWindowDrag();
+      }}
       style={{
         paddingLeft: "max(1rem, var(--safe-area-left))",
         paddingRight: "max(1rem, var(--safe-area-right))",

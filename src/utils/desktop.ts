@@ -1,15 +1,26 @@
 import { isElectron, osName } from "react-device-detect";
 
 export function isDesktop(): boolean {
-  return isElectron;
+  return isElectron || hasTauriBridge();
+}
+
+export function hasTauriBridge(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    ("__TAURI_INTERNALS__" in window || "__TAURI__" in window)
+  );
 }
 
 export function hasElectronBridge(): boolean {
   return (
-    isDesktop() &&
+    isElectron &&
     typeof window !== "undefined" &&
     typeof window.api !== "undefined"
   );
+}
+
+export function hasDesktopBridge(): boolean {
+  return hasElectronBridge() || hasTauriBridge();
 }
 
 export function hasLanControlBridge(): boolean {

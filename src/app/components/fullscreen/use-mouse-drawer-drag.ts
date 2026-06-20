@@ -1,4 +1,5 @@
 import {
+  type MouseEvent,
   type PointerEvent,
   type RefObject,
   useCallback,
@@ -6,12 +7,15 @@ import {
   useRef,
 } from "react";
 import { closeFullscreenPlayerWithHistory } from "@/routes/fullscreenRouter";
+import { hasTauriBridge, isMacOS } from "@/utils/desktop";
+import { startTauriWindowDrag } from "@/utils/tauri-window";
 
 const MOUSE_DRAG_START_THRESHOLD_PX = 2;
 const MOUSE_DRAG_CLOSE_DISTANCE_PX = 48;
 const MOUSE_DRAG_CLOSE_THRESHOLD = 0.08;
 const MOUSE_DRAG_VELOCITY_THRESHOLD = 0.12;
 const DRAWER_MOUSE_RELEASE_EASING = "cubic-bezier(0.32, 0.72, 0, 1)";
+const DEFAULT_TITLEBAR_DRAG_HEIGHT_PX = 44;
 
 type MouseDrawerDragState = {
   drawer: HTMLElement;
@@ -43,10 +47,32 @@ function isMouseDrawerDragBlocked(target: EventTarget | null) {
         "[role='button']",
         "[role='link']",
         "[role='slider']",
+        "[data-tauri-no-drag]",
         "[data-vaul-no-drag]",
       ].join(","),
     ),
   );
+}
+
+function getTitlebarDragHeight() {
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue("--header-height")
+    .trim();
+  const parsed = Number.parseFloat(value);
+
+  return Number.isFinite(parsed) && parsed > 0
+    ? parsed
+    : DEFAULT_TITLEBAR_DRAG_HEIGHT_PX;
+}
+
+function isTauriMacTitlebarDragTarget(input: {
+  clientY: number;
+  target: EventTarget | null;
+}) {
+  if (!hasTauriBridge() || !isMacOS) return false;
+  if (isMouseDrawerDragBlocked(input.target)) return false;
+
+  return input.clientY <= getTitlebarDragHeight();
 }
 
 function getVisibleDrawerHeight(drawer: HTMLElement) {
@@ -140,6 +166,12 @@ export function useFullscreenMouseDrawerDrag({
   const handlePointerDown = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
       if (event.pointerType !== "mouse" || event.button !== 0) return;
+
+      if (isTauriMacTitlebarDragTarget(event)) {
+        event.stopPropagation();
+        return;
+      }
+
       if (isMouseDrawerDragBlocked(event.target)) return;
 
       const drawer = drawerRef.current;
@@ -162,6 +194,15 @@ export function useFullscreenMouseDrawerDrag({
     },
     [clearResetTimer, drawerRef],
   );
+
+  const handleMouseDown = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    if (event.button !== 0 || event.detail > 1) return;
+    if (!isTauriMacTitlebarDragTarget(event)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    startTauriWindowDrag();
+  }, []);
 
   const handlePointerMove = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
@@ -259,6 +300,7 @@ export function useFullscreenMouseDrawerDrag({
   }, [drawerRef, open]);
 
   return {
+    onMouseDown: handleMouseDown,
     onPointerDown: handlePointerDown,
     onPointerMove: handlePointerMove,
     onPointerUp: finishPointerDrag,

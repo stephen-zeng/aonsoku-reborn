@@ -112,6 +112,8 @@ export function AudioPlayer({
     setBufferedProgress: setStoreBufferedProgress,
     setCurrentDuration: setStoreCurrentDuration,
     setIsBuffering: setStoreIsBuffering,
+    setIsTransitioning,
+    setPlayingState,
     setProgress: setStoreProgress,
     togglePlayPause,
     playNextSong,
@@ -276,10 +278,11 @@ export function AudioPlayer({
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !metadata) return;
-    if (playbackCapabilities.supportsNativePlayback) return;
+    const entry = getPlaybackBackendEntry(audio);
+    if (!entry || entry.kind === "native") return;
 
-    getPlaybackBackend(audio)?.updateMetadata(metadata);
-  }, [audioRef, getPlaybackBackend, metadata, playbackCapabilities]);
+    entry.backend.updateMetadata(metadata);
+  }, [audioRef, getPlaybackBackendEntry, metadata]);
 
   const audioVolume = useMemo(
     () =>
@@ -613,7 +616,9 @@ export function AudioPlayer({
     if (!audio) return;
 
     const backendEntry = getPlaybackBackendEntry(audio);
-    if (!backendEntry || backendEntry.kind !== "native") return;
+    if (!backendEntry || backendEntry.kind === "web") return;
+
+    const isTauriBackend = backendEntry.kind === "tauri";
 
     const unsubscribeProgress = backendEntry.backend.subscribe(
       "progress",
@@ -624,6 +629,12 @@ export function AudioPlayer({
           });
         }
         setStoreBufferedProgress(event.bufferedTime);
+        if (isTauriBackend && event.duration > 0) {
+          manageMediaSession.setPositionState(
+            event.duration,
+            event.currentTime,
+          );
+        }
       },
     );
     const unsubscribeDuration = backendEntry.backend.subscribe(
@@ -638,6 +649,10 @@ export function AudioPlayer({
             applyPendingResume(audio);
           }
           sessionRef.current.finishCanPlay();
+          if (isTauriBackend) {
+            setStoreIsBuffering(false);
+            setIsTransitioning(false);
+          }
         }
       },
     );
@@ -649,10 +664,16 @@ export function AudioPlayer({
     );
     const unsubscribePlay = backendEntry.backend.subscribe("play", () => {
       sessionRef.current.handlePlayEvent();
+      if (isTauriBackend) {
+        setPlayingState(true);
+      }
     });
     const unsubscribePause = backendEntry.backend.subscribe("pause", () => {
       // native-controller already handles playbackStateChanged → store update.
       // Sending a pause command back here would race with queue engine transitions.
+      if (isTauriBackend) {
+        setPlayingState(false);
+      }
     });
     const unsubscribeEnded = backendEntry.backend.subscribe("ended", () => {
       const state = usePlayerStore.getState();
@@ -711,6 +732,8 @@ export function AudioPlayer({
     setStoreBufferedProgress,
     setStoreCurrentDuration,
     setStoreIsBuffering,
+    setIsTransitioning,
+    setPlayingState,
     songId,
   ]);
 
