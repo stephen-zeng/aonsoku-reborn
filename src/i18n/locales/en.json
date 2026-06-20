@@ -319,7 +319,7 @@
       "title": "Lyrics settings",
       "subtitle": "{{title}} by {{artist}}",
       "noSong": "No song is playing.",
-      "serverDisabled": "Enable a custom lyrics server to manually pick lyrics. You can still turn lyrics off above.",
+      "serverDisabled": "Use a custom lyrics service to choose more lyrics",
       "empty": "No custom lyrics candidates found.",
       "searchTitle": "Song title",
       "searchArtist": "Artist",

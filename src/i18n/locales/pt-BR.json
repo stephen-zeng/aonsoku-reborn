@@ -1105,7 +1105,7 @@
       "title": "Configurações de letra",
       "subtitle": "{{title}} por {{artist}}",
       "noSong": "Nenhuma música em reprodução.",
-      "serverDisabled": "O servidor personalizado de letras não está ativado.",
+      "serverDisabled": "Use um serviço de letras personalizado para escolher mais letras",
       "empty": "Nenhuma letra personalizada encontrada.",
       "searchTitle": "Título da música",
       "searchArtist": "Artista",
