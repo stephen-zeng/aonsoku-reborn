@@ -134,7 +134,7 @@
     "queueHistory": "Verlauf",
     "queueRepeating": "Wiederholen",
     "switchButton": "Zum großen Player wechseln",
-    "selectLyrics": "Songtext auswählen"
+    "selectLyrics": "Songtext-Einstellungen"
   },
   "generic": {
     "beta": "Beta",
@@ -1089,7 +1089,7 @@
   },
   "lyrics": {
     "customSelect": {
-      "title": "Songtext auswählen",
+      "title": "Songtext-Einstellungen",
       "subtitle": "{{title}} von {{artist}}",
       "noSong": "Es wird kein Song abgespielt.",
       "serverDisabled": "Benutzerdefinierter Songtext-Server ist nicht aktiviert.",

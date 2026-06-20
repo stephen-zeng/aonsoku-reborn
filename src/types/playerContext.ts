@@ -107,6 +107,7 @@ export interface SelectedCustomLyrics {
   id?: string;
   title?: string;
   artist?: string;
+  disabled?: boolean;
 }
 
 export interface SelectedCustomLyricsInput extends SelectedCustomLyrics {
@@ -164,6 +165,7 @@ interface ILyrics {
     songKey: string,
     lyrics: SelectedCustomLyricsInput,
   ) => Promise<void>;
+  setSongLyricsDisabled: (songKey: string, disabled: boolean) => Promise<void>;
 }
 
 export interface IPrivacySettings {

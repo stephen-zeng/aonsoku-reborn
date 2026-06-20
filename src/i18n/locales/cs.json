@@ -136,7 +136,7 @@
     "queueHistory": "Historie",
     "queueRepeating": "Opakování",
     "switchButton": "Přepnout na velký přehrávač",
-    "selectLyrics": "Vybrat text"
+    "selectLyrics": "Nastavení textu"
   },
   "generic": {
     "beta": "Beta",
@@ -1107,7 +1107,7 @@
   },
   "lyrics": {
     "customSelect": {
-      "title": "Vybrat text",
+      "title": "Nastavení textu",
       "subtitle": "{{title}} od {{artist}}",
       "noSong": "Nepřehrává se žádná skladba.",
       "serverDisabled": "Vlastní server textů není povolen.",
