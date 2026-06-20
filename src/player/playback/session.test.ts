@@ -334,7 +334,7 @@ describe("PlaybackSession event decisions", () => {
     ).toEqual({ type: "forward" });
   });
 
-  it("decides repeat-one ended behavior separately from DOM events", () => {
+  it("decides repeat ended behavior separately from DOM events", () => {
     expect(
       getPlaybackEndedDecision({
         loopState: LoopState.One,
@@ -358,11 +358,7 @@ describe("PlaybackSession event decisions", () => {
         loopState: LoopState.All,
         songlist: makeSonglist(),
       }),
-    ).toEqual({
-      type: "forward-ended",
-      action: "playNext",
-      hasNextInRepeatOne: false,
-    });
+    ).toEqual({ type: "restart-current" });
     expect(
       getPlaybackEndedDecision({
         loopState: LoopState.Off,

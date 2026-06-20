@@ -1,7 +1,8 @@
 import type { Draft } from "immer";
-import { LanControlMessageType } from "@/types/lanControl";
 import { seekPlaybackTarget } from "@/player/playback/backend-registry";
+import { getNativeQueueController } from "@/player/queue-controller";
 import { useSleepTimerStore } from "@/store/sleep-timer.store";
+import { LanControlMessageType } from "@/types/lanControl";
 import type {
   IPlayerActions,
   IPlayerContext,
@@ -19,6 +20,7 @@ import {
   getMaxShuffleStartHistory,
   pushToHistory,
 } from "@/utils/songListFunctions";
+import { transitionHandleSongEnded } from "./queue-transitions";
 import {
   advancePlaybackQueue,
   appendPlaybackQueueCycle,
@@ -37,8 +39,6 @@ import {
   setNextOnUserQueue,
   trimQueueToWindow,
 } from "./queue-utils";
-import { transitionHandleSongEnded } from "./queue-transitions";
-import { getNativeQueueController } from "@/player/queue-controller";
 
 interface SharedDeps {
   set: (fn: (state: Draft<IPlayerContext>) => void) => void;
@@ -725,19 +725,6 @@ export function createQueueActions(shared: SharedDeps) {
           state.playerState.currentDuration = nextSong?.duration
             ? Math.round(nextSong.duration)
             : 0;
-        });
-        return;
-      }
-
-      if (loopState === LoopState.One) {
-        logger.info(
-          `[playNextSong:LoopOne] seekToStart=true | songId=${getCurrentSong(get().songlist)?.id}`,
-        );
-        set((state) => {
-          state.playerProgress.progress = 0;
-          state.playerProgress.bufferedProgress = 0;
-          state.playerState.isPlaying = true;
-          state.playerState.seekToStart = true;
         });
         return;
       }

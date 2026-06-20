@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  Loader2,
   Pause,
   Play,
   Repeat,
@@ -18,6 +19,8 @@ import { LoopState } from "@/types/playerContext";
 function FullscreenControls() {
   const {
     isPlaying,
+    isBuffering,
+    isTransitioning,
     isShuffleActive,
     loopState,
     cannotSkipPrev,
@@ -33,8 +36,12 @@ function FullscreenControls() {
     toggleLoop,
     hasNext,
   } = usePlaybackControls();
-  const { isBackdropDark, playButtonBg, playButtonIcon } =
-    useFullscreenContrast();
+  const {
+    isBackdropDark,
+    playButtonBg,
+    playButtonIconColor,
+    playButtonIconFill,
+  } = useFullscreenContrast();
 
   const secondaryBtnClass = clsx(
     "relative h-11 w-11 min-h-11 min-w-11 shrink-0 rounded-full text-foreground md:h-12 md:w-12 md:min-h-12 md:min-w-12",
@@ -43,6 +50,8 @@ function FullscreenControls() {
       : "data-[state=active]:text-primary hover-supported:data-[state=active]:text-primary",
     "hover-supported:bg-transparent hover-supported:scale-110 transition-transform will-change-transform",
   );
+
+  const isLoading = isBuffering || isTransitioning;
 
   return (
     <>
@@ -81,11 +90,23 @@ function FullscreenControls() {
         )}
         style={{ backfaceVisibility: "hidden" }}
         onClick={() => togglePlayPause()}
-        aria-label={isPlaying ? "Pause" : "Play"}
+        aria-label={isLoading ? "Loading" : isPlaying ? "Pause" : "Play"}
         type="button"
       >
         <AnimatePresence mode="wait">
-          {isPlaying ? (
+          {isLoading ? (
+            <motion.div
+              key="loading"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.1 }}
+            >
+              <Loader2
+                className={clsx("w-6 h-6 animate-spin", playButtonIconColor)}
+              />
+            </motion.div>
+          ) : isPlaying ? (
             <motion.div
               key="pause"
               initial={{ scale: 0.8, opacity: 0 }}
@@ -94,7 +115,11 @@ function FullscreenControls() {
               transition={{ duration: 0.1 }}
             >
               <Pause
-                className={clsx("w-6 h-6", playButtonIcon)}
+                className={clsx(
+                  "w-6 h-6",
+                  playButtonIconColor,
+                  playButtonIconFill,
+                )}
                 strokeWidth={1}
               />
             </motion.div>
@@ -106,7 +131,13 @@ function FullscreenControls() {
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ duration: 0.1 }}
             >
-              <Play className={clsx("w-6 h-6", playButtonIcon)} />
+              <Play
+                className={clsx(
+                  "w-6 h-6",
+                  playButtonIconColor,
+                  playButtonIconFill,
+                )}
+              />
             </motion.div>
           )}
         </AnimatePresence>

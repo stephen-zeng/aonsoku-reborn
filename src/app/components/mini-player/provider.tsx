@@ -23,6 +23,8 @@ import { MiniPlayerContext, MiniPlayerContextValue } from "./context";
 export function InternalMiniPlayerProvider({ children }: PropsWithChildren) {
   const {
     isPlaying,
+    isBuffering,
+    isTransitioning,
     isShuffleActive,
     cannotSkipPrev,
     cannotSkipNext,
@@ -51,8 +53,8 @@ export function InternalMiniPlayerProvider({ children }: PropsWithChildren) {
     () => ({
       state: {
         isPlaying,
-        isTransitioning: playerState.isTransitioning,
-        isBuffering: playerState.isBuffering,
+        isTransitioning,
+        isBuffering,
         shuffleActive: isShuffleActive,
         loopState,
         hasPrev: !cannotSkipPrev,
@@ -91,6 +93,8 @@ export function InternalMiniPlayerProvider({ children }: PropsWithChildren) {
     }),
     [
       isPlaying,
+      isBuffering,
+      isTransitioning,
       playerState,
       isShuffleActive,
       loopState,

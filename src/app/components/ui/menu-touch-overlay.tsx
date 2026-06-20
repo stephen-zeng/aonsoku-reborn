@@ -1,34 +1,47 @@
 import * as React from "react";
-import { useIsTouchPrimary } from "@/app/hooks/use-input-mode";
 
 export const MenuCloseContext = React.createContext<(() => void) | null>(null);
+
+export const MENU_DISMISS_OVERLAY_ATTR = "data-menu-dismiss-overlay";
 
 export const MenuTouchOverlay = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >((props, ref) => {
-  const isTouchPrimary = useIsTouchPrimary();
+  const { style, onPointerDown, onPointerUp, onClick, ...overlayProps } = props;
   const close = React.useContext(MenuCloseContext);
 
-  if (!isTouchPrimary || !close) return null;
+  if (!close) return null;
 
   return (
     <div
       ref={ref}
+      data-menu-dismiss-overlay=""
       aria-hidden
+      {...overlayProps}
       style={{
         position: "fixed",
         inset: 0,
         zIndex: 49,
         pointerEvents: "auto",
         touchAction: "manipulation",
+        ...style,
       }}
       onPointerDown={(e) => {
-        if (e.pointerType === "touch") {
-          React.startTransition(() => close());
-        }
+        e.preventDefault();
+        e.stopPropagation();
+        onPointerDown?.(e);
       }}
-      {...props}
+      onPointerUp={(e) => {
+        e.stopPropagation();
+        onPointerUp?.(e);
+      }}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        React.startTransition(() => close());
+        onClick?.(e);
+      }}
     />
   );
 });

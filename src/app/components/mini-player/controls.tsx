@@ -1,6 +1,7 @@
 import { clsx } from "clsx";
 import {
   Heart,
+  Loader2,
   Pause,
   Play,
   Repeat,
@@ -22,6 +23,8 @@ export function MiniPlayerControls() {
   const isLoopOff = state.loopState === LoopState.Off;
   const isLoopAll = state.loopState === LoopState.All;
   const isLoopOne = state.loopState === LoopState.One;
+
+  const isLoading = state.isBuffering || state.isTransitioning;
 
   return (
     <div className="flex items-center">
@@ -68,7 +71,12 @@ export function MiniPlayerControls() {
         style={{ ...buttonsStyle.style }}
         onClick={() => actions.togglePlayPause()}
       >
-        {state.isPlaying ? (
+        {isLoading ? (
+          <Loader2
+            className={cn("animate-spin", buttonsStyle.mainIcon)}
+            size={18}
+          />
+        ) : state.isPlaying ? (
           <Pause
             className={buttonsStyle.mainIcon}
             size={20}

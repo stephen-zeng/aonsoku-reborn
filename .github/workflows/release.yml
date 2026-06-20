@@ -63,3 +63,61 @@ jobs:
           # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           # APPLE_IDENTITY: ${{ secrets.APPLE_IDENTITY }}
         run: pnpm run publish --arch ${{ matrix.arch }}
+
+  publish-android:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web assets
+        run: pnpm run build
+
+      - name: Sync Capacitor Android
+        run: pnpm exec cap sync android
+
+      - name: Build Release APK (Unsigned)
+        working-directory: android
+        run: ./gradlew assembleRelease
+
+      - name: Get version from package.json
+        id: app_version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Rename APK
+        run: |
+          mv android/app/build/outputs/apk/release/app-release-unsigned.apk Aonsoku-v${{ steps.app_version.outputs.version }}-android-unsigned.apk
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Aonsoku-v${{ steps.app_version.outputs.version }}-android-unsigned.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

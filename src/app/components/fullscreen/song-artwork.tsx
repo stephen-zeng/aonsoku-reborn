@@ -3,13 +3,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { memo } from "react";
 import { CachedImage } from "@/app/components/cover-image/cached-image";
 import { usePlayerStore } from "@/store/player.store";
-import { CONTENT_MAX_WIDTH } from "./constants";
 
 export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
   compact = false,
+  large = false,
   showTouchDragSurface = false,
 }: {
   compact?: boolean;
+  large?: boolean;
   showTouchDragSurface?: boolean;
 }) {
   const { albumId, coverArt, artist, title, id } = usePlayerStore(
@@ -19,11 +20,13 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
   return (
     <div
       className={clsx(
-        "relative aspect-square w-full bg-foreground/5 rounded-md overflow-hidden flex items-center justify-center transition-all duration-300 ease-in-out",
-        !compact && "fullscreen-desktop-artwork",
+        "relative aspect-square shrink bg-foreground/5 rounded-md overflow-hidden flex items-center justify-center transition-all duration-300 ease-in-out",
         compact
-          ? "max-w-[min(260px,42svh,calc(100vw-2rem))]"
-          : `${CONTENT_MAX_WIDTH} max-h-full`,
+          ? "h-[min(260px,42svh,calc(100vw-2rem))]"
+          : large
+            ? "h-[min(480px,85vw,60svh)]"
+            : "h-[clamp(280px,85vw,480px)]",
+        "w-auto max-w-full max-h-full",
       )}
     >
       {showTouchDragSurface && (

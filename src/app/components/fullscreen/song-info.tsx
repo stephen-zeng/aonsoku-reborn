@@ -80,8 +80,10 @@ export const SongInfo = memo(function SongInfo({
 });
 
 export const AlbumName = memo(function AlbumName({
+  className,
   compact = false,
 }: {
+  className?: string;
   compact?: boolean;
 }) {
   const currentSong = usePlayerStore(
@@ -99,7 +101,10 @@ export const AlbumName = memo(function AlbumName({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 8 }}
         transition={TEXT_TRANSITION}
-        className="w-full min-w-0 overflow-hidden text-center"
+        className={clsx(
+          "w-full min-w-0 overflow-hidden text-center",
+          className,
+        )}
       >
         <ScrollingTitle>
           <p

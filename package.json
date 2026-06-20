@@ -167,6 +167,7 @@
     "@vitest/coverage-v8": "4.1.5",
     "@vitest/ui": "4.1.5",
     "autoprefixer": "10.5.0",
+    "capacitor-set-version": "^2.2.0",
     "cypress": "14.5.4",
     "cypress-real-events": "1.15.0",
     "electron": "39.8.9",
@@ -179,6 +180,23 @@
     "typescript": "5.9.3",
     "vite": "6.4.2",
     "vitest": "4.1.5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@applemusic-like-lyrics/core",
+      "@applemusic-like-lyrics/lyric",
+      "@applemusic-like-lyrics/react",
+      "bufferutil",
+      "cypress",
+      "electron",
+      "electron-winstaller",
+      "esbuild",
+      "fs-xattr",
+      "macos-alias",
+      "register-scheme",
+      "sharp",
+      "utf-8-validate"
+    ]
   },
   "electron": {
     "window": {

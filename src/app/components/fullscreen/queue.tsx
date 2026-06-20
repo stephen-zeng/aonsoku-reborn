@@ -18,8 +18,6 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { useHaptic } from "@/app/hooks/use-haptic";
-import { useScrollEndListener } from "@/app/hooks/use-scroll-end-listener";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { useQueueDndSensors } from "@/app/components/queue/dnd-sensors";
 import {
@@ -32,7 +30,9 @@ import {
   ScrollArea,
   scrollAreaViewportSelector,
 } from "@/app/components/ui/scroll-area";
+import { useHaptic } from "@/app/hooks/use-haptic";
 import { useIsMobile } from "@/app/hooks/use-mobile";
+import { useScrollEndListener } from "@/app/hooks/use-scroll-end-listener";
 import { cn } from "@/lib/utils";
 import {
   useContextQueue,
@@ -107,6 +107,7 @@ interface FullscreenSongQueueProps {
   hideModeButtons?: boolean;
   hideHistory?: boolean;
   hideCurrentSong?: boolean;
+  hideCurrentSongContent?: boolean;
   hideRepeatIndicator?: boolean;
   useVirtualization?: boolean;
   scrollAreaClassName?: string;
@@ -118,6 +119,7 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
   hideModeButtons = false,
   hideHistory = false,
   hideCurrentSong = false,
+  hideCurrentSongContent = false,
   hideRepeatIndicator = false,
   useVirtualization = false,
   scrollAreaClassName,
@@ -178,6 +180,7 @@ export const FullscreenSongQueue = memo(function FullscreenSongQueue({
       hideModeButtons={hideModeButtons}
       hideHistory={hideHistory}
       hideCurrentSong={hideCurrentSong}
+      hideCurrentSongContent={hideCurrentSongContent}
       hideRepeatIndicator={hideRepeatIndicator}
       useVirtualization={useVirtualization}
       scrollAreaClassName={scrollAreaClassName}
@@ -202,6 +205,7 @@ function UnifiedQueueView({
   hideModeButtons,
   hideHistory,
   hideCurrentSong,
+  hideCurrentSongContent,
   hideRepeatIndicator,
   useVirtualization,
   scrollAreaClassName,
@@ -222,6 +226,7 @@ function UnifiedQueueView({
   hideModeButtons: boolean;
   hideHistory: boolean;
   hideCurrentSong: boolean;
+  hideCurrentSongContent: boolean;
   hideRepeatIndicator: boolean;
   useVirtualization: boolean;
   scrollAreaClassName?: string;
@@ -414,6 +419,7 @@ function UnifiedQueueView({
         hideModeButtons={hideModeButtons}
         hideHistory={hideHistory}
         hideCurrentSong={hideCurrentSong}
+        hideCurrentSongContent={hideCurrentSongContent}
         hideRepeatIndicator={hideRepeatIndicator}
         isRepeatOne={isRepeatOne}
         isRepeatAll={isRepeatAll}
@@ -494,8 +500,17 @@ function UnifiedQueueView({
         )}
 
         {!hideCurrentSong && (
-          <div ref={currentSongRef} className="shrink-0 pt-2 pb-1">
-            <QueueCurrentSong onClick={onCurrentSongClick} />
+          <div
+            ref={currentSongRef}
+            className={cn(
+              "shrink-0",
+              hideCurrentSongContent ? "h-0 overflow-hidden" : "pt-2 pb-1",
+            )}
+            aria-hidden={hideCurrentSongContent || undefined}
+          >
+            {!hideCurrentSongContent && (
+              <QueueCurrentSong onClick={onCurrentSongClick} />
+            )}
           </div>
         )}
 
@@ -505,24 +520,7 @@ function UnifiedQueueView({
           </div>
         )}
 
-        {isRepeatOne && userQueueSongs.length === 0 && (
-          <div>
-            {!hideRepeatIndicator && (
-              <RepeatIndicator
-                icon={RepeatOne}
-                label={t("fullscreen.queueRepeating")}
-              />
-            )}
-            {isShuffleActive && !hideRepeatIndicator && (
-              <RepeatIndicator
-                icon={Shuffle}
-                label={t("fullscreen.queueShuffling")}
-              />
-            )}
-          </div>
-        )}
-
-        {isRepeatOne && userQueueSongs.length > 0 && (
+        {userQueueSongs.length > 0 && (
           <div>
             <UserQueueSection
               userQueueSongs={userQueueSongs}
@@ -539,7 +537,17 @@ function UnifiedQueueView({
               sticky
               queueItemProps={queueItemProps}
             />
-            {!hideRepeatIndicator && (
+          </div>
+        )}
+
+        {hasNoUpcoming && !isRepeatAll ? (
+          <div>
+            <div className="flex items-center justify-center py-4">
+              <span className="text-foreground/50 text-xs">
+                {t("fullscreen.emptyQueue")}
+              </span>
+            </div>
+            {isRepeatOne && !hideRepeatIndicator && (
               <RepeatIndicator
                 icon={RepeatOne}
                 label={t("fullscreen.queueRepeating")}
@@ -552,125 +560,81 @@ function UnifiedQueueView({
               />
             )}
           </div>
-        )}
-
-        {!isRepeatOne && (
-          <>
-            {userQueueSongs.length > 0 && (
-              <div>
-                <UserQueueSection
-                  userQueueSongs={userQueueSongs}
-                  userSortableItems={userSortableItems}
-                  currentSong={currentSong}
-                  sensors={sensors}
-                  onDragStart={handleUserDragStart}
-                  onDragEnd={handleUserDragEnd}
-                  clearUserQueue={clearUserQueue}
-                  activeItem={activeItem}
-                  dragOverlayBg={dragOverlayBg}
-                  onPlaySong={(userQueueIndex) =>
-                    playFromUserQueue(userQueueIndex)
-                  }
-                  t={t}
-                  sticky
-                  queueItemProps={queueItemProps}
-                />
+        ) : (
+          <div>
+            <div
+              className={cn(
+                FULLSCREEN_QUEUE_BG_CLASS,
+                "sticky top-0 z-10 pt-1 pb-1",
+              )}
+            >
+              <div className="flex items-center justify-between px-2 pt-1">
+                <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
+                  {t("fullscreen.queueContinue")}
+                </h3>
               </div>
-            )}
+              <QueueSourceLabel />
+            </div>
 
-            {hasNoUpcoming && !isRepeatAll ? (
-              <div>
-                <div className="flex items-center justify-center py-4">
-                  <span className="text-foreground/50 text-xs">
-                    {t("fullscreen.emptyQueue")}
-                  </span>
-                </div>
-                {isShuffleActive && !hideRepeatIndicator && (
-                  <RepeatIndicator
-                    icon={Shuffle}
-                    label={t("fullscreen.queueShuffling")}
-                  />
-                )}
-              </div>
-            ) : (
-              <div>
-                <div
-                  className={cn(
-                    FULLSCREEN_QUEUE_BG_CLASS,
-                    "sticky top-0 z-10 pt-1 pb-1",
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleUpcomingDragStart}
+              onDragEnd={handleUpcomingDragEnd}
+            >
+              <SortableContext
+                items={upcomingSortableItems}
+                strategy={verticalListSortingStrategy}
+              >
+                {upcomingContext.length > 0 &&
+                  upcomingContext.map((song, idx) => {
+                    const contextIdx = contextIndex + 1 + idx;
+                    return (
+                      <SortableQueueItem
+                        key={song.id}
+                        id={song.id}
+                        song={song}
+                        isActive={false}
+                        onPlay={() => playFromQueue(contextSongs, contextIdx)}
+                        tier="context"
+                        {...queueItemProps}
+                      />
+                    );
+                  })}
+              </SortableContext>
+              {createPortal(
+                <DragOverlay>
+                  {activeItem && (
+                    <div
+                      className="rounded-md shadow-lg"
+                      style={{ background: dragOverlayBg || undefined }}
+                    >
+                      <QueueItemRow
+                        song={activeItem}
+                        isActive={currentSong?.id === activeItem.id}
+                        onPlay={() => {}}
+                        {...queueItemProps}
+                      />
+                    </div>
                   )}
-                >
-                  <div className="flex items-center justify-between px-2 pt-1">
-                    <h3 className="text-xs font-semibold text-foreground/70 uppercase tracking-wider">
-                      {t("fullscreen.queueContinue")}
-                    </h3>
-                  </div>
-                  <QueueSourceLabel />
-                </div>
+                </DragOverlay>,
+                document.body,
+              )}
+            </DndContext>
 
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragStart={handleUpcomingDragStart}
-                  onDragEnd={handleUpcomingDragEnd}
-                >
-                  <SortableContext
-                    items={upcomingSortableItems}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {upcomingContext.length > 0 &&
-                      upcomingContext.map((song, idx) => {
-                        const contextIdx = contextIndex + 1 + idx;
-                        return (
-                          <SortableQueueItem
-                            key={song.id}
-                            id={song.id}
-                            song={song}
-                            isActive={false}
-                            onPlay={() =>
-                              playFromQueue(contextSongs, contextIdx)
-                            }
-                            tier="context"
-                            {...queueItemProps}
-                          />
-                        );
-                      })}
-                  </SortableContext>
-                  {createPortal(
-                    <DragOverlay>
-                      {activeItem && (
-                        <div
-                          className="rounded-md shadow-lg"
-                          style={{ background: dragOverlayBg || undefined }}
-                        >
-                          <QueueItemRow
-                            song={activeItem}
-                            isActive={currentSong?.id === activeItem.id}
-                            onPlay={() => {}}
-                            {...queueItemProps}
-                          />
-                        </div>
-                      )}
-                    </DragOverlay>,
-                    document.body,
-                  )}
-                </DndContext>
-
-                {isRepeatAll && !hideRepeatIndicator && (
-                  <RepeatIndicator
-                    icon={Repeat}
-                    label={t("fullscreen.queueRepeating")}
-                  />
-                )}
-                {isShuffleActive && !hideRepeatIndicator && (
-                  <RepeatIndicator
-                    icon={Shuffle}
-                    label={t("fullscreen.queueShuffling")}
-                  />
-                )}
-              </div>
+            {(isRepeatOne || isRepeatAll) && !hideRepeatIndicator && (
+              <RepeatIndicator
+                icon={isRepeatOne ? RepeatOne : Repeat}
+                label={t("fullscreen.queueRepeating")}
+              />
             )}
-          </>
+            {isShuffleActive && !hideRepeatIndicator && (
+              <RepeatIndicator
+                icon={Shuffle}
+                label={t("fullscreen.queueShuffling")}
+              />
+            )}
+          </div>
         )}
         <div ref={spacerRef} className="shrink-0" aria-hidden="true" />
       </div>
@@ -689,6 +653,7 @@ function VirtualizedQueueView({
   hideModeButtons,
   hideHistory,
   hideCurrentSong,
+  hideCurrentSongContent,
   hideRepeatIndicator,
   isRepeatOne,
   isRepeatAll,
@@ -725,6 +690,7 @@ function VirtualizedQueueView({
   hideModeButtons: boolean;
   hideHistory: boolean;
   hideCurrentSong: boolean;
+  hideCurrentSongContent: boolean;
   hideRepeatIndicator: boolean;
   isRepeatOne: boolean;
   isRepeatAll: boolean;
@@ -819,9 +785,7 @@ function VirtualizedQueueView({
       items.push({ type: "queueDivider" });
     }
 
-    if (isRepeatOne) {
-      // no continue header or source label in repeat one mode
-    } else if (hasNoUpcoming && !isRepeatAll) {
+    if (hasNoUpcoming && !isRepeatAll) {
       items.push({ type: "emptyQueueMessage" });
     } else {
       items.push({ type: "continueHeader" });
@@ -886,7 +850,7 @@ function VirtualizedQueueView({
         case "upcomingSong":
           return 64;
         case "currentSong":
-          return 56;
+          return hideCurrentSongContent ? 1 : 56;
         case "modeButtons":
           return 40;
         case "queueHeader":
@@ -1030,8 +994,18 @@ function VirtualizedQueueView({
                         )}
 
                         {item.type === "currentSong" && (
-                          <div data-current-song className="px-0 pt-2 pb-0.5">
-                            <QueueCurrentSong onClick={onCurrentSongClick} />
+                          <div
+                            data-current-song
+                            className={cn(
+                              hideCurrentSongContent
+                                ? "h-px overflow-hidden"
+                                : "px-0 pt-2 pb-0.5",
+                            )}
+                            aria-hidden={hideCurrentSongContent || undefined}
+                          >
+                            {!hideCurrentSongContent && (
+                              <QueueCurrentSong onClick={onCurrentSongClick} />
+                            )}
                           </div>
                         )}
 

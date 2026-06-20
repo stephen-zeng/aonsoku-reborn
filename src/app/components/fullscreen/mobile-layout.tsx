@@ -2,12 +2,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ListChecks, ListMusic, MicVocalIcon } from "lucide-react";
 import { memo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Drawer as DrawerPrimitive } from "vaul";
 import { Button } from "@/app/components/ui/button";
+import { Drawer as DrawerPrimitive } from "vaul";
 import { useFullscreenContrast } from "@/app/hooks/use-fullscreen-contrast";
 import { useHasLyrics } from "@/app/hooks/use-has-lyrics";
 import { useIsTouchPrimary } from "@/app/hooks/use-input-mode";
-import { useIsShortViewport, useIsWideViewport } from "@/app/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import {
   closeFullscreenPlayerWithHistory,
@@ -19,12 +18,8 @@ import {
   useLyricsSettings,
   useSongColor,
 } from "@/store/player.store";
-import { ArtworkWithInfo } from "./artwork-with-info";
-import {
-  CONTENT_MAX_WIDTH,
-  FULLSCREEN_QUEUE_BG_CLASS,
-  PANEL_MAX_WIDTH,
-} from "./constants";
+import { ArtworkWithInfo, FullscreenSongInfoRow } from "./artwork-with-info";
+import { FULLSCREEN_QUEUE_BG_CLASS, PANEL_MAX_WIDTH } from "./constants";
 import { FullscreenControlPanel } from "./control-panel";
 import { CustomLyricsSelect } from "./custom-lyrics-select";
 import { LyricsTab } from "./lyrics";
@@ -137,8 +132,7 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
   return (
     <div
       className={cn(
-        "shrink-0 flex items-center justify-between w-full mx-auto px-0 pt-2 pb-5",
-        CONTENT_MAX_WIDTH,
+        "shrink-0 flex items-center justify-between w-full mx-auto px-0 pt-2 pb-5 w-[65dvw] max-w-[450px]",
       )}
       role="tablist"
     >
@@ -178,6 +172,29 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
   );
 });
 
+const MobilePlayingView = memo(function MobilePlayingView() {
+  const isTouchPrimary = useIsTouchPrimary();
+
+  return (
+    <div className="flex flex-col items-center justify-center w-full flex-1 min-h-0">
+      {/* Artwork Section: AlbumName + Artwork */}
+      <ArtworkWithInfo
+        fitArtworkContent
+        largeArtwork
+        showInfo={false}
+        showTouchDragSurface={isTouchPrimary}
+        className="w-full"
+      />
+
+      {/* Info Section: Visually centered between artwork and progress */}
+      <FullscreenSongInfoRow className="py-8" />
+
+      {/* Control Section: Progress, Controls, VolumeBar */}
+      <FullscreenControlPanel flushTop relaxed className="w-full" />
+    </div>
+  );
+});
+
 export const MobileLayout = memo(function MobileLayout({
   showDragHandle = false,
 }: {
@@ -185,19 +202,7 @@ export const MobileLayout = memo(function MobileLayout({
 }) {
   const { fullscreenPlayerTab } = useFullscreenPlayerState();
   const areLyricsAligned = useLyricsAlignment();
-  const isShortViewport = useIsShortViewport();
-  const isWideViewport = useIsWideViewport();
-  const isTouchPrimary = useIsTouchPrimary();
   const contrast = useFullscreenContrast();
-  const useWideCenteredPlayingLayout =
-    fullscreenPlayerTab === "playing" && isWideViewport && !isShortViewport;
-  const useShortCompactPlayingLayout =
-    fullscreenPlayerTab === "playing" && isShortViewport;
-  const playingViewLayout = useShortCompactPlayingLayout
-    ? "short-compact"
-    : useWideCenteredPlayingLayout
-      ? "wide-centered"
-      : "default";
 
   return (
     <div
@@ -211,7 +216,6 @@ export const MobileLayout = memo(function MobileLayout({
       <MobileHeader
         onClose={closeFullscreenPlayerWithHistory}
         showDragHandle={showDragHandle}
-        compact={useShortCompactPlayingLayout}
       />
 
       <div className="flex-1 min-h-0 flex flex-col">
@@ -224,27 +228,9 @@ export const MobileLayout = memo(function MobileLayout({
               exit={{ opacity: 0, y: -8 }}
               transition={VIEW_TRANSITION}
               data-testid="fullscreen-playing-view"
-              data-layout={playingViewLayout}
-              className={cn(
-                "flex min-h-0 flex-1 flex-col items-center overflow-hidden overflow-clip",
-                useWideCenteredPlayingLayout && "justify-center",
-                useShortCompactPlayingLayout && "justify-between",
-              )}
+              className="flex min-h-0 flex-1 flex-col items-center overflow-hidden overflow-clip px-4"
             >
-              <ArtworkWithInfo
-                compact={useShortCompactPlayingLayout}
-                showTouchDragSurface={isTouchPrimary}
-                className={cn(
-                  "w-full",
-                  useShortCompactPlayingLayout ? "flex-1 px-4" : "min-h-0",
-                )}
-              />
-              <FullscreenControlPanel
-                compact={useShortCompactPlayingLayout}
-                expanded={
-                  !useShortCompactPlayingLayout && !useWideCenteredPlayingLayout
-                }
-              />
+              <MobilePlayingView />
             </motion.div>
           )}
 

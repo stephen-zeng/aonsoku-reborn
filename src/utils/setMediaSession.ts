@@ -15,9 +15,11 @@ function isMediaSessionSupported(): boolean {
   if (typeof navigator === "undefined") return false;
   if (!("mediaSession" in navigator) || navigator.mediaSession === null)
     return false;
-  // On Android native, the ExoPlayer MediaSession handles system-level
-  // controls. navigator.mediaSession would conflict with it.
-  if (getRuntime() === "capacitor-android") return false;
+  // On Android and iOS native, the native MediaSession/MPNowPlayingInfoCenter
+  // handles system-level controls. navigator.mediaSession would conflict with it.
+  const runtime = getRuntime();
+  if (runtime === "capacitor-android" || runtime === "capacitor-ios")
+    return false;
   return true;
 }
 
