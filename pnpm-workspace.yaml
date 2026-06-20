@@ -2,6 +2,24 @@ packages:
   - "."
   - "capacitor-plugins/*"
 
+onlyBuiltDependencies:
+  - '@applemusic-like-lyrics/core'
+  - '@applemusic-like-lyrics/lyric'
+  - '@applemusic-like-lyrics/react'
+  - bufferutil
+  - cypress
+  - electron
+  - electron-winstaller
+  - esbuild
+  - fs-xattr
+  - macos-alias
+  - register-scheme
+  - sharp
+  - utf-8-validate
+
+ignoredBuiltDependencies:
+  - yarn
+
 allowBuilds:
   '@applemusic-like-lyrics/core': true
   '@applemusic-like-lyrics/lyric': true
@@ -16,3 +34,4 @@ allowBuilds:
   register-scheme@https://codeload.github.com/devsnek/node-register-scheme/tar.gz/e7cc9a63a1f512565da44cb57316d9fb10750e17: true
   sharp: true
   utf-8-validate: true
+  yarn: false
