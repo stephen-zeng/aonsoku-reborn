@@ -30,7 +30,7 @@ export const FullscreenControlPanel = memo(function FullscreenControlPanel({
             : clsx(
                 "shrink-0",
                 flushTop ? "pt-0" : "pt-7",
-                relaxed ? "gap-8 pb-8" : "gap-5 pb-7",
+                relaxed ? "gap-3 pb-2" : "gap-5 pb-7",
               ),
         className,
       )}
