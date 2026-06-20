@@ -1101,7 +1101,7 @@
       "title": "Paramètres des paroles",
       "subtitle": "{{title}} par {{artist}}",
       "noSong": "Aucun morceau en cours de lecture.",
-      "serverDisabled": "Le serveur de paroles personnalisé n'est pas activé.",
+      "serverDisabled": "Utilisez un service de paroles personnalisé pour choisir plus de paroles",
       "empty": "Aucune parole personnalisée candidate trouvée.",
       "searchTitle": "Titre du morceau",
       "searchArtist": "Artiste",

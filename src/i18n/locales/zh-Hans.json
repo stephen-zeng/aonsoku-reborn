@@ -147,7 +147,7 @@
       "title": "歌词设置",
       "subtitle": "{{artist}} - {{title}}",
       "noSong": "当前没有播放歌曲。",
-      "serverDisabled": "自定义歌词服务器未启用。",
+      "serverDisabled": "使用自定义歌词服务以选择更多歌词",
       "empty": "没有找到可选的自定义歌词。",
       "searchTitle": "歌曲名",
       "searchArtist": "作者名",

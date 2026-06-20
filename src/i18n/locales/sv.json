@@ -1092,7 +1092,7 @@
       "title": "Textinställningar",
       "subtitle": "{{title}} av {{artist}}",
       "noSong": "Ingen låt spelas.",
-      "serverDisabled": "Anpassad textserver är inte aktiverad.",
+      "serverDisabled": "Använd en anpassad texttjänst för att välja fler texter",
       "empty": "Inga anpassade textkandidater hittades.",
       "searchTitle": "Låttitel",
       "searchArtist": "Artist",

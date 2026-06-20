@@ -1092,7 +1092,7 @@
       "title": "Şarkı sözü ayarları",
       "subtitle": "{{artist}} - {{title}}",
       "noSong": "Çalan şarkı yok.",
-      "serverDisabled": "Özel söz sunucusu etkin değil.",
+      "serverDisabled": "Daha fazla şarkı sözü seçmek için özel bir şarkı sözü hizmeti kullanın",
       "empty": "Özel söz adayı bulunamadı.",
       "searchTitle": "Şarkı adı",
       "searchArtist": "Sanatçı",
