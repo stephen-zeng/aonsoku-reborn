@@ -15,7 +15,6 @@ import {
 import {
   useFullscreenPlayerState,
   useLyricsAlignment,
-  useLyricsSettings,
   useSongColor,
 } from "@/store/player.store";
 import { ArtworkWithInfo, FullscreenSongInfoRow } from "./artwork-with-info";
@@ -123,11 +122,8 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
   const { t } = useTranslation();
   const { fullscreenPlayerTab } = useFullscreenPlayerState();
   const { hasLyrics } = useHasLyrics();
-  const { customServerEnabled, customServerUrl } = useLyricsSettings();
 
   const lyricsDisabled = hasLyrics === false;
-  const customLyricsDisabled =
-    !customServerEnabled || customServerUrl.trim().length === 0;
 
   return (
     <div
@@ -151,7 +147,6 @@ const MobileBottomTabs = memo(function MobileBottomTabs() {
         icon={<ListChecks className="size-5" />}
         label={t("fullscreen.selectLyrics")}
         active={fullscreenPlayerTab === "customLyrics"}
-        disabled={customLyricsDisabled}
         onClick={() =>
           setFullscreenTabWithHistory(
             fullscreenPlayerTab === "customLyrics" ? "playing" : "customLyrics",
