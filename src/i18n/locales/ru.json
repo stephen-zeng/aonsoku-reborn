@@ -136,7 +136,7 @@
     "queueHistory": "История",
     "queueRepeating": "Повтор",
     "switchButton": "Перейти в полноэкранный режим",
-    "selectLyrics": "Выбрать текст"
+    "selectLyrics": "Настройки текста"
   },
   "generic": {
     "beta": "Бета",
@@ -1107,7 +1107,7 @@
   },
   "lyrics": {
     "customSelect": {
-      "title": "Выбрать текст",
+      "title": "Настройки текста",
       "subtitle": "{{title}} — {{artist}}",
       "noSong": "Сейчас ничего не воспроизводится.",
       "serverDisabled": "Пользовательский сервер текстов не включен.",

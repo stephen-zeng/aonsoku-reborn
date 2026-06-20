@@ -135,7 +135,7 @@
     "queueHistory": "Historique",
     "queueRepeating": "Répétition en cours",
     "switchButton": "Passer au Big Player",
-    "selectLyrics": "Choisir les paroles"
+    "selectLyrics": "Paramètres des paroles"
   },
   "generic": {
     "beta": "Bêta",
@@ -1098,7 +1098,7 @@
   },
   "lyrics": {
     "customSelect": {
-      "title": "Choisir les paroles",
+      "title": "Paramètres des paroles",
       "subtitle": "{{title}} par {{artist}}",
       "noSong": "Aucun morceau en cours de lecture.",
       "serverDisabled": "Le serveur de paroles personnalisé n'est pas activé.",

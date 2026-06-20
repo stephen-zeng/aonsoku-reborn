@@ -134,7 +134,7 @@
     "queueHistory": "Geçmiş",
     "queueRepeating": "Tekrarlanıyor",
     "switchButton": "Büyük Oynatıcıya geç",
-    "selectLyrics": "Söz seç"
+    "selectLyrics": "Şarkı sözü ayarları"
   },
   "generic": {
     "beta": "Beta",
@@ -1089,7 +1089,7 @@
   },
   "lyrics": {
     "customSelect": {
-      "title": "Söz seç",
+      "title": "Şarkı sözü ayarları",
       "subtitle": "{{artist}} - {{title}}",
       "noSong": "Çalan şarkı yok.",
       "serverDisabled": "Özel söz sunucusu etkin değil.",
