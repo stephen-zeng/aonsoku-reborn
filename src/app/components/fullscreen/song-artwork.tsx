@@ -26,7 +26,7 @@ export const FullscreenSongArtwork = memo(function FullscreenSongArtwork({
           : large
             ? "h-[min(480px,85vw,60svh)]"
             : "h-[clamp(280px,85vw,480px)]",
-        "w-auto max-w-full",
+        "w-auto max-w-full max-h-full",
       )}
     >
       {showTouchDragSurface && (
