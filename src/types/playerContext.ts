@@ -108,6 +108,8 @@ export interface SelectedCustomLyrics {
   title?: string;
   artist?: string;
   disabled?: boolean;
+  /** Manual lyrics timing offset in seconds. Positive delays the lyrics. */
+  offset?: number;
 }
 
 export interface SelectedCustomLyricsInput extends SelectedCustomLyrics {
@@ -115,6 +117,10 @@ export interface SelectedCustomLyricsInput extends SelectedCustomLyrics {
 }
 
 export const MAX_SELECTED_CUSTOM_LYRICS = 50;
+
+export const LYRICS_OFFSET_MIN = -2;
+export const LYRICS_OFFSET_MAX = 2;
+export const LYRICS_OFFSET_STEP = 0.1;
 
 interface IReplayGainData {
   enabled: boolean;
@@ -166,6 +172,7 @@ interface ILyrics {
     lyrics: SelectedCustomLyricsInput,
   ) => Promise<void>;
   setSongLyricsDisabled: (songKey: string, disabled: boolean) => Promise<void>;
+  setSongLyricsOffset: (songKey: string, offset: number) => void;
 }
 
 export interface IPrivacySettings {

@@ -7,6 +7,7 @@ import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
+import { Slider } from "@/app/components/ui/slider";
 import { cn } from "@/lib/utils";
 import type { CustomLyricsCandidate } from "@/service/lyrics";
 import {
@@ -20,10 +21,21 @@ import {
   usePlayerActions,
   usePlayerSonglist,
 } from "@/store/player.store";
+import {
+  LYRICS_OFFSET_MAX,
+  LYRICS_OFFSET_MIN,
+  LYRICS_OFFSET_STEP,
+} from "@/types/playerContext";
 import { queryKeys } from "@/utils/queryKeys";
 
 function getLyricsPreview(lyrics?: string) {
   return lyrics?.trim() || "";
+}
+
+function formatOffset(offset: number) {
+  const rounded = Math.round(offset * 10) / 10;
+  const prefix = rounded > 0 ? "+" : "";
+  return `${prefix}${rounded.toFixed(1)}s`;
 }
 
 interface CustomLyricsSelectProps {
@@ -41,6 +53,7 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
     selectedCustomLyrics,
     setSelectedCustomLyrics,
     setSongLyricsDisabled,
+    setSongLyricsOffset,
   } = useLyricsSettings();
 
   const { artist, title, album, duration, path } = currentSong || {};
@@ -49,6 +62,7 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
   const songKey = songData ? getCustomLyricsSongKey(songData) : "";
   const selectedLyrics = getSelectedCustomLyrics(selectedCustomLyrics, songKey);
   const lyricsDisabled = selectedLyrics?.disabled === true;
+  const lyricsOffset = selectedLyrics?.offset ?? 0;
   const [searchTitle, setSearchTitle] = useState("");
   const [searchArtist, setSearchArtist] = useState("");
   const [submittedSearch, setSubmittedSearch] = useState({
@@ -132,6 +146,16 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
 
     queryClient.invalidateQueries({ queryKey: queryKeys.lyrics.plain });
     onBack();
+  }
+
+  function handleOffsetChange(values: number[]) {
+    if (!songData) return;
+    const raw = values[0] ?? 0;
+    const clamped = Math.min(
+      LYRICS_OFFSET_MAX,
+      Math.max(LYRICS_OFFSET_MIN, raw),
+    );
+    setSongLyricsOffset(songKey, Math.round(clamped * 10) / 10);
   }
 
   async function handleToggleDisabled() {
@@ -243,6 +267,46 @@ export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
               })}
             </p>
           )}
+        </div>
+      )}
+
+      {currentSong && (
+        <div className="mb-3 ml-2 mr-6 shrink-0 rounded-2xl border border-border bg-muted/30 p-3 backdrop-blur-xl">
+          <div className="flex items-center justify-between gap-3">
+            <Label className="text-xs text-foreground/60">
+              {t("lyrics.customSelect.offsetLabel")}
+            </Label>
+            <div className="flex items-center gap-2">
+              <span className="min-w-12 text-right font-mono text-sm tabular-nums text-foreground/80">
+                {formatOffset(lyricsOffset)}
+              </span>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 rounded-full border border-border bg-muted/30 px-3 text-xs backdrop-blur-md hover:bg-muted/50"
+                disabled={lyricsDisabled || lyricsOffset === 0}
+                onClick={() => handleOffsetChange([0])}
+              >
+                {t("lyrics.customSelect.offsetReset")}
+              </Button>
+            </div>
+          </div>
+          <div className="mt-3 px-1">
+            <Slider
+              variant="secondary"
+              min={LYRICS_OFFSET_MIN}
+              max={LYRICS_OFFSET_MAX}
+              step={LYRICS_OFFSET_STEP}
+              value={[lyricsOffset]}
+              disabled={lyricsDisabled}
+              onValueChange={handleOffsetChange}
+            />
+          </div>
+          <div className="mt-2 flex justify-between text-[10px] text-foreground/40">
+            <span>{formatOffset(LYRICS_OFFSET_MIN)}</span>
+            <span>{t("lyrics.customSelect.offsetHint")}</span>
+            <span>{formatOffset(LYRICS_OFFSET_MAX)}</span>
+          </div>
         </div>
       )}
 

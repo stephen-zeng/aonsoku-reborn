@@ -96,7 +96,7 @@ export function useCurrentLyricLine() {
     path,
   } = currentSong || {};
   const songDurationMs = duration ? duration * 1000 : undefined;
-  const selectedCustomLyricsKey = currentSong
+  const selectedCustomLyricsEntry = currentSong
     ? getSelectedCustomLyrics(
         selectedCustomLyrics,
         getCustomLyricsSongKey({
@@ -106,8 +106,12 @@ export function useCurrentLyricLine() {
           duration: currentSong.duration,
           path: currentSong.path,
         }),
-      )?.key
+      )
     : undefined;
+  const selectedCustomLyricsKey = selectedCustomLyricsEntry?.key;
+  const lyricsOffsetMs = (selectedCustomLyricsEntry?.offset ?? 0) * 1000;
+  const offsetMsRef = useRef(lyricsOffsetMs);
+  offsetMsRef.current = lyricsOffsetMs;
   const lyricsSettingsKey = [
     sourcePriority.join(","),
     customServerEnabled,
@@ -180,7 +184,7 @@ export function useCurrentLyricLine() {
     }
 
     const timeMs = Math.floor((playerRef.currentTime || 0) * 1000);
-    const line = findCurrentLine(lines, timeMs);
+    const line = findCurrentLine(lines, timeMs - offsetMsRef.current);
     if (line !== lastLineRef.current) {
       lastLineRef.current = line;
       setCurrentLine(line);
@@ -211,7 +215,7 @@ export function useCurrentLyricLine() {
     if (isPlaying || !playerRef || syncedLines.length === 0) return;
 
     const timeMs = Math.floor((playerRef.currentTime || 0) * 1000);
-    const line = findCurrentLine(syncedLines, timeMs);
+    const line = findCurrentLine(syncedLines, timeMs - offsetMsRef.current);
     if (line !== lastLineRef.current) {
       lastLineRef.current = line;
       setCurrentLine(line);
