@@ -1,28 +1,5 @@
 import { Capacitor } from "@capacitor/core";
 import { getAvatarUrl, getCoverArtUrl } from "@/api/httpClient";
-
-function convertFileSrc(uri: string): string {
-  if (typeof uri !== "string" || !uri.startsWith("file:")) {
-    return Capacitor.convertFileSrc(uri);
-  }
-  const serverUrl = Capacitor.getServerUrl?.() ?? "";
-  if (!serverUrl) return Capacitor.convertFileSrc(uri);
-
-  // Handle all file: URI variants produced by the native layer:
-  //   "file:///absolute/path"  – RFC 8089 (iOS, Capacitor's own convertFileSrc)
-  //   "file:/absolute/path"    – Java File.toURI() (Android native plugin)
-  //   "file://relative/path"   – not used, handled for safety
-  // Strip the "file:" scheme, then normalize leading slashes to "/".
-  let filePath = uri.slice(5);
-  while (filePath.startsWith("//")) {
-    filePath = filePath.slice(1);
-  }
-  if (!filePath.startsWith("/")) {
-    filePath = "/" + filePath;
-  }
-
-  return `${serverUrl}/_capacitor_file_${filePath}`;
-}
 import { asyncPool } from "@/service/cache/concurrency";
 import { subsonic } from "@/service/subsonic";
 import { useCacheStore } from "@/store/cache.store";
@@ -55,6 +32,8 @@ import { computeEvictionPlan } from "./eviction";
 import {
   clearNativeAudioFilesIfAvailable,
   evictNativeAudioFileIfAvailable,
+  getNativeCacheAdapter,
+  isNativeCacheAdapterAvailable,
 } from "./native-cache-adapter";
 import {
   getNativeImageCacheAdapter,
@@ -68,6 +47,29 @@ import {
 import { syncService } from "./sync-worker-adapter";
 
 export { buildAudioUrl } from "./audio-url-resolver";
+
+function convertFileSrc(uri: string): string {
+  if (typeof uri !== "string" || !uri.startsWith("file:")) {
+    return Capacitor.convertFileSrc(uri);
+  }
+  const serverUrl = Capacitor.getServerUrl?.() ?? "";
+  if (!serverUrl) return Capacitor.convertFileSrc(uri);
+
+  // Handle all file: URI variants produced by the native layer:
+  //   "file:///absolute/path"  – RFC 8089 (iOS, Capacitor's own convertFileSrc)
+  //   "file:/absolute/path"    – Java File.toURI() (Android native plugin)
+  //   "file://relative/path"   – not used, handled for safety
+  // Strip the "file:" scheme, then normalize leading slashes to "/".
+  let filePath = uri.slice(5);
+  while (filePath.startsWith("//")) {
+    filePath = filePath.slice(1);
+  }
+  if (!filePath.startsWith("/")) {
+    filePath = "/" + filePath;
+  }
+
+  return `${serverUrl}/_capacitor_file_${filePath}`;
+}
 
 export interface CachedItemDetail {
   key: string;
@@ -128,12 +130,66 @@ class CacheManager {
 
   async cacheSong(songId: string): Promise<void> {
     if (isAudioCached(songId)) return;
+    if (await this.restoreCachedAudioIndex(songId, "explicit")) return;
+
     getCacheIndexActions().setDownloadProgress(songId, 0);
-    return audioCacheService.cacheSong({
-      songId,
-      priority: Priority.Explicit,
-      source: "explicit",
-    });
+    try {
+      return await audioCacheService.cacheSong({
+        songId,
+        priority: Priority.Explicit,
+        source: "explicit",
+      });
+    } catch (error) {
+      getCacheIndexActions().clearDownloadProgress(songId);
+      throw error;
+    }
+  }
+
+  private async restoreCachedAudioIndex(
+    songId: string,
+    source: CacheMetaSource,
+    triggers?: string[],
+  ): Promise<boolean> {
+    const key = audioKey(songId);
+    const now = Date.now();
+
+    if (isNativeCacheAdapterAvailable()) {
+      const file = await getNativeCacheAdapter().resolveAudioFile(songId);
+      if (file) {
+        const cachedAt = file.lastModifiedAt ?? now;
+        const meta: CachedItemMeta = {
+          id: songId,
+          type: "audio",
+          source,
+          triggers,
+          sizeBytes: file.sizeBytes ?? 0,
+          cachedAt,
+          lastAccessedAt: now,
+        };
+        getCacheIndexActions().addItem(key, meta);
+        this.scheduleStatsRefresh();
+        persistCacheMeta(key, { key, ...meta });
+        return true;
+      }
+    }
+
+    const blob = await cacheStorage.get(key);
+    if (!blob) return false;
+
+    const meta: CachedItemMeta = {
+      id: songId,
+      type: "audio",
+      source,
+      triggers,
+      sizeBytes: blob.size,
+      cachedAt: now,
+      lastAccessedAt: now,
+    };
+    getCacheIndexActions().addItem(key, meta);
+    this.scheduleStatsRefresh();
+    persistCacheMeta(key, { key, ...meta });
+
+    return true;
   }
 
   /**
@@ -170,6 +226,8 @@ class CacheManager {
         return;
       }
     }
+
+    if (await this.restoreCachedAudioIndex(songId, "smart", triggers)) return;
 
     return audioCacheService.cacheSong({
       songId,

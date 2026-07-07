@@ -48,7 +48,7 @@ export function CachedIndicator({
   const progress = useDownloadProgress(songId);
   const source = meta?.source as CacheMetaSource | undefined;
 
-  if (progress !== undefined) {
+  if (!isCached && progress !== undefined) {
     return <DownloadingIndicator progress={progress} className={className} />;
   }
 

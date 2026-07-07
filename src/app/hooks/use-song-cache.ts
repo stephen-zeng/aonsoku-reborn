@@ -18,7 +18,7 @@ export function useSongCacheState(songId: string): UseSongCacheStateResult {
   const progress = useDownloadProgress(songId);
   const [isLocalLoading, setIsLocalLoading] = useState(false);
 
-  const isLoading = isLocalLoading || progress !== undefined;
+  const isLoading = isLocalLoading || (!isCached && progress !== undefined);
 
   const cache = useCallback(async () => {
     if (isCached || isLoading) return;
@@ -40,5 +40,11 @@ export function useSongCacheState(songId: string): UseSongCacheStateResult {
     }
   }, [songId, isCached]);
 
-  return { isCached, isLoading, progress, cache, remove };
+  return {
+    isCached,
+    isLoading,
+    progress: isCached ? undefined : progress,
+    cache,
+    remove,
+  };
 }

@@ -32,6 +32,7 @@ const nativeCacheHelpersMock = {
   clearNativeAudioFilesIfAvailable: vi.fn(() => Promise.resolve()),
   evictNativeAudioFileIfAvailable: vi.fn(() => Promise.resolve(false)),
   getNativeCacheAdapter: vi.fn(() => nativeCacheAdapterMock),
+  isNativeCacheAdapterAvailable: vi.fn(() => false),
 };
 
 vi.mock("./cache-storage", () => ({
@@ -109,6 +110,9 @@ describe("cacheManager", () => {
     nativeCacheHelpersMock.evictNativeAudioFileIfAvailable
       .mockReset()
       .mockResolvedValue(false);
+    nativeCacheHelpersMock.isNativeCacheAdapterAvailable
+      .mockReset()
+      .mockReturnValue(false);
     await idbClear(cacheIndexStore);
     await _resetLibraryDbForTests();
     useCacheIndexStore.setState({ items: {}, loaded: true, downloads: {} });
@@ -223,6 +227,34 @@ describe("cacheManager", () => {
       source: "explicit",
     });
     expect(useCacheIndexStore.getState().downloads["song-1"]).toBe(0);
+  });
+
+  it("cacheSong restores the cache index when the audio blob already exists", async () => {
+    const blob = new Blob(["cached audio"], { type: "audio/mpeg" });
+    cacheStorageMock.get.mockResolvedValue(blob);
+    useCacheIndexStore.setState({ items: {}, loaded: true, downloads: {} });
+
+    const { cacheManager } = await import("./cache-manager");
+    await cacheManager.cacheSong("song-1");
+
+    expect(audioCacheServiceMock.cacheSong).not.toHaveBeenCalled();
+    expect(useCacheIndexStore.getState().downloads["song-1"]).toBeUndefined();
+    expect(useCacheIndexStore.getState().items["audio:song-1"]).toMatchObject({
+      id: "song-1",
+      type: "audio",
+      source: "explicit",
+      sizeBytes: blob.size,
+    });
+  });
+
+  it("cacheSong clears download progress when the download fails", async () => {
+    audioCacheServiceMock.cacheSong.mockRejectedValue(new Error("boom"));
+    useCacheIndexStore.setState({ items: {}, loaded: true, downloads: {} });
+
+    const { cacheManager } = await import("./cache-manager");
+    await expect(cacheManager.cacheSong("song-1")).rejects.toThrow("boom");
+
+    expect(useCacheIndexStore.getState().downloads["song-1"]).toBeUndefined();
   });
 
   it("loadFromIDB restores audio cached state from cacheMeta only", async () => {

@@ -50,12 +50,13 @@ async function cacheStoragePut(
   await cache.put(`/_cache/${encodeURIComponent(key)}`, response);
 }
 
-async function cacheStorageHas(key: string): Promise<boolean> {
+async function cacheStorageGet(key: string): Promise<Blob | null> {
   const cache = await getWorkerCache();
-  const response = await cache.match(`/_cache/${encodeURIComponent(key)}`);
-  if (response) return true;
-  const legacy = await cache.match(`/_cache/${key}`);
-  return legacy !== undefined;
+  let response = await cache.match(`/_cache/${encodeURIComponent(key)}`);
+  if (!response) {
+    response = await cache.match(`/_cache/${key}`);
+  }
+  return response ? response.blob() : null;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -180,7 +181,23 @@ class AudioCacheWorkerService {
   async cacheSong(task: CacheTask): Promise<void> {
     await this.#authReady;
     const key = audioKey(task.songId);
-    if (await cacheStorageHas(key)) return;
+    const existingBlob = await cacheStorageGet(key);
+    if (existingBlob) {
+      const now = Date.now();
+      const meta: CachedItemMeta = {
+        id: task.songId,
+        type: "audio",
+        source: task.source,
+        triggers: task.triggers,
+        sizeBytes: existingBlob.size,
+        cachedAt: now,
+        lastAccessedAt: now,
+      };
+
+      await persistCacheMeta(key, { key, ...meta });
+      this.#callbacks?.onCompleted(task.songId, meta);
+      return;
+    }
     return this.#queue.enqueue(task);
   }
 

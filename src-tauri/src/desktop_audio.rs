@@ -221,7 +221,6 @@ pub async fn desktop_audio_load(
     state: tauri::State<'_, DesktopAudioState>,
     payload: DesktopAudioLoadPayload,
 ) -> Result<(), String> {
-    state.set_request_id(payload.request_id.clone())?;
     state
         .send_command(&window, |response| AudioCommand::Load {
             source: payload.source,
@@ -334,15 +333,6 @@ pub async fn desktop_audio_set_shuffle(
 }
 
 impl DesktopAudioState {
-    fn set_request_id(&self, request_id: Option<String>) -> Result<(), String> {
-        let mut current = self
-            .request_id
-            .lock()
-            .map_err(|_| "desktop audio request lock poisoned".to_string())?;
-        *current = request_id;
-        Ok(())
-    }
-
     async fn send_command<F>(&self, window: &WebviewWindow, command: F) -> Result<(), String>
     where
         F: FnOnce(AudioCommandResponse) -> AudioCommand,
@@ -509,12 +499,16 @@ fn handle_load(
     next_request_id: Option<String>,
     autoplay: bool,
 ) -> Result<(), String> {
-    set_current_request_id(request_id, next_request_id)?;
-    emit_buffering(window, request_id, true);
-
+    if let Some(player) = worker.player.as_mut() {
+        player.stop();
+    }
     worker.loaded = false;
     worker.stream_handle = None;
     worker.metadata = metadata;
+
+    set_current_request_id(request_id, next_request_id)?;
+    emit_buffering(window, request_id, true);
+
     let load_result = {
         let player = ensure_player(worker, window, request_id)?;
         runtime.block_on(load_source(player, &source))

@@ -266,11 +266,9 @@ export class TauriAudioPlaybackBackend implements PlaybackBackend {
   }
 
   #isStaleEvent(event: { requestId?: string }) {
-    return !!(
-      event.requestId &&
-      this.#activeRequestId &&
-      event.requestId !== this.#activeRequestId
-    );
+    if (!this.#activeRequestId) return false;
+
+    return event.requestId !== this.#activeRequestId;
   }
 
   #assertActive() {
