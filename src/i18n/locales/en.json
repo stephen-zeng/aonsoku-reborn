@@ -334,7 +334,8 @@
       "lyricsDisabled": "Lyrics off",
       "offsetLabel": "Lyrics offset",
       "offsetReset": "Reset",
-      "offsetHint": "Positive delays the lyrics"
+      "offsetHint": "Positive delays the lyrics",
+      "hasRomaji": "Romaji"
     }
   },
   "logout": {

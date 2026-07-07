@@ -234,8 +234,9 @@ describe("custom lyrics IDB operations", () => {
   });
 
   it("handles non-existent keys gracefully", async () => {
+    // Each key clears both the lyrics body and its romaji body.
     const results = await deleteCustomLyricsBodies(["non-existent"]);
-    expect(results).toHaveLength(1);
+    expect(results).toHaveLength(2);
   });
 
   it("isolates different song keys", async () => {
