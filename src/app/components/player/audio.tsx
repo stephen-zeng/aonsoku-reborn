@@ -57,6 +57,8 @@ type AudioPlayerProps = ComponentPropsWithoutRef<"audio"> & {
   songId?: string;
 };
 
+const TAURI_INCOMPLETE_END_TOLERANCE_SECONDS = 2;
+
 export function AudioPlayer({
   audioRef,
   replayGain,
@@ -434,6 +436,8 @@ export function AudioPlayer({
           `[scheduleRetry] attempt=${result.attempt}/5 | delay=${result.delay}ms | fromPosition=${result.resumePosition.toFixed(2)}`,
         );
       }
+
+      return result;
     },
     [
       audioRef,
@@ -517,7 +521,11 @@ export function AudioPlayer({
       );
 
       if (shouldRetryPlaybackError(event, { isRadio })) {
-        scheduleRetry(audio);
+        setStoreIsBuffering(true);
+        const result = scheduleRetry(audio);
+        if (result.type === "offline" || result.type === "failed") {
+          setStoreIsBuffering(false);
+        }
         return;
       }
 
@@ -526,12 +534,21 @@ export function AudioPlayer({
         return;
       }
 
+      setStoreIsBuffering(false);
       if (isSong || isRadio) {
         onPlaybackError?.();
         cancelRetry();
       }
     },
-    [audioRef, cancelRetry, isRadio, isSong, onPlaybackError, scheduleRetry],
+    [
+      audioRef,
+      cancelRetry,
+      isRadio,
+      isSong,
+      onPlaybackError,
+      scheduleRetry,
+      setStoreIsBuffering,
+    ],
   );
 
   const handleNativeRemoteCommand = useCallback(
@@ -680,6 +697,18 @@ export function AudioPlayer({
       const loopState = state.playerState.loopState;
       const songlist = state.songlist;
 
+      if (isTauriBackend && shouldRetryIncompleteTauriEnded(state)) {
+        logger.info(
+          `[TauriBackend:onEnded:INCOMPLETE] progress=${state.playerProgress.progress.toFixed(2)} | buffered=${state.playerProgress.bufferedProgress.toFixed(2)} | duration=${state.playerState.currentDuration}`,
+        );
+        setStoreIsBuffering(true);
+        const result = scheduleRetry(audio);
+        if (result.type === "offline" || result.type === "failed") {
+          setStoreIsBuffering(false);
+        }
+        return;
+      }
+
       const decision = getPlaybackEndedDecision({
         loopState,
         songlist,
@@ -728,6 +757,7 @@ export function AudioPlayer({
     handleNativeRemoteCommand,
     onEnded,
     safePlay,
+    scheduleRetry,
     seekAudio,
     setStoreBufferedProgress,
     setStoreCurrentDuration,
@@ -1023,4 +1053,19 @@ export function AudioPlayer({
       preload="auto"
     />
   );
+}
+
+function shouldRetryIncompleteTauriEnded(
+  state: ReturnType<typeof usePlayerStore.getState>,
+) {
+  const progress = state.playerProgress.progress;
+  const bufferedProgress = state.playerProgress.bufferedProgress;
+  const duration = state.playerState.currentDuration;
+
+  if (!Number.isFinite(duration) || duration <= 0) return false;
+  if (duration - progress <= TAURI_INCOMPLETE_END_TOLERANCE_SECONDS) {
+    return false;
+  }
+
+  return bufferedProgress < duration - TAURI_INCOMPLETE_END_TOLERANCE_SECONDS;
 }

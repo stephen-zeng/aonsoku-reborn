@@ -1,13 +1,13 @@
 use std::{
     path::PathBuf,
     sync::{mpsc, Arc, Condvar, Mutex},
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 use remu_audio::{
     decoder::Decoder,
     events::PlayerEvent,
-    loader::downloader::Downloader,
+    loader::downloader::{DownloadStatus, Downloader},
     player::{PlaybackControl, Player},
     reader::{MVecBytesReader, MVecBytesWrapper},
 };
@@ -19,6 +19,11 @@ use tokio_util::sync::CancellationToken;
 const DESKTOP_AUDIO_EVENT: &str = "desktop-audio-event";
 const PROGRESS_INTERVAL_MS: u64 = 500;
 const STREAM_CHUNK_SIZE: usize = 256 * 1024;
+const STREAM_BUFFER_LOW_SECONDS: f64 = 2.0;
+const STREAM_BUFFER_RECOVER_SECONDS: f64 = 5.0;
+const STREAM_STALL_BUFFERING_MS: u64 = 1_500;
+const STREAM_STALL_ERROR_MS: u64 = 10_000;
+const STREAM_POSITION_EPSILON_SECONDS: f64 = 0.05;
 
 type AudioCommandSender = mpsc::Sender<AudioCommand>;
 type AudioCommandResponse = oneshot::Sender<Result<(), String>>;
@@ -43,6 +48,11 @@ struct StreamLoadHandle {
     loader: Downloader,
     condvar: Arc<Condvar>,
     cancellation_token: CancellationToken,
+    last_downloaded_bytes: u64,
+    last_position: f64,
+    last_activity_at: Instant,
+    is_buffering: bool,
+    error_emitted: bool,
 }
 
 impl Drop for StreamLoadHandle {
@@ -410,7 +420,7 @@ fn run_audio_worker(
                 handle_audio_command(&mut worker, &runtime, &window, &request_id, command)
             }
             Err(mpsc::RecvTimeoutError::Timeout) => {
-                emit_worker_progress(&worker, &window, &request_id);
+                emit_worker_progress(&mut worker, &window, &request_id);
             }
             Err(mpsc::RecvTimeoutError::Disconnected) => break,
         }
@@ -534,7 +544,11 @@ fn handle_load(
         } else {
             player.pause();
         }
-        let snapshot = progress_snapshot(player, worker.metadata.as_ref());
+        let snapshot = progress_snapshot(
+            player,
+            worker.metadata.as_ref(),
+            worker.stream_handle.as_ref(),
+        );
         emit_duration(window, request_id, snapshot.duration);
         emit_progress(window, request_id, snapshot);
     }
@@ -571,7 +585,11 @@ fn handle_seek(
     emit_progress(
         window,
         request_id,
-        progress_snapshot(player, worker.metadata.as_ref()),
+        progress_snapshot(
+            player,
+            worker.metadata.as_ref(),
+            worker.stream_handle.as_ref(),
+        ),
     );
     Ok(())
 }
@@ -683,6 +701,11 @@ async fn load_seekable_stream(player: &mut Player, url: &str) -> Result<StreamLo
         loader,
         condvar,
         cancellation_token,
+        last_downloaded_bytes: 0,
+        last_position: 0.0,
+        last_activity_at: Instant::now(),
+        is_buffering: false,
+        error_emitted: false,
     })
 }
 
@@ -694,25 +717,33 @@ struct ProgressSnapshot {
 }
 
 fn emit_worker_progress(
-    worker: &DesktopAudioWorker,
+    worker: &mut DesktopAudioWorker,
     window: &WebviewWindow,
     request_id: &Arc<Mutex<Option<String>>>,
 ) {
-    let Some(player) = worker.player.as_ref() else {
-        return;
-    };
     if !worker.loaded {
         return;
     }
 
-    emit_progress(
-        window,
-        request_id,
-        progress_snapshot(player, worker.metadata.as_ref()),
+    let Some(player) = worker.player.as_ref() else {
+        return;
+    };
+    let paused = player.paused();
+    let snapshot = progress_snapshot(
+        player,
+        worker.metadata.as_ref(),
+        worker.stream_handle.as_ref(),
     );
+
+    emit_progress(window, request_id, snapshot);
+    update_stream_load_state(worker, window, request_id, paused, snapshot);
 }
 
-fn progress_snapshot(player: &Player, metadata: Option<&DesktopAudioMetadata>) -> ProgressSnapshot {
+fn progress_snapshot(
+    player: &Player,
+    metadata: Option<&DesktopAudioMetadata>,
+    stream_handle: Option<&StreamLoadHandle>,
+) -> ProgressSnapshot {
     let current_time = player.position().as_secs_f64();
     let player_duration = player
         .duration()
@@ -726,12 +757,167 @@ fn progress_snapshot(player: &Player, metadata: Option<&DesktopAudioMetadata>) -
     ProgressSnapshot {
         current_time,
         duration,
-        buffered_time: if duration > 0.0 {
+        buffered_time: buffered_time(current_time, duration, stream_handle),
+    }
+}
+
+fn buffered_time(
+    current_time: f64,
+    duration: f64,
+    stream_handle: Option<&StreamLoadHandle>,
+) -> f64 {
+    let Some(stream_handle) = stream_handle else {
+        return if duration > 0.0 {
             current_time.min(duration)
         } else {
             current_time
-        },
+        };
+    };
+
+    let total_bytes = stream_handle.loader.total_bytes();
+    let downloaded_bytes = stream_handle.loader.downloaded_bytes();
+    if total_bytes == 0 || duration <= 0.0 {
+        return current_time;
     }
+
+    let buffered = (downloaded_bytes as f64 / total_bytes as f64) * duration;
+    buffered.clamp(current_time, duration)
+}
+
+fn update_stream_load_state(
+    worker: &mut DesktopAudioWorker,
+    window: &WebviewWindow,
+    request_id: &Arc<Mutex<Option<String>>>,
+    player_paused: bool,
+    snapshot: ProgressSnapshot,
+) {
+    let Some(stream_handle) = worker.stream_handle.as_mut() else {
+        return;
+    };
+
+    let status = stream_handle.loader.status();
+    let downloaded_bytes = stream_handle.loader.downloaded_bytes();
+    let now = Instant::now();
+    let position_advanced =
+        snapshot.current_time > stream_handle.last_position + STREAM_POSITION_EPSILON_SECONDS;
+    let download_advanced = downloaded_bytes > stream_handle.last_downloaded_bytes;
+
+    if position_advanced || download_advanced {
+        stream_handle.last_activity_at = now;
+    }
+
+    stream_handle.last_position = snapshot.current_time;
+    stream_handle.last_downloaded_bytes = downloaded_bytes;
+
+    match status {
+        DownloadStatus::Aborted => {
+            emit_stream_network_error(
+                stream_handle,
+                window,
+                request_id,
+                "network_error",
+                "desktop audio stream download was interrupted".to_string(),
+            );
+        }
+        DownloadStatus::Completed => {
+            set_stream_buffering(stream_handle, window, request_id, false);
+        }
+        DownloadStatus::Downloading => {
+            update_stream_buffering(
+                stream_handle,
+                window,
+                request_id,
+                player_paused,
+                snapshot,
+                position_advanced,
+                download_advanced,
+                now,
+            );
+        }
+        DownloadStatus::NotStarted => {
+            set_stream_buffering(stream_handle, window, request_id, false);
+        }
+    }
+}
+
+fn update_stream_buffering(
+    stream_handle: &mut StreamLoadHandle,
+    window: &WebviewWindow,
+    request_id: &Arc<Mutex<Option<String>>>,
+    player_paused: bool,
+    snapshot: ProgressSnapshot,
+    position_advanced: bool,
+    download_advanced: bool,
+    now: Instant,
+) {
+    if player_paused {
+        set_stream_buffering(stream_handle, window, request_id, false);
+        return;
+    }
+
+    let stalled_for = now.saturating_duration_since(stream_handle.last_activity_at);
+    if stalled_for >= Duration::from_millis(STREAM_STALL_ERROR_MS) {
+        emit_stream_network_error(
+            stream_handle,
+            window,
+            request_id,
+            "timed_out",
+            "desktop audio stream stalled while buffering".to_string(),
+        );
+        return;
+    }
+
+    let total_bytes = stream_handle.loader.total_bytes();
+    let has_reliable_buffer = total_bytes > 0 && snapshot.duration > 0.0;
+    let buffer_ahead = (snapshot.buffered_time - snapshot.current_time).max(0.0);
+    let near_track_end = snapshot.duration > 0.0
+        && snapshot.current_time >= snapshot.duration - STREAM_BUFFER_LOW_SECONDS;
+    let low_buffer =
+        has_reliable_buffer && !near_track_end && buffer_ahead <= STREAM_BUFFER_LOW_SECONDS;
+    let stalled = stalled_for >= Duration::from_millis(STREAM_STALL_BUFFERING_MS);
+    let recovered = if has_reliable_buffer {
+        buffer_ahead >= STREAM_BUFFER_RECOVER_SECONDS
+    } else {
+        position_advanced || download_advanced
+    };
+
+    let should_buffer = if stream_handle.is_buffering {
+        !recovered && !near_track_end
+    } else {
+        low_buffer || stalled
+    };
+
+    set_stream_buffering(stream_handle, window, request_id, should_buffer);
+}
+
+fn set_stream_buffering(
+    stream_handle: &mut StreamLoadHandle,
+    window: &WebviewWindow,
+    request_id: &Arc<Mutex<Option<String>>>,
+    is_buffering: bool,
+) {
+    if stream_handle.is_buffering == is_buffering {
+        return;
+    }
+
+    stream_handle.is_buffering = is_buffering;
+    emit_buffering(window, request_id, is_buffering);
+}
+
+fn emit_stream_network_error(
+    stream_handle: &mut StreamLoadHandle,
+    window: &WebviewWindow,
+    request_id: &Arc<Mutex<Option<String>>>,
+    code: &'static str,
+    message: String,
+) {
+    if stream_handle.error_emitted {
+        return;
+    }
+
+    stream_handle.error_emitted = true;
+    set_stream_buffering(stream_handle, window, request_id, false);
+    emit_error(window, request_id, code, "network", message);
 }
 
 fn url_with_estimated_content_length(url: &str) -> String {
