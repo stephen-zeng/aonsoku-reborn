@@ -18,6 +18,7 @@ use tokio_util::sync::CancellationToken;
 
 const DESKTOP_AUDIO_EVENT: &str = "desktop-audio-event";
 const PROGRESS_INTERVAL_MS: u64 = 500;
+const STATUS_LOG_INTERVAL_MS: u64 = 5_000;
 const STREAM_CHUNK_SIZE: usize = 256 * 1024;
 const STREAM_BUFFER_LOW_SECONDS: f64 = 2.0;
 const STREAM_BUFFER_RECOVER_SECONDS: f64 = 5.0;
@@ -42,6 +43,7 @@ struct DesktopAudioWorker {
     volume: f32,
     repeat_mode: DesktopAudioRepeatMode,
     shuffle: bool,
+    last_status_log_at: Option<Instant>,
 }
 
 struct StreamLoadHandle {
@@ -73,6 +75,7 @@ impl Default for DesktopAudioWorker {
             volume: 1.0,
             repeat_mode: DesktopAudioRepeatMode::Off,
             shuffle: false,
+            last_status_log_at: None,
         }
     }
 }
@@ -369,6 +372,7 @@ impl DesktopAudioState {
             .spawn(move || run_audio_worker(worker_window, request_id, rx))
             .map_err(|error| error.to_string())?;
 
+        audio_log("worker spawned");
         *command_tx = Some(tx.clone());
         Ok(tx)
     }
@@ -391,6 +395,7 @@ fn run_audio_worker(
     let runtime = match Runtime::new() {
         Ok(runtime) => runtime,
         Err(error) => {
+            audio_log(format!("runtime unavailable error={error}"));
             emit_error(
                 &window,
                 &request_id,
@@ -403,6 +408,7 @@ fn run_audio_worker(
     };
 
     let mut worker = DesktopAudioWorker::default();
+    audio_log("worker started");
 
     loop {
         match rx.recv_timeout(Duration::from_millis(PROGRESS_INTERVAL_MS)) {
@@ -415,6 +421,8 @@ fn run_audio_worker(
             Err(mpsc::RecvTimeoutError::Disconnected) => break,
         }
     }
+
+    audio_log("worker stopped");
 }
 
 fn handle_audio_command(
@@ -432,6 +440,12 @@ fn handle_audio_command(
             autoplay,
             response,
         } => {
+            audio_log(format!(
+                "command=load request_id={} autoplay={} source={}",
+                next_request_id.as_deref().unwrap_or("none"),
+                autoplay,
+                source_log_label(&source)
+            ));
             let result = handle_load(
                 worker,
                 runtime,
@@ -445,45 +459,97 @@ fn handle_audio_command(
             let _ = response.send(result);
         }
         AudioCommand::Play { response } => {
+            audio_log(format!(
+                "command=play request_id={}",
+                request_log_label(request_id)
+            ));
             let result = ensure_player(worker, window, request_id).map(|player| player.play());
+            if let Err(error) = &result {
+                audio_log(format!(
+                    "command=play failed request_id={} error={}",
+                    request_log_label(request_id),
+                    error
+                ));
+            }
             let _ = response.send(result.map(|_| ()));
         }
         AudioCommand::Pause { response } => {
+            audio_log(format!(
+                "command=pause request_id={}",
+                request_log_label(request_id)
+            ));
             if let Some(player) = worker.player.as_ref() {
                 player.pause();
             }
             let _ = response.send(Ok(()));
         }
         AudioCommand::Stop { response } => {
+            audio_log(format!(
+                "command=stop request_id={}",
+                request_log_label(request_id)
+            ));
             if let Some(player) = worker.player.as_mut() {
                 player.stop();
             }
             worker.loaded = false;
             worker.stream_handle = None;
+            worker.last_status_log_at = None;
             let _ = set_current_request_id(request_id, None);
             let _ = response.send(Ok(()));
         }
         AudioCommand::Seek { position, response } => {
+            audio_log(format!(
+                "command=seek request_id={} position={position:.2}s",
+                request_log_label(request_id)
+            ));
             let result = handle_seek(worker, window, request_id, position);
+            if let Err(error) = &result {
+                audio_log(format!(
+                    "command=seek failed request_id={} error={}",
+                    request_log_label(request_id),
+                    error
+                ));
+            }
             let _ = response.send(result);
         }
         AudioCommand::SetVolume { value, response } => {
             worker.volume = value.clamp(0.0, 1.0) as f32;
+            audio_log(format!(
+                "command=set_volume request_id={} value={:.2}",
+                request_log_label(request_id),
+                worker.volume
+            ));
             if let Some(player) = worker.player.as_ref() {
                 player.set_volume(worker.volume);
             }
             let _ = response.send(Ok(()));
         }
         AudioCommand::UpdateMetadata { metadata, response } => {
+            audio_log(format!(
+                "command=update_metadata request_id={} duration={}",
+                request_log_label(request_id),
+                metadata
+                    .duration
+                    .map(|duration| format!("{duration:.2}s"))
+                    .unwrap_or_else(|| "unknown".to_string())
+            ));
             worker.metadata = Some(metadata);
             let _ = response.send(Ok(()));
         }
         AudioCommand::SetRepeatMode { mode, response } => {
             worker.repeat_mode = mode;
+            audio_log(format!(
+                "command=set_repeat_mode request_id={} mode={mode:?}",
+                request_log_label(request_id)
+            ));
             let _ = response.send(Ok(()));
         }
         AudioCommand::SetShuffle { enabled, response } => {
             worker.shuffle = enabled;
+            audio_log(format!(
+                "command=set_shuffle request_id={} enabled={enabled}",
+                request_log_label(request_id)
+            ));
             let _ = response.send(Ok(()));
         }
     }
@@ -508,6 +574,11 @@ fn handle_load(
 
     set_current_request_id(request_id, next_request_id)?;
     emit_buffering(window, request_id, true);
+    audio_log(format!(
+        "load started request_id={} source={}",
+        request_log_label(request_id),
+        source_log_label(&source)
+    ));
 
     let load_result = {
         let player = ensure_player(worker, window, request_id)?;
@@ -517,6 +588,12 @@ fn handle_load(
     let stream_handle = match load_result {
         Ok(stream_handle) => stream_handle,
         Err(error) => {
+            audio_log(format!(
+                "load failed request_id={} kind={} error={}",
+                request_log_label(request_id),
+                classify_load_error(&source, &error),
+                error
+            ));
             emit_error(
                 window,
                 request_id,
@@ -531,6 +608,7 @@ fn handle_load(
 
     worker.loaded = true;
     worker.stream_handle = stream_handle;
+    worker.last_status_log_at = None;
     if let Some(player) = worker.player.as_ref() {
         player.set_volume(worker.volume);
         if autoplay {
@@ -545,6 +623,14 @@ fn handle_load(
         );
         emit_duration(window, request_id, snapshot.duration);
         emit_progress(window, request_id, snapshot);
+        audio_log(format!(
+            "load completed request_id={} autoplay={} duration={:.2}s buffered={:.2}s stream={}",
+            request_log_label(request_id),
+            autoplay,
+            snapshot.duration,
+            snapshot.buffered_time,
+            stream_log_label(worker.stream_handle.as_ref())
+        ));
     }
     emit_buffering(window, request_id, false);
 
@@ -585,6 +671,10 @@ fn handle_seek(
             worker.stream_handle.as_ref(),
         ),
     );
+    audio_log(format!(
+        "seek completed request_id={} position={position:.2}s was_playing={was_playing}",
+        request_log_label(request_id)
+    ));
     Ok(())
 }
 
@@ -611,16 +701,47 @@ fn install_player_callbacks(
     request_id: Arc<Mutex<Option<String>>>,
 ) {
     player.set_callback(move |event| match event {
-        PlayerEvent::Play => emit_simple(&window, &request_id, "play"),
-        PlayerEvent::Pause => emit_simple(&window, &request_id, "pause"),
-        PlayerEvent::Ended => emit_simple(&window, &request_id, "ended"),
+        PlayerEvent::Play => {
+            audio_log(format!(
+                "player_event=play request_id={}",
+                request_log_label(&request_id)
+            ));
+            emit_simple(&window, &request_id, "play");
+        }
+        PlayerEvent::Pause => {
+            audio_log(format!(
+                "player_event=pause request_id={}",
+                request_log_label(&request_id)
+            ));
+            emit_simple(&window, &request_id, "pause");
+        }
+        PlayerEvent::Ended => {
+            audio_log(format!(
+                "player_event=ended request_id={}",
+                request_log_label(&request_id)
+            ));
+            emit_simple(&window, &request_id, "ended");
+        }
         PlayerEvent::Waiting | PlayerEvent::LoadStart => {
+            audio_log(format!(
+                "player_event=buffering_start request_id={}",
+                request_log_label(&request_id)
+            ));
             emit_buffering(&window, &request_id, true);
         }
         PlayerEvent::Playing | PlayerEvent::LoadedData | PlayerEvent::LoadedMetadata => {
+            audio_log(format!(
+                "player_event=buffering_end request_id={}",
+                request_log_label(&request_id)
+            ));
             emit_buffering(&window, &request_id, false);
         }
         PlayerEvent::Error { message } => {
+            audio_log(format!(
+                "player_event=error request_id={} message={}",
+                request_log_label(&request_id),
+                message
+            ));
             emit_error(&window, &request_id, "playback_failed", "unknown", message);
         }
         PlayerEvent::DurationChange
@@ -731,6 +852,7 @@ fn emit_worker_progress(
 
     emit_progress(window, request_id, snapshot);
     update_stream_load_state(worker, window, request_id, paused, snapshot);
+    maybe_log_worker_status(worker, request_id, paused, snapshot);
 }
 
 fn progress_snapshot(
@@ -776,6 +898,55 @@ fn buffered_time(
 
     let buffered = (downloaded_bytes as f64 / total_bytes as f64) * duration;
     buffered.clamp(current_time, duration)
+}
+
+fn maybe_log_worker_status(
+    worker: &mut DesktopAudioWorker,
+    request_id: &Arc<Mutex<Option<String>>>,
+    paused: bool,
+    snapshot: ProgressSnapshot,
+) {
+    let now = Instant::now();
+    if let Some(last_logged_at) = worker.last_status_log_at {
+        if now.saturating_duration_since(last_logged_at)
+            < Duration::from_millis(STATUS_LOG_INTERVAL_MS)
+        {
+            return;
+        }
+    }
+
+    worker.last_status_log_at = Some(now);
+    audio_log(format!(
+        "status request_id={} paused={} position={:.2}s duration={:.2}s buffered={:.2}s {}",
+        request_log_label(request_id),
+        paused,
+        snapshot.current_time,
+        snapshot.duration,
+        snapshot.buffered_time,
+        stream_log_label(worker.stream_handle.as_ref())
+    ));
+}
+
+fn stream_log_label(stream_handle: Option<&StreamLoadHandle>) -> String {
+    let Some(stream_handle) = stream_handle else {
+        return "stream=none".to_string();
+    };
+
+    format!(
+        "stream_status={} downloaded={} total={}",
+        download_status_label(stream_handle.loader.status()),
+        stream_handle.loader.downloaded_bytes(),
+        stream_handle.loader.total_bytes()
+    )
+}
+
+fn download_status_label(status: DownloadStatus) -> &'static str {
+    match status {
+        DownloadStatus::Aborted => "aborted",
+        DownloadStatus::Completed => "completed",
+        DownloadStatus::Downloading => "downloading",
+        DownloadStatus::NotStarted => "not_started",
+    }
 }
 
 fn update_stream_load_state(
@@ -895,6 +1066,13 @@ fn set_stream_buffering(
     }
 
     stream_handle.is_buffering = is_buffering;
+    audio_log(format!(
+        "stream_buffering request_id={} is_buffering={} downloaded={} total={}",
+        request_log_label(request_id),
+        is_buffering,
+        stream_handle.loader.downloaded_bytes(),
+        stream_handle.loader.total_bytes()
+    ));
     emit_buffering(window, request_id, is_buffering);
 }
 
@@ -910,6 +1088,14 @@ fn emit_stream_network_error(
     }
 
     stream_handle.error_emitted = true;
+    audio_log(format!(
+        "stream_error request_id={} code={} downloaded={} total={} message={}",
+        request_log_label(request_id),
+        code,
+        stream_handle.loader.downloaded_bytes(),
+        stream_handle.loader.total_bytes(),
+        message
+    ));
     set_stream_buffering(stream_handle, window, request_id, false);
     emit_error(window, request_id, code, "network", message);
 }
@@ -934,6 +1120,65 @@ fn url_with_estimated_content_length(url: &str) -> String {
 
     let separator = if url.contains('?') { '&' } else { '?' };
     format!("{url}{separator}estimateContentLength=true")
+}
+
+fn source_log_label(source: &DesktopAudioSource) -> String {
+    match source {
+        DesktopAudioSource::Stream { url } => {
+            format!("kind=stream url={}", redacted_url_label(url))
+        }
+        DesktopAudioSource::Blob {} => "kind=blob".to_string(),
+        DesktopAudioSource::NativeFile { uri } => {
+            format!("kind=native-file {}", native_file_log_label(uri))
+        }
+        DesktopAudioSource::Radio { url } => format!("kind=radio url={}", redacted_url_label(url)),
+    }
+}
+
+fn redacted_url_label(url: &str) -> String {
+    if let Ok(mut parsed_url) = url::Url::parse(url) {
+        parsed_url.set_query(None);
+        parsed_url.set_fragment(None);
+        let _ = parsed_url.set_username("");
+        let _ = parsed_url.set_password(None);
+        return parsed_url.to_string();
+    }
+
+    let without_query = url.split_once('?').map(|(value, _)| value).unwrap_or(url);
+    without_query
+        .split_once('#')
+        .map(|(value, _)| value)
+        .unwrap_or(without_query)
+        .to_string()
+}
+
+fn native_file_log_label(uri: &str) -> String {
+    if let Ok(url) = url::Url::parse(uri) {
+        if url.scheme() == "file" {
+            if let Ok(path) = url.to_file_path() {
+                if let Some(file_name) = path.file_name().and_then(|value| value.to_str()) {
+                    return format!("file={file_name}");
+                }
+            }
+        }
+    }
+
+    if let Some(file_name) = PathBuf::from(uri)
+        .file_name()
+        .and_then(|value| value.to_str())
+    {
+        return format!("file={file_name}");
+    }
+
+    "file=<unknown>".to_string()
+}
+
+fn audio_log(message: impl AsRef<str>) {
+    eprintln!("[aonsoku][desktop-audio] {}", message.as_ref());
+}
+
+fn request_log_label(request_id: &Arc<Mutex<Option<String>>>) -> String {
+    current_request_id(request_id).unwrap_or_else(|| "none".to_string())
 }
 
 fn emit_simple(
@@ -1045,7 +1290,11 @@ fn emit_error(
 }
 
 fn emit_audio_event(window: &WebviewWindow, payload: DesktopAudioEventPayload) {
-    let _ = window.emit(DESKTOP_AUDIO_EVENT, payload);
+    if let Err(error) = window.emit(DESKTOP_AUDIO_EVENT, payload) {
+        audio_log(format!(
+            "emit failed event={DESKTOP_AUDIO_EVENT} error={error}"
+        ));
+    }
 }
 
 fn set_current_request_id(
