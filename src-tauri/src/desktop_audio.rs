@@ -896,6 +896,7 @@ fn buffered_time(
         return current_time;
     }
 
+    let current_time = current_time.min(duration);
     let buffered = (downloaded_bytes as f64 / total_bytes as f64) * duration;
     buffered.clamp(current_time, duration)
 }
