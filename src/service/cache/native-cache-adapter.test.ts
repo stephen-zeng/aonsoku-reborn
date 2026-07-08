@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { NativeAudioPlugin } from "@/native/audio";
-import { FakeNativeCacheAdapter } from "./contracts/fakes";
 import type { NativeCacheAdapter } from "./contracts";
+import { FakeNativeCacheAdapter } from "./contracts/fakes";
 import {
   _resetNativeCacheAdapter,
   _setNativeCacheAdapterForTests,
@@ -11,11 +11,13 @@ import {
   IosNativeCacheAdapter,
   isNativeCacheAdapterAvailable,
   storeNativeAudioFileIfAvailable,
+  TauriNativeCacheAdapter,
 } from "./native-cache-adapter";
 
 const mocks = vi.hoisted(() => ({
   getRuntime: vi.fn(),
   getNativeAudioPluginAvailability: vi.fn(),
+  getTauriInvoke: vi.fn(),
 }));
 
 vi.mock("@/utils/capabilities", () => ({
@@ -24,6 +26,10 @@ vi.mock("@/utils/capabilities", () => ({
 
 vi.mock("@/native/audio", () => ({
   getNativeAudioPluginAvailability: mocks.getNativeAudioPluginAvailability,
+}));
+
+vi.mock("@/utils/tauri", () => ({
+  getTauriInvoke: mocks.getTauriInvoke,
 }));
 
 function createNativePlugin(): NativeAudioPlugin {
@@ -67,8 +73,38 @@ function createNativePlugin(): NativeAudioPlugin {
 
 afterEach(() => {
   _resetNativeCacheAdapter();
+  mocks.getRuntime.mockReset();
+  mocks.getNativeAudioPluginAvailability.mockReset();
+  mocks.getTauriInvoke.mockReset();
   vi.restoreAllMocks();
 });
+
+function createTauriInvoke() {
+  const file = {
+    songId: "song-1",
+    uri: "file:///tauri-cache/song-1.mp3",
+    contentType: "audio/mpeg",
+    sizeBytes: 4,
+    lastModifiedAt: 123,
+  };
+
+  return vi.fn(async (command: string) => {
+    switch (command) {
+      case "desktop_cache_store_audio_file":
+        return file;
+      case "desktop_cache_resolve_audio_file":
+        return { file };
+      case "desktop_cache_get_audio_file_size":
+        return { sizeBytes: file.sizeBytes };
+      case "desktop_cache_delete_audio_file":
+        return { deleted: true };
+      case "desktop_cache_clear_audio_files":
+        return { deletedCount: 1 };
+      default:
+        throw new Error(`unexpected command: ${command}`);
+    }
+  });
+}
 
 describe("getNativeCacheAdapter", () => {
   it("returns a null adapter on web platform", () => {
@@ -143,6 +179,37 @@ describe("getNativeCacheAdapter", () => {
     });
 
     expect(getNativeCacheAdapter()).toBeInstanceOf(IosNativeCacheAdapter);
+    expect(isNativeCacheAdapterAvailable()).toBe(true);
+  });
+
+  it("returns the Tauri adapter when invoke is available", () => {
+    const invoke = createTauriInvoke();
+    mocks.getRuntime.mockReturnValue("tauri");
+    mocks.getTauriInvoke.mockReturnValue(invoke);
+
+    expect(getNativeCacheAdapter()).toBeInstanceOf(TauriNativeCacheAdapter);
+    expect(isNativeCacheAdapterAvailable()).toBe(true);
+  });
+
+  it("returns a null adapter on Tauri when invoke is unavailable", async () => {
+    mocks.getRuntime.mockReturnValue("tauri");
+    mocks.getTauriInvoke.mockReturnValue(null);
+
+    const adapter = getNativeCacheAdapter();
+
+    expect(isNativeCacheAdapterAvailable()).toBe(false);
+    expect(await adapter.resolveAudioFile("song-1")).toBeNull();
+  });
+
+  it("upgrades the Tauri adapter after invoke becomes available", () => {
+    mocks.getRuntime.mockReturnValue("tauri");
+    mocks.getTauriInvoke.mockReturnValue(null);
+    expect(getNativeCacheAdapter()).not.toBeInstanceOf(TauriNativeCacheAdapter);
+
+    const invoke = createTauriInvoke();
+    mocks.getTauriInvoke.mockReturnValue(invoke);
+
+    expect(getNativeCacheAdapter()).toBeInstanceOf(TauriNativeCacheAdapter);
     expect(isNativeCacheAdapterAvailable()).toBe(true);
   });
 
@@ -252,6 +319,62 @@ describe("IosNativeCacheAdapter", () => {
 
     await expect(adapter.resolveAudioFile("missing")).resolves.toBeNull();
     await expect(adapter.getAudioFileSize("missing")).resolves.toBeNull();
+  });
+});
+
+describe("TauriNativeCacheAdapter", () => {
+  it("stores blobs through Tauri invoke as base64", async () => {
+    const invoke = createTauriInvoke();
+    const adapter = new TauriNativeCacheAdapter(invoke);
+
+    const stored = await adapter.storeAudioFile(
+      "song-1",
+      new Blob(["test"]),
+      "audio/mpeg",
+    );
+
+    expect(invoke).toHaveBeenCalledWith("desktop_cache_store_audio_file", {
+      payload: {
+        songId: "song-1",
+        dataBase64: "dGVzdA==",
+        contentType: "audio/mpeg",
+      },
+    });
+    expect(stored).toEqual({
+      songId: "song-1",
+      uri: "file:///tauri-cache/song-1.mp3",
+      contentType: "audio/mpeg",
+      sizeBytes: 4,
+      lastModifiedAt: 123,
+    });
+  });
+
+  it("resolves, sizes, deletes, evicts, and clears through Tauri invoke", async () => {
+    const invoke = createTauriInvoke();
+    const adapter = new TauriNativeCacheAdapter(invoke);
+
+    await expect(adapter.resolveAudioFile("song-1")).resolves.toEqual({
+      songId: "song-1",
+      uri: "file:///tauri-cache/song-1.mp3",
+      contentType: "audio/mpeg",
+      sizeBytes: 4,
+      lastModifiedAt: 123,
+    });
+    await expect(adapter.getAudioFileSize("song-1")).resolves.toBe(4);
+    await expect(adapter.deleteAudioFile("song-1")).resolves.toBe(true);
+    await expect(adapter.evictAudioFile("song-1")).resolves.toBe(true);
+    await expect(adapter.clearAudioFiles()).resolves.toBeUndefined();
+
+    expect(invoke).toHaveBeenCalledWith("desktop_cache_resolve_audio_file", {
+      payload: { songId: "song-1" },
+    });
+    expect(invoke).toHaveBeenCalledWith("desktop_cache_get_audio_file_size", {
+      payload: { songId: "song-1" },
+    });
+    expect(invoke).toHaveBeenCalledWith("desktop_cache_delete_audio_file", {
+      payload: { songId: "song-1" },
+    });
+    expect(invoke).toHaveBeenCalledWith("desktop_cache_clear_audio_files");
   });
 });
 

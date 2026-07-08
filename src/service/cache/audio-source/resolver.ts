@@ -25,6 +25,7 @@ export interface CacheAudioSourceResolverOptions {
   metadata: CacheMetadataPersistence;
   urlResolver: CacheAudioUrlResolver;
   nativeFileResolver?: NativeFileResolver;
+  isNativeCacheAvailable?: () => boolean;
   blobUrls: BlobUrlAdapter;
   preferStreamOverBlob?: boolean;
   now?: () => number;
@@ -88,6 +89,7 @@ export class CacheAudioSourceResolver implements AudioSourceResolver {
   private readonly metadata: CacheMetadataPersistence;
   private readonly urlResolver: CacheAudioUrlResolver;
   private readonly nativeFileResolver?: NativeFileResolver;
+  private readonly isNativeCacheAvailable: () => boolean;
   private readonly blobUrls: BlobUrlAdapter;
   private readonly preferStreamOverBlob: boolean;
   private readonly now: () => number;
@@ -98,13 +100,17 @@ export class CacheAudioSourceResolver implements AudioSourceResolver {
     this.metadata = options.metadata;
     this.urlResolver = options.urlResolver;
     this.nativeFileResolver = options.nativeFileResolver;
+    this.isNativeCacheAvailable =
+      options.isNativeCacheAvailable ?? (() => true);
     this.blobUrls = options.blobUrls;
     this.preferStreamOverBlob = options.preferStreamOverBlob ?? false;
     this.now = options.now ?? Date.now;
   }
 
   async resolveSongSource(songId: string): Promise<AudioSourceDescriptor> {
-    const nativeFile = await this.nativeFileResolver?.resolveAudioFile(songId);
+    const nativeFile = this.isNativeCacheAvailable()
+      ? await this.nativeFileResolver?.resolveAudioFile(songId)
+      : null;
     if (nativeFile) {
       await this.ensureNativeFileIndexed(nativeFile);
       return {
@@ -114,7 +120,9 @@ export class CacheAudioSourceResolver implements AudioSourceResolver {
       };
     }
 
-    const nativeCache = nativeCacheAdapter(this.nativeFileResolver);
+    const nativeCache = this.isNativeCacheAvailable()
+      ? nativeCacheAdapter(this.nativeFileResolver)
+      : null;
     if (nativeCache) {
       const blob = await this.getCachedBlobAndEnsureIndexed(songId);
       if (blob) {

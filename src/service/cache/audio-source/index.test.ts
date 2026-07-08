@@ -43,6 +43,8 @@ function createResolver(
     index?: FakeCacheIndex;
     metadata?: FakeCacheMetadataPersistence;
     nativeFileResolver?: FakeNativeFileResolver | FakeNativeCacheAdapter;
+    isNativeCacheAvailable?: () => boolean;
+    preferStreamOverBlob?: boolean;
     now?: () => number;
   } = {},
 ) {
@@ -52,8 +54,10 @@ function createResolver(
     index: options.index ?? new FakeCacheIndex(),
     metadata: options.metadata ?? new FakeCacheMetadataPersistence(),
     nativeFileResolver: options.nativeFileResolver,
+    isNativeCacheAvailable: options.isNativeCacheAvailable,
     urlResolver: new FakeAudioUrlResolver("https://music.test"),
     blobUrls: blobUrls.adapter,
+    preferStreamOverBlob: options.preferStreamOverBlob,
     now: options.now ?? (() => 50),
   });
 
@@ -343,6 +347,34 @@ describe("CacheAudioSourceResolver", () => {
     });
     expect(storedFile?.contentType).toBe("audio/flac");
     expect(index.getItem(audioKey("song-1"))?.lastAccessedAt).toBe(77);
+  });
+
+  it("does not report a Tauri blob cache hit when native cache is unavailable", async () => {
+    const storage = new FakeCacheStorage();
+    const index = new FakeCacheIndex({
+      items: { [audioKey("song-1")]: audioMeta() },
+    });
+    await storage.put(audioKey("song-1"), new Blob(["audio"]), "audio/mpeg");
+
+    const nativeCacheAdapter = new FakeNativeCacheAdapter();
+    const { resolver } = createResolver({
+      storage,
+      index,
+      nativeFileResolver: nativeCacheAdapter,
+      isNativeCacheAvailable: () => false,
+      preferStreamOverBlob: true,
+    });
+
+    const source = await resolver.resolveSongSource("song-1");
+
+    expect(source).toEqual({
+      kind: "stream",
+      songId: "song-1",
+      url: "https://music.test/stream/song-1?v=1",
+    });
+    await expect(
+      nativeCacheAdapter.resolveAudioFile("song-1"),
+    ).resolves.toBeNull();
   });
 
   it("keeps using blob URLs when only a native file resolver is available", async () => {

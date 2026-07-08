@@ -14,15 +14,16 @@ use remu_audio::{
     reader::{AppendableDataWrapper, MVecBytesReader, MVecBytesWrapper},
 };
 use reqwest::{
-    header::{ACCEPT_ENCODING, CONTENT_LENGTH, CONTENT_RANGE, RANGE},
+    header::{ACCEPT_ENCODING, CONTENT_LENGTH, CONTENT_RANGE, CONTENT_TYPE, RANGE},
     Client, Response, StatusCode,
 };
 use serde::{Deserialize, Serialize};
-use tauri::{Emitter, WebviewWindow};
+use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 use tokio::{runtime::Runtime, sync::oneshot, task::JoinHandle, time::sleep};
 use tokio_util::sync::CancellationToken;
 
 const DESKTOP_AUDIO_EVENT: &str = "desktop-audio-event";
+const DESKTOP_AUDIO_STREAM_CACHE_EVENT: &str = "desktop-audio-stream-cache-completed";
 const PROGRESS_INTERVAL_MS: u64 = 500;
 const STATUS_LOG_INTERVAL_MS: u64 = 5_000;
 const STREAM_CHUNK_SIZE: usize = 256 * 1024;
@@ -97,6 +98,19 @@ struct StreamDownloader {
     thread_handle: Arc<Mutex<Option<JoinHandle<()>>>>,
 }
 
+/// Everything the stream downloader needs to persist a fully-downloaded
+/// stream to the on-disk audio cache once it completes. Mirrors the
+/// "cache while playing" behavior of the iOS/Android native backends
+/// (`startBackgroundCache`). Absent for radio and when the song id cannot
+/// be resolved.
+#[derive(Clone)]
+struct StreamPersistContext {
+    app_handle: AppHandle,
+    window: WebviewWindow,
+    song_id: String,
+    content_type: String,
+}
+
 impl Default for DesktopAudioWorker {
     fn default() -> Self {
         Self {
@@ -146,6 +160,8 @@ impl StreamDownloader {
         url: String,
         mut wrapper: MVecBytesWrapper,
         request_label: String,
+        window: WebviewWindow,
+        song_id: Option<String>,
     ) -> Result<(), String> {
         self.state.set_status(StreamDownloadStatus::Downloading);
 
@@ -164,6 +180,13 @@ impl StreamDownloader {
             reserve_stream_capacity(&mut wrapper, total_bytes);
         }
 
+        let persist = song_id.map(|song_id| StreamPersistContext {
+            app_handle: window.app_handle().clone(),
+            window,
+            song_id,
+            content_type: response_content_type(&response),
+        });
+
         let condvar = Arc::clone(&self.condvar);
         let state = self.state.clone();
         let handle = tokio::spawn(async move {
@@ -175,6 +198,7 @@ impl StreamDownloader {
                 condvar,
                 state,
                 request_label,
+                persist,
             )
             .await;
         });
@@ -236,11 +260,13 @@ impl Drop for StreamDownloader {
 pub enum DesktopAudioSource {
     Stream {
         url: String,
+        song_id: Option<String>,
     },
     Blob {},
     #[serde(rename = "native-file")]
     NativeFile {
         uri: String,
+        song_id: Option<String>,
     },
     Radio {
         url: String,
@@ -726,14 +752,20 @@ fn handle_load(
     set_current_request_id(request_id, next_request_id)?;
     emit_buffering(window, request_id, true);
     audio_log(format!(
-        "load started request_id={} source={}",
+        "load started request_id={} playback_source={} source={}",
         request_log_label(request_id),
+        playback_source_log_label(&source),
         source_log_label(&source)
     ));
 
     let load_result = {
         let player = ensure_player(worker, window, request_id)?;
-        runtime.block_on(load_source(player, &source, request_log_label(request_id)))
+        runtime.block_on(load_source(
+            player,
+            &source,
+            request_log_label(request_id),
+            window.clone(),
+        ))
     };
 
     let stream_handle = match load_result {
@@ -775,8 +807,9 @@ fn handle_load(
         emit_duration(window, request_id, snapshot.duration);
         emit_progress(window, request_id, snapshot);
         audio_log(format!(
-            "load completed request_id={} autoplay={} duration={:.2}s buffered={:.2}s stream={}",
+            "load completed request_id={} playback_source={} autoplay={} duration={:.2}s buffered={:.2}s stream={}",
             request_log_label(request_id),
+            playback_source_log_label(&source),
             autoplay,
             snapshot.duration,
             snapshot.buffered_time,
@@ -907,11 +940,15 @@ async fn load_source(
     player: &mut Player,
     source: &DesktopAudioSource,
     request_label: String,
+    window: WebviewWindow,
 ) -> Result<Option<StreamLoadHandle>, String> {
     match source {
-        DesktopAudioSource::Stream { url, .. } => load_seekable_stream(player, url, request_label)
-            .await
-            .map(Some),
+        DesktopAudioSource::Stream { url, song_id } => {
+            let resolved_song_id = resolve_stream_song_id(song_id.as_deref(), url);
+            load_seekable_stream(player, url, request_label, window, resolved_song_id)
+                .await
+                .map(Some)
+        }
         DesktopAudioSource::Radio { url, .. } => {
             player
                 .load_url(url)
@@ -938,11 +975,15 @@ async fn load_seekable_stream(
     player: &mut Player,
     url: &str,
     request_label: String,
+    window: WebviewWindow,
+    song_id: Option<String>,
 ) -> Result<StreamLoadHandle, String> {
     let url = url_with_estimated_content_length(url);
     let wrapper = MVecBytesWrapper::new(STREAM_CHUNK_SIZE);
     let loader = StreamDownloader::new();
-    loader.download(url, wrapper.clone(), request_label).await?;
+    loader
+        .download(url, wrapper.clone(), request_label, window, song_id)
+        .await?;
 
     let byte_len = loader.total_bytes();
     let condvar = loader.condvar();
@@ -993,6 +1034,7 @@ async fn run_resumable_stream_download(
     condvar: Arc<Condvar>,
     state: StreamDownloadState,
     request_label: String,
+    persist: Option<StreamPersistContext>,
 ) {
     let mut retry_offset = None;
     let mut retries_at_offset = 0;
@@ -1006,6 +1048,7 @@ async fn run_resumable_stream_download(
                     &state,
                     StreamDownloadStatus::Completed,
                 );
+                persist_completed_stream(&wrapper, &persist, &request_label);
                 return;
             }
             StreamReadResult::Cancelled => {
@@ -1032,6 +1075,7 @@ async fn run_resumable_stream_download(
                             &state,
                             StreamDownloadStatus::Completed,
                         );
+                        persist_completed_stream(&wrapper, &persist, &request_label);
                         return;
                     }
 
@@ -1142,6 +1186,102 @@ fn complete_stream_download(
     wrapper.complete();
     state.set_status(status);
     condvar.notify_all();
+}
+
+/// Write a fully-downloaded stream to the on-disk audio cache so it can be
+/// played back from `native-file` next time. No-op when there is no persist
+/// context (radio / unknown song id) or when the song is already cached.
+fn persist_completed_stream(
+    wrapper: &MVecBytesWrapper,
+    persist: &Option<StreamPersistContext>,
+    request_label: &str,
+) {
+    let Some(context) = persist else {
+        return;
+    };
+
+    if crate::desktop_cache::is_audio_file_cached(&context.app_handle, &context.song_id) {
+        return;
+    }
+
+    let data = collect_wrapper_bytes(wrapper);
+    if data.is_empty() {
+        return;
+    }
+    let size_bytes = data.len() as u64;
+
+    match crate::desktop_cache::store_audio_bytes(
+        &context.app_handle,
+        &context.song_id,
+        data,
+        &context.content_type,
+    ) {
+        Ok(_) => {
+            audio_log(format!(
+                "stream_cache_stored request_id={} song_id={} size={} content_type={}",
+                request_label, context.song_id, size_bytes, context.content_type
+            ));
+            emit_stream_cache_completed(&context.window, &context.song_id, size_bytes);
+        }
+        Err(error) => {
+            audio_log(format!(
+                "stream_cache_failed request_id={} song_id={} error={}",
+                request_label, context.song_id, error
+            ));
+        }
+    }
+}
+
+fn collect_wrapper_bytes(wrapper: &MVecBytesWrapper) -> Vec<u8> {
+    // Clone the chunk list under the lock — each `Bytes` clone is a cheap
+    // refcount bump — then concatenate outside it so we don't block the
+    // decoder (which shares this mutex) during the copy.
+    let data = wrapper.data();
+    let chunks: Vec<_> = match data.lock() {
+        Ok(chunks) => chunks.clone(),
+        Err(_) => return Vec::new(),
+    };
+
+    let total: usize = chunks.iter().map(|chunk| chunk.len()).sum();
+    let mut buffer = Vec::with_capacity(total);
+    for chunk in &chunks {
+        buffer.extend_from_slice(chunk.as_ref());
+    }
+    buffer
+}
+
+fn response_content_type(response: &Response) -> String {
+    response
+        .headers()
+        .get(CONTENT_TYPE)
+        .and_then(|value| value.to_str().ok())
+        .map(|value| value.to_string())
+        .unwrap_or_else(|| "audio/mpeg".to_string())
+}
+
+/// Resolve the song id used as the cache key. Prefers the explicit id sent
+/// by the WebView, falling back to the `id` query parameter of the Subsonic
+/// stream URL (which always carries it) so caching still works even if the
+/// explicit id is missing.
+fn resolve_stream_song_id(song_id: Option<&str>, url: &str) -> Option<String> {
+    if let Some(song_id) = song_id {
+        let trimmed = song_id.trim();
+        if !trimmed.is_empty() {
+            return Some(trimmed.to_string());
+        }
+    }
+
+    song_id_from_stream_url(url)
+}
+
+fn song_id_from_stream_url(url: &str) -> Option<String> {
+    url::Url::parse(url).ok().and_then(|parsed| {
+        parsed
+            .query_pairs()
+            .find(|(key, _)| key == "id")
+            .map(|(_, value)| value.into_owned())
+            .filter(|value| !value.is_empty())
+    })
 }
 
 fn stream_http_client() -> Result<Client, String> {
@@ -1538,15 +1678,36 @@ fn url_with_estimated_content_length(url: &str) -> String {
 
 fn source_log_label(source: &DesktopAudioSource) -> String {
     match source {
-        DesktopAudioSource::Stream { url } => {
-            format!("kind=stream url={}", redacted_url_label(url))
+        DesktopAudioSource::Stream { url, song_id } => {
+            format!(
+                "kind=stream song_id={} url={}",
+                song_id_log_label(song_id.as_deref()),
+                redacted_url_label(url)
+            )
         }
         DesktopAudioSource::Blob {} => "kind=blob".to_string(),
-        DesktopAudioSource::NativeFile { uri } => {
-            format!("kind=native-file {}", native_file_log_label(uri))
+        DesktopAudioSource::NativeFile { uri, song_id } => {
+            format!(
+                "kind=native-file song_id={} {}",
+                song_id_log_label(song_id.as_deref()),
+                native_file_log_label(uri)
+            )
         }
         DesktopAudioSource::Radio { url } => format!("kind=radio url={}", redacted_url_label(url)),
     }
+}
+
+fn playback_source_log_label(source: &DesktopAudioSource) -> &'static str {
+    match source {
+        DesktopAudioSource::NativeFile { .. } => "local-cache",
+        DesktopAudioSource::Stream { .. } => "online-stream",
+        DesktopAudioSource::Radio { .. } => "online-radio",
+        DesktopAudioSource::Blob { .. } => "webview-blob",
+    }
+}
+
+fn song_id_log_label(song_id: Option<&str>) -> &str {
+    song_id.unwrap_or("none")
 }
 
 fn redacted_url_label(url: &str) -> String {
@@ -1707,6 +1868,25 @@ fn emit_audio_event(window: &WebviewWindow, payload: DesktopAudioEventPayload) {
     if let Err(error) = window.emit(DESKTOP_AUDIO_EVENT, payload) {
         audio_log(format!(
             "emit failed event={DESKTOP_AUDIO_EVENT} error={error}"
+        ));
+    }
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DesktopAudioStreamCachePayload {
+    song_id: String,
+    size_bytes: u64,
+}
+
+fn emit_stream_cache_completed(window: &WebviewWindow, song_id: &str, size_bytes: u64) {
+    let payload = DesktopAudioStreamCachePayload {
+        song_id: song_id.to_string(),
+        size_bytes,
+    };
+    if let Err(error) = window.emit(DESKTOP_AUDIO_STREAM_CACHE_EVENT, payload) {
+        audio_log(format!(
+            "emit failed event={DESKTOP_AUDIO_STREAM_CACHE_EVENT} error={error}"
         ));
     }
 }

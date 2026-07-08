@@ -1,7 +1,7 @@
+import type { PluginListenerHandle } from "@capacitor/core";
 import { expose, type Remote, transfer, wrap } from "comlink";
 import { getSongStreamUrl } from "@/api/httpClient";
 import { getNativeAudioPluginAvailability } from "@/native/audio/facade";
-import type { PluginListenerHandle } from "@capacitor/core";
 import { AudioCacheQueue } from "@/service/cache/audio-cache-queue";
 import { audioKey } from "@/service/cache/cache-keys";
 import { cacheStorage } from "@/service/cache/cache-storage";
@@ -17,6 +17,7 @@ import { libraryDb } from "@/store/library-db";
 import type { CachedItemMeta, CacheTask } from "@/types/cache";
 import type { AuthType } from "@/types/serverConfig";
 import { getRuntime } from "@/utils/capabilities";
+import { listenTauriEvent } from "@/utils/tauri";
 import type { AudioDownloadService } from "./contracts";
 import { storeNativeAudioFileIfAvailable } from "./native-cache-adapter";
 
@@ -181,10 +182,8 @@ class MainThreadAudioCacheEngine implements AudioCacheDownloader {
   }
 
   private async executeDownload(task: CacheTask): Promise<void> {
-    if (
-      getRuntime() === "capacitor-ios" ||
-      getRuntime() === "capacitor-android"
-    ) {
+    const runtime = getRuntime();
+    if (runtime === "capacitor-ios" || runtime === "capacitor-android") {
       return this.executeNativeDownload(task);
     }
 
@@ -208,12 +207,17 @@ class MainThreadAudioCacheEngine implements AudioCacheDownloader {
 
     const key = audioKey(songId);
     const contentType = blob.type || "audio/mpeg";
-    await cacheStorage.put(key, blob, contentType);
     const nativeFile = await storeNativeAudioFileIfAvailable(
       songId,
       blob,
       contentType,
     );
+    if (!nativeFile && runtime === "tauri") {
+      throw new Error("Tauri native audio cache is unavailable");
+    }
+    if (!nativeFile) {
+      await cacheStorage.put(key, blob, contentType);
+    }
 
     const meta: CachedItemMeta = {
       id: songId,
@@ -457,12 +461,13 @@ class AudioCacheWorkerAdapter implements AudioCacheDownloader {
 let audioCacheService: AudioCacheDownloader;
 
 try {
-  if (
-    getRuntime() === "capacitor-ios" ||
-    getRuntime() === "capacitor-android"
-  ) {
+  const runtime = getRuntime();
+  if (runtime === "capacitor-ios" || runtime === "capacitor-android") {
     audioCacheService = new MainThreadAudioCacheEngine();
     setupStreamCacheListener();
+  } else if (runtime === "tauri") {
+    audioCacheService = new MainThreadAudioCacheEngine();
+    setupTauriStreamCacheListener();
   } else if (typeof Worker !== "undefined") {
     audioCacheService = new AudioCacheWorkerAdapter();
   } else {
@@ -476,35 +481,56 @@ try {
   audioCacheService = new MainThreadAudioCacheEngine();
 }
 
+function recordStreamCacheCompleted(songId: string, sizeBytes: number): void {
+  const key = audioKey(songId);
+
+  const existing = getCacheIndexItems()[key];
+  if (existing) {
+    const updated = { ...existing, lastAccessedAt: Date.now() };
+    getCacheIndexActions().addItem(key, updated);
+    persistCacheMeta(key, { key, ...updated });
+    return;
+  }
+
+  const meta: CachedItemMeta = {
+    id: songId,
+    type: "audio",
+    source: "lru",
+    sizeBytes,
+    cachedAt: Date.now(),
+    lastAccessedAt: Date.now(),
+  };
+
+  getCacheIndexActions().addItem(key, meta);
+  refreshCacheStatsFromIndex();
+  persistCacheMeta(key, { key, ...meta });
+}
+
 function setupStreamCacheListener(): void {
   const availability = getNativeAudioPluginAvailability();
   if (!availability.available) return;
 
   availability.plugin.addListener("streamCacheCompleted", (event) => {
-    const { songId, sizeBytes } = event;
-    const key = audioKey(songId);
-
-    const existing = getCacheIndexItems()[key];
-    if (existing) {
-      const updated = { ...existing, lastAccessedAt: Date.now() };
-      getCacheIndexActions().addItem(key, updated);
-      persistCacheMeta(key, { key, ...updated });
-      return;
-    }
-
-    const meta: CachedItemMeta = {
-      id: songId,
-      type: "audio",
-      source: "lru",
-      sizeBytes,
-      cachedAt: Date.now(),
-      lastAccessedAt: Date.now(),
-    };
-
-    getCacheIndexActions().addItem(key, meta);
-    refreshCacheStatsFromIndex();
-    persistCacheMeta(key, { key, ...meta });
+    recordStreamCacheCompleted(event.songId, event.sizeBytes);
   });
+}
+
+/**
+ * Tauri counterpart of {@link setupStreamCacheListener}: the desktop audio
+ * engine caches a stream to disk while playing it (mirroring the iOS/Android
+ * `startBackgroundCache`) and emits `desktop-audio-stream-cache-completed`
+ * on completion. Reflect it into the web cache index so the UI shows the song
+ * as cached without waiting for the next `resolveAudioFile()` lazy discovery.
+ */
+function setupTauriStreamCacheListener(): void {
+  listenTauriEvent<{ songId: string; sizeBytes: number }>(
+    "desktop-audio-stream-cache-completed",
+    (event) => {
+      const { songId, sizeBytes } = event.payload;
+      if (!songId) return;
+      recordStreamCacheCompleted(songId, sizeBytes);
+    },
+  );
 }
 
 export { audioCacheService };

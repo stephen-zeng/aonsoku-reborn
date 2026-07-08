@@ -1,9 +1,24 @@
-import { getRuntime } from "@/utils/capabilities";
 import {
   getNativeAudioPluginAvailability,
   type NativeAudioPlugin,
 } from "@/native/audio";
+import { getRuntime } from "@/utils/capabilities";
+import { getTauriInvoke } from "@/utils/tauri";
 import type { NativeCacheAdapter, NativeCachedAudioFile } from "./contracts";
+
+type TauriInvoke = NonNullable<ReturnType<typeof getTauriInvoke>>;
+
+interface TauriResolveAudioFileResult {
+  file: NativeCachedAudioFile | null;
+}
+
+interface TauriAudioFileSizeResult {
+  sizeBytes: number | null;
+}
+
+interface TauriDeleteAudioFileResult {
+  deleted: boolean;
+}
 
 class WebNullNativeCacheAdapter implements NativeCacheAdapter {
   async storeAudioFile(
@@ -94,12 +109,78 @@ export class IosNativeCacheAdapter implements NativeCacheAdapter {
   }
 }
 
+export class TauriNativeCacheAdapter implements NativeCacheAdapter {
+  constructor(private readonly invoke: TauriInvoke) {}
+
+  async storeAudioFile(
+    songId: string,
+    data: Blob,
+    contentType: string,
+  ): Promise<NativeCachedAudioFile> {
+    const dataBase64 = await arrayBufferToBase64(await data.arrayBuffer());
+    return this.invoke<NativeCachedAudioFile>(
+      "desktop_cache_store_audio_file",
+      {
+        payload: {
+          songId,
+          dataBase64,
+          contentType,
+        },
+      },
+    );
+  }
+
+  async resolveAudioFile(
+    songId: string,
+  ): Promise<NativeCachedAudioFile | null> {
+    const result = await this.invoke<TauriResolveAudioFileResult>(
+      "desktop_cache_resolve_audio_file",
+      { payload: { songId } },
+    );
+    return result.file ?? null;
+  }
+
+  async getAudioFileSize(songId: string): Promise<number | null> {
+    const result = await this.invoke<TauriAudioFileSizeResult>(
+      "desktop_cache_get_audio_file_size",
+      { payload: { songId } },
+    );
+    return result.sizeBytes ?? null;
+  }
+
+  async deleteAudioFile(songId: string): Promise<boolean> {
+    const result = await this.invoke<TauriDeleteAudioFileResult>(
+      "desktop_cache_delete_audio_file",
+      { payload: { songId } },
+    );
+    return result.deleted;
+  }
+
+  async evictAudioFile(songId: string): Promise<boolean> {
+    return this.deleteAudioFile(songId);
+  }
+
+  async clearAudioFiles(): Promise<void> {
+    await this.invoke("desktop_cache_clear_audio_files");
+  }
+}
+
 let nativeCacheAdapter: NativeCacheAdapter | null = null;
 
 export function getNativeCacheAdapter(): NativeCacheAdapter {
+  const runtime = getRuntime();
+  if (runtime === "tauri") {
+    const invoke = getTauriInvoke();
+    if (!invoke) return new WebNullNativeCacheAdapter();
+    if (nativeCacheAdapter instanceof TauriNativeCacheAdapter) {
+      return nativeCacheAdapter;
+    }
+    nativeCacheAdapter = new TauriNativeCacheAdapter(invoke);
+    return nativeCacheAdapter;
+  }
+
   if (nativeCacheAdapter) return nativeCacheAdapter;
 
-  const runtime = getRuntime();
   if (runtime === "capacitor-ios" || runtime === "capacitor-android") {
     const availability = getNativeAudioPluginAvailability();
     const useNativeCache = availability.available;
@@ -114,6 +195,12 @@ export function getNativeCacheAdapter(): NativeCacheAdapter {
 }
 
 export function isNativeCacheAdapterAvailable(): boolean {
+  const runtime = getRuntime();
+  if (runtime === "tauri") return getTauriInvoke() !== null;
+  if (runtime !== "capacitor-ios" && runtime !== "capacitor-android") {
+    return false;
+  }
+
   const availability = getNativeAudioPluginAvailability();
   return availability.available;
 }

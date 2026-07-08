@@ -2,6 +2,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { AlertTriangle, HardDrive, Loader2, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { shallow } from "zustand/shallow";
 import {
   Content,
   ContentSeparator,
@@ -30,6 +31,7 @@ import {
   type CachedItemDetail,
   cacheManager,
 } from "@/service/cache/cache-manager";
+import { useCacheIndexStore } from "@/store/cache-index.store";
 import dateTime from "@/utils/dateTime";
 import { formatBytes } from "@/utils/formatBytes";
 
@@ -66,6 +68,13 @@ export function CacheManagerSection() {
 
   useEffect(() => {
     loadItems();
+    return useCacheIndexStore.subscribe(
+      (state) => [state.items, state.loaded] as const,
+      () => {
+        loadItems();
+      },
+      { equalityFn: shallow },
+    );
   }, [loadItems]);
 
   const filteredItems = useMemo(() => {
