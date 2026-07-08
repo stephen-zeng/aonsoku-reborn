@@ -229,11 +229,23 @@ export function AudioPlayer({
   useEffect(() => {
     if (src !== audioSrc) {
       const currentProgress = usePlayerStore.getState().playerProgress.progress;
+      // Only carry the current position over when reloading the *same* source
+      // (stream→cache swap, replaygain toggle) or on the first load after an app
+      // restart (persisted resume — loadedSourceId is still undefined). Switching
+      // to a different song must start from 0: late progress events from the
+      // previous track can bump the store progress back up before this effect
+      // runs, and stashing it as a resume position leaks the old position onto
+      // the new song (observed on the Tauri backend).
+      const previousSourceId = sessionRef.current.loadedSourceId;
+      const isDifferentSong =
+        previousSourceId !== undefined && previousSourceId !== songId;
+      const resumePosition =
+        !isDifferentSong && currentProgress > 0 ? currentProgress : undefined;
       const sourceChange = sessionRef.current.beginSourceChange(songId, {
-        resumePosition: currentProgress > 0 ? currentProgress : undefined,
+        resumePosition,
       });
       logger.info(
-        `[AudioSrcChange] newSrc=${src?.slice(-60)} | oldSrc=${audioSrc?.slice(-60)} | cancelledRetry=${sourceChange.cancelledRetry} | retryCount=${sourceChange.retryCount} | resumePosition=${currentProgress} | srcChangingRef=true`,
+        `[AudioSrcChange] newSrc=${src?.slice(-60)} | oldSrc=${audioSrc?.slice(-60)} | cancelledRetry=${sourceChange.cancelledRetry} | retryCount=${sourceChange.retryCount} | resumePosition=${resumePosition ?? "none"} | isDifferentSong=${isDifferentSong} | srcChangingRef=true`,
       );
 
       const state = usePlayerStore.getState();
