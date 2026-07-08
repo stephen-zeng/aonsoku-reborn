@@ -1,25 +1,35 @@
 use std::{
     path::PathBuf,
-    sync::{mpsc, Arc, Condvar, Mutex},
+    sync::{
+        atomic::{AtomicBool, AtomicU64, Ordering},
+        mpsc, Arc, Condvar, Mutex,
+    },
     time::{Duration, Instant},
 };
 
 use remu_audio::{
     decoder::Decoder,
     events::PlayerEvent,
-    loader::downloader::{DownloadStatus, Downloader},
     player::{PlaybackControl, Player},
-    reader::{MVecBytesReader, MVecBytesWrapper},
+    reader::{AppendableDataWrapper, MVecBytesReader, MVecBytesWrapper},
+};
+use reqwest::{
+    header::{ACCEPT_ENCODING, CONTENT_LENGTH, CONTENT_RANGE, RANGE},
+    Client, Response, StatusCode,
 };
 use serde::{Deserialize, Serialize};
 use tauri::{Emitter, WebviewWindow};
-use tokio::{runtime::Runtime, sync::oneshot};
+use tokio::{runtime::Runtime, sync::oneshot, task::JoinHandle, time::sleep};
 use tokio_util::sync::CancellationToken;
 
 const DESKTOP_AUDIO_EVENT: &str = "desktop-audio-event";
 const PROGRESS_INTERVAL_MS: u64 = 500;
 const STATUS_LOG_INTERVAL_MS: u64 = 5_000;
 const STREAM_CHUNK_SIZE: usize = 256 * 1024;
+const STREAM_DOWNLOAD_TIMEOUT_SECONDS: u64 = 30;
+const STREAM_DOWNLOAD_MAX_RETRIES_PER_OFFSET: usize = 5;
+const STREAM_DOWNLOAD_RETRY_BASE_MS: u64 = 500;
+const STREAM_DOWNLOAD_RETRY_MAX_MS: u64 = 5_000;
 const STREAM_BUFFER_LOW_SECONDS: f64 = 2.0;
 const STREAM_BUFFER_RECOVER_SECONDS: f64 = 5.0;
 const STREAM_STALL_BUFFERING_MS: u64 = 1_500;
@@ -47,7 +57,7 @@ struct DesktopAudioWorker {
 }
 
 struct StreamLoadHandle {
-    loader: Downloader,
+    loader: StreamDownloader,
     condvar: Arc<Condvar>,
     cancellation_token: CancellationToken,
     last_downloaded_bytes: u64,
@@ -65,6 +75,28 @@ impl Drop for StreamLoadHandle {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum StreamDownloadStatus {
+    NotStarted,
+    Downloading,
+    Completed,
+    Aborted,
+}
+
+#[derive(Clone)]
+struct StreamDownloadState {
+    status: Arc<Mutex<StreamDownloadStatus>>,
+    total_bytes: Arc<AtomicU64>,
+    downloaded_bytes: Arc<AtomicU64>,
+    should_abort: Arc<AtomicBool>,
+}
+
+struct StreamDownloader {
+    condvar: Arc<Condvar>,
+    state: StreamDownloadState,
+    thread_handle: Arc<Mutex<Option<JoinHandle<()>>>>,
+}
+
 impl Default for DesktopAudioWorker {
     fn default() -> Self {
         Self {
@@ -77,6 +109,125 @@ impl Default for DesktopAudioWorker {
             shuffle: false,
             last_status_log_at: None,
         }
+    }
+}
+
+impl StreamDownloadState {
+    fn new() -> Self {
+        Self {
+            status: Arc::new(Mutex::new(StreamDownloadStatus::NotStarted)),
+            total_bytes: Arc::new(AtomicU64::new(0)),
+            downloaded_bytes: Arc::new(AtomicU64::new(0)),
+            should_abort: Arc::new(AtomicBool::new(false)),
+        }
+    }
+
+    fn status(&self) -> StreamDownloadStatus {
+        *self.status.lock().unwrap()
+    }
+
+    fn set_status(&self, status: StreamDownloadStatus) {
+        let mut current = self.status.lock().unwrap();
+        *current = status;
+    }
+}
+
+impl StreamDownloader {
+    fn new() -> Self {
+        Self {
+            condvar: Arc::new(Condvar::new()),
+            state: StreamDownloadState::new(),
+            thread_handle: Arc::new(Mutex::new(None)),
+        }
+    }
+
+    async fn download(
+        &self,
+        url: String,
+        mut wrapper: MVecBytesWrapper,
+        request_label: String,
+    ) -> Result<(), String> {
+        self.state.set_status(StreamDownloadStatus::Downloading);
+
+        let client = stream_http_client()?;
+        let response = match request_stream_response(&client, &url, 0).await {
+            Ok(response) => response,
+            Err(error) => {
+                self.state.set_status(StreamDownloadStatus::Aborted);
+                self.condvar.notify_all();
+                return Err(error);
+            }
+        };
+
+        if let Some(total_bytes) = response_total_bytes(&response, 0) {
+            self.state.total_bytes.store(total_bytes, Ordering::Relaxed);
+            reserve_stream_capacity(&mut wrapper, total_bytes);
+        }
+
+        let condvar = Arc::clone(&self.condvar);
+        let state = self.state.clone();
+        let handle = tokio::spawn(async move {
+            run_resumable_stream_download(
+                client,
+                url,
+                response,
+                wrapper,
+                condvar,
+                state,
+                request_label,
+            )
+            .await;
+        });
+        let mut thread_handle = self.thread_handle.lock().unwrap();
+        *thread_handle = Some(handle);
+
+        Ok(())
+    }
+
+    fn status(&self) -> StreamDownloadStatus {
+        self.state.status()
+    }
+
+    fn total_bytes(&self) -> u64 {
+        self.state.total_bytes.load(Ordering::Relaxed)
+    }
+
+    fn downloaded_bytes(&self) -> u64 {
+        self.state.downloaded_bytes.load(Ordering::Relaxed)
+    }
+
+    fn condvar(&self) -> Arc<Condvar> {
+        Arc::clone(&self.condvar)
+    }
+
+    fn abort(&self) -> Result<(), StreamDownloadStatus> {
+        let status = self.status();
+        if !matches!(
+            status,
+            StreamDownloadStatus::NotStarted | StreamDownloadStatus::Downloading
+        ) {
+            return Err(status);
+        }
+
+        self.state.should_abort.store(true, Ordering::SeqCst);
+        let mut thread_handle = self.thread_handle.lock().unwrap();
+        if let Some(handle) = thread_handle.take() {
+            handle.abort();
+        }
+        self.state.set_status(StreamDownloadStatus::Aborted);
+        self.condvar.notify_all();
+        Ok(())
+    }
+}
+
+impl Drop for StreamDownloader {
+    fn drop(&mut self) {
+        self.state.should_abort.store(true, Ordering::SeqCst);
+        let mut thread_handle = self.thread_handle.lock().unwrap();
+        if let Some(handle) = thread_handle.take() {
+            handle.abort();
+        }
+        self.condvar.notify_all();
     }
 }
 
@@ -488,11 +639,11 @@ fn handle_audio_command(
                 "command=stop request_id={}",
                 request_log_label(request_id)
             ));
+            worker.stream_handle = None;
             if let Some(player) = worker.player.as_mut() {
                 player.stop();
             }
             worker.loaded = false;
-            worker.stream_handle = None;
             worker.last_status_log_at = None;
             let _ = set_current_request_id(request_id, None);
             let _ = response.send(Ok(()));
@@ -565,11 +716,11 @@ fn handle_load(
     next_request_id: Option<String>,
     autoplay: bool,
 ) -> Result<(), String> {
+    worker.stream_handle = None;
     if let Some(player) = worker.player.as_mut() {
         player.stop();
     }
     worker.loaded = false;
-    worker.stream_handle = None;
     worker.metadata = metadata;
 
     set_current_request_id(request_id, next_request_id)?;
@@ -582,7 +733,7 @@ fn handle_load(
 
     let load_result = {
         let player = ensure_player(worker, window, request_id)?;
-        runtime.block_on(load_source(player, &source))
+        runtime.block_on(load_source(player, &source, request_log_label(request_id)))
     };
 
     let stream_handle = match load_result {
@@ -755,9 +906,12 @@ fn install_player_callbacks(
 async fn load_source(
     player: &mut Player,
     source: &DesktopAudioSource,
+    request_label: String,
 ) -> Result<Option<StreamLoadHandle>, String> {
     match source {
-        DesktopAudioSource::Stream { url, .. } => load_seekable_stream(player, url).await.map(Some),
+        DesktopAudioSource::Stream { url, .. } => load_seekable_stream(player, url, request_label)
+            .await
+            .map(Some),
         DesktopAudioSource::Radio { url, .. } => {
             player
                 .load_url(url)
@@ -780,14 +934,15 @@ async fn load_source(
     }
 }
 
-async fn load_seekable_stream(player: &mut Player, url: &str) -> Result<StreamLoadHandle, String> {
+async fn load_seekable_stream(
+    player: &mut Player,
+    url: &str,
+    request_label: String,
+) -> Result<StreamLoadHandle, String> {
     let url = url_with_estimated_content_length(url);
     let wrapper = MVecBytesWrapper::new(STREAM_CHUNK_SIZE);
-    let loader = Downloader::new(wrapper.clone());
-    loader
-        .download(&url, None)
-        .await
-        .map_err(|_| "failed to download desktop audio stream".to_string())?;
+    let loader = StreamDownloader::new();
+    loader.download(url, wrapper.clone(), request_label).await?;
 
     let byte_len = loader.total_bytes();
     let condvar = loader.condvar();
@@ -822,6 +977,262 @@ async fn load_seekable_stream(player: &mut Player, url: &str) -> Result<StreamLo
         is_buffering: false,
         error_emitted: false,
     })
+}
+
+enum StreamReadResult {
+    Completed,
+    Cancelled,
+    Failed(String),
+}
+
+async fn run_resumable_stream_download(
+    client: Client,
+    url: String,
+    mut response: Response,
+    mut wrapper: MVecBytesWrapper,
+    condvar: Arc<Condvar>,
+    state: StreamDownloadState,
+    request_label: String,
+) {
+    let mut retry_offset = None;
+    let mut retries_at_offset = 0;
+
+    loop {
+        match read_stream_response(&mut response, &mut wrapper, &condvar, &state).await {
+            StreamReadResult::Completed => {
+                complete_stream_download(
+                    &mut wrapper,
+                    &condvar,
+                    &state,
+                    StreamDownloadStatus::Completed,
+                );
+                return;
+            }
+            StreamReadResult::Cancelled => {
+                state.set_status(StreamDownloadStatus::Aborted);
+                condvar.notify_all();
+                return;
+            }
+            StreamReadResult::Failed(error) => {
+                let mut last_error = error;
+
+                loop {
+                    if state.should_abort.load(Ordering::Relaxed) {
+                        state.set_status(StreamDownloadStatus::Aborted);
+                        condvar.notify_all();
+                        return;
+                    }
+
+                    let downloaded_bytes = state.downloaded_bytes.load(Ordering::Relaxed);
+                    let total_bytes = state.total_bytes.load(Ordering::Relaxed);
+                    if total_bytes > 0 && downloaded_bytes >= total_bytes {
+                        complete_stream_download(
+                            &mut wrapper,
+                            &condvar,
+                            &state,
+                            StreamDownloadStatus::Completed,
+                        );
+                        return;
+                    }
+
+                    if retry_offset == Some(downloaded_bytes) {
+                        retries_at_offset += 1;
+                    } else {
+                        retry_offset = Some(downloaded_bytes);
+                        retries_at_offset = 1;
+                    }
+
+                    if retries_at_offset > STREAM_DOWNLOAD_MAX_RETRIES_PER_OFFSET {
+                        audio_log(format!(
+                            "stream_retry_exhausted request_id={} offset={} total={} error={}",
+                            request_label, downloaded_bytes, total_bytes, last_error
+                        ));
+                        complete_stream_download(
+                            &mut wrapper,
+                            &condvar,
+                            &state,
+                            StreamDownloadStatus::Aborted,
+                        );
+                        return;
+                    }
+
+                    let retry_delay = stream_retry_delay(retries_at_offset);
+                    audio_log(format!(
+                        "stream_retry request_id={} attempt={} offset={} total={} delay={}ms error={}",
+                        request_label,
+                        retries_at_offset,
+                        downloaded_bytes,
+                        total_bytes,
+                        retry_delay.as_millis(),
+                        last_error
+                    ));
+                    sleep(retry_delay).await;
+
+                    match request_stream_response(&client, &url, downloaded_bytes).await {
+                        Ok(next_response) => {
+                            if let Some(next_total_bytes) =
+                                response_total_bytes(&next_response, downloaded_bytes)
+                            {
+                                let current_total_bytes = state.total_bytes.load(Ordering::Relaxed);
+                                if current_total_bytes == 0
+                                    || next_total_bytes > current_total_bytes
+                                {
+                                    state.total_bytes.store(next_total_bytes, Ordering::Relaxed);
+                                }
+                            }
+
+                            response = next_response;
+                            break;
+                        }
+                        Err(error) => {
+                            last_error = error;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+async fn read_stream_response(
+    response: &mut Response,
+    wrapper: &mut MVecBytesWrapper,
+    condvar: &Arc<Condvar>,
+    state: &StreamDownloadState,
+) -> StreamReadResult {
+    loop {
+        if state.should_abort.load(Ordering::Relaxed) {
+            return StreamReadResult::Cancelled;
+        }
+
+        match response.chunk().await {
+            Ok(Some(chunk)) => {
+                if chunk.is_empty() {
+                    continue;
+                }
+
+                wrapper.append_data(&chunk);
+                state
+                    .downloaded_bytes
+                    .fetch_add(chunk.len() as u64, Ordering::Relaxed);
+                condvar.notify_all();
+            }
+            Ok(None) => {
+                let downloaded_bytes = state.downloaded_bytes.load(Ordering::Relaxed);
+                let total_bytes = state.total_bytes.load(Ordering::Relaxed);
+                if total_bytes > 0 && downloaded_bytes < total_bytes {
+                    return StreamReadResult::Failed(format!(
+                        "stream ended after {downloaded_bytes} of {total_bytes} bytes"
+                    ));
+                }
+
+                return StreamReadResult::Completed;
+            }
+            Err(error) => return StreamReadResult::Failed(error.to_string()),
+        }
+    }
+}
+
+fn complete_stream_download(
+    wrapper: &mut MVecBytesWrapper,
+    condvar: &Arc<Condvar>,
+    state: &StreamDownloadState,
+    status: StreamDownloadStatus,
+) {
+    wrapper.complete();
+    state.set_status(status);
+    condvar.notify_all();
+}
+
+fn stream_http_client() -> Result<Client, String> {
+    Client::builder()
+        .timeout(Duration::from_secs(STREAM_DOWNLOAD_TIMEOUT_SECONDS))
+        .no_gzip()
+        .no_brotli()
+        .no_zstd()
+        .no_deflate()
+        .build()
+        .map_err(|error| format!("failed to create desktop audio HTTP client: {error}"))
+}
+
+async fn request_stream_response(
+    client: &Client,
+    url: &str,
+    offset: u64,
+) -> Result<Response, String> {
+    let mut request = client.get(url).header(ACCEPT_ENCODING, "identity");
+    if offset > 0 {
+        request = request.header(RANGE, format!("bytes={offset}-"));
+    }
+
+    let response = request
+        .send()
+        .await
+        .map_err(|error| format!("failed to download desktop audio stream: {error}"))?;
+    let status = response.status();
+
+    if !status.is_success() {
+        return Err(format!(
+            "desktop audio stream request failed with HTTP {status}"
+        ));
+    }
+
+    if offset > 0 && status != StatusCode::PARTIAL_CONTENT {
+        return Err(format!(
+            "desktop audio stream server did not honor range resume request (HTTP {status})"
+        ));
+    }
+
+    Ok(response)
+}
+
+fn response_total_bytes(response: &Response, offset: u64) -> Option<u64> {
+    response_content_range_total(response).or_else(|| {
+        response_content_length(response).map(|content_length| {
+            if offset > 0 {
+                offset.saturating_add(content_length)
+            } else {
+                content_length
+            }
+        })
+    })
+}
+
+fn response_content_length(response: &Response) -> Option<u64> {
+    response
+        .headers()
+        .get(CONTENT_LENGTH)
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.parse::<u64>().ok())
+}
+
+fn response_content_range_total(response: &Response) -> Option<u64> {
+    let value = response.headers().get(CONTENT_RANGE)?.to_str().ok()?;
+    let (_, total) = value.rsplit_once('/')?;
+    if total == "*" {
+        return None;
+    }
+
+    total.parse::<u64>().ok()
+}
+
+fn reserve_stream_capacity(wrapper: &mut MVecBytesWrapper, total_bytes: u64) {
+    if total_bytes == 0 {
+        return;
+    }
+
+    let Ok(capacity) = usize::try_from(total_bytes) else {
+        return;
+    };
+    wrapper.set_capacity(capacity);
+}
+
+fn stream_retry_delay(attempt: usize) -> Duration {
+    let multiplier = 1_u64 << attempt.saturating_sub(1).min(6);
+    let delay_ms = STREAM_DOWNLOAD_RETRY_BASE_MS
+        .saturating_mul(multiplier)
+        .min(STREAM_DOWNLOAD_RETRY_MAX_MS);
+    Duration::from_millis(delay_ms)
 }
 
 #[derive(Clone, Copy)]
@@ -941,12 +1352,12 @@ fn stream_log_label(stream_handle: Option<&StreamLoadHandle>) -> String {
     )
 }
 
-fn download_status_label(status: DownloadStatus) -> &'static str {
+fn download_status_label(status: StreamDownloadStatus) -> &'static str {
     match status {
-        DownloadStatus::Aborted => "aborted",
-        DownloadStatus::Completed => "completed",
-        DownloadStatus::Downloading => "downloading",
-        DownloadStatus::NotStarted => "not_started",
+        StreamDownloadStatus::Aborted => "aborted",
+        StreamDownloadStatus::Completed => "completed",
+        StreamDownloadStatus::Downloading => "downloading",
+        StreamDownloadStatus::NotStarted => "not_started",
     }
 }
 
@@ -976,7 +1387,9 @@ fn update_stream_load_state(
     stream_handle.last_downloaded_bytes = downloaded_bytes;
 
     match status {
-        DownloadStatus::Aborted => {
+        StreamDownloadStatus::Aborted => {
+            stream_handle.cancellation_token.cancel();
+            stream_handle.condvar.notify_all();
             emit_stream_network_error(
                 stream_handle,
                 window,
@@ -985,10 +1398,10 @@ fn update_stream_load_state(
                 "desktop audio stream download was interrupted".to_string(),
             );
         }
-        DownloadStatus::Completed => {
+        StreamDownloadStatus::Completed => {
             set_stream_buffering(stream_handle, window, request_id, false);
         }
-        DownloadStatus::Downloading => {
+        StreamDownloadStatus::Downloading => {
             update_stream_buffering(
                 stream_handle,
                 window,
@@ -1000,7 +1413,7 @@ fn update_stream_load_state(
                 now,
             );
         }
-        DownloadStatus::NotStarted => {
+        StreamDownloadStatus::NotStarted => {
             set_stream_buffering(stream_handle, window, request_id, false);
         }
     }

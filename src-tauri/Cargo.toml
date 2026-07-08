@@ -18,6 +18,7 @@ tauri-build = { version = "2.6.3", features = [] }
 base64 = "0.22"
 raw-window-handle = "0.6"
 remu-audio = "0.1.0-beta.0"
+reqwest = { version = "0.12", features = ["stream"] }
 serde = { version = "1", features = ["derive"] }
 souvlaki = "0.8.3"
 tauri = { version = "2.6.3", features = [] }
