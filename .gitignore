@@ -39,3 +39,6 @@ dist/
 coverage/
 .build/
 .swiftpm/
+
+# personal doc
+/doc
