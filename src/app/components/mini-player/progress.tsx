@@ -18,6 +18,7 @@ export function MiniPlayerProgress({
   const { state, actions } = useMiniPlayerContext();
 
   const progress = state?.progress ?? 0;
+  const bufferedProgress = state?.bufferedProgress ?? 0;
   const currentDuration = state?.duration ?? 0;
   const isBuffering = state?.isBuffering ?? false;
 
@@ -75,6 +76,7 @@ export function MiniPlayerProgress({
       <Slider
         variant="secondary"
         isBuffering={isBuffering}
+        bufferedProgress={bufferedProgress}
         hideThumb
         defaultValue={[0]}
         value={[localProgress]}

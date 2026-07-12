@@ -2,8 +2,11 @@ import { PropsWithChildren, useEffect, useMemo, useState } from "react";
 import { useCurrentLyricLine } from "@/app/hooks/use-current-lyric-line";
 import { usePlaybackControls } from "@/app/hooks/use-playback-controls";
 import { useSystemVolume } from "@/app/hooks/use-system-volume";
+import { seekPlaybackTarget } from "@/player/playback/backend-registry";
+import { getNativeQueueController } from "@/player/queue-controller";
 import {
   usePlayerActions,
+  usePlayerBufferedProgress,
   usePlayerProgress,
   usePlayerStore,
   useSongColor,
@@ -41,6 +44,7 @@ export function InternalMiniPlayerProvider({ children }: PropsWithChildren) {
   const currentSong = usePlayerStore((s) => s.songlist.currentSong);
   const playerState = usePlayerStore((s) => s.playerState);
   const progress = usePlayerProgress();
+  const bufferedProgress = usePlayerBufferedProgress();
   const { currentLine } = useCurrentLyricLine();
   const { volume: systemVolume, supportsSystemVolumeControl } =
     useSystemVolume();
@@ -74,6 +78,7 @@ export function InternalMiniPlayerProvider({ children }: PropsWithChildren) {
             }
           : null,
         progress,
+        bufferedProgress,
         duration: playerState.currentDuration ?? 0,
         volume: displayVolume,
         mediaType: playerState.mediaType as "song" | "radio",
@@ -86,7 +91,14 @@ export function InternalMiniPlayerProvider({ children }: PropsWithChildren) {
         playPrevSong,
         toggleShuffle: () => toggleShuffle(),
         toggleLoop: () => toggleLoop(),
-        seek: (time) => setProgress(time),
+        seek: (time) => {
+          setProgress(time);
+          if (!getNativeQueueController() && playerState.audioPlayerRef) {
+            Promise.resolve(
+              seekPlaybackTarget(playerState.audioPlayerRef, time),
+            ).catch(() => {});
+          }
+        },
         setVolume: (v) => setVolume(v),
         starCurrentSong,
       },
@@ -102,6 +114,7 @@ export function InternalMiniPlayerProvider({ children }: PropsWithChildren) {
       cannotSkipNext,
       currentSong,
       progress,
+      bufferedProgress,
       currentSongColor,
       currentLine,
       displayVolume,

@@ -1,3 +1,5 @@
+import { seekPlaybackTarget } from "@/player/playback";
+import { getNativeQueueController } from "@/player/queue-controller";
 import { usePlayerStore } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
 import {
@@ -40,6 +42,7 @@ export interface MiniPlayerState {
     albumId: string;
   } | null;
   progress: number;
+  bufferedProgress: number;
   duration: number;
   volume: number;
   mediaType: "song" | "radio";
@@ -79,6 +82,7 @@ function getStateFromStore(): MiniPlayerState {
         }
       : null,
     progress: state.playerProgress.progress,
+    bufferedProgress: state.playerProgress.bufferedProgress,
     duration: state.playerState.currentDuration ?? 0,
     volume: canUseSystemVolumeControl()
       ? getCurrentSystemVolume()
@@ -201,8 +205,8 @@ export function handleControlAction(action: ControlAction, value?: number) {
     case "seek":
       if (value !== undefined) {
         actions.setProgress(value);
-        if (audioRef) {
-          audioRef.currentTime = value;
+        if (!getNativeQueueController() && audioRef) {
+          Promise.resolve(seekPlaybackTarget(audioRef, value)).catch(() => {});
         }
       }
       break;

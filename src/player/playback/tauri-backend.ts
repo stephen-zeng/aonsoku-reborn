@@ -14,6 +14,8 @@ import type {
 } from "./types";
 
 const TAURI_DESKTOP_AUDIO_EVENT = "desktop-audio-event";
+const SEEK_PROGRESS_GUARD_MS = 1500;
+const SEEK_PROGRESS_TOLERANCE_SECONDS = 0.75;
 
 type ListenerMap = {
   [TEvent in PlaybackBackendEvent]: Set<PlaybackBackendListener<TEvent>>;
@@ -55,6 +57,7 @@ export class TauriAudioPlaybackBackend implements PlaybackBackend {
   readonly #unlistenPromise: Promise<() => void>;
   #loadSequence = 0;
   #activeRequestId: string | null = null;
+  #pendingSeek: { position: number; startedAt: number } | null = null;
   #disposed = false;
 
   constructor() {
@@ -120,8 +123,15 @@ export class TauriAudioPlaybackBackend implements PlaybackBackend {
 
   seek(seconds: number) {
     this.#assertActive();
+    const position = Math.max(0, seconds);
+    this.#pendingSeek = { position, startedAt: Date.now() };
     return this.#invoke("desktop_audio_seek", {
-      payload: { position: Math.max(0, seconds) },
+      payload: { position },
+    }).catch((error) => {
+      if (this.#pendingSeek?.position === position) {
+        this.#pendingSeek = null;
+      }
+      throw error;
     });
   }
 
@@ -211,6 +221,7 @@ export class TauriAudioPlaybackBackend implements PlaybackBackend {
 
     switch (event.type) {
       case "progress":
+        if (this.#shouldSuppressSeekProgress(event.currentTime)) return;
         this.#emit("progress", {
           currentTime: validNumber(event.currentTime),
           duration: validNumber(event.duration),
@@ -269,6 +280,27 @@ export class TauriAudioPlaybackBackend implements PlaybackBackend {
     if (!this.#activeRequestId) return false;
 
     return event.requestId !== this.#activeRequestId;
+  }
+
+  #shouldSuppressSeekProgress(currentTime: number | undefined) {
+    const pendingSeek = this.#pendingSeek;
+    if (!pendingSeek) return false;
+
+    const current = validNumber(currentTime);
+    if (
+      Math.abs(current - pendingSeek.position) <=
+      SEEK_PROGRESS_TOLERANCE_SECONDS
+    ) {
+      this.#pendingSeek = null;
+      return false;
+    }
+
+    if (Date.now() - pendingSeek.startedAt > SEEK_PROGRESS_GUARD_MS) {
+      this.#pendingSeek = null;
+      return false;
+    }
+
+    return true;
   }
 
   #assertActive() {

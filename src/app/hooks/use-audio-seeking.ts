@@ -24,7 +24,9 @@ export function useAudioSeeking({ audioRef }: UseAudioSeekingOptions) {
       const audio = audioRef.current;
       if (audio) {
         logger.debug("Seeking to:", value);
-        seekPlaybackTarget(audio, value);
+        Promise.resolve(seekPlaybackTarget(audio, value)).catch((error) => {
+          logger.error("Seek failed", error);
+        });
       }
     },
     [audioRef, isRemoteControlActive],

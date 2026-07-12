@@ -104,6 +104,7 @@ export function AudioPlayer({
     kind: PlaybackBackendKind;
     unregisterBackend: () => void;
   } | null>(null);
+  const backendPlaybackSyncRef = useRef<"play" | "pause" | null>(null);
   const sessionRef = useRef(new PlaybackSession<HTMLAudioElement>());
 
   const cancelRetry = useCallback(() => {
@@ -611,6 +612,14 @@ export function AudioPlayer({
     [seekAudio, setStoreProgress],
   );
 
+  const consumeBackendPlaybackSync = useCallback((action: "play" | "pause") => {
+    const pending = backendPlaybackSyncRef.current;
+    if (!pending) return false;
+
+    backendPlaybackSyncRef.current = null;
+    return pending === action;
+  }, []);
+
   useEffect(() => {
     return () => {
       sessionRef.current.dispose();
@@ -694,14 +703,20 @@ export function AudioPlayer({
     const unsubscribePlay = backendEntry.backend.subscribe("play", () => {
       sessionRef.current.handlePlayEvent();
       if (isTauriBackend) {
-        setPlayingState(true);
+        if (!usePlayerStore.getState().playerState.isPlaying) {
+          backendPlaybackSyncRef.current = "play";
+          setPlayingState(true);
+        }
       }
     });
     const unsubscribePause = backendEntry.backend.subscribe("pause", () => {
       // native-controller already handles playbackStateChanged → store update.
       // Sending a pause command back here would race with queue engine transitions.
       if (isTauriBackend) {
-        setPlayingState(false);
+        if (usePlayerStore.getState().playerState.isPlaying) {
+          backendPlaybackSyncRef.current = "pause";
+          setPlayingState(false);
+        }
       }
     });
     const unsubscribeEnded = backendEntry.backend.subscribe("ended", () => {
@@ -855,6 +870,15 @@ export function AudioPlayer({
             await resumeContext();
           }
 
+          if (backendRef.current?.kind === "tauri") {
+            if (consumeBackendPlaybackSync("play")) {
+              logger.info(
+                "[PlayEffect:SKIP] reason=tauriBackendStateSync | action=play",
+              );
+              return;
+            }
+          }
+
           if (sessionRef.current.consumeSyncPlayHandled()) {
             logger.info(
               "[PlayEffect:SKIP] reason=syncPlayHandledAlready | clearing flag",
@@ -873,6 +897,15 @@ export function AudioPlayer({
           safePlay(audio, "Song");
         } else {
           sessionRef.current.consumeSyncPlayHandled();
+
+          if (backendRef.current?.kind === "tauri") {
+            if (consumeBackendPlaybackSync("pause")) {
+              logger.info(
+                "[PlayEffect:SKIP] reason=tauriBackendStateSync | action=pause",
+              );
+              return;
+            }
+          }
 
           if (backendRef.current?.kind === "native") {
             logger.info(
@@ -895,6 +928,7 @@ export function AudioPlayer({
     audioSrc,
     isPlaying,
     isSong,
+    consumeBackendPlaybackSync,
     pauseAudio,
     resumeContext,
     safePlay,
@@ -910,14 +944,40 @@ export function AudioPlayer({
       if (!audio) return;
 
       if (isPlaying) {
+        if (
+          backendRef.current?.kind === "tauri" &&
+          consumeBackendPlaybackSync("play")
+        ) {
+          logger.info(
+            "[RadioEffect:SKIP] reason=tauriBackendStateSync | action=play",
+          );
+          return;
+        }
         loadAudio(audio);
         safePlay(audio, "Radio");
       } else {
+        if (
+          backendRef.current?.kind === "tauri" &&
+          consumeBackendPlaybackSync("pause")
+        ) {
+          logger.info(
+            "[RadioEffect:SKIP] reason=tauriBackendStateSync | action=pause",
+          );
+          return;
+        }
         pauseAudio(audio);
       }
     }
     if (isRadio) handleRadio();
-  }, [audioRef, isPlaying, isRadio, loadAudio, pauseAudio, safePlay]);
+  }, [
+    audioRef,
+    consumeBackendPlaybackSync,
+    isPlaying,
+    isRadio,
+    loadAudio,
+    pauseAudio,
+    safePlay,
+  ]);
 
   const handleLoadedMetadata = useCallback(
     (e: React.SyntheticEvent<HTMLAudioElement>) => {

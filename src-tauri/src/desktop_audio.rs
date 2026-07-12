@@ -1,4 +1,5 @@
 use std::{
+    io::{Read, Seek, SeekFrom},
     path::PathBuf,
     sync::{
         atomic::{AtomicBool, AtomicU64, Ordering},
@@ -11,7 +12,7 @@ use remu_audio::{
     decoder::Decoder,
     events::PlayerEvent,
     player::{PlaybackControl, Player},
-    reader::{AppendableDataWrapper, MVecBytesReader, MVecBytesWrapper},
+    reader::AppendableDataWrapper,
 };
 use reqwest::{
     header::{ACCEPT_ENCODING, CONTENT_LENGTH, CONTENT_RANGE, CONTENT_TYPE, RANGE},
@@ -28,14 +29,13 @@ const PROGRESS_INTERVAL_MS: u64 = 500;
 const STATUS_LOG_INTERVAL_MS: u64 = 5_000;
 const STREAM_CHUNK_SIZE: usize = 256 * 1024;
 const STREAM_DOWNLOAD_TIMEOUT_SECONDS: u64 = 30;
-const STREAM_DOWNLOAD_MAX_RETRIES_PER_OFFSET: usize = 5;
 const STREAM_DOWNLOAD_RETRY_BASE_MS: u64 = 500;
 const STREAM_DOWNLOAD_RETRY_MAX_MS: u64 = 5_000;
 const STREAM_BUFFER_LOW_SECONDS: f64 = 2.0;
 const STREAM_BUFFER_RECOVER_SECONDS: f64 = 5.0;
 const STREAM_STALL_BUFFERING_MS: u64 = 1_500;
-const STREAM_STALL_ERROR_MS: u64 = 10_000;
 const STREAM_POSITION_EPSILON_SECONDS: f64 = 0.05;
+const STREAM_SEEK_RELOAD_BUFFER_MARGIN_SECONDS: f64 = 0.5;
 
 type AudioCommandSender = mpsc::Sender<AudioCommand>;
 type AudioCommandResponse = oneshot::Sender<Result<(), String>>;
@@ -59,6 +59,7 @@ struct DesktopAudioWorker {
 
 struct StreamLoadHandle {
     loader: StreamDownloader,
+    buffer: StreamBuffer,
     condvar: Arc<Condvar>,
     cancellation_token: CancellationToken,
     last_downloaded_bytes: u64,
@@ -90,6 +91,26 @@ struct StreamDownloadState {
     total_bytes: Arc<AtomicU64>,
     downloaded_bytes: Arc<AtomicU64>,
     should_abort: Arc<AtomicBool>,
+}
+
+#[derive(Clone)]
+struct StreamBuffer {
+    inner: Arc<StreamBufferInner>,
+}
+
+// Expose every downloaded chunk immediately; remu's chunked wrapper hides
+// partial chunks until completion, which makes buffered seeks appear stuck.
+struct StreamBufferInner {
+    chunks: Mutex<Vec<Vec<u8>>>,
+    completed: AtomicBool,
+    available_bytes: AtomicU64,
+}
+
+struct StreamBufferReader {
+    buffer: StreamBuffer,
+    condvar: Arc<Condvar>,
+    position: u64,
+    cancellation_token: CancellationToken,
 }
 
 struct StreamDownloader {
@@ -146,6 +167,151 @@ impl StreamDownloadState {
     }
 }
 
+impl StreamBuffer {
+    fn new() -> Self {
+        Self {
+            inner: Arc::new(StreamBufferInner {
+                chunks: Mutex::new(Vec::new()),
+                completed: AtomicBool::new(false),
+                available_bytes: AtomicU64::new(0),
+            }),
+        }
+    }
+
+    fn reader(&self, condvar: Arc<Condvar>) -> StreamBufferReader {
+        StreamBufferReader {
+            buffer: self.clone(),
+            condvar,
+            position: 0,
+            cancellation_token: CancellationToken::new(),
+        }
+    }
+
+    fn available_bytes(&self) -> u64 {
+        self.inner.available_bytes.load(Ordering::Relaxed)
+    }
+
+    fn completed(&self) -> bool {
+        self.inner.completed.load(Ordering::Acquire)
+    }
+
+    fn collect_bytes(&self) -> Vec<u8> {
+        let chunks = match self.inner.chunks.lock() {
+            Ok(chunks) => chunks,
+            Err(_) => return Vec::new(),
+        };
+        let total: usize = chunks.iter().map(|chunk| chunk.len()).sum();
+        let mut buffer = Vec::with_capacity(total);
+        for chunk in chunks.iter() {
+            buffer.extend_from_slice(chunk);
+        }
+        buffer
+    }
+}
+
+impl AppendableDataWrapper for StreamBuffer {
+    fn append_data(&mut self, slice: &[u8]) {
+        if slice.is_empty() || self.completed() {
+            return;
+        }
+
+        let mut chunks = self.inner.chunks.lock().unwrap();
+        chunks.push(slice.to_vec());
+        self.inner
+            .available_bytes
+            .fetch_add(slice.len() as u64, Ordering::Release);
+    }
+
+    fn complete(&mut self) {
+        self.inner.completed.store(true, Ordering::Release);
+    }
+
+    fn set_capacity(&mut self, capacity: usize) {
+        let mut chunks = self.inner.chunks.lock().unwrap();
+        chunks.reserve(capacity / STREAM_CHUNK_SIZE + 1);
+    }
+}
+
+impl StreamBufferReader {
+    fn cancellation_token(&self) -> CancellationToken {
+        self.cancellation_token.clone()
+    }
+}
+
+impl Read for StreamBufferReader {
+    fn read(&mut self, target: &mut [u8]) -> std::io::Result<usize> {
+        if target.is_empty() {
+            return Ok(0);
+        }
+
+        let mut chunks = self.buffer.inner.chunks.lock().unwrap();
+        loop {
+            if self.position < self.buffer.available_bytes() {
+                let copied = copy_stream_buffer_chunks(&chunks, self.position, target);
+                self.position = self.position.saturating_add(copied as u64);
+                return Ok(copied);
+            }
+
+            if self.buffer.completed() || self.cancellation_token.is_cancelled() {
+                return Ok(0);
+            }
+
+            chunks = self.condvar.wait(chunks).unwrap();
+        }
+    }
+}
+
+impl Seek for StreamBufferReader {
+    fn seek(&mut self, position: SeekFrom) -> std::io::Result<u64> {
+        let next_position = match position {
+            SeekFrom::Start(position) => position,
+            SeekFrom::Current(offset) => {
+                if offset >= 0 {
+                    self.position.saturating_add(offset as u64)
+                } else {
+                    self.position.saturating_sub(offset.unsigned_abs())
+                }
+            }
+            SeekFrom::End(_) => {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::Unsupported,
+                    "SeekFrom::End is not supported for streaming audio",
+                ));
+            }
+        };
+
+        self.position = next_position;
+        Ok(self.position)
+    }
+}
+
+fn copy_stream_buffer_chunks(chunks: &[Vec<u8>], position: u64, target: &mut [u8]) -> usize {
+    let mut skip_bytes = position;
+    let mut written = 0;
+
+    for chunk in chunks {
+        if skip_bytes >= chunk.len() as u64 {
+            skip_bytes -= chunk.len() as u64;
+            continue;
+        }
+
+        let chunk_offset = skip_bytes as usize;
+        let available = chunk.len() - chunk_offset;
+        let remaining = target.len() - written;
+        let copy_len = available.min(remaining);
+        target[written..written + copy_len]
+            .copy_from_slice(&chunk[chunk_offset..chunk_offset + copy_len]);
+        written += copy_len;
+
+        if written == target.len() {
+            break;
+        }
+        skip_bytes = 0;
+    }
+
+    written
+}
+
 impl StreamDownloader {
     fn new() -> Self {
         Self {
@@ -158,7 +324,7 @@ impl StreamDownloader {
     async fn download(
         &self,
         url: String,
-        mut wrapper: MVecBytesWrapper,
+        mut wrapper: StreamBuffer,
         request_label: String,
         window: WebviewWindow,
         song_id: Option<String>,
@@ -829,17 +995,16 @@ fn handle_seek(
 ) -> Result<(), String> {
     let position =
         valid_seconds(position).ok_or_else(|| "invalid desktop audio seek position".to_string())?;
-    let was_playing = worker
-        .player
-        .as_ref()
-        .ok_or_else(|| "desktop audio player unavailable".to_string())?
-        .paused()
-        == false;
-
     let player = worker
         .player
         .as_ref()
         .ok_or_else(|| "desktop audio player unavailable".to_string())?;
+    let was_playing = player.paused() == false;
+
+    if should_reload_stream_for_seek(worker, player, position) {
+        return handle_buffered_stream_seek(worker, window, request_id, position, was_playing);
+    }
+
     player
         .seek(Duration::from_secs_f64(position))
         .map_err(|error| error.to_string())?;
@@ -860,6 +1025,83 @@ fn handle_seek(
         request_log_label(request_id)
     ));
     Ok(())
+}
+
+fn handle_buffered_stream_seek(
+    worker: &mut DesktopAudioWorker,
+    window: &WebviewWindow,
+    request_id: &Arc<Mutex<Option<String>>>,
+    position: f64,
+    was_playing: bool,
+) -> Result<(), String> {
+    let metadata = worker.metadata.clone();
+    let snapshot = {
+        let stream_handle = worker
+            .stream_handle
+            .as_mut()
+            .ok_or_else(|| "desktop audio stream unavailable".to_string())?;
+        let player = worker
+            .player
+            .as_mut()
+            .ok_or_else(|| "desktop audio player unavailable".to_string())?;
+
+        stream_handle.cancellation_token.cancel();
+        stream_handle.condvar.notify_all();
+        // Sink::try_seek is processed on the audio thread; if that thread is
+        // blocked in Read waiting for future bytes, reload the source first.
+        stream_handle.cancellation_token = load_stream_buffer_source(
+            player,
+            &stream_handle.buffer,
+            Arc::clone(&stream_handle.condvar),
+            stream_handle.loader.total_bytes(),
+        )?;
+        player
+            .seek(Duration::from_secs_f64(position))
+            .map_err(|error| error.to_string())?;
+        if was_playing {
+            player.play();
+        } else {
+            player.pause();
+        }
+
+        stream_handle.last_activity_at = Instant::now();
+        stream_handle.last_position = position;
+        stream_handle.error_emitted = false;
+        progress_snapshot(player, metadata.as_ref(), Some(stream_handle))
+    };
+
+    emit_progress(window, request_id, snapshot);
+    if let Some(stream_handle) = worker.stream_handle.as_mut() {
+        set_stream_buffering(stream_handle, window, request_id, false);
+    }
+    audio_log(format!(
+        "seek completed request_id={} position={position:.2}s was_playing={was_playing} source=reloaded-stream-buffer",
+        request_log_label(request_id)
+    ));
+    Ok(())
+}
+
+fn should_reload_stream_for_seek(
+    worker: &DesktopAudioWorker,
+    player: &Player,
+    position: f64,
+) -> bool {
+    let Some(stream_handle) = worker.stream_handle.as_ref() else {
+        return false;
+    };
+    let duration = worker
+        .metadata
+        .as_ref()
+        .and_then(|metadata| metadata.duration)
+        .and_then(valid_seconds)
+        .or_else(|| player.duration().map(|duration| duration.as_secs_f64()))
+        .unwrap_or(0.0);
+    if duration <= 0.0 || stream_handle.loader.total_bytes() == 0 {
+        return false;
+    }
+
+    position + STREAM_SEEK_RELOAD_BUFFER_MARGIN_SECONDS
+        <= stream_available_time(duration, stream_handle)
 }
 
 fn ensure_player<'a>(
@@ -979,15 +1221,37 @@ async fn load_seekable_stream(
     song_id: Option<String>,
 ) -> Result<StreamLoadHandle, String> {
     let url = url_with_estimated_content_length(url);
-    let wrapper = MVecBytesWrapper::new(STREAM_CHUNK_SIZE);
+    let buffer = StreamBuffer::new();
     let loader = StreamDownloader::new();
     loader
-        .download(url, wrapper.clone(), request_label, window, song_id)
+        .download(url, buffer.clone(), request_label, window, song_id)
         .await?;
 
     let byte_len = loader.total_bytes();
     let condvar = loader.condvar();
-    let reader = MVecBytesReader::new(wrapper, Arc::clone(&condvar));
+    let cancellation_token =
+        load_stream_buffer_source(player, &buffer, Arc::clone(&condvar), byte_len)?;
+
+    Ok(StreamLoadHandle {
+        loader,
+        buffer,
+        condvar,
+        cancellation_token,
+        last_downloaded_bytes: 0,
+        last_position: 0.0,
+        last_activity_at: Instant::now(),
+        is_buffering: false,
+        error_emitted: false,
+    })
+}
+
+fn load_stream_buffer_source(
+    player: &mut Player,
+    buffer: &StreamBuffer,
+    condvar: Arc<Condvar>,
+    byte_len: u64,
+) -> Result<CancellationToken, String> {
+    let reader = buffer.reader(condvar);
     let cancellation_token = reader.cancellation_token();
     let decoder = if byte_len > 0 {
         Decoder::builder()
@@ -1008,16 +1272,7 @@ async fn load_seekable_stream(
         .load_source(decoder)
         .map_err(|error| error.to_string())?;
 
-    Ok(StreamLoadHandle {
-        loader,
-        condvar,
-        cancellation_token,
-        last_downloaded_bytes: 0,
-        last_position: 0.0,
-        last_activity_at: Instant::now(),
-        is_buffering: false,
-        error_emitted: false,
-    })
+    Ok(cancellation_token)
 }
 
 enum StreamReadResult {
@@ -1030,7 +1285,7 @@ async fn run_resumable_stream_download(
     client: Client,
     url: String,
     mut response: Response,
-    mut wrapper: MVecBytesWrapper,
+    mut wrapper: StreamBuffer,
     condvar: Arc<Condvar>,
     state: StreamDownloadState,
     request_label: String,
@@ -1086,20 +1341,6 @@ async fn run_resumable_stream_download(
                         retries_at_offset = 1;
                     }
 
-                    if retries_at_offset > STREAM_DOWNLOAD_MAX_RETRIES_PER_OFFSET {
-                        audio_log(format!(
-                            "stream_retry_exhausted request_id={} offset={} total={} error={}",
-                            request_label, downloaded_bytes, total_bytes, last_error
-                        ));
-                        complete_stream_download(
-                            &mut wrapper,
-                            &condvar,
-                            &state,
-                            StreamDownloadStatus::Aborted,
-                        );
-                        return;
-                    }
-
                     let retry_delay = stream_retry_delay(retries_at_offset);
                     audio_log(format!(
                         "stream_retry request_id={} attempt={} offset={} total={} delay={}ms error={}",
@@ -1140,7 +1381,7 @@ async fn run_resumable_stream_download(
 
 async fn read_stream_response(
     response: &mut Response,
-    wrapper: &mut MVecBytesWrapper,
+    wrapper: &mut StreamBuffer,
     condvar: &Arc<Condvar>,
     state: &StreamDownloadState,
 ) -> StreamReadResult {
@@ -1178,7 +1419,7 @@ async fn read_stream_response(
 }
 
 fn complete_stream_download(
-    wrapper: &mut MVecBytesWrapper,
+    wrapper: &mut StreamBuffer,
     condvar: &Arc<Condvar>,
     state: &StreamDownloadState,
     status: StreamDownloadStatus,
@@ -1192,7 +1433,7 @@ fn complete_stream_download(
 /// played back from `native-file` next time. No-op when there is no persist
 /// context (radio / unknown song id) or when the song is already cached.
 fn persist_completed_stream(
-    wrapper: &MVecBytesWrapper,
+    buffer: &StreamBuffer,
     persist: &Option<StreamPersistContext>,
     request_label: &str,
 ) {
@@ -1204,7 +1445,7 @@ fn persist_completed_stream(
         return;
     }
 
-    let data = collect_wrapper_bytes(wrapper);
+    let data = buffer.collect_bytes();
     if data.is_empty() {
         return;
     }
@@ -1230,24 +1471,6 @@ fn persist_completed_stream(
             ));
         }
     }
-}
-
-fn collect_wrapper_bytes(wrapper: &MVecBytesWrapper) -> Vec<u8> {
-    // Clone the chunk list under the lock — each `Bytes` clone is a cheap
-    // refcount bump — then concatenate outside it so we don't block the
-    // decoder (which shares this mutex) during the copy.
-    let data = wrapper.data();
-    let chunks: Vec<_> = match data.lock() {
-        Ok(chunks) => chunks.clone(),
-        Err(_) => return Vec::new(),
-    };
-
-    let total: usize = chunks.iter().map(|chunk| chunk.len()).sum();
-    let mut buffer = Vec::with_capacity(total);
-    for chunk in &chunks {
-        buffer.extend_from_slice(chunk.as_ref());
-    }
-    buffer
 }
 
 fn response_content_type(response: &Response) -> String {
@@ -1356,7 +1579,7 @@ fn response_content_range_total(response: &Response) -> Option<u64> {
     total.parse::<u64>().ok()
 }
 
-fn reserve_stream_capacity(wrapper: &mut MVecBytesWrapper, total_bytes: u64) {
+fn reserve_stream_capacity(wrapper: &mut StreamBuffer, total_bytes: u64) {
     if total_bytes == 0 {
         return;
     }
@@ -1442,14 +1665,23 @@ fn buffered_time(
     };
 
     let total_bytes = stream_handle.loader.total_bytes();
-    let downloaded_bytes = stream_handle.loader.downloaded_bytes();
     if total_bytes == 0 || duration <= 0.0 {
         return current_time;
     }
 
     let current_time = current_time.min(duration);
-    let buffered = (downloaded_bytes as f64 / total_bytes as f64) * duration;
+    let buffered = stream_available_time(duration, stream_handle);
     buffered.clamp(current_time, duration)
+}
+
+fn stream_available_time(duration: f64, stream_handle: &StreamLoadHandle) -> f64 {
+    let total_bytes = stream_handle.loader.total_bytes();
+    if total_bytes == 0 || duration <= 0.0 {
+        return 0.0;
+    }
+
+    let available_bytes = stream_handle.buffer.available_bytes();
+    ((available_bytes as f64 / total_bytes as f64) * duration).clamp(0.0, duration)
 }
 
 fn maybe_log_worker_status(
@@ -1575,17 +1807,6 @@ fn update_stream_buffering(
     }
 
     let stalled_for = now.saturating_duration_since(stream_handle.last_activity_at);
-    if stalled_for >= Duration::from_millis(STREAM_STALL_ERROR_MS) {
-        emit_stream_network_error(
-            stream_handle,
-            window,
-            request_id,
-            "timed_out",
-            "desktop audio stream stalled while buffering".to_string(),
-        );
-        return;
-    }
-
     let total_bytes = stream_handle.loader.total_bytes();
     let has_reliable_buffer = total_bytes > 0 && snapshot.duration > 0.0;
     let buffer_ahead = (snapshot.buffered_time - snapshot.current_time).max(0.0);

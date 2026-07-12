@@ -18,7 +18,11 @@ import {
   ScrollArea,
   scrollAreaViewportSelector,
 } from "@/app/components/ui/scroll-area";
-import { shouldUseNativePlaybackBackend } from "@/player/playback";
+import {
+  getRegisteredPlaybackBackend,
+  seekPlaybackTarget,
+  shouldUseNativePlaybackBackend,
+} from "@/player/playback";
 import {
   getCustomLyricsSongKey,
   getSelectedCustomLyrics,
@@ -455,13 +459,23 @@ function SyncedLyrics({ lyricLines, offsetMs, hasRomaji }: SyncedLyricsProps) {
       // The lyric line time lives on the (offset-adjusted) lyric timeline;
       // translate it back to the real audio timeline before seeking.
       const seekSeconds = (lyricLine.startTime + offsetMsRef.current) / 1000;
-      playerRef.currentTime = seekSeconds;
+      const seekPromise = Promise.resolve(
+        seekPlaybackTarget(playerRef, seekSeconds),
+      );
+      seekPromise.catch((e) => {
+        logger.warn("Lyric seek failed", e);
+      });
       if (isPlaying) {
-        playerRef.play().catch((e) => {
-          if (e.name !== "AbortError") {
-            logger.warn("Lyric seek play failed", e);
-          }
-        });
+        seekPromise
+          .then(() => {
+            const backend = getRegisteredPlaybackBackend(playerRef);
+            return backend?.play() ?? playerRef.play();
+          })
+          .catch((e) => {
+            if (e.name !== "AbortError") {
+              logger.warn("Lyric seek play failed", e);
+            }
+          });
       }
 
       const player = getInternalLyricPlayer(lyricPlayerRef);
