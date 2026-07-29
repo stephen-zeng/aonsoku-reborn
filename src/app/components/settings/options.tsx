@@ -1,5 +1,4 @@
 import {
-  CircleUserRound,
   EarthLock,
   FileText,
   Globe,
@@ -8,6 +7,7 @@ import {
   LaptopIcon,
   Paintbrush,
   Server,
+  Share2,
 } from "lucide-react";
 import { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
@@ -28,8 +28,8 @@ export type SettingsOptions =
   | "audio"
   | "content"
   | "storage"
-  | "accounts"
   | "desktop"
+  | "cross-device"
   | "privacy";
 
 interface OptionsData {
@@ -37,7 +37,6 @@ interface OptionsData {
   icon: ComponentType;
 }
 
-const accountsOption: OptionsData = { id: "accounts", icon: CircleUserRound };
 const desktopOption: OptionsData = { id: "desktop", icon: LaptopIcon };
 
 const options: OptionsData[] = [
@@ -47,7 +46,8 @@ const options: OptionsData[] = [
   { id: "audio", icon: Headphones },
   { id: "content", icon: FileText },
   { id: "storage", icon: HardDrive },
-  ...(hasElectronBridge() ? [accountsOption, desktopOption] : []),
+  ...(hasElectronBridge() ? [desktopOption] : []),
+  { id: "cross-device", icon: Share2 },
   { id: "privacy", icon: EarthLock },
 ];
 

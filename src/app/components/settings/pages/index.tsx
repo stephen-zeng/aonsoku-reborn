@@ -1,9 +1,9 @@
 import { SettingsOptions } from "@/app/components/settings/options";
 import { useAppSettings } from "@/store/app.store";
-import { Accounts } from "./accounts";
 import { Appearance } from "./appearance";
 import { Audio } from "./audio";
 import { Content } from "./content";
+import { CrossDeviceSettings } from "./cross-device";
 import { Desktop } from "./desktop";
 import { Language } from "./language";
 import { Privacy } from "./privacy";
@@ -17,8 +17,8 @@ const pages: Record<SettingsOptions, JSX.Element> = {
   language: <Language />,
   content: <Content />,
   storage: <Storage />,
-  accounts: <Accounts />,
   desktop: <Desktop />,
+  "cross-device": <CrossDeviceSettings />,
   privacy: <Privacy />,
 };
 

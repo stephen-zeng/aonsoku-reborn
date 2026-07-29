@@ -1,10 +1,10 @@
 import { seekPlaybackTarget } from "@/player/playback";
+import { shouldUseNativePlaybackBackend } from "@/player/playback/backend-factory";
 import { getNativeQueueController } from "@/player/queue-controller";
 import { cacheManager } from "@/service/cache";
 import { usePlayerStore } from "@/store/player.store";
 import { LanControlMessageType } from "@/types/lanControl";
 import { ISong } from "@/types/responses/song";
-import { getRuntime } from "./capabilities";
 import { getCoverArtUrlFromSongPreference, resolveCacheKeys } from "./coverArt";
 import { isValidDuration } from "./duration";
 import { logger } from "./logger";
@@ -40,11 +40,12 @@ function isMediaSessionSupported(): boolean {
   if (isTauriMediaSessionSupported()) return false;
   if (!("mediaSession" in navigator) || navigator.mediaSession === null)
     return false;
-  // On Android and iOS native, the native MediaSession/MPNowPlayingInfoCenter
-  // handles system-level controls. navigator.mediaSession would conflict with it.
-  const runtime = getRuntime();
-  if (runtime === "capacitor-android" || runtime === "capacitor-ios")
-    return false;
+  // When the native playback backend owns the system media session (Electron
+  // desktop native audio via the libmpv addon, or iOS/Android native), the
+  // renderer's navigator.mediaSession would conflict with it: both Chromium and
+  // the native addon write to the same MPNowPlayingInfoCenter on macOS. The
+  // native addon/plugin is the source of truth for system-level controls there.
+  if (shouldUseNativePlaybackBackend()) return false;
   return true;
 }
 
@@ -450,7 +451,7 @@ function setPositionState(
       return;
     }
     const clampedPosition = Math.min(position, duration);
-    const durationChanged = tauriSessionPayload.duration !== duration;
+    const durationChanged = tauriSessionPayload?.duration !== duration;
     tauriSessionPayload = {
       ...tauriSessionPayload,
       duration,
@@ -547,7 +548,7 @@ function handleTauriRemoteCommand(event: TauriMediaRemoteCommandEvent) {
     case "seek": {
       const position = Math.max(0, event.position ?? 0);
       if (active && sendCommand) {
-        sendCommand(LanControlMessageType.SEEK, { time: position });
+        sendCommand(LanControlMessageType.SEEK, { seconds: position });
         return;
       }
 
@@ -562,7 +563,7 @@ function handleTauriRemoteCommand(event: TauriMediaRemoteCommandEvent) {
           },
         );
       }
-      state.actions.setProgress(Math.floor(position));
+      state.actions.setProgress(position, true);
       if (isValidDuration(state.playerState.currentDuration)) {
         setPositionState(state.playerState.currentDuration, position);
       }
@@ -699,7 +700,7 @@ function setHandlers() {
         const state = usePlayerStore.getState();
         if (state.remoteControl.active && state.remoteControl.sendCommand) {
           state.remoteControl.sendCommand(LanControlMessageType.SEEK, {
-            time: details.seekTime,
+            seconds: details.seekTime,
           });
           return;
         }
@@ -711,7 +712,7 @@ function setHandlers() {
         const audioPlayerRef = state.playerState.audioPlayerRef;
         if (audioPlayerRef) {
           audioPlayerRef.currentTime = details.seekTime;
-          state.actions.setProgress(Math.floor(details.seekTime));
+          state.actions.setProgress(details.seekTime, true);
         }
       }
     });

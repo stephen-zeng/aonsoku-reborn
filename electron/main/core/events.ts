@@ -7,6 +7,20 @@ import {
 } from "../../preload/types";
 import { getIsQuitting } from "../index";
 import { setupMiniPlayerIpc } from "../mini-player";
+import { resolveDesktopSystemArtworkUrl } from "../native/audio/artwork-url";
+import { setupDesktopNativeAudioIpc } from "../native/audio/ipc";
+import {
+  desktopNativeBridgeService,
+  setupDesktopNativeBridgeIpc,
+} from "../native/bridge/ipc";
+import { setupDesktopNativeCoordinationIpc } from "../native/coordination/ipc";
+import {
+  getDesktopNativeDataService,
+  setupDesktopNativeDataIpc,
+} from "../native/data/ipc";
+import { setupDesktopNativeDebugIpc } from "../native/debug/ipc";
+import { setupNativeDebugWindowIpc } from "../native/debug/native-debug-window";
+import { setupDesktopNativePreferencesIpc } from "../native/preferences/ipc";
 import { tray, updateTray } from "../tray";
 import { colorsState } from "./colors";
 import {
@@ -14,6 +28,7 @@ import {
   RpcPayload,
   setDiscordRpcActivity,
 } from "./discordRpc";
+import { setupDesktopPlaybackControlChrome } from "./playerControls";
 import { playerState } from "./playerState";
 import { getAppSetting, ISettingPayload, saveAppSettings } from "./settings";
 import { setTaskbarButtons } from "./taskbar";
@@ -84,6 +99,51 @@ export function setupIpcEvents(window: BrowserWindow | null) {
   ipcMain.removeAllListeners();
 
   setupMiniPlayerIpc();
+  setupNativeDebugWindowIpc();
+  const resolveDesktopMediaUrl = (url: string): string => {
+    if (!url.startsWith("aonsoku-media://")) return url;
+    const parsed = new URL(url);
+    if ((parsed.hostname || parsed.pathname.replace(/^\//, "")) !== "stream") {
+      throw new Error(`Unsupported desktop media source: ${url}`);
+    }
+    return desktopNativeBridgeService
+      .getMediaUrl("/stream.view", Object.fromEntries(parsed.searchParams))
+      .toString();
+  };
+  const resolveDesktopArtworkUrl = (
+    artworkUrl: string | undefined,
+  ): string | undefined =>
+    resolveDesktopSystemArtworkUrl(artworkUrl, {
+      isLinux: platform.isLinux,
+      resolveCachedFile: (coverArtId) =>
+        getDesktopNativeDataService()?.resolveCoverFileUri(coverArtId),
+      resolveAuthenticatedUrl: (_coverArtId, params) =>
+        desktopNativeBridgeService
+          .getMediaUrl("/getCoverArt.view", params)
+          .toString(),
+    });
+  setupDesktopNativeAudioIpc(window, {
+    streamUrlResolver: resolveDesktopMediaUrl,
+    downloadUrlResolver: ({ songId, maxBitRate, format }) =>
+      desktopNativeBridgeService
+        .getMediaUrl("/stream.view", {
+          id: songId,
+          ...(maxBitRate ? { maxBitRate } : {}),
+          ...(format ? { format } : {}),
+        })
+        .toString(),
+    artworkUrlResolver: resolveDesktopArtworkUrl,
+    scrobbleRequest: (options) => desktopNativeBridgeService.request(options),
+  });
+  setupDesktopNativeBridgeIpc();
+  setupDesktopNativeDataIpc(window);
+  setupDesktopNativePreferencesIpc();
+  setupDesktopNativeCoordinationIpc(window);
+  setupDesktopNativeDebugIpc();
+  setupDesktopPlaybackControlChrome(() => {
+    setTaskbarButtons();
+    updateTray();
+  });
 
   ipcMain.on(IpcChannels.ToggleFullscreen, (_, isFullscreen: boolean) => {
     window.setFullScreen(isFullscreen);

@@ -1,16 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  useRemotePlaybackProjection,
+  useSmoothRemoteProgress,
+} from "@/app/components/remote-control/use-remote-playback-projection";
+import { shouldUseNativePlaybackBackend } from "@/player/playback";
+import {
   getCustomLyricsSongKey,
   getSelectedCustomLyrics,
 } from "@/service/lyrics";
 import { subsonic } from "@/service/subsonic";
 import { useIsOnline } from "@/store/cache.store";
 import {
+  useIsRemoteControlActive,
   useLyricsSettings,
   usePlayerCurrentSong,
   usePlayerIsPlaying,
   usePlayerRef,
+  usePlayerStore,
 } from "@/store/player.store";
 import type { IStructuredLyric } from "@/types/responses/song";
 import {
@@ -76,10 +83,22 @@ function findCurrentLine(
 }
 
 export function useCurrentLyricLine() {
-  const currentSong = usePlayerCurrentSong();
+  const localCurrentSong = usePlayerCurrentSong();
+  const remoteProjection = useRemotePlaybackProjection();
+  const smoothRemoteProgress = useSmoothRemoteProgress({
+    active: remoteProjection.active,
+    isPlaying: remoteProjection.isPlaying,
+    progress: remoteProjection.progress,
+    duration: remoteProjection.duration,
+  });
+  const currentSong = remoteProjection.song ?? localCurrentSong;
   const playerRef = usePlayerRef();
   const isOnline = useIsOnline();
-  const isPlaying = usePlayerIsPlaying();
+  const localIsPlaying = usePlayerIsPlaying();
+  const isRemoteControlActive = useIsRemoteControlActive();
+  const isPlaying = remoteProjection.active
+    ? remoteProjection.isPlaying
+    : localIsPlaying;
   const {
     sourcePriority,
     customServerEnabled,
@@ -171,8 +190,33 @@ export function useCurrentLyricLine() {
   const syncedLinesRef = useRef(syncedLines);
   syncedLinesRef.current = syncedLines;
 
+  const lastProgressRef = useRef(0);
+  const lastProgressTimeRef = useRef(0);
+  const useNativeTime = shouldUseNativePlaybackBackend();
+  const useStoreTime = useNativeTime || isRemoteControlActive;
+
+  useEffect(() => {
+    const currentProgress = usePlayerStore.getState().playerProgress.progress;
+    lastProgressRef.current = currentProgress * 1000;
+    lastProgressTimeRef.current = performance.now();
+
+    return usePlayerStore.subscribe(
+      (state) => state.playerProgress.progress,
+      (progress) => {
+        lastProgressRef.current = progress * 1000;
+        lastProgressTimeRef.current = performance.now();
+      },
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!remoteProjection.active) return;
+    lastProgressRef.current = smoothRemoteProgress * 1000;
+    lastProgressTimeRef.current = performance.now();
+  }, [remoteProjection.active, smoothRemoteProgress]);
+
   const tick = useCallback(() => {
-    if (!playerRef) return;
+    if (!playerRef && !useStoreTime) return;
 
     const lines = syncedLinesRef.current;
     if (lines.length === 0) {
@@ -183,7 +227,20 @@ export function useCurrentLyricLine() {
       return;
     }
 
-    const timeMs = Math.floor((playerRef.currentTime || 0) * 1000);
+    let timeMs = 0;
+    if (isRemoteControlActive) {
+      timeMs = Math.floor(lastProgressRef.current);
+    } else if (useNativeTime) {
+      timeMs = isPlaying
+        ? Math.floor(
+            lastProgressRef.current +
+              (performance.now() - lastProgressTimeRef.current),
+          )
+        : Math.floor(lastProgressRef.current);
+    } else {
+      timeMs = Math.floor((playerRef?.currentTime || 0) * 1000);
+    }
+
     const line = findCurrentLine(lines, timeMs - offsetMsRef.current);
     if (line !== lastLineRef.current) {
       lastLineRef.current = line;
@@ -191,7 +248,7 @@ export function useCurrentLyricLine() {
     }
 
     animationFrameRef.current = requestAnimationFrame(tick);
-  }, [playerRef]);
+  }, [playerRef, isPlaying, isRemoteControlActive, useNativeTime, useStoreTime]);
 
   useEffect(() => {
     if (!isPlaying || syncedLines.length === 0) {
@@ -212,15 +269,39 @@ export function useCurrentLyricLine() {
 
   // Set initial line position when paused with synced lyrics available
   useEffect(() => {
-    if (isPlaying || !playerRef || syncedLines.length === 0) return;
+    if (
+      isPlaying ||
+      (!playerRef && !useStoreTime) ||
+      syncedLines.length === 0
+    )
+      return;
 
-    const timeMs = Math.floor((playerRef.currentTime || 0) * 1000);
-    const line = findCurrentLine(syncedLines, timeMs - offsetMsRef.current);
-    if (line !== lastLineRef.current) {
-      lastLineRef.current = line;
-      setCurrentLine(line);
+    const updatePausedLine = () => {
+      const timeMs = useStoreTime
+        ? Math.floor(
+            usePlayerStore.getState().playerProgress.progress * 1000,
+          )
+        : Math.floor((playerRef?.currentTime || 0) * 1000);
+      const line = findCurrentLine(syncedLines, timeMs - offsetMsRef.current);
+      if (line !== lastLineRef.current) {
+        lastLineRef.current = line;
+        setCurrentLine(line);
+      }
+    };
+
+    updatePausedLine();
+
+    if (useStoreTime) {
+      return usePlayerStore.subscribe(
+        (state) => state.playerProgress.progress,
+        () => {
+          if (!usePlayerStore.getState().playerState.isPlaying) {
+            updatePausedLine();
+          }
+        },
+      );
     }
-  }, [isPlaying, playerRef, syncedLines]);
+  }, [isPlaying, playerRef, syncedLines, useStoreTime]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset on song change
   useEffect(() => {

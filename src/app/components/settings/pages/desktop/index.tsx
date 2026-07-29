@@ -1,13 +1,13 @@
 import { DesktopSettings } from "./desktop";
-import { LanControlSettings } from "./lanControl";
+import { DiscordRpc } from "./discord-rpc";
 import { UpdateSettings } from "./updates";
 
 export function Desktop() {
   return (
     <div className="space-y-4">
       <DesktopSettings />
+      <DiscordRpc />
       <UpdateSettings />
-      <LanControlSettings />
     </div>
   );
 }

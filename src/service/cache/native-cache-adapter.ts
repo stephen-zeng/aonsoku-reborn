@@ -181,7 +181,11 @@ export function getNativeCacheAdapter(): NativeCacheAdapter {
 
   if (nativeCacheAdapter) return nativeCacheAdapter;
 
-  if (runtime === "capacitor-ios" || runtime === "capacitor-android") {
+  if (
+    runtime === "capacitor-ios" ||
+    runtime === "capacitor-android" ||
+    runtime === "electron"
+  ) {
     const availability = getNativeAudioPluginAvailability();
     const useNativeCache = availability.available;
     nativeCacheAdapter = useNativeCache
@@ -197,7 +201,11 @@ export function getNativeCacheAdapter(): NativeCacheAdapter {
 export function isNativeCacheAdapterAvailable(): boolean {
   const runtime = getRuntime();
   if (runtime === "tauri") return getTauriInvoke() !== null;
-  if (runtime !== "capacitor-ios" && runtime !== "capacitor-android") {
+  if (
+    runtime !== "capacitor-ios" &&
+    runtime !== "capacitor-android" &&
+    runtime !== "electron"
+  ) {
     return false;
   }
 

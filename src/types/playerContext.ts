@@ -1,10 +1,4 @@
-import {
-  CurrentSongData,
-  LanControlMessageType,
-  PlayerStateData,
-  QueueData,
-  RemoteDeviceInfo,
-} from "./lanControl";
+import { LanControlMessageType, RemoteDeviceInfo } from "./lanControl";
 import { Radio } from "./responses/radios";
 import { ISong } from "./responses/song";
 
@@ -60,6 +54,10 @@ export type DesktopFullscreenPanelView =
   | null;
 export type QueueTier = "context" | "user";
 
+export interface QueueReplacementOptions {
+  bypassQueueConfirmation?: boolean;
+}
+
 export interface IPlayerState {
   isPlaying: boolean;
   loopState: LoopState;
@@ -89,6 +87,7 @@ export interface IPlayerProgress {
   bufferedProgress: number;
   isScrubbing: boolean;
   scrubbingProgress: number;
+  seekCount: number;
 }
 
 export interface IVolumeSettings {
@@ -216,13 +215,18 @@ export interface IRemoteControlState {
 }
 
 export interface IPlayerActions {
-  playSong: (song: ISong, sourceName?: string) => void;
+  playSong: (
+    song: ISong,
+    sourceName?: string,
+    options?: QueueReplacementOptions,
+  ) => void;
   setSongList: (
     songlist: ISong[],
-    index: number,
+    index?: number | null,
     shuffle?: boolean,
     sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     sourceName?: string,
+    options?: QueueReplacementOptions,
   ) => void;
   playFromQueue: (contextSongs: ISong[], contextIndex: number) => void;
   playFromUserQueue: (userQueueIndex: number) => void;
@@ -243,7 +247,7 @@ export interface IPlayerActions {
   clearPlayerState: () => void;
   clearUserQueue: () => void;
   resetProgress: () => void;
-  setProgress: (progress: number) => void;
+  setProgress: (progress: number, isSeek?: boolean) => void;
   setIsScrubbing: (value: boolean) => void;
   setScrubbingProgress: (value: number) => void;
   setVolume: (volume: number) => void;
@@ -287,16 +291,6 @@ export interface IPlayerActions {
   setCurrentSongIntensity: (value: number) => void;
   openPipWindow: () => void;
   closePipWindow: () => void;
-  enterRemoteControl: (device: RemoteDeviceInfo | null) => void;
-  exitRemoteControl: () => void;
-  registerRemoteSender: (
-    sender: (type: LanControlMessageType, data?: unknown) => void,
-  ) => void;
-  clearRemoteSender: () => void;
-  setRemotePlayerState: (state: PlayerStateData | null) => void;
-  setRemoteCurrentSongData: (song: CurrentSongData | null) => void;
-  setRemoteQueueData: (queue: QueueData | null) => void;
-  setRemoteDevice: (device: RemoteDeviceInfo | null) => void;
 }
 
 export interface IPlayerContext {

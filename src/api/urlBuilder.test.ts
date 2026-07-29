@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AuthType } from "@/types/serverConfig";
+import { appName } from "@/utils/appName";
 import type { ServerAuthConfig } from "./urlBuilder";
 import {
   buildCoverArtUrl,
@@ -30,7 +31,7 @@ describe("buildQueryParams", () => {
     expect(params).toHaveProperty("t", "abc123");
     expect(params).toHaveProperty("s", "40n50kuPl4y3r");
     expect(params).toHaveProperty("v", "1.16.1");
-    expect(params).toHaveProperty("c", "Aonsoku");
+    expect(params).toHaveProperty("c", appName);
     expect(params).toHaveProperty("f", "json");
   });
 
@@ -96,19 +97,19 @@ describe("buildCoverArtUrl", () => {
     expect(url).toContain("size=300");
   });
 
-  it("returns default album art when no id", () => {
+  it("returns undefined when no id", () => {
     const url = buildCoverArtUrl(tokenConfig, undefined, "album");
-    expect(url).toBe("/default_album_art.png");
+    expect(url).toBeUndefined();
   });
 
-  it("returns default artist art for artist type with no id", () => {
+  it("returns undefined for artist type with no id", () => {
     const url = buildCoverArtUrl(tokenConfig, undefined, "artist");
-    expect(url).toBe("/default_artist_art.png");
+    expect(url).toBeUndefined();
   });
 
-  it("defaults type to album", () => {
+  it("defaults type to album and returns undefined when no id", () => {
     const url = buildCoverArtUrl(tokenConfig, undefined);
-    expect(url).toBe("/default_album_art.png");
+    expect(url).toBeUndefined();
   });
 
   it("defaults size to 300", () => {

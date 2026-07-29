@@ -1,4 +1,5 @@
-import { getRuntime } from "@/utils/capabilities";
+import { getNativeAudioPluginAvailability } from "@/native/audio";
+import { getPlaybackCapabilities } from "@/utils/capabilities";
 import { logger } from "@/utils/logger";
 import { NativeQueueController } from "./native-controller";
 import type { QueueController } from "./types";
@@ -15,8 +16,8 @@ export function getQueueController(): QueueController {
 
 function createQueueController(): QueueController {
   if (
-    getRuntime() === "capacitor-ios" ||
-    getRuntime() === "capacitor-android"
+    getPlaybackCapabilities().supportsNativePlayback &&
+    getNativeAudioPluginAvailability().available
   ) {
     try {
       return new NativeQueueController();
@@ -40,11 +41,11 @@ export function resetQueueController(): void {
   instance = null;
 }
 
-export type { QueueController } from "./types";
 export type {
-  QueueControllerState,
+  QueueController,
   QueueControllerEvent,
   QueueControllerListener,
+  QueueControllerState,
   QueueStateChangeEvent,
   QueueStateChangeReason,
 } from "./types";

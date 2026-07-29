@@ -1,6 +1,6 @@
-import type { LoopState, QueueSourceId } from "@/types/playerContext";
 import { getCurrentSong } from "@/store/player/queue-utils";
-import { usePlayerStore } from "@/store/player.store";
+import { usePlayerStore } from "@/store/player/store";
+import type { LoopState, QueueSourceId } from "@/types/playerContext";
 import type { Radio } from "@/types/responses/radios";
 import type { ISong } from "@/types/responses/song";
 import type {
@@ -26,7 +26,7 @@ export class WebQueueController implements QueueController {
 
   setSongList(
     songs: ISong[],
-    index: number,
+    index?: number | null,
     shuffle?: boolean,
     sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     sourceName?: string,
@@ -58,6 +58,13 @@ export class WebQueueController implements QueueController {
     this.#getActions().toggleShuffle();
   }
 
+  setShuffleState(enabled: boolean): void {
+    const store = this.#getStore();
+    if (store.songlist.isShuffleActive !== enabled) {
+      this.#getActions().toggleShuffle();
+    }
+  }
+
   setLoopState(_state: LoopState): void {
     const store = this.#getStore();
     const current = store.playerState.loopState;
@@ -85,7 +92,7 @@ export class WebQueueController implements QueueController {
   }
 
   seek(seconds: number): void {
-    this.#getActions().setProgress(seconds);
+    this.#getActions().setProgress(seconds, true);
   }
 
   setVolume(volume: number): void {

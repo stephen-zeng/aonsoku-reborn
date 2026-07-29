@@ -1,6 +1,5 @@
 import {
   ChevronRight,
-  CircleUserRound,
   EarthLock,
   FileText,
   Globe,
@@ -9,16 +8,17 @@ import {
   LaptopIcon,
   Paintbrush,
   Server,
+  Share2,
 } from "lucide-react";
 import { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { MobilePageHeader } from "@/app/components/header/mobile-page-header";
 import { SettingsOptions } from "@/app/components/settings/options";
-import { Accounts } from "@/app/components/settings/pages/accounts";
 import { Appearance } from "@/app/components/settings/pages/appearance";
 import { Audio } from "@/app/components/settings/pages/audio";
 import { Content } from "@/app/components/settings/pages/content";
+import { CrossDeviceSettings } from "@/app/components/settings/pages/cross-device";
 import { Desktop } from "@/app/components/settings/pages/desktop";
 import { Language } from "@/app/components/settings/pages/language";
 import { Privacy } from "@/app/components/settings/pages/privacy";
@@ -31,7 +31,6 @@ interface CategoryItem {
   icon: ComponentType<{ className?: string }>;
 }
 
-const accountsOption: CategoryItem = { id: "accounts", icon: CircleUserRound };
 const desktopOption: CategoryItem = { id: "desktop", icon: LaptopIcon };
 
 const categories: CategoryItem[] = [
@@ -41,7 +40,8 @@ const categories: CategoryItem[] = [
   { id: "audio", icon: Headphones },
   { id: "content", icon: FileText },
   { id: "storage", icon: HardDrive },
-  ...(hasElectronBridge() ? [accountsOption, desktopOption] : []),
+  ...(hasElectronBridge() ? [desktopOption] : []),
+  { id: "cross-device", icon: Share2 },
   { id: "privacy", icon: EarthLock },
 ];
 
@@ -52,8 +52,8 @@ const pages: Record<SettingsOptions, () => JSX.Element> = {
   language: () => <Language />,
   content: () => <Content />,
   storage: () => <Storage />,
-  accounts: () => <Accounts />,
   desktop: () => <Desktop />,
+  "cross-device": () => <CrossDeviceSettings />,
   privacy: () => <Privacy />,
 };
 

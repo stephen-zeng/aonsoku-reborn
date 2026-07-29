@@ -4,6 +4,7 @@ import { ProgressSlider } from "@/app/components/ui/slider";
 import { useAudioSeeking } from "@/app/hooks/use-audio-seeking";
 import {
   useHasQueueSongs,
+  useIsRemoteControlActive,
   usePlayerBufferedProgress,
   usePlayerDuration,
   usePlayerIsBuffering,
@@ -23,6 +24,7 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
   const isBuffering = usePlayerIsBuffering();
   const hasQueueSongs = useHasQueueSongs();
   const { isSong } = usePlayerMediaType();
+  const isRemoteActive = useIsRemoteControlActive();
 
   const isEmpty = isSong && !hasQueueSongs;
 
@@ -68,9 +70,9 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
           value={isLocalSeeking ? [localProgress] : [progress]}
           max={currentDuration ?? 0}
           step={1}
-          className="cursor-pointer w-[32rem]"
+          className="cursor-pointer w-[32rem] before:-top-1.5 before:-bottom-1.5"
           isBuffering={isBuffering}
-          bufferedProgress={bufferedProgress}
+          bufferedProgress={isRemoteActive ? 0 : bufferedProgress}
           onValueChange={([value]) => handleSeeking(value)}
           onValueCommit={([value]) => handleSeeked(value)}
           data-testid="player-progress-slider"
@@ -81,7 +83,7 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
           max={100}
           step={1}
           disabled={true}
-          className="cursor-pointer w-[32rem] pointer-events-none"
+          className="cursor-pointer w-[32rem] pointer-events-none before:-top-1.5 before:-bottom-1.5"
         />
       )}
       <small

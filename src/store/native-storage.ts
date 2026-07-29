@@ -1,29 +1,40 @@
-import type { PersistStorage, StorageValue } from "zustand/middleware";
 import type { AonsokuNativePreferencesPlugin } from "@aonsoku/capacitor-native/preferences";
-import { isNativePreferencesAvailable } from "@/native/preferences/facade";
+import type { PersistStorage, StorageValue } from "zustand/middleware";
+import {
+  getNativePreferences,
+  isNativePreferencesAvailable,
+} from "@/native/preferences/facade";
 
 let nativePrefsCache: Record<string, string> | null = null;
 let cacheReady = false;
 let pluginRef: AonsokuNativePreferencesPlugin | null = null;
+let initializationPromise: Promise<void> | null = null;
 const pendingReads: Array<() => void> = [];
 
-export async function initNativePrefsCache(): Promise<void> {
-  if (!isNativePreferencesAvailable()) return;
+export function initNativePrefsCache(): Promise<void> {
+  if (!isNativePreferencesAvailable()) return Promise.resolve();
+  if (initializationPromise) return initializationPromise;
 
-  const { AonsokuNativePreferences } = await import(
-    "@aonsoku/capacitor-native/preferences"
-  );
-  pluginRef = AonsokuNativePreferences;
+  const plugin = getNativePreferences();
+  pluginRef = plugin;
 
-  const { migrateToNativeStorageIfNeeded } = await import(
-    "@/store/native-migration"
-  );
-  nativePrefsCache = await migrateToNativeStorageIfNeeded(
-    AonsokuNativePreferences,
-  );
-  cacheReady = true;
-  for (const resolve of pendingReads) resolve();
-  pendingReads.length = 0;
+  initializationPromise = (async () => {
+    try {
+      const { migrateToNativeStorageIfNeeded } = await import(
+        "@/store/native-migration"
+      );
+      nativePrefsCache = await migrateToNativeStorageIfNeeded(plugin);
+    } catch (error) {
+      nativePrefsCache = {};
+      console.error("[native-storage] failed to initialize preferences", error);
+    } finally {
+      cacheReady = true;
+      for (const resolve of pendingReads) resolve();
+      pendingReads.length = 0;
+    }
+  })();
+
+  return initializationPromise;
 }
 
 export function isNativeStorageReady(): boolean {
@@ -32,6 +43,38 @@ export function isNativeStorageReady(): boolean {
 
 export function getNativePrefsPlugin(): AonsokuNativePreferencesPlugin | null {
   return pluginRef;
+}
+
+export function getPreferenceValue(key: string): string | null {
+  if (!isNativePreferencesAvailable()) {
+    return localStorage.getItem(key);
+  }
+
+  return nativePrefsCache?.[key] ?? null;
+}
+
+export function setPreferenceValue(key: string, value: string): void {
+  if (!isNativePreferencesAvailable()) {
+    localStorage.setItem(key, value);
+    return;
+  }
+
+  if (nativePrefsCache) {
+    nativePrefsCache[key] = value;
+  }
+  debouncedNativeWrite(key, value);
+}
+
+export function removePreferenceValue(key: string): void {
+  if (!isNativePreferencesAvailable()) {
+    localStorage.removeItem(key);
+    return;
+  }
+
+  if (nativePrefsCache) {
+    delete nativePrefsCache[key];
+  }
+  pluginRef?.deletePreference({ key });
 }
 
 const writeTimers = new Map<string, ReturnType<typeof setTimeout>>();

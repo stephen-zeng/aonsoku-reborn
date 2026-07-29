@@ -49,12 +49,14 @@ function swCacheVersionPlugin(buildHash: string): Plugin {
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const buildTimestamp = mode === "production" ? Date.now() : 0;
+  const isMobileBuild = mode === "mobile";
+  const isProductionBuild = mode === "production" || isMobileBuild;
+  const buildTimestamp = isProductionBuild ? Date.now() : 0;
   const buildHash = buildTimestamp > 0 ? buildTimestamp.toString(36) : "dev";
   return {
     plugins: [
       react(),
-      ...(mode === "production" ? [swCacheVersionPlugin(buildHash)] : []),
+      ...(isProductionBuild ? [swCacheVersionPlugin(buildHash)] : []),
     ],
     define: {
       __BUILD_HASH__: JSON.stringify(buildHash),
@@ -62,6 +64,10 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
+        "@aonsoku/audio-contract": path.resolve(
+          __dirname,
+          "./packages/audio-contract/src",
+        ),
         "@": path.resolve(__dirname, "./src"),
         cy: path.resolve(__dirname, "./cypress"),
       },
@@ -71,9 +77,13 @@ export default defineConfig(({ mode }) => {
       minify: "terser",
       rollupOptions: {
         external: ["bufferutil", "utf-8-validate"],
-        output: {
-          manualChunks: createManualChunks,
-        },
+        ...(isMobileBuild
+          ? {}
+          : {
+              output: {
+                manualChunks: createManualChunks,
+              },
+            }),
       },
     },
   };

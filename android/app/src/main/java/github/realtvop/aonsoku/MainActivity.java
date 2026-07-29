@@ -9,6 +9,7 @@ import android.hardware.SensorManager;
 import com.getcapacitor.BridgeActivity;
 import github.realtvop.aonsoku.plugins.audio.AudioPlugin;
 import github.realtvop.aonsoku.plugins.bridge.BridgePlugin;
+import github.realtvop.aonsoku.plugins.coordination.AonsokuNativeCoordinationPlugin;
 import github.realtvop.aonsoku.plugins.data.DataPlugin;
 import github.realtvop.aonsoku.plugins.preferences.PreferencesPlugin;
 import github.realtvop.aonsoku.plugins.debug.DebugActivity;
@@ -29,10 +30,22 @@ public class MainActivity extends BridgeActivity implements SensorEventListener 
         com.google.android.material.color.DynamicColors.applyToActivitiesIfAvailable(this.getApplication());
         registerPlugin(AudioPlugin.class);
         registerPlugin(BridgePlugin.class);
+        registerPlugin(AonsokuNativeCoordinationPlugin.class);
         registerPlugin(DataPlugin.class);
         registerPlugin(PreferencesPlugin.class);
 
         super.onCreate(savedInstanceState);
+
+        int startupBackground = androidx.core.content.ContextCompat.getColor(
+            this,
+            R.color.startup_background
+        );
+        android.webkit.WebView startupWebView = getBridge().getWebView();
+        startupWebView.setBackgroundColor(startupBackground);
+        View startupParent = (View) startupWebView.getParent();
+        if (startupParent != null) {
+            startupParent.setBackgroundColor(startupBackground);
+        }
 
         getBridge().getWebView().post(() -> {
             android.webkit.WebView webView = getBridge().getWebView();

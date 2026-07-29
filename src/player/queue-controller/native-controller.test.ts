@@ -104,6 +104,7 @@ const mocks = vi.hoisted(() => {
       isPlaying: true,
       isBuffering: false,
       currentDuration: 123,
+      volume: 100,
       mediaType: "song" as const,
     },
     playerProgress: {
@@ -160,7 +161,7 @@ vi.mock("@/native/audio/facade", () => ({
   getNativeAudioPluginAvailability: mocks.getNativeAudioPluginAvailability,
 }));
 
-vi.mock("@/store/player.store", () => ({
+vi.mock("@/store/player/store", () => ({
   usePlayerStore: {
     getState: () => mocks.storeState,
     setState: (
@@ -198,6 +199,7 @@ describe("NativeQueueController terminal playback reset", () => {
     mocks.storeState.playerState.isPlaying = true;
     mocks.storeState.playerState.isBuffering = false;
     mocks.storeState.playerState.currentDuration = 123;
+    mocks.storeState.playerState.volume = 100;
     mocks.storeState.playerProgress.progress = 123;
     mocks.storeState.playerProgress.bufferedProgress = 123;
     mocks.storeState.songlist.contextQueue.songs = [];
@@ -277,6 +279,20 @@ describe("NativeQueueController setVolume", () => {
     controller.dispose();
   });
 
+  it("routes Electron volume to the desktop player bridge", () => {
+    mocks.mockGetRuntime.mockReturnValue("electron");
+    const controller = new NativeQueueController();
+
+    controller.setVolume(40);
+
+    expect(mocks.plugin.setSystemVolume).toHaveBeenCalledWith({
+      value: 0.4,
+    });
+    expect(mocks.storeState.playerState.volume).toBe(40);
+
+    controller.dispose();
+  });
+
   it("does not call setSystemVolume on iOS", () => {
     mocks.mockGetRuntime.mockReturnValue("capacitor-ios");
     const controller = new NativeQueueController();
@@ -349,6 +365,19 @@ describe("NativeQueueController shuffle and loop queue updates", () => {
     controller.dispose();
   });
 
+  it("sets native shuffle to an explicit target state", () => {
+    mocks.storeState.songlist.isShuffleActive = true;
+    const controller = new NativeQueueController();
+
+    controller.setShuffleState(false);
+
+    expect(mocks.plugin.setShuffle).toHaveBeenCalledWith({ enabled: false });
+    expect(mocks.storeState.songlist.isShuffleActive).toBe(false);
+    expect(mocks.plugin.updateContextQueue).toHaveBeenCalled();
+
+    controller.dispose();
+  });
+
   it("updates native queue without reloading when loop state changes", () => {
     const controller = new NativeQueueController();
 
@@ -364,6 +393,48 @@ describe("NativeQueueController shuffle and loop queue updates", () => {
       currentIndex: 0,
     });
     expect(mocks.plugin.setContextQueue).not.toHaveBeenCalled();
+
+    controller.dispose();
+  });
+});
+
+describe("NativeQueueController handoff preparation", () => {
+  beforeEach(() => {
+    for (const value of Object.values(mocks.plugin)) {
+      if (typeof value === "function") {
+        vi.mocked(value).mockClear();
+      }
+    }
+    mocks.storeState.playerState.loopState = LoopState.All;
+    mocks.storeState.songlist.contextQueue.songs = [
+      { id: "song-1", title: "Song 1", duration: 123 } as never,
+      { id: "song-2", title: "Song 2", duration: 234 } as never,
+    ];
+    mocks.storeState.songlist.contextQueue.currentIndex = 1;
+    mocks.storeState.songlist.contextQueue.sourceId = {
+      type: "album",
+      id: "album-1",
+    };
+    mocks.storeState.songlist.contextQueue.sourceName = "Album 1";
+  });
+
+  it("syncs the current queue and seeks before resolving", async () => {
+    const controller = new NativeQueueController();
+
+    await controller.prepareHandoffPlayback(42, { autoplay: false });
+
+    expect(mocks.plugin.setContextQueue).toHaveBeenCalledWith({
+      songs: [
+        expect.objectContaining({ id: "song-1" }),
+        expect.objectContaining({ id: "song-2" }),
+      ],
+      currentIndex: 1,
+      autoplay: false,
+      repeatMode: "all",
+      sourceId: { type: "album", id: "album-1" },
+      sourceName: "Album 1",
+    });
+    expect(mocks.plugin.seek).toHaveBeenCalledWith({ position: 42 });
 
     controller.dispose();
   });

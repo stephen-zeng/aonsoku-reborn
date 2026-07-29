@@ -3,6 +3,7 @@ import { Check, Eye, EyeOff, Languages, Music2, Search } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
+import { useRemotePlaybackProjection } from "@/app/components/remote-control/use-remote-playback-projection";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
@@ -45,7 +46,9 @@ interface CustomLyricsSelectProps {
 export function CustomLyricsSelect({ onBack }: CustomLyricsSelectProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { currentSong } = usePlayerSonglist();
+  const { currentSong: localCurrentSong } = usePlayerSonglist();
+  const remoteProjection = useRemotePlaybackProjection();
+  const currentSong = remoteProjection.song ?? localCurrentSong;
   const { setAreLyricsAligned } = usePlayerActions();
   const {
     customServerEnabled,

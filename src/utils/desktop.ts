@@ -23,10 +23,6 @@ export function hasDesktopBridge(): boolean {
   return hasElectronBridge() || hasTauriBridge();
 }
 
-export function hasLanControlBridge(): boolean {
-  return hasElectronBridge() && typeof window.api.lanControl !== "undefined";
-}
-
 /**
  * Detect operating system for both Electron and browser/PWA environments
  */

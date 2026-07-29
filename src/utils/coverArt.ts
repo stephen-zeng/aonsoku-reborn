@@ -2,7 +2,7 @@ import { getCoverArtUrl } from "@/api/httpClient";
 // TODO: CachedImage provides lazy loading only — no application-level caching.
 // Consider adding a CacheFirst strategy for /rest/getCoverArt in the service worker,
 // or an in-memory LRU URL cache to avoid recomputing cover art URLs every render.
-import { usePlayerStore } from "@/store/player.store";
+import { usePlayerStore } from "@/store/player/store";
 import { CoverArt } from "@/types/coverArtType";
 import { ISong } from "@/types/responses/song";
 
@@ -91,9 +91,8 @@ export function useCoverArtUrlFromSongPreference({
   return getCoverArtUrl(id, coverArtType, size);
 }
 
-export function getDefaultArtUrl(coverArtType: CoverArt | undefined): string {
-  const type = coverArtType === "artist" ? "artist" : "album";
-  return `/default_${type}_art.png`;
+export function getDefaultArtUrl(_coverArtType?: CoverArt): undefined {
+  return undefined;
 }
 
 export function resolveCacheKeys(

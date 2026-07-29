@@ -1,6 +1,8 @@
 import { useEffect } from "react";
-import { AonsokuNativeBridge } from "@aonsoku/capacitor-native/bridge";
-import { isNativeBridgeAvailable } from "@/native/bridge/facade";
+import {
+  getNativeBridge,
+  isNativeBridgeAvailable,
+} from "@/native/bridge/facade";
 import { useAppStore } from "@/store/app.store";
 import { AuthType } from "@/types/serverConfig";
 import { logger } from "@/utils/logger";
@@ -13,7 +15,9 @@ export function NativeAuthObserver() {
   useEffect(() => {
     if (!isNativeBridgeAvailable()) return;
 
-    AonsokuNativeBridge.getCredentials()
+    const nativeBridge = getNativeBridge();
+    nativeBridge
+      .getCredentials()
       .then(async (credentials) => {
         if (!credentials || !credentials.serverUrl) {
           const data = useAppStore.getState().data;
@@ -27,7 +31,7 @@ export function NativeAuthObserver() {
             return;
           }
 
-          await AonsokuNativeBridge.storeCredentials({
+          await nativeBridge.storeCredentials({
             serverUrl: data.url,
             username: data.username,
             password: data.password,
@@ -45,7 +49,7 @@ export function NativeAuthObserver() {
           state.data.fallbackUrl = credentials.fallbackUrl ?? "";
           state.data.activeServerType = "primary";
           state.data.username = credentials.username;
-          state.data.password = "";
+          state.data.password = credentials.password ?? "";
           state.data.authType =
             credentials.authType === "token"
               ? AuthType.TOKEN

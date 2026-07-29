@@ -201,8 +201,8 @@ describe("getPlaybackCapabilities", () => {
     const caps = getPlaybackCapabilities();
     expect(caps.canSetVolume).toBe(true);
     expect(caps.requiresSystemVolume).toBe(false);
-    expect(caps.supportsWebAudioReplayGain).toBe(true);
-    expect(caps.supportsNativePlayback).toBe(false);
+    expect(caps.supportsWebAudioReplayGain).toBe(false);
+    expect(caps.supportsNativePlayback).toBe(true);
     expect(caps.supportsBackgroundPlayback).toBe(true);
   });
 
@@ -213,8 +213,8 @@ describe("getPlaybackCapabilities", () => {
     const caps = getPlaybackCapabilities();
     expect(caps.canSetVolume).toBe(true);
     expect(caps.requiresSystemVolume).toBe(false);
-    expect(caps.supportsWebAudioReplayGain).toBe(true);
-    expect(caps.supportsNativePlayback).toBe(false);
+    expect(caps.supportsWebAudioReplayGain).toBe(false);
+    expect(caps.supportsNativePlayback).toBe(true);
     expect(caps.supportsBackgroundPlayback).toBe(true);
   });
 

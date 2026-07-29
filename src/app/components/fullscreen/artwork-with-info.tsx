@@ -1,6 +1,7 @@
 import { clsx } from "clsx";
 import { EllipsisVertical } from "lucide-react";
 import { memo } from "react";
+import { useRemotePlaybackProjection } from "@/app/components/remote-control/use-remote-playback-projection";
 import { Button } from "@/app/components/ui/button";
 import {
   DropdownMenu,
@@ -17,16 +18,16 @@ import { FullscreenSongArtwork } from "./song-artwork";
 import { AlbumName, SongInfo } from "./song-info";
 
 export const FullscreenSongInfoRow = memo(function FullscreenSongInfoRow({
-  compact = false,
   className,
 }: {
-  compact?: boolean;
   className?: string;
 }) {
   const currentSong = usePlayerStore(
     (state) => state.songlist.currentSong,
     (a, b) => a?.id === b?.id,
   );
+  const remoteProjection = useRemotePlaybackProjection();
+  const displaySong = remoteProjection.song ?? currentSong;
   const { hoverBg } = useFullscreenContrast();
   const { open, setOpen, triggerProps } = useTouchMenuGuard();
 
@@ -40,19 +41,14 @@ export const FullscreenSongInfoRow = memo(function FullscreenSongInfoRow({
     >
       <div className="flex min-w-0 items-center justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <SongInfo compact={compact} />
+          <SongInfo />
         </div>
-        <div
-          className={clsx(
-            "flex shrink-0 items-center gap-1",
-            compact ? "pt-0.5" : "pt-1",
-          )}
-        >
+        <div className="flex shrink-0 items-center gap-1 pt-1">
           <LikeButton
             className="size-11 rounded-full"
             iconClassName="w-6 h-6"
           />
-          {currentSong && (
+          {displaySong && (
             <DropdownMenu open={open} onOpenChange={setOpen}>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -75,7 +71,7 @@ export const FullscreenSongInfoRow = memo(function FullscreenSongInfoRow({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <CurrentSongMenuOptions song={currentSong} />
+                <CurrentSongMenuOptions song={displaySong} />
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -87,74 +83,58 @@ export const FullscreenSongInfoRow = memo(function FullscreenSongInfoRow({
 
 export const ArtworkWithInfo = memo(function ArtworkWithInfo({
   className,
-  compact = false,
+  preferCompactLayout = false,
   showTouchDragSurface = false,
   showInfo = true,
-  fitArtworkContent = false,
-  largeArtwork = false,
 }: {
   className?: string;
-  compact?: boolean;
+  preferCompactLayout?: boolean;
   showTouchDragSurface?: boolean;
   showInfo?: boolean;
-  fitArtworkContent?: boolean;
-  largeArtwork?: boolean;
 }) {
   return (
     <div
       className={clsx(
-        "flex w-full min-h-0 min-w-0 flex-col items-center transition-all duration-300 ease-in-out",
-        showInfo ? "flex-1 justify-between" : "justify-center",
-        fitArtworkContent && "h-fit flex-none",
+        "flex w-full min-h-0 min-w-0 flex-col items-center",
+        preferCompactLayout ? "flex-[0_1_auto]" : "flex-1",
+        showInfo ? "justify-between" : "justify-center",
         className,
       )}
     >
       <div
         className={clsx(
-          "w-full min-h-0 flex flex-col items-center justify-center",
-          showInfo
-            ? "flex-1"
-            : fitArtworkContent
-              ? "flex-none h-fit"
-              : "flex-1 min-h-0",
+          "flex w-full min-h-0 flex-col items-center justify-center",
+          preferCompactLayout
+            ? "flex-[0_1_auto] [container-type:inline-size]"
+            : "flex-1",
         )}
       >
         <div
           className={clsx(
-            "mx-auto w-full min-w-0 shrink-0 justify-self-center",
+            "mx-auto w-full min-w-0 shrink-0 justify-self-center pb-2",
             CONTENT_MAX_WIDTH,
-            compact ? "pb-1" : "pb-2",
           )}
         >
-          <AlbumName
-            compact={compact}
-            className={clsx(
-              "[&>div]:py-0.5 [&_p]:leading-normal",
-              compact ? "pb-0.5" : "pb-1",
-            )}
-          />
+          <AlbumName className="pb-1 [&>div]:py-0.5 [&_p]:leading-normal" />
         </div>
 
         <div
           className={clsx(
-            "min-h-0 w-full flex items-center justify-center overflow-hidden",
-            fitArtworkContent ? "flex-none h-fit" : "flex-1",
+            "flex min-h-0 w-full items-center justify-center overflow-hidden [container-type:size]",
+            preferCompactLayout
+              ? "flex-[0_1_min(480px,100cqw)]"
+              : "flex-1",
           )}
         >
-          <FullscreenSongArtwork
-            compact={compact}
-            large={largeArtwork}
-            showTouchDragSurface={showTouchDragSurface}
-          />
+          <div className="aspect-square flex-none w-[min(100cqw,100cqh,clamp(280px,85vw,480px))]">
+            <FullscreenSongArtwork
+              showTouchDragSurface={showTouchDragSurface}
+            />
+          </div>
         </div>
       </div>
 
-      {showInfo && (
-        <FullscreenSongInfoRow
-          compact={compact}
-          className={clsx(compact ? "pt-2" : "pt-4")}
-        />
-      )}
+      {showInfo && <FullscreenSongInfoRow className="pt-4" />}
     </div>
   );
 });

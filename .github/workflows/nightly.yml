@@ -18,10 +18,10 @@ jobs:
       nightly_version: ${{ steps.check.outputs.nightly_version }}
       short_sha: ${{ steps.check.outputs.short_sha }}
     steps:
-      - name: Checkout development branch
+      - name: Checkout main branch
         uses: actions/checkout@v4
         with:
-          ref: development
+          ref: main
           fetch-depth: 0
 
       - name: Check for recent commits
@@ -62,10 +62,10 @@ jobs:
       attestations: write
       id-token: write
     steps:
-      - name: Checkout development branch
+      - name: Checkout main branch
         uses: actions/checkout@v4
         with:
-          ref: development
+          ref: main
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -110,30 +110,38 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: "macos-latest"
+          - platform: "macos-15-intel"
+            libmpv_platform: "darwin"
             target: "mac"
             arch: "x64"
           - platform: "macos-latest"
+            libmpv_platform: "darwin"
             target: "mac"
             arch: "arm64"
           - platform: "ubuntu-22.04"
+            libmpv_platform: "linux"
             target: "linux"
             arch: "x64"
+            # Linux native-audio artifacts require glibc >= 2.35.
           - platform: "ubuntu-22.04-arm"
+            libmpv_platform: "linux"
             target: "linux"
             arch: "arm64"
+            # Linux native-audio artifacts require glibc >= 2.35.
           - platform: "windows-latest"
+            libmpv_platform: "win32"
             target: "win"
             arch: "x64"
           - platform: "windows-11-arm"
+            libmpv_platform: "win32"
             target: "win"
             arch: "arm64"
     runs-on: ${{ matrix.platform }}
     steps:
-      - name: Checkout development branch
+      - name: Checkout main branch
         uses: actions/checkout@v4
         with:
-          ref: development
+          ref: main
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -155,10 +163,29 @@ jobs:
       - name: Inject nightly version
         run: node -e "const p=require('./package.json'); p.version='${{ needs.check-changes.outputs.nightly_version }}'; require('fs').writeFileSync('package.json', JSON.stringify(p, null, 2))"
 
+      - name: Setup native audio (libmpv addon + runtime)
+        uses: ./.github/actions/setup-native-audio
+        with:
+          platform: ${{ matrix.libmpv_platform }}
+          arch: ${{ matrix.arch }}
+          target: ${{ matrix.target }}
+
       - name: Build Electron app
+        shell: bash
         env:
           ARCH: ${{ matrix.arch }}
-        run: pnpm run build:${{ matrix.target }}
+        run: |
+          if [ "${{ matrix.target }}" = "linux" ]; then
+            # Linux bundles an audio-only libmpv with its .so runtime closure;
+            # strict verification ensures the bundled runtime is complete. The
+            # artifacts are built on Ubuntu 22.04 and require glibc >= 2.35.
+            # See docs/native-audio-libmpv.md.
+            pnpm native-audio:verify-package --require-native-audio --platform linux --arch ${{ matrix.arch }}
+            pnpm electron:build
+            pnpm exec electron-forge make --platform linux --arch ${{ matrix.arch }}
+          else
+            pnpm run build:${{ matrix.target }}
+          fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -167,6 +194,7 @@ jobs:
           path: |
             dist/make/**/*.deb
             dist/make/**/*.rpm
+            dist/make/**/*.AppImage
             dist/make/**/*.dmg
             dist/make/**/*.zip
             dist/make/**/*.exe
@@ -178,10 +206,10 @@ jobs:
     if: needs.check-changes.outputs.has_changes == 'true'
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout development branch
+      - name: Checkout main branch
         uses: actions/checkout@v4
         with:
-          ref: development
+          ref: main
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -209,8 +237,8 @@ jobs:
       - name: Inject nightly version
         run: node -e "const p=require('./package.json'); p.version='${{ needs.check-changes.outputs.nightly_version }}'; require('fs').writeFileSync('package.json', JSON.stringify(p, null, 2))"
 
-      - name: Build web assets
-        run: pnpm run build
+      - name: Build mobile web assets
+        run: pnpm run build:mobile
 
       - name: Sync Capacitor Android
         run: pnpm exec cap sync android
@@ -237,10 +265,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout development branch
+      - name: Checkout main branch
         uses: actions/checkout@v4
         with:
-          ref: development
+          ref: main
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -270,9 +298,17 @@ jobs:
           body: |
             ## Nightly Build
 
-            **Branch:** `development`
+            **Branch:** `main`
             **Version:** `${{ needs.check-changes.outputs.nightly_version }}`
             **Commit:** `${{ needs.check-changes.outputs.short_sha }}`
+
+            ---
+
+            ### Linux desktop packages
+
+            Linux artifacts are built on `ubuntu-22.04` and require **glibc >= 2.35**
+            (e.g. Ubuntu 22.04+, Debian 12+, Fedora 36+). They will not run on older
+            distributions.
 
             ---
 
@@ -286,10 +322,11 @@ jobs:
 
             ---
 
-            > This is an automated nightly build from the `development` branch. It may be unstable.
+            > This is an automated nightly build from the `main` branch. It may be unstable.
           files: |
             artifacts/**/*.deb
             artifacts/**/*.rpm
+            artifacts/**/*.AppImage
             artifacts/**/*.dmg
             artifacts/**/*.zip
             artifacts/**/*.exe

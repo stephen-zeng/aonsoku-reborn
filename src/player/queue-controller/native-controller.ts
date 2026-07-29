@@ -1,7 +1,6 @@
 import type { PluginListenerHandle } from "@capacitor/core";
 import { getSongStreamUrl } from "@/api/httpClient";
 import { getNativeAudioPluginAvailability } from "@/native/audio/facade";
-import { getRuntime } from "@/utils/capabilities";
 import type {
   NativeAudioEvents,
   NativeAudioPlugin,
@@ -18,15 +17,17 @@ import {
   setLastOnUserQueue,
   setNextOnUserQueue,
 } from "@/store/player/queue-utils";
-import { usePlayerStore } from "@/store/player.store";
+import { usePlayerStore } from "@/store/player/store";
 import type { QueueSourceId } from "@/types/playerContext";
 import { LoopState } from "@/types/playerContext";
 import type { Radio } from "@/types/responses/radios";
 import type { ISong } from "@/types/responses/song";
-import { logger } from "@/utils/logger";
+import { getRuntime } from "@/utils/capabilities";
 import { getSongCoverArtId } from "@/utils/coverArt";
+import { logger } from "@/utils/logger";
 import {
   getMaxShuffleStartHistory,
+  pickRandomStartIndex,
   pushToHistory,
 } from "@/utils/songListFunctions";
 import type {
@@ -58,6 +59,7 @@ function songToNativeQueueSong(song: ISong): NativeQueueSong {
     duration: song.duration,
     coverArtId: getSongCoverArtId(song),
     streamUrl: getSongStreamUrl(song.id),
+    song: { ...song },
   };
 }
 
@@ -116,12 +118,14 @@ export class NativeQueueController implements QueueController {
   #queueSynced = false;
   #terminalPlaybackResetTimer: ReturnType<typeof setTimeout> | null = null;
 
-  #syncContextQueueToNative(autoplay = true): void {
+  #syncContextQueueToNative(autoplay = true): Promise<void> {
     const { songlist, playerState } = usePlayerStore.getState();
-    if (songlist.contextQueue.songs.length === 0) return;
+    if (songlist.contextQueue.songs.length === 0) {
+      return Promise.resolve();
+    }
 
     this.#nativeDrivenTransition = true;
-    this.#plugin
+    return this.#plugin
       .setContextQueue({
         songs: songlist.contextQueue.songs.map(songToNativeQueueSong),
         currentIndex: songlist.contextQueue.currentIndex,
@@ -132,6 +136,7 @@ export class NativeQueueController implements QueueController {
       })
       .catch((err) => {
         logger.error("[NativeQueueController] queue sync failed", err);
+        throw err;
       });
   }
 
@@ -160,13 +165,27 @@ export class NativeQueueController implements QueueController {
 
   setSongList(
     songs: ISong[],
-    index: number,
+    index?: number | null,
     shuffle?: boolean,
     sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
     sourceName?: string,
   ): void {
     this.#queueSynced = true;
     if (!songs || songs.length === 0) return;
+
+    let targetIndex = index;
+    if (shuffle && (targetIndex === null || targetIndex === undefined)) {
+      const startHistory =
+        usePlayerStore.getState().songlist.shuffleStartHistory ?? [];
+      targetIndex = pickRandomStartIndex(
+        songs.length,
+        startHistory,
+        (i) => songs[i].id,
+      );
+    } else if (targetIndex === null || targetIndex === undefined) {
+      targetIndex = 0;
+    }
+    const clampedIndex = Math.max(0, Math.min(targetIndex, songs.length - 1));
 
     const prevPlayerState = { ...usePlayerStore.getState().playerState };
     const prevPlayerProgress = { ...usePlayerStore.getState().playerProgress };
@@ -225,7 +244,6 @@ export class NativeQueueController implements QueueController {
     if (shuffle && songs.length > 1) {
       const startHistory =
         usePlayerStore.getState().songlist.shuffleStartHistory ?? [];
-      const clampedIndex = Math.max(0, Math.min(index, songs.length - 1));
       const startSong = songs[clampedIndex];
       const queueSongs = buildContextQueueSongs(
         songs,
@@ -491,14 +509,21 @@ export class NativeQueueController implements QueueController {
 
   toggleShuffle(): void {
     const current = usePlayerStore.getState().songlist.isShuffleActive;
+    this.setShuffleState(!current);
+  }
+
+  setShuffleState(enabled: boolean): void {
+    const current = usePlayerStore.getState().songlist.isShuffleActive;
+    if (current === enabled) return;
+
     const prevOriginalContextSongs =
       usePlayerStore.getState().songlist.originalContextSongs;
     const prevOriginalUserSongs =
       usePlayerStore.getState().songlist.originalUserSongs;
     const prevUserSongs = usePlayerStore.getState().songlist.userQueue.songs;
 
-    this.#plugin.setShuffle({ enabled: !current }).catch((err) => {
-      logger.error("[NativeQueueController] toggleShuffle failed", err);
+    this.#plugin.setShuffle({ enabled }).catch((err) => {
+      logger.error("[NativeQueueController] setShuffleState failed", err);
       usePlayerStore.setState((state) => {
         state.songlist.isShuffleActive = current;
         state.songlist.originalContextSongs = prevOriginalContextSongs;
@@ -508,7 +533,7 @@ export class NativeQueueController implements QueueController {
     });
 
     usePlayerStore.setState((state) => {
-      if (!current) {
+      if (enabled) {
         const currentSong = getCurrentSong(state.songlist);
         const sourceSongs =
           state.songlist.sourceQueue.songs.length > 0
@@ -545,7 +570,7 @@ export class NativeQueueController implements QueueController {
           state.playerState.loopState,
         );
       }
-      state.songlist.isShuffleActive = !current;
+      state.songlist.isShuffleActive = enabled;
     });
     this.#updateContextQueueOnNative();
   }
@@ -620,14 +645,31 @@ export class NativeQueueController implements QueueController {
 
     usePlayerStore.setState((state) => {
       state.playerProgress.progress = seconds;
+      state.playerProgress.seekCount =
+        (state.playerProgress.seekCount ?? 0) + 1;
     });
+  }
+
+  async prepareHandoffPlayback(
+    progressSeconds: number,
+    options: { autoplay: boolean },
+  ): Promise<void> {
+    await this.#syncContextQueueToNative(options.autoplay);
+    await this.#plugin.seek({ position: Math.max(0, progressSeconds) });
   }
 
   setVolume(volume: number): void {
     const runtime = getRuntime();
-    if (runtime !== "capacitor-android") return;
+    if (runtime !== "capacitor-android" && runtime !== "electron") return;
 
     const clamped = Math.max(0, Math.min(100, Math.round(volume)));
+    if (runtime === "electron") {
+      // Desktop bridge maps this compatibility method to player volume, not
+      // OS output volume.
+      usePlayerStore.setState((state) => {
+        state.playerState.volume = clamped;
+      });
+    }
     this.#plugin.setSystemVolume({ value: clamped / 100 }).catch(() => {
       /* ignore */
     });
