@@ -539,13 +539,7 @@
     "title": "Queue",
     "clear": "Clear queue",
     "close": "Close queue",
-    "open": "Open queue",
-    "replacementConfirmation": {
-      "title": "Choose how to continue",
-      "description": "The current playback queue is not empty.",
-      "replace": "Replace current queue",
-      "playNext": "Play after this song"
-    }
+    "open": "Open queue"
   },
   "shortcuts": {
     "modal": {

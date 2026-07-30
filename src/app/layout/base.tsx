@@ -1,7 +1,6 @@
 import { memo, useEffect } from "react";
 import { MainDrawerPage } from "@/app/components/drawer/page";
 import { Player } from "@/app/components/player/player";
-import { QueueReplacementConfirmationDialog } from "@/app/components/player/queue-replacement-confirmation-dialog";
 import { RemovePlaylistDialog } from "@/app/components/playlist/remove-dialog";
 import { SettingsHotkeyProvider } from "@/app/components/settings/hotkey-provider";
 import { SongInfoDialog } from "@/app/components/song/info-dialog";
@@ -19,9 +18,6 @@ const MemoSidebar = memo(Sidebar);
 const MemoPlayer = memo(Player);
 const MemoSongInfoDialog = memo(SongInfoDialog);
 const MemoRemovePlaylistDialog = memo(RemovePlaylistDialog);
-const MemoQueueReplacementConfirmationDialog = memo(
-  QueueReplacementConfirmationDialog,
-);
 const MemoMainDrawerPage = memo(MainDrawerPage);
 const MemoBottomNavigation = memo(BottomNavigation);
 
@@ -60,7 +56,6 @@ export default function BaseLayout() {
       <MainRoutes />
       <MemoSongInfoDialog />
       <MemoRemovePlaylistDialog />
-      <MemoQueueReplacementConfirmationDialog />
       <MemoMainDrawerPage />
       <FullscreenPlayerRouter />
     </div>

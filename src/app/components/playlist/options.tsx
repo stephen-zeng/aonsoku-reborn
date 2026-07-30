@@ -32,7 +32,7 @@ export function PlaylistOptions({
   disableDelete = false,
 }: PlaylistOptionsProps) {
   const { setPlaylistDialogState, setData } = usePlaylists();
-  const { playPlaylist, playNext, playLast } = useOptions();
+  const { play, playNext, playLast } = useOptions();
   const { toggle } = usePinnedHomeActions();
   const { setPlaylistId, setConfirmDialogState } = useRemovePlaylist();
   const isUserQueueEmpty = usePlayerStore(
@@ -61,7 +61,13 @@ export function PlaylistOptions({
   }
 
   async function handlePlay() {
-    await playPlaylist(playlist);
+    if ("entry" in playlist) {
+      play(playlist.entry, { playlistId: playlist.id }, playlist.name);
+    } else {
+      await getSongsToQueue((songs, sourceId) =>
+        play(songs, sourceId, playlist.name),
+      );
+    }
   }
 
   async function handlePlayNext() {

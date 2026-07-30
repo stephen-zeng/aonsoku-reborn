@@ -373,12 +373,6 @@
     "clear": "清空队列",
     "close": "关闭队列",
     "open": "打开队列",
-    "replacementConfirmation": {
-      "description": "当前播放队列不为空。",
-      "playNext": "在本曲后播放",
-      "replace": "替换当前播放队列",
-      "title": "选择播放方式"
-    },
     "title": "队列"
   },
   "radios": {

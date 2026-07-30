@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { usePlaybackReplacementStore } from "@/store/playback-replacement.store";
 import { LoopState } from "@/types/playerContext";
 import { createQueueActions } from "./queue-actions";
 
@@ -70,7 +69,6 @@ function makeState() {
 describe("queue actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    usePlaybackReplacementStore.getState().reset();
   });
 
   it("restarts the current song when previous is used without a real previous song", () => {
@@ -135,7 +133,7 @@ describe("queue actions", () => {
     ]);
   });
 
-  it("requests confirmation before replacing a non-empty context queue", () => {
+  it("replaces a non-empty context queue immediately", () => {
     const state = makeState();
     const actions = createQueueActions({
       set: (fn) => fn(state as never),
@@ -149,15 +147,14 @@ describe("queue actions", () => {
       albumId: "album-2",
     });
 
-    expect(state.songlist.contextQueue.songs[0]?.id).toBe("a");
-    expect(usePlaybackReplacementStore.getState().request).toMatchObject({
-      kind: "songList",
-      songs: [{ id: "replacement" }],
-      sourceId: { albumId: "album-2" },
+    expect(state.songlist.contextQueue.songs[0]?.id).toBe("replacement");
+    expect(state.songlist.contextQueue.sourceId).toEqual({
+      type: "album",
+      id: "album-2",
     });
   });
 
-  it("replaces the context queue after confirmation", () => {
+  it("replaces immediately when callers pass the compatibility option", () => {
     const state = makeState();
     const actions = createQueueActions({
       set: (fn) => fn(state as never),
@@ -183,7 +180,7 @@ describe("queue actions", () => {
     });
   });
 
-  it("requests confirmation before replacing the queue with one song", () => {
+  it("replaces the queue with one song immediately", () => {
     const state = makeState();
     const actions = createQueueActions({
       set: (fn) => fn(state as never),
@@ -196,10 +193,6 @@ describe("queue actions", () => {
 
     actions.playSong?.(makeSong("replacement"));
 
-    expect(state.songlist.contextQueue.songs[0]?.id).toBe("a");
-    expect(usePlaybackReplacementStore.getState().request).toMatchObject({
-      kind: "song",
-      song: { id: "replacement" },
-    });
+    expect(state.songlist.contextQueue.songs[0]?.id).toBe("replacement");
   });
 });

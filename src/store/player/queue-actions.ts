@@ -1,7 +1,6 @@
 import type { Draft } from "immer";
 import { seekPlaybackTarget } from "@/player/playback/backend-registry";
 import { getNativeQueueController } from "@/player/queue-controller";
-import { usePlaybackReplacementStore } from "@/store/playback-replacement.store";
 import { useSleepTimerStore } from "@/store/sleep-timer.store";
 import { LanControlMessageType } from "@/types/lanControl";
 import type {
@@ -20,7 +19,6 @@ import { logger } from "@/utils/logger";
 import {
   getMaxShuffleHistory,
   getMaxShuffleStartHistory,
-  pickRandomStartIndex,
   pushToHistory,
 } from "@/utils/songListFunctions";
 import { transitionHandleSongEnded } from "./queue-transitions";
@@ -141,21 +139,11 @@ export function createQueueActions(shared: SharedDeps) {
       shuffle = false,
       sourceId?: QueueSourceId | { albumId: string } | { playlistId: string },
       sourceName?: string,
-      options?: QueueReplacementOptions,
+      _options?: QueueReplacementOptions,
     ) => {
       if (!songlist || songlist.length === 0) return;
 
-      let targetIndex = index;
-      if (shuffle && (targetIndex === null || targetIndex === undefined)) {
-        const startHistory = get().songlist.shuffleStartHistory ?? [];
-        targetIndex = pickRandomStartIndex(
-          songlist.length,
-          startHistory,
-          (i) => songlist[i].id,
-        );
-      } else if (targetIndex === null || targetIndex === undefined) {
-        targetIndex = 0;
-      }
+      let targetIndex = index ?? 0;
       targetIndex = Math.max(0, Math.min(targetIndex, songlist.length - 1));
 
       if (isRemoteActive()) {
@@ -169,21 +157,6 @@ export function createQueueActions(shared: SharedDeps) {
         );
         set((state) => {
           state.playerState.isPlaying = true;
-        });
-        return;
-      }
-
-      if (
-        get().songlist.contextQueue.songs.length > 0 &&
-        !options?.bypassQueueConfirmation
-      ) {
-        usePlaybackReplacementStore.getState().show({
-          kind: "songList",
-          songs: [...songlist],
-          index,
-          shuffle,
-          sourceId,
-          sourceName,
         });
         return;
       }
@@ -437,26 +410,11 @@ export function createQueueActions(shared: SharedDeps) {
     playSong: (
       song: ISong,
       sourceName?: string,
-      options?: QueueReplacementOptions,
+      _options?: QueueReplacementOptions,
     ) => {
       const { isPlaying } = get().playerState;
       const songIsAlreadyPlaying = get().actions.checkActiveSong(song.id);
-      const onlyResumesCurrentSong = songIsAlreadyPlaying && !isPlaying;
-
       if (remoteSend(LanControlMessageType.PLAY_SONG, { songId: song.id })) {
-        return;
-      }
-
-      if (
-        get().songlist.contextQueue.songs.length > 0 &&
-        !onlyResumesCurrentSong &&
-        !options?.bypassQueueConfirmation
-      ) {
-        usePlaybackReplacementStore.getState().show({
-          kind: "song",
-          song,
-          sourceName,
-        });
         return;
       }
 

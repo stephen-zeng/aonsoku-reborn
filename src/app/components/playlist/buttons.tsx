@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import { Actions } from "@/app/components/actions";
-import { useOptions } from "@/app/hooks/use-options";
 import { usePlayerActions } from "@/store/player.store";
 import { PlaylistWithEntries } from "@/types/responses/playlist";
 import { PlaylistOptions } from "./options";
@@ -12,7 +11,6 @@ interface PlaylistButtonsProps {
 export function PlaylistButtons({ playlist }: PlaylistButtonsProps) {
   const { t } = useTranslation();
   const { setSongList } = usePlayerActions();
-  const { playPlaylist } = useOptions();
 
   const buttonsTooltips = {
     play: t("playlist.buttons.play", { name: playlist.name }),
@@ -27,7 +25,7 @@ export function PlaylistButtons({ playlist }: PlaylistButtonsProps) {
         onClick={() =>
           setSongList(
             playlist.entry,
-            undefined,
+            0,
             true,
             { playlistId: playlist.id },
             playlist.name,
@@ -42,7 +40,15 @@ export function PlaylistButtons({ playlist }: PlaylistButtonsProps) {
         tooltip={buttonsTooltips.play}
         buttonStyle="primary"
         className="md:order-first"
-        onClick={() => playPlaylist(playlist)}
+        onClick={() =>
+          setSongList(
+            playlist.entry,
+            0,
+            false,
+            { playlistId: playlist.id },
+            playlist.name,
+          )
+        }
         disabled={!playlist.entry}
       >
         <Actions.PlayIcon />
